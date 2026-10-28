@@ -1,0 +1,5 @@
+# Inactive template. After approval, merge into .codex/config.toml.
+# Codex must trust this project before loading project-local configuration.
+[mcp_servers.Roblox_Studio]
+command = 'cmd.exe'
+args = ['/c', '%LOCALAPPDATA%\Roblox\mcp.bat']

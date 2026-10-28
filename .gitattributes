@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.luau text eol=lf
+*.rbxm binary
+*.rbxl binary
+*.blend binary
+*.fbx binary
+*.png binary
+*.jpg binary
+*.wav binary

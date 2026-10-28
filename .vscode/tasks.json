@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Verify foundation",
+      "type": "process",
+      "command": "python",
+      "args": [
+        "tools/verify.py"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Rojo: serve",
+      "type": "process",
+      "command": "rojo",
+      "args": [
+        "serve",
+        "default.project.json"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Format Luau",
+      "type": "process",
+      "command": "stylua",
+      "args": [
+        "src",
+        "tests/studio"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
