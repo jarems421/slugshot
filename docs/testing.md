@@ -30,4 +30,4 @@ Future network features need latency/jitter/loss and client join/leave tests whe
 
 ## CI
 
-[The workflow](../.github/workflows/ci.yml) uses read-only repository permissions and no Roblox credentials. It builds and packages but never publishes. Its first hosted run is pending remote setup. Local Windows success does not establish Linux runner success.
+[The workflow](../.github/workflows/ci.yml) uses read-only repository permissions and no Roblox credentials. It builds and packages but never publishes. The public GitHub remote is configured; see [verification](verification.md) for hosted run evidence. Local Windows success does not establish Linux runner success.

@@ -14,7 +14,8 @@
 - [ ] Run Studio single-client and two-client checklists and collect logs.
 - [ ] Approve matching Rojo Studio plugin installation if missing, then test live sync.
 - [ ] Approve Studio MCP connections; activate examples/quick connect and verify read-only calls.
-- [ ] Choose GitHub account/remote/visibility, approve connection/creation and run hosted CI.
+- [x] Create the approved public GitHub repository: https://github.com/jarems421/slugshot.
+- [ ] Verify the first hosted CI run.
 - [ ] Decide whether Blender/its optional integrations are needed; no installation requested yet.
 
 ## Considering future work

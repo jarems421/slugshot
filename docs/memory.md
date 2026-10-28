@@ -10,3 +10,10 @@
 - Kept integration examples inactive and documented approval-dependent steps. No global client configuration, account connection, GitHub remote or publishing action was changed.
 - Deferred Studio runtime/multiplayer/MCP tests because no approved active session/connection was available. The bundled skill validator lacks PyYAML; no dependency was installed to work around it.
 - Initialized local Git and created the foundation snapshot on `main`. See [verification](verification.md), [status](status.md) and [research](research/tooling.md).
+
+## 2026-10-28 - GitHub publication
+
+- User requested GitHub publication with a simple README, then explicitly selected public visibility.
+- Reused the authenticated GitHub CLI to create https://github.com/jarems421/slugshot and configure `origin`.
+- Simplified the README to a project description, setup commands and links. Updated current notes to reflect the approved remote.
+- First hosted CI result is pending; local foundation verification previously passed. Studio/MCP setup remains separate.

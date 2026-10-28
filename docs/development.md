@@ -34,4 +34,4 @@ Codex reads `.agents/skills/`; Claude reads `.claude/skills/`. Update canonical 
 
 ## GitHub handoff
 
-A local Git repository is initialized. No GitHub remote, repository visibility or account connection has been chosen. After owner approval, create/select the remote, push the foundation and observe the first Actions run. CI installs the pinned tools on its temporary runner and runs the same verification command, then retains place artifacts. Workflow actions are pinned to reviewed commit SHAs. Update pins deliberately; do not use automatic remote installers during local setup.
+The owner approved publishing to the public repository https://github.com/jarems421/slugshot on 2026-10-28. `origin` points to that repository. Push reviewed commits to `main` and inspect the Actions result. CI installs the pinned tools on its temporary runner and runs the same verification command, then retains place artifacts. Workflow actions are pinned to reviewed commit SHAs. Update pins deliberately; do not use automatic remote installers during local setup.

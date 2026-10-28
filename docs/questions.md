@@ -7,7 +7,7 @@ All items are Unresolved; none blocks creating the local foundation.
 - Which modes, player counts and target devices are worth testing first?
 - Are exploration, evolution, progression or cinematics part of an eventual first milestone?
 - What performance/network budgets should future prototypes measure?
-- Which GitHub account/organization, repository name and visibility should own the project?
+- Resolved 2026-10-28: public repository `jarems421/slugshot`, explicitly approved by the owner.
 - Should the project receive an open-source license, and where should future large assets live?
 - Which approved Studio session/place should MCP target, and which AI clients should connect?
 
