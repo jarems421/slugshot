@@ -39,7 +39,13 @@ Build outputs are intentionally ignored and reproducible. A local HTTP server re
 - Claude/Codex skill auto-discovery in a new session and behavioral evaluations. Files/metadata match; actual discovery is not claimed.
 - Bundled `skill-creator/scripts/quick_validate.py` was attempted for all three skills and failed at import because PyYAML is absent. Dependency-free project checks cover the two metadata fields and parity; they are not a general YAML validator.
 - Full engine-aware CLI type analysis. Only the engine-neutral shared module is analyzed; startup and test scripts need Studio diagnostics/runtime or reviewed engine definitions.
-- Hosted GitHub Actions/Linux execution is pending the first run result. Public `jarems421/slugshot` creation and publication were approved on 2026-10-28.
+
 - Blender execution, addon/export roundtrip, asset service accounts, uploads and publishing. None is required for the present foundation.
 
 Follow [testing](testing.md) and [integrations](integrations.md) to close pending items. Do not mark them passed until evidence exists.
+
+## GitHub publication follow-up
+
+The owner approved public visibility and publication to [jarems421/slugshot](https://github.com/jarems421/slugshot). Source and the simplified README were pushed to `main`, with `origin/main` configured as the upstream.
+
+The [first hosted Foundation run](https://github.com/jarems421/slugshot/actions/runs/40719697932) passed on Linux for commit `3cfbd63`: tool installation, formatting, linting, shared-module analysis, both builds, package checks and artifact upload. Studio runtime/MCP checks remain pending.

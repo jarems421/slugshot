@@ -10,7 +10,7 @@ Reviewed 2026-10-28. No account connection, MCP activation or external installat
 | VS Code | Installed; Rojo, Luau LSP, StyLua, Selene and Actions extensions listed | Recommendations/tasks created; interactive editor diagnostics not exercised |
 | Claude Code | Existing executable | Project instructions/skills and inactive MCP example prepared; authentication and MCP calls not tested |
 | Codex | Existing VS Code-bundled executable | `.agents/skills` prepared; inactive project MCP template; new-session discovery not tested |
-| Git/GitHub | Git 2.55.0 and `gh` installed; GitHub connector tools exposed in this chat | Public `jarems421/slugshot` created with owner approval; hosted CI result pending |
+| Git/GitHub | Git 2.55.0 and `gh` installed; GitHub connector tools exposed in this chat | Public `jarems421/slugshot` created with owner approval; first hosted Linux CI run passed |
 | Blender | No `blender` executable on PATH | Not proof it is absent elsewhere; installation/optional MCP deferred |
 
 ## Official Studio MCP (approval-dependent)

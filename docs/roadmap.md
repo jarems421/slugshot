@@ -15,7 +15,7 @@
 - [ ] Approve matching Rojo Studio plugin installation if missing, then test live sync.
 - [ ] Approve Studio MCP connections; activate examples/quick connect and verify read-only calls.
 - [x] Create the approved public GitHub repository: https://github.com/jarems421/slugshot.
-- [ ] Verify the first hosted CI run.
+- [x] Verify the first hosted CI run: https://github.com/jarems421/slugshot/actions/runs/40719697932 (passed).
 - [ ] Decide whether Blender/its optional integrations are needed; no installation requested yet.
 
 ## Considering future work

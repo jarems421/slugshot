@@ -16,4 +16,4 @@
 - User requested GitHub publication with a simple README, then explicitly selected public visibility.
 - Reused the authenticated GitHub CLI to create https://github.com/jarems421/slugshot and configure `origin`.
 - Simplified the README to a project description, setup commands and links. Updated current notes to reflect the approved remote.
-- First hosted CI result is pending; local foundation verification previously passed. Studio/MCP setup remains separate.
+- First hosted Linux CI passed: https://github.com/jarems421/slugshot/actions/runs/40719697932. Local foundation checks also passed previously. Studio/MCP setup remains separate.
