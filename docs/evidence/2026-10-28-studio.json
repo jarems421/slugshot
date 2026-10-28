@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-28",
+  "sourceCommit": "4593d9dca81e728b6f6ffe6af66611669eac684f",
+  "scope": "Development foundation only; disposable local places; no gameplay or uploads",
+  "versions": {
+    "studio": "0.745.0.7451137",
+    "rojo": "7.7.1",
+    "claudeCode": "2.1.302",
+    "codexCli": "0.164.0-alpha.11.1"
+  },
+  "rojoPlugin": {
+    "file": "RojoManagedPlugin.rbxm",
+    "size": 504236,
+    "sha256": "9412c5ce010e18342a4470a48f516772127649216aa3fbf55b8fe1369ca5db7f"
+  },
+  "mcp": {
+    "studioServerEnabled": true,
+    "claudeCode": {
+      "scope": "local, private to this project",
+      "health": "Connected"
+    },
+    "codex": {
+      "scope": "project-local",
+      "discoveredToolCount": 31,
+      "liveToolsCalled": [
+        "list_roblox_studios",
+        "script_read"
+      ],
+      "modelTurnRequested": false
+    }
+  },
+  "singleClient": {
+    "place": "SlugshotTests.rbxlx",
+    "serverBootstrapLogCount": 1,
+    "clientBootstrapLogCount": 1,
+    "sharedModuleContract": "PASS",
+    "clientAssertions": "PASS; shared probe immutable; server bootstrap not visible"
+  },
+  "twoClient": {
+    "launch": "StudioTestService:ExecuteMultiplayerTestAsync(2, \"SlugshotFoundation\")",
+    "server": {
+      "players": {
+        "1": "Player1",
+        "2": "Player2"
+      },
+      "playerCount": 2,
+      "serverProbe": true
+    },
+    "serverBootstrapLogCount": 1,
+    "clients": [
+      {
+        "serverBootstrapVisible": false,
+        "player": "Player2",
+        "playerCount": 2,
+        "clientProbe": true,
+        "bootstrapLogCount": 1
+      },
+      {
+        "serverBootstrapVisible": false,
+        "player": "Player1",
+        "playerCount": 2,
+        "clientProbe": true,
+        "bootstrapLogCount": 1
+      }
+    ],
+    "endResult": "Slugshot two-client foundation checks passed",
+    "returnedToEdit": true
+  },
+  "rojoSync": {
+    "project": "default.project.json",
+    "place": "Slugshot.rbxlx",
+    "address": "127.0.0.1:34872",
+    "filesystemMarkerObservedInStudio": true,
+    "originalSourceRestoredInStudioAndOnDisk": true,
+    "restoredSourceSha256": "894071afb6a27cb0dacfd0fd7cd0755b1ff693b250a19e459f10ab05fe9e427d",
+    "normalPlaceHasNoTests": true
+  },
+  "observations": {
+    "runtimeWarning": "ContentId: rbxassetid://203785492 failed due to: Asset type does not match requested type",
+    "normalEditorWarning": "Built-in MaterialManager debug.profileEnd() - No active profile annotation stack; no project script in stack",
+    "foundationScriptAssertionErrors": 0
+  },
+  "cleanup": {
+    "simulatedSessionsEnded": true,
+    "disposableTestWindowsClosedWithoutSaving": true,
+    "temporaryRojoServerStopped": true,
+    "verificationMcpProxyStopped": true,
+    "normalPlaceLeftOpenInEditMode": true
+  },
+  "limits": [
+    "No interactive Claude model tool invocation tested; native Claude MCP handshake/health check passed.",
+    "Existing Codex IDE chat may require a new session/reload to expose newly configured tools.",
+    "No stress, device, latency/loss or gameplay tests required or performed."
+  ]
+}

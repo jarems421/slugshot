@@ -5,20 +5,24 @@ Milestone: development foundation only
 
 ## Confirmed
 
-Roblox Studio / Luau / VS Code / Git-GitHub / Rojo foundation, client/server/shared separation, lightweight checks and Markdown project memory. No gameplay mechanics or final game design selected.
+Roblox Studio / Luau / VS Code / Git-GitHub / Rojo foundation, client/server/shared separation, lightweight checks and Markdown memory. The owner approved the matching Rojo plugin, Studio MCP for Claude Code/Codex, integration/runtime/two-client verification and pushing results. No gameplay or final game design selected.
 
 ## Implemented/verified
 
-Minimal source probes, separate normal/test Rojo projects, pinned cached tools, formatter/linter configuration, shared-module type analysis, build/sourcemap generation and automated packaging assertions. Local Rojo HTTP service responded and was stopped. Project instructions, three mirrored procedure skills, editor tasks, CI configuration, research, asset conventions and knowledge templates are present. Local Git tracks source and notes on `main`; the approved public remote is https://github.com/jarems421/slugshot. The first hosted Linux CI run passed: https://github.com/jarems421/slugshot/actions/runs/40719697932.
+Minimal source, isolated tests and pinned tooling pass formatting, linting, shared-module types, builds, sourcemap, packaging and skill checks. The public repo is [jarems421/slugshot](https://github.com/jarems421/slugshot); initial hosted Linux CI passed.
 
-See [verification evidence](verification.md) for exact commands and limits. Configuration and procedure files are created; that does not mean every external integration has run.
+Rojo 7.7.1's matching plugin is installed. A filesystem edit synchronized into Studio; original source was restored and matched exactly. Studio 0.745.0.7451137's built-in MCP is enabled. Claude's native health check reports Connected; native Codex discovered tools and made live calls. Host config is local/private.
+
+Single-client smoke and isolated two-client tests passed. The server saw two distinct players; each client logged once, loaded the shared probe and could not see the server bootstrap. The normal place has no test folder. Multiplayer ended and the parent returned to Edit mode.
+
+[Verification](verification.md) and [captured evidence](evidence/2026-10-28-studio.json) detail checks and built-in/avatar warnings. No gameplay, maps, creatures, custom remotes or game-design decisions were added.
 
 ## Considering
 
-All gameplay directions in [vision](vision.md). Candidate tools in [research](research/tooling.md) are research only.
+Gameplay directions in [vision](vision.md) and tools in [research](research/tooling.md) remain ideas/research, not implementation requirements.
 
-## Unresolved / pending
+## Unresolved / outside this milestone
 
-Studio runtime and two-client checks; matching Rojo plugin installation/GUI sync; Studio MCP approval, activation and read-only verification. Blender is deferred. Engine-aware CLI type checking is not configured. New-session agent skill discovery is not yet exercised. Bundled skill-validator command could not run without PyYAML; repository metadata/parity checks passed instead.
+Blender, full engine-aware CLI types, interactive editor diagnostics, new-session skill discovery and later gameplay/device/network tests are unverified. The bundled skill validator lacks PyYAML; project metadata/parity checks pass. Existing IDE chats may need a new session to expose the new MCP tools.
 
-Next work: review the [approval queue](integrations.md) and perform the [Studio checklist](testing.md). These setup actions do not authorize gameplay.
+No requested integration/runtime test remains pending. Next work should be an explicitly chosen design or implementation task.

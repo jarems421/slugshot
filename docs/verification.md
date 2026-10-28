@@ -1,51 +1,55 @@
 # Foundation verification report
 
-Date: 2026-10-28 (Europe/London)
-Workspace: local Windows repository, initially empty
-Scope: development infrastructure only
+Verified: 2026-10-28 (Europe/London)
+Scope: development infrastructure only; no gameplay implemented
+Source under test: `4593d9d`, with a temporary sync comment added and restored byte-for-byte
 
-## Reused, installed and created
+All requested integration/runtime tests completed. [Sanitized machine-readable evidence](evidence/2026-10-28-studio.json) records observed results. Raw logs, generated schemas and scratch automation remain in ignored `build/`.
 
-Reused existing Git 2.55.0, Python 3.13, Rokit 1.2.0 and cached Rojo 7.7.1, StyLua 2.6.0, Selene 0.32.0 and Luau LSP 1.70.1. Existing Studio, VS Code and relevant editor extensions were detected. Claude Code and Codex executables were detected, but no authentication flow was started. Blender was not on PATH.
+## Installed and configured
 
-No external tool, package manager dependency, gameplay library, Studio plugin, Blender addon or third-party skill was installed. An upstream Rokit Linux archive was fetched into memory to compute the CI bootstrap checksum; it was not extracted or executed on this machine.
+- Installed Studio's matching plugin with cached Rojo 7.7.1 using `rojo plugin install`. RojoManagedPlugin.rbxm: 504236 bytes; SHA-256 `9412c5ce010e18342a4470a48f516772127649216aa3fbf55b8fe1369ca5db7f`.
+- Studio automatically updated at launch from 0.743.0.7431133 to 0.745.0.7451137. Its built-in MCP setting was already enabled; live calls verified it remained enabled.
+- Configured Claude Code 2.1.302 with a private per-project entry in `~/.claude.json`. Native health checks repeatedly reported Connected.
+- Configured Codex CLI 0.164.0-alpha.11.1 in project `.codex/config.toml` and trusted only this workspace. Its native app-server discovered 31 tools, listed instances and read the normal place's shared ModuleScript. No model turn started.
+- Reused Git 2.55.0, Python 3.13, Rokit 1.2.0, StyLua 2.6.0, Selene 0.32.0 and Luau LSP 1.70.1. No unrelated plugin, Python package, Blender addon or gameplay library was installed.
 
-Created client/server/shared setup probes, two Rojo manifests, test source, local verification tool, formatting/lint configuration, GitHub Actions, editor recommendations/tasks, Git conventions, agent instructions, three original project skills with Claude copies, inactive MCP templates and the Markdown knowledge base. Initialized local Git with a foundation snapshot on `main`. No remote account/repository, map, creature, combat, movement, remotes, matchmaking or progression implementation was created.
+Host-specific configuration and credentials are not committed. Portable examples and reproduction instructions are tracked. See [integrations](integrations.md).
 
-## Passed locally
+## Runtime and integration results
 
-| Check | Command / evidence | Result |
+| Check | Observed evidence | Result |
 | --- | --- | --- |
-| Tool resolution | `rojo --version`, `stylua --version`, `selene --version`, `luau-lsp --version` from project root | Exact manifest versions above resolve using existing cache |
-| Full repeatable verification | `python tools/verify.py` | Passed |
-| Formatting / parse | `stylua --check src tests/studio` | Passed |
-| Roblox-aware lint | `selene src tests/studio` | 0 errors, 0 warnings, 0 parse errors |
-| Shared module types | `luau-lsp analyze --platform=standard src/shared/Foundation.luau` | Passed; reports no engine definitions loaded, as expected for this module |
-| Normal build | `rojo build default.project.json --output build/Slugshot.rbxlx` | Passed |
-| Isolated test build | `rojo build test.project.json --output build/SlugshotTests.rbxlx` | Passed |
-| Sourcemap | `rojo sourcemap default.project.json --output build/sourcemap.json` | Passed |
-| Package semantics | `tools/verify.py` parses both XML outputs | Correct script classes/containers and exact source text; normal has only three probes, test build includes assertion script |
-| Skills | Repository metadata checks and byte comparison | Three canonical skills, valid restricted plain-scalar metadata, matching Claude copies |
-| Repository consistency | Local Markdown link audit, JSON/TOML parsing, `git diff --cached --check` | 51 local links resolve; configuration parses; no whitespace errors |
-| Local serve | Temporary existing Rojo executable, `default.project.json`, HTTP requests to root and `/api/rojo` | HTTP 200; landing page identifies Rojo; API `application/msgpack`, 211 bytes; stopped afterward and port confirmed closed |
+| Claude MCP | Native CLI health check, private local scope | Connected |
+| Codex MCP | Native app-server inventory and live list/read calls | Passed |
+| Single-client smoke | Server/client probes once each; shared-module contract PASS | Passed |
+| Single-client isolation | Client-context expected message, frozen module, server bootstrap absent | Passed |
+| Two-client server | Native StudioTestService test; server observed Player1/Player2; server probe and contract once | Passed |
+| Player1 | Independently checked shared probe, both players visible, server bootstrap absent, client log once | Passed |
+| Player2 | Same assertions checked in the other client's actual Client datamodel | Passed |
+| Multiplayer teardown | EndTest returned success; parent returned to Edit mode | Passed |
+| Real Rojo sync | Filesystem comment appeared in normal Studio ModuleScript | Passed |
+| Source restoration | Comment removed; subsequent Studio read exactly matched original file | Passed |
+| Normal project isolation | Actual Studio assertion: no FoundationTests folder | Passed |
 
-Build outputs are intentionally ignored and reproducible. A local HTTP server response proves CLI serving, not Studio plugin synchronization.
+Tests used generated local places without uploading or publishing a Roblox experience. No inspection commands or scene changes were adopted as gameplay/design.
 
-## Not verified / intentionally pending
+All simulated sessions ended. Disposable test windows were closed without saving their incidental Studio changes. Temporary Rojo/MCP verification processes were stopped. The normal foundation place remains open in Edit mode; run `rojo serve default.project.json` to reconnect for development.
 
-- Studio execution of the client/server probes and Luau assertion script. Source is parsed/linted and packaged but has not run in the engine.
-- Multi-client behavior, GUI Rojo plugin sync and editor interactive diagnostics. No running Studio process was observed; no plugin file appeared in the inspected local Plugins directory. Cloud-installed inventory was not inspected.
-- Studio MCP connection and tools. `mcp.bat` and Studio installation exist; examples are inactive. Approval and an intended open Studio session are needed.
-- Claude/Codex skill auto-discovery in a new session and behavioral evaluations. Files/metadata match; actual discovery is not claimed.
-- Bundled `skill-creator/scripts/quick_validate.py` was attempted for all three skills and failed at import because PyYAML is absent. Dependency-free project checks cover the two metadata fields and parity; they are not a general YAML validator.
-- Full engine-aware CLI type analysis. Only the engine-neutral shared module is analyzed; startup and test scripts need Studio diagnostics/runtime or reviewed engine definitions.
+## Automated checks
 
-- Blender execution, addon/export roundtrip, asset service accounts, uploads and publishing. None is required for the present foundation.
+`python tools/verify.py` passes: StyLua, Selene (0 errors/warnings/parse errors), shared-module analysis, both builds, sourcemap, built script placement/classes/source fidelity, test isolation and skill checks. This is not full engine-aware type analysis.
 
-Follow [testing](testing.md) and [integrations](integrations.md) to close pending items. Do not mark them passed until evidence exists.
+Local JSON/TOML configurations parse, documentation links resolve, and `git diff --check` passes. The initial hosted [Foundation run](https://github.com/jarems421/slugshot/actions/runs/40719697932) passed on Linux. Follow-up hosted results apply to the pushed setup revision; CI does not perform Studio runtime checks.
 
-## GitHub publication follow-up
+## Studio warnings and remaining limits
 
-The owner approved public visibility and publication to [jarems421/slugshot](https://github.com/jarems421/slugshot). Source and the simplified README were pushed to `main`, with `origin/main` configured as the upstream.
+Project scripts/assertions passed without project-script errors. The Studio session was not completely warning-free:
 
-The [first hosted Foundation run](https://github.com/jarems421/slugshot/actions/runs/40719697932) passed on Linux for commit `3cfbd63`: tool installation, formatting, linting, shared-module analysis, both builds, package checks and artifact upload. Studio runtime/MCP checks remain pending.
+- Runtime sessions reported `rbxassetid://203785492` with "Asset type does not match requested type". The repo contains no reference to this ID or authored assets; each simulated client reported it. No avatar/asset/design change was made to suppress it.
+- The normal editor reported a `debug.profileEnd()` / "No active profile annotation" stack inside Studio's built-in MaterialManager/React packages. No project script appears in that stack. No built-in/unrelated plugin was modified.
+- Opening a generated place triggered Studio's legacy default-lighting migration notice. It was dismissed in the disposable place; no authored lighting/map decision was committed.
+
+No requested Rojo/MCP/runtime/two-client test remains uncompleted. Outside-task checks remain unverified: full engine-aware CLI types, interactive VS Code diagnostics, a model-driven tool call from an interactive Claude chat, new-session skill discovery, device/stress/network-impairment tests and Blender exports. The bundled skill validator still lacks PyYAML; dependency-free project metadata/parity checks pass instead. Existing IDE chats may need a reload/new session to expose new tools; native Codex connectivity is verified.
+
+See [testing](testing.md) to reproduce. Source was restored before the final automated build and commit.

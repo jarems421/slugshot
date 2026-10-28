@@ -11,9 +11,9 @@
 
 ## Pending verification / owner actions
 
-- [ ] Run Studio single-client and two-client checklists and collect logs.
-- [ ] Approve matching Rojo Studio plugin installation if missing, then test live sync.
-- [ ] Approve Studio MCP connections; activate examples/quick connect and verify read-only calls.
+- [x] Run Studio single-client and two-client checklists and capture evidence.
+- [x] Install approved Rojo 7.7.1 plugin; verify live sync and source restoration.
+- [x] Configure approved Studio MCP for Claude Code and Codex; verify native connections and live reads.
 - [x] Create the approved public GitHub repository: https://github.com/jarems421/slugshot.
 - [x] Verify the first hosted CI run: https://github.com/jarems421/slugshot/actions/runs/40719697932 (passed).
 - [ ] Decide whether Blender/its optional integrations are needed; no installation requested yet.

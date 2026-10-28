@@ -1,44 +1,42 @@
 # Integration setup and status
 
-Reviewed 2026-10-28. No account connection, MCP activation or external installation was performed.
+Verified 2026-10-28. The owner approved the compatible Rojo plugin, Studio MCP for Claude Code and Codex, runtime/two-client tests, and committing/pushing results. No gameplay or unrelated plugins were added.
 
-| Integration | Observed locally | Verification / next step |
+| Integration | Installed/configured | Verification |
 | --- | --- | --- |
-| Rojo CLI | 7.7.1 cached and resolves from project manifest | Build/sourcemap verified; local serve checked separately in verification report |
-| Studio | Executable and `mcp.bat` exist | No running Studio session observed; runtime tests pending |
-| Rojo Studio plugin | No plugin found in inspected local Plugins folder | Installation approval and GUI sync test needed; cloud-installed plugin inventory not verified |
-| VS Code | Installed; Rojo, Luau LSP, StyLua, Selene and Actions extensions listed | Recommendations/tasks created; interactive editor diagnostics not exercised |
-| Claude Code | Existing executable | Project instructions/skills and inactive MCP example prepared; authentication and MCP calls not tested |
-| Codex | Existing VS Code-bundled executable | `.agents/skills` prepared; inactive project MCP template; new-session discovery not tested |
-| Git/GitHub | Git 2.55.0 and `gh` installed; GitHub connector tools exposed in this chat | Public `jarems421/slugshot` created with owner approval; first hosted Linux CI run passed |
-| Blender | No `blender` executable on PATH | Not proof it is absent elsewhere; installation/optional MCP deferred |
+| Rojo | CLI and matching Studio plugin 7.7.1 | Filesystem edit and restoration observed in Studio; normal place has no tests |
+| Studio | Auto-updated at launch to 0.745.0.7451137; built-in MCP enabled | Single-client smoke and isolated two-client test passed |
+| Claude Code | Existing 2.1.302; private project-local MCP entry | Native health check reports Connected |
+| Codex | Existing CLI 0.164.0-alpha.11.1; project config active; this workspace trusted | Native app-server discovered 31 tools and made live list/read calls without a model turn |
+| VS Code | Existing recommended extensions | Interactive editor diagnostics not exercised |
+| GitHub | Public [jarems421/slugshot](https://github.com/jarems421/slugshot) | Initial hosted CI passed; see [verification](verification.md) |
+| Blender | No executable on PATH or addon installed | Deferred; not required for the foundation |
 
-## Official Studio MCP (approval-dependent)
+[Sanitized evidence](evidence/2026-10-28-studio.json) records versions, assertions, source restoration and plugin checksum. Host configuration, auth material, raw logs and scratch automation remain untracked.
 
-Current [Roblox documentation](https://create.roblox.com/docs/studio/mcp) recommends the built-in server. Avoid the obsolete standalone Studio Agent Plugin route mentioned in the PDF.
+## Rojo setup and sync
 
-After approval, open the intended foundation place, then Assistant > ... > Manage MCP Servers > Enable Studio as MCP server. Quick connect supports Codex CLI and Claude Code. Prefer Studio's generated settings over guessing version-specific paths.
+The approved `rojo plugin install` installed the plugin bundled with the pinned CLI into Studio's local Plugins folder. Restart Studio after installation if necessary. Run `python tools/verify.py`, open `build/Slugshot.rbxlx`, then run `rojo serve default.project.json`. Connect the plugin to `127.0.0.1:34872` using its notification or panel. Review initial changes before accepting them; use a disposable foundation place.
 
-Inactive reviewed alternatives are in [Claude JSON](../tools/integrations/claude.mcp.example.json) and [Codex TOML](../tools/integrations/codex.config.example.toml). After approval, merge the Claude entry into a project `.mcp.json` or the Codex table into `.codex/config.toml`, preserving existing entries. These active local files are ignored. Windows uses `cmd.exe /c %LOCALAPPDATA%\Roblox\mcp.bat`; the batch file already exists on this machine and resolves to the installed StudioMCP binary. No global configuration was edited.
+Filesystem source is authoritative. To verify sync, append a unique temporary comment to the shared source, read the actual Studio ModuleScript through MCP, restore the original file and wait for another read to match exactly. This roundtrip passed. Keep native Script Sync off for the same tree. MCP edits to mapped scripts are not automatically saved to Git.
 
-See [Codex MCP configuration](https://developers.openai.com/codex/mcp/) and [Claude MCP](https://code.claude.com/docs/en/mcp). Codex project configuration also requires trusting the project. Restart the client after changes if needed.
+## Built-in Studio MCP
 
-Verify the green connected-client indicator in Studio. Call the exposed read-only Studio-list tool (currently documented as `list_roblox_studios`), select the intended instance ID, and inspect the tree or read the probe script. Tool names can vary by installed version: inspect the actual exposed schema. Record instance/place, client version and read result. A configuration file or existing executable is not proof of a successful MCP connection. Do not execute generated Luau, import models or publish as a connectivity test.
+Use the [official built-in server](https://create.roblox.com/docs/studio/mcp), not the older standalone Agent Plugin. In Studio: Assistant > ... > Manage MCP Servers > Enable Studio as MCP server. It was already enabled and was verified live. The existing `%LOCALAPPDATA%\Roblox\mcp.bat` launcher updated its version path with Studio.
 
-## GitHub
+Both clients use `cmd.exe /c %LOCALAPPDATA%\Roblox\mcp.bat`. The [Claude JSON](../tools/integrations/claude.mcp.example.json) and [Codex TOML](../tools/integrations/codex.config.example.toml) remain portable references. Activation is approved and complete on this machine:
 
-Prefer the existing GitHub connector or `gh` when authenticated rather than installing another MCP server. The owner approved public publication on 2026-10-28. The existing authenticated GitHub CLI created https://github.com/jarems421/slugshot and configured `origin`. No new account connection or MCP installation was needed. Inspect hosted CI after each push. Do not publish private research by default. The official [GitHub MCP server](https://github.com/github/github-mcp-server) is an optional alternative, not a current dependency.
+- Claude Code: `claude mcp add --scope local Roblox_Studio -- cmd.exe /c '%LOCALAPPDATA%\Roblox\mcp.bat'` was run in the repository. The private per-project entry lives in `~/.claude.json`. Native `claude mcp get Roblox_Studio` checks report Connected. A duplicate project MCP entry was removed; unrelated entries were preserved.
+- Codex: the table was added to ignored project `.codex/config.toml`; only this repository was added as trusted in the existing user config. `codex mcp get` confirms configuration. Its native app-server loaded the project context, discovered tools and made live calls. No model turn or additional coding agent was started.
 
-## Blender
+See [official OpenAI MCP configuration](https://developers.openai.com/codex/mcp/) and [Claude MCP](https://code.claude.com/docs/en/mcp). An existing IDE chat may need a new session/reload to expose new tools; native connectivity is verified.
 
-Native Blender editing/export or headless CLI may be enough. [MCP for Blender](https://github.com/ahujasid/mcp-for-blender), formerly blender-mcp, is third-party and MIT-licensed, not an official Blender Foundation server. It exposes code execution and can integrate asset services. No addon, Python dependency, cloud service or MCP configuration is installed. Before any future approval request, review a specific pinned version, transport, telemetry, optional services, license and a rollback/uninstall plan. Avoid piping remote installers directly into PowerShell.
+Use `list_roblox_studios` and explicitly select the intended instance ID before further calls. Multiple test windows have different IDs. Keep a verification connection alive: a newly started proxy can briefly list no instances while Studio reconnects. Require a live tool call, not merely cached inventory, as evidence.
 
-## Approval queue
+## Runtime and rollback
 
-The user's pasted request explicitly says: "Request approval before account connections, external installations or other consequential changes." This is why external setup remains pending. Prepared files are reviewable locally; activation is a separate step.
+The test place passed its contract assertion and both startup probes. StudioTestService launched a separate server and two clients. The server saw two players; each client logged once and passed shared-module/server-source isolation assertions. EndTest returned success and the parent returned to Edit mode. See [testing](testing.md) and [verification](verification.md).
 
-1. Approve a matching Rojo Studio plugin installation if missing and run Studio checks.
-2. Approve which Studio MCP clients may connect; activate only those.
-3. Completed approval: public `jarems421/slugshot`; inspect hosted CI after publication.
+To roll back only these integrations: `rojo plugin uninstall`, `claude mcp remove Roblox_Studio -s local`, and remove the named server table from the project Codex config. Studio's toggle controls its MCP server. Preserve other servers and trust entries. Pre-edit backups were retained in ignored `build/integration-backups/` where applicable.
 
-Blender and gameplay packages are deferred until needed; they are not prerequisites for this foundation.
+GitHub publication and these integrations are approved. Blender, extra plugins, gameplay dependencies, asset uploads and publishing a Roblox experience remain outside scope. Repeating the authorized foundation checks does not need fresh approval.
