@@ -22,7 +22,7 @@ jobs:
           echo "$HOME/.rokit/bin" >> "$GITHUB_PATH"
       - name: Install pinned project tools on temporary runner
         run: rokit install --no-trust-check
-      - run: python tools/verify.py
+      - run: python tools/verify_movement.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: foundation-places

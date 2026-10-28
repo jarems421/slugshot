@@ -10,6 +10,8 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Integrations and approval-dependent setup](integrations.md)
 - [Technical research and specialist tooling](research/tooling.md)
 - [Skill evaluation](research/skills.md)
+- [Movement lab and playtest plan](movement.md)
+- [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Asset register and conventions](assets.md)
 - [Creature proposal template](templates/creature.md)
 - [ADR template](templates/adr.md) and [foundation ADR](decisions/0001-foundation.md)

@@ -5,7 +5,7 @@ description: Review authorized Blender-to-Roblox assets, rigs, animation, VFX or
 
 # Asset and animation review
 
-Read `docs/assets.md` and the relevant approved task. This skill supports future authorized asset work; it does not authorize building creatures, animations or environments during the foundation milestone.
+Read `docs/assets.md` and the current approved task. This procedure does not itself authorize new asset work. The foundation stays asset-free; the authorized movement sandbox has its own private provenance and original procedural presentation.
 
 Before touching assets, record ownership/license evidence and preserve editable source. Check current Roblox import constraints and the installed Blender version instead of copying generic engine limits. Do not copy franchise characters or assume a code repository license covers its example art.
 

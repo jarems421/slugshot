@@ -18,6 +18,15 @@
 - [x] Verify the first hosted CI run: https://github.com/jarems421/slugshot/actions/runs/40719697932 (passed).
 - [ ] Decide whether Blender/its optional integrations are needed; no installation requested yet.
 
-## Considering future work
+## Movement experiment
 
-A later user-approved design milestone may compare movement, combat, creature presentation or world ideas. This is not a backlog of committed gameplay requirements. No feature implementation is scheduled by this document.
+- [x] Review supplied controllers and additional alternatives against actual source/licences.
+- [x] Privately acquire/audit free movement and combat starter clips; preview relevant candidates on R15.
+- [x] Build isolated movement lab with comparison profiles and original procedural presentation.
+- [x] Test control/aim separation, walls, respawn, native keyboard input, peers and one network-emulation condition.
+- [x] Keep foundation builds intact and restricted data outside public mappings.
+- [x] Add movement procedure skill, provenance and measured verification notes.
+- [ ] Human playtest: compare profiles, stride/landing quality, camera comfort and usefulness of evade/flourish.
+- [ ] Decide what to retain, change or remove before extending mechanics or selecting production clips.
+
+Combat, creatures, progression and permanent movement/world design remain future choices, not tasks automatically approved by this prototype.

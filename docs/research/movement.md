@@ -1,0 +1,38 @@
+# Movement research and shortlist
+
+Reviewed 2026-10-28 for an explicitly authorized experiment. Rankings are practical choices for this sandbox, not final game design. Repository snapshots/implementation were inspected without executing downloaded installers or bundled gameplay scripts. No third-party controller code was copied into the prototype.
+
+## Controller ranking
+
+| Rank | Candidate | Findings and decision |
+| --- | --- | --- |
+| 1 | Native Humanoid plus a small original layer | Selected experimentally: existing input, collisions, jumping and character ownership work locally; no competing framework. Profiles, evasion and visual presentation are isolated. Request validation is useful, but this is not competitive anti-cheat. |
+| 2 | [Official Character Controller Library](https://create.roblox.com/docs/characters/character-controller-library) | Strong future comparison: modular abilities, controller configuration and predicted/server simulation callbacks. Official setup currently requires the AvatarAbilities beta/Avatar Settings opt-in. This Studio can instantiate ControllerManager, GroundController and AirController; its tested Workspace AuthorityMode lookup was unavailable and the AvatarAbilities alias probe did not complete. A ready-to-use CCL integration was not established. No beta/security settings were changed. Do not infer capability from the documentation alone. |
+| 3 | [Place1](https://github.com/alexkkork/place1-movement-system) | MIT; real implementation and a release, last push 2026-08-31. Inspected controller source, AssetFactory, config/bootstrap, architecture and notices at `87da75e2f2528291ebf65c4cbc52d1ce83c2f527`. It forces first person, changes local gravity, adds stamina and aggressive slide/bhop values. Useful raycast/queue/cleanup reference, but adopting it wholesale would import too many assumptions. No package installed. |
+| 4 | [Precision Framework](https://github.com/lukas-mikalainis/roblox-precision-framework) | MIT, early prototype, last push 2026-08-13; source reviewed at `332fc64b8bdb6d52bff2ea1a316cf03fa1e2546d`. Real server-side movement code, vector normalization, cooldowns and state messages; also tightly bundles boost/wallrun/weapon behavior. Not a demonstrated production networking/security solution. Reference only. |
+| 5 | [Nevermore](https://github.com/Quenty/NevermoreEngine), [EgoMoose wallstick](https://github.com/EgoMoose/rbx-wallstick) | Additional discovery beyond the supplied list. MIT; recent repository activity. Nevermore offers reusable camera/character packages but its broad dependency surface is unnecessary here; only metadata/README were reviewed, not the entire codebase. Wallstick targets surface/gravity mechanics, not this experiment's immediate needs. Neither installed. |
+| 6 | [Chickynoid](https://github.com/easy-games/chickynoid) | MIT; source inventory/README reviewed at `8c3b643526f2cd4f3b682a148f654071d530c004`; last push 2024-05-27. Prediction/rollback reference with an invasive custom collision/character stack. Not warranted for a modest movement study. |
+| Reject | [Open-Source Movement Base](https://github.com/cristophvolt-netizen/-Open-Source-Roblox-Movement-Base) | At `18b7414a5823020ee2343d4ee0d0bad8c57242fc`, the tree has only README, LICENSE and .gitignore, with no releases. Its modular/dash/slide claims are not usable implementation evidence. |
+
+GitHub push dates indicate activity, not support quality. No feature/security claim was accepted solely from a README. Raw review snapshots remain in ignored `build/movement-research/`.
+
+## Animation and editor ranking
+
+| Candidate | Provenance, acquisition and assessment |
+| --- | --- |
+| Original procedural R15 study | Integrated in public-safe sandbox source: run stride/arm swing, airborne pose, compact evade and optional aerial flourish. Captured actual running poses were inspected and joint-axis/blending issues corrected. Supports Motor6D and this Studio's AnimationConstraint rigs. It remains a placeholder, not polished animation production. |
+| [Cinderlore Movement & Dash Sampler](https://cinderlore.com/products/r15-movement-dash-sampler) | Downloaded free direct from the official site, version 1.0.1. Offline conversion and live data-only preview found six KeyframeSequences and no scripts. All six played on an actual R15 rig and their captured poses were inspected. Dashes have pronounced full-body lean; vault/wall jump need matched environmental contact and root motion to judge fit. Retiming, proportion and blend review still needed. Kept private; not bundled into the public sandbox. |
+| [Cinderlore Combat Starter Motions](https://cinderlore.com/products/r15-combat-starter-motions) | Downloaded privately; seven sequences, no scripts. GuardReaction played and was visually inspected on R15; useful future reaction candidate, not a movement requirement. Punches were not implemented or reviewed as combat features. |
+| [Official Animation Editor](https://create.roblox.com/docs/animation/editor) | First choice for later authored clip editing. Already part of Studio; no additional installation. Native Animator/AnimationClipProvider were sufficient for this task's private playback trials. |
+| [Apex Animator](https://devforum.roblox.com/t/plugin-free-apex-animator-dynamic-rigparenting-face-animation-ikfk-many-more/4918289) | Author advertises free native editing plus an optional runtime engine. Forum/source-distribution claims and linked store identity inspected. Full plugin implementation/licence audit was not established. Its extra runtime/script-injection workflow is unnecessary for the tested prototype. Not installed; native editing is sufficient at present. |
+| [Free R15 Walk](https://devforum.roblox.com/t/free-r15-walk-animation/3545236) | Additional discovery; author permits reuse, but describes slower-than-16 movement and a sample-place acquisition workflow. Not a strong fit for athletic running. Manual extraction/owner publishing would still be needed. |
+| [Creator Store free run model](https://create.roblox.com/store/asset/12801015181/R15-Run-animation-free) | Store metadata identifies a Model, not a directly reusable animation; current API says not for sale. No independently established redistribution permission/source audit. Not imported. |
+| [Older backflip model](https://create.roblox.com/store/asset/253016693/Backflip-Animation-When-Jumping) | Verified Model type and current not-for-sale status. No verified reusable clip licence or reviewed bundled scripts. Not downloaded/executed; no marketplace access restrictions bypassed. |
+
+No paid tool, new external account, asset upload or experience publication was used. Blender/export addons were unnecessary for the first playable study. Downloading and playback were reported separately from visual assessment and subjective feel.
+
+## Acrobatic aiming implications
+
+The prototype rotates visual joints, not the HumanoidRootPart or camera. A harmless camera-space marker remains available during the flourish; measured camera roll stayed zero and aim direction stayed unchanged in the tested case. The upper-body aim pose is a separate presentation layer, but this does not prove a future weapon muzzle stays aligned throughout a full flip. A weapon/grip solution, joint masks, authoring with native animation priorities and real combat hit validation remain future work. No final camera, controls or movement set was chosen.
+
+See [sandbox controls and experiments](../movement.md), [asset provenance](../movement-assets.md) and [verification](../movement-verification.md).

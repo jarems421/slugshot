@@ -5,7 +5,7 @@ description: Plan or run authorized Roblox multi-client, networking or physics e
 
 # Multiplayer and physics validation
 
-Read `docs/vision.md` to identify which behavior has actually been approved. The current foundation permits startup probes only. Do not implement a controller, remotes, combat or an authority framework merely to exercise this procedure.
+Read `docs/vision.md` and the latest task to identify approved behavior. The foundation place stays probe-only; authorized movement work belongs to its isolated project. Do not add mechanics, remotes, combat or an authority framework merely to exercise this procedure.
 
 For foundation validation, use `docs/testing.md` with one server and two clients. Inspect each Output separately and distinguish replicated shared code from server-only code. A server-side test requiring a module does not prove the client loaded it.
 

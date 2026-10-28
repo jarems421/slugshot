@@ -1,14 +1,15 @@
 # Specialist skill evaluation
 
-Reviewed 2026-10-28. Skill files are instructions, not guarantees of correct code or permission to implement gameplay. No third-party skill installer was run and no remote skill bundle was installed. The three local skills are original, narrowly scoped procedures derived from the user request and official tool documentation; they contain no copied third-party code.
+Reviewed 2026-10-28. Skill files are procedures, not permission to expand gameplay scope. No third-party skill installer or remote bundle was installed. The four local skills are original project procedures, with no copied third-party code; actual task authorization takes precedence over historical foundation-only guidance.
 
 ## Installed project procedures
 
 | Skill | Coverage | Review and limits |
 | --- | --- | --- |
 | `roblox-foundation` | Rojo packaging, source ownership, MCP verification | Checked against official Rojo/Studio/Codex/Claude docs; local checks exercised |
-| `roblox-multiplayer-validation` | Multi-client, networking and physics experiment protocol | Official Studio test/network modes; no controller or protocol design prescribed; runtime evaluation pending |
-| `roblox-asset-pipeline` | Blender, rigs, animation, VFX, environments and provenance | Review/roundtrip procedure only; no asset creation or Blender execution performed |
+| `roblox-multiplayer-validation` | Multi-client, networking and physics experiment protocol | Exercised in foundation and movement tests; one impaired-network trial completed with settings restored |
+| `roblox-asset-pipeline` | Blender, rigs, animation, VFX, environments and provenance | Private movement clips audited and previewed; no Blender execution |
+| `roblox-movement-experiments` | Controller/asset review, isolated iteration, joint compatibility, physical/visual separation and measured comparison | Added from the actual movement workflow; metadata/parity checks pass, future agent behavior not independently evaluated |
 
 Canonical files are in `.agents/skills/`; identical Claude copies in `.claude/skills/`. Codex's current documented path is `.agents/skills`, not a guessed `.codex/skills`. New-session automatic discovery and behavioral effectiveness are not established by filesystem validation alone.
 

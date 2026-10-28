@@ -1,0 +1,41 @@
+{
+  "name": "SlugshotMovementLab",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34873,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "MovementExperiment": {
+        "$path": "experiments/movement/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      },
+      "MovementSandbox": {
+        "$path": "experiments/movement/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        },
+        "MovementSandbox": {
+          "$path": "experiments/movement/client"
+        }
+      },
+      "$properties": {
+        "EnableMouseLockOption": false
+      }
+    }
+  }
+}

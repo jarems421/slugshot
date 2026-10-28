@@ -21,7 +21,7 @@ VS Code recommendations and tasks are checked in. The Luau extension can provide
 ## Change loop
 
 1. Read current status, inspect Git changes and find the approved task.
-2. Update source and the smallest useful test/check. Do not add gameplay under this foundation milestone.
+2. Update source and the smallest useful test/check within the approved task. Keep the foundation probe-only; authorized movement work belongs in its dedicated experiment project.
 3. Run `python tools/verify.py`. For runtime changes, also use [the Studio checklist](testing.md).
 4. Update relevant notes, status and dated memory with actual evidence and unverified items.
 5. Review `git diff --check`, then stage and commit intentional files. Keep builds, secrets and personal configuration out of Git.

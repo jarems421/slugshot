@@ -1,6 +1,6 @@
 # Asset management and register
 
-Status: Confirmed procedure. No assets imported, generated, uploaded or licensed for this project yet.
+Status: Confirmed procedure. The movement experiment has original procedural poses and privately acquired animation candidates; see [movement provenance](movement-assets.md). No third-party animation sources or reusable IDs are included in public builds, and no animation/experience was published.
 
 Use `assets/source/<category>/<asset-name>/` for editable originals and `assets/exports/<category>/<asset-name>/` for reviewed exports when assets are authorized. Names use lowercase kebab-case and meaningful versions. Keep export settings beside source. Do not infer creature names, rig shape or art style from the folder scheme.
 

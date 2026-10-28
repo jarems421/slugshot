@@ -1,0 +1,207 @@
+{
+  "date": "2026-10-28",
+  "studioVersion": "0.745.0.7451137",
+  "branch": "experiment/movement-sandbox",
+  "foundationBase": "072807dafffc334ea0f74e466f7928d244b427f6",
+  "finalSourceHashes": {
+    "experiments/movement/client/init.client.luau": "999f9971f63f7fc854117613a3df02790603b6763da50ba73f461de6492d88a5",
+    "experiments/movement/client/Presentation.luau": "b99b68f9e389d17de96a395550c5a688d34cd9562934ce34fa27ec856a413c8a",
+    "experiments/movement/server/Arena.luau": "7e375a4a45f1735941121cce5aa291af30d770473139559d123eb66e0ecf96dc",
+    "experiments/movement/server/init.server.luau": "f193b8402711449ff8878a835bd5e34cb6cd151bf4185663209fb7d7d2a82c2d",
+    "experiments/movement/shared/Config.luau": "a5a9407299728bf0883cd36716bc7043fbb892895e7dbe9e023a0c92dea1213a",
+    "experiments/movement/shared/MotionMath.luau": "2f4f264c661cf34c4f84c28e4665e84661f226ee968b33efd0f1e7d424e4a0ed",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04"
+  },
+  "profileComparison": {
+    "1": {
+      "profile": "Baseline",
+      "distance": 13.953057289123535,
+      "speed": 16
+    },
+    "3": {
+      "profile": "Precise",
+      "distance": 17.486648559570312,
+      "speed": 20.999996185302734
+    },
+    "2": {
+      "profile": "Athletic",
+      "distance": 19.07632064819336,
+      "speed": 23.999998092651367
+    }
+  },
+  "singleClientActionSample": {
+    "aimDot": 1.000000238418579,
+    "cameraRoll": 0,
+    "rootUp": 1,
+    "airState": "Freefall",
+    "evadeDistance": 6.897214889526367,
+    "flourish": true,
+    "visualPitch": -1.760819406099729
+  },
+  "wallAndBraking": {
+    "reversalAfter80ms": -13.125161170959473,
+    "health": 100,
+    "position": "28.161447525024414, 3.1924219131469727, -18.2951717376709",
+    "restSpeed": 6.696390300930943e-06,
+    "corrections": 0,
+    "wallEvadeDistance": 1.7588883638381958,
+    "cruise": 23.99989128112793
+  },
+  "respawn": {
+    "profile": "Athletic",
+    "respawned": true,
+    "ready": true,
+    "joints": 15
+  },
+  "twoClient": {
+    "server": {
+      "players": 2,
+      "arena": true
+    },
+    "player1Move": {
+      "rootUp": 1,
+      "speed": 23.94171714782715
+    },
+    "player2ObservesPlayer1": {
+      "joints": 15,
+      "renderedWeight": 1,
+      "maxHipPitch": 0.6731671094894409
+    },
+    "player2Move": {
+      "speed": 23.98118019104004
+    },
+    "peerFlourish": {
+      "maxVisualPitch": 6.203129258932737,
+      "minimumRootUp": 1,
+      "action": "Flourish"
+    },
+    "aimCompatibility": {
+      "cameraRoll": 0,
+      "markers": 1,
+      "lastReject": "none"
+    },
+    "networkSetup": {
+      "before": {
+        "InboundNetworkMinDelayMs": 0,
+        "OutboundNetworkMinDelayMs": 0,
+        "OutboundNetworkJitterMs": 0,
+        "InboundNetworkJitterMs": 0
+      },
+      "applied": {
+        "outbound": 60,
+        "inbound": 60,
+        "jitter": 10
+      }
+    },
+    "networkMotion": {
+      "evadeDistance": 6.775758743286133,
+      "rootUp": 1,
+      "lastReject": "none",
+      "corrections": 0
+    },
+    "networkRestored": {
+      "restored": true,
+      "inbound": 0,
+      "jitter": 0,
+      "outbound": 0
+    },
+    "invalidRequests": {
+      "health": 100,
+      "rejected": 32
+    },
+    "respawn": {
+      "reattached": true,
+      "mouseReset": true,
+      "hudCount": 1,
+      "joints": 15
+    },
+    "observerAfterRespawn": {
+      "players": 2,
+      "rigReady": true
+    },
+    "serverConsole": {
+      "projectError": false,
+      "knownAvatarWarning": true
+    },
+    "client1Console": {
+      "projectError": false,
+      "knownAvatarWarning": true
+    },
+    "client2Console": {
+      "projectError": false,
+      "knownAvatarWarning": true
+    },
+    "passed": true,
+    "sessionsEnded": true
+  },
+  "nativeKeyboardInput": {
+    "initial": {
+      "ready": true,
+      "joints": 15
+    },
+    "nativeInputTool": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Success"
+        }
+      ],
+      "isError": false
+    },
+    "nativeInput": {
+      "profile": "Athletic",
+      "visualPitch": -3.643556762067268,
+      "distance": 19.246726989746094,
+      "rootUp": 1,
+      "action": "Flourish"
+    },
+    "passed": true
+  },
+  "privateClipPlayback": [
+    {
+      "clip": "DashForward",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.30000001192092896
+    },
+    {
+      "clip": "DashBackward",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.3333333432674408
+    },
+    {
+      "clip": "DashLeft",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.3499999940395355
+    },
+    {
+      "clip": "DashRight",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.3499999940395355
+    },
+    {
+      "clip": "VaultTwoHanded",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.7833333611488342
+    },
+    {
+      "clip": "WallJump",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.3333333432674408
+    },
+    {
+      "clip": "GuardReaction",
+      "rig": "R15",
+      "playing": true,
+      "duration": 0.4166666567325592
+    }
+  ],
+  "visualReview": "Captured original run samples and seven selected private preview clips inspected; no full motion-quality certification.",
+  "frameRateLimit": "30/60/144 numerical integration checks passed; actual rendered FPS extremes not tested.",
+  "scope": "Original movement prototype only; no combat, asset publication or experience publication."
+}
