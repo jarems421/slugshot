@@ -60,8 +60,7 @@ local function spawnCharacter(player: Player)
 	root:SetNetworkOwner(player)
 	state.spawnedAt = workspace:GetServerTimeNow()
 	state.position = root.Position
-	state.lastEvade = -math.huge
-	state.lastFlourish = -math.huge
+	state.lastRoll = -math.huge
 	state.airUsed = false
 	state.violations = 0
 	state.spawning = false
@@ -159,39 +158,73 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 		player:SetAttribute("MovementProfile", state.profile)
 		character:SetAttribute("MovementProfile", state.profile)
 		humanoid.JumpPower = Config.Profiles[state.profile].JumpPower
-	elseif packet.kind == "Evade" or packet.kind == "Flourish" then
+	elseif packet.kind == "Roll" or packet.kind == "Flip" then
 		local direction = directionOf(packet.direction)
+		local isRoll = packet.kind == "Roll"
+		local variants = if isRoll
+			then Config.Validation.RollVariants
+			else Config.Validation.FlipVariants
+		local limits = Config.Acrobatics.Flip
+		local rate = packet.rate
 		if not direction then
 			reject("direction")
 			return
 		end
+		if typeof(packet.value) ~= "string" or not table.find(variants, packet.value) then
+			reject("variant")
+			return
+		end
+		if
+			typeof(rate) ~= "number"
+			or not Math.finite(rate)
+			or (isRoll and math.abs(rate - Config.Acrobatics.Roll.PlaybackRate) > 1e-3)
+			or (not isRoll and (rate < limits.MinRate - 1e-3 or rate > limits.MaxRate + 1e-3))
+		then
+			reject("rate")
+			return
+		end
+		-- Native character replication can trail the immediately sent action (jump
+		-- start or landing roll). Poll server-observed physics for a bounded window;
+		-- never accept a client grounded flag.
 		local onGround = grounded(character, root, humanoid)
-		if packet.kind == "Flourish" and onGround then
-			-- Native character replication can trail the immediately sent action.
-			-- Recheck server-observed physics; never accept a client grounded flag.
-			task.wait(0.12)
+		local deadline = os.clock() + Config.Validation.StateSettle
+		while onGround ~= isRoll and os.clock() < deadline do
+			task.wait()
 			if player.Character ~= character or humanoid.Health <= 0 then
 				reject("character-changed")
 				return
 			end
 			onGround = grounded(character, root, humanoid)
 		end
-		if packet.kind == "Evade" then
-			if not onGround or now - state.lastEvade < Config.Evade.Cooldown then
-				reject("evade-state")
+		if isRoll then
+			if not onGround or now - state.lastRoll < Config.Acrobatics.Roll.Cooldown * 0.9 then
+				reject("roll-state")
 				return
 			end
-			state.lastEvade = now
+			state.lastRoll = now
 		else
-			if onGround or state.airUsed or now - state.lastFlourish < Config.Flourish.Cooldown then
-				reject("flourish-state")
+			if onGround or state.airUsed then
+				reject("flip-state")
 				return
 			end
-			state.airUsed, state.lastFlourish = true, now
+			state.airUsed = true
+		end
+		-- Reuse the client's start time when plausible so the owner's attributes match
+		-- and its animation does not restart when the server values replicate back.
+		local stamp = packet.time
+		if
+			typeof(stamp) ~= "number"
+			or not Math.finite(stamp)
+			or now - stamp < -0.05
+			or now - stamp > 0.4
+		then
+			stamp = now
 		end
 		character:SetAttribute("MovementAction", packet.kind)
+		character:SetAttribute("MovementVariant", packet.value)
 		character:SetAttribute("MovementDirection", direction)
-		character:SetAttribute("MovementActionTime", now)
+		character:SetAttribute("MovementRate", rate)
+		character:SetAttribute("MovementActionTime", stamp)
 	elseif packet.kind == "Aim" then
 		if
 			typeof(packet.value) ~= "boolean"

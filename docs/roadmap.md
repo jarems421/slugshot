@@ -16,7 +16,7 @@
 - [x] Configure approved Studio MCP for Claude Code and Codex; verify native connections and live reads.
 - [x] Create the approved public GitHub repository: https://github.com/jarems421/slugshot.
 - [x] Verify the first hosted CI run: https://github.com/jarems421/slugshot/actions/runs/40719697932 (passed).
-- [ ] Decide whether Blender/its optional integrations are needed; no installation requested yet.
+- [x] Blender: portable 4.5.14 LTS in ignored `.tools/` for the private Mixamo retargeter; nothing installed system-wide, no addons.
 
 ## Movement experiment
 
@@ -26,7 +26,11 @@
 - [x] Test control/aim separation, walls, respawn, native keyboard input, peers and one network-emulation condition.
 - [x] Keep foundation builds intact and restricted data outside public mappings.
 - [x] Add movement procedure skill, provenance and measured verification notes.
-- [ ] Human playtest: compare profiles, stride/landing quality, camera comfort and usefulness of evade/flourish.
-- [ ] Decide what to retain, change or remove before extending mechanics or selecting production clips.
+- [x] v1 human playtest feedback: evade read as a dash, flourish as a spin, running/jumping lacked expression.
+- [x] v2: original keyframed clips, clip-driven presentation, directional rolls, front/back flips, single context-sensitive control; single/two-client, network, aim and respawn checks.
+- [ ] Owner playtest of v2 against v1 (see [movement guide](movement.md#playtest-priorities)).
+- [ ] Decide which clips to keep, retime or replace with Mixamo/Animation Editor work; decide on the single acrobatics control.
+- [ ] Optional: download Mixamo clips and run `python tools/build_movement_playtest.py --retarget` (pipeline verified on synthetic data only).
+- [ ] Owner review before any merge of the experiment into `main`.
 
 Combat, creatures, progression and permanent movement/world design remain future choices, not tasks automatically approved by this prototype.

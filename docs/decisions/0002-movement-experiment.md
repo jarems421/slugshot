@@ -2,6 +2,7 @@
 
 Date: 2026-10-28
 Status: Accepted for experiment only; reconsider after human playtesting
+Update: procedural presentation superseded by [ADR 0003](0003-clip-presentation.md); controller decision unchanged
 Approval: owner's movement-research/prototype request; later request explicitly authorizes pushing the work.
 
 ## Context and alternatives

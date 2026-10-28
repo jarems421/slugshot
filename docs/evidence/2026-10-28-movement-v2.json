@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-28",
+  "studioVersion": "0.745.0.7451137",
+  "branch": "experiment/movement-sandbox",
+  "comparisonBase": "e2b5688 (v1 lab, rebuilt by tools/build_movement_playtest.py)",
+  "clipSource": "OriginalClips.luau only; no private or third-party clips loaded",
+  "sourceSha256": {
+    "experiments/movement/client/Presentation.luau": "734e24f339c6783f4cf7668e1e7708cc81bab55d48f7623efcd2a48fd226b51f",
+    "experiments/movement/client/init.client.luau": "1ba6d21f06e4a78da437924de7ce094e50ad9363b929661b06ac6497c778075c",
+    "experiments/movement/server/Arena.luau": "7e375a4a45f1735941121cce5aa291af30d770473139559d123eb66e0ecf96dc",
+    "experiments/movement/server/init.server.luau": "d6434f1502e964a5f452e786cf16bdf0db47b3f7ad835f077e703827b35bb027",
+    "experiments/movement/shared/Clips.luau": "029b3b984c676b8f75f78fa5355cfaa67f4f93591b5ee1deabd40d4434046a12",
+    "experiments/movement/shared/Config.luau": "359fdafa2a5d75a17393d595b65c5c56618ac47611703d09a689c7f0c36430ed",
+    "experiments/movement/shared/MotionMath.luau": "cb145fcbeeb4ef4f9a98fabc66bacfd4736d5970ac852e4476d432d0a97ac597",
+    "experiments/movement/shared/OriginalClips.luau": "d69607a207b538dc008a376b7bb7360bfb467a020ab641890190a233e7b11d8c",
+    "experiments/movement/tests/Clips.spec.server.luau": "fb5281bc0f8144b5fe66ffcf760d14bad1efaf79d491d676d50e8ca29c45d35e",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04"
+  },
+  "groundContactMeasured": "Held poses: lowest posed part within 0.0001 studs of the floor for idle, run contact, land and roll frames; run flight 0.12 studs (authored 0.06 hip units).",
+  "singleClient": {
+    "testsPass": {
+      "math": true,
+      "clips": true
+    },
+    "rollForward": {
+      "accepted": true,
+      "variant": "RollForward",
+      "rendered": "Roll",
+      "speedMid": 26.81436538696289,
+      "distance": 12.142515182495117,
+      "lastReject": "none",
+      "rootUp": 1
+    },
+    "rollRight": {
+      "variant": "RollRight",
+      "rendered": "Roll",
+      "lastReject": "none"
+    },
+    "rollBack": {
+      "variant": "RollBack",
+      "rendered": "Roll",
+      "lastReject": "none"
+    },
+    "frontFlip": {
+      "accepted": true,
+      "variant": "FlipFront",
+      "rendered": "Flip",
+      "state": "Freefall",
+      "rootUp": 1,
+      "cameraUp": 0.9659258127212524,
+      "landedState": "Running",
+      "lastReject": "none"
+    },
+    "backFlip": {
+      "variant": "FlipBack",
+      "rendered": "Flip",
+      "rootUp": 1,
+      "lastReject": "none"
+    },
+    "respawn": {
+      "ready": true,
+      "acro": "",
+      "huds": 1,
+      "joints": 15
+    },
+    "server": {
+      "rejected": 0,
+      "accepted": 8
+    },
+    "consoleErrors": [],
+    "landingRoll": "buffered roll started on touchdown (variant RollForward)"
+  },
+  "aimDuringFlip": {
+    "cameraRoll": 0,
+    "lastReject": "none",
+    "flip": true,
+    "maxBodyRotation": 3.1083343029022217,
+    "variant": "FlipFront",
+    "markers": 1,
+    "mouse": "Enum.MouseBehavior.Default",
+    "aimDirectionDot": 0.9999999403953552,
+    "minRootUp": 1
+  },
+  "twoClient": {
+    "server": {
+      "players": 2
+    },
+    "player1Run": {
+      "speed": 23.981769561767578,
+      "mode": "Clips"
+    },
+    "peerSeesRun": {
+      "engineVelocityOnObserver": 24.000001907348633,
+      "maxHipRadians": 1.0488510131835938,
+      "hipSamples": [
+        0.17,
+        0.18,
+        0.18,
+        0.18,
+        0.18,
+        0.19,
+        0.19,
+        0.19,
+        0.19,
+        0.2,
+        0.2,
+        1.04,
+        0.77,
+        0.29,
+        -0.16,
+        -0.37
+      ],
+      "mode": "Clips"
+    },
+    "peerSeesRoll": {
+      "minRootUp": 1,
+      "rendered": "Roll",
+      "lowestUpperTorsoY": 1.3058419227600098,
+      "maxRootJointRadians": 3.1206417083740234,
+      "variant": "RollForward"
+    },
+    "player1FlipScheduled": true,
+    "peerSeesFlip": {
+      "minRootUp": 1,
+      "maxRootJointRadians": 3.0714592933654785,
+      "variant": "FlipBack",
+      "rendered": "Flip"
+    },
+    "player1SeesPeerBackRoll": {
+      "variant": "RollBack"
+    },
+    "networkSetup": {
+      "before": {
+        "InboundNetworkJitterMs": 0,
+        "InboundNetworkMinDelayMs": 0,
+        "OutboundNetworkJitterMs": 0,
+        "OutboundNetworkMinDelayMs": 0
+      },
+      "applied": "60ms each way + 10ms jitter"
+    },
+    "networkRollAndLandingRoll": {
+      "rollDistance": 12.623222351074219,
+      "corrections": 0,
+      "lastReject": "none",
+      "variant": "RollLeft"
+    },
+    "networkRestored": {
+      "outbound": 0,
+      "inbound": 0,
+      "jitter": 0
+    },
+    "invalidRequests": {
+      "rejected": 4,
+      "health": 100,
+      "action": "RollBack"
+    },
+    "respawn": {
+      "rendered": "Roll",
+      "hud": 1,
+      "mode": "Clips",
+      "joints": 15
+    },
+    "observerAfterRespawn": {
+      "players": 2,
+      "mode": "Clips",
+      "joints": 15
+    },
+    "passed": true,
+    "ended": true
+  },
+  "consoleErrorLines": {
+    "serverConsole": [],
+    "client1Console": [],
+    "client2Console": []
+  }
+}

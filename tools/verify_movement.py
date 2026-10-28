@@ -26,8 +26,13 @@ def main():
         scripts = [i for i in tree.iter("Item") if i.attrib.get("class") in {"Script", "LocalScript", "ModuleScript"}]
         names = [i.findtext("Properties/string[@name='Name']") for i in scripts]
         assert "MovementSandbox" in names and "Presentation" in names and "MotionMath" in names
-        assert ("Math.spec" in names) == (name == "movement.test.project.json"), "Test scripts leaked into playable sandbox"
+        assert "Clips" in names and "OriginalClips" in names
+        assert "MovementPrivateClips" not in names, "Private clip data must stay out of public builds"
+        for spec in ("Math.spec", "Clips.spec"):
+            assert (spec in names) == (name == "movement.test.project.json"), "Test scripts leaked into playable sandbox"
         assert not any(i.attrib.get("class") in {"KeyframeSequence", "Animation"} for i in tree.iter("Item")), "Public build must remain independent of restricted clips and IDs"
+    private = json.loads((ROOT / "movement.private.project.json").read_text(encoding="utf-8"))
+    assert json.dumps(private).count("private-assets") == 1, "Only the generated clip module may be mapped privately"
     print("PASS: foundation unchanged; movement builds, Luau checks and private-asset/test isolation")
 
 

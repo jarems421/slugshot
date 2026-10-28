@@ -1,25 +1,27 @@
 # Current status
 
 Updated: 2026-10-28
-Milestone: isolated movement research and playable prototype
-Branch: `experiment/movement-sandbox`
+Milestone: movement refinement (v2) on the isolated movement prototype
+Branch: `experiment/movement-sandbox` (not merged; owner review of gameplay required first)
 
 ## Confirmed authorization
 
-The owner authorized movement/controller research, relevant verified free assets/tools, an isolated playable sandbox, runtime/multiplayer testing and later explicitly requested pushing the work. No paid purchase, new account connection, security/elevation change or Roblox publication is authorized. Restricted animation sources and reusable IDs must stay private.
+The owner authorized movement/controller research and refinement, relevant verified free assets/tools, an isolated playable sandbox, runtime/multiplayer testing and pushing this experimental branch. For animation, the owner first chose Mixamo + Blender, then chose original clips for now with Mixamo as a later option. No paid purchase, new account connection, security/elevation change, animation upload or Roblox publication is authorized. Restricted animation sources and reusable IDs stay private.
 
 ## Implemented and verified
 
-The foundation project is preserved. A separate movement project adds a functional arena, generated R15 avatar, three comparison profiles, smoothed native input, a compact directional evade, an optional visual airborne flourish, original procedural presentation, shoulder aim pose and harmless camera-directed marker. These are experimental choices.
+The foundation project is preserved. v2 keeps v1's native Humanoid controller, profiles, server validation and attribute replication, and replaces the presentation and actions:
 
-Local foundation/movement checks pass. Real Studio checks covered profile speeds, run/stop/reversal, wall blocking, evasion, jump/landing, aim separation, native keyboard input and respawn. Two clients moved and observed each other's presentation. One native delay/jitter trial completed with settings restored; 32 invalid/rate-limited requests were rejected. See [results](movement-verification.md).
+- Original keyframed clips: run, sprint, back-pedal, strafes, idle, jump, fall, land, four directional rolls, front flip and backflip.
+- Clip player with directional speed-matched locomotion, physics-driven air poses, landing absorption, crossfades, lean and rig-accurate ground contact.
+- Single context-sensitive Q/B control: roll on the ground, flip in the air, buffered landing roll. Rolls move by their own root motion.
+- v1 remains playable as `build/SlugshotMovementLab-v1.rbxlx` via `tools/build_movement_playtest.py`.
+- Private Mixamo retarget pipeline (portable Blender, verified on synthetic data only) and ignored private build path.
 
-Two free Cinderlore packs were downloaded privately and audited with zero scripts. All six movement clips and GuardReaction played on R15; captured samples were inspected. They are not bundled into public source/builds. No additional controller, editor plugin, Blender addon or gameplay dependency was installed.
+Implemented/verified with evidence in [results](movement-verification.md#v2-refinement-2026-10-28): local checks; Studio clip tests; held-pose and live visual review; ground contact; single-client rolls/flips/landing roll/respawn; aim stability through a flip; two-client replication of run/roll/flip/directional variants; one 60 ms + jitter trial with settings restored to 0; invalid-request rejection; two-client respawn.
 
 ## Experimental / unresolved
 
-Final movement set, perspective, controls, speeds, cooldowns and animation style remain open. Procedural poses are placeholders. Actual rendered FPS extremes, real device controls, broad network/security testing, production clip publishing and weapon/muzzle alignment are not established. The current CCL opt-in path was not fully validated.
+Whether v2 feels and looks substantially better is the owner's playtest call. Final move set, controls (single acrobatics button or separate), speeds, roll distance, flip lift, animation style and camera remain open. Not established: rendered 30/60/144 FPS behaviour, foot placement on slopes/steps, devices, packet loss, large player counts, weapon/muzzle alignment, Mixamo quality on real files.
 
-Your subjective playtest is the next gate. Use [the movement lab guide](movement.md) to compare profiles before adding more abilities. No combat, creatures, progression, matchmaking or permanent environment/game-design decisions were implemented.
-
-The original foundation/integration results remain in [verification](verification.md). Native Studio MCP and existing tools were reused.
+Next gate: owner compares v1 and v2 using [the movement guide](movement.md#playtest-priorities). No combat, creatures, progression, matchmaking or permanent environment/game-design decisions were implemented.

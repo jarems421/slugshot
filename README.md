@@ -20,4 +20,4 @@ See [development setup](docs/development.md), [testing](docs/testing.md) and [pr
 
 ## Movement experiment
 
-Run `python tools/verify_movement.py`, then open `build/SlugshotMovementLab.rbxlx` and press Play. Use WASD, Shift, Space, Q (evade), F (aerial flourish), RMB/click (harmless aim marker), P (compare profiles) and R (reset). See [controls and playtest notes](docs/movement.md), [research](docs/research/movement.md) and [results](docs/movement-verification.md). Restricted third-party animation files are excluded from this public repository.
+Run `python tools/verify_movement.py`, then open `build/SlugshotMovementLab.rbxlx` and press Play. Use WASD, Shift (sprint), Space, Q (roll on the ground, flip in the air), RMB/click (harmless aim marker), P (compare profiles) and R (reset). `python tools/build_movement_playtest.py` also builds the previous v1 lab for comparison. See [controls and playtest notes](docs/movement.md), [research](docs/research/movement.md) and [results](docs/movement-verification.md). Restricted third-party animation files are excluded from this public repository.

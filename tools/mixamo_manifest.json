@@ -1,0 +1,18 @@
+{
+  "comment": "Maps privately downloaded Mixamo FBX files (private-assets/mixamo) to runtime clip names. trim is [startSeconds, endSeconds|null].",
+  "clips": {
+    "Idle": { "file": "idle.fbx", "loop": true, "idle": true },
+    "Run": { "file": "run.fbx", "loop": true },
+    "Sprint": { "file": "sprint.fbx", "loop": true },
+    "RunBack": { "file": "run_back.fbx", "loop": true },
+    "StrafeLeft": { "file": "strafe_left.fbx", "loop": true, "mirror": "StrafeRight" },
+    "Jump": { "file": "jump.fbx", "air": true },
+    "Fall": { "file": "fall.fbx", "loop": true, "idle": true },
+    "Land": { "file": "land.fbx" },
+    "RollForward": { "file": "roll_forward.fbx", "rootMotion": true },
+    "RollLeft": { "file": "roll_left.fbx", "rootMotion": true, "mirror": "RollRight" },
+    "RollBack": { "file": "roll_back.fbx", "rootMotion": true },
+    "FlipFront": { "file": "flip_front.fbx", "air": true },
+    "FlipBack": { "file": "flip_back.fbx", "air": true }
+  }
+}

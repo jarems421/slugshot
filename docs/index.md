@@ -14,7 +14,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Asset register and conventions](assets.md)
 - [Creature proposal template](templates/creature.md)
-- [ADR template](templates/adr.md) and [foundation ADR](decisions/0001-foundation.md)
+- [ADR template](templates/adr.md), [foundation ADR](decisions/0001-foundation.md), [movement ADR](decisions/0002-movement-experiment.md) and [clip presentation ADR](decisions/0003-clip-presentation.md)
 - [Roadmap](roadmap.md)
 - [Open questions](questions.md)
 - [Current status](status.md)

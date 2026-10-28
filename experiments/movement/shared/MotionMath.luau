@@ -14,9 +14,4 @@ function MotionMath.finite(value: number): boolean
 	return value == value and math.abs(value) < math.huge
 end
 
-function MotionMath.evadeSpeed(progress: number, startSpeed: number, endSpeed: number): number
-	local t = math.clamp(progress, 0, 1)
-	return startSpeed + (endSpeed - startSpeed) * t
-end
-
 return table.freeze(MotionMath)

@@ -9,9 +9,12 @@ local player = Players.LocalPlayer
 local shared = ReplicatedStorage:WaitForChild("MovementExperiment")
 local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
+local Clips = require(shared.Clips)
 local request = shared:WaitForChild("MovementRequest") :: RemoteEvent
 local controls = require(player.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
-require(script.Presentation).start()
+local library, privateClips = Clips.load()
+require(script.Presentation).start(library)
+local Acro = Config.Acrobatics
 
 local character: Model? = nil
 local humanoid: Humanoid? = nil
@@ -19,9 +22,10 @@ local root: BasePart? = nil
 local sprinting, aiming = false, false
 local speed, move = 0, Vector3.zero
 local sequence, pendingAction = 0, 0
-local lastEvade, lastFlourish = -math.huge, -math.huge
+local lastRoll = -math.huge
 local airUsed = false
-local evade: any = nil
+local acro: any = nil
+local bufferedRoll, bufferedDirection = 0, nil :: Vector3?
 local testMove: Vector3? = nil
 local testUntil = 0
 local testJumpUntil = 0
@@ -57,9 +61,13 @@ crosshair.Text, crosshair.TextSize = "+", 24
 crosshair.TextColor3 = Color3.new(1, 1, 1)
 crosshair.Parent = gui
 
-local function send(kind: string, value: any?, direction: Vector3?): number
+local function send(kind: string, value: any?, direction: Vector3?, extra: any?): number
 	sequence += 1
-	request:FireServer({ sequence = sequence, kind = kind, value = value, direction = direction })
+	local packet: any = { sequence = sequence, kind = kind, value = value, direction = direction }
+	if extra then
+		packet.rate, packet.time = extra.rate, extra.time
+	end
+	request:FireServer(packet)
 	return sequence
 end
 
@@ -86,11 +94,11 @@ local function attach(newCharacter: Model)
 			track:Stop(0)
 		end
 	end
-	speed, move, evade, airUsed = 0, Vector3.zero, nil, false
+	speed, move, acro, airUsed, bufferedRoll = 0, Vector3.zero, nil, false, 0
 	sprinting, aiming, testMove = false, false, nil
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-	lastEvade, lastFlourish = -math.huge, -math.huge
+	lastRoll = -math.huge
 	humanoid.UseJumpPower = true
 	humanoid.JumpPower = profile().JumpPower
 	local camera = workspace.CurrentCamera
@@ -119,46 +127,136 @@ local function setAim(value: boolean)
 		else Enum.MouseBehavior.Default
 end
 
-local function action(kind: string, requestedDirection: Vector3?): boolean
+local function flat(vector: Vector3): Vector3?
+	local result = Vector3.new(vector.X, 0, vector.Z)
+	return if result.Magnitude > 0.01 then result.Unit else nil
+end
+
+-- Seconds until the character lands, from the floor distance and vertical speed.
+local function timeToLand(verticalSpeed: number): number
+	if not character or not humanoid or not root then
+		return math.huge
+	end
+	local params = RaycastParams.new()
+	params.FilterDescendantsInstances = { character }
+	local stand = humanoid.HipHeight + root.Size.Y / 2
+	local hit = workspace:Raycast(root.Position, Vector3.new(0, -(stand + 200), 0), params)
+	if not hit then
+		return math.huge
+	end
+	local height = math.max(0, root.Position.Y - hit.Position.Y - stand)
+	local gravity = workspace.Gravity
+	return (verticalSpeed + math.sqrt(verticalSpeed * verticalSpeed + 2 * gravity * height))
+		/ gravity
+end
+
+local function announce(
+	kind: string,
+	variant: string,
+	direction: Vector3,
+	rate: number,
+	now: number
+)
+	if not character then
+		return
+	end
+	character:SetAttribute("MovementAction", kind)
+	character:SetAttribute("MovementVariant", variant)
+	character:SetAttribute("MovementDirection", direction)
+	character:SetAttribute("MovementRate", rate)
+	character:SetAttribute("MovementActionTime", now)
+	pendingAction = send(kind, variant, direction, { rate = rate, time = now })
+end
+
+-- Grounded: roll toward the input. The clip whose root motion best matches the
+-- direction relative to facing is chosen; the presentation turns the remainder.
+local function startRoll(direction: Vector3, now: number): boolean
+	if not character or not root or now - lastRoll < Acro.Roll.Cooldown then
+		return false
+	end
+	local settings = Acro.Roll
+	if settings.FaceInput and not aiming then
+		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
+	end
+	local localDirection = root.CFrame:VectorToObjectSpace(direction)
+	local variant, best = "RollForward", -math.huge
+	for _, name in Config.Validation.RollVariants do
+		local score = library[name].direction:Dot(localDirection)
+		if score > best then
+			variant, best = name, score
+		end
+	end
+	local clip = library[variant]
+	local rate = settings.PlaybackRate
+	local length = clip.events.recover or clip.duration
+	local travel = math.max(Clips.motion(clip, length):Dot(clip.direction), 0.05)
+	lastRoll = now
+	acro = {
+		kind = "Roll",
+		start = now,
+		clip = clip,
+		rate = rate,
+		direction = direction,
+		scale = settings.Distance / travel,
+		duration = length / rate,
+	}
+	announce("Roll", variant, direction, rate, now)
+	return true
+end
+
+-- Airborne: front flip, or backflip when input points behind the facing.
+local function startFlip(input: Vector3?, now: number): boolean
+	if not character or not root or airUsed then
+		return false
+	end
+	local settings = Acro.Flip
+	local facing = flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
+	local variant = if input and input:Dot(facing) < settings.BackInputDot
+		then "FlipBack"
+		else "FlipFront"
+	local velocity = root.AssemblyLinearVelocity
+	if velocity.Y < settings.Lift then
+		root.AssemblyLinearVelocity = Vector3.new(velocity.X, settings.Lift, velocity.Z)
+	end
+	local events = library[variant].events
+	local airDuration = (events.land or 0.6) - (events.takeoff or 0)
+	local rate = math.clamp(
+		airDuration / timeToLand(math.max(velocity.Y, settings.Lift)),
+		settings.MinRate,
+		settings.MaxRate
+	)
+	airUsed = true
+	acro = { kind = "Flip", start = now, duration = airDuration / rate }
+	announce("Flip", variant, facing, rate, now)
+	return true
+end
+
+local function acrobatics(requested: Vector3?): boolean
 	if not character or not humanoid or not root or humanoid.Health <= 0 then
 		return false
 	end
 	local now = workspace:GetServerTimeNow()
-	local onGround = humanoid.FloorMaterial ~= Enum.Material.Air
-	if kind == "Evade" and (not onGround or now - lastEvade < Config.Evade.Cooldown) then
-		return false
+	local input = if requested
+		then flat(requested)
+		elseif move.Magnitude > 0.1 then flat(move)
+		else nil
+	if humanoid.FloorMaterial ~= Enum.Material.Air then
+		return not acro
+			and startRoll(input or flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1), now)
 	end
-	if
-		kind == "Flourish"
-		and (onGround or airUsed or now - lastFlourish < Config.Flourish.Cooldown)
-	then
-		return false
+	-- Mid-flip, already flipped or too late for a flip to read: roll on touchdown.
+	if acro or airUsed or timeToLand(root.AssemblyLinearVelocity.Y) < Acro.LandingRollWindow then
+		bufferedRoll, bufferedDirection = os.clock() + Acro.LandingRollWindow + 0.1, input
+		return true
 	end
-	local direction = requestedDirection
-		or (if move.Magnitude > 0.1 then move else root.CFrame.LookVector)
-	direction = Vector3.new(direction.X, 0, direction.Z)
-	if direction.Magnitude < 0.01 then
-		return false
-	end
-	direction = direction.Unit
-	character:SetAttribute("MovementAction", kind)
-	character:SetAttribute("MovementActionTime", now)
-	character:SetAttribute("MovementDirection", direction)
-	if kind == "Evade" then
-		lastEvade = now
-		evade = { start = now, direction = direction }
-	else
-		lastFlourish, airUsed = now, true
-	end
-	pendingAction = send(kind, nil, direction)
-	return true
+	return startFlip(input, now)
 end
 
 request.OnClientEvent:Connect(function(id: number, accepted: boolean, detail: string)
 	if not accepted then
 		lastReject = detail
 		if id == pendingAction and character then
-			evade = nil
+			acro = nil
 			character:SetAttribute("MovementActionTime", -1e9)
 		end
 	end
@@ -206,18 +304,12 @@ bind("ExperimentSprint", function(_, state)
 	end
 	return Enum.ContextActionResult.Sink
 end, "Run", Enum.KeyCode.LeftShift, Enum.KeyCode.ButtonL3)
-bind("ExperimentEvade", function(_, state)
+bind("ExperimentAcrobatics", function(_, state)
 	if state == Enum.UserInputState.Begin then
-		action("Evade", nil)
+		acrobatics(nil)
 	end
 	return Enum.ContextActionResult.Sink
-end, "Evade", Enum.KeyCode.Q, Enum.KeyCode.ButtonB)
-bind("ExperimentFlourish", function(_, state)
-	if state == Enum.UserInputState.Begin then
-		action("Flourish", nil)
-	end
-	return Enum.ContextActionResult.Sink
-end, "Flourish", Enum.KeyCode.F, Enum.KeyCode.ButtonY)
+end, "Roll/Flip", Enum.KeyCode.Q, Enum.KeyCode.ButtonB)
 bind("ExperimentAim", function(_, state)
 	if state == Enum.UserInputState.Begin then
 		setAim(true)
@@ -279,11 +371,48 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	)
 	humanoid.WalkSpeed = speed
 	humanoid.JumpPower = settings.JumpPower
-	humanoid:Move(if evade then Vector3.zero else move, false)
+	local now = workspace:GetServerTimeNow()
+	local onGround = humanoid.FloorMaterial ~= Enum.Material.Air
+	local rolling = acro and acro.kind == "Roll"
+	if rolling then
+		-- Drive the Humanoid along the roll so its ground controller cooperates
+		-- with the root-motion velocity instead of braking against it.
+		humanoid.WalkSpeed = acro.speed or 0
+		humanoid:Move(acro.direction, false)
+	else
+		humanoid:Move(move, false)
+	end
 	if os.clock() < testJumpUntil then
 		humanoid.Jump = true
 	end
-	humanoid.AutoRotate = not aiming
+	if rolling and humanoid.Jump then
+		-- Jump cancels only the end of a roll.
+		if now - acro.start < acro.duration * Acro.Roll.JumpCancel then
+			humanoid.Jump = false
+		else
+			acro = nil
+		end
+	end
+	if
+		acro
+		and acro.kind == "Flip"
+		and (now - acro.start > acro.duration or onGround and now - acro.start > 0.15)
+	then
+		acro = nil
+	end
+	if bufferedRoll > 0 and onGround then
+		if os.clock() < bufferedRoll and not acro then
+			startRoll(
+				bufferedDirection
+					or flat(move)
+					or flat(root.CFrame.LookVector)
+					or Vector3.new(0, 0, -1),
+				now
+			)
+		end
+		bufferedRoll = 0
+	end
+	humanoid.AutoRotate = not aiming and not acro
 	if aiming then
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + forward)
 		if os.clock() - lastAimSent > 0.2 then
@@ -304,8 +433,9 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB   •   %s\nWASD move · Shift run · Space jump · Q evade · F aerial flourish\nRMB aim · Click harmless marker · P compare profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
+		"SLUGSHOT / MOVEMENT LAB v2   •   %s   •   %s\nWASD move · Shift run · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nRMB aim · Click harmless marker · P compare profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
+		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
 		if humanoid.FloorMaterial == Enum.Material.Air then "Airborne" else "Grounded",
 		markers
@@ -313,27 +443,27 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 end)
 
 RunService.PreSimulation:Connect(function()
-	if not evade or not root or not character then
+	if not acro or acro.kind ~= "Roll" or not root or not character then
 		return
 	end
-	local t = (workspace:GetServerTimeNow() - evade.start) / Config.Evade.Duration
+	local elapsed = workspace:GetServerTimeNow() - acro.start
 	local params = RaycastParams.new()
 	params.FilterDescendantsInstances = { character }
-	if
-		t >= 1
-		or workspace:Raycast(
-			root.Position,
-			evade.direction * (Config.Evade.WallClearance + 1),
-			params
-		)
-	then
-		evade = nil
+	local blocked =
+		workspace:Raycast(root.Position, acro.direction * (Acro.Roll.WallClearance + 1), params)
+	if elapsed >= acro.duration or blocked then
+		local velocity = root.AssemblyLinearVelocity
+		speed = math.min(Vector3.new(velocity.X, 0, velocity.Z).Magnitude, profile().SprintSpeed)
+		acro = nil
 		return
 	end
+	-- Follow the clip's own root-motion profile, scaled to the configured distance.
+	local along = Clips.motionVelocity(acro.clip, elapsed * acro.rate):Dot(acro.clip.direction)
+		* acro.scale
+		* acro.rate
 	local velocity = root.AssemblyLinearVelocity
-	root.AssemblyLinearVelocity = evade.direction
-			* Math.evadeSpeed(t, Config.Evade.Speed, Config.Evade.EndSpeed)
-		+ Vector3.new(0, velocity.Y, 0)
+	acro.speed = math.clamp(along, 0, Acro.Roll.MaxSpeed)
+	root.AssemblyLinearVelocity = acro.direction * acro.speed + Vector3.new(0, velocity.Y, 0)
 end)
 
 if RunService:IsStudio() then
@@ -347,7 +477,7 @@ if RunService:IsStudio() then
 		elseif command == "Jump" and humanoid then
 			testJumpUntil = os.clock() + 0.12
 		elseif command == "Action" then
-			return action(value.kind, value.direction)
+			return acrobatics(value.direction)
 		elseif command == "Aim" then
 			setAim(value)
 		elseif command == "Mark" then
@@ -356,6 +486,10 @@ if RunService:IsStudio() then
 			send("Profile", value)
 		elseif command == "Respawn" then
 			send("Respawn")
+		elseif command == "Pose" and character then
+			-- Hold a clip frame for visual inspection (nil clears).
+			character:SetAttribute("DebugClip", value and value.clip)
+			character:SetAttribute("DebugTime", value and value.time)
 		end
 		if not root or not humanoid then
 			return { ready = false }
@@ -372,6 +506,13 @@ if RunService:IsStudio() then
 			lastReject = lastReject,
 			profile = player:GetAttribute("MovementProfile"),
 			state = humanoid:GetState().Name,
+			privateClips = privateClips,
+			acro = if acro then acro.kind else "",
+			variant = character and character:GetAttribute("MovementVariant"),
+			rendered = character and character:GetAttribute("RenderedAction"),
+			airState = character and character:GetAttribute("RenderedAirState"),
+			footOffset = character and character:GetAttribute("RenderedFootOffset"),
+			phase = character and character:GetAttribute("RenderedCyclePhase"),
 		}
 	end
 	probe.Parent = player.PlayerScripts
