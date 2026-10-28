@@ -40,7 +40,7 @@ All simulated sessions ended. Disposable test windows were closed without saving
 
 `python tools/verify.py` passes: StyLua, Selene (0 errors/warnings/parse errors), shared-module analysis, both builds, sourcemap, built script placement/classes/source fidelity, test isolation and skill checks. This is not full engine-aware type analysis.
 
-Local JSON/TOML configurations parse, documentation links resolve, and `git diff --check` passes. The initial hosted [Foundation run](https://github.com/jarems421/slugshot/actions/runs/40719697932) passed on Linux. Follow-up hosted results apply to the pushed setup revision; CI does not perform Studio runtime checks.
+Local JSON/TOML configurations parse, 48 documentation links resolve, and `git diff --check` passes. The hosted [integration setup run](https://github.com/jarems421/slugshot/actions/runs/40724542365) passed on Linux for commit `407102e`, including artifact upload. CI does not perform Studio runtime checks; those were verified locally above.
 
 ## Studio warnings and remaining limits
 

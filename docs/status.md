@@ -9,7 +9,7 @@ Roblox Studio / Luau / VS Code / Git-GitHub / Rojo foundation, client/server/sha
 
 ## Implemented/verified
 
-Minimal source, isolated tests and pinned tooling pass formatting, linting, shared-module types, builds, sourcemap, packaging and skill checks. The public repo is [jarems421/slugshot](https://github.com/jarems421/slugshot); initial hosted Linux CI passed.
+Minimal source, isolated tests and pinned tooling pass formatting, linting, shared-module types, builds, sourcemap, packaging and skill checks. The public repo is [jarems421/slugshot](https://github.com/jarems421/slugshot); hosted [Linux CI for the integration setup](https://github.com/jarems421/slugshot/actions/runs/40724542365) passed.
 
 Rojo 7.7.1's matching plugin is installed. A filesystem edit synchronized into Studio; original source was restored and matched exactly. Studio 0.745.0.7451137's built-in MCP is enabled. Claude's native health check reports Connected; native Codex discovered tools and made live calls. Host config is local/private.
 
