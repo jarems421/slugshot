@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-29",
+  "branch": "experiment/movement-sandbox",
+  "scope": "v4.3: wall run lock, wall-jump climbing, original parkour mantle and reach-based mantle style, HUD rejection reason",
+  "wallRunLock": {
+    "hold0.6sThenRelease": "1.92 s on the wall, ended on the floor",
+    "quickJump": "1.13 s, ended on the floor"
+  },
+  "wallJumpCorridor": {
+    "before": "3 kicks then presses ignored",
+    "after350ms": "8 consecutive kicks",
+    "after250ms": "onto the top of 40-stud walls in 4 kicks"
+  },
+  "mantleStyle": {
+    "3": "jumped onto",
+    "4.5": "jumped onto",
+    "5.5": "MantleVault",
+    "7.5": "MantleHigh",
+    "rejections": 0
+  },
+  "twoClients": {
+    "peerSawWallRuns": "5/5",
+    "motionCorrections": 0,
+    "rejections": {
+      "count": 5,
+      "note": "with crouch/flip input the script did not send; cause not established"
+    }
+  },
+  "studioTests": "pass",
+  "sourceSha256": {
+    "experiments/movement/client/Presentation.luau": "39333466c7af234c7fabd83952c6da7a29a69f153725ca2650caffb9beb610fd",
+    "experiments/movement/client/Traversal.luau": "4f5bfb0c3f2a171964dc86145313c9666608c968c9f86e57c6510f884d035263",
+    "experiments/movement/client/init.client.luau": "03b7d5b4fcb54dc93ea8719fd4d851994ae5ef98c4cac3848197f5e43ad9750d",
+    "experiments/movement/server/Arena.luau": "1aa8270aef9497f7a4b965c7d0151871a899d2c8dc21e928b4ad30817aa110a4",
+    "experiments/movement/server/init.server.luau": "387a42b8aa18410619daf52487fb4772a5478c07cbd5ef5cd05f0b0f96617c5f",
+    "experiments/movement/shared/Clips.luau": "a0113b9e5f9934131e77beec9cdfaeefe0c3c70406921fb75d203b8c26d4d3a0",
+    "experiments/movement/shared/Config.luau": "22eac580ff5254a101d82af210c59b7997ebdd13afd4041e1b66eedd1819d0d8",
+    "experiments/movement/shared/MotionMath.luau": "cb145fcbeeb4ef4f9a98fabc66bacfd4736d5970ac852e4476d432d0a97ac597",
+    "experiments/movement/shared/OriginalClips.luau": "2db295ae9d6684b833a04a39f46700fdba8c4e5b0c13646a1ca4759b352a3167",
+    "experiments/movement/tests/Clips.spec.server.luau": "b7e3af3e8248562c7a8b51366e81f2b35fffc804b459c2e09c0b1e8716eafdb0",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04",
+    "tools/mixamo_to_r15.py": "b2f1c9f147150139f9256667babcbb92497c591b515b16f26a229ec819d41d7a",
+    "tools/mixamo_manifest.json": "492087e8b72874d7cb3a033d25d4f8455f1d15f0bb9d1a64fd72d6a84e677539"
+  }
+}

@@ -1,7 +1,7 @@
 # Current status
 
 Updated: 2026-10-29
-Milestone: movement refinement (v4.2: owner feedback on the Mixamo lab: wall run with height control, wall jump, parkour mantle with a clear-the-jump rule, fewer jumps, smoother transitions) on the isolated movement prototype
+Milestone: movement refinement (v4.3: owner feedback on the Mixamo lab: wall run with height control, wall jump, parkour mantle with a clear-the-jump rule, fewer jumps, smoother transitions) on the isolated movement prototype
 Branch: `experiment/movement-sandbox` (not merged; owner review of gameplay required first)
 
 ## Confirmed authorization
@@ -23,6 +23,9 @@ The foundation project is preserved. v2 keeps v1's native Humanoid controller, p
 
 - v4.1 (private lab, owner feedback): Space now triggers traversal (`JumpRequest` was not firing); wall run is an automatic attach state with kick-off; wall jumps use the owner's kick clips; parkour mantle under 4.6 studs (0.41-0.51 s); one running and one standing jump; no crouch drop or fidget; transitions and idle blend out smoothly; restyled stride; edge-tolerant ground check; wall-run corridor.
 - v4.2: crouch idle at crouch-walk height; hold Space to climb / release to slide / tap to kick on the wall; wall hand solved to meet the wall; mantle only for ledges at least 2.2 studs up that the jump would not clear; falls sway about the jump pose (no Falling Idle).
+- v4.3: wall run locked on until the floor, wall end or kick; up to 8 wall jumps per airtime with a 0.35 s press buffer (climb between walls); original speed-vault parkour mantle chosen when the jump reaches within 2 studs of the top, climb otherwise; HUD shows the last rejection.
+
+v4.3 implemented/verified with evidence in [results](movement-verification.md#v43-owner-feedback-pass-2026-10-29). One test session showed 5 rejections from input the script did not send (cause not established).
 
 v4.2 implemented/verified with evidence in [results](movement-verification.md#v42-owner-feedback-pass-2026-10-29): real-key wall climb/slide/tap, staircase without mantles, 3-stud jump-on versus 4.5/5.5 mantles, hand gap, two clients 5/5 (0 rejections, 0 corrections), public build and Studio tests.
 
@@ -38,4 +41,4 @@ v2 implemented/verified with evidence in [results](movement-verification.md#v2-r
 
 Whether v2/v3/v4/v4.1 feel and look substantially better is the owner's playtest call, as are whether crouch, vault and wall run stay, and which Mixamo clips to keep or replace. The owner still dislikes the running/sprinting look (next item). Wall running on sloped walls was raised and deferred by the owner. Whether mantle and wall hop stay in the move set, final move set, controls (single acrobatics button or separate), speeds, roll distance, flip lift, animation style and camera remain open. Not established: rendered 30/60/144 FPS behaviour, foot placement on slopes/steps, devices, packet loss, large player counts, weapon/muzzle alignment, mantle arm IK, foot slide at sprint speed with realistic Mixamo cadence, moving platforms.
 
-Next gate: owner plays the private v4.2 lab (wall climbing, mantle rule, crouch, falls), then the running animation rework; see [the movement guide](movement.md#playtest-priorities). No combat, creatures, progression, matchmaking or permanent environment/game-design decisions were implemented.
+Next gate: owner plays the private v4.3 lab (wall run lock, wall-jump climbing, parkour mantle), then the running animation rework; see [the movement guide](movement.md#playtest-priorities). No combat, creatures, progression, matchmaking or permanent environment/game-design decisions were implemented.

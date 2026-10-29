@@ -2,6 +2,22 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v4.3 owner feedback pass (2026-10-29)
+
+Changes from the owner's v4.2 playtest ([ADR 0006 addendum](decisions/0006-wall-run-and-v4-feedback.md#addendum-v43-same-day)), tested with real key presses. [Sanitized evidence](evidence/2026-10-29-movement-v4.3.json).
+
+| Check | Observed result |
+| --- | --- |
+| Wall run lock | Holding Space 0.6 s then releasing: the run lasted 1.9 s and ended only when the feet reached the floor. A quick jump: 1.1 s, also ending on the floor. Before the change, the run ended at 2 s or when the input moved |
+| Wall jump climbing | Reproduced first: in the 12-stud corridor the 4th and later presses were ignored (3-kick limit), and early presses were missed. After the change, presses every 350 ms gave 8 consecutive kicks; presses every 250 ms climbed onto the top of the 40-stud walls in 4 kicks |
+| Mantle style | Space about 3 studs before the face: 3 and 4.5 studs were jumped onto; 5.5 studs used `MantleVault`; 7.5 studs (reaching) used `MantleHigh`; all ended on top with 0 rejections |
+| Parkour clip | Held-pose sheets of the Mixamo segment (hunched, unreadable) and of the new original clip (front and three-quarter views): planted arm, raised free arm, body tipped about 55°, legs swung out sideways |
+| Two clients | The peer saw all 5 wall runs (3 hold-and-tap with kick clips, 2 ride-outs to the floor). 0 motion corrections. 5 rejections (2 flip-state, 2 geometry-WallRun, 1 geometry-WallHop) came with crouch and flip input that the script never sent, so they were probably from someone playing in the test window; their cause was not established |
+| Public build, tests | Studio math and clip tests pass. The 5.5-stud ledge mantled (MantleHigh with that press timing), with 0 rejections |
+| Checks | `python tools/verify_movement.py` passes |
+
+Not established: the cause of the geometry rejections above (the HUD now shows the last rejection), and feel in hand. That test session's windows stayed open after `EndTest`, could no longer be reached by the test tools, and were left for the owner to close.
+
 ## v4.2 owner feedback pass (2026-10-29)
 
 Changes from the owner's v4.1 playtest ([ADR 0006 addendum](decisions/0006-wall-run-and-v4-feedback.md#addendum-v42-same-day)), tested with real key presses in the private lab. [Sanitized evidence](evidence/2026-10-29-movement-v4.2.json).

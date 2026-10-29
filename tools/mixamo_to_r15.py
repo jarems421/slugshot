@@ -180,6 +180,15 @@ def normalize_yaw(frames, align_end):
         f["feet"] = {k: (fix @ v[0], v[1]) for k, v in f["feet"].items()}
 
 
+def flatten_yaw(frames):
+    """Cancel the chest's turn relative to the first frame, frame by frame, so a clip
+    that spins (Vault Over Box) keeps facing forward; pitch, roll and limbs stay."""
+    start = yaw_of(frames[0]["parts"]["UpperTorso"])
+    for f in frames:
+        fix = Matrix.Rotation(-(yaw_of(f["parts"]["UpperTorso"]) - start), 3, "Y")
+        f["parts"] = {k: fix @ v for k, v in f["parts"].items()}
+
+
 def mirror(frames):
     swap = lambda name: name.replace("Left", "\0").replace("Right", "Left").replace("\0", "Right")
     out = []
@@ -440,6 +449,8 @@ def main():
             continue
         frames, fps, unit = capture(path, spec)
         normalize_yaw(frames, bool(spec.get("alignEnd")))
+        if spec.get("flattenYaw"):
+            flatten_yaw(frames)
         if spec.get("mirrored"):
             frames = mirror(frames)
         variants = [(name, frames)]

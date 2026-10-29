@@ -104,3 +104,16 @@
 - **Mantle rule.** Predict the feet's path to the ledge face, and mantle only when the jump won't clear it, for ledges at least 2.2 studs above the ground. The first version still mantled steps when descending onto them; the ground-height floor fixed that.
 - **Testing lesson.** The MCP keyboard tool has about 0.3 s of latency, so a press "at 4 studs" arrives at about 1.8 studs. Measure where the press actually lands before blaming the logic. Also, the harness `call` overrides `studio_id`; pass `sid=` to target a test client.
 - Next: the owner reviews v4.2; running animation rework.
+
+## 2026-10-29 - Owner feedback on v4.2 (v4.3)
+
+- The owner asked for:
+  - a wall run that stays on until the floor or a jump-off
+  - responsive wall jumps between two walls
+  - a parkour one-hand "breakdance" mantle for ledges at your level, and the climb only when reaching
+- **Causes found.**
+  - Wall run: a 2 s limit, plus input-based drop-offs.
+  - Wall jumps: a 3-kick-per-airtime cap and a 0.15 s press buffer.
+- **Mixamo did not have the mantle.** Mixamo's vault selection is thin. Vault Over Box contains the motion, but even spin-cancelled (new `flattenYaw` converter option) it read as a hunched ball on the R15 rig. An original keyframed speed vault reads clearly. Lesson: on the blocky rig, a hand-keyed clip can beat mocap for silhouette-driven moves.
+- **Possible interference with tests.** A two-client run showed crouch/flip input the script never sent, plus 5 rejections. The owner may have been playing in the popped-up test window, and that session's windows stayed open. The HUD now shows the last rejection; avoid long Studio test runs while the owner may be playing.
+- Next: the owner reviews v4.3; running animation rework.

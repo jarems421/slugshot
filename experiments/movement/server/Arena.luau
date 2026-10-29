@@ -54,8 +54,8 @@ function Arena.create(): Model
 	end
 	-- Wall-run corridor: two long facing walls (east of the ledges) to run along and
 	-- kick between.
-	block("RunWallWest", Vector3.new(2, 20, 160), CFrame.new(94, 10, 0), amber)
-	block("RunWallEast", Vector3.new(2, 20, 160), CFrame.new(108, 10, 0), blue)
+	block("RunWallWest", Vector3.new(2, 40, 160), CFrame.new(94, 20, 0), amber)
+	block("RunWallEast", Vector3.new(2, 40, 160), CFrame.new(108, 20, 0), blue)
 	block("ChimneyLedge", Vector3.new(8, 14, 14), CFrame.new(70, 7, -6), blue)
 	block("ChimneyWall", Vector3.new(2, 22, 14), CFrame.new(83, 11, -6), amber)
 	for i = 0, 5 do

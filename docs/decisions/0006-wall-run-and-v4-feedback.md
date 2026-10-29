@@ -68,4 +68,17 @@ Decisions:
 - **Falls.** They sway about the jump clip's apex instead of playing Falling Idle.
 - **Crouch idle.** It uses the crouch walk's stance with the crouch idle's breathing.
 
+## Addendum: v4.3 (same day)
+
+After playing v4.2, the owner asked for:
+- a wall run that stays on until the floor or a jump-off
+- responsive wall jumps for climbing between two walls
+- a parkour one-hand mantle for ledges at about your level, and the climb only for ledges you reach up to
+
+Decisions:
+- **Wall run end conditions.** Remove the time limit and input-based drop-offs; the ground, the wall's end or a kick ends it.
+- **Wall-jump limits.** Raise the per-airtime kick limit to 8 and the early-press buffer to 0.35 s.
+- **Parkour mantle clip.** An original keyframed speed vault. The Mixamo Vault Over Box segment, even with its spin cancelled by a new converter option, did not read clearly on the R15 rig.
+- **Mantle style.** Pick by predicted reach: within 2 studs of the top, parkour; otherwise, climb.
+
 Evidence: [results](../movement-verification.md#v41-owner-feedback-pass-2026-10-29) and the [sanitized evidence](../evidence/2026-10-29-movement-v4.1.json).

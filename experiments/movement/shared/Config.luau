@@ -58,7 +58,9 @@ return table.freeze({
 			MinHeight = 0.7, -- ledge height above the feet, studs
 			MaxHeight = 5.7,
 			LowHeight = 3.2, -- below: one-hand step vault; above: two-hand climb
-			ParkourHeight = 4.6, -- below: one-hand parkour mantle clip, when present
+			-- Parkour mantle (one-hand vault, when present) when the jump brings the feet
+			-- within this of the ledge top at its face; further below, a reaching climb.
+			ParkourReach = 2,
 			Duration = { Base = 0.28, PerStud = 0.04, Min = 0.32, Max = 0.48 },
 			MaxRate = 3.2, -- longer clips (motion capture) play up to this fast, then stretch the climb
 			HangHeight = 5, -- at or above: hanging climb clip, when present
@@ -75,15 +77,15 @@ return table.freeze({
 			ClearApproach = 8, -- minimum approach speed assumed for that prediction
 		},
 		WallHop = {
-			Reach = 3.8, -- from the root: about 2.8 studs of gap beside the body
+			Reach = 4.5, -- from the root: about 3.5 studs of gap beside the body
 			AwaySpeed = 30,
 			UpSpeed = 54,
 			TangentCarry = 0.55, -- fraction of along-wall speed kept
 			MaxTangent = 24,
-			MaxHops = 3, -- per airtime (wall-run jumps count)
+			MaxHops = 8, -- per airtime (wall-run jumps count); enough to climb between two walls
 			Cooldown = 0.15,
 			GroundDelay = 0.13, -- no hop this soon after leaving the ground
-			Buffer = 0.15, -- an airborne press too early or out of reach is retried this long
+			Buffer = 0.35, -- an airborne press too early or out of reach is retried this long
 			LockTime = 0.22, -- seconds the kick owns movement before input resumes
 			RefreshFlip = true, -- a hop restores the airborne flip
 		},
@@ -96,23 +98,25 @@ return table.freeze({
 			LookAhead = 0.12, -- seconds of approach: a jump pressed this early still vaults
 			Clearance = 0.7, -- feet above the top at the peak
 		},
-		-- Jumping onto a wall while running along it attaches: run along the wall,
-		-- climbing while Jump is held and sliding down otherwise, until a Jump tap
-		-- kicks off, input lets go, the wall ends or time runs out. No clip needed;
-		-- the kick uses WallJump clips.
+		-- Jumping onto a wall while running along it attaches and locks on: run along
+		-- the wall, climbing while Jump is held and sliding down otherwise, until a
+		-- Jump tap kicks off, the feet reach the ground or the wall ends. No clip
+		-- needed; the kick uses WallJump clips.
 		WallRun = {
 			Reach = 4.2, -- from the root to the wall surface
 			Hug = 2.1, -- root distance from the wall held while attached
 			MinAlong = 12, -- along-wall speed needed to attach
 			MaxInto = 0.8, -- travel more head-on than this (dot into the wall) does not attach
-			MinInput = 0.3, -- move input along the wall needed to attach and to stay on
+			MinInput = 0.3, -- move input along the wall needed to attach
 			MinHeight = 2, -- feet above the ground needed to attach
-			MaxTime = 2,
 			Speed = 26, -- minimum run speed on the wall
 			Rise = { Min = 4, Max = 13, Carry = 0.3 }, -- upward speed on attach: Carry of the jump's, clamped
-			Climb = 11, -- upward speed while Jump is held, fading to 0 over MaxTime
-			Slide = 3, -- downward speed once Jump is released, growing by SlideGrow per second since
-			SlideGrow = 8,
+			Climb = 11, -- upward speed while Jump is held, easing over ClimbTime into a HeldSlide
+			ClimbTime = 2,
+			HeldSlide = 2, -- downward speed reached while still holding Jump
+			Slide = 1.5, -- downward speed once Jump is released, growing by SlideGrow per second since
+			SlideGrow = 5,
+			SlideMax = 20,
 			VerticalAccel = 40, -- studs/s^2 toward the climb or slide speed
 			TapTime = 0.2, -- a Jump press released sooner than this kicks off
 			Pull = { Rate = 8, Max = 14, Away = 6 }, -- speed holding the root at Hug distance
@@ -125,6 +129,7 @@ return table.freeze({
 			ArmForward = 0.5, -- presentation: wall hand's swing ahead of the shoulder, radians
 			HandGap = 0.1, -- presentation: hand stops this far from the wall surface
 			SettleTime = 0.35, -- presentation: observers' replicated body catches up before end checks
+			ObserverLimit = 12, -- presentation: safety cap on a run that never visibly ends
 		},
 	},
 	Crouch = {
@@ -152,7 +157,7 @@ return table.freeze({
 		-- clip (seconds of clip either side, and the sway period); nil uses the Fall clip.
 		FallFromJump = { Swing = 0.06, Period = 1.4 },
 		GroundProbeRadius = 0.85, -- presentation ground check footprint (edges count)
-		Fade = { ActionIn = 0.07, ActionOut = 0.2, Air = 0.12, Land = 0.08 },
+		Fade = { ActionIn = 0.07, ActionOut = 0.2, MantleOut = 0.3, Air = 0.12, Land = 0.08 },
 		Land = {
 			Duration = 0.42,
 			MinImpact = 20,

@@ -318,9 +318,10 @@ local function smoothstep(x: number): number
 	return x * x * (3 - 2 * x)
 end
 
--- Whether the jump (about to start, or under way) carries the feet over the
--- ledge top, with a margin, by the time the body reaches the ledge face.
-local function jumpClears(ledge: Traversal.Ledge): boolean
+-- How far below the ledge top the feet are predicted to be when the body reaches
+-- the ledge face, for the jump about to start or under way (negative: above it).
+-- Ledges too low above the ground to be worth mantling return -math.huge.
+local function jumpShortfall(ledge: Traversal.Ledge): number
 	assert(humanoid and root, "jump check needs a character")
 	local settings = Trav.Mantle
 	local offset = Traversal.standOffset(humanoid, root)
@@ -328,7 +329,7 @@ local function jumpClears(ledge: Traversal.Ledge): boolean
 	-- Low ledges (steps, small boxes) are never mantled, whatever the jump does.
 	local ground = workspace:Raycast(root.Position, Vector3.new(0, -60, 0), rays)
 	if ground and topY - ground.Position.Y < settings.MinGroundHeight then
-		return true
+		return -math.huge
 	end
 	local velocity = root.AssemblyLinearVelocity
 	local rise = if grounded() then profile().JumpPower else velocity.Y
@@ -338,7 +339,7 @@ local function jumpClears(ledge: Traversal.Ledge): boolean
 	local face = ledge.wall - root.Position
 	local t = math.max(Vector3.new(face.X, 0, face.Z):Dot(toward) - 1, 0) / approach
 	local feetY = root.Position.Y - offset + rise * t - 0.5 * workspace.Gravity * t * t
-	return feetY >= topY + settings.ClearMargin
+	return topY - feetY
 end
 
 -- Jump into a ledge the jump would not clear: close to the wall, then climb along
@@ -367,6 +368,7 @@ local function startMantle(now: number): boolean
 	local vault = Trav.Vault
 	local ledge: Traversal.Ledge? = nil
 	local target, lift, vaulting = CFrame.identity, 0, false
+	local shortfall = 0
 	if library.Vault and approach >= vault.MinSpeed then
 		local ahead = table.clone(settings)
 		ahead.Reach = settings.Reach + approach * vault.LookAhead
@@ -384,7 +386,12 @@ local function startMantle(now: number): boolean
 	end
 	if not ledge then
 		ledge = Traversal.findLedge(humanoid, root, settings, rays, overlap)
-		if not ledge or jumpClears(ledge) then
+		if not ledge then
+			return false
+		end
+		-- A jump that clears the top is just a jump onto it.
+		shortfall = jumpShortfall(ledge)
+		if shortfall <= -settings.ClearMargin then
 			return false
 		end
 		target = ledge.target
@@ -392,7 +399,7 @@ local function startMantle(now: number): boolean
 	assert(ledge, "ledge resolved above")
 	local variant = if vaulting
 		then pickVariant("Vault")
-		elseif ledge.height < settings.ParkourHeight and library.MantleVault then pickVariant(
+		elseif shortfall < settings.ParkourReach and library.MantleVault then pickVariant(
 			"MantleVault"
 		)
 		elseif ledge.height < settings.LowHeight then "MantleLow"
@@ -821,8 +828,8 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	local kind = if acro then acro.kind else nil
 	local rolling = kind == "Roll"
 	if kind == "WallRun" and rays then
-		-- Follow the wall surface; let go when it ends, input stops pointing along
-		-- it (or points away), the ground arrives or time runs out.
+		-- Locked on: follow the wall surface until it ends or the feet reach the
+		-- ground (a Jump tap kicks off; see the InputEnded handler).
 		local run = Trav.WallRun
 		local hit = workspace:Raycast(root.Position, -acro.away * (run.Reach + 0.6), rays)
 		local away = hit and math.abs(hit.Normal.Y) < 0.35 and flat(hit.Normal)
@@ -831,13 +838,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 			acro.away, acro.contact = away, hit.Position
 			acro.direction = flat(along) or acro.direction
 		end
-		if
-			not away
-			or onGround
-			or now - acro.start > run.MaxTime
-			or move:Dot(acro.direction) < run.MinInput * 0.5
-			or move:Dot(acro.away) > 0.5
-		then
+		if not away or onGround then
 			endWallRun(now, false)
 			kind = nil
 		elseif not aiming then
@@ -930,12 +931,13 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v4.2   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
+		"SLUGSHOT / MOVEMENT LAB v4.3   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d   |   Last rejected: %s",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
 		if humanoid.FloorMaterial == Enum.Material.Air then "Airborne" else "Grounded",
-		markers
+		markers,
+		lastReject
 	)
 end)
 
@@ -951,8 +953,8 @@ RunService.PreSimulation:Connect(function(dt)
 			acro.releasedAt = acro.releasedAt or elapsed
 		end
 		local target = if acro.releasedAt
-			then -(run.Slide + run.SlideGrow * (elapsed - acro.releasedAt))
-			else run.Climb * math.max(1 - elapsed / run.MaxTime, 0)
+			then -math.min(run.Slide + run.SlideGrow * (elapsed - acro.releasedAt), run.SlideMax)
+			else run.Climb - (run.Climb + run.HeldSlide) * math.min(elapsed / run.ClimbTime, 1)
 		acro.vy = Math.approach(acro.vy, target, run.VerticalAccel, dt)
 		local gap = (root.Position - acro.contact):Dot(acro.away)
 		local pull = math.clamp((gap - run.Hug) * run.Pull.Rate, -run.Pull.Away, run.Pull.Max)

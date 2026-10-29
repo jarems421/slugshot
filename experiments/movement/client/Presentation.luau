@@ -783,7 +783,7 @@ function Presentation.start(clips: Clips.Library)
 			local sideways = rig.root.CFrame.RightVector * action.side
 			local wall = workspace:Raycast(root.Position, sideways * (WallRun.Reach + 1), params)
 			if
-				elapsed > WallRun.MaxTime + 0.2
+				elapsed > WallRun.ObserverLimit
 				or elapsed > WallRun.SettleTime and (grounded or not wall)
 			then
 				rig.action = nil
@@ -815,7 +815,12 @@ function Presentation.start(clips: Clips.Library)
 			end
 			if finished then
 				rig.action = nil
-				startFade(rig, A.Fade.ActionOut, now)
+				-- A mantle ends mid-motion on top, so it hands over more gently.
+				startFade(
+					rig,
+					if action.kind == "Mantle" then A.Fade.MantleOut else A.Fade.ActionOut,
+					now
+				)
 			else
 				local actionPose = Clips.sample(clip, t, scratch(rig, 17))
 				if action.yaw ~= 0 then
