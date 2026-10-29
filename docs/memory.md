@@ -91,3 +91,16 @@
 - **Lag emulation left on again.** Studio network emulation was found at 60/60/10/10 ms in two windows (cause not established; probably an earlier test of mine) and reset to 0. The owner's v4 playtest may have run with that lag. Check it at the start of each session.
 - **Updating open Studio windows.** `ScriptEditorService:UpdateSourceAsync` works where `Source` assignment is capped at 200,000 characters. Studio relaunches hung while orphaned test windows were open, and force-closing Studio was not permitted.
 - Next: the owner reviews v4.1; running animation rework.
+
+## 2026-10-29 - Owner feedback on v4.1 (v4.2)
+
+- The owner asked for:
+  - the crouch idle at the crouch-walk height
+  - up/down control on the wall (suggested: Space up, otherwise slide)
+  - a wall hand that stops at the wall
+  - no mantling over small steps ("only mantle where it's too tall to jump over")
+  - only the jump look they liked, not the "Spider-Man" one
+- **Ambiguity resolved by comparing poses.** "Spider-Man" was ambiguous. Held poses of the running jump, standing jump and Falling Idle side by side showed Falling Idle as the crouched, limbs-out pose. Falls now sway about the jump clip's apex. The first fall hold landed on a straight-diagonal-arms frame, so it was moved to the apex.
+- **Mantle rule.** Predict the feet's path to the ledge face, and mantle only when the jump won't clear it, for ledges at least 2.2 studs above the ground. The first version still mantled steps when descending onto them; the ground-height floor fixed that.
+- **Testing lesson.** The MCP keyboard tool has about 0.3 s of latency, so a press "at 4 studs" arrives at about 1.8 studs. Measure where the press actually lands before blaming the logic. Also, the harness `call` overrides `studio_id`; pass `sid=` to target a test client.
+- Next: the owner reviews v4.2; running animation rework.

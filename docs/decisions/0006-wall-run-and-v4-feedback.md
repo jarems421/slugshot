@@ -52,4 +52,20 @@ The owner described a standard wall run: jump onto a wall while running and keep
 - The wall-run pose has no hand IK.
 - Running style is still unresolved: the owner wants it reworked next.
 
+## Addendum: v4.2 (same day)
+
+After playing v4.1, the owner asked for:
+- the crouch idle at the crouch-walk height
+- vertical control on the wall
+- a wall hand that stops at the wall
+- no mantling over small steps
+- no "Spider-Man" fall pose
+
+Decisions:
+- **Wall height control.** Space held climbs (fading over the run); released slides down; a tap under 0.2 s kicks off. Holding to climb and tapping to kick keep both on one key.
+- **Wall hand.** The body is held at a fixed distance from the wall, and the arm angle is solved for that distance.
+- **Mantle rule.** A mantle needs a ledge at least 2.2 studs above the ground, and a jump predicted not to clear it.
+- **Falls.** They sway about the jump clip's apex instead of playing Falling Idle.
+- **Crouch idle.** It uses the crouch walk's stance with the crouch idle's breathing.
+
 Evidence: [results](../movement-verification.md#v41-owner-feedback-pass-2026-10-29) and the [sanitized evidence](../evidence/2026-10-29-movement-v4.1.json).

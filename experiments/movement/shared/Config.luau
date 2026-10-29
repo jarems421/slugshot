@@ -68,6 +68,11 @@ return table.freeze({
 			Cooldown = 0.34,
 			CheckInterval = 0.055, -- ledge checks while jump is held
 			JumpWindow = 0.34, -- seconds after a jump press that ledges still count
+			-- Only ledges the jump would not clear are mantled: if the feet are predicted
+			-- to pass ClearMargin over the top before reaching the face, it is a plain jump.
+			ClearMargin = 0.4,
+			MinGroundHeight = 2.2, -- ledges lower than this above the ground below are jumped or stepped onto
+			ClearApproach = 8, -- minimum approach speed assumed for that prediction
 		},
 		WallHop = {
 			Reach = 3.8, -- from the root: about 2.8 studs of gap beside the body
@@ -91,27 +96,34 @@ return table.freeze({
 			LookAhead = 0.12, -- seconds of approach: a jump pressed this early still vaults
 			Clearance = 0.7, -- feet above the top at the peak
 		},
-		-- Jumping onto a wall while running along it attaches: run along the wall
-		-- (slight rise, then a slow sink) until Jump kicks off, input lets go, the
-		-- wall ends or time runs out. No clip needed; the kick uses WallJump clips.
+		-- Jumping onto a wall while running along it attaches: run along the wall,
+		-- climbing while Jump is held and sliding down otherwise, until a Jump tap
+		-- kicks off, input lets go, the wall ends or time runs out. No clip needed;
+		-- the kick uses WallJump clips.
 		WallRun = {
 			Reach = 4.2, -- from the root to the wall surface
-			Hug = 1.6, -- root distance from the wall once attached (pulled in)
+			Hug = 2.1, -- root distance from the wall held while attached
 			MinAlong = 12, -- along-wall speed needed to attach
 			MaxInto = 0.8, -- travel more head-on than this (dot into the wall) does not attach
 			MinInput = 0.3, -- move input along the wall needed to attach and to stay on
 			MinHeight = 2, -- feet above the ground needed to attach
-			MaxTime = 1.6,
+			MaxTime = 2,
 			Speed = 26, -- minimum run speed on the wall
 			Rise = { Min = 4, Max = 13, Carry = 0.3 }, -- upward speed on attach: Carry of the jump's, clamped
-			Gravity = 14, -- studs/s^2 on the wall (normal gravity is about 196)
-			Stick = 3, -- speed held into the wall, plus a pull while further than Hug
+			Climb = 11, -- upward speed while Jump is held, fading to 0 over MaxTime
+			Slide = 3, -- downward speed once Jump is released, growing by SlideGrow per second since
+			SlideGrow = 8,
+			VerticalAccel = 40, -- studs/s^2 toward the climb or slide speed
+			TapTime = 0.2, -- a Jump press released sooner than this kicks off
+			Pull = { Rate = 8, Max = 14, Away = 6 }, -- speed holding the root at Hug distance
 			Release = 8, -- push away from the wall when dropping off
 			Reattach = 0.45, -- seconds before the same wall can be run again
 			JumpAway = 28,
 			JumpUp = 46,
 			JumpCarry = 0.85, -- fraction of the run speed kept on the kick
 			Tilt = 0.35, -- presentation: body roll away from the wall, radians
+			ArmForward = 0.5, -- presentation: wall hand's swing ahead of the shoulder, radians
+			HandGap = 0.1, -- presentation: hand stops this far from the wall surface
 			SettleTime = 0.35, -- presentation: observers' replicated body catches up before end checks
 		},
 	},
@@ -136,6 +148,9 @@ return table.freeze({
 		MinCycleRate = 0.55,
 		IdleBlendSpeed = 5,
 		IdleBlendRate = 9, -- how fast the idle/moving mix follows speed
+		-- Long falls sway gently about the jump clip's apex pose instead of playing a Fall
+		-- clip (seconds of clip either side, and the sway period); nil uses the Fall clip.
+		FallFromJump = { Swing = 0.06, Period = 1.4 },
 		GroundProbeRadius = 0.85, -- presentation ground check footprint (edges count)
 		Fade = { ActionIn = 0.07, ActionOut = 0.2, Air = 0.12, Land = 0.08 },
 		Land = {

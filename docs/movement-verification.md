@@ -2,6 +2,23 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v4.2 owner feedback pass (2026-10-29)
+
+Changes from the owner's v4.1 playtest ([ADR 0006 addendum](decisions/0006-wall-run-and-v4-feedback.md#addendum-v42-same-day)), tested with real key presses in the private lab. [Sanitized evidence](evidence/2026-10-29-movement-v4.2.json).
+
+| Check | Observed result |
+| --- | --- |
+| Crouch height | The Root joint's vertical offset is -0.34 at crouch idle against -0.35 to -0.44 while crouch walking, so the two are at the same height |
+| Wall run, one client | Holding Space for 0.9 s climbed from y 10.8 to 15.3. Releasing slid down, gently at first (about 10 studs over 0.7 s). A 90 ms tap kicked off, and the kick attached to the opposite wall |
+| Wall hand | Front view mid-run: the hand stops about 0.15 studs from the wall surface, with the root 2.0 studs out (it had gone into the wall) |
+| Mantle rule | Holding Space up the staircase: 0 mantle frames (it had mantled every step). Space about 3 studs before the face: the 3-stud box is jumped onto with no mantle, while the 4.5 and 5.5 stud ledges are mantled and end on top. Pressed against the face, a mantle runs (prediction logged: no time to clear) |
+| Fall pose | A long fall shows the "fall" state with the jump's apex pose swaying, arms bent around the body; a held-pose comparison showed Falling Idle as the crouched, limbs-out pose |
+| Two clients | 3/3 hold-and-tap runs (owner peak y≈19, kick clip on the peer) and 2/2 quick-release ride-outs (peak y 8-10) were seen by the peer. Server: 11 accepted, 0 rejected, 0 motion corrections; no script errors |
+| Public build, tests | Wall run climbs (peak y≈19) and kicks off with the original clip, with 0 rejections. Studio math and clip tests pass. Network emulation was 0/0/0/0 |
+| Checks | `python tools/verify_movement.py` passes |
+
+Not established: how wall climbing and the mantle rule feel in hand, gamepad and touch (a wall-run tap needs a button release, which touch `JumpRequest` does not report), and the running restyle (next owner item).
+
 ## v4.1 owner feedback pass (2026-10-29)
 
 Fixes for the owner's v4 playtest ([ADR 0006](decisions/0006-wall-run-and-v4-feedback.md)), checked in the private lab with real key presses (Studio's `user_keyboard_input`) where input mattered. [Sanitized evidence](evidence/2026-10-29-movement-v4.1.json).

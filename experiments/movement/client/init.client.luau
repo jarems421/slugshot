@@ -318,8 +318,32 @@ local function smoothstep(x: number): number
 	return x * x * (3 - 2 * x)
 end
 
--- Jump into a ledge: close to the wall, then climb along the clip's advance/rise
--- curves while the root is placed kinematically (Physics state, zero velocity).
+-- Whether the jump (about to start, or under way) carries the feet over the
+-- ledge top, with a margin, by the time the body reaches the ledge face.
+local function jumpClears(ledge: Traversal.Ledge): boolean
+	assert(humanoid and root, "jump check needs a character")
+	local settings = Trav.Mantle
+	local offset = Traversal.standOffset(humanoid, root)
+	local topY = ledge.target.Y - offset - 0.12
+	-- Low ledges (steps, small boxes) are never mantled, whatever the jump does.
+	local ground = workspace:Raycast(root.Position, Vector3.new(0, -60, 0), rays)
+	if ground and topY - ground.Position.Y < settings.MinGroundHeight then
+		return true
+	end
+	local velocity = root.AssemblyLinearVelocity
+	local rise = if grounded() then profile().JumpPower else velocity.Y
+	local toward = -ledge.normal
+	local approach =
+		math.max(Vector3.new(velocity.X, 0, velocity.Z):Dot(toward), settings.ClearApproach)
+	local face = ledge.wall - root.Position
+	local t = math.max(Vector3.new(face.X, 0, face.Z):Dot(toward) - 1, 0) / approach
+	local feetY = root.Position.Y - offset + rise * t - 0.5 * workspace.Gravity * t * t
+	return feetY >= topY + settings.ClearMargin
+end
+
+-- Jump into a ledge the jump would not clear: close to the wall, then climb along
+-- the clip's advance/rise curves while the root is placed kinematically (Physics
+-- state, zero velocity).
 local function startMantle(now: number): boolean
 	if acro or not character or not humanoid or not root or not rays or not overlap then
 		return false
@@ -360,7 +384,7 @@ local function startMantle(now: number): boolean
 	end
 	if not ledge then
 		ledge = Traversal.findLedge(humanoid, root, settings, rays, overlap)
-		if not ledge then
+		if not ledge or jumpClears(ledge) then
 			return false
 		end
 		target = ledge.target
@@ -556,8 +580,8 @@ local function tryWallRun(now: number): boolean
 		part = hit.Instance,
 		contact = hit.Position,
 		speed = math.max(along.Magnitude, run.Speed),
-		-- Keep part of the jump's rise so the run starts climbing, then sinks slowly.
-		rise = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
+		-- Keep part of the jump's rise; Jump held then climbs, released slides down.
+		vy = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
 	}
 	if not aiming then
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
@@ -602,7 +626,7 @@ local function onJumpPress()
 	setCrouch(false)
 	local now = workspace:GetServerTimeNow()
 	if acro and acro.kind == "WallRun" then
-		endWallRun(now, true)
+		acro.pressedAt = os.clock() -- held: climb; released quickly: kick off
 		return
 	end
 	if not startMantle(now) and not tryWallHop(now) and not grounded() then
@@ -741,6 +765,14 @@ end)
 UserInputService.InputEnded:Connect(function(input)
 	if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
 		jumpHeld = false
+		if
+			acro
+			and acro.kind == "WallRun"
+			and acro.pressedAt
+			and os.clock() - acro.pressedAt < Trav.WallRun.TapTime
+		then
+			endWallRun(workspace:GetServerTimeNow(), true)
+		end
 	end
 end)
 UserInputService.WindowFocusReleased:Connect(function()
@@ -898,7 +930,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v4.1   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (Space: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
+		"SLUGSHOT / MOVEMENT LAB v4.2   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
@@ -907,17 +939,26 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	)
 end)
 
-RunService.PreSimulation:Connect(function()
+RunService.PreSimulation:Connect(function(dt)
 	if acro and acro.kind == "WallRun" and root then
-		-- Along the wall, held lightly against it: a small rise that light wall
-		-- gravity turns into a slow sink.
+		-- Along the wall at the Hug distance: climbing while Jump is held (less as
+		-- the run goes on), otherwise sliding down ever faster.
 		local run = Trav.WallRun
 		local elapsed = workspace:GetServerTimeNow() - acro.start
+		if jumpHeld then
+			acro.releasedAt = nil
+		else
+			acro.releasedAt = acro.releasedAt or elapsed
+		end
+		local target = if acro.releasedAt
+			then -(run.Slide + run.SlideGrow * (elapsed - acro.releasedAt))
+			else run.Climb * math.max(1 - elapsed / run.MaxTime, 0)
+		acro.vy = Math.approach(acro.vy, target, run.VerticalAccel, dt)
 		local gap = (root.Position - acro.contact):Dot(acro.away)
-		local pull = run.Stick + math.clamp((gap - run.Hug) * 10, 0, 14)
+		local pull = math.clamp((gap - run.Hug) * run.Pull.Rate, -run.Pull.Away, run.Pull.Max)
 		root.AssemblyLinearVelocity = acro.direction * acro.speed
 			- acro.away * pull
-			+ Vector3.new(0, acro.rise - run.Gravity * elapsed, 0)
+			+ Vector3.new(0, acro.vy, 0)
 		return
 	end
 	if not acro or acro.kind ~= "Roll" or not root or not character then

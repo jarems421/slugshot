@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-29",
+  "branch": "experiment/movement-sandbox",
+  "scope": "v4.2: crouch idle height, wall-run height control and hand, mantle clear rule, fall pose",
+  "crouchRootY": {
+    "idle": -0.34,
+    "walk": [
+      -0.44,
+      -0.35
+    ]
+  },
+  "wallRun": {
+    "holdClimb": "y 10.8 -> 15.3 over 0.9 s held",
+    "releaseSlide": "about 10 studs over 0.7 s",
+    "tapKick": "90 ms tap kicked off; attached to the opposite wall",
+    "handGapStuds": 0.15,
+    "rootToWallStuds": 2.0
+  },
+  "mantle": {
+    "staircaseHeldSpaceMantleFrames": 0,
+    "earlyJump3Studs": "jumped on, no mantle",
+    "earlyJump4.5": "MantleVault, on top",
+    "earlyJump5.5": "MantleVault, on top"
+  },
+  "fall": "sways about jump apex; Falling Idle not shown",
+  "twoClients": {
+    "climbKickSeenByPeer": "3/3",
+    "rideOutSeenByPeer": "2/2",
+    "accepted": 11,
+    "rejected": 0,
+    "motionCorrections": 0,
+    "scriptErrors": 0
+  },
+  "publicBuild": {
+    "wallRunClimbPeakY": 19,
+    "rejects": 0,
+    "studioTests": "pass",
+    "networkEmulation": "0/0/0/0"
+  },
+  "sourceSha256": {
+    "experiments/movement/client/Presentation.luau": "58eb4c81b12aac84c9ce6d897f427ac37edf319283b831cbcdf582c2fff81d85",
+    "experiments/movement/client/Traversal.luau": "4f5bfb0c3f2a171964dc86145313c9666608c968c9f86e57c6510f884d035263",
+    "experiments/movement/client/init.client.luau": "8de84ec665ba5d2f4bc03f849acff27e3b4469f8bfe3afe61fc8b6fd75aa55f5",
+    "experiments/movement/server/Arena.luau": "4187338f64a9335bb6bff4ca11b84004f484215a95923467dcd933bb4bbcab94",
+    "experiments/movement/server/init.server.luau": "387a42b8aa18410619daf52487fb4772a5478c07cbd5ef5cd05f0b0f96617c5f",
+    "experiments/movement/shared/Clips.luau": "a0113b9e5f9934131e77beec9cdfaeefe0c3c70406921fb75d203b8c26d4d3a0",
+    "experiments/movement/shared/Config.luau": "2dc99c08ca87d8a67d48108d00d875e30c749cc8ea2e93b91bd25f72360a9f10",
+    "experiments/movement/shared/MotionMath.luau": "cb145fcbeeb4ef4f9a98fabc66bacfd4736d5970ac852e4476d432d0a97ac597",
+    "experiments/movement/shared/OriginalClips.luau": "3aba046924d1d11231ca0152c4cdc91ad42a8ebf0c58b12639de4c3b63b0710d",
+    "experiments/movement/tests/Clips.spec.server.luau": "b7e3af3e8248562c7a8b51366e81f2b35fffc804b459c2e09c0b1e8716eafdb0",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04",
+    "tools/mixamo_to_r15.py": "bb7a28cdbf03e6aaabf8b5073b0643cc00dc688c4ac153d07f040581de4b86f6",
+    "tools/mixamo_manifest.json": "530ee4a46764957478cb8b0b895626997600d344c2dcb55b67371b153f130480"
+  }
+}

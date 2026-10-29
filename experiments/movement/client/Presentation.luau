@@ -27,14 +27,7 @@ type Link = {
 
 local A = Config.Animation
 local IDENTITY = CFrame.identity
-local CROUCH_ARMS = {
-	"LeftShoulder",
-	"LeftElbow",
-	"LeftWrist",
-	"RightShoulder",
-	"RightElbow",
-	"RightWrist",
-}
+local BREATH_JOINTS = { "Waist", "Neck" }
 local DEBUG_POSES = RunService:IsStudio()
 
 local function parts(joint: AnimationJoint): (Instance?, Instance?)
@@ -136,6 +129,22 @@ function Presentation.start(clips: Clips.Library)
 		-- Rest feet rest on the floor, so this is the floor height in root space.
 		rig.ground = lowestPoint(rig.chain, {}, true)
 		rig.unit = Clips.hipUnit(rig.character)
+		-- Rest shoulder (sideways, height) in root space and arm length, for the
+		-- wall-run hand.
+		for _, link in rig.chain do
+			local parent = framesScratch[link.parent]
+			if link.joint == "LeftShoulder" and parent then
+				local shoulder = (parent * link.c0).Position
+				rig.shoulder = Vector2.new(math.abs(shoulder.X), shoulder.Y)
+			end
+		end
+		local character = rig.character
+		local upper = character:FindFirstChild("LeftUpperArm") :: BasePart?
+		local lower = character:FindFirstChild("LeftLowerArm") :: BasePart?
+		local hand = character:FindFirstChild("LeftHand") :: BasePart?
+		if upper and lower and hand then
+			rig.armLength = upper.Size.Y + lower.Size.Y + hand.Size.Y * 0.5
+		end
 		rig.character:SetAttribute("PresentationJointCount", count)
 	end
 
@@ -378,14 +387,23 @@ function Presentation.start(clips: Clips.Library)
 		if not idle or moveWeight >= 0.999 then
 			return moving, floor
 		end
-		local idlePose = Clips.sample(idle, now, scratch(rig, 11))
-		local idleFloor = Clips.floor(idle, now)
+		local idlePose, idleFloor
 		if crouched and clips.CrouchForward then
-			-- The crouch idle's hands hang to the floor; keep the crouch walk's raised arms.
-			local walk = Clips.sample(clips.CrouchForward, 0, scratch(rig, 21))
-			for _, joint in CROUCH_ARMS do
-				idlePose[joint] = walk[joint]
+			-- The crouch idle sits lower and drops its hands to the floor: stand in the
+			-- crouch walk's stance instead (same height and arms), breathing with the
+			-- crouch idle's torso and head.
+			idlePose = Clips.sample(clips.CrouchForward, 0, scratch(rig, 11))
+			idleFloor = Clips.floor(clips.CrouchForward, 0)
+			local breath = Clips.sample(idle, now, scratch(rig, 21))
+			local rest = Clips.sample(idle, 0, scratch(rig, 22))
+			for _, joint in BREATH_JOINTS do
+				idlePose[joint] = (idlePose[joint] or IDENTITY)
+					* (rest[joint] or IDENTITY):Inverse()
+					* (breath[joint] or IDENTITY)
 			end
+		else
+			idlePose = Clips.sample(idle, now, scratch(rig, 11))
+			idleFloor = Clips.floor(idle, now)
 		end
 		if #poses == 0 then
 			return idlePose, idleFloor
@@ -417,6 +435,13 @@ function Presentation.start(clips: Clips.Library)
 			if rig.jumped and now - rig.apexTime < reach then
 				return Clips.sample(jump, apex + (now - rig.apexTime) * 0.5, scratch(rig, 13)),
 					"apex"
+			end
+			local sway = A.FallFromJump
+			if sway then
+				-- Long falls stay in the jump's own look: a slow sway about its apex.
+				local phase = (now - rig.airStart) * 2 * math.pi / sway.Period
+				return Clips.sample(jump, apex + sway.Swing * math.sin(phase), scratch(rig, 13)),
+					"fall"
 			end
 		end
 		if clips.Fall then
@@ -629,12 +654,27 @@ function Presentation.start(clips: Clips.Library)
 	-- Wall run: the forward run cycle, body rolled away from the wall (feet toward
 	-- it) and the wall-side hand reaching out to the wall. side: -1 wall on the left.
 	local WallRun = Config.Traversal.WallRun
-	local function wallRunPose(rig: any, dt: number, now: number, speed: number, side: number): Pose
+	local function wallRunPose(
+		rig: any,
+		dt: number,
+		now: number,
+		speed: number,
+		side: number,
+		gap: number
+	): Pose
 		local forward = rig.root.CFrame.LookVector * math.max(speed, WallRun.Speed)
 		local pose = locomotion(rig, dt, now, Vector3.new(forward.X, 0, forward.Z))
-		pose.Root = CFrame.Angles(0, 0, side * WallRun.Tilt) * (pose.Root or IDENTITY)
+		local tilt = WallRun.Tilt
+		pose.Root = CFrame.Angles(0, 0, side * tilt) * (pose.Root or IDENTITY)
+		-- Spread the wall arm just enough for the hand to meet the wall (gap: root to
+		-- wall surface). The roll already leans the arm toward the wall by tilt.
+		local shoulder = rig.shoulder or Vector2.new(1, 1.4)
+		local swing = WallRun.ArmForward
+		local lateral = shoulder.X * math.cos(tilt) - shoulder.Y * math.sin(tilt)
+		local reach = (gap - lateral - WallRun.HandGap) / ((rig.armLength or 2.3) * math.cos(swing))
+		local spread = math.max(math.asin(math.clamp(reach, 0, 1)) - tilt, 0)
 		local prefix = if side < 0 then "Left" else "Right"
-		pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * 0.5, side * 1.4)
+		pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * swing, side * spread)
 		pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
 		pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
 		return pose
@@ -749,7 +789,8 @@ function Presentation.start(clips: Clips.Library)
 				rig.action = nil
 				startFade(rig, A.Fade.ActionOut, now)
 			else
-				pose = wallRunPose(rig, dt, now, flat.Magnitude, action.side)
+				local gap = if wall then wall.Distance else WallRun.Hug
+				pose = wallRunPose(rig, dt, now, flat.Magnitude, action.side, gap)
 				actionWeight = 1
 				floor, contact = 0, nil
 			end
