@@ -81,4 +81,16 @@ Decisions:
 - **Parkour mantle clip.** An original keyframed speed vault. The Mixamo Vault Over Box segment, even with its spin cancelled by a new converter option, did not read clearly on the R15 rig.
 - **Mantle style.** Pick by predicted reach: within 2 studs of the top, parkour; otherwise, climb.
 
+## Addendum: v4.4 (same day)
+
+The owner asked for:
+- wall jumps that go up or sideways, not only out
+- running up a wall and mantling over its top
+- a mantle that feels near-instant but not out of place
+
+Decisions:
+- **Kick direction.** The held input picks it: toward the wall, up (once per wall per airtime); along it, sideways; away or none, out.
+- **Mantles from a wall.** A mantle may interrupt a wall run or a kick. From a wall run it looks toward the wall and always takes the top.
+- **Mantle speed.** Target 0.2-0.3 s, with the approach speed kept.
+
 Evidence: [results](../movement-verification.md#v41-owner-feedback-pass-2026-10-29) and the [sanitized evidence](../evidence/2026-10-29-movement-v4.1.json).

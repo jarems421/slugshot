@@ -344,9 +344,17 @@ end
 
 -- Jump into a ledge the jump would not clear: close to the wall, then climb along
 -- the clip's advance/rise curves while the root is placed kinematically (Physics
--- state, zero velocity).
-local function startMantle(now: number): boolean
-	if acro or not character or not humanoid or not root or not rays or not overlap then
+-- state, zero velocity). `direction` looks for the ledge that way (the wall being
+-- run) instead of along the input; a kick or wall run in progress gives way.
+local function startMantle(now: number, direction: Vector3?): boolean
+	if
+		(acro and acro.kind ~= "WallHop" and acro.kind ~= "WallRun")
+		or not character
+		or not humanoid
+		or not root
+		or not rays
+		or not overlap
+	then
 		return false
 	end
 	local settings = Trav.Mantle
@@ -369,7 +377,7 @@ local function startMantle(now: number): boolean
 	local ledge: Traversal.Ledge? = nil
 	local target, lift, vaulting = CFrame.identity, 0, false
 	local shortfall = 0
-	if library.Vault and approach >= vault.MinSpeed then
+	if library.Vault and approach >= vault.MinSpeed and not direction then
 		local ahead = table.clone(settings)
 		ahead.Reach = settings.Reach + approach * vault.LookAhead
 		ahead.MaxHeight = vault.MaxHeight
@@ -385,15 +393,17 @@ local function startMantle(now: number): boolean
 		end
 	end
 	if not ledge then
-		ledge = Traversal.findLedge(humanoid, root, settings, rays, overlap)
+		ledge = Traversal.findLedge(humanoid, root, settings, rays, overlap, direction)
 		if not ledge then
 			return false
 		end
-		-- A jump that clears the top is just a jump onto it.
+		-- A jump that clears the top is just a jump onto it (from a wall, the top is
+		-- always taken).
 		shortfall = jumpShortfall(ledge)
-		if shortfall <= -settings.ClearMargin then
+		if shortfall <= -settings.ClearMargin and not direction then
 			return false
 		end
+		shortfall = math.max(shortfall, 0)
 		target = ledge.target
 	end
 	assert(ledge, "ledge resolved above")
@@ -464,11 +474,19 @@ local function finishMantle(completed: boolean)
 	end
 end
 
--- Kick away from a wall at `contact`: turn to face the launch and play the wall
--- jump clip for the side the wall is on (it ends facing the launch direction).
-local function kickOff(now: number, launch: Vector3, up: number, away: Vector3, contact: Vector3)
+-- Kick off a wall at `contact`: turn to face the launch and play the wall jump
+-- clip for the side the wall is on (it ends facing the launch direction). An
+-- up-kick keeps its facing (`face`) and plays the jump clip instead.
+local function kickOff(
+	now: number,
+	launch: Vector3,
+	up: number,
+	away: Vector3,
+	contact: Vector3,
+	face: Vector3?
+)
 	assert(root and humanoid, "kick needs a character")
-	local direction = flat(launch) or away
+	local direction = face or flat(launch) or away
 	hops += 1
 	lastHop = os.clock()
 	if Trav.WallHop.RefreshFlip then
@@ -489,14 +507,52 @@ local function kickOff(now: number, launch: Vector3, up: number, away: Vector3, 
 	-- The wall is behind-left when it lies to the left of the new facing.
 	local wallLeft = (-away):Dot(direction:Cross(Vector3.yAxis)) < 0
 	local clip = if wallLeft then "WallJumpLeft" else "WallJumpRight"
-	announce(
-		"WallHop",
-		if library[clip] then pickVariant(clip) else "WallHop",
-		direction,
-		1,
-		now,
-		contact
-	)
+	local variant = if face
+		then "WallKickUp"
+		elseif library[clip] then pickVariant(clip)
+		else "WallHop"
+	announce("WallHop", variant, direction, 1, now, contact)
+end
+
+-- What the held input asks of a kick off a wall: "Up" (toward the wall), "Side"
+-- (along it) or "Out" (away, or nothing held).
+local function kickMode(away: Vector3): string
+	local settings = Trav.WallHop
+	local into = -move:Dot(away)
+	local along = move - away * move:Dot(away)
+	if into > settings.Input then
+		return "Up"
+	elseif along.Magnitude > settings.Input and into > -settings.Input then
+		return "Side"
+	end
+	return "Out"
+end
+
+-- Launch for a kick: `along` is the current along-wall velocity, `out` the plain
+-- outward launch. Returns the launch, up speed and, for an up-kick, the facing kept.
+local upKickWall: Instance? = nil -- the wall already leapt up this airtime
+local function kickLaunch(
+	away: Vector3,
+	along: Vector3,
+	out: Vector3,
+	outUp: number,
+	part: Instance?
+): (Vector3, number, Vector3?)
+	local settings = Trav.WallHop
+	local mode = kickMode(away)
+	if mode == "Up" and part ~= nil and part == upKickWall then
+		mode = "Out" -- one leap up each wall per airtime: no endless climbing
+	end
+	if mode == "Up" then
+		upKickWall = part
+		local face = if root then flat(root.CFrame.LookVector) else nil
+		return away * settings.Up.Away + along * settings.Up.Carry, settings.Up.Speed, face or -away
+	elseif mode == "Side" then
+		local direction = flat(move - away * move:Dot(away)) or flat(along) or away
+		local sideways = math.max(along:Dot(direction), settings.Side.Speed)
+		return direction * sideways + away * settings.Side.Away, settings.Side.Up, nil
+	end
+	return out, outUp, nil
 end
 
 -- The wall last kicked off or run, which is not run again straight away.
@@ -531,13 +587,14 @@ local function tryWallHop(now: number): boolean
 		along = along.Unit * settings.MaxTangent
 	end
 	lastWallPart, lastWallTime = hit.Instance, clock
-	kickOff(
-		now,
+	local launch, up, face = kickLaunch(
+		away,
+		along,
 		away * settings.AwaySpeed + along * settings.TangentCarry,
 		settings.UpSpeed,
-		away,
-		hit.Position
+		hit.Instance
 	)
+	kickOff(now, launch, up, away, hit.Position, face)
 	return true
 end
 
@@ -607,13 +664,14 @@ local function endWallRun(now: number, jump: boolean)
 	lastWallPart, lastWallTime = wall.part, os.clock()
 	local run = Trav.WallRun
 	if jump then
-		kickOff(
-			now,
+		local launch, up, face = kickLaunch(
+			wall.away,
+			wall.direction * wall.speed,
 			wall.away * run.JumpAway + wall.direction * wall.speed * run.JumpCarry,
 			run.JumpUp,
-			wall.away,
-			wall.contact
+			wall.part
 		)
+		kickOff(now, launch, up, wall.away, wall.contact, face)
 		return
 	end
 	local velocity = root.AssemblyLinearVelocity
@@ -623,8 +681,18 @@ local function endWallRun(now: number, jump: boolean)
 	speed = math.min(wall.speed, profile().SprintSpeed)
 end
 
--- Jump presses: kick off a wall being run; else a ledge ahead takes priority,
--- then a wall to kick off.
+-- From a wall run: mantle onto the top of the wall when it is in reach.
+local function mantleFromWall(now: number): boolean
+	local wall = acro
+	if not wall or wall.kind ~= "WallRun" or not startMantle(now, -wall.away) then
+		return false
+	end
+	lastWallPart, lastWallTime = wall.part, os.clock()
+	return true
+end
+
+-- Jump presses: on a wall run, mantle its top or start a climb/kick; else a ledge
+-- ahead takes priority, then a wall to kick off.
 local function onJumpPress()
 	jumpWindow = os.clock() + Trav.Mantle.JumpWindow
 	if not humanoid or not root or humanoid.Health <= 0 then
@@ -633,7 +701,9 @@ local function onJumpPress()
 	setCrouch(false)
 	local now = workspace:GetServerTimeNow()
 	if acro and acro.kind == "WallRun" then
-		acro.pressedAt = os.clock() -- held: climb; released quickly: kick off
+		if not mantleFromWall(now) then
+			acro.pressedAt = os.clock() -- held: climb; released quickly: kick off
+		end
 		return
 	end
 	if not startMantle(now) and not tryWallHop(now) and not grounded() then
@@ -778,7 +848,10 @@ UserInputService.InputEnded:Connect(function(input)
 			and acro.pressedAt
 			and os.clock() - acro.pressedAt < Trav.WallRun.TapTime
 		then
-			endWallRun(workspace:GetServerTimeNow(), true)
+			local now = workspace:GetServerTimeNow()
+			if not mantleFromWall(now) then
+				endWallRun(now, true)
+			end
 		end
 	end
 end)
@@ -838,7 +911,14 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 			acro.away, acro.contact = away, hit.Position
 			acro.direction = flat(along) or acro.direction
 		end
-		if not away or onGround then
+		local mantled = false
+		if not away or (jumpHeld and os.clock() - lastMantleCheck >= Trav.Mantle.CheckInterval) then
+			lastMantleCheck = os.clock()
+			mantled = mantleFromWall(now)
+		end
+		if mantled then
+			kind = "Mantle"
+		elseif not away or onGround then
 			endWallRun(now, false)
 			kind = nil
 		elseif not aiming then
@@ -866,7 +946,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		humanoid:Move(move, false)
 	end
 	if
-		not acro
+		(not acro or acro.kind == "WallHop")
 		and (jumpHeld or os.clock() < jumpWindow)
 		and os.clock() - lastMantleCheck >= Trav.Mantle.CheckInterval
 	then
@@ -916,7 +996,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		airUsed = false
 	end
 	if grounded() then
-		hops, hopBuffer = 0, 0
+		hops, hopBuffer, upKickWall = 0, 0, nil
 		lastGrounded = os.clock()
 	elseif os.clock() < hopBuffer and tryWallHop(now) then
 		hopBuffer = 0
@@ -931,7 +1011,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v4.3   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d   |   Last rejected: %s",
+		"SLUGSHOT / MOVEMENT LAB v4.4   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d   |   Last rejected: %s",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,

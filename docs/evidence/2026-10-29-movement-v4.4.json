@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-29",
+  "branch": "experiment/movement-sandbox",
+  "scope": "v4.4: directional wall kicks, wall-top mantle from a wall run or kick, quicker mantles",
+  "wallRunOverTop": {
+    "attachY": 9.7,
+    "mantle": "MantleHang",
+    "seconds": 0.33
+  },
+  "upKick": {
+    "variant": "WallKickUp",
+    "upSpeed": 55,
+    "renderedClip": "Jump",
+    "secondOnSameWall": "WallJumpRight.2 (out)"
+  },
+  "sideKick": {
+    "awaySpeed": 8,
+    "alongSpeed": 28,
+    "then": "re-attached further along"
+  },
+  "mantleSeconds": {
+    "5.5": [
+      "MantleVault",
+      0.3
+    ],
+    "4.5": "jumped onto"
+  },
+  "rejections": 0,
+  "twoClients": "not re-run",
+  "sourceSha256": {
+    "experiments/movement/client/Presentation.luau": "eed02737488a0774ced24c9a3c86488b0a6fa05a79e0b097c6091f94c1feb48c",
+    "experiments/movement/client/Traversal.luau": "275c462de73c3eba739a769c2e6361781f16cf50106369bcfc4d3e6c2933feb7",
+    "experiments/movement/client/init.client.luau": "ff05c8600aca4bd1b21fe61b2329d12b2236c529810555e58dad005b6e789f84",
+    "experiments/movement/server/Arena.luau": "1aa8270aef9497f7a4b965c7d0151871a899d2c8dc21e928b4ad30817aa110a4",
+    "experiments/movement/server/init.server.luau": "387a42b8aa18410619daf52487fb4772a5478c07cbd5ef5cd05f0b0f96617c5f",
+    "experiments/movement/shared/Clips.luau": "a0113b9e5f9934131e77beec9cdfaeefe0c3c70406921fb75d203b8c26d4d3a0",
+    "experiments/movement/shared/Config.luau": "34bf3f85addfe640636a474f39a10d87e8102f1444228c25076887e597fef8b9",
+    "experiments/movement/shared/MotionMath.luau": "cb145fcbeeb4ef4f9a98fabc66bacfd4736d5970ac852e4476d432d0a97ac597",
+    "experiments/movement/shared/OriginalClips.luau": "2db295ae9d6684b833a04a39f46700fdba8c4e5b0c13646a1ca4759b352a3167",
+    "experiments/movement/tests/Clips.spec.server.luau": "b7e3af3e8248562c7a8b51366e81f2b35fffc804b459c2e09c0b1e8716eafdb0",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04",
+    "tools/mixamo_to_r15.py": "b2f1c9f147150139f9256667babcbb92497c591b515b16f26a229ec819d41d7a",
+    "tools/mixamo_manifest.json": "492087e8b72874d7cb3a033d25d4f8455f1d15f0bb9d1a64fd72d6a84e677539"
+  }
+}

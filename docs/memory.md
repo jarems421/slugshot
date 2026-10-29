@@ -117,3 +117,12 @@
 - **Mixamo did not have the mantle.** Mixamo's vault selection is thin. Vault Over Box contains the motion, but even spin-cancelled (new `flattenYaw` converter option) it read as a hunched ball on the R15 rig. An original keyframed speed vault reads clearly. Lesson: on the blocky rig, a hand-keyed clip can beat mocap for silhouette-driven moves.
 - **Possible interference with tests.** A two-client run showed crouch/flip input the script never sent, plus 5 rejections. The owner may have been playing in the popped-up test window, and that session's windows stayed open. The HUD now shows the last rejection; avoid long Studio test runs while the owner may be playing.
 - Next: the owner reviews v4.3; running animation rework.
+
+## 2026-10-29 - Owner feedback on v4.3 (v4.4)
+
+- The owner wants wall jumps that go up or sideways as well as out, running up a wall then mantling over the top, and mantles that feel near-instant ("frictionless").
+- **Kick direction.** The held input picks it, reusing the camera-relative move vector: toward the wall, up; along, side; away or none, out.
+- **Limits.** One up-kick per wall per airtime prevents climbing a wall forever; the 8-kick limit still bounds chains.
+- **Mantle.** Mantles can interrupt a wall run or a kick; from a wall they look toward it and always take the top. Duration is 0.2-0.3 s.
+- **Testing.** Two-client tests were not re-run, to avoid popping up test windows while the owner may be playing.
+- Next: the owner reviews v4.4; running animation rework.

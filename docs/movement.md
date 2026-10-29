@@ -11,19 +11,19 @@ python tools/build_movement_playtest.py --retarget    # private Mixamo lab (v4),
 
 Open a place in Studio and press Play. Studio does not reload a rebuilt `.rbxlx`: close and reopen it after rebuilding.
 
-- `SlugshotMovementLabPrivate.rbxlx`: **v4.3**, the owner's Mixamo clips with transitions, crouch, vault, wall run and parkour mantle (the HUD shows `original + N private clips`). Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
+- `SlugshotMovementLabPrivate.rbxlx`: **v4.4**, the owner's Mixamo clips with transitions, crouch, vault, wall run and parkour mantle (the HUD shows `original + N private clips`). Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
 - `SlugshotMovementLab.rbxlx`: the same code with original clips only (HUD: `original clips`). Wall run works with the original wall-hop clip; vault, parkour mantle and transitions need Mixamo clips.
 - `SlugshotMovementLab-v2.rbxlx`: v2 (clips, rolls, flips), rebuilt from commit `0b06985`.
 - `SlugshotMovementLab-v1.rbxlx`: the first lab, rebuilt from commit `e2b5688`.
 
 For live editing, serve `movement.project.json` with the Rojo plugin on port **34873**.
 
-| Control | Experimental action (v4.3) |
+| Control | Experimental action (v4.4) |
 | --- | --- |
 | WASD / native movement controls | Run (eight directions; jog while accelerating) |
 | Shift / gamepad L3 | Sprint (also stands up from a crouch) |
 | C / gamepad R3 | Crouch toggle (crouch walk in four directions) |
-| Space / native jump | Jump. **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically, locked on until your feet reach the ground or the wall ends. Hold Space to run up the wall (easing into a slow slide), release to slide down, tap Space to kick off. Ledges are mantled only when the jump would not clear them, and never when under 2.2 studs above the ground. **In the air beside a wall**: wall jump away from it; presses up to 0.35 s early count. Up to 8 kicks per airtime, enough to climb between two walls; each restores the flip |
+| Space / native jump | Jump. **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically, locked on until your feet reach the ground or the wall ends. Hold Space to run up the wall (easing into a slow slide) and over its top when you reach it; release to slide down; tap Space to kick off. Ledges are mantled only when the jump would not clear them, and never when under 2.2 studs above the ground. **In the air beside a wall**: wall jump; presses up to 0.35 s early count. The held direction picks the kick: toward the wall leaps up it (once per wall per airtime), along it jumps sideways, away or nothing kicks out (also for the tap off a wall run). Up to 8 kicks per airtime, enough to climb between two walls; each restores the flip |
 | Q / gamepad B | **Acrobatics**: on the ground, roll toward your input (forward, back, left or right of your facing); in the air, front flip, or backflip when holding back. Pressing during a flip or just before landing queues a landing roll |
 | RMB / gamepad L2 | Shoulder aim pose, stable camera, small FOV change |
 | Click / gamepad R2 | Harmless aim marker; no damage or projectile system |
@@ -31,6 +31,12 @@ For live editing, serve `movement.project.json` with the Rojo plugin on port **3
 | P / R | Cycle Baseline, Athletic, Precise profiles / respawn |
 
 v1's separate F flourish is gone: Q is the single context-sensitive control. Touch/gamepad bindings exist but have not been device-tested.
+
+## What changed in v4.4 (owner feedback on v4.3)
+
+- **Directional wall jumps.** The kick follows the held input: toward the wall leaps straight up it (58 studs/s up, facing the wall, jump clip), along the wall jumps off sideways (keeps the run speed, 8 studs/s out), away or nothing kicks out as before. The up-leap works once per wall per airtime, so a single wall cannot be climbed forever. The same choice applies to the tap off a wall run.
+- **Up and over.** Holding Space on a wall run mantles over the top when it comes in reach, and so does a Space press near the top or the wall ending under you. Ledge checks also run straight after a kick, so leap up a wall, then over.
+- **Faster mantles.** Target 0.2-0.3 s (was 0.32-0.48), clips up to 5x, full approach speed kept on top (at least 14 studs/s), 0.2 s cooldown.
 
 ## What changed in v4.3 (owner feedback on v4.2)
 
@@ -118,7 +124,7 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 3. Jump early and late, flip forward and back, queue landing rolls. Is one context-sensitive button better than separate controls?
 4. Aim (RMB) through rolls and flips and place markers: is the camera comfortable?
 5. Run and jump into each ledge on the traversal course and climb the chimney. Do mantles feel responsive and grounded? Is wall-hop height/distance right, and does hop then backflip read well?
-6. v4.3 (private lab): ride a wall run down to the floor; climb the 40-stud corridor by wall jumping between the walls; mantle each ledge with early and late jumps (parkour vault versus climb); note any 'Last rejected' reason on the HUD. Which still look or feel wrong?
+6. v4.4 (private lab): wall run up the 16-stud wall holding Space and over the top; run at it holding W and jump twice (leap up, then over); tap off a wall run holding forward (sideways) and holding away (out); mantle each ledge. Note any 'Last rejected' reason on the HUD. Which still look or feel wrong?
 7. Decide which clips are good enough and which should be replaced (more Mixamo choices, or Animation Editor work).
 
 [Research](research/movement.md) · [Assets and Mixamo pipeline](movement-assets.md) · [Results](movement-verification.md) · [ADR 0003](decisions/0003-clip-presentation.md) · [ADR 0004](decisions/0004-place1-traversal.md) · [ADR 0005](decisions/0005-mixamo-variants-transitions.md) · [ADR 0006](decisions/0006-wall-run-and-v4-feedback.md)

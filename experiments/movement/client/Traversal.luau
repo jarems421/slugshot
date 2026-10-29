@@ -100,15 +100,16 @@ local function clearanceOpen(
 	return true
 end
 
--- A climbable ledge ahead of the movement direction, or nil.
+-- A climbable ledge ahead of the movement direction (or `direction`), or nil.
 function Traversal.findLedge(
 	humanoid: Humanoid,
 	root: BasePart,
 	settings: any,
 	rays: RaycastParams,
-	overlap: OverlapParams
+	overlap: OverlapParams,
+	direction: Vector3?
 ): Ledge?
-	local move = horizontal(humanoid.MoveDirection)
+	local move = horizontal(direction or humanoid.MoveDirection)
 	if move.Magnitude < 0.12 then
 		return nil
 	end

@@ -606,7 +606,8 @@ function Presentation.start(clips: Clips.Library)
 		local character = rig.character
 		local kind = character:GetAttribute("MovementAction")
 		local variant = character:GetAttribute("MovementVariant") or ""
-		local clip = clips[variant]
+		-- A leap up a wall plays the jump's rise.
+		local clip = clips[variant] or if variant == "WallKickUp" then clips.Jump else nil
 		if kind == "WallRun" and now - stamp <= 1.5 then
 			-- Procedural: the run cycle against the wall (see wallRunPose).
 			rig.action = {

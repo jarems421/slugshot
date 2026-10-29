@@ -2,6 +2,20 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v4.4 owner feedback pass (2026-10-29)
+
+Changes from the owner's v4.3 playtest ([ADR 0006 addendum](decisions/0006-wall-run-and-v4-feedback.md#addendum-v44-same-day)), tested with real key presses in the private lab. [Sanitized evidence](evidence/2026-10-29-movement-v4.4.json).
+
+| Check | Observed result |
+| --- | --- |
+| Wall run, up and over | Along the 16-stud wall, holding Space: attached at y 9.7, climbed, then mantled onto the top (MantleHang, 0.33 s, root at the top's stand height) |
+| Up-kick | Holding into the wall, a second Space press leapt straight up (`WallKickUp`, 55 studs/s up, the jump clip rendered) and carried over the 16-stud top. On the 40-stud wall, a second kick on the same wall became an outward kick (WallJumpRight.2) |
+| Side kick | Wall run, tap while holding along the wall: launched 8 studs/s out and 28 along with the WallJump clip, then re-attached to the same wall further along |
+| Mantle speed | The 5.5-stud ledge: MantleVault in 0.30 s (v4.3: about 0.46 s); the 4.5-stud ledge was jumped onto. 0 rejections throughout |
+| Checks | `python tools/verify_movement.py` passes |
+
+Not established: two-client rendering of the up-kick (it uses the same attribute path as other kicks; not re-run, to avoid opening test windows while the owner may be playing), and feel in hand.
+
 ## v4.3 owner feedback pass (2026-10-29)
 
 Changes from the owner's v4.2 playtest ([ADR 0006 addendum](decisions/0006-wall-run-and-v4-feedback.md#addendum-v43-same-day)), tested with real key presses. [Sanitized evidence](evidence/2026-10-29-movement-v4.3.json).

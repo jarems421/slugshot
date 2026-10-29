@@ -61,13 +61,13 @@ return table.freeze({
 			-- Parkour mantle (one-hand vault, when present) when the jump brings the feet
 			-- within this of the ledge top at its face; further below, a reaching climb.
 			ParkourReach = 2,
-			Duration = { Base = 0.28, PerStud = 0.04, Min = 0.32, Max = 0.48 },
-			MaxRate = 3.2, -- longer clips (motion capture) play up to this fast, then stretch the climb
+			Duration = { Base = 0.16, PerStud = 0.025, Min = 0.2, Max = 0.3 }, -- quick, not a climb sequence
+			MaxRate = 5, -- longer clips (motion capture) play up to this fast, then stretch the climb
 			HangHeight = 5, -- at or above: hanging climb clip, when present
 			HangGap = 0.8, -- root distance from the wall face while the hands plant
-			ExitSpeed = 0.8, -- fraction of the approach speed kept on top
-			ExitMin = 8,
-			Cooldown = 0.34,
+			ExitSpeed = 1, -- fraction of the approach speed kept on top
+			ExitMin = 14,
+			Cooldown = 0.2,
 			CheckInterval = 0.055, -- ledge checks while jump is held
 			JumpWindow = 0.34, -- seconds after a jump press that ledges still count
 			-- Only ledges the jump would not clear are mantled: if the feet are predicted
@@ -88,6 +88,12 @@ return table.freeze({
 			Buffer = 0.35, -- an airborne press too early or out of reach is retried this long
 			LockTime = 0.22, -- seconds the kick owns movement before input resumes
 			RefreshFlip = true, -- a hop restores the airborne flip
+			-- The kick follows the input held on the press: toward the wall leaps up it
+			-- (once per wall per airtime), along it jumps off sideways, away or none
+			-- kicks out. Input counts once its component passes Input.
+			Input = 0.5,
+			Up = { Speed = 58, Away = 3, Carry = 0.3 },
+			Side = { Speed = 26, Away = 8, Up = 46 },
 		},
 		-- Jumping into a thin, low obstacle at speed vaults over it (needs a Vault clip).
 		Vault = {
@@ -194,7 +200,7 @@ return table.freeze({
 		RollVariants = { "RollForward", "RollBack", "RollLeft", "RollRight", "RollLand" },
 		FlipVariants = { "FlipFront", "FlipBack", "FlipDrop" },
 		MantleVariants = { "MantleLow", "MantleVault", "MantleHigh", "MantleHang", "Vault" },
-		WallHopVariants = { "WallHop", "WallJumpLeft", "WallJumpRight" },
+		WallHopVariants = { "WallHop", "WallJumpLeft", "WallJumpRight", "WallKickUp" },
 		WallRunVariants = { "WallRunLeft", "WallRunRight" },
 		TraversalSlack = 4, -- studs of replication lag allowed in traversal checks
 	},
