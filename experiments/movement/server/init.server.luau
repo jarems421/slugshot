@@ -17,6 +17,7 @@ local ACTION_VARIANTS = {
 	Flip = Config.Validation.FlipVariants,
 	Mantle = Config.Validation.MantleVariants,
 	WallHop = Config.Validation.WallHopVariants,
+	WallRun = Config.Validation.WallRunVariants,
 }
 
 local function spawnCharacter(player: Player)
@@ -152,8 +153,9 @@ local function traversalValid(
 				and offset.Y >= -2
 				and offset.Y <= settings.MaxHeight + 1 + slack
 		else
-			near = flat <= Config.Traversal.WallHop.Reach + slack
-				and math.abs(offset.Y) <= 2 + slack
+			local wallReach =
+				math.max(Config.Traversal.WallHop.Reach, Config.Traversal.WallRun.Reach)
+			near = flat <= wallReach + slack and math.abs(offset.Y) <= 2 + slack
 		end
 		if near then
 			break
@@ -194,7 +196,7 @@ local function grounded(character: Model, root: BasePart, humanoid: Humanoid): b
 		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), params) ~= nil
 end
 
--- Validates a Roll/Flip/Mantle/WallHop request against server-observed state and
+-- Validates a Roll/Flip/Mantle/WallHop/WallRun request against server-observed state and
 -- publishes it for every client. Returns a rejection reason, or nil on success.
 local function validateAction(
 	player: Player,
@@ -228,13 +230,13 @@ local function validateAction(
 		or not Math.finite(rate)
 		or (kind == "Roll" and (rate < roll.MinRate - 1e-3 or rate > roll.MaxRate + 1e-3))
 		or (kind == "Flip" and (rate < limits.MinRate - 1e-3 or rate > limits.MaxRate + 1e-3))
-		or (kind == "Mantle" and (rate < 0.5 or rate > 3))
-		or (kind == "WallHop" and rate ~= 1)
+		or (kind == "Mantle" and (rate < 0.5 or rate > Config.Traversal.Mantle.MaxRate + 1e-3))
+		or ((kind == "WallHop" or kind == "WallRun") and rate ~= 1)
 	then
 		return "rate"
 	end
 	local target = vectorOf(packet.target)
-	local traversal = kind == "Mantle" or kind == "WallHop"
+	local traversal = kind == "Mantle" or kind == "WallHop" or kind == "WallRun"
 	if traversal and not target then
 		return "target"
 	end
@@ -282,6 +284,12 @@ local function validateAction(
 			return "mantle-state"
 		end
 		state.lastMantle = now
+	elseif kind == "WallRun" then
+		-- Attaching needs no hop; jumping off it is a WallHop request.
+		if onGround or now - (state.lastWallRun or -math.huge) < 0.2 then
+			return "wallrun-state"
+		end
+		state.lastWallRun = now
 	else
 		local settings = Config.Traversal.WallHop
 		if

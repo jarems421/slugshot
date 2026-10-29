@@ -73,3 +73,21 @@
   - Client-side teleports can trigger the server's motion correction; teleport from the server in two-client tests.
   - Multiplayer test windows from earlier runs had stayed open for hours; they were ended with `StudioTestService:EndTest`. Check for leftover Studio windows after multiplayer tests.
 - See [results](movement-verification.md#v4-mixamo-clips-2026-10-29). Next gate: owner playtest of the private v4 lab.
+
+## 2026-10-29 - Owner feedback on v4 (v4.1)
+
+- **Wrong build.** The owner first played the public build by mistake: four Studio windows were open. The HUD names the clip source (`original + N private clips`); point to it when handing over a build.
+- **Owner's feedback on v4.** Wall run/jump did nothing, too many jump variants, a crouch drop to all fours, cuts between stop/idle/fidget, short fast running strides, a slow mantle, and a falling pose on box edges. A second round said the v4 "wall run" was a hop: a standard wall run attaches when you jump onto a wall while running. Sloped walls were raised, then deferred.
+- **Root cause of the dead wall moves.** `UserInputService.JumpRequest` did not fire for Space in Studio, and v4 tests had called the jump handler directly. Lesson: test inputs through the real input path (`user_keyboard_input`), not only probes.
+- **Implemented** (see [ADR 0006](decisions/0006-wall-run-and-v4-feedback.md)):
+  - wall run as an automatic attach state with kick-off (procedural pose)
+  - wall jumps from the owner's kick clips
+  - a parkour mantle from Vault Over Box
+  - one running and one standing jump
+  - crossfaded crouch and transitions; no fidget
+  - a restyled stride
+  - a sphere ground check
+- **Observer bug.** The wall-run action could reach observers before the body left the ground, ending it at once; observers now wait 0.35 s before end checks.
+- **Lag emulation left on again.** Studio network emulation was found at 60/60/10/10 ms in two windows (cause not established; probably an earlier test of mine) and reset to 0. The owner's v4 playtest may have run with that lag. Check it at the start of each session.
+- **Updating open Studio windows.** `ScriptEditorService:UpdateSourceAsync` works where `Source` assignment is capped at 200,000 characters. Studio relaunches hung while orphaned test windows were open, and force-closing Studio was not permitted.
+- Next: the owner reviews v4.1; running animation rework.

@@ -46,7 +46,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "MovementSandboxHUD"
 gui.ResetOnSpawn = false
 local label = Instance.new("TextLabel")
-label.Size = UDim2.fromOffset(660, 146)
+label.Size = UDim2.fromOffset(780, 146)
 label.Position = UDim2.fromOffset(20, 65)
 label.BackgroundColor3 = Color3.fromRGB(20, 28, 40)
 label.BackgroundTransparency = 0.12
@@ -368,6 +368,9 @@ local function startMantle(now: number): boolean
 	assert(ledge, "ledge resolved above")
 	local variant = if vaulting
 		then pickVariant("Vault")
+		elseif ledge.height < settings.ParkourHeight and library.MantleVault then pickVariant(
+			"MantleVault"
+		)
 		elseif ledge.height < settings.LowHeight then "MantleLow"
 		else "MantleHigh"
 	if variant == "MantleHigh" then
@@ -430,8 +433,46 @@ local function finishMantle(completed: boolean)
 	end
 end
 
--- Airborne jump beside a wall: kick away from it, keeping some along-wall speed,
--- and turn to face the new direction.
+-- Kick away from a wall at `contact`: turn to face the launch and play the wall
+-- jump clip for the side the wall is on (it ends facing the launch direction).
+local function kickOff(now: number, launch: Vector3, up: number, away: Vector3, contact: Vector3)
+	assert(root and humanoid, "kick needs a character")
+	local direction = flat(launch) or away
+	hops += 1
+	lastHop = os.clock()
+	if Trav.WallHop.RefreshFlip then
+		airUsed = false
+	end
+	if not aiming then
+		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
+	end
+	humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	root.AssemblyLinearVelocity = launch + Vector3.new(0, up, 0)
+	acro = {
+		kind = "WallHop",
+		start = now,
+		duration = Trav.WallHop.LockTime,
+		direction = direction,
+		speed = launch.Magnitude,
+	}
+	-- The wall is behind-left when it lies to the left of the new facing.
+	local wallLeft = (-away):Dot(direction:Cross(Vector3.yAxis)) < 0
+	local clip = if wallLeft then "WallJumpLeft" else "WallJumpRight"
+	announce(
+		"WallHop",
+		if library[clip] then pickVariant(clip) else "WallHop",
+		direction,
+		1,
+		now,
+		contact
+	)
+end
+
+-- The wall last kicked off or run, which is not run again straight away.
+local lastWallPart: Instance? = nil
+local lastWallTime = -math.huge
+
+-- Airborne jump beside a wall: kick away from it, keeping some along-wall speed.
 local function tryWallHop(now: number): boolean
 	if not character or not humanoid or not root or not rays then
 		return false
@@ -454,67 +495,105 @@ local function tryWallHop(now: number): boolean
 	local away = flat(hit.Normal) or -(flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1))
 	local velocity = root.AssemblyLinearVelocity
 	local along = Vector3.new(velocity.X, 0, velocity.Z)
-	local into = if along.Magnitude > 0.1 then -along.Unit:Dot(away) else 1
 	along -= away * along:Dot(away)
-	-- Taken along the wall at speed (not straight into it): run up it, then kick.
-	local run = Trav.WallRun
-	if
-		hops == 0
-		and along.Magnitude >= run.MinAlong
-		and into < run.MaxInto
-		and library.WallRunLeft
-		and library.WallRunRight
-	then
-		local direction = along.Unit
-		-- Wall on the left when its normal points to the runner's right.
-		local side = if away:Dot(direction:Cross(Vector3.yAxis)) > 0
-			then "WallRunLeft"
-			else "WallRunRight"
-		hops += 1
-		lastHop = clock
-		if not aiming then
-			root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
-		end
-		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-		acro = {
-			kind = "WallHop",
-			wallRun = true,
-			start = now,
-			duration = run.Time,
-			direction = direction,
-			away = away,
-			speed = math.max(along.Magnitude, run.Speed),
-		}
-		announce("WallHop", pickVariant(side), direction, 1, now, hit.Position)
-		return true
-	end
 	if along.Magnitude > settings.MaxTangent then
 		along = along.Unit * settings.MaxTangent
 	end
-	local launch = away * settings.AwaySpeed + along * settings.TangentCarry
-	local direction = launch.Unit
-	hops += 1
-	lastHop = clock
-	if settings.RefreshFlip then
-		airUsed = false
-	end
-	if not aiming then
-		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
-	end
-	humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-	root.AssemblyLinearVelocity = launch + Vector3.new(0, settings.UpSpeed, 0)
-	acro = {
-		kind = "WallHop",
-		start = now,
-		duration = settings.LockTime,
-		direction = direction,
-		speed = launch.Magnitude,
-	}
-	announce("WallHop", "WallHop", direction, 1, now, hit.Position)
+	lastWallPart, lastWallTime = hit.Instance, clock
+	kickOff(
+		now,
+		away * settings.AwaySpeed + along * settings.TangentCarry,
+		settings.UpSpeed,
+		away,
+		hit.Position
+	)
 	return true
 end
 
--- Jump presses: a ledge ahead takes priority, then a wall to kick off.
+-- Airborne, running along a wall (not into it) with input along it: attach and
+-- run along the wall. No button; the jump onto the wall is enough.
+local function tryWallRun(now: number): boolean
+	if acro or not character or not humanoid or not root or not rays then
+		return false
+	end
+	local run = Trav.WallRun
+	local clock = os.clock()
+	if grounded() or clock - lastGrounded < Trav.WallHop.GroundDelay or humanoid.Health <= 0 then
+		return false
+	end
+	local velocity = root.AssemblyLinearVelocity
+	local travel = Vector3.new(velocity.X, 0, velocity.Z)
+	if travel.Magnitude < run.MinAlong then
+		return false
+	end
+	local stand = Traversal.standOffset(humanoid, root)
+	if workspace:Raycast(root.Position, Vector3.new(0, -(stand + run.MinHeight), 0), rays) then
+		return false -- too close to the ground
+	end
+	local hit = Traversal.findWall(humanoid, root, run, rays)
+	if not hit or (hit.Instance == lastWallPart and clock - lastWallTime < run.Reattach) then
+		return false
+	end
+	local away = flat(hit.Normal)
+	local into = if away then -travel.Unit:Dot(away) else 0
+	if not away or into > run.MaxInto or into < -0.35 then
+		return false -- too head-on, or already moving away from it
+	end
+	local along = travel - away * travel:Dot(away)
+	if along.Magnitude < run.MinAlong or move:Dot(along.Unit) < run.MinInput then
+		return false
+	end
+	local direction = along.Unit
+	-- Wall on the left when its normal points to the runner's right.
+	local side = if away:Dot(direction:Cross(Vector3.yAxis)) > 0 then "Left" else "Right"
+	setCrouch(false)
+	acro = {
+		kind = "WallRun",
+		start = now,
+		direction = direction,
+		away = away,
+		side = side,
+		part = hit.Instance,
+		contact = hit.Position,
+		speed = math.max(along.Magnitude, run.Speed),
+		-- Keep part of the jump's rise so the run starts climbing, then sinks slowly.
+		rise = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
+	}
+	if not aiming then
+		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
+	end
+	announce("WallRun", "WallRun" .. side, direction, 1, now, hit.Position)
+	return true
+end
+
+-- Leave the wall: Jump kicks off it; otherwise drop away from it.
+local function endWallRun(now: number, jump: boolean)
+	local wall = acro
+	if not wall or wall.kind ~= "WallRun" or not root then
+		return
+	end
+	acro = nil
+	lastWallPart, lastWallTime = wall.part, os.clock()
+	local run = Trav.WallRun
+	if jump then
+		kickOff(
+			now,
+			wall.away * run.JumpAway + wall.direction * wall.speed * run.JumpCarry,
+			run.JumpUp,
+			wall.away,
+			wall.contact
+		)
+		return
+	end
+	local velocity = root.AssemblyLinearVelocity
+	root.AssemblyLinearVelocity = wall.direction * wall.speed
+		+ wall.away * run.Release
+		+ Vector3.new(0, velocity.Y, 0)
+	speed = math.min(wall.speed, profile().SprintSpeed)
+end
+
+-- Jump presses: kick off a wall being run; else a ledge ahead takes priority,
+-- then a wall to kick off.
 local function onJumpPress()
 	jumpWindow = os.clock() + Trav.Mantle.JumpWindow
 	if not humanoid or not root or humanoid.Health <= 0 then
@@ -522,6 +601,10 @@ local function onJumpPress()
 	end
 	setCrouch(false)
 	local now = workspace:GetServerTimeNow()
+	if acro and acro.kind == "WallRun" then
+		endWallRun(now, true)
+		return
+	end
 	if not startMantle(now) and not tryWallHop(now) and not grounded() then
 		hopBuffer = os.clock() + Trav.WallHop.Buffer -- retried each frame
 	end
@@ -628,18 +711,31 @@ ContextActionService:BindAction("ExperimentRespawn", function(_, state)
 		send("Respawn")
 	end
 end, false, Enum.KeyCode.R)
--- JumpRequest covers keyboard, gamepad and touch; it can repeat while held, so a
--- gap marks a new press. Held jump keeps checking for ledges.
+-- Space/ButtonA presses are jump presses. JumpRequest does not fire for them in
+-- every case (it did not while airborne in Studio), so it only covers touch; it
+-- repeats while held, so a gap marks a new press. Held jump keeps checking ledges.
+local lastJumpPress = -math.huge
+local function jumpPressed()
+	local clock = os.clock()
+	if clock - lastJumpPress > 0.12 then
+		lastJumpPress = clock
+		onJumpPress()
+	end
+end
 UserInputService.JumpRequest:Connect(function()
 	local clock = os.clock()
-	if clock - lastJumpRequest > 0.12 then
-		onJumpPress()
+	if clock - lastJumpRequest > 0.12 and not jumpHeld then
+		jumpPressed()
 	end
 	lastJumpRequest = clock
 end)
-UserInputService.InputBegan:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
+UserInputService.InputBegan:Connect(function(input, processed)
+	if
+		not processed
+		and (input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA)
+	then
 		jumpHeld = true
+		jumpPressed()
 	end
 end)
 UserInputService.InputEnded:Connect(function(input)
@@ -692,30 +788,40 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	local onGround = humanoid.FloorMaterial ~= Enum.Material.Air
 	local kind = if acro then acro.kind else nil
 	local rolling = kind == "Roll"
-	if kind == "WallHop" and acro.wallRun and now - acro.start > acro.duration and not onGround then
-		-- The run up the wall ends in a kick away from it; the kick keeps the lock.
-		local hop = Trav.WallHop
-		local launch = acro.away * hop.AwaySpeed + acro.direction * acro.speed * hop.TangentCarry
-		if not aiming then
-			root.CFrame = CFrame.lookAt(root.Position, root.Position + launch)
+	if kind == "WallRun" and rays then
+		-- Follow the wall surface; let go when it ends, input stops pointing along
+		-- it (or points away), the ground arrives or time runs out.
+		local run = Trav.WallRun
+		local hit = workspace:Raycast(root.Position, -acro.away * (run.Reach + 0.6), rays)
+		local away = hit and math.abs(hit.Normal.Y) < 0.35 and flat(hit.Normal)
+		if away then
+			local along = acro.direction - away * acro.direction:Dot(away)
+			acro.away, acro.contact = away, hit.Position
+			acro.direction = flat(along) or acro.direction
 		end
-		root.AssemblyLinearVelocity = launch + Vector3.new(0, hop.UpSpeed * Trav.WallRun.KickUp, 0)
-		if hop.RefreshFlip then
-			airUsed = false
+		if
+			not away
+			or onGround
+			or now - acro.start > run.MaxTime
+			or move:Dot(acro.direction) < run.MinInput * 0.5
+			or move:Dot(acro.away) > 0.5
+		then
+			endWallRun(now, false)
+			kind = nil
+		elseif not aiming then
+			root.CFrame = CFrame.lookAt(root.Position, root.Position + acro.direction)
 		end
-		acro = {
-			kind = "WallHop",
-			start = now,
-			duration = hop.LockTime,
-			direction = launch.Unit,
-			speed = launch.Magnitude,
-		}
 	elseif kind == "WallHop" and (now - acro.start > acro.duration or onGround) then
 		local velocity = root.AssemblyLinearVelocity
 		speed = math.min(Vector3.new(velocity.X, 0, velocity.Z).Magnitude, settings.SprintSpeed)
 		acro, kind = nil, nil
 	end
-	if rolling or kind == "WallHop" then
+	if not acro and not onGround then
+		if tryWallRun(now) then
+			kind = "WallRun"
+		end
+	end
+	if rolling or kind == "WallHop" or kind == "WallRun" then
 		-- Drive the Humanoid along the roll/kick so its controller cooperates with
 		-- the action's velocity instead of braking or air-steering against it.
 		humanoid.WalkSpeed = acro.speed or 0
@@ -792,7 +898,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v4   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · by a wall in the air: wall hop / run along it\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
+		"SLUGSHOT / MOVEMENT LAB v4.1   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (Space: kick off) · by a wall in the air: wall jump\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
@@ -802,13 +908,16 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 end)
 
 RunService.PreSimulation:Connect(function()
-	if acro and acro.wallRun and root then
-		-- Along the wall and up it, rise fading out, held lightly against the wall.
-		local fraction =
-			math.clamp((workspace:GetServerTimeNow() - acro.start) / acro.duration, 0, 1)
+	if acro and acro.kind == "WallRun" and root then
+		-- Along the wall, held lightly against it: a small rise that light wall
+		-- gravity turns into a slow sink.
+		local run = Trav.WallRun
+		local elapsed = workspace:GetServerTimeNow() - acro.start
+		local gap = (root.Position - acro.contact):Dot(acro.away)
+		local pull = run.Stick + math.clamp((gap - run.Hug) * 10, 0, 14)
 		root.AssemblyLinearVelocity = acro.direction * acro.speed
-			- acro.away * 2
-			+ Vector3.new(0, Trav.WallRun.UpSpeed * (1 - fraction * fraction), 0)
+			- acro.away * pull
+			+ Vector3.new(0, acro.rise - run.Gravity * elapsed, 0)
 		return
 	end
 	if not acro or acro.kind ~= "Roll" or not root or not character then

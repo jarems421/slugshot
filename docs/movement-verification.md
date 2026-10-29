@@ -2,6 +2,27 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v4.1 owner feedback pass (2026-10-29)
+
+Fixes for the owner's v4 playtest ([ADR 0006](decisions/0006-wall-run-and-v4-feedback.md)), checked in the private lab with real key presses (Studio's `user_keyboard_input`) where input mattered. [Sanitized evidence](evidence/2026-10-29-movement-v4.1.json).
+
+| Check | Observed result |
+| --- | --- |
+| Jump input | Reproduced the owner's report before the fix: Space in the air beside the wall did nothing, and `JumpRequest` did not fire for any Space press (counted with a listener). After the fix, real Space presses trigger wall run, kick-off and mantles |
+| Wall run, single client | Running parallel to the wall 3.5 studs out, one Space attaches without a second press and pulls in to the wall. A 35° approach also attaches. The run ends at the wall's end. Mid-run Space kicks off with a WallJump clip (about 8 studs away, up to y≈18). Kicking across the new corridor attaches to the opposite wall. An earlier build attached too low and sank to the floor in about 0.8 s; fixed by keeping 30% of the jump's rise and attaching only from 2 studs up |
+| Wall jump and mantle poses | Held frames on the real rig: WallJump clips push off, throw the arms and tuck the legs, ending facing the jump. MantleVault plants one hand and loops the legs |
+| Mantle timing | Real Space press: 3 studs MantleVault 0.41 s, 4.5 studs MantleVault 0.46 s, 5.5 studs MantleHang 0.51 s (v4: about 0.75-0.9 s); 0 rejections |
+| Two clients | The second client sees the wall run in 6/6 runs (3 kick-offs, 3 ride-outs), each kick with a WallJump clip, and ride-outs end at the 1.6 s limit. Before an observer fix, the action often arrived while the replicated body was still on the ground and ended at once. Server: 12 accepted, 0 rejected, 0 motion corrections; no script errors |
+| Public build | Wall run attaches and kicks off with the original WallHop clip. Studio tests pass: math, and clip decode/sampling/loop/root motion/climb/variants/blend |
+| Edges and crouch | Standing with the root 0.3 studs past a box edge renders as grounded (further out, the Humanoid itself falls). The crouch idle keeps raised arms like the crouch walk |
+| Checks | `python tools/verify_movement.py` passes |
+
+Test-process notes:
+- **Network emulation left on.** Studio network emulation was found at 60/60/10/10 ms in the private-lab and test windows, so earlier v4 playtests may have run with emulated lag. It is now reset to 0 in every window the test tools could reach; one window was left alone because it was in a Play session. The two-client script's 0-baseline assertion caught it.
+- **Updating open windows.** Scripts in the already-open private lab were updated in place through `ScriptEditorService:UpdateSourceAsync`; a plain `Source` assignment is limited to 200,000 characters. Relaunching Studio hung while orphaned test windows were open.
+
+Not established: how the wall run feels in hand, gamepad/touch input, the running restyle's look (next owner item), and sloped walls (deferred by the owner).
+
 ## v4 Mixamo clips (2026-10-29)
 
 These are the owner's 49 Mixamo downloads, retargeted privately into 54 clips and played in the private lab ([ADR 0005](decisions/0005-mixamo-variants-transitions.md)). The [sanitized evidence](evidence/2026-10-29-movement-v4.json) lists outcomes and hashes only. Clip data, FBX files and pose captures stay in ignored storage.

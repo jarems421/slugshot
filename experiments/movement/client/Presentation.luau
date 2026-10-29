@@ -27,6 +27,14 @@ type Link = {
 
 local A = Config.Animation
 local IDENTITY = CFrame.identity
+local CROUCH_ARMS = {
+	"LeftShoulder",
+	"LeftElbow",
+	"LeftWrist",
+	"RightShoulder",
+	"RightElbow",
+	"RightWrist",
+}
 local DEBUG_POSES = RunService:IsStudio()
 
 local function parts(joint: AnimationJoint): (Instance?, Instance?)
@@ -159,7 +167,7 @@ function Presentation.start(clips: Clips.Library)
 			crouched = false,
 			aiming = false,
 			idleSince = 0,
-			fidgetAt = math.huge,
+			moveMix = 0,
 			fastAt = -math.huge,
 			fastBack = false,
 			stopped = true,
@@ -362,12 +370,23 @@ function Presentation.start(clips: Clips.Library)
 			then clips.CrouchIdle
 			elseif injured and clips.IdleInjured then clips.IdleInjured
 			else clips.Idle
-		local moveWeight = smoothstep(speed / A.IdleBlendSpeed)
+		-- Braking reaches zero in a fraction of a second, so the idle mix eases
+		-- toward its speed-based target instead of snapping with it.
+		local target = smoothstep(speed / A.IdleBlendSpeed)
+		rig.moveMix += (target - rig.moveMix) * Math.alpha(A.IdleBlendRate, dt)
+		local moveWeight = rig.moveMix
 		if not idle or moveWeight >= 0.999 then
 			return moving, floor
 		end
 		local idlePose = Clips.sample(idle, now, scratch(rig, 11))
 		local idleFloor = Clips.floor(idle, now)
+		if crouched and clips.CrouchForward then
+			-- The crouch idle's hands hang to the floor; keep the crouch walk's raised arms.
+			local walk = Clips.sample(clips.CrouchForward, 0, scratch(rig, 21))
+			for _, joint in CROUCH_ARMS do
+				idlePose[joint] = walk[joint]
+			end
+		end
 		if #poses == 0 then
 			return idlePose, idleFloor
 		end
@@ -406,23 +425,10 @@ function Presentation.start(clips: Clips.Library)
 		return nil, "none"
 	end
 
-	-- Takeoff clip from the run-up: aiming, sideways, running or standing.
-	local function chooseJump(rig: any, flat: Vector3, now: number): Clips.Clip?
-		local speed = flat.Magnitude
-		local seed = now * 7
-		if rig.character:GetAttribute("Aiming") and clips.JumpAim then
-			return Clips.pick(clips, "JumpAim", seed)
-		end
-		if speed > 8 then
-			local side = rig.root.CFrame:VectorToObjectSpace(flat).X / speed
-			if math.abs(side) > 0.6 then
-				local sideways =
-					Clips.pick(clips, if side > 0 then "JumpRight" else "JumpLeft", seed)
-				if sideways then
-					return sideways
-				end
-			end
-			return Clips.pick(clips, "JumpRun", seed) or clips.Jump
+	-- Takeoff clip from the run-up: running or standing.
+	local function chooseJump(flat: Vector3, now: number): Clips.Clip?
+		if flat.Magnitude > 8 then
+			return Clips.pick(clips, "JumpRun", now * 7) or clips.Jump
 		end
 		return clips.Jump
 	end
@@ -468,7 +474,6 @@ function Presentation.start(clips: Clips.Library)
 		local idleFor = now - rig.idleSince
 		if speed > 1 or aiming or crouched or not grounded then
 			rig.idleSince = now
-			rig.fidgetAt = now + Moves.Fidget.After + math.random() * Moves.Fidget.Spread
 		end
 		if not grounded or rig.action then
 			rig.move = nil
@@ -479,7 +484,9 @@ function Presentation.start(clips: Clips.Library)
 			startMove(rig, "Flinch", Clips.pick(clips, "Flinch", seed), now)
 		elseif crouched ~= wasCrouched then
 			if crouched then
-				startMove(rig, "Crouch", clips.CrouchEnter, now, Moves.Crouch.Rate)
+				-- Settling into the crouch set is a crossfade, not a clip.
+				rig.move = nil
+				startFade(rig, Moves.Crouch.Fade, now)
 			elseif speed > 4 then
 				startMove(rig, "Crouch", clips.CrouchExitRun, now, Moves.Crouch.Rate)
 			else
@@ -512,9 +519,6 @@ function Presentation.start(clips: Clips.Library)
 				elseif aiming and clips.StopAim then clips.StopAim
 				else clips.Stop
 			startMove(rig, "Stop", clip, now, stop.Rate, stop.Offset)
-		elseif speed < 0.5 and now > rig.fidgetAt and clips.IdleFidget then
-			rig.fidgetAt = now + Moves.Fidget.After + math.random() * Moves.Fidget.Spread
-			startMove(rig, "Fidget", Clips.pick(clips, "IdleFidget", seed), now)
 		end
 		if speed > Moves.Stop.MinSpeed then
 			rig.fastAt = now
@@ -550,16 +554,16 @@ function Presentation.start(clips: Clips.Library)
 		local kind = move.kind
 		local cancel = (kind == "Start" and speed < 1)
 			or (kind == "Stop" and speed > 6)
-			or ((kind == "Settle" or kind == "Fidget") and (speed > 1.5 or character:GetAttribute(
-				"Aiming"
-			)))
-			or (kind == "Fidget" and character:GetAttribute("Crouching"))
+			or (kind == "Settle" and (speed > 1.5 or character:GetAttribute("Aiming")))
 		local weight = 1
 		if move.hold then
 			weight = 1 - smoothstep((elapsed - move.hold) / Moves.Fade)
 		elseif kind == "Flinch" then
 			weight = 1 - 0.5 * smoothstep(speed / A.IdleBlendSpeed)
 		end
+		-- Hand back to locomotion over the clip's last moments instead of at its end.
+		local remaining = (move.clip.duration - t) / move.rate
+		weight *= smoothstep(remaining / Moves.FadeOut)
 		if cancel or t >= move.clip.duration or weight <= 0 then
 			rig.move = nil
 			if weight > 0 then
@@ -576,7 +580,18 @@ function Presentation.start(clips: Clips.Library)
 	local function startAction(rig: any, stamp: number, now: number)
 		local character = rig.character
 		local kind = character:GetAttribute("MovementAction")
-		local clip = clips[character:GetAttribute("MovementVariant") or ""]
+		local variant = character:GetAttribute("MovementVariant") or ""
+		local clip = clips[variant]
+		if kind == "WallRun" and now - stamp <= 1.5 then
+			-- Procedural: the run cycle against the wall (see wallRunPose).
+			rig.action = {
+				kind = kind,
+				start = now,
+				side = if variant == "WallRunLeft" then -1 else 1,
+			}
+			startFade(rig, A.Fade.ActionIn * 2, now)
+			return
+		end
 		if not clip or not ACTIONS[kind] or now - stamp > 1.5 then
 			-- A stale stamp means the action was cancelled (rejected request).
 			if rig.action then
@@ -611,13 +626,34 @@ function Presentation.start(clips: Clips.Library)
 		startFade(rig, A.Fade.ActionIn, now)
 	end
 
+	-- Wall run: the forward run cycle, body rolled away from the wall (feet toward
+	-- it) and the wall-side hand reaching out to the wall. side: -1 wall on the left.
+	local WallRun = Config.Traversal.WallRun
+	local function wallRunPose(rig: any, dt: number, now: number, speed: number, side: number): Pose
+		local forward = rig.root.CFrame.LookVector * math.max(speed, WallRun.Speed)
+		local pose = locomotion(rig, dt, now, Vector3.new(forward.X, 0, forward.Z))
+		pose.Root = CFrame.Angles(0, 0, side * WallRun.Tilt) * (pose.Root or IDENTITY)
+		local prefix = if side < 0 then "Left" else "Right"
+		pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * 0.5, side * 1.4)
+		pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
+		pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
+		return pose
+	end
+
 	local aimPose: Pose = {}
 	local function evaluate(rig: any, dt: number, now: number)
 		local character, root, humanoid = rig.character, rig.root, rig.humanoid
 		local velocity = root.AssemblyLinearVelocity
 		local flat = Vector3.new(velocity.X, 0, velocity.Z)
 		local stand = humanoid.HipHeight + root.Size.Y / 2
-		local hit = workspace:Raycast(root.Position, Vector3.new(0, -(stand + 12), 0), params)
+		-- A sphere about the body's footprint, so standing on an edge (centre over
+		-- the drop) still finds the ledge under the feet.
+		local hit = workspace:Spherecast(
+			root.Position,
+			A.GroundProbeRadius,
+			Vector3.new(0, -(stand + 12), 0),
+			params
+		)
 		local height = if hit then root.Position.Y - hit.Position.Y - stand else math.huge
 		local grounded = height < 0.4 and velocity.Y < 6
 
@@ -648,7 +684,7 @@ function Presentation.start(clips: Clips.Library)
 				rig.jumped = velocity.Y > 10
 				rig.airVy0 = velocity.Y
 				rig.airState = ""
-				rig.jumpClip = if rig.jumped then chooseJump(rig, flat, now) else nil
+				rig.jumpClip = if rig.jumped then chooseJump(flat, now) else nil
 			end
 			rig.grounded = grounded
 		end
@@ -699,7 +735,25 @@ function Presentation.start(clips: Clips.Library)
 		-- Action layer (roll/flip) replaces the base pose; fades cover entry/exit.
 		local action = rig.action
 		local actionWeight = 0
-		if action then
+		if action and action.kind == "WallRun" then
+			-- Ends on the ground, on timeout, or once the wall is no longer beside the body.
+			-- Observers can receive the action before the replicated body leaves the
+			-- ground, so those checks wait a moment.
+			local elapsed = now - action.start
+			local sideways = rig.root.CFrame.RightVector * action.side
+			local wall = workspace:Raycast(root.Position, sideways * (WallRun.Reach + 1), params)
+			if
+				elapsed > WallRun.MaxTime + 0.2
+				or elapsed > WallRun.SettleTime and (grounded or not wall)
+			then
+				rig.action = nil
+				startFade(rig, A.Fade.ActionOut, now)
+			else
+				pose = wallRunPose(rig, dt, now, flat.Magnitude, action.side)
+				actionWeight = 1
+				floor, contact = 0, nil
+			end
+		elseif action then
 			local clip = action.clip
 			local t = action.offset + (now - action.start) * action.rate
 			local finished
@@ -826,7 +880,12 @@ function Presentation.start(clips: Clips.Library)
 				else ""
 		)
 		character:SetAttribute("RenderedJump", if rig.jumpClip then rig.jumpClip.name else "")
-		character:SetAttribute("RenderedClip", if rig.action then rig.action.clip.name else "")
+		character:SetAttribute(
+			"RenderedClip",
+			if rig.action
+				then (if rig.action.clip then rig.action.clip.name else rig.action.kind)
+				else ""
+		)
 		character:SetAttribute("RenderedAirState", if grounded then "ground" else rig.airState)
 		character:SetAttribute("RenderedCyclePhase", rig.phase)
 		character:SetAttribute("RenderedFootOffset", rig.footOffset)

@@ -190,6 +190,39 @@ def mirror(frames):
     return out
 
 
+STYLE_JOINTS = {"legs": ("LeftHip", "RightHip"), "arms": ("LeftShoulder", "RightShoulder")}
+
+
+def mean_rotation(quats):
+    total = Quaternion((0, 0, 0, 0))
+    for q in quats:
+        if q.dot(quats[0]) < 0:
+            q = -q
+        total = Quaternion([a + b for a, b in zip(total, q)])
+    return total.normalized()
+
+
+def scale_about(mean, q, factor):
+    """q's rotation away from mean, scaled by factor (above 1 widens the swing)."""
+    rel = mean.inverted() @ q
+    if rel.w < 0:
+        rel = -rel
+    axis, angle = rel.to_axis_angle()
+    return mean @ Quaternion(axis, angle * factor)
+
+
+def stylize(quats, spec):
+    """Optional pose styling: "amplitude" scales the hip ("legs") and shoulder ("arms")
+    swing about the clip's mean pose; "elbows" scales the elbow bend (0 straight)."""
+    for group, factor in spec.get("amplitude", {}).items():
+        for joint in STYLE_JOINTS[group]:
+            mean = mean_rotation(quats[joint])
+            quats[joint] = [scale_about(mean, q, factor) for q in quats[joint]]
+    if "elbows" in spec:
+        for joint in ("LeftElbow", "RightElbow"):
+            quats[joint] = [Quaternion().slerp(q, spec["elbows"]) for q in quats[joint]]
+
+
 def floor_curve(frames):
     return [min(f["feet"][n][1] for n in FEET) for f in frames]
 
@@ -338,16 +371,23 @@ def build(name, frames, fps, unit, spec):
         rise = next((i for i in range(low, len(hips)) if hips[i].y > -0.15), len(hips) - 1)
         # Rolls that run out never settle: they recover once the hips are back up.
         events["recover"] = (rise if settle is None else max(settle, rise)) / fps
-    joints = {}
+    quats = {}
     for joint, (parent, child) in JOINTS.items():
-        values = []
-        for i, f in enumerate(frames):
-            rotation = f["parts"][child] if parent is None else f["parts"][parent].transposed() @ f["parts"][child]
-            q = rotation.to_quaternion()
+        quats[joint] = [
+            (f["parts"][child] if parent is None else f["parts"][parent].transposed() @ f["parts"][child]).to_quaternion()
+            for f in frames
+        ]
+    stylize(quats, spec)
+    if loop and speed:
+        speed *= spec.get("amplitude", {}).get("legs", 1)  # a wider stride covers more ground
+    joints = {}
+    for joint, values in quats.items():
+        out = []
+        for i, q in enumerate(values):
             if joint == "Root":
-                values += [round(hips[i].x, 4), round(hips[i].y, 4), round(hips[i].z, 4)]
-            values += [round(q.x, 4), round(q.y, 4), round(q.z, 4), round(q.w, 4)]
-        joints[joint] = values
+                out += [round(hips[i].x, 4), round(hips[i].y, 4), round(hips[i].z, 4)]
+            out += [round(q.x, 4), round(q.y, 4), round(q.z, 4), round(q.w, 4)]
+        joints[joint] = out
     data = {
         "fps": fps,
         "frames": len(frames),
@@ -400,6 +440,8 @@ def main():
             continue
         frames, fps, unit = capture(path, spec)
         normalize_yaw(frames, bool(spec.get("alignEnd")))
+        if spec.get("mirrored"):
+            frames = mirror(frames)
         variants = [(name, frames)]
         if spec.get("mirror"):
             variants.append((spec["mirror"], mirror(frames)))

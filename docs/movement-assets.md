@@ -20,7 +20,7 @@ Offline inspection used the existing Rojo binary to convert RBXM to private XML 
 
 Mixamo requires the owner's own Adobe sign-in. Reposted copies of Adobe's Mixamo FAQ ([community](https://community.adobe.com/questions-696/mixamo-faq-licensing-royalties-ownership-eula-and-tos-589400), [itch.io quote](https://itch.io/post/7747839)) describe royalty-free use in games, but no redistribution of raw character or animation files. Adobe's own FAQ page returned HTTP 403 to this review, so check its current wording when signing in. Treat downloads, conversions and generated data like the Cinderlore packs: private only.
 
-**Status (2026-10-29):** the owner downloaded 49 clips into `private-assets/mixamo/`, keeping Mixamo's own file names. All 49 are mapped in `tools/mixamo_manifest.json` (file names and trims only, no animation data) and verified in the private lab ([results](movement-verification.md#v4-mixamo-clips-2026-10-29)).
+**Status (2026-10-29):** the owner downloaded 49 clips into `private-assets/mixamo/`, keeping Mixamo's own file names. All 49 were mapped in v4. After the owner's playtest, v4.1 maps 48 runtime clips and no longer uses Neck Stretching, Strafing, Jump, Rifle Jump, Left Strafe Jump or Run Strafing Jump. `tools/mixamo_manifest.json` holds file names, trims and style options only, no animation data ([results](movement-verification.md#v41-owner-feedback-pass-2026-10-29)). Manifest flags added in v4.1: `mirrored` (flip in place), `amplitude` (hip/shoulder swing scale) and `elbows` (bend scale).
 
 1. **Download settings:** FBX Binary, With Skin (the T-pose bind pose is required), 30 fps, no keyframe reduction. In Place is optional: the converter removes travel from loops. Save into `private-assets/mixamo/` with any file name, then add a manifest entry: runtime name (`Name.2` for a variant), file, and flags such as `loop`, `air`, `rootMotion`, `traversal`, `vault`, `trim`, `mirror` or `alignEnd`.
 2. **Still wanted.** A missing slot keeps the original clip, or skips the feature:
@@ -30,9 +30,11 @@ Mixamo requires the owner's own Adobe sign-in. Reposted copies of Adobe's Mixamo
    | `RollBack`, `RollLeft` (right is mirrored) | back roll, side roll | back and side rolls are still original clips |
    | `RunBack` | running backward | straight back-pedal; currently blended from the two back diagonals |
    | `MantleLow` | climbing / step up (low) | a quick step-up onto waist height; still the original clip |
-   | `WallHop` | jump (off a wall) / wall jump | a short kick-off; still the original clip |
+   | Running / sprint | fast run, sprint (long stride) | the owner dislikes the current run; a longer-striding clip would replace the restyled one |
+   | `Jump` | jump (standing, in place) | the standing jump is derived from Running Jump; none of the downloads is a standing takeoff |
+   | Wall-run loop | wall run (loop) | the wall-run pose is procedural; a looping clip could replace it |
    | Rifle locomotion | rifle idle / run / walk / strafe | only if the owner wants the gun-ready look while aiming (needs a grip decision first) |
-   | Extra variants | second idle, another running jump, another side jump | more variety; any `Name.2` is picked up automatically |
+   | Extra variants | second idle | the owner prefers fewer, consistent clips over many variants |
 3. Run `python tools/build_movement_playtest.py --retarget`. The reviewed `tools/mixamo_to_r15.py` runs in portable Blender and writes `private-assets/generated/MovementClips.luau`, which is used by `build/SlugshotMovementLabPrivate.rbxlx` only.
 4. Live (non-Studio) use would need the chosen animations published under the owner's account, plus a private ID mapping. This has not been done; ask first.
 

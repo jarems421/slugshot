@@ -11,19 +11,19 @@ python tools/build_movement_playtest.py --retarget    # private Mixamo lab (v4),
 
 Open a place in Studio and press Play. Studio does not reload a rebuilt `.rbxlx`: close and reopen it after rebuilding.
 
-- `SlugshotMovementLabPrivate.rbxlx`: **v4**, the owner's Mixamo clips with variants, transitions, crouch, vault and wall run. Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
-- `SlugshotMovementLab.rbxlx`: the same code with original clips only (v3 look plus crouch speed; vault, wall run and transitions need Mixamo clips).
+- `SlugshotMovementLabPrivate.rbxlx`: **v4.1**, the owner's Mixamo clips with transitions, crouch, vault, wall run and parkour mantle (the HUD shows `original + N private clips`). Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
+- `SlugshotMovementLab.rbxlx`: the same code with original clips only (HUD: `original clips`). Wall run works with the original wall-hop clip; vault, parkour mantle and transitions need Mixamo clips.
 - `SlugshotMovementLab-v2.rbxlx`: v2 (clips, rolls, flips), rebuilt from commit `0b06985`.
 - `SlugshotMovementLab-v1.rbxlx`: the first lab, rebuilt from commit `e2b5688`.
 
 For live editing, serve `movement.project.json` with the Rojo plugin on port **34873**.
 
-| Control | Experimental action (v4) |
+| Control | Experimental action (v4.1) |
 | --- | --- |
 | WASD / native movement controls | Run (eight directions; jog while accelerating) |
 | Shift / gamepad L3 | Sprint (also stands up from a crouch) |
 | C / gamepad R3 | Crouch toggle (crouch walk in four directions) |
-| Space / native jump | Jump. **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **In the air beside a wall**: wall hop away from it, up to 2 per airtime; **running along the wall** instead runs up it, then kicks off. Each hop restores the flip |
+| Space / native jump | Jump. **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically; Space kicks off, letting go of the direction or steering away drops off. **In the air beside a wall**: wall jump away from it. Up to 3 kicks per airtime; each restores the flip |
 | Q / gamepad B | **Acrobatics**: on the ground, roll toward your input (forward, back, left or right of your facing); in the air, front flip, or backflip when holding back. Pressing during a flip or just before landing queues a landing roll |
 | RMB / gamepad L2 | Shoulder aim pose, stable camera, small FOV change |
 | Click / gamepad R2 | Harmless aim marker; no damage or projectile system |
@@ -31,6 +31,20 @@ For live editing, serve `movement.project.json` with the Rojo plugin on port **3
 | P / R | Cycle Baseline, Athletic, Precise profiles / respawn |
 
 v1's separate F flourish is gone: Q is the single context-sensitive control. Touch/gamepad bindings exist but have not been device-tested.
+
+## What changed in v4.1 (owner feedback on v4)
+
+The owner played v4 and reported the problems below. Changes are in [ADR 0006](decisions/0006-wall-run-and-v4-feedback.md).
+
+- **Wall run and wall jump did nothing.** Studio does not fire `UserInputService.JumpRequest` for every Space press (it did not fire at all in a real-key test), and wall hops only listened to it. Space/ButtonA presses are now read directly; `JumpRequest` remains for touch.
+- **Wall run was a hop, not a run.** It is now a state: jump onto a wall while running along it and you attach, with no second press, from parallel to about 53° into the wall. You keep the jump's rise briefly, then sink slowly while running along the wall for up to 1.6 s. The body tilts off the wall with the wall-side hand on it. Space kicks off; releasing or steering away drops off; the wall's end or the ground ends it. A corridor of two long walls east of the ledges lets you chain wall runs.
+- **Wall jump looked scrappy.** Both wall jumps (from a run or from mid-air) now play the kick-off part of the owner's Wall Run / Diagonal Wall Run clips, turned so they end facing the jump direction.
+- **Mantle was slow.** Ledges up to 4.6 studs use a one-hand parkour mantle (the hand-plant part of Vault Over Box); taller ones play faster. Measured: 0.41 s at 3 studs, 0.46 s at 4.5, 0.51 s at 5.5 (was about 0.75-0.9 s).
+- **Too many jumps.** One running jump (Running Jump) and one standing jump derived from it (mirrored, smaller swing; none of the owner's files is a standing takeoff).
+- **Crouch:** the "all fours" drop (from Strafing) is gone; entering a crouch crossfades. The crouch idle keeps the crouch walk's raised arms (Crouching Idle's hands hang to the floor).
+- **Stops and idle cut three times.** The neck-stretch fidget is removed; transitions blend into locomotion over their last 0.35 s; the idle/moving mix eases over time instead of following braking speed.
+- **Running:** wider hip and shoulder swing, straighter elbows, cadence capped at 1.3x. The owner still dislikes it; it is the next item.
+- **Falling pose on box edges:** the presentation's ground check is a sphere about the footprint, not one ray under the centre.
 
 ## What changed in v4 (Mixamo clips)
 
@@ -68,7 +82,8 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 
 ## Boundaries and known rough edges
 
-- Mixamo motion is realistic but Roblox speeds are not: cadence is capped at 1.6x, so feet slide a little at sprint. Strafe clips twist the hips toward travel, as Mixamo authored them. Mixamo climbs and vaults play longer than the v3 clips (about 0.7-1.2 s).
+- Mixamo motion is realistic but Roblox speeds are not: cadence is capped at 1.3x, so feet slide at sprint. Strafe clips twist the hips toward travel, as Mixamo authored them.
+- The wall-run pose is procedural (sprint cycle, roll and a reaching arm), not a clip: there is no hand IK, so the hand only approximately meets the wall. Wall running on sloped walls is not implemented.
 - Crouch changes speed and pose only. The collision height is unchanged, so it does not let you fit under anything.
 
 - The clips are hand-keyed by an AI author from pose sheets, not by an animator; expect clean and readable rather than mocap-natural. The blocky default R15 limits how organic they can look.
@@ -77,7 +92,7 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 - Flips triggered late in a jump play fast (up to 2.6x, raised for the longer Mixamo flips); very late presses become a landing roll instead.
 - Aiming stays camera-directed through a flip (verified with the marker), but this is not a weapon system: no grip, muzzle or hit validation.
 - Mantle hands are tuned for typical heights with no arm IK, so they can hover slightly above very low or very high edges. Mantles need anchored, collidable parts; moving platforms are unsupported.
-- A jump plus two quick hops lifted the feet over 20 studs in testing: a lab value to tune, not a design decision.
+- A jump plus quick kicks can lift the feet over 20 studs: lab values to tune, not design decisions.
 - Request validation (variants, rates, ground state, geometry, cooldowns, rate limit) is not competitive anti-cheat.
 
 ## Playtest priorities
@@ -87,7 +102,7 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 3. Jump early and late, flip forward and back, queue landing rolls. Is one context-sensitive button better than separate controls?
 4. Aim (RMB) through rolls and flips and place markers: is the camera comfortable?
 5. Run and jump into each ledge on the traversal course and climb the chimney. Do mantles feel responsive and grounded? Is wall-hop height/distance right, and does hop then backflip read well?
-6. v4 (private lab): run, stop and reverse; crouch and walk around; jump standing, running, sideways and aiming; fall from the chimney top; vault the three low walls; wall run along the long wall; press H a few times. Which clips look right, which look wrong, and what is missing?
+6. v4.1 (private lab): wall run in the corridor (attach, ride, kick between the walls, drop off); wall jump from mid-air; mantle every ledge; crouch in and out while moving; run, stop and stand still. Which still look wrong?
 7. Decide which clips are good enough and which should be replaced (more Mixamo choices, or Animation Editor work).
 
-[Research](research/movement.md) · [Assets and Mixamo pipeline](movement-assets.md) · [Results](movement-verification.md) · [ADR 0003](decisions/0003-clip-presentation.md) · [ADR 0004](decisions/0004-place1-traversal.md) · [ADR 0005](decisions/0005-mixamo-variants-transitions.md)
+[Research](research/movement.md) · [Assets and Mixamo pipeline](movement-assets.md) · [Results](movement-verification.md) · [ADR 0003](decisions/0003-clip-presentation.md) · [ADR 0004](decisions/0004-place1-traversal.md) · [ADR 0005](decisions/0005-mixamo-variants-transitions.md) · [ADR 0006](decisions/0006-wall-run-and-v4-feedback.md)
