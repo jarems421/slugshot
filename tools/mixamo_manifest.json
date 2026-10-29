@@ -1,5 +1,5 @@
 {
-  "comment": "Maps privately downloaded Mixamo FBX files (private-assets/mixamo) to runtime clip names. trim is [startSeconds, endSeconds|null].",
+  "comment": "Maps privately downloaded Mixamo FBX files (private-assets/mixamo) to runtime clip names. trim is [startSeconds, endSeconds|null]. traversal clips must start at the foot of the obstacle and end standing on it.",
   "clips": {
     "Idle": { "file": "idle.fbx", "loop": true, "idle": true },
     "Run": { "file": "run.fbx", "loop": true },
@@ -13,6 +13,8 @@
     "RollLeft": { "file": "roll_left.fbx", "rootMotion": true, "mirror": "RollRight" },
     "RollBack": { "file": "roll_back.fbx", "rootMotion": true },
     "FlipFront": { "file": "flip_front.fbx", "air": true },
-    "FlipBack": { "file": "flip_back.fbx", "air": true }
+    "FlipBack": { "file": "flip_back.fbx", "air": true },
+    "MantleLow": { "file": "mantle_low.fbx", "traversal": true },
+    "MantleHigh": { "file": "mantle_high.fbx", "traversal": true }
   }
 }

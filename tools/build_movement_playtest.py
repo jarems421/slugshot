@@ -1,7 +1,7 @@
 """Build the local movement playtest places (outputs stay in ignored build/).
 
-- SlugshotMovementLabPrivate.rbxlx: refined v2 lab with privately retargeted clips.
-- SlugshotMovementLab-v1.rbxlx: the previous lab, rebuilt from its exact commit, for A/B play.
+- SlugshotMovementLabPrivate.rbxlx: the current lab with privately retargeted clips.
+- SlugshotMovementLab-v1.rbxlx / -v2.rbxlx: earlier labs, rebuilt from their exact commits, for A/B play.
 
     python tools/build_movement_playtest.py [--retarget]
 
@@ -19,7 +19,10 @@ import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-V1_COMMIT = "e2b5688"  # "Add isolated movement lab..." - the reviewed v1 sandbox.
+VERSIONS = {
+    "v1": "e2b5688",  # "Add isolated movement lab..." - the reviewed v1 sandbox.
+    "v2": "0b06985",  # "Refine movement lab with original clips..." - clips, rolls, flips.
+}
 CLIPS = ROOT / "private-assets/generated/MovementClips.luau"
 
 
@@ -60,15 +63,16 @@ def main():
         run("rojo", "build", "movement.private.project.json", "--output", "build/SlugshotMovementLabPrivate.rbxlx")
     else:
         print(f"SKIP private lab: {CLIPS.relative_to(ROOT)} not generated (run with --retarget)")
-    source = ROOT / "build/movement-v1"
-    shutil.rmtree(source, ignore_errors=True)
-    archive = subprocess.run(
-        ["git", "archive", V1_COMMIT, "movement.project.json", "src", "experiments/movement"],
-        cwd=ROOT, check=True, capture_output=True,
-    ).stdout
-    with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
-        tar.extractall(source, filter="data")
-    run("rojo", "build", source / "movement.project.json", "--output", "build/SlugshotMovementLab-v1.rbxlx")
+    for version, commit in VERSIONS.items():
+        source = ROOT / f"build/movement-{version}"
+        shutil.rmtree(source, ignore_errors=True)
+        archive = subprocess.run(
+            ["git", "archive", commit, "movement.project.json", "src", "experiments/movement"],
+            cwd=ROOT, check=True, capture_output=True,
+        ).stdout
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(source, filter="data")
+        run("rojo", "build", source / "movement.project.json", "--output", f"build/SlugshotMovementLab-{version}.rbxlx")
     print("PASS: playtest places in build/ (ignored). Never commit or publish the private lab.")
 
 

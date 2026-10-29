@@ -47,6 +47,36 @@ return table.freeze({
 		},
 		LandingRollWindow = 0.18, -- seconds before touchdown that buffer a roll
 	},
+	-- Jump-triggered traversal, adapted from the Place1 movement system (MIT):
+	-- jump into a ledge to climb onto it, jump near a wall in the air to kick off it.
+	Traversal = {
+		Mantle = {
+			Reach = 3.6, -- studs ahead of the root a wall is detected
+			MinHeight = 0.7, -- ledge height above the feet, studs
+			MaxHeight = 5.7,
+			LowHeight = 3.2, -- below: one-hand step vault; above: two-hand climb
+			Duration = { Base = 0.3, PerStud = 0.045, Min = 0.34, Max = 0.55 },
+			HangGap = 0.8, -- root distance from the wall face while the hands plant
+			ExitSpeed = 0.8, -- fraction of the approach speed kept on top
+			ExitMin = 8,
+			Cooldown = 0.34,
+			CheckInterval = 0.055, -- ledge checks while jump is held
+			JumpWindow = 0.34, -- seconds after a jump press that ledges still count
+		},
+		WallHop = {
+			Reach = 3.25,
+			AwaySpeed = 30,
+			UpSpeed = 54,
+			TangentCarry = 0.55, -- fraction of along-wall speed kept
+			MaxTangent = 24,
+			MaxHops = 2, -- per airtime
+			Cooldown = 0.15,
+			GroundDelay = 0.13, -- no hop this soon after leaving the ground
+			Buffer = 0.15, -- an airborne press too early or out of reach is retried this long
+			LockTime = 0.22, -- seconds the kick owns movement before input resumes
+			RefreshFlip = true, -- a hop restores the airborne flip
+		},
+	},
 	Camera = {
 		Fov = 72,
 		SprintFov = 74,
@@ -76,5 +106,8 @@ return table.freeze({
 		StateSettle = 0.35, -- seconds the server waits for replicated ground state
 		RollVariants = { "RollForward", "RollBack", "RollLeft", "RollRight" },
 		FlipVariants = { "FlipFront", "FlipBack" },
+		MantleVariants = { "MantleLow", "MantleHigh" },
+		WallHopVariants = { "WallHop" },
+		TraversalSlack = 4, -- studs of replication lag allowed in traversal checks
 	},
 })

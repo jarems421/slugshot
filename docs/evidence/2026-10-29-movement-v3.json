@@ -1,0 +1,149 @@
+{
+  "date": "2026-10-29",
+  "studioVersion": "0.745.0.7451137",
+  "branch": "experiment/movement-sandbox",
+  "thirdPartySource": "Place1 movement system (MIT) ParkourTraversalController at 87da75e2f2528291ebf65c4cbc52d1ce83c2f527; detection adapted into client/Traversal.luau with notice",
+  "clipSource": "OriginalClips.luau only; no private or third-party clips loaded",
+  "sourceSha256": {
+    "experiments/movement/client/Presentation.luau": "6fbaa864b18959a2ab430fe90afc61aba444439fbd6a2a63300b046d6f7df6dd",
+    "experiments/movement/client/Traversal.luau": "8f238102be402613613cdd0f28f05b9857943fcb3708e3ab08601d558e5bae7a",
+    "experiments/movement/client/init.client.luau": "d356ea7b0248fef9565b3f8432fc7cb838ac3922d0731462cff73525252c1b24",
+    "experiments/movement/server/Arena.luau": "a00d2eb3ccd5e0bd6b95667c0126280c08ea1c41f5c04167194a9d8c00067dc2",
+    "experiments/movement/server/init.server.luau": "bfd00e8af60726972b4db6a7394e7df6f32895eeb248a1866b1b1ec0d63c81e4",
+    "experiments/movement/shared/Clips.luau": "8c6de1ab2dbd3e31951e3401f87ddabca021246673a3ed71fdde1391e1d6ece1",
+    "experiments/movement/shared/Config.luau": "80fe442a4124db57fce059c136503219b3ef2348b72a5c8b757b4ed9bfb01a83",
+    "experiments/movement/shared/MotionMath.luau": "cb145fcbeeb4ef4f9a98fabc66bacfd4736d5970ac852e4476d432d0a97ac597",
+    "experiments/movement/shared/OriginalClips.luau": "3aba046924d1d11231ca0152c4cdc91ad42a8ebf0c58b12639de4c3b63b0710d",
+    "experiments/movement/tests/Clips.spec.server.luau": "c215198f77ad1ff89c9d44be5f1c0129c614775e6fad9392aeecef0bbae162cc",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04"
+  },
+  "singleClient": {
+    "clipTests": {
+      "clips": true,
+      "math": true
+    },
+    "mantle3": {
+      "variant": "MantleLow",
+      "endRootY": 6.19,
+      "feetAboveLedge": 0.0,
+      "onTop": true,
+      "rejects": []
+    },
+    "mantle4.5": {
+      "variant": "MantleHigh",
+      "endRootY": 7.69,
+      "feetAboveLedge": 0.0,
+      "onTop": true,
+      "rejects": []
+    },
+    "mantle5.5": {
+      "variant": "MantleHigh",
+      "endRootY": 8.69,
+      "feetAboveLedge": 0.0,
+      "onTop": true,
+      "rejects": []
+    },
+    "mantleFromJump7.5": {
+      "seen": [
+        "('', 'MantleHigh')",
+        "('Mantle', 'MantleHigh')"
+      ],
+      "standingY": 10.69,
+      "reachedTop": true,
+      "rejects": []
+    },
+    "lowLedge1.5": "MantleLow from standing gaps 1.6/2.4/3.2 studs; root ended at ledge top + 3.19 each time",
+    "chimney": {
+      "hop1": {
+        "acro": "WallHop",
+        "variant": "WallHop",
+        "rendered": "WallHop",
+        "vel": [
+          30,
+          33.0,
+          0.0
+        ],
+        "hops": 1
+      },
+      "rejects": []
+    },
+    "hopThenFlip": {
+      "hop": "WallHop",
+      "flipAccepted": true,
+      "variant": "FlipBack",
+      "rendered": "Flip",
+      "rootUp": 1,
+      "rejects": []
+    },
+    "forgedRejected": 4,
+    "server": {
+      "rejected": 4,
+      "accepted": 11
+    },
+    "consoleErrors": [],
+    "hopPressTiming": "second jump press 0.10/0.15/0.20/0.30 s after takeoff each produced a wall hop (after buffering fix)",
+    "respawn": {
+      "hud": 1,
+      "rejects": [],
+      "hopAcro": "WallHop",
+      "hops": 1,
+      "standingY": 6.2232666015625,
+      "mantled": true,
+      "newCharacter": true
+    }
+  },
+  "twoClient": {
+    "peerSeesMantle": {
+      "maxRootJoint": 0.7023540735244751,
+      "rendered": [
+        "Mantle"
+      ],
+      "finalY": 7.6923828125,
+      "variant": "MantleHigh",
+      "maxRootY": 7.8123779296875
+    },
+    "peerSeesWallHop": {
+      "maxRootJoint": 0.2238234281539917,
+      "rendered": [
+        "WallHop"
+      ],
+      "finalY": 3.1923253536224365,
+      "variant": "WallHop",
+      "maxRootY": 17.582292556762695
+    },
+    "player1Rejects": {
+      "accepted": 2,
+      "rejects": []
+    },
+    "networkSetup": {
+      "before": {
+        "InboundNetworkJitterMs": 0,
+        "InboundNetworkMinDelayMs": 0,
+        "OutboundNetworkJitterMs": 0,
+        "OutboundNetworkMinDelayMs": 0
+      },
+      "applied": "60ms each way + 10ms jitter"
+    },
+    "delayedTraversal": {
+      "mantleTopY": 8.692421913146973,
+      "flipAccepted": true,
+      "corrections": 0,
+      "rejects": []
+    },
+    "networkRestored": {
+      "outbound": 0,
+      "inbound": 0,
+      "jitter": 0
+    },
+    "invalidTraversal": {
+      "rejected": 3
+    },
+    "passed": true,
+    "ended": true
+  },
+  "consoleErrorLines": {
+    "serverConsole": [],
+    "client1Console": [],
+    "client2Console": []
+  }
+}

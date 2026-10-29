@@ -28,7 +28,8 @@
 - [x] Add movement procedure skill, provenance and measured verification notes.
 - [x] v1 human playtest feedback: evade read as a dash, flourish as a spin, running/jumping lacked expression.
 - [x] v2: original keyframed clips, clip-driven presentation, directional rolls, front/back flips, single context-sensitive control; single/two-client, network, aim and respawn checks.
-- [ ] Owner playtest of v2 against v1 (see [movement guide](movement.md#playtest-priorities)).
+- [x] Adapt mantle and wall hop from Place1 (MIT) with original clips and server checks (v3).
+- [ ] Owner playtest of v3 against v2 and v1 (see [movement guide](movement.md#playtest-priorities)).
 - [ ] Decide which clips to keep, retime or replace with Mixamo/Animation Editor work; decide on the single acrobatics control.
 - [ ] Optional: download Mixamo clips and run `python tools/build_movement_playtest.py --retarget` (pipeline verified on synthetic data only).
 - [ ] Owner review before any merge of the experiment into `main`.

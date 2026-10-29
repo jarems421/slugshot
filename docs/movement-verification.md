@@ -2,6 +2,23 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v3 traversal (2026-10-29)
+
+Mantle and wall hop, with detection adapted from Place1 (MIT; [ADR 0004](decisions/0004-place1-traversal.md)). Original clips only. [Sanitized evidence](evidence/2026-10-29-movement-v3.json), [pose sheet](evidence/movement-v3-traversal.jpg) (two-hand climb on a 5.5-stud ledge, step vault on a 3-stud ledge, wall kick).
+
+| Check | Observed result |
+| --- | --- |
+| Pipelines | `python tools/verify_movement.py` passes. Clip tests in Studio also cover climb curves (0 to 1, no drop in rise) and the wall-hop clip. Converter `traversal` mode verified in Blender on the synthetic FBX: climb 0 to 1, root translation removed, no contact mode. **Not run on real Mixamo files** |
+| Mantle | 1.5 and 3 studs: `MantleLow`. 4.5 and 5.5 studs: `MantleHigh`. Each ended with the root exactly 3.19 studs above the ledge top. The 7.5-stud ledge mantled mid-jump through the held-jump window |
+| Wall hop | Hop off the long wall and chimney: velocity (30 away, 54 up), turned to face away, `WallHop` rendered. Chimney: hop, hop, then mantle onto the 14-stud top. Hop then Q gave an accepted backflip with the physical root upright |
+| Visual review | Held frames placed on the controller's path at 1.5/3/4.5/5.5 studs, side view. Fixed: a belly-flop press frame (now more upright with legs hanging), and a two-hand overhead reach on a chest-high ledge (threshold raised to 3.2 studs, so it is a step vault). Hands meet the edge at typical heights; no arm IK |
+| Server checks | Bugs found and fixed: genuine wall hops were rejected because the server had not yet seen the jump (the hop request overtook replication; it now polls up to 0.35 s and checks recent positions), and requests now validate one at a time per player. 4/4 forged single-client requests and 3/3 two-client requests rejected (mantle onto empty air, hop on open ground, bad rate/variant/target) |
+| Input timing | Roblox's floor flag lags takeoff by a few frames, which dropped second presses within about 0.15 s of a jump. Fixed with a grounded check that also needs low vertical speed, plus a 0.15 s hop buffer. Presses at 0.10/0.15/0.20/0.30 s all hop |
+| Two clients | Player 2 rendered Player 1's `Mantle` (MantleHigh, root reaching the ledge top) and `WallHop`. Under 60 ms each way + 10 ms jitter: mantle, wall hop and flip with 0 rejections and 0 motion corrections. Settings were verified at 0 before and restored to 0 after |
+| Respawn | New character: one HUD, mantle onto the 3-stud ledge, wall hop, no rejections. No console errors on server or either client |
+
+Not established: rendered FPS extremes, devices/touch (jump presses use `JumpRequest`, which also covers touch and gamepad, but this was not device-tested), moving or unanchored platforms (unsupported by design), arm IK on the edge, and how it feels in hand.
+
 ## v2 refinement (2026-10-28)
 
 Original keyframed clips, clip-driven presentation and the single Q/B acrobatics control. Public build only (no private clips loaded). [Sanitized evidence](evidence/2026-10-28-movement-v2.json), [clip contact sheet](evidence/movement-v2-clips.jpg).

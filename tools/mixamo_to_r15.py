@@ -255,7 +255,23 @@ def build(name, frames, fps, unit, spec):
             direction = (net.x, net.z)
         for h in hips:
             h.x, h.z = 0.0, 0.0
-    segment = air_segment(frames, unit) if not loop else None
+    climb = None
+    if spec.get("traversal"):
+        # The controller moves the root along the ledge; keep the clip's own path
+        # as normalized progress (over, up) and remove it from the hips.
+        origin = hips[0].copy()
+        over = Vector((hips[-1].x - origin.x, 0, hips[-1].z - origin.z))
+        up = hips[-1].y - origin.y
+        if over.length < 0.05 or up < 0.05:
+            raise SystemExit(f"{name}: traversal clip must move forward and up (got {over.length:.2f}, {up:.2f})")
+        heading = over.normalized()
+        climb = []
+        for h in hips:
+            offset = Vector((h.x - origin.x, 0, h.z - origin.z))
+            advance, rise = offset.dot(heading) / over.length, (h.y - origin.y) / up
+            climb += [round(advance, 4), round(rise, 4)]
+            h.x, h.y, h.z = 0.0, origin.y * (1 - rise), 0.0  # starting crouch fades out
+    segment = air_segment(frames, unit) if not loop and not climb else None
     if segment:
         takeoff, land = segment
         events["takeoff"] = takeoff / fps
@@ -274,7 +290,7 @@ def build(name, frames, fps, unit, spec):
             curve = num / den
             for k, i in enumerate(range(takeoff, land)):
                 hips[i].y -= curve * shape[k]
-    elif not loop:
+    elif not loop and not climb:
         floor = [h / unit for h in floor_curve(frames)]
         if floor[0] > CONTACT:
             events["contact"] = next((i for i, h in enumerate(floor) if h <= CONTACT), 0) / fps
@@ -306,10 +322,12 @@ def build(name, frames, fps, unit, spec):
     }
     if spec.get("rootMotion"):
         data["contact"] = "body"
-    elif not spec.get("air") and name != "Fall":
+    elif not spec.get("air") and not climb and name != "Fall":
         data["contact"] = "feet"
     if motion:
         data["motion"] = [round(v, 4) for pair in motion for v in pair]
+    if climb:
+        data["climb"] = climb
     return data
 
 

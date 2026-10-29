@@ -33,6 +33,18 @@ function Arena.create(): Model
 	for i = 1, 5 do
 		block("Step" .. i, Vector3.new(14, i * 0.9, 4), CFrame.new(3, i * 0.45, -6 - i * 4), amber)
 	end
+	-- Traversal course: mantle ledges of rising height (the last needs a jump
+	-- first), and a chimney of two facing walls for wall hops up to a ledge.
+	for i, height in { 1.5, 3, 4.5, 5.5, 7.5 } do
+		block(
+			"Ledge" .. i,
+			Vector3.new(10, height, 8),
+			CFrame.new(52, height / 2, 26 - i * 11),
+			if i % 2 == 0 then amber else blue
+		)
+	end
+	block("ChimneyLedge", Vector3.new(8, 14, 14), CFrame.new(70, 7, -6), blue)
+	block("ChimneyWall", Vector3.new(2, 22, 14), CFrame.new(83, 11, -6), amber)
 	for i = 0, 5 do
 		local line = block(
 			"Distance" .. i * 10,

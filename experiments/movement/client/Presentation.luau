@@ -1,7 +1,7 @@
 --!strict
 -- Clip-driven R15 presentation for every character: directional locomotion whose
 -- cadence follows ground speed, physics-driven jump/fall, landing absorption,
--- roll/flip actions, lean and ground-contact correction. Physics root and camera
+-- roll/flip/mantle/wall-hop actions, lean and ground-contact correction. Physics root and camera
 -- never rotate. Clips come from Clips.load (original, optionally private overrides).
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -313,12 +313,22 @@ function Presentation.start(clips: Clips.Library)
 		return nil, "none"
 	end
 
+	local ACTIONS = { Roll = true, Flip = true, Mantle = true, WallHop = true }
 	local function startAction(rig: any, stamp: number, now: number)
 		local character = rig.character
 		local kind = character:GetAttribute("MovementAction")
 		local clip = clips[character:GetAttribute("MovementVariant") or ""]
-		if not clip or (kind ~= "Roll" and kind ~= "Flip") or now - stamp > 1.5 then
+		if not clip or not ACTIONS[kind] or now - stamp > 1.5 then
+			-- A stale stamp means the action was cancelled (rejected request).
+			if rig.action then
+				rig.action = nil
+				startFade(rig, A.Fade.ActionOut, now)
+			end
 			return
+		end
+		if kind == "WallHop" then
+			-- The kick is a fresh rise: hand the jump clip's rise/apex logic over.
+			rig.jumped, rig.airVy0, rig.apexTime = true, Config.Traversal.WallHop.UpSpeed, now
 		end
 		local yaw = 0
 		if kind == "Roll" then
@@ -429,6 +439,10 @@ function Presentation.start(clips: Clips.Library)
 				finished = t >= clip.duration
 					or (t >= recover and flat.Magnitude > A.IdleBlendSpeed)
 					or not grounded and now - action.start > 0.25
+			elseif action.kind == "Mantle" then
+				finished = t >= clip.duration
+			elseif action.kind == "WallHop" then
+				finished = t >= clip.duration or (grounded and now - action.start > 0.1)
 			else
 				action.airborne = action.airborne or not grounded
 				finished = t >= (clip.events.land or clip.duration)

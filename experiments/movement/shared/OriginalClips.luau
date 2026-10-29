@@ -146,7 +146,13 @@ local function build(name: string, spec: any): any
 	end)
 	local direction = spec.direction or { 0, -1 }
 	local directionVector = Vector3.new(direction[1], 0, direction[2]).Unit
-	local joints, motion, floors = {}, {}, {}
+	local advance = channel(function(key)
+		return key.advance or 0
+	end)
+	local rise = channel(function(key)
+		return key.rise or 0
+	end)
+	local joints, motion, floors, climb = {}, {}, {}, {}
 	for _, joint in JOINTS do
 		joints[joint] = table.create(frames)
 	end
@@ -163,6 +169,7 @@ local function build(name: string, spec: any): any
 		end
 		floors[frame] = floor(t)
 		motion[frame] = directionVector * motionCurve(t)
+		climb[frame] = Vector2.new(advance(t), rise(t))
 	end
 	return {
 		name = name,
@@ -177,6 +184,7 @@ local function build(name: string, spec: any): any
 		motion = if hasMotion then motion else nil,
 		floor = floors,
 		contact = spec.contact,
+		climb = if spec.climb then climb else nil,
 	}
 end
 
@@ -857,6 +865,237 @@ local function flip(direction: number): { Key }
 	}
 end
 
+-- Mantles face the ledge. advance/rise are the root's progress over and up onto
+-- the ledge (0..1), timed so the hands meet the edge for typical heights.
+-- Two-hand climb: reach, pull, press over the edge, knee onto it, step through.
+local mantleHigh: { Key } = {
+	{
+		t = 0,
+		Root = { -12, 0, 0 },
+		Waist = { -8, 0, 0 },
+		Neck = { 12, 0, 0 },
+		LeftHip = { 25, 0, -4 },
+		LeftKnee = { -45, 0, 0 },
+		LeftAnkle = { -15, 0, 0 },
+		RightHip = { 8, 0, 4 },
+		RightKnee = { -25, 0, 0 },
+		RightAnkle = { -20, 0, 0 },
+		LeftShoulder = { 150, 0, -15 },
+		RightShoulder = { 150, 0, 15 },
+		LeftElbow = { 25, 0, 0 },
+		RightElbow = { 25, 0, 0 },
+		advance = 0,
+		rise = 0,
+	},
+	upper({ -- hands on the edge, pull
+		t = 0.1,
+		LeftHip = { 55, 0, -6 },
+		LeftKnee = { -85, 0, 0 },
+		LeftAnkle = { -10, 0, 0 },
+		RightHip = { 20, 0, 4 },
+		RightKnee = { -50, 0, 0 },
+		RightAnkle = { -25, 0, 0 },
+	}, {
+		Root = { -20, 0, 0 },
+		Waist = { -12, 0, 0 },
+		Neck = { 18, 0, 0 },
+		Shoulder = { 80, 25 },
+		Elbow = 95,
+		advance = 0,
+		rise = 0.15,
+	}),
+	upper({ -- press: arms straight, chest over the edge, legs hanging under
+		t = 0.22,
+		LeftHip = { 70, 0, -6 },
+		LeftKnee = { -100, 0, 0 },
+		LeftAnkle = { 0, 0, 0 },
+		RightHip = { 25, 0, 4 },
+		RightKnee = { -45, 0, 0 },
+		RightAnkle = { -20, 0, 0 },
+	}, {
+		Root = { -34, 0, 0 },
+		Waist = { -16, 0, 0 },
+		Neck = { 24, 0, 0 },
+		Shoulder = { -8, 22 },
+		Elbow = 15,
+		advance = 0.12,
+		rise = 0.55,
+	}),
+	upper({ -- knee onto the ledge
+		t = 0.32,
+		LeftHip = { 120, 0, -8 },
+		LeftKnee = { -140, 0, 0 },
+		LeftAnkle = { 20, 0, 0 },
+		RightHip = { 30, 0, 4 },
+		RightKnee = { -95, 0, 0 },
+		RightAnkle = { -15, 0, 0 },
+	}, {
+		Root = { -40, 0, 0 },
+		Waist = { -15, 0, 0 },
+		Neck = { 22, 0, 0 },
+		Shoulder = { -15, 20 },
+		Elbow = 20,
+		advance = 0.35,
+		rise = 0.82,
+	}),
+	{ -- step up, trailing leg comes through
+		t = 0.42,
+		Root = { -25, 0, 0 },
+		Waist = { -12, 0, 0 },
+		Neck = { 10, 0, 0 },
+		LeftHip = { 70, 0, -4 },
+		LeftKnee = { -85, 0, 0 },
+		LeftAnkle = { 15, 0, 0 },
+		RightHip = { 75, 0, 4 },
+		RightKnee = { -125, 0, 0 },
+		RightAnkle = { -5, 0, 0 },
+		LeftShoulder = { -25, 0, -12 },
+		RightShoulder = { 30, 0, 12 },
+		LeftElbow = { 60, 0, 0 },
+		RightElbow = { 60, 0, 0 },
+		advance = 0.72,
+		rise = 1,
+	},
+	{ -- out into a running stride
+		t = 0.52,
+		Root = { -12, 0, 0 },
+		Waist = { -8, 0, 0 },
+		LeftHip = { 15, 0, -3 },
+		LeftKnee = { -20, 0, 0 },
+		LeftAnkle = { 5, 0, 0 },
+		RightHip = { 45, 0, 3 },
+		RightKnee = { -70, 0, 0 },
+		LeftShoulder = { 35, 0, -8 },
+		RightShoulder = { -20, 0, 8 },
+		LeftElbow = { 70, 0, 0 },
+		RightElbow = { 70, 0, 0 },
+		advance = 1,
+		rise = 1,
+	},
+}
+
+-- One-hand step vault for low ledges: the right hand plants, the left foot steps
+-- onto the edge and drives up, the right leg swings through into a stride.
+local mantleLow: { Key } = {
+	{
+		t = 0,
+		Root = { -18, 0, 0 },
+		Waist = { -10, 0, 0 },
+		LeftHip = { 70, 0, -4 },
+		LeftKnee = { -95, 0, 0 },
+		LeftAnkle = { 10, 0, 0 },
+		RightHip = { -15, 0, 4 },
+		RightKnee = { -25, 0, 0 },
+		RightAnkle = { -25, 0, 0 },
+		LeftShoulder = { -15, 0, -20 },
+		RightShoulder = { 55, 0, 10 },
+		LeftElbow = { 45, 0, 0 },
+		RightElbow = { 25, 0, 0 },
+		advance = 0,
+		rise = 0,
+	},
+	{ -- hand plants, lead foot on the edge
+		t = 0.12,
+		Root = { -30, 0, 0 },
+		Waist = { -14, 0, -6 },
+		Neck = { 12, 0, 0 },
+		LeftHip = { 95, 0, -4 },
+		LeftKnee = { -115, 0, 0 },
+		LeftAnkle = { 15, 0, 0 },
+		RightHip = { 5, 0, 4 },
+		RightKnee = { -55, 0, 0 },
+		RightAnkle = { -20, 0, 0 },
+		LeftShoulder = { 40, 0, -35 },
+		RightShoulder = { 10, 0, 15 },
+		LeftElbow = { 30, 0, 0 },
+		RightElbow = { 10, 0, 0 },
+		advance = 0.15,
+		rise = 0.3,
+	},
+	{ -- drive up, trailing leg swings through
+		t = 0.26,
+		Root = { -22, 0, 0 },
+		Waist = { -10, 0, 0 },
+		Neck = { 6, 0, 0 },
+		LeftHip = { 45, 0, -3 },
+		LeftKnee = { -50, 0, 0 },
+		LeftAnkle = { 10, 0, 0 },
+		RightHip = { 70, 0, 4 },
+		RightKnee = { -115, 0, 0 },
+		RightAnkle = { -5, 0, 0 },
+		LeftShoulder = { 35, 0, -20 },
+		RightShoulder = { -20, 0, 12 },
+		LeftElbow = { 40, 0, 0 },
+		RightElbow = { 30, 0, 0 },
+		advance = 0.6,
+		rise = 0.85,
+	},
+	{
+		t = 0.42,
+		Root = { -12, 0, 0 },
+		Waist = { -8, 0, 0 },
+		LeftHip = { 15, 0, -3 },
+		LeftKnee = { -20, 0, 0 },
+		LeftAnkle = { 5, 0, 0 },
+		RightHip = { 45, 0, 3 },
+		RightKnee = { -70, 0, 0 },
+		LeftShoulder = { 35, 0, -8 },
+		RightShoulder = { -20, 0, 8 },
+		LeftElbow = { 70, 0, 0 },
+		RightElbow = { 70, 0, 0 },
+		advance = 1,
+		rise = 1,
+	},
+}
+
+-- Wall kick, facing away from the wall: the right foot pushes off behind, the left
+-- knee and both arms drive up, then settle into the jump's apex pose.
+local wallHop: { Key } = {
+	{
+		t = 0,
+		Root = { -18, 0, 0 },
+		Waist = { -10, 0, 0 },
+		Neck = { 8, 0, 0 },
+		LeftHip = { 95, 0, -4 },
+		LeftKnee = { -110, 0, 0 },
+		LeftAnkle = { 10, 0, 0 },
+		RightHip = { -40, 0, 4 },
+		RightKnee = { -20, 0, 0 },
+		RightAnkle = { -35, 0, 0 },
+		LeftShoulder = { -25, 0, -15 },
+		RightShoulder = { -25, 0, 15 },
+		LeftElbow = { 40, 0, 0 },
+		RightElbow = { 40, 0, 0 },
+	},
+	{ -- push: trailing leg extends, arms drive up
+		t = 0.08,
+		Root = { -12, 0, 0 },
+		Waist = { -6, 0, 0 },
+		LeftHip = { 100, 0, -4 },
+		LeftKnee = { -95, 0, 0 },
+		RightHip = { -25, 0, 4 },
+		RightKnee = { -8, 0, 0 },
+		RightAnkle = { -40, 0, 0 },
+		LeftShoulder = { 150, 0, -18 },
+		RightShoulder = { 150, 0, 18 },
+		LeftElbow = { 15, 0, 0 },
+		RightElbow = { 15, 0, 0 },
+	},
+	upper(legs(0.22, 85, 40, -100, -75, -15), {
+		Root = { -6, 0, 0 },
+		Waist = { -6, 0, 0 },
+		Shoulder = { 115, 40 },
+		Elbow = 30,
+	}),
+	upper(legs(0.4, 60, 45, -80, -70, -10), { -- the jump clip's apex pose
+		Root = { -5, 0, 0 },
+		RootPos = { 0, 0.05, 0 },
+		Waist = { -8, 0, 0 },
+		Shoulder = { 80, 55 },
+		Elbow = 35,
+	}),
+}
+
 local function mirrorAll(keys: { Key }): { Key }
 	local result = {}
 	for _, key in keys do
@@ -937,6 +1176,9 @@ function OriginalClips.build(): { [string]: any }
 		},
 		FlipFront = { keys = flip(-1), duration = 0.82, events = air },
 		FlipBack = { keys = flip(1), duration = 0.82, events = air },
+		MantleLow = { keys = mantleLow, duration = 0.42, climb = true },
+		MantleHigh = { keys = mantleHigh, duration = 0.52, climb = true },
+		WallHop = { keys = wallHop, duration = 0.4 },
 	}
 	local library = {}
 	for name, spec in specs do

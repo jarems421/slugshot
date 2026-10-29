@@ -63,6 +63,24 @@ for _, name in { "FlipFront", "FlipBack" } do
 	local events = original[name].events
 	assert(events.takeoff < events.apex and events.apex < events.land, name .. " air events")
 end
+for _, name in { "MantleLow", "MantleHigh" } do
+	local mantle = original[name]
+	assert(mantle and mantle.climb, name .. " needs a climb curve")
+	local first, last = Clips.climb(mantle, 0), Clips.climb(mantle, mantle.duration)
+	assert(
+		first.Magnitude < 1e-3 and (last - Vector2.one).Magnitude < 1e-3,
+		name .. " climbs 0 to 1"
+	)
+	local previous = first
+	for frame = 1, mantle.frames do
+		local value = Clips.climb(mantle, (frame - 1) / mantle.fps)
+		assert(value.Y >= previous.Y - 0.02, name .. " rise must not drop back")
+		previous = value
+	end
+end
+assert(original.WallHop and not original.WallHop.climb, "Wall hop clip present")
+local synthetic = Clips.climb(clip, clip.duration / 2)
+assert(math.abs(synthetic.X - 0.5) < 1e-3, "Clips without a climb curve ease evenly")
 local _, turn = original.FlipFront.joints.Root[original.FlipFront.frames // 2]:ToAxisAngle()
 assert(turn > math.pi / 2, "Front flip rotates the body through the air")
 for name, entry in original do
@@ -73,4 +91,6 @@ for name, entry in original do
 		end
 	end
 end
-print("[Movement tests] PASS: clip decode, sampling, loop wrap, root motion and weighted blend")
+print(
+	"[Movement tests] PASS: clip decode, sampling, loop wrap, root motion, climb curves and weighted blend"
+)

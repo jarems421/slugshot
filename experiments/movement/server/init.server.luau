@@ -12,6 +12,12 @@ request.Name = "MovementRequest"
 request.Parent = shared
 local states: { [Player]: any } = {}
 Players.CharacterAutoLoads = false
+local ACTION_VARIANTS = {
+	Roll = Config.Validation.RollVariants,
+	Flip = Config.Validation.FlipVariants,
+	Mantle = Config.Validation.MantleVariants,
+	WallHop = Config.Validation.WallHopVariants,
+}
 
 local function spawnCharacter(player: Player)
 	local state = states[player]
@@ -61,6 +67,10 @@ local function spawnCharacter(player: Player)
 	state.spawnedAt = workspace:GetServerTimeNow()
 	state.position = root.Position
 	state.lastRoll = -math.huge
+	state.lastMantle = -math.huge
+	state.lastHop = -math.huge
+	state.hops = 0
+	state.history = {}
 	state.airUsed = false
 	state.violations = 0
 	state.spawning = false
@@ -101,12 +111,194 @@ local function directionOf(value: any): Vector3?
 	return if flat.Magnitude > 0.01 then flat.Unit else nil
 end
 
+local function vectorOf(value: any): Vector3?
+	if
+		typeof(value) ~= "Vector3"
+		or not Math.finite(value.X)
+		or not Math.finite(value.Y)
+		or not Math.finite(value.Z)
+	then
+		return nil
+	end
+	return value
+end
+
+-- Traversal requests name a world point (ledge stand point or wall contact).
+-- Check it against server geometry and against any server-observed position in
+-- the recent history: replicated positions trail fast traversal by 0.1-0.2 s.
+local function traversalValid(
+	kind: string,
+	character: Model,
+	positions: { Vector3 },
+	target: Vector3
+): boolean
+	local slack = Config.Validation.TraversalSlack
+	local near = false
+	for _, position in positions do
+		local offset = target - position
+		local flat = Vector3.new(offset.X, 0, offset.Z).Magnitude
+		if kind == "Mantle" then
+			local settings = Config.Traversal.Mantle
+			near = flat <= settings.Reach + 2 + slack
+				and offset.Y >= -2
+				and offset.Y <= settings.MaxHeight + 1 + slack
+		else
+			near = flat <= Config.Traversal.WallHop.Reach + slack
+				and math.abs(offset.Y) <= 2 + slack
+		end
+		if near then
+			break
+		end
+	end
+	if not near then
+		return false
+	end
+	local function solid(part: Instance): boolean
+		return part:IsA("BasePart") and part.Anchored and part.CanCollide
+	end
+	if kind == "Mantle" then
+		local params = RaycastParams.new()
+		params.FilterDescendantsInstances = { character }
+		params.RespectCanCollide = true
+		local hit = workspace:Raycast(target, Vector3.new(0, -8, 0), params)
+		return hit ~= nil
+			and hit.Normal.Y > 0.7
+			and solid(hit.Instance)
+			and target.Y - hit.Position.Y < 4.5
+	end
+	local overlap = OverlapParams.new()
+	overlap.FilterDescendantsInstances = { character }
+	overlap.RespectCanCollide = true
+	for _, part in workspace:GetPartBoundsInRadius(target, 0.75, overlap) do
+		if solid(part) then
+			return true
+		end
+	end
+	return false
+end
+
 local function grounded(character: Model, root: BasePart, humanoid: Humanoid): boolean
 	local params = RaycastParams.new()
 	params.FilterDescendantsInstances = { character }
 	local distance = humanoid.HipHeight + root.Size.Y / 2 + 0.65
 	return math.abs(root.AssemblyLinearVelocity.Y) < 8
 		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), params) ~= nil
+end
+
+-- Validates a Roll/Flip/Mantle/WallHop request against server-observed state and
+-- publishes it for every client. Returns a rejection reason, or nil on success.
+local function validateAction(
+	player: Player,
+	state: any,
+	packet: any,
+	character: Model,
+	humanoid: Humanoid,
+	root: BasePart,
+	now: number
+): string?
+	if player.Character ~= character or humanoid.Health <= 0 then
+		return "character-changed" -- changed while queued behind another action
+	end
+	local kind = packet.kind
+	local direction = directionOf(packet.direction)
+	local limits = Config.Acrobatics.Flip
+	local rate = packet.rate
+	if not direction then
+		return "direction"
+	end
+	if typeof(packet.value) ~= "string" or not table.find(ACTION_VARIANTS[kind], packet.value) then
+		return "variant"
+	end
+	if
+		typeof(rate) ~= "number"
+		or not Math.finite(rate)
+		or (kind == "Roll" and math.abs(rate - Config.Acrobatics.Roll.PlaybackRate) > 1e-3)
+		or (kind == "Flip" and (rate < limits.MinRate - 1e-3 or rate > limits.MaxRate + 1e-3))
+		or (kind == "Mantle" and (rate < 0.5 or rate > 3))
+		or (kind == "WallHop" and rate ~= 1)
+	then
+		return "rate"
+	end
+	local target = vectorOf(packet.target)
+	local traversal = kind == "Mantle" or kind == "WallHop"
+	if traversal and not target then
+		return "target"
+	end
+	-- Native character replication trails the immediately sent action (jump
+	-- start, landing roll, a kick off a wall). Poll server-observed physics for a
+	-- bounded window; never accept a client grounded flag or position. Mantles
+	-- start grounded or airborne.
+	local wantGround = kind == "Roll"
+	local onGround, placed
+	local function observe()
+		onGround = grounded(character, root, humanoid)
+		placed = not traversal
+			or traversalValid(
+				kind,
+				character,
+				{ root.Position, table.unpack(state.history) },
+				target :: Vector3
+			)
+	end
+	observe()
+	local deadline = os.clock() + Config.Validation.StateSettle
+	while (not placed or (kind ~= "Mantle" and onGround ~= wantGround)) and os.clock() < deadline do
+		task.wait()
+		if player.Character ~= character or humanoid.Health <= 0 then
+			return "character-changed"
+		end
+		observe()
+	end
+	if not placed then
+		return "geometry-" .. kind
+	end
+	if kind == "Roll" then
+		if not onGround or now - state.lastRoll < Config.Acrobatics.Roll.Cooldown * 0.9 then
+			return "roll-state"
+		end
+		state.lastRoll = now
+	elseif kind == "Flip" then
+		if onGround or state.airUsed then
+			return "flip-state"
+		end
+		state.airUsed = true
+	elseif kind == "Mantle" then
+		if now - state.lastMantle < Config.Traversal.Mantle.Cooldown * 0.9 then
+			return "mantle-state"
+		end
+		state.lastMantle = now
+	else
+		local settings = Config.Traversal.WallHop
+		if
+			onGround
+			or state.hops >= settings.MaxHops
+			or now - state.lastHop < settings.Cooldown * 0.9
+		then
+			return "wallhop-state"
+		end
+		state.hops += 1
+		state.lastHop = now
+		if settings.RefreshFlip then
+			state.airUsed = false
+		end
+	end
+	-- Reuse the client's start time when plausible so the owner's attributes match
+	-- and its animation does not restart when the server values replicate back.
+	local stamp = packet.time
+	if
+		typeof(stamp) ~= "number"
+		or not Math.finite(stamp)
+		or now - stamp < -0.05
+		or now - stamp > 0.4
+	then
+		stamp = now
+	end
+	character:SetAttribute("MovementAction", packet.kind)
+	character:SetAttribute("MovementVariant", packet.value)
+	character:SetAttribute("MovementDirection", direction)
+	character:SetAttribute("MovementRate", rate)
+	character:SetAttribute("MovementActionTime", stamp)
+	return nil
 end
 
 request.OnServerEvent:Connect(function(player: Player, packet: any)
@@ -158,73 +350,20 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 		player:SetAttribute("MovementProfile", state.profile)
 		character:SetAttribute("MovementProfile", state.profile)
 		humanoid.JumpPower = Config.Profiles[state.profile].JumpPower
-	elseif packet.kind == "Roll" or packet.kind == "Flip" then
-		local direction = directionOf(packet.direction)
-		local isRoll = packet.kind == "Roll"
-		local variants = if isRoll
-			then Config.Validation.RollVariants
-			else Config.Validation.FlipVariants
-		local limits = Config.Acrobatics.Flip
-		local rate = packet.rate
-		if not direction then
-			reject("direction")
-			return
-		end
-		if typeof(packet.value) ~= "string" or not table.find(variants, packet.value) then
-			reject("variant")
-			return
-		end
-		if
-			typeof(rate) ~= "number"
-			or not Math.finite(rate)
-			or (isRoll and math.abs(rate - Config.Acrobatics.Roll.PlaybackRate) > 1e-3)
-			or (not isRoll and (rate < limits.MinRate - 1e-3 or rate > limits.MaxRate + 1e-3))
-		then
-			reject("rate")
-			return
-		end
-		-- Native character replication can trail the immediately sent action (jump
-		-- start or landing roll). Poll server-observed physics for a bounded window;
-		-- never accept a client grounded flag.
-		local onGround = grounded(character, root, humanoid)
-		local deadline = os.clock() + Config.Validation.StateSettle
-		while onGround ~= isRoll and os.clock() < deadline do
+	elseif ACTION_VARIANTS[packet.kind] then
+		-- One action at a time per player, in arrival order: a request still waiting
+		-- for replication must not be overtaken (a flip straight after a wall hop).
+		while state.acting do
 			task.wait()
-			if player.Character ~= character or humanoid.Health <= 0 then
-				reject("character-changed")
-				return
-			end
-			onGround = grounded(character, root, humanoid)
 		end
-		if isRoll then
-			if not onGround or now - state.lastRoll < Config.Acrobatics.Roll.Cooldown * 0.9 then
-				reject("roll-state")
-				return
-			end
-			state.lastRoll = now
-		else
-			if onGround or state.airUsed then
-				reject("flip-state")
-				return
-			end
-			state.airUsed = true
+		state.acting = true
+		local ok, reason =
+			pcall(validateAction, player, state, packet, character, humanoid, root, now)
+		state.acting = false
+		if not ok or reason then
+			reject(if ok then reason :: string else "error")
+			return
 		end
-		-- Reuse the client's start time when plausible so the owner's attributes match
-		-- and its animation does not restart when the server values replicate back.
-		local stamp = packet.time
-		if
-			typeof(stamp) ~= "number"
-			or not Math.finite(stamp)
-			or now - stamp < -0.05
-			or now - stamp > 0.4
-		then
-			stamp = now
-		end
-		character:SetAttribute("MovementAction", packet.kind)
-		character:SetAttribute("MovementVariant", packet.value)
-		character:SetAttribute("MovementDirection", direction)
-		character:SetAttribute("MovementRate", rate)
-		character:SetAttribute("MovementActionTime", stamp)
 	elseif packet.kind == "Aim" then
 		if
 			typeof(packet.value) ~= "boolean"
@@ -272,6 +411,7 @@ RunService.Heartbeat:Connect(function(dt)
 		if character and root and humanoid then
 			if grounded(character, root, humanoid) then
 				state.airUsed = false
+				state.hops = 0
 			end
 			local velocity = root.AssemblyLinearVelocity
 			local speed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
@@ -299,6 +439,10 @@ RunService.Heartbeat:Connect(function(dt)
 				end
 			end
 			state.position = root.Position
+			table.insert(state.history, root.Position)
+			if #state.history > 8 then
+				table.remove(state.history, 1)
+			end
 			if root.Position.Y < -40 and not state.spawning then
 				task.spawn(spawnCharacter, player)
 			end

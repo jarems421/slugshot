@@ -17,6 +17,7 @@ export type Clip = {
 	motion: { Vector3 }?,
 	floor: { number }?,
 	contact: string?, -- "feet" or "body": what the presentation keeps on the floor
+	climb: { Vector2 }?, -- traversal progress per frame: X over the ledge, Y up, 0..1
 }
 
 export type Library = { [string]: Clip }
@@ -56,6 +57,14 @@ function Clips.decode(name: string, raw: any): Clip
 		end
 		motion = list
 	end
+	local climb: { Vector2 }? = nil
+	if raw.climb then
+		local list = table.create(frames)
+		for frame = 0, frames - 1 do
+			list[frame + 1] = Vector2.new(raw.climb[frame * 2 + 1], raw.climb[frame * 2 + 2])
+		end
+		climb = list
+	end
 	local direction = raw.direction or { 0, 0, -1 }
 	return {
 		name = name,
@@ -71,6 +80,7 @@ function Clips.decode(name: string, raw: any): Clip
 		motion = motion,
 		floor = raw.floor,
 		contact = raw.contact,
+		climb = climb,
 	}
 end
 
@@ -121,6 +131,20 @@ end
 function Clips.motionVelocity(clip: Clip, time: number): Vector3
 	local step = 1 / clip.fps
 	return (Clips.motion(clip, time + step * 0.5) - Clips.motion(clip, time - step * 0.5)) / step
+end
+
+-- Traversal progress (X over the ledge, Y up), each clamped to 0..1. Clips
+-- without a climb curve ease both together.
+function Clips.climb(clip: Clip, time: number): Vector2
+	local climb = clip.climb
+	if not climb then
+		local x = math.clamp(time / clip.duration, 0, 1)
+		x = x * x * (3 - 2 * x)
+		return Vector2.new(x, x)
+	end
+	local a, b, f = locate(clip, time)
+	local value = climb[a]:Lerp(climb[b], f)
+	return Vector2.new(math.clamp(value.X, 0, 1), math.clamp(value.Y, 0, 1))
 end
 
 -- Accumulates weighted poses; weights need not be normalized.
