@@ -21,7 +21,7 @@ local Trav = Config.Traversal
 local character: Model? = nil
 local humanoid: Humanoid? = nil
 local root: BasePart? = nil
-local sprinting, aiming = false, false
+local sprinting, aiming, crouching = false, false, false
 local speed, move = 0, Vector3.zero
 local sequence, pendingAction = 0, 0
 local lastRoll = -math.huge
@@ -46,7 +46,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "MovementSandboxHUD"
 gui.ResetOnSpawn = false
 local label = Instance.new("TextLabel")
-label.Size = UDim2.fromOffset(540, 146)
+label.Size = UDim2.fromOffset(660, 146)
 label.Position = UDim2.fromOffset(20, 65)
 label.BackgroundColor3 = Color3.fromRGB(20, 28, 40)
 label.BackgroundTransparency = 0.12
@@ -104,7 +104,7 @@ local function attach(newCharacter: Model)
 		end
 	end
 	speed, move, acro, airUsed, bufferedRoll = 0, Vector3.zero, nil, false, 0
-	sprinting, aiming, testMove = false, false, nil
+	sprinting, aiming, crouching, testMove = false, false, false, nil
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
 	rays, overlap = Traversal.params(newCharacter)
 	hops, lastHop, lastMantle, lastGrounded = 0, -math.huge, -math.huge, os.clock()
@@ -136,6 +136,17 @@ local function setAim(value: boolean)
 	UserInputService.MouseBehavior = if value
 		then Enum.MouseBehavior.LockCenter
 		else Enum.MouseBehavior.Default
+end
+
+local function setCrouch(value: boolean)
+	if crouching == value then
+		return
+	end
+	crouching = value
+	if character then
+		character:SetAttribute("Crouching", value)
+	end
+	send("Crouch", value)
 end
 
 local function flat(vector: Vector3): Vector3?
@@ -180,9 +191,26 @@ local function announce(
 	pendingAction = send(kind, variant, direction, { rate = rate, time = now, target = target })
 end
 
+-- Variant names for a clip and its alternatives (Name, Name.2, ...), present only.
+local function variantNames(name: string): { string }
+	local names = {}
+	for index in Clips.variants(library, name) do
+		table.insert(names, if index == 1 then name else `{name}.{index}`)
+	end
+	return names
+end
+
+local variantCounter = 0
+local function pickVariant(name: string): string
+	local names = variantNames(name)
+	variantCounter += 1
+	return names[variantCounter % math.max(#names, 1) + 1] or name
+end
+
 -- Grounded: roll toward the input. The clip whose root motion best matches the
 -- direction relative to facing is chosen; the presentation turns the remainder.
-local function startRoll(direction: Vector3, now: number): boolean
+-- A roll buffered before touchdown uses the landing roll when there is one.
+local function startRoll(direction: Vector3, now: number, landing: boolean?): boolean
 	if not character or not root or now - lastRoll < Acro.Roll.Cooldown then
 		return false
 	end
@@ -190,17 +218,26 @@ local function startRoll(direction: Vector3, now: number): boolean
 	if settings.FaceInput and not aiming then
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
 	end
+	setCrouch(false)
 	local localDirection = root.CFrame:VectorToObjectSpace(direction)
-	local variant, best = "RollForward", -math.huge
+	local base, best = "RollForward", -math.huge
 	for _, name in Config.Validation.RollVariants do
-		local score = library[name].direction:Dot(localDirection)
+		local candidate = library[name]
+		local score = if candidate and name ~= "RollLand"
+			then candidate.direction:Dot(localDirection)
+			else -math.huge
 		if score > best then
-			variant, best = name, score
+			base, best = name, score
 		end
 	end
+	local variant = if landing
+			and base == "RollForward"
+			and library.RollLand
+		then "RollLand"
+		else pickVariant(base)
 	local clip = library[variant]
-	local rate = settings.PlaybackRate
 	local length = clip.events.recover or clip.duration
+	local rate = math.clamp(length / settings.Duration, settings.MinRate, settings.MaxRate)
 	local travel = math.max(Clips.motion(clip, length):Dot(clip.direction), 0.05)
 	lastRoll = now
 	acro = {
@@ -223,20 +260,19 @@ local function startFlip(input: Vector3?, now: number): boolean
 	end
 	local settings = Acro.Flip
 	local facing = flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1)
-	local variant = if input and input:Dot(facing) < settings.BackInputDot
-		then "FlipBack"
-		else "FlipFront"
 	local velocity = root.AssemblyLinearVelocity
 	if velocity.Y < settings.Lift then
 		root.AssemblyLinearVelocity = Vector3.new(velocity.X, settings.Lift, velocity.Z)
 	end
+	local landIn = timeToLand(math.max(velocity.Y, settings.Lift))
+	local variant = if landIn > settings.DropTime and library.FlipDrop
+		then pickVariant("FlipDrop")
+		else pickVariant(
+			if input and input:Dot(facing) < settings.BackInputDot then "FlipBack" else "FlipFront"
+		)
 	local events = library[variant].events
 	local airDuration = (events.land or 0.6) - (events.takeoff or 0)
-	local rate = math.clamp(
-		airDuration / timeToLand(math.max(velocity.Y, settings.Lift)),
-		settings.MinRate,
-		settings.MaxRate
-	)
+	local rate = math.clamp(airDuration / landIn, settings.MinRate, settings.MaxRate)
 	airUsed = true
 	acro = { kind = "Flip", start = now, duration = airDuration / rate }
 	announce("Flip", variant, facing, rate, now)
@@ -300,22 +336,62 @@ local function startMantle(now: number): boolean
 	then
 		return false
 	end
-	local ledge = Traversal.findLedge(humanoid, root, settings, rays, overlap)
-	if not ledge then
-		return false
+	local velocity = root.AssemblyLinearVelocity
+	local approach = math.max(Vector3.new(velocity.X, 0, velocity.Z).Magnitude, speed)
+	-- A thin, low obstacle taken at speed is vaulted instead of climbed onto; the
+	-- check looks a little further ahead so an early jump press still vaults.
+	local vault = Trav.Vault
+	local ledge: Traversal.Ledge? = nil
+	local target, lift, vaulting = CFrame.identity, 0, false
+	if library.Vault and approach >= vault.MinSpeed then
+		local ahead = table.clone(settings)
+		ahead.Reach = settings.Reach + approach * vault.LookAhead
+		ahead.MaxHeight = vault.MaxHeight
+		local far = Traversal.findLedge(humanoid, root, ahead, rays, overlap)
+		local landing, topY = nil, 0
+		if far then
+			landing, topY = Traversal.findVault(humanoid, root, far, vault, rays, overlap)
+		end
+		if far and landing then
+			local feetY = root.Position.Y - Traversal.standOffset(humanoid, root)
+			ledge, target, vaulting = far, landing, true
+			lift = math.max(topY + vault.Clearance - feetY, 0)
+		end
 	end
-	local variant = if ledge.height < settings.LowHeight then "MantleLow" else "MantleHigh"
+	if not ledge then
+		ledge = Traversal.findLedge(humanoid, root, settings, rays, overlap)
+		if not ledge then
+			return false
+		end
+		target = ledge.target
+	end
+	assert(ledge, "ledge resolved above")
+	local variant = if vaulting
+		then pickVariant("Vault")
+		elseif ledge.height < settings.LowHeight then "MantleLow"
+		else "MantleHigh"
+	if variant == "MantleHigh" then
+		variant = pickVariant(
+			if ledge.height >= settings.HangHeight and library.MantleHang
+				then "MantleHang"
+				else "MantleHigh"
+		)
+	elseif variant == "MantleLow" then
+		variant = pickVariant("MantleLow")
+	end
 	local clip = library[variant]
 	local timing = settings.Duration
-	local duration = math.clamp(timing.Base + ledge.height * timing.PerStud, timing.Min, timing.Max)
+	local duration = math.max(
+		math.clamp(timing.Base + ledge.height * timing.PerStud, timing.Min, timing.Max),
+		clip.duration / settings.MaxRate
+	)
 	local from = root.CFrame
 	local hang = ledge.wall + ledge.normal * settings.HangGap
 	local gap = Vector3.new(hang.X - from.X, 0, hang.Z - from.Z)
 	if gap:Dot(ledge.normal) > 0 then
 		gap = Vector3.zero -- already closer than the hang distance
 	end
-	local velocity = root.AssemblyLinearVelocity
-	local approach = math.max(Vector3.new(velocity.X, 0, velocity.Z).Magnitude, speed)
+	setCrouch(false)
 	acro = {
 		kind = "Mantle",
 		start = now,
@@ -323,14 +399,17 @@ local function startMantle(now: number): boolean
 		rate = clip.duration / duration,
 		duration = duration,
 		from = from,
-		to = ledge.target,
-		gap = gap,
-		over = Vector3.new(ledge.target.X - from.X, 0, ledge.target.Z - from.Z) - gap,
+		to = target,
+		gap = if vaulting then Vector3.zero else gap,
+		over = Vector3.new(target.X - from.X, 0, target.Z - from.Z)
+			- (if vaulting then Vector3.zero else gap),
+		vault = vaulting,
+		lift = lift,
 		exit = math.clamp(approach * settings.ExitSpeed, settings.ExitMin, profile().SprintSpeed),
 	}
 	humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 	root.AssemblyLinearVelocity = Vector3.zero
-	announce("Mantle", variant, ledge.target.LookVector, acro.rate, now, ledge.target.Position)
+	announce("Mantle", variant, target.LookVector, acro.rate, now, target.Position)
 	return true
 end
 
@@ -375,7 +454,40 @@ local function tryWallHop(now: number): boolean
 	local away = flat(hit.Normal) or -(flat(root.CFrame.LookVector) or Vector3.new(0, 0, -1))
 	local velocity = root.AssemblyLinearVelocity
 	local along = Vector3.new(velocity.X, 0, velocity.Z)
+	local into = if along.Magnitude > 0.1 then -along.Unit:Dot(away) else 1
 	along -= away * along:Dot(away)
+	-- Taken along the wall at speed (not straight into it): run up it, then kick.
+	local run = Trav.WallRun
+	if
+		hops == 0
+		and along.Magnitude >= run.MinAlong
+		and into < run.MaxInto
+		and library.WallRunLeft
+		and library.WallRunRight
+	then
+		local direction = along.Unit
+		-- Wall on the left when its normal points to the runner's right.
+		local side = if away:Dot(direction:Cross(Vector3.yAxis)) > 0
+			then "WallRunLeft"
+			else "WallRunRight"
+		hops += 1
+		lastHop = clock
+		if not aiming then
+			root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
+		end
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		acro = {
+			kind = "WallHop",
+			wallRun = true,
+			start = now,
+			duration = run.Time,
+			direction = direction,
+			away = away,
+			speed = math.max(along.Magnitude, run.Speed),
+		}
+		announce("WallHop", pickVariant(side), direction, 1, now, hit.Position)
+		return true
+	end
 	if along.Magnitude > settings.MaxTangent then
 		along = along.Unit * settings.MaxTangent
 	end
@@ -408,6 +520,7 @@ local function onJumpPress()
 	if not humanoid or not root or humanoid.Health <= 0 then
 		return
 	end
+	setCrouch(false)
 	local now = workspace:GetServerTimeNow()
 	if not startMantle(now) and not tryWallHop(now) and not grounded() then
 		hopBuffer = os.clock() + Trav.WallHop.Buffer -- retried each frame
@@ -468,6 +581,7 @@ end
 bind("ExperimentSprint", function(_, state)
 	if state == Enum.UserInputState.Begin then
 		sprinting = true
+		setCrouch(false)
 	elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
 		sprinting = false
 	end
@@ -493,6 +607,17 @@ bind("ExperimentMarker", function(_, state)
 	end
 	return Enum.ContextActionResult.Sink
 end, "Mark", Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2)
+bind("ExperimentCrouch", function(_, state)
+	if state == Enum.UserInputState.Begin then
+		setCrouch(not crouching)
+	end
+	return Enum.ContextActionResult.Sink
+end, "Crouch", Enum.KeyCode.C, Enum.KeyCode.ButtonR3)
+ContextActionService:BindAction("ExperimentHurt", function(_, state)
+	if state == Enum.UserInputState.Begin then
+		send("Hurt")
+	end
+end, false, Enum.KeyCode.H)
 ContextActionService:BindAction("ExperimentProfile", function(_, state)
 	if state == Enum.UserInputState.Begin then
 		cycleProfile()
@@ -551,7 +676,10 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	desired = if desired.Magnitude > 1 then desired.Unit else desired
 	local settings = profile()
 	move = move:Lerp(desired, Math.alpha(settings.TurnRate, dt))
-	local target = if sprinting then settings.SprintSpeed else settings.RunSpeed
+	local target = if crouching
+		then Config.Crouch.Speed
+		elseif sprinting then settings.SprintSpeed
+		else settings.RunSpeed
 	speed = Math.approach(
 		speed,
 		if desired.Magnitude > 0.01 then target else 0,
@@ -564,7 +692,25 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	local onGround = humanoid.FloorMaterial ~= Enum.Material.Air
 	local kind = if acro then acro.kind else nil
 	local rolling = kind == "Roll"
-	if kind == "WallHop" and (now - acro.start > acro.duration or onGround) then
+	if kind == "WallHop" and acro.wallRun and now - acro.start > acro.duration and not onGround then
+		-- The run up the wall ends in a kick away from it; the kick keeps the lock.
+		local hop = Trav.WallHop
+		local launch = acro.away * hop.AwaySpeed + acro.direction * acro.speed * hop.TangentCarry
+		if not aiming then
+			root.CFrame = CFrame.lookAt(root.Position, root.Position + launch)
+		end
+		root.AssemblyLinearVelocity = launch + Vector3.new(0, hop.UpSpeed * Trav.WallRun.KickUp, 0)
+		if hop.RefreshFlip then
+			airUsed = false
+		end
+		acro = {
+			kind = "WallHop",
+			start = now,
+			duration = hop.LockTime,
+			direction = launch.Unit,
+			speed = launch.Magnitude,
+		}
+	elseif kind == "WallHop" and (now - acro.start > acro.duration or onGround) then
 		local velocity = root.AssemblyLinearVelocity
 		speed = math.min(Vector3.new(velocity.X, 0, velocity.Z).Magnitude, settings.SprintSpeed)
 		acro, kind = nil, nil
@@ -613,7 +759,8 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 					or flat(move)
 					or flat(root.CFrame.LookVector)
 					or Vector3.new(0, 0, -1),
-				now
+				now,
+				true
 			)
 		end
 		bufferedRoll = 0
@@ -645,7 +792,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v3   •   %s   •   %s\nWASD move · Shift run · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle · Space by a wall in the air: wall hop (x2)\nRMB aim · Click harmless marker · P compare profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
+		"SLUGSHOT / MOVEMENT LAB v4   •   %s   •   %s\nWASD move · Shift sprint · C crouch · Space jump · Q roll (ground) / flip (air; hold back = backflip)\nSpace into a ledge: mantle (low wall at speed: vault) · by a wall in the air: wall hop / run along it\nRMB aim · Click marker · H test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   Markers %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
@@ -655,6 +802,15 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 end)
 
 RunService.PreSimulation:Connect(function()
+	if acro and acro.wallRun and root then
+		-- Along the wall and up it, rise fading out, held lightly against the wall.
+		local fraction =
+			math.clamp((workspace:GetServerTimeNow() - acro.start) / acro.duration, 0, 1)
+		root.AssemblyLinearVelocity = acro.direction * acro.speed
+			- acro.away * 2
+			+ Vector3.new(0, Trav.WallRun.UpSpeed * (1 - fraction * fraction), 0)
+		return
+	end
 	if not acro or acro.kind ~= "Roll" or not root or not character then
 		return
 	end
@@ -695,10 +851,11 @@ RunService.Heartbeat:Connect(function()
 	local progress = Clips.climb(acro.clip, t)
 	local close = smoothstep(t / (acro.clip.duration * 0.3))
 	local from, to = acro.from.Position, acro.to.Position
-	local position = from
-		+ acro.gap * close
-		+ acro.over * progress.X
-		+ Vector3.new(0, (to.Y - from.Y) * progress.Y, 0)
+	-- Climbs rise with the clip; vaults travel over, lifted by the clip's arc.
+	local rise = if acro.vault
+		then (to.Y - from.Y) * progress.X + acro.lift * progress.Y
+		else (to.Y - from.Y) * progress.Y
+	local position = from + acro.gap * close + acro.over * progress.X + Vector3.new(0, rise, 0)
 	local startFacing = flat(acro.from.LookVector) or acro.to.LookVector
 	local facing = flat(startFacing:Lerp(acro.to.LookVector, close)) or acro.to.LookVector
 	root.CFrame = CFrame.lookAt(position, position + facing)
@@ -713,6 +870,10 @@ if RunService:IsStudio() then
 			testMove, testUntil = value.direction, os.clock() + (value.duration or 1)
 		elseif command == "Sprint" then
 			sprinting = value
+		elseif command == "Crouch" then
+			setCrouch(value)
+		elseif command == "Hurt" then
+			send("Hurt")
 		elseif command == "Jump" and humanoid then
 			testJumpUntil = os.clock() + 0.12
 		elseif command == "JumpPress" and humanoid then
@@ -755,6 +916,9 @@ if RunService:IsStudio() then
 			hops = hops,
 			variant = character and character:GetAttribute("MovementVariant"),
 			rendered = character and character:GetAttribute("RenderedAction"),
+			renderedMove = character and character:GetAttribute("RenderedMove"),
+			renderedClip = character and character:GetAttribute("RenderedClip"),
+			crouching = crouching,
 			airState = character and character:GetAttribute("RenderedAirState"),
 			footOffset = character and character:GetAttribute("RenderedFootOffset"),
 			phase = character and character:GetAttribute("RenderedCyclePhase"),

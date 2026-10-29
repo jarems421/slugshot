@@ -56,3 +56,20 @@
 - Studio tests caught: server rejecting genuine wall hops because the hop request overtook replication of the jump (fixed by polling and recent positions); possible out-of-order validation (now one action at a time per player); FloorMaterial lagging takeoff and dropping early second presses (grounded check now needs low vertical speed, plus a 0.15 s hop buffer); a belly-flop press pose and an overhead reach on chest-high ledges (retuned, threshold 3.2 studs).
 - Lesson: a test that keeps moving after an action can falsely fail (the character ran off the far side of the ledge). Sample during the action, not only at the end.
 - See [results](movement-verification.md#v3-traversal-2026-10-29). Next gate: owner playtest of v3 against v2/v1; Mixamo needs the owner's downloads.
+
+## 2026-10-29 - Owner's Mixamo clips (v4)
+
+- The owner downloaded 49 Mixamo clips (several per state) and asked for all of them to be used for variation, and to be told what else is needed. All 49 are used, as 54 runtime clips, via named variants (`Name.2`). See [ADR 0005](decisions/0005-mixamo-variants-transitions.md).
+- The downloads went to `Desktop\mixamo`, and `private-assets/` had been moved to the Desktop (probably an accidental drag). Both were copied back into the ignored project folder; the Desktop copies were left in place.
+- The first run on real files exposed converter problems that synthetic data had not:
+  - pelvis-yaw facing correction (removed)
+  - travelling loops offset by half their travel
+  - one-shot clips carrying their own travel
+  - run-out roll recovery
+  - turn clip facing
+  Lesson: look at held poses on the real rig before trusting a converter report.
+- Added crouch, vault, wall run, motion-derived transitions and three landing tiers. Studio tests then caught that a reversal passes through a stop (which had cleared the turn direction) and that early jump presses cleared low walls instead of vaulting (look-ahead added).
+- Test-process lessons:
+  - Client-side teleports can trigger the server's motion correction; teleport from the server in two-client tests.
+  - Multiplayer test windows from earlier runs had stayed open for hours; they were ended with `StudioTestService:EndTest`. Check for leftover Studio windows after multiplayer tests.
+- See [results](movement-verification.md#v4-mixamo-clips-2026-10-29). Next gate: owner playtest of the private v4 lab.

@@ -43,6 +43,15 @@ function Arena.create(): Model
 			if i % 2 == 0 then amber else blue
 		)
 	end
+	-- Vault course: thin low walls to run and jump over (westward, from spawn).
+	for i, height in { 2, 2.8, 3.4 } do
+		block(
+			"VaultWall" .. i,
+			Vector3.new(1.6, height, 10),
+			CFrame.new(-26 - i * 16, height / 2, 40),
+			if i % 2 == 0 then amber else blue
+		)
+	end
 	block("ChimneyLedge", Vector3.new(8, 14, 14), CFrame.new(70, 7, -6), blue)
 	block("ChimneyWall", Vector3.new(2, 22, 14), CFrame.new(83, 11, -6), amber)
 	for i = 0, 5 do

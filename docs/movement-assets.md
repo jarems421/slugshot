@@ -16,27 +16,25 @@ The [Cinderlore licence](https://cinderlore.com/license), version 1.0 effective 
 
 Offline inspection used the existing Rojo binary to convert RBXM to private XML without executing anything. Live Studio's LoadLocalAsset call lacked the required capability; no permission/security setting was changed to work around it. Instead, only reviewed Keyframe/Pose data was reconstructed for a temporary native Animator preview. No bundled script was executed. Preview rigs, temporary registered clip IDs and private data were not included in the built sandbox or retained in the edit place.
 
-## Optional Mixamo clips (owner download)
+## Mixamo clips (owner download)
 
-The owner chose original clips for now, with Mixamo as a later upgrade. Mixamo requires the owner's own Adobe sign-in. Reposted copies of Adobe's Mixamo FAQ ([community](https://community.adobe.com/questions-696/mixamo-faq-licensing-royalties-ownership-eula-and-tos-589400), [itch.io quote](https://itch.io/post/7747839)) describe royalty-free use in games but no redistribution of raw character/animation files; Adobe's own FAQ page returned HTTP 403 to this review, so check its current wording when signing in. Treat downloads, conversions and generated data like the Cinderlore packs: private only.
+Mixamo requires the owner's own Adobe sign-in. Reposted copies of Adobe's Mixamo FAQ ([community](https://community.adobe.com/questions-696/mixamo-faq-licensing-royalties-ownership-eula-and-tos-589400), [itch.io quote](https://itch.io/post/7747839)) describe royalty-free use in games, but no redistribution of raw character or animation files. Adobe's own FAQ page returned HTTP 403 to this review, so check its current wording when signing in. Treat downloads, conversions and generated data like the Cinderlore packs: private only.
 
-1. Download Y Bot clips as FBX Binary, With Skin (the T-pose bind pose is required), 30 fps, no keyframe reduction. Tick In Place only for run/sprint/back-pedal/strafe. Save to `private-assets/mixamo/` with the file names below. Mixamo's catalogue names change, so these are search terms: preview each result and pick the one that matches the description.
+**Status (2026-10-29):** the owner downloaded 49 clips into `private-assets/mixamo/`, keeping Mixamo's own file names. All 49 are mapped in `tools/mixamo_manifest.json` (file names and trims only, no animation data) and verified in the private lab ([results](movement-verification.md#v4-mixamo-clips-2026-10-29)).
 
-   | Save as | Search Mixamo for | Pick |
+1. **Download settings:** FBX Binary, With Skin (the T-pose bind pose is required), 30 fps, no keyframe reduction. In Place is optional: the converter removes travel from loops. Save into `private-assets/mixamo/` with any file name, then add a manifest entry: runtime name (`Name.2` for a variant), file, and flags such as `loop`, `air`, `rootMotion`, `traversal`, `vault`, `trim`, `mirror` or `alignEnd`.
+2. **Still wanted.** A missing slot keeps the original clip, or skips the feature:
+
+   | Slot | Search Mixamo for | Why |
    | --- | --- | --- |
-   | `idle.fbx` | idle | a relaxed athletic stance (no weapon) |
-   | `run.fbx`, `sprint.fbx` | run, fast run, sprint | a jog-paced run and a fast sprint, In Place |
-   | `run_back.fbx` | running backward | back-pedal, In Place |
-   | `strafe_left.fbx` | left strafe, running left | sideways run to the left, In Place (right is mirrored) |
-   | `jump.fbx`, `fall.fbx`, `land.fbx` | jump, falling idle, landing | standing jump with takeoff and landing; airborne loop; landing absorb |
-   | `roll_forward.fbx`, `roll_back.fbx`, `roll_left.fbx` | roll, forward roll, back roll, side roll | ground rolls with root motion (not In Place) |
-   | `flip_front.fbx`, `flip_back.fbx` | front flip, backflip | standing flips with takeoff and landing |
-   | `mantle_low.fbx`, `mantle_high.fbx` | climb, vault, jump over, climbing up wall | must start at the foot of an obstacle and end standing on top (not In Place): a quick step-up for low, a two-hand pull-up for high |
-
-   Any missing file just keeps the original clip of that name.
-2. Run `python tools/build_movement_playtest.py --retarget`. The reviewed `tools/mixamo_to_r15.py` runs in portable Blender and writes `private-assets/generated/MovementClips.luau`, which replaces original clips by name in `build/SlugshotMovementLabPrivate.rbxlx` only.
-3. The retargeter was verified on a synthetic Mixamo-named FBX (including the `traversal` climb mode), not yet on real Mixamo files: inspect the report and contact sheets before judging quality.
-4. Live (non-Studio) use would require publishing the chosen animations under the owner's account and a private ID mapping. Not done; ask first.
+   | `RollBack`, `RollLeft` (right is mirrored) | back roll, side roll | back and side rolls are still original clips |
+   | `RunBack` | running backward | straight back-pedal; currently blended from the two back diagonals |
+   | `MantleLow` | climbing / step up (low) | a quick step-up onto waist height; still the original clip |
+   | `WallHop` | jump (off a wall) / wall jump | a short kick-off; still the original clip |
+   | Rifle locomotion | rifle idle / run / walk / strafe | only if the owner wants the gun-ready look while aiming (needs a grip decision first) |
+   | Extra variants | second idle, another running jump, another side jump | more variety; any `Name.2` is picked up automatically |
+3. Run `python tools/build_movement_playtest.py --retarget`. The reviewed `tools/mixamo_to_r15.py` runs in portable Blender and writes `private-assets/generated/MovementClips.luau`, which is used by `build/SlugshotMovementLabPrivate.rbxlx` only.
+4. Live (non-Studio) use would need the chosen animations published under the owner's account, plus a private ID mapping. This has not been done; ask first.
 
 ## Later owner-controlled use
 

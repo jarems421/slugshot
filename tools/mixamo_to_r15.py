@@ -165,13 +165,14 @@ def yaw_of(matrix):
     return math.atan2(-facing.x, -facing.z)
 
 
-def normalize_yaw(frames, loop):
-    if loop:
-        sin = sum(math.sin(yaw_of(f["parts"]["LowerTorso"])) for f in frames)
-        cos = sum(math.cos(yaw_of(f["parts"]["LowerTorso"])) for f in frames)
-        yaw = math.atan2(sin, cos)
-    else:
-        yaw = yaw_of(frames[0]["parts"]["LowerTorso"])
+def normalize_yaw(frames, align_end):
+    # Mixamo exports every clip facing its world forward, which the rest-pose basis
+    # already maps to R15 forward; the pelvis turns during strafes and stances, so
+    # it is not a facing reference. Turn clips are rotated by their net turn so they
+    # end facing forward, matching a root that has already turned.
+    if not align_end:
+        return
+    yaw = yaw_of(frames[-1]["parts"]["LowerTorso"]) - yaw_of(frames[0]["parts"]["LowerTorso"])
     fix = Matrix.Rotation(-yaw, 3, "Y")
     for f in frames:
         f["parts"] = {k: fix @ v for k, v in f["parts"].items()}
@@ -238,8 +239,29 @@ def build(name, frames, fps, unit, spec):
     motion = None
     direction = (0, -1)
     hips = [f["hips"].copy() for f in frames]
+    drift = None
+    if loop and len(hips) > 2:
+        # Loops downloaded without In Place travel: remove the steady drift (least
+        # squares) and use it as the clip's natural speed.
+        n = len(hips)
+        mean_i = (n - 1) / 2
+        denom = sum((i - mean_i) ** 2 for i in range(n))
+        slope = Vector((
+            sum((i - mean_i) * h.x for i, h in enumerate(hips)) / denom,
+            0,
+            sum((i - mean_i) * h.z for i, h in enumerate(hips)) / denom,
+        ))
+        if slope.length * fps > 0.3:
+            drift = slope
+            centre_x = sum(h.x for h in hips) / n
+            centre_z = sum(h.z for h in hips) / n
+            for i, h in enumerate(hips):
+                h.x -= slope.x * (i - mean_i) + centre_x
+                h.z -= slope.z * (i - mean_i) + centre_z
     if loop:
         contact, speed = loop_analysis(frames, fps, unit)
+        if drift is not None:
+            speed = drift.length * fps  # planted feet do not slide in travelling clips
         frames = frames[contact:] + frames[:contact]
         hips = hips[contact:] + hips[:contact]
         if spec.get("idle"):
@@ -255,13 +277,17 @@ def build(name, frames, fps, unit, spec):
             direction = (net.x, net.z)
         for h in hips:
             h.x, h.z = 0.0, 0.0
+    if drift is not None:
+        direction = (drift.x / drift.length, drift.z / drift.length)
     climb = None
-    if spec.get("traversal"):
+    if spec.get("traversal") or spec.get("vault"):
         # The controller moves the root along the ledge; keep the clip's own path
-        # as normalized progress (over, up) and remove it from the hips.
+        # as normalized progress (over, up) and remove it from the hips. A vault
+        # goes over and back down: up is its peak lift, and dips below the start
+        # (the landing crouch) stay in the hips.
         origin = hips[0].copy()
         over = Vector((hips[-1].x - origin.x, 0, hips[-1].z - origin.z))
-        up = hips[-1].y - origin.y
+        up = max(h.y for h in hips) - origin.y if spec.get("vault") else hips[-1].y - origin.y
         if over.length < 0.05 or up < 0.05:
             raise SystemExit(f"{name}: traversal clip must move forward and up (got {over.length:.2f}, {up:.2f})")
         heading = over.normalized()
@@ -269,9 +295,19 @@ def build(name, frames, fps, unit, spec):
         for h in hips:
             offset = Vector((h.x - origin.x, 0, h.z - origin.z))
             advance, rise = offset.dot(heading) / over.length, (h.y - origin.y) / up
-            climb += [round(advance, 4), round(rise, 4)]
-            h.x, h.y, h.z = 0.0, origin.y * (1 - rise), 0.0  # starting crouch fades out
-    segment = air_segment(frames, unit) if not loop and not climb else None
+            if spec.get("vault"):
+                lift = max(rise, 0.0)
+                climb += [round(advance, 4), round(lift, 4)]
+                h.x, h.y, h.z = 0.0, origin.y + (h.y - origin.y) - lift * up, 0.0
+            else:
+                climb += [round(advance, 4), round(rise, 4)]
+                h.x, h.y, h.z = 0.0, origin.y * (1 - rise), 0.0  # starting crouch fades out
+    elif not loop and not motion:
+        # One-shot clips (starts, stops, turns, landings, reactions) play on the
+        # physics root, so their own travel is removed.
+        for h in hips:
+            h.x, h.z = 0.0, 0.0
+    segment = air_segment(frames, unit) if spec.get("air") else None
     if segment:
         takeoff, land = segment
         events["takeoff"] = takeoff / fps
@@ -290,16 +326,18 @@ def build(name, frames, fps, unit, spec):
             curve = num / den
             for k, i in enumerate(range(takeoff, land)):
                 hips[i].y -= curve * shape[k]
-    elif not loop and not climb:
+    elif not loop and not climb and not motion:
         floor = [h / unit for h in floor_curve(frames)]
         if floor[0] > CONTACT:
             events["contact"] = next((i for i, h in enumerate(floor) if h <= CONTACT), 0) / fps
     if motion and spec.get("rootMotion"):
         speeds = [math.hypot(motion[i][0] - motion[i - 1][0], motion[i][1] - motion[i - 1][1]) * fps for i in range(1, len(motion))]
         peak = max(range(len(speeds)), key=lambda i: speeds[i])
-        settle = next((i for i in range(peak, len(speeds)) if speeds[i] < speeds[peak] * 0.2), len(speeds))
-        rise = next((i for i in range(peak, len(hips)) if hips[i].y > -0.15), len(hips) - 1)
-        events["recover"] = max(settle, rise) / fps
+        settle = next((i for i in range(peak, len(speeds)) if speeds[i] < speeds[peak] * 0.2), None)
+        low = min(range(len(hips)), key=lambda i: hips[i].y)
+        rise = next((i for i in range(low, len(hips)) if hips[i].y > -0.15), len(hips) - 1)
+        # Rolls that run out never settle: they recover once the hips are back up.
+        events["recover"] = (rise if settle is None else max(settle, rise)) / fps
     joints = {}
     for joint, (parent, child) in JOINTS.items():
         values = []
@@ -322,7 +360,7 @@ def build(name, frames, fps, unit, spec):
     }
     if spec.get("rootMotion"):
         data["contact"] = "body"
-    elif not spec.get("air") and not climb and name != "Fall":
+    elif not spec.get("air") and not climb and name.split(".")[0] != "Fall":
         data["contact"] = "feet"
     if motion:
         data["motion"] = [round(v, 4) for pair in motion for v in pair]
@@ -361,7 +399,7 @@ def main():
             report[name] = "missing"
             continue
         frames, fps, unit = capture(path, spec)
-        normalize_yaw(frames, bool(spec.get("loop")))
+        normalize_yaw(frames, bool(spec.get("alignEnd")))
         variants = [(name, frames)]
         if spec.get("mirror"):
             variants.append((spec["mirror"], mirror(frames)))

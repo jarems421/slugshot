@@ -166,6 +166,60 @@ function Traversal.findLedge(
 	}
 end
 
+-- For a found ledge: if the obstacle is thin with open ground beyond, the landing
+-- stand point past it and the obstacle top height. (Slugshot addition, not Place1.)
+function Traversal.findVault(
+	humanoid: Humanoid,
+	root: BasePart,
+	ledge: Ledge,
+	settings: any,
+	rays: RaycastParams,
+	overlap: OverlapParams
+): (CFrame?, number)
+	local offset = Traversal.standOffset(humanoid, root)
+	local topY = ledge.target.Y - offset - 0.12
+	-- The floor under the character, which may already be mid-jump.
+	local below = workspace:Raycast(root.Position, Vector3.new(0, -(offset + 10), 0), rays)
+	local floorY = if below then below.Position.Y else topY - ledge.height
+	local into = -ledge.normal
+	local depth: number? = nil
+	local step = 0.6
+	while step <= settings.MaxDepth do
+		local probe = ledge.wall + into * step
+		local hit = workspace:Raycast(
+			Vector3.new(probe.X, topY + 0.6, probe.Z),
+			Vector3.new(0, -1.2, 0),
+			rays
+		)
+		if not hit then
+			depth = step
+			break
+		end
+		step += 0.4
+	end
+	if not depth then
+		return nil, topY
+	end
+	local land = ledge.wall + into * (depth + settings.LandDistance)
+	local ground = workspace:Raycast(
+		Vector3.new(land.X, topY + 0.5, land.Z),
+		Vector3.new(0, -(ledge.height + 2.5), 0),
+		rays
+	)
+	if not ground or ground.Normal.Y < 0.72 or math.abs(ground.Position.Y - floorY) > 1.5 then
+		return nil, topY
+	end
+	local size = Vector3.new(2.35, offset + 2, 1.85)
+	local center = ground.Position + Vector3.new(0, size.Y * 0.5 + 0.14, 0)
+	for _, part in workspace:GetPartBoundsInBox(CFrame.new(center), size, overlap) do
+		if part.CanCollide then
+			return nil, topY
+		end
+	end
+	local target = Vector3.new(land.X, ground.Position.Y + offset + 0.12, land.Z)
+	return CFrame.lookAt(target, target + into), topY
+end
+
 -- The nearest kickable wall around an airborne character, or nil.
 function Traversal.findWall(
 	humanoid: Humanoid,

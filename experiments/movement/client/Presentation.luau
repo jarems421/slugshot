@@ -1,8 +1,10 @@
 --!strict
 -- Clip-driven R15 presentation for every character: directional locomotion whose
--- cadence follows ground speed, physics-driven jump/fall, landing absorption,
--- roll/flip/mantle/wall-hop actions, lean and ground-contact correction. Physics root and camera
--- never rotate. Clips come from Clips.load (original, optionally private overrides).
+-- cadence follows ground speed, crouch, physics-driven jump/fall, tiered landings,
+-- one-shot transitions (start, stop, turn, crouch, settle, fidget, flinch),
+-- roll/flip/mantle/vault/wall-hop actions, lean and ground-contact correction.
+-- Physics root and camera never rotate. Clips come from Clips.load (original,
+-- optionally private overrides and variants).
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local shared = game:GetService("ReplicatedStorage"):WaitForChild("MovementExperiment")
@@ -149,6 +151,20 @@ function Presentation.start(clips: Clips.Library)
 			lastVy = 0,
 			landStart = -math.huge,
 			landStrength = 0,
+			landClip = nil,
+			landDuration = 0,
+			jumpClip = nil,
+			move = nil,
+			health = humanoid.Health,
+			crouched = false,
+			aiming = false,
+			idleSince = 0,
+			fidgetAt = math.huge,
+			fastAt = -math.huge,
+			fastBack = false,
+			stopped = true,
+			wasMoving = false,
+			runDirection = nil,
 			actionStamp = character:GetAttribute("MovementActionTime"),
 			action = nil,
 			fade = nil,
@@ -213,39 +229,111 @@ function Presentation.start(clips: Clips.Library)
 		rig.fade = { from = table.clone(rig.output), start = now, duration = duration }
 	end
 
-	-- Directional locomotion: run/sprint/back/strafe share one normalized phase so
-	-- foot contacts line up; cadence follows ground speed within a clamped range.
+	-- Forward clips by speed: jog (if present) -> run -> sprint.
+	local function forwardTier(speed: number, profile: any): { { any } }
+		local points = {}
+		if clips.Jog then
+			table.insert(points, { profile.RunSpeed * 0.45, clips.Jog })
+		end
+		if clips.Run then
+			table.insert(points, { profile.RunSpeed * 0.92, clips.Run })
+		end
+		if clips.Sprint and profile.SprintSpeed > profile.RunSpeed + 0.1 then
+			table.insert(points, { profile.SprintSpeed, clips.Sprint })
+		end
+		if #points == 0 then
+			return {}
+		end
+		if speed <= points[1][1] then
+			return { { points[1][2], 1 } }
+		end
+		for index = 1, #points - 1 do
+			local a, b = points[index], points[index + 1]
+			if speed < b[1] then
+				local mix = (speed - a[1]) / (b[1] - a[1])
+				return { { a[2], 1 - mix }, { b[2], mix } }
+			end
+		end
+		return { { points[#points][2], 1 } }
+	end
+
+	-- Directional anchors (degrees from facing, + right) with the clips each blends.
+	local function anchors(crouched: boolean, front: { { any } }): { { any } }
+		local list = {}
+		local function add(angle: number, name: string)
+			local clip = clips[name]
+			if clip then
+				table.insert(list, { angle, { { clip, 1 } } })
+			end
+		end
+		if crouched then
+			add(0, "CrouchForward")
+			add(90, "CrouchRight")
+			add(180, "CrouchBack")
+			add(-90, "CrouchLeft")
+			return list
+		end
+		if #front > 0 then
+			table.insert(list, { 0, front })
+		end
+		add(45, "SprintForwardRight")
+		add(-45, "SprintForwardLeft")
+		add(90, "StrafeRight")
+		add(-90, "StrafeLeft")
+		add(135, "SprintBackRight")
+		add(-135, "SprintBackLeft")
+		if not (clips.SprintBackRight and clips.SprintBackLeft) then
+			add(180, "RunBack")
+		end
+		return list
+	end
+
+	-- Directional locomotion: every direction clip shares one normalized phase so
+	-- foot contacts line up; the two anchors around the travel direction blend by
+	-- angle, and cadence follows ground speed within a clamped range.
 	local function locomotion(rig: any, dt: number, now: number, flat: Vector3): (Pose, number)
 		local speed = flat.Magnitude
 		local localVelocity = rig.root.CFrame:VectorToObjectSpace(flat)
 		local profile = Config.Profiles[rig.character:GetAttribute("MovementProfile") or ""]
 			or Config.Profiles[Config.DefaultProfile]
-		local sprintStart = profile.RunSpeed * 0.92
-		local sprintMix = if profile.SprintSpeed > sprintStart + 0.1
-			then math.clamp((speed - sprintStart) / (profile.SprintSpeed - sprintStart), 0, 1)
+		local crouched = rig.character:GetAttribute("Crouching") == true and clips.CrouchIdle ~= nil
+		local angle = if speed > 0.01
+			then math.deg(math.atan2(localVelocity.X, -localVelocity.Z))
 			else 0
-		local inverse = if speed > 0.01 then 1 / speed else 0
-		local forward, side = -localVelocity.Z * inverse, localVelocity.X * inverse
+		local list = anchors(crouched, forwardTier(speed, profile))
+		table.sort(list, function(a, b)
+			return a[1] < b[1]
+		end)
 		local entries: { { any } } = {}
 		local total = 0
-		local function add(name: string, weight: number)
+		local function addAnchor(anchor: { any }, weight: number)
 			if weight <= 1e-3 then
 				return
 			end
-			local clip = clips[name] or clips.Run or clips.Sprint
-			if clip then
-				table.insert(entries, { clip, weight })
-				total += weight
+			for _, entry in anchor[2] do
+				table.insert(entries, { entry[1], entry[2] * weight })
+				total += entry[2] * weight
 			end
 		end
-		if speed <= 0.01 then
-			forward = 1
+		if #list > 0 then
+			-- The anchors either side of the travel angle, wrapping around behind.
+			local before, after = list[#list], list[1]
+			for _, anchor in list do
+				if anchor[1] <= angle then
+					before = anchor
+				end
+			end
+			for index = #list, 1, -1 do
+				if list[index][1] > angle then
+					after = list[index]
+				end
+			end
+			local span = (after[1] - before[1]) % 360
+			local into = (angle - before[1]) % 360
+			local mix = if span > 1e-3 then into / span else 0
+			addAnchor(before, 1 - mix)
+			addAnchor(after, mix)
 		end
-		add("Run", math.max(0, forward) * (1 - sprintMix))
-		add("Sprint", math.max(0, forward) * sprintMix)
-		add("RunBack", math.max(0, -forward))
-		add("StrafeRight", math.max(0, side))
-		add("StrafeLeft", math.max(0, -side))
 		local natural, cycle = 0, 0
 		for _, entry in entries do
 			entry[2] /= total
@@ -268,7 +356,12 @@ function Presentation.start(clips: Clips.Library)
 			floor += Clips.floor(clip, time) * entry[2]
 		end
 		local moving = Clips.blend(poses, weights, scratch(rig, 10))
-		local idle = clips.Idle
+		local humanoid = rig.humanoid
+		local injured = humanoid.Health < humanoid.MaxHealth * A.Moves.InjuredBelow
+		local idle = if crouched
+			then clips.CrouchIdle
+			elseif injured and clips.IdleInjured then clips.IdleInjured
+			else clips.Idle
 		local moveWeight = smoothstep(speed / A.IdleBlendSpeed)
 		if not idle or moveWeight >= 0.999 then
 			return moving, floor
@@ -285,7 +378,7 @@ function Presentation.start(clips: Clips.Library)
 	-- Airborne: rise through the jump clip as vertical speed decays, carry the
 	-- apex, then reach for the ground over the clip's final air time.
 	local function airborne(rig: any, now: number, vy: number, height: number): (Pose?, string)
-		local jump = clips.Jump
+		local jump = rig.jumpClip or clips.Jump
 		local events = if jump then jump.events else {}
 		local takeoff, apex, land = events.takeoff, events.apex, events.land
 		if jump and takeoff and apex and land then
@@ -311,6 +404,172 @@ function Presentation.start(clips: Clips.Library)
 			return Clips.sample(clips.Fall, now - rig.airStart, scratch(rig, 14)), "fall"
 		end
 		return nil, "none"
+	end
+
+	-- Takeoff clip from the run-up: aiming, sideways, running or standing.
+	local function chooseJump(rig: any, flat: Vector3, now: number): Clips.Clip?
+		local speed = flat.Magnitude
+		local seed = now * 7
+		if rig.character:GetAttribute("Aiming") and clips.JumpAim then
+			return Clips.pick(clips, "JumpAim", seed)
+		end
+		if speed > 8 then
+			local side = rig.root.CFrame:VectorToObjectSpace(flat).X / speed
+			if math.abs(side) > 0.6 then
+				local sideways =
+					Clips.pick(clips, if side > 0 then "JumpRight" else "JumpLeft", seed)
+				if sideways then
+					return sideways
+				end
+			end
+			return Clips.pick(clips, "JumpRun", seed) or clips.Jump
+		end
+		return clips.Jump
+	end
+
+	-- One-shot transitions over grounded locomotion.
+	local Moves = A.Moves
+	local function startMove(
+		rig: any,
+		kind: string,
+		clip: Clips.Clip?,
+		now: number,
+		rate: number?,
+		offset: number?,
+		hold: number?
+	)
+		if not clip then
+			return
+		end
+		rig.move = {
+			kind = kind,
+			clip = clip,
+			start = now,
+			rate = rate or 1,
+			offset = offset or 0,
+			hold = hold,
+		}
+		startFade(rig, Moves.Fade, now)
+	end
+
+	-- Picks transitions from what the body is doing (speed, turns, crouch, aim,
+	-- health), so observers derive the same ones from replicated state.
+	local function watchMoves(rig: any, now: number, flat: Vector3, grounded: boolean)
+		local character, humanoid = rig.character, rig.humanoid
+		local speed = flat.Magnitude
+		local aiming = character:GetAttribute("Aiming") == true
+		local crouched = character:GetAttribute("Crouching") == true
+		local seed = now * 13
+		local health = humanoid.Health
+		local hurt = health < rig.health - 0.5
+		rig.health = health
+		local wasCrouched, wasAiming = rig.crouched, rig.aiming
+		rig.crouched, rig.aiming = crouched, aiming
+		local idleFor = now - rig.idleSince
+		if speed > 1 or aiming or crouched or not grounded then
+			rig.idleSince = now
+			rig.fidgetAt = now + Moves.Fidget.After + math.random() * Moves.Fidget.Spread
+		end
+		if not grounded or rig.action then
+			rig.move = nil
+			rig.wasMoving = speed > 1
+			return
+		end
+		if hurt then
+			startMove(rig, "Flinch", Clips.pick(clips, "Flinch", seed), now)
+		elseif crouched ~= wasCrouched then
+			if crouched then
+				startMove(rig, "Crouch", clips.CrouchEnter, now, Moves.Crouch.Rate)
+			elseif speed > 4 then
+				startMove(rig, "Crouch", clips.CrouchExitRun, now, Moves.Crouch.Rate)
+			else
+				startMove(rig, "Crouch", clips.CrouchExit, now, Moves.Crouch.Rate)
+			end
+		elseif wasAiming and not aiming and speed < 1 and not crouched then
+			startMove(rig, "Settle", clips.AimSettle, now)
+		elseif not rig.wasMoving and speed > 1 and not crouched then
+			if idleFor > Moves.Start.IdleTime then
+				local start = Moves.Start
+				startMove(rig, "Start", clips.Start, now, start.Rate, start.Offset, start.Hold)
+			end
+		elseif speed > Moves.Turn.MinSpeed and not aiming and not crouched then
+			-- A reversal passes through a stop: compare with the last fast direction.
+			local direction = flat.Unit
+			if
+				rig.runDirection
+				and direction:Dot(rig.runDirection) < Moves.Turn.Dot
+				and now - rig.fastAt < Moves.Turn.Window
+			then
+				local turn = Moves.Turn
+				startMove(rig, "Turn", clips.Turn, now, turn.Rate, 0, turn.Hold)
+				rig.runDirection = direction
+			end
+		elseif speed < 4 and now - rig.fastAt < 0.35 and not crouched and not rig.stopped then
+			rig.stopped = true
+			local stop = Moves.Stop
+			local clip = if rig.fastBack and clips.StopBack
+				then clips.StopBack
+				elseif aiming and clips.StopAim then clips.StopAim
+				else clips.Stop
+			startMove(rig, "Stop", clip, now, stop.Rate, stop.Offset)
+		elseif speed < 0.5 and now > rig.fidgetAt and clips.IdleFidget then
+			rig.fidgetAt = now + Moves.Fidget.After + math.random() * Moves.Fidget.Spread
+			startMove(rig, "Fidget", Clips.pick(clips, "IdleFidget", seed), now)
+		end
+		if speed > Moves.Stop.MinSpeed then
+			rig.fastAt = now
+			rig.stopped = false
+			rig.fastBack = rig.root.CFrame.LookVector:Dot(flat) < -0.3 * speed
+		end
+		if speed > Moves.Turn.MinSpeed then
+			local direction = flat.Unit
+			rig.runDirection = if rig.runDirection
+				then (rig.runDirection:Lerp(direction, 0.15)).Unit
+				else direction
+		elseif now - rig.fastAt > Moves.Turn.Window then
+			rig.runDirection = nil
+		end
+		rig.wasMoving = speed > 1
+	end
+
+	-- Plays the current transition over the base pose; returns the blended pose.
+	local function applyMove(
+		rig: any,
+		now: number,
+		speed: number,
+		pose: Pose,
+		floor: number
+	): (Pose, number)
+		local move = rig.move
+		if not move then
+			return pose, floor
+		end
+		local character = rig.character
+		local elapsed = now - move.start
+		local t = move.offset + elapsed * move.rate
+		local kind = move.kind
+		local cancel = (kind == "Start" and speed < 1)
+			or (kind == "Stop" and speed > 6)
+			or ((kind == "Settle" or kind == "Fidget") and (speed > 1.5 or character:GetAttribute(
+				"Aiming"
+			)))
+			or (kind == "Fidget" and character:GetAttribute("Crouching"))
+		local weight = 1
+		if move.hold then
+			weight = 1 - smoothstep((elapsed - move.hold) / Moves.Fade)
+		elseif kind == "Flinch" then
+			weight = 1 - 0.5 * smoothstep(speed / A.IdleBlendSpeed)
+		end
+		if cancel or t >= move.clip.duration or weight <= 0 then
+			rig.move = nil
+			if weight > 0 then
+				startFade(rig, Moves.Fade, now)
+			end
+			return pose, floor
+		end
+		local movePose = Clips.sample(move.clip, t, scratch(rig, 19))
+		local result = Clips.blend({ pose, movePose }, { 1 - weight, weight }, scratch(rig, 20))
+		return result, floor + (Clips.floor(move.clip, t) - floor) * weight
 	end
 
 	local ACTIONS = { Roll = true, Flip = true, Mantle = true, WallHop = true }
@@ -346,7 +605,7 @@ function Presentation.start(clips: Clips.Library)
 			-- owner's clock, and the attributes arrive about as late as the motion.
 			start = if character == Players.LocalPlayer.Character then stamp else now,
 			rate = if typeof(rate) == "number" then rate else 1,
-			offset = if kind == "Flip" then clip.events.takeoff or 0 else 0,
+			offset = if kind == "Flip" or kind == "WallHop" then clip.events.takeoff or 0 else 0,
 			yaw = yaw,
 		}
 		startFade(rig, A.Fade.ActionIn, now)
@@ -367,15 +626,21 @@ function Presentation.start(clips: Clips.Library)
 			if grounded then
 				local impact = -rig.lastVy
 				if now - rig.airStart > 0.08 and impact >= A.Land.MinImpact then
+					local land = A.Land
 					rig.landStart = now
 					rig.landStrength = math.clamp(
-						0.35
-							+ 0.65
-								* (impact - A.Land.MinImpact)
-								/ (A.Land.FullImpact - A.Land.MinImpact),
+						0.35 + 0.65 * (impact - land.MinImpact) / (land.FullImpact - land.MinImpact),
 						0,
 						1
 					)
+					rig.landClip, rig.landDuration = clips.Land, land.Duration
+					if impact >= land.Heavy.Impact and clips.LandHeavy then
+						rig.landClip, rig.landDuration, rig.landStrength =
+							clips.LandHeavy, land.Heavy.Duration, 1
+					elseif impact >= land.Hard.Impact and clips.LandHard then
+						rig.landClip, rig.landDuration, rig.landStrength =
+							clips.LandHard, land.Hard.Duration, 1
+					end
 				end
 				startFade(rig, A.Fade.Land, now)
 			else
@@ -383,6 +648,7 @@ function Presentation.start(clips: Clips.Library)
 				rig.jumped = velocity.Y > 10
 				rig.airVy0 = velocity.Y
 				rig.airState = ""
+				rig.jumpClip = if rig.jumped then chooseJump(rig, flat, now) else nil
 			end
 			rig.grounded = grounded
 		end
@@ -401,20 +667,23 @@ function Presentation.start(clips: Clips.Library)
 		local pose: Pose
 		local floor = 0
 		local contact: string? = nil
+		watchMoves(rig, now, flat, grounded)
 		if grounded then
 			pose, floor = locomotion(rig, dt, now, flat)
 			contact = "feet"
-			local land = clips.Land
+			pose, floor = applyMove(rig, now, flat.Magnitude, pose, floor)
+			local land = rig.landClip or clips.Land
 			local landTime = now - rig.landStart
-			if land and landTime < A.Land.Duration then
+			local duration = if rig.landClip then rig.landDuration else A.Land.Duration
+			if land and landTime < duration then
 				local moveWeight = smoothstep(flat.Magnitude / A.IdleBlendSpeed)
 				local weight = rig.landStrength
-					* (1 - smoothstep(landTime / A.Land.Duration))
+					* (1 - smoothstep(landTime / duration) ^ 2)
 					* (1 - moveWeight * A.Land.MovingScale)
-				local landPose =
-					Clips.sample(land, (land.events.contact or 0) + landTime, scratch(rig, 15))
+				local landAt = (land.events.contact or 0) + landTime * A.Land.Rate
+				local landPose = Clips.sample(land, landAt, scratch(rig, 15))
 				pose = Clips.blend({ pose, landPose }, { 1 - weight, weight }, scratch(rig, 16))
-				floor += (Clips.floor(land, (land.events.contact or 0) + landTime) - floor) * weight
+				floor += (Clips.floor(land, landAt) - floor) * weight
 			end
 		else
 			local airPose, state = airborne(rig, now, velocity.Y, height)
@@ -549,6 +818,15 @@ function Presentation.start(clips: Clips.Library)
 			joint.Transform = value
 		end
 		character:SetAttribute("RenderedAction", if action and rig.action then action.kind else "")
+		character:SetAttribute("RenderedMove", if rig.move then rig.move.kind else "")
+		character:SetAttribute(
+			"RenderedLand",
+			if rig.landClip and now - rig.landStart < rig.landDuration
+				then rig.landClip.name
+				else ""
+		)
+		character:SetAttribute("RenderedJump", if rig.jumpClip then rig.jumpClip.name else "")
+		character:SetAttribute("RenderedClip", if rig.action then rig.action.clip.name else "")
 		character:SetAttribute("RenderedAirState", if grounded then "ground" else rig.airState)
 		character:SetAttribute("RenderedCyclePhase", rig.phase)
 		character:SetAttribute("RenderedFootOffset", rig.footOffset)

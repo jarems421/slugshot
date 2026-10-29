@@ -128,18 +128,27 @@ end
 -- the recent history: replicated positions trail fast traversal by 0.1-0.2 s.
 local function traversalValid(
 	kind: string,
+	variant: string,
 	character: Model,
 	positions: { Vector3 },
 	target: Vector3
 ): boolean
 	local slack = Config.Validation.TraversalSlack
+	local vault = Config.Traversal.Vault
+	-- A vault lands beyond the obstacle; a wall run's contact trails along the wall.
+	local reach = if variant == "Vault"
+		then Config.Traversal.Mantle.Reach
+			+ vault.LookAhead * Config.Validation.HorizontalSpeedLimit
+			+ vault.MaxDepth
+			+ vault.LandDistance
+		else Config.Traversal.Mantle.Reach + 2
 	local near = false
 	for _, position in positions do
 		local offset = target - position
 		local flat = Vector3.new(offset.X, 0, offset.Z).Magnitude
 		if kind == "Mantle" then
 			local settings = Config.Traversal.Mantle
-			near = flat <= settings.Reach + 2 + slack
+			near = flat <= reach + slack
 				and offset.Y >= -2
 				and offset.Y <= settings.MaxHeight + 1 + slack
 		else
@@ -206,13 +215,18 @@ local function validateAction(
 	if not direction then
 		return "direction"
 	end
-	if typeof(packet.value) ~= "string" or not table.find(ACTION_VARIANTS[kind], packet.value) then
+	-- Clip variants (Name.2) are presentation choices of the same action.
+	local base = if typeof(packet.value) == "string" and #packet.value <= 40
+		then string.match(packet.value, "^(.-)%.%d$") or packet.value
+		else nil
+	if not base or not table.find(ACTION_VARIANTS[kind], base) then
 		return "variant"
 	end
+	local roll = Config.Acrobatics.Roll
 	if
 		typeof(rate) ~= "number"
 		or not Math.finite(rate)
-		or (kind == "Roll" and math.abs(rate - Config.Acrobatics.Roll.PlaybackRate) > 1e-3)
+		or (kind == "Roll" and (rate < roll.MinRate - 1e-3 or rate > roll.MaxRate + 1e-3))
 		or (kind == "Flip" and (rate < limits.MinRate - 1e-3 or rate > limits.MaxRate + 1e-3))
 		or (kind == "Mantle" and (rate < 0.5 or rate > 3))
 		or (kind == "WallHop" and rate ~= 1)
@@ -235,6 +249,7 @@ local function validateAction(
 		placed = not traversal
 			or traversalValid(
 				kind,
+				base :: string,
 				character,
 				{ root.Position, table.unpack(state.history) },
 				target :: Vector3
@@ -379,6 +394,20 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 				math.clamp(math.asin(math.clamp(packet.direction.Y, -1, 1)), -0.8, 0.8)
 			)
 		end
+	elseif packet.kind == "Crouch" then
+		if typeof(packet.value) ~= "boolean" then
+			reject("crouch")
+			return
+		end
+		character:SetAttribute("Crouching", packet.value)
+	elseif packet.kind == "Hurt" then
+		-- Lab-only preview of hit reactions and the injured idle; not combat.
+		if now - (state.lastHurt or -math.huge) < Config.Lab.HurtCooldown then
+			reject("hurt-rate")
+			return
+		end
+		state.lastHurt = now
+		humanoid:TakeDamage(Config.Lab.HurtAmount)
 	elseif packet.kind == "Respawn" then
 		if now - state.lastRespawn < 3 then
 			reject("respawn-rate")

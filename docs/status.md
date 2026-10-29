@@ -1,12 +1,12 @@
 # Current status
 
 Updated: 2026-10-29
-Milestone: movement refinement (v3: v2 plus traversal) on the isolated movement prototype
+Milestone: movement refinement (v4: owner's Mixamo clips, variants, transitions, crouch, vault, wall run) on the isolated movement prototype
 Branch: `experiment/movement-sandbox` (not merged; owner review of gameplay required first)
 
 ## Confirmed authorization
 
-The owner authorized movement/controller research and refinement, relevant verified free assets/tools, an isolated playable sandbox, runtime/multiplayer testing and pushing this experimental branch. For animation, the owner first chose Mixamo + Blender, then chose original clips for now with Mixamo as a later option. On 2026-10-29 the owner chose to build on established free systems: adapt Place1's mantle and wall hop (MIT), with Mixamo still planned. No paid purchase, new account connection, security/elevation change, animation upload or Roblox publication is authorized. Restricted animation sources and reusable IDs stay private.
+The owner authorized movement/controller research and refinement, relevant verified free assets/tools, an isolated playable sandbox, runtime/multiplayer testing and pushing this experimental branch. For animation, the owner first chose Mixamo + Blender, then chose original clips for now with Mixamo as a later option. On 2026-10-29 the owner chose to build on established free systems: adapt Place1's mantle and wall hop (MIT), with Mixamo still planned. The owner then downloaded 49 Mixamo clips with their own Adobe account and asked for all of them to be used for variation. No paid purchase, new account connection, security/elevation change, animation upload or Roblox publication is authorized. Restricted animation sources and reusable IDs stay private.
 
 ## Implemented and verified
 
@@ -19,12 +19,16 @@ The foundation project is preserved. v2 keeps v1's native Humanoid controller, p
 - Private Mixamo retarget pipeline (portable Blender, verified on synthetic data only, now including climb clips) and ignored private build path.
 - v3: mantle (step vault or two-hand climb) and wall hop, with detection adapted from Place1 (MIT notice in source), original clips, server geometry/order checks and a traversal course. v2 is also rebuildable for comparison.
 
+- v4 (private lab): all 49 Mixamo downloads as 54 clips with variants. It adds 8-way jog/run/sprint, crouch, start/stop/turn/settle/fidget/flinch transitions derived from motion, jump variants, three landing tiers, roll/flip variants (landing roll, drop flip), a hanging climb, vault, wall run, and a lab hit-reaction key. The converter was fixed on real Mixamo data.
+
+v4 implemented/verified with evidence in [results](movement-verification.md#v4-mixamo-clips-2026-10-29): Studio held-pose visual review; single-client checks of every new move and transition; public-build regression and Studio tests; two-client replication of crouch, vault, wall run, roll variant and flinch; one 60 ms + jitter trial (0 rejections, 0 corrections, settings restored to 0; one unexplained plain hop instead of a wall run, not reproduced in 4 repeats); respawn; forged requests rejected.
+
 v3 implemented/verified with evidence in [results](movement-verification.md#v3-traversal-2026-10-29): mantles at 1.5-7.5 studs, chimney hop-hop-mantle, hop into backflip, path-placed pose review, two-client replication, one 60 ms + jitter trial (0 rejections, settings restored to 0), forged requests rejected, respawn.
 
 v2 implemented/verified with evidence in [results](movement-verification.md#v2-refinement-2026-10-28): local checks; Studio clip tests; held-pose and live visual review; ground contact; single-client rolls/flips/landing roll/respawn; aim stability through a flip; two-client replication of run/roll/flip/directional variants; one 60 ms + jitter trial with settings restored to 0; invalid-request rejection; two-client respawn.
 
 ## Experimental / unresolved
 
-Whether v2/v3 feel and look substantially better is the owner's playtest call. Whether mantle and wall hop stay in the move set, final move set, controls (single acrobatics button or separate), speeds, roll distance, flip lift, animation style and camera remain open. Not established: rendered 30/60/144 FPS behaviour, foot placement on slopes/steps, devices, packet loss, large player counts, weapon/muzzle alignment, Mixamo quality on real files, mantle arm IK, moving platforms.
+Whether v2/v3/v4 feel and look substantially better is the owner's playtest call, as are whether crouch, vault and wall run stay, and which Mixamo clips to keep or replace. Whether mantle and wall hop stay in the move set, final move set, controls (single acrobatics button or separate), speeds, roll distance, flip lift, animation style and camera remain open. Not established: rendered 30/60/144 FPS behaviour, foot placement on slopes/steps, devices, packet loss, large player counts, weapon/muzzle alignment, mantle arm IK, foot slide at sprint speed with realistic Mixamo cadence, moving platforms.
 
-Next gate: owner compares v1, v2 and v3 using [the movement guide](movement.md#playtest-priorities). No combat, creatures, progression, matchmaking or permanent environment/game-design decisions were implemented.
+Next gate: owner plays the private v4 lab and compares it with v3/v2/v1 using [the movement guide](movement.md#playtest-priorities). No combat, creatures, progression, matchmaking or permanent environment/game-design decisions were implemented.

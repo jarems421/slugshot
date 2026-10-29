@@ -2,6 +2,26 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v4 Mixamo clips (2026-10-29)
+
+These are the owner's 49 Mixamo downloads, retargeted privately into 54 clips and played in the private lab ([ADR 0005](decisions/0005-mixamo-variants-transitions.md)). The [sanitized evidence](evidence/2026-10-29-movement-v4.json) lists outcomes and hashes only. Clip data, FBX files and pose captures stay in ignored storage.
+
+| Check | Observed result |
+| --- | --- |
+| Files | All 49: 30 fps, with skin, full Mixamo skeleton, T-pose bind. Pose sheets were drawn from the source FBX and checked against the intended use of each clip |
+| Converter, real data | First real run exposed five problems, all fixed: <ul><li>pelvis-yaw facing correction turned strafes and crouch walks sideways (removed; Mixamo already faces forward)</li><li>travelling loops kept half their travel as an offset (drift removed and recentred)</li><li>one-shot clips carried their own travel (removed)</li><li>run-out rolls recovered only at the end</li><li>the turn clip ended backwards (aligned to its end facing)</li></ul>After the fixes, directions were checked: strafes ±X, diagonals at 45°, sideways jumps ±X |
+| Visual review | Held frames on the real R15 rig, side and front views: idle, jog, run, sprint, diagonals, strafe, crouch, turn, stop, landings, roll, flip, climbs, vault, wall run, aim jump, injured idle, flinch. Strafe clips twist the hips toward travel, as authored |
+| Single client (private lab) | <ul><li>Start, stop and 180° turn fire (the turn only after a fix: a reversal passes through a stop, which had cleared the direction)</li><li>Crouch in and out at 9.9 studs/s</li><li>Aim settle, flinch (health 100→85) and idle fidget</li><li>Jumps: standing / running / aiming</li><li>Rolls: two forward variants, 11.7-12 studs</li><li>Flips: two front and two back variants, root up 1; drop flip from height</li><li>Landings: 12 studs → normal, 30 → hard, 60 → heavy; landing roll</li><li>Mantles at 3 / 4.5 / 5.5 (hanging climb) / 7.5 studs end exactly on top</li><li>Vaults over 2, 2.8 and 3.4 stud walls (after adding a look-ahead: early presses had jumped over)</li><li>Wall run up the long wall (+16.6 studs) and kick-off</li></ul>0 rejections, no console errors |
+| Public build regression | Original clips only: rolls, flips and mantles accepted. Transitions, vault and wall run are absent, as expected. Studio tests pass, including the new variant tests |
+| Two clients | Player 2 rendered Player 1's crouch, vault, wall run, roll variant and flinch. Under 60 ms each way + 10 ms jitter: vault, roll and crouch accepted, 0 rejections, 0 motion corrections; settings verified 0 before and restored to 0. One delayed attempt produced a plain wall hop instead of a wall run; 4 of 4 repeats ran the wall correctly (cause not established). Respawn: one HUD, crouch works. 4/4 forged requests rejected (vault onto empty air, roll rate 5, bad variant suffix, non-boolean crouch). No console errors |
+
+Test-process notes:
+- Client-side teleports in test scripts can trigger the server's motion correction, so the two-client checks teleport from the server.
+- Leftover multiplayer test windows from earlier runs were ended through `StudioTestService:EndTest`.
+- One Studio process launched for testing hung without a window and was left running (force-closing was not permitted).
+
+Not established: rendered FPS extremes, devices, packet loss, foot IK on slopes, arm IK on ledges, and whether it looks and feels better (the owner's call).
+
 ## v3 traversal (2026-10-29)
 
 Mantle and wall hop, with detection adapted from Place1 (MIT; [ADR 0004](decisions/0004-place1-traversal.md)). Original clips only. [Sanitized evidence](evidence/2026-10-29-movement-v3.json), [pose sheet](evidence/movement-v3-traversal.jpg) (two-hand climb on a 5.5-stud ledge, step vault on a 3-stud ledge, wall kick).

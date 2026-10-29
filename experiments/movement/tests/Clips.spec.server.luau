@@ -91,6 +91,18 @@ for name, entry in original do
 		end
 	end
 end
+local library = { Spin = clip, ["Spin.2"] = loop, ["Spin.4"] = clip }
+local variants = Clips.variants(library, "Spin")
+assert(#variants == 2 and variants[2] == loop, "Variants run Name, Name.2 until a gap")
+assert(
+	Clips.pick(library, "Spin", 3) == loop and Clips.pick(library, "Spin", 4) == clip,
+	"Pick cycles"
+)
+assert(Clips.pick(library, "Missing", 1) == nil, "Pick of an absent clip is nil")
+assert(
+	Clips.baseName("FlipFront.2") == "FlipFront" and Clips.baseName("Roll") == "Roll",
+	"Variant base names"
+)
 print(
-	"[Movement tests] PASS: clip decode, sampling, loop wrap, root motion, climb curves and weighted blend"
+	"[Movement tests] PASS: clip decode, sampling, loop wrap, root motion, climb curves, variants and weighted blend"
 )

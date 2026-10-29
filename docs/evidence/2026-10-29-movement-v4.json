@@ -1,0 +1,309 @@
+{
+  "date": "2026-10-29",
+  "studioVersion": "0.745.0.7451137",
+  "branch": "experiment/movement-sandbox",
+  "clipSource": "Owner-downloaded Mixamo FBX (49 files) retargeted privately by tools/mixamo_to_r15.py into 54 clips; the generated data, FBX files and pose captures stay in ignored private-assets/ and build/. Public builds contain original clips only.",
+  "retarget": {
+    "files": 49,
+    "clips": 54,
+    "fps": 30,
+    "allHaveSkin": true,
+    "allMixamoSkeleton": true,
+    "tPoseBind": true,
+    "fixesFromRealData": [
+      "pelvis-yaw facing normalisation removed (strafes/crouch read as sideways)",
+      "travelling loops: drift removed and recentred",
+      "one-shot clips: own travel removed",
+      "roll recover point for run-out rolls",
+      "turn clip aligned to its end facing"
+    ]
+  },
+  "sourceSha256": {
+    "experiments/movement/client/Presentation.luau": "0fbcba79664908cd77bcf2f6dbdad65c02c1e0628f8fbf123d38945964a2b9d3",
+    "experiments/movement/client/Traversal.luau": "4f5bfb0c3f2a171964dc86145313c9666608c968c9f86e57c6510f884d035263",
+    "experiments/movement/client/init.client.luau": "bdc17f3552041d6c1a1ff3eea8c30d44ae529f9a2e125fe13754ff5b00d5ed1f",
+    "experiments/movement/server/Arena.luau": "6fc6a45db39cc70d7eb427605c37b7be97e04c7d9e5db44f6157d09b9fd9d048",
+    "experiments/movement/server/init.server.luau": "18980faf35994b4abe406e35cdf12a852dd305e5b2567b270f2176bebc5a680a",
+    "experiments/movement/shared/Clips.luau": "a0113b9e5f9934131e77beec9cdfaeefe0c3c70406921fb75d203b8c26d4d3a0",
+    "experiments/movement/shared/Config.luau": "fe8214454c2eaf12c51d8bcef791c09d57917fa3090838fa26a47fcdeb3c4260",
+    "experiments/movement/shared/MotionMath.luau": "cb145fcbeeb4ef4f9a98fabc66bacfd4736d5970ac852e4476d432d0a97ac597",
+    "experiments/movement/shared/OriginalClips.luau": "3aba046924d1d11231ca0152c4cdc91ad42a8ebf0c58b12639de4c3b63b0710d",
+    "experiments/movement/tests/Clips.spec.server.luau": "b7e3af3e8248562c7a8b51366e81f2b35fffc804b459c2e09c0b1e8716eafdb0",
+    "experiments/movement/tests/Math.spec.server.luau": "cb39199052d449cbacb0361545a092241e398d67e2555eb11472169215490e04",
+    "tools/mixamo_to_r15.py": "be88621920d52f3993a1d6893dca1b4ee6069f76962f9444105d0e0d0975a74c",
+    "tools/mixamo_manifest.json": "821b87105b03955ad3b8eeded8801c4a768b9ed012b603e8742e6ab2df033d1e"
+  },
+  "privateLabSingleClient": {
+    "startStopTurn": {
+      "start": [],
+      "turn": [],
+      "stop": [],
+      "runSpeed": 23.9
+    },
+    "crouch": {
+      "enter": [],
+      "exitMoving": [],
+      "crouchSpeed": 9.9,
+      "exit": [],
+      "attr": true
+    },
+    "rollsFlips": {
+      "rejects": [],
+      "rolls": [
+        {
+          "ok": true,
+          "seen": [
+            "Clip:RollLeft"
+          ],
+          "dist": 11.9
+        },
+        {
+          "ok": true,
+          "seen": [
+            "Clip:RollForward"
+          ],
+          "dist": 11.9
+        },
+        {
+          "ok": true,
+          "seen": [
+            "Clip:RollForward"
+          ],
+          "dist": 11.9
+        }
+      ],
+      "drop": {
+        "ok": true,
+        "seen": [
+          "Clip:FlipFront",
+          "Land:Land"
+        ]
+      },
+      "flips": [
+        {
+          "ok": true,
+          "seen": [
+            "Jump:Jump",
+            "Clip:FlipFront",
+            "Land:Land"
+          ],
+          "up": 1
+        },
+        {
+          "ok": true,
+          "seen": [
+            "Jump:Jump",
+            "Clip:FlipFront",
+            "Land:Land"
+          ],
+          "up": 1
+        },
+        {
+          "ok": true,
+          "seen": [
+            "Jump:Jump",
+            "Clip:FlipBack",
+            "Land:Land"
+          ],
+          "up": 1
+        },
+        {
+          "ok": true,
+          "seen": [
+            "Jump:Jump",
+            "Clip:FlipBack",
+            "Land:Land"
+          ],
+          "up": 1
+        }
+      ]
+    },
+    "mantles": {
+      "mantles": [
+        {
+          "top": 0,
+          "h": 4.5,
+          "variant": "MantleHigh",
+          "seen": [
+            "Clip:MantleHigh"
+          ],
+          "x": 48.7
+        },
+        {
+          "top": 0,
+          "h": 3,
+          "variant": "MantleLow",
+          "seen": [
+            "Clip:MantleLow"
+          ],
+          "x": 48.7
+        },
+        {
+          "top": 0,
+          "h": 7.5,
+          "variant": "MantleHigh",
+          "seen": [
+            "Jump:Jump",
+            "Clip:MantleHigh"
+          ],
+          "x": 48.7
+        },
+        {
+          "top": 0,
+          "h": 5.5,
+          "variant": "MantleHigh",
+          "seen": [
+            "Jump:Jump",
+            "Clip:MantleHigh"
+          ],
+          "x": 48.7
+        }
+      ],
+      "rejects": []
+    },
+    "consoleErrors": []
+  },
+  "privateLabSingleClientReruns": {
+    "startStopTurn": {
+      "start": [
+        "Move:Start"
+      ],
+      "stop": [
+        "Move:Stop"
+      ],
+      "turn": [
+        "Move:Stop",
+        "Move:Turn"
+      ],
+      "runSpeed": 23.9,
+      "note": "after the reversal-through-stop fix"
+    },
+    "vaults": [
+      {
+        "height": 2,
+        "variant": "Vault",
+        "landedBeyond": true,
+        "rootY": 3.1
+      },
+      {
+        "height": 2.8,
+        "variant": "Vault",
+        "landedBeyond": true,
+        "rootY": 3.1
+      },
+      {
+        "height": 3.4,
+        "variant": "Vault",
+        "landedBeyond": true,
+        "rootY": 3.1
+      }
+    ],
+    "wallRun": {
+      "variant": "WallRunRight.2",
+      "heightGain": 16.6,
+      "kickedAway": true,
+      "rejects": []
+    }
+  },
+  "twoClients": {
+    "peerCrouch": [
+      "Move:Crouch",
+      "Crouching:true"
+    ],
+    "peerVault": [
+      "Move:Start",
+      "Action:Mantle",
+      "Clip:Vault"
+    ],
+    "peerWallRun": [
+      "Move:Start",
+      "Action:WallHop",
+      "Clip:WallRunRight",
+      "Land:Land"
+    ],
+    "peerRollFlinch": [
+      "Action:Roll",
+      "Clip:RollForward.2",
+      "Move:Flinch"
+    ],
+    "player1Rejects": {
+      "accepted": 6,
+      "health": 85,
+      "rejects": []
+    },
+    "networkSetup": {
+      "before": {
+        "InboundNetworkJitterMs": 0,
+        "InboundNetworkMinDelayMs": 0,
+        "OutboundNetworkJitterMs": 0,
+        "OutboundNetworkMinDelayMs": 0
+      },
+      "applied": "60ms each way + 10ms jitter"
+    },
+    "delayed": {
+      "vault": {
+        "endX": -61.72847366333008,
+        "variant": "Vault"
+      },
+      "wallRun": {
+        "variant": "WallHop"
+      },
+      "rest": {
+        "corrections": 0,
+        "rollAccepted": true,
+        "rejects": [],
+        "crouch": true
+      }
+    },
+    "networkRestored": {
+      "outbound": 0,
+      "inbound": 0,
+      "jitter": 0
+    },
+    "respawn": {
+      "joints": 16,
+      "crouch": true,
+      "huds": 1,
+      "newCharacter": true
+    },
+    "invalid": {
+      "rejected": 4
+    }
+  },
+  "twoClientsDelayedWallRunRepeat": {
+    "attempts": 4,
+    "wallRunVariants": [
+      "WallRunRight.2",
+      "WallRunRight",
+      "WallRunRight.2",
+      "WallRunRight"
+    ],
+    "note": "one earlier delayed attempt produced a plain wall hop; not reproduced in 4 repeats, cause not established"
+  },
+  "consoles": {
+    "server": [],
+    "client1": [],
+    "client2": []
+  },
+  "publicBuildRegression": {
+    "privateClips": 0,
+    "rollsFlipsMantlesAccepted": true,
+    "transitionsAbsentAsExpected": true,
+    "studioTests": [
+      "[Movement tests] PASS: 30/60/144 Hz convergence, no overshoot and finite input checks",
+      "[Movement tests] PASS: clip decode, sampling, loop wrap, root motion, climb curves, variants and weighted blend"
+    ]
+  },
+  "testNotes": [
+    "client-side teleports in test scripts can trigger the server's motion correction; two-client checks teleport from the server",
+    "network emulation verified 0 before, restored to 0 after"
+  ],
+  "notEstablished": [
+    "rendered FPS extremes",
+    "devices/touch/gamepad",
+    "packet loss",
+    "foot IK on slopes",
+    "arm IK on ledges",
+    "subjective feel and look"
+  ]
+}

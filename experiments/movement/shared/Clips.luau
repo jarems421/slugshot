@@ -170,6 +170,33 @@ function Clips.blend(
 	return result
 end
 
+-- A clip and its variants (Name, Name.2, Name.3, ...), in order. Empty if absent.
+function Clips.variants(library: Library, name: string): { Clip }
+	local list = {}
+	local clip = library[name]
+	local index = 2
+	while clip do
+		table.insert(list, clip)
+		clip = library[`{name}.{index}`]
+		index += 1
+	end
+	return list
+end
+
+-- One of a clip's variants, chosen by any number (a time, a counter).
+function Clips.pick(library: Library, name: string, seed: number): Clip?
+	local list = Clips.variants(library, name)
+	if #list == 0 then
+		return nil
+	end
+	return list[math.floor(math.abs(seed)) % #list + 1]
+end
+
+-- The base action name of a variant ("FlipFront.2" -> "FlipFront").
+function Clips.baseName(name: string): string
+	return string.match(name, "^(.-)%.%d+$") or name
+end
+
 function Clips.load(): (Library, number)
 	local library: Library = require(script.Parent.OriginalClips).build()
 	local overrides = 0
