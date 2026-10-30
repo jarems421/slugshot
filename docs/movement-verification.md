@@ -2,6 +2,38 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v7.37 drag limb spacing (2026-10-30)
+
+- **Confirmed:** the owner says the overall pose positioning is right, but the wall-side shoulder looks compressed and the legs still look odd.
+- **Implemented/verified:** `python tools/verify_movement.py` passes. Offline R6 box calculations suggested the original wall arm intersected the torso and the two legs intersected each other. The wall arm was offset outward/up/forward as the drag blends in; the free leg was angled less into the wall-side leg.
+- **Studio, one client:** a probe-driven catch reached `WallRun` with zero reported corrections; the camera was placed to inspect the actual R6 character. Oriented-block measurements at the held pose showed a 0.094-stud separation between legs and 0.309-stud shoulder/torso overlap. The screenshot showed the limbs connected; the pose remains for the owner to judge. The temporary anchor and camera were restored and the test stopped.
+- **Limits:** the other wall side, exact wall contact over the transition, real-key input, jump-off, other actions and peer presentation were not checked. R6 cannot bend elbows or knees. A Studio lighting migration notice appeared on opening; no network settings were changed.
+
+## v7.36 wall drag legs (2026-10-30)
+
+- **Confirmed:** the owner accepted the drag's body and arms, but wanted the legs angled to the side rather than forward.
+- **Implemented/verified:** only the drag hip transforms changed. `python tools/verify_movement.py` passed. In one Studio client a probe-driven jump reached the wall and rendered `WallRun`; the actual R6 leg orientations both angled toward the wall. The temporary anchored root and camera were restored and the test was stopped. The reopened private lab reports v7.36.
+- **Limits:** the Studio capture was blank, so the final appearance was not visually assessed. Opposite-wall mirroring, exact surface contact, real inputs, jump-off, other actions and peer presentation were not checked in this pass. R6 has no knee joint; only the whole leg block can be rotated. A lighting migration notice appeared on opening; no network settings were changed.
+
+## v7.35 first jump and drag pose (2026-10-30)
+
+- **Confirmed:** the owner reports wall stopping now works and requests a less flat drag pose, plus more first-jump distance and a smaller height increase; the double jump was explicitly excluded.
+- **Studio, one client:** a probe-driven running first jump on v7.34 traveled 13.93 studs with a 10.01-stud measured peak; one on v7.35 traveled 15.80 studs with a 10.88-stud peak. Sampled airtimes were 0.63 and 0.67 s. Each used a flat area, the Athletic profile, and a running start; no new motion correction was observed. These are individual runtime samples, not a frame-rate comparison or a statistical performance claim. A previous `JumpPress` probe invocation inadvertently triggered a flip and was discarded; the comparison uses `Jump`.
+- **Pose:** a captured actual R6 wall drag showed the torso off the wall, one raised arm and one raised leg on the wall side. The free leg was raised further after that capture; its final appearance and both-wall contact remain unverified. The temporary camera and anchor were restored and the session stopped.
+- **Other limits:** real-key first and double jumps, subjective feel, wall jump, mirrored walls, server validation under sustained normal play and peer presentation need review. A Studio lighting migration notice appeared; no network settings were changed.
+
+## v7.34 front flip refinement (2026-10-30)
+
+- **Implemented/verified:** `python tools/verify_movement.py` passed formatting, lint, strict types and build/isolation checks. The private place was rebuilt from existing private clips, Studio was closed and reopened, and the running client was confirmed to contain the v7.34 controller and revised front flip source.
+- **Unresolved:** no visual or live-input assessment of the revised flip was made; the owner is to judge the motion in Studio. The earlier wall-drag limits remain as below.
+- **Handoff:** an earlier close saved the old Studio place over the first build. The place was rebuilt after closing Studio, verified to contain v7.34, then reopened; future handoffs should build after the old Studio session closes to avoid this ordering issue.
+
+## v7.33 wall input and drag (2026-10-30)
+
+- **Implemented/verified:** `python tools/verify_movement.py` passed foundation and movement formatting, lint, strict types and build/isolation checks. The private lab was rebuilt from existing private clips without retargeting.
+- **Studio, one client:** temporary local source changes were loaded into the open private lab for the test, then the original Studio sources were restored and play stopped. With probe movement, jumping into the west corridor wall and releasing input produced the wall action with effectively zero along-wall velocity for 0.9 s. From a 34 studs/s wall run, velocity was about 7.2 after 0.05 s and zero after 0.1 s; downward velocity followed. Reapplying along-wall input reached 34 studs/s in 0.3 s. Samples were actual runtime observations, not a rendered frame-rate comparison.
+- **Warnings and limits:** the first artificial teleport triggered two server corrections; the successful approach used normal movement and did not add corrections. The sampled downward velocity was about -7.3 studs/s after physics, despite the controller's -4 target. Real keys, wall jump, both wall sides, prolonged attachment, peer presentation, respawn cleanup, wall blocking, action rejection and HUD/input duplication were not checked in this pass. The pose's actual appearance and hand contact were not visually assessed; the owner must judge the reference match. No network settings were changed.
+
 ## v7.9 light server authority (2026-10-30)
 
 Automated evidence only (no Studio MCP in this session).

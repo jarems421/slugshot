@@ -26,6 +26,8 @@ VS Code recommendations and tasks are checked in. The Luau extension can provide
 4. Update relevant notes, status and dated memory with actual evidence and unverified items.
 5. Review `git diff --check`, then stage and commit intentional files. Keep builds, secrets and personal configuration out of Git.
 
+**Confirmed (owner, 2026-10-30):** after a change intended for the owner to playtest, close Studio, rebuild the appropriate movement lab, then reopen Studio with the updated place so it is ready to test. Preserve any unrelated unsaved work. Studio does not reload a rebuilt file automatically, and saving on close can overwrite a build made before closing.
+
 ## Memory updates
 
 Each knowledge statement belongs to one state: Confirmed, Considering, Unresolved, or Implemented/verified. Approval can move an idea to Confirmed; test evidence can move an implementation to verified. Neither happens automatically. Record who approved a change and link the user request/issue when available. Use [an ADR](templates/adr.md) for architecture changes; do not write a gameplay ADR as accepted without approval. Append concise outcomes and pending checks to [memory](memory.md); keep [status](status.md) current rather than appending stale claims forever.

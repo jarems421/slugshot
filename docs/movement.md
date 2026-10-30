@@ -12,26 +12,104 @@ python tools/r6pose/preview.py mantleHigh --ledge 4.5 # render an original clip'
 
 Open a place in Studio and press Play. Studio does not reload a rebuilt `.rbxlx`: close and reopen it after rebuilding.
 
-- `SlugshotMovementLabPrivate.rbxlx`: **v7.29**, adding the owner's Mixamo clips (the HUD shows `original + N private clips`): the running jump, landings, hit reactions, injured idle, wall jumps and the neck-stretch fidget. Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
+- `SlugshotMovementLabPrivate.rbxlx`: **v7.37**, adding the owner's Mixamo clips (the HUD shows `original + N private clips`): the running jump, landings, hit reactions, injured idle, wall jumps and the neck-stretch fidget. Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
 - `SlugshotMovementLab.rbxlx`: the same code with original clips only (HUD: `original clips`). Every move works: run, idle, flips, slide, mantles, kong vault, wall run and wall jumps are original clips. Without the private clips it uses an original jump and landing, plays the wall-hop clip for wall jumps, and has no fidget.
 - `SlugshotMovementLab-v2.rbxlx`: v2 (clips, rolls, flips), rebuilt from commit `0b06985`.
 - `SlugshotMovementLab-v1.rbxlx`: the first lab, rebuilt from commit `e2b5688`.
 
 For live editing, serve `movement.project.json` with the Rojo plugin on port **34873**.
 
-| Control | Experimental action (v7.29) |
+| Control | Experimental action (v7.37) |
 | --- | --- |
 | WASD / native movement controls | Run (eight directions: run ahead, strafes either side and the back-run behind, blended between) |
 | Double-tap W / gamepad L3 | Sprint (30 studs/s; the run is 22) until W is released (gamepad: until the stick is released), with a very slight camera bounce and wider view |
 | Shift / gamepad B | **Slide** while running (12+ studs/s): current speed +15 (max 46), slowing to 20 over 0.8 s, steering a little. Pressed in the air, mid-action or inside the 0.25 s cooldown, it waits 0.4 s (or while Shift is held, until you land) and slides on touchdown. Jump during it leaps out keeping the speed (slide-jump); Shift again stands up. Camera dips 1.4 studs and the FOV kicks to 82 |
 | Ctrl | **Shift lock** toggle: mouse locked to the centre, body faces the camera (strafing on A/D), camera 1.75 studs over the right shoulder. Actions keep their own facing, then the body turns back to the camera |
-| Space / native jump | Jump (Athletic: 8.7 studs, a springy arc). **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically, locked on until your feet reach the ground or the wall ends. Steer with the keys: along the wall runs, nothing slows to a cling (dragging slowly down), back along it turns round. Jumping straight into a wall and doing nothing clings to it too. Hold Space at any point to run up the wall (3 s of full-speed climbing per run, then easing into a slow slide); at the top it keeps running along the edge. Release to slide down. Press Space again near the top to mantle over; press it holding away from the wall (or back) to jump off at once; a tap lower down (released within 0.3 s) kicks off. Ledges are mantled only when the jump would not clear them, and never when under 2.2 studs above the ground. **In the air beside a wall**: wall jump; presses up to 0.35 s early count. One press kicks off where you hold (camera relative; where the camera faces if you hold nothing), always at least 30° out from the wall and facing the way you go. This also applies to the tap off a wall run. Holding almost straight into the wall leaps up it instead (once per wall per airtime). Up to 8 kicks per airtime, enough to climb between two walls; each restores the flip. **Anywhere else in the air** (a second press): double jump with a flip toward the keys held, as seen on screen: W front full step-out (winged layout twisting a full turn, stepping out), A/D butterfly twist, S back full (arms overhead), all four diagonals a tilted corkscrew; once per airtime |
+| Space / native jump | Jump (the first jump has a longer arc and a modest in-air speed boost). **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically, locked on until your feet reach the ground or the wall ends. Steer with the keys: along the wall runs, nothing slows to a cling (dragging slowly down), back along it turns round. Jumping straight into a wall and doing nothing clings to it too. Hold Space at any point to run up the wall (3 s of full-speed climbing per run, then easing into a slow slide); at the top it keeps running along the edge. Release to slide down. Press Space again near the top to mantle over; press it holding away from the wall (or back) to jump off at once; a tap lower down (released within 0.3 s) kicks off. Ledges are mantled only when the jump would not clear them, and never when under 2.2 studs above the ground. **In the air beside a wall**: wall jump; presses up to 0.35 s early count. One press kicks off where you hold (camera relative; where the camera faces if you hold nothing), always at least 30° out from the wall and facing the way you go. This also applies to the tap off a wall run. Holding almost straight into the wall leaps up it instead (once per wall per airtime). Up to 8 kicks per airtime, enough to climb between two walls; each restores the flip. **Anywhere else in the air** (a second press): double jump with a flip toward the keys held, as seen on screen: W front full step-out (winged layout twisting a full turn, stepping out), A/D butterfly twist, S back full (arms overhead), all four diagonals a tilted corkscrew; once per airtime |
 | H | Lab only: take 15 damage to preview hit reactions and the injured idle (no combat rules) |
 | P / R | Cycle Baseline, Athletic, Precise profiles / respawn |
 
 There is no ground roll (removed in v7.8) and Q is unbound. Touch/gamepad bindings exist but have not been device-tested.
 
 **Pose tools.** `tools/r6pose/preview.py` renders any literal key table in `OriginalClips.luau` (idle, air, mantles, kong vault) on the R6 block rig with the game's curves. Mantles can be placed on the client's path against a ledge, printing hand and foot positions relative to the top and face; `--help` lists options. It needs numpy and matplotlib, and writes to `build/r6pose/` (ignored). The Luau tables are the only copy of the poses.
+
+## What changed in v7.37 (drag limb spacing)
+
+- **Confirmed:** the owner likes the overall positioning, but the wall-side shoulder looks compressed and the legs still look odd.
+- **Implemented:** the raised R6 wall arm is offset slightly out and up as the drag pose blends in, reducing overlap at the torso. The free leg angles sideways less, separating the two legs while keeping their overall direction. Other actions and wall-drag movement are unchanged.
+- **Verified, limited:** automated movement checks pass. In one Studio client, the R6 wall drag was visually inspected and its oriented blocks measured: leg separation about 0.09 studs and shoulder/torso overlap about 0.31 studs. Exact fit varies during blending; opposite-wall presentation and the owner's subjective verdict remain open. See [results](movement-verification.md#v737-drag-limb-spacing-2026-10-30).
+
+## What changed in v7.36 (wall drag legs)
+
+- **Confirmed:** the owner likes the body and arm placement, but the legs looked bent forward; they should angle to the side like the supplied Mario reference.
+- **Implemented:** both R6 legs now angle sideways toward the wall rather than forward, mirrored by wall side. The torso and arm pose, drag behavior and wall spacing stay the same. R6 legs are single rigid blocks, so they cannot bend at a knee.
+- **Verified, limited:** automated movement checks pass; a one-client Studio probe reached the wall-drag action, and the real R6 leg orientations were measured. The Studio capture was blank, so the appearance and the other wall side still need the owner's review. See [results](movement-verification.md#v736-wall-drag-legs-2026-10-30).
+
+## What changed in v7.35 (first jump and drag pose)
+
+- **Confirmed:** the owner reports that stopping on a wall now works, but the drag pose looks flat against the wall with dangling legs. The first jump should travel a little farther, with a smaller height increase; the request does not change the double jump.
+- **Implemented:** the ground-jump arc is slightly longer and the normal jump's in-air speed target is 8% higher with movement input. Double-jump launch settings are unchanged. The drag holds the root farther out, leans the body away, and raises the wall-side arm and leg; the free leg is also raised. R6 limbs cannot bend at the knee or elbow.
+- **Verified, limited:** a single Studio probe comparison measured approximately 13.9 to 15.8 studs of travel and 10.0 to 10.9 studs of peak height for running first jumps; this is one sample per build, not a controlled frame-rate study. One wall-side pose was viewed in Studio before the final free-leg adjustment. Subjective pose quality, mirrored wall contact, and live double-jump regression need owner review. See [evidence](movement-verification.md#v735-first-jump-and-drag-pose-2026-10-30).
+
+## What changed in v7.34 (front flip refinement)
+
+- **Confirmed:** the owner requested a substantial improvement to the existing front flip, rather than necessarily a new move.
+- **Implemented:** the chosen front full step-out retains its original spin, twist, timing and directional mapping. Its arms now sweep asymmetrically through the twist and recovery, and the legs separate earlier into the step-out. Other directions are unchanged. Subjective quality is awaiting the owner's Studio playtest.
+- **Confirmed workflow:** rebuild and reopen the updated Studio place for the owner after playtestable changes.
+
+## What changed in v7.33 (wall input and drag)
+
+- **Confirmed:** the owner still experienced running without W and a roughly two-second delay after releasing it, and rejected the drag pose in the supplied references.
+- **Implemented:** attachment and steering now use current input instead of the smoothed locomotion vector. A catch without run input starts with zero along-wall speed; releasing input uses the fast stop rate instead of slow speed bleed. The pose measures motion along the actual wall, and no longer expires after 12 seconds while still attached.
+- **Considering:** the original R6 drag pose now reaches the wall arm higher and back, with the free arm and leg forward. It is a new interpretation of the reference, not a verified match; the block rig cannot bend its limbs like the pictured character.
+- **Verified, limited:** in a single Studio client using the movement probe, a no-input catch had no along-wall velocity, and a 34-stud/s run stopped along the wall within 0.1 s of releasing the probe input. Running resumed. Pose appearance, real keys, jump-off, mirrored walls and multiplayer need review; see [results](movement-verification.md#v733-wall-input-and-drag-2026-10-30).
+
+## What changed in v7.32 (slide at once, pose refit)
+
+- **Owner:** after stopping a wall run, it took a solid 2 seconds to start dragging down, when it should be almost instant. The v7.31 pose was not accurate at all.
+- **Causes:**
+  - With Space held, stopping kept climbing (v7.28 ran straight up with no direction and Space held) until the climb allowance ran out.
+  - The pose blend measured the whole horizontal speed, including the pull toward the wall, so it barely blended in and showed a mix of the run and the slide.
+- **Fixes:**
+  - Whenever the run along the wall is below 6 studs/s, the body slides straight down, whether or not Space is held. Running up the wall with Space still works while moving along it.
+  - The pose blend uses only the speed along the wall.
+- **Pose refit**, after the owner's references:
+  - The body is turned three-quarters (65°) away from the wall, looking out.
+  - The wall-side arm goes out flat and back, with the hand on the wall at head height (it was above the head).
+  - The other arm is out in front, and the wall-side foot is against the wall.
+  - The body is held 1.2 studs from the wall. Fitted at the blocks' corners: hand and foot within 0.04 studs of the wall, nothing else within 0.3.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.31 (wall slide pose, instant stop)
+
+- **Owner** (with two reference images of a classic platformer wall slide):
+  - The pose should be exactly that: back to the wall, one hand flat on it behind, the other arm out in front.
+  - The hand was halfway through the wall.
+  - The slide should go directly down. Letting go of W after landing on a wall (or mid-run) should go straight into the slide, not keep running for a moment.
+- **Wall slide pose**, replacing v7.30's face-the-wall cling:
+  - The body turns 75° away from the wall with a slight lean into it, facing out.
+  - The wall-side hand reaches back and up, planted on the wall above the head; the other arm is out in front.
+  - The wall-side foot is against the wall, the other a little forward, with a slight sway.
+  - It is mirrored for walls on the left, and eases in over about 0.1 s.
+- **Fit:** on the R6 renderer for the body 1.1 studs from the wall (`WallRun.Cling.Hug`), measuring contact at the blocks' corners. The hand's corner touches the wall (0.02 studs) and the foot touches; no other part comes within 0.3.
+  - v7.30 measured the hand at its end's centre, so half the block sank into the wall.
+- **Instant stop:**
+  - Letting go of the run input stops at 400 studs/s² (`WallRun.Stop`; 34 to 0 in under 0.1 s).
+  - Holding the run input still runs, and a faster attach still bleeds down slowly.
+  - The slide reaches its 4 studs/s drag at 200 studs/s² (`WallRun.Cling.Accel`), so it goes straight down.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.30 (cling pose)
+
+- **Owner:** the drag looked really bad (the feet half on the wall, still running while sliding down). It should look like a controlled drag: a Spider-Man-like cling with one hand on the wall and one arm off it, the feet stuck to the wall, slowly dragging down. Stopping a wall run should come to a stop quickly, then drag the same way. Jumping off works at any time.
+- **Cling pose** (`Presentation.wallRunPose`), blended in as the speed along the wall drops below 6:
+  - The body turns to face the wall, with the right hand planted on it overhead and the left arm hanging out off it.
+  - Both feet are against the wall, staggered, and the head looks down.
+  - The loose arm and legs sway slightly while dragging.
+  - Fitted on the R6 renderer: the hand and feet within about 0.15 studs of the wall, the hand at head height.
+- **Distance:** while clinging, the body is held 1.2 studs from the wall (`WallRun.Cling.Hug`; 2.1 while running) so the hand and feet reach it.
+- **Stopping:** letting go of the keys stops the run quickly, from 34 to 0 in about 0.3 s (`WallRun.Steer` 120, was 70).
+- `verify_movement.py` passes; not yet run in Studio.
 
 ## What changed in v7.29 (cling and slow drag)
 
@@ -726,7 +804,7 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 
 ## Playtest priorities
 
-1. v7.29: jump straight at a tall wall and let go: you should cling and drag down slowly. Run along a wall and let go: same.
+1. v7.32 (also with Space held): jump at a tall wall holding W, then let go: straight into the wall slide (back to the wall, hand on it behind, other arm out), going directly down. Run along a wall and let go: the same, at once. Jump off at any point.
 1. v7.28: on a wall run, let go of W (slow to a cling; hold Space to run straight up), hold back along the wall (turn round), hold forward again.
 1. v7.24: double-jump forward (W): the front full step-out, a fraction faster, the face never turning back to the camera.
 1. v7.18: run, then double-tap W to sprint: is the difference clear, and is the shake subtle enough?

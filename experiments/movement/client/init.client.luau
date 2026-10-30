@@ -650,7 +650,7 @@ end
 
 -- Airborne, running along a wall (not into it) with input along it: attach and
 -- run along the wall. No button; the jump onto the wall is enough.
-local function tryWallRun(now: number): boolean
+local function tryWallRun(now: number, input: Vector3): boolean
 	-- A double-jump flip gives way at once (owner: flipping onto a wall slid down it
 	-- until the flip ended before the run caught).
 	if (acro and acro.kind ~= "Flip") or not character or not humanoid or not root or not rays then
@@ -681,12 +681,12 @@ local function tryWallRun(now: number): boolean
 	local running = along.Magnitude >= run.MinAlong
 		and into <= run.MaxInto
 		and into >= -0.35
-		and move:Dot(along.Unit) >= run.MinInput
+		and input:Dot(along.Unit) >= run.MinInput
 	-- Owner (2026-10-30): jumping onto a wall and doing nothing clings to it, dragging
 	-- slowly down. Moving or holding into the wall attaches too, unless there is a
 	-- ledge in reach to mantle instead.
 	local clinging = not running
-		and (-travel:Dot(away) > run.Cling.Into or move:Dot(-away) > 0.5)
+		and (-travel:Dot(away) > run.Cling.Into or input:Dot(-away) > 0.5)
 		and Traversal.findLedge(
 				humanoid,
 				root,
@@ -714,7 +714,7 @@ local function tryWallRun(now: number): boolean
 		side = side,
 		part = hit.Instance,
 		contact = hit.Position,
-		speed = if running then math.max(along.Magnitude, run.Speed) else along.Magnitude,
+		speed = if running then math.max(along.Magnitude, run.Speed) else 0,
 		-- Keep part of the jump's rise; Jump held then climbs, released slides down.
 		vy = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
 	}
@@ -1048,6 +1048,9 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		sprinting = false -- a gamepad sprint ends when the stick is released
 	end
 	local target = if sprinting then settings.SprintSpeed else settings.RunSpeed
+	if bouncing and not acro and not airUsed and hops == 0 then
+		target *= Acro.Jump.AirSpeedScale
+	end
 	local goal = if desired.Magnitude > 0.01 then target else 0
 	-- Speed above the goal (a slide-jump) bleeds slowly in the air: momentum carries.
 	local rate = if humanoid.FloorMaterial == Enum.Material.Air and speed > goal
@@ -1083,13 +1086,17 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 				== nil
 		-- Steering (owner, 2026-10-30: once running there was no control but Space).
 		-- Input along the wall sets the run speed, and pushing into the wall counts as
-		-- forward; no input slows to a cling (with Space held: straight up the wall);
+		-- forward; no input stops into a drag;
 		-- input back along the wall brakes, turns round and runs the other way.
 		local wanted =
-			math.clamp(move:Dot(acro.direction) + math.max(move:Dot(-acro.away), 0), -1, 1)
+			math.clamp(desired:Dot(acro.direction) + math.max(desired:Dot(-acro.away), 0), -1, 1)
 		local steerTarget = run.Speed * wanted
-		local steerRate = if acro.speed > steerTarget and steerTarget > 0
-			then run.Bleed
+		-- Letting go stops at once (owner: straight into the slide, no slowing down);
+		-- a faster attach bleeds down to the run speed while the run is held.
+		local steerRate = if math.abs(wanted) < run.MinInput
+			then run.Stop
+			elseif acro.speed > steerTarget and steerTarget >= acro.speed * 0.9 then run.Bleed
+			elseif math.abs(steerTarget) < acro.speed then run.Stop
 			else run.Steer
 		local signed = Math.approach(acro.speed, steerTarget, steerRate, dt)
 		if signed < 0 then
@@ -1114,7 +1121,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		acro, kind = nil, nil
 	end
 	if (not acro or acro.kind == "Flip") and not onGround then
-		if tryWallRun(now) then
+		if tryWallRun(now, desired) then
 			kind = "WallRun"
 		end
 	end
@@ -1220,7 +1227,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v7.29   •   %s   •   %s\nWASD move · Ctrl shift lock · double-tap W sprint · Shift slide (works in the air: slides on landing; jump out of it to keep the speed) · Space jump · Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\n%sH test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
+		"SLUGSHOT / MOVEMENT LAB v7.37   •   %s   •   %s\nWASD move · Ctrl shift lock · double-tap W sprint · Shift slide (works in the air: slides on landing; jump out of it to keep the speed) · Space jump · Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\n%sH test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		if Config.Lab.Aim then "RMB aim · Click marker · " else "",
@@ -1234,8 +1241,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 end)
 
 RunService.PreSimulation:Connect(function(dt)
-	-- A ground jump pulls down a little harder than gravity: higher JumpPower with about
-	-- the same airtime reads as a springier jump (owner: higher, bouncier).
+	-- Profiles may add gravity during a first jump; other aerial actions are separate.
 	if bouncing and not acro and not airUsed and hops == 0 and root then
 		local extra = profile().JumpGravity - 1
 		if extra > 0 then
@@ -1254,8 +1260,12 @@ RunService.PreSimulation:Connect(function(dt)
 		else
 			acro.releasedAt = acro.releasedAt or elapsed
 		end
-		local target = if acro.releasedAt and acro.speed < run.Cling.Below
-			then -run.Cling.Drag -- not running along it: a slow drag down (owner)
+		-- Not running along the wall (Space held or not): the wall slide drags straight
+		-- down (owner: stopping a run must slide at once; holding Space had kept it
+		-- climbing for seconds).
+		local sliding = acro.speed < run.Cling.Below
+		local target = if sliding
+			then -run.Cling.Drag
 			elseif acro.releasedAt then -math.min(
 				run.Slide + run.SlideGrow * (elapsed - acro.releasedAt),
 				run.SlideMax
@@ -1270,9 +1280,20 @@ RunService.PreSimulation:Connect(function(dt)
 			target = 0
 			acro.vy = math.min(acro.vy, 0)
 		end
-		acro.vy = Math.approach(acro.vy, target, run.VerticalAccel, dt)
+		-- The wall slide drops straight to its drag speed (owner: directly down).
+		acro.vy = Math.approach(
+			acro.vy,
+			target,
+			if sliding then run.Cling.Accel else run.VerticalAccel,
+			dt
+		)
+		-- Slowing into the cling pulls the body in close enough for its hand and feet
+		-- to reach the wall.
+		local slow = math.clamp(acro.speed / run.Cling.Below, 0, 1)
+		local cling = 1 - slow * slow * (3 - 2 * slow)
+		local hug = run.Hug + (run.Cling.Hug - run.Hug) * cling
 		local gap = (root.Position - acro.contact):Dot(acro.away)
-		local pull = math.clamp((gap - run.Hug) * run.Pull.Rate, -run.Pull.Away, run.Pull.Max)
+		local pull = math.clamp((gap - hug) * run.Pull.Rate, -run.Pull.Away, run.Pull.Max)
 		root.AssemblyLinearVelocity = acro.direction * acro.speed
 			- acro.away * pull
 			+ Vector3.new(0, acro.vy, 0)

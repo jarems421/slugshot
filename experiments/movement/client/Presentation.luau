@@ -651,6 +651,7 @@ function Presentation.start(clips: Clips.Library)
 				start = now,
 				side = if variant == "WallRunLeft" then -1 else 1,
 			}
+			rig.cling = 0
 			startFade(rig, A.Fade.ActionIn * 2, now)
 			return
 		end
@@ -679,6 +680,17 @@ function Presentation.start(clips: Clips.Library)
 		startFade(rig, A.Fade.ActionIn, now)
 	end
 
+	local clingPose: Pose = {}
+	local CLING_STRAIGHT = {
+		"LeftElbow",
+		"RightElbow",
+		"LeftWrist",
+		"RightWrist",
+		"LeftKnee",
+		"RightKnee",
+		"LeftAnkle",
+		"RightAnkle",
+	}
 	-- Wall run: the forward run cycle, body rolled away from the wall (feet toward
 	-- it) and the wall-side hand reaching out to the wall. side: -1 wall on the left.
 	local WallRun = Config.Traversal.WallRun
@@ -708,6 +720,31 @@ function Presentation.start(clips: Clips.Library)
 		pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * swing, side * spread)
 		pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
 		pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
+		-- Drag: lean away from the wall, brace with one raised arm and the wall-side
+		-- leg. Both legs angle toward the wall instead of kicking forward; R6 limbs
+		-- are straight blocks and cannot bend at the knee.
+		local x = math.clamp(speed / WallRun.Cling.Below, 0, 1)
+		local target = 1 - x * x * (3 - 2 * x)
+		rig.cling = (rig.cling or 0) + (target - (rig.cling or 0)) * Math.alpha(20, dt)
+		local cling = rig.cling
+		if cling > 0.001 then
+			local sway = math.sin(now * 2.6)
+			local wall, free =
+				if side > 0 then "Right" else "Left", if side > 0 then "Left" else "Right"
+			clingPose.Root = CFrame.Angles(0, side * math.rad(25), side * math.rad(12))
+			clingPose.Waist = CFrame.Angles(math.rad(-5), 0, 0)
+			clingPose.Neck = CFrame.Angles(math.rad(-5), -side * math.rad(12), 0)
+			clingPose[wall .. "Shoulder"] = CFrame.Angles(math.rad(-30), 0, side * math.rad(110))
+			clingPose[free .. "Shoulder"] =
+				CFrame.Angles(math.rad(65 + 2 * sway), 0, -side * math.rad(30))
+			clingPose[wall .. "Hip"] = CFrame.Angles(math.rad(10), 0, side * math.rad(15))
+			-- Keep the legs side-on without driving the free leg through the wall-side leg.
+			clingPose[free .. "Hip"] = CFrame.Angles(0, 0, side * math.rad(10 + 2 * sway))
+			for _, joint in CLING_STRAIGHT do
+				clingPose[joint] = IDENTITY
+			end
+			pose = Clips.blend({ pose, clingPose }, { 1 - cling, cling }, scratch(rig, 27))
+		end
 		return pose
 	end
 
@@ -827,7 +864,7 @@ function Presentation.start(clips: Clips.Library)
 		local action = rig.action
 		local actionWeight = 0
 		if action and action.kind == "WallRun" then
-			-- Ends on the ground, on timeout, or once the wall is no longer beside the body.
+			-- Ends on the ground or once the wall is no longer beside the body.
 			-- Observers can receive the action before the replicated body leaves the
 			-- ground, so those checks wait a moment.
 			local elapsed = now - action.start
@@ -841,15 +878,18 @@ function Presentation.start(clips: Clips.Library)
 			elseif onRight then
 				action.side = 1
 			end
-			if
-				elapsed > WallRun.ObserverLimit
-				or elapsed > WallRun.SettleTime and (grounded or not wall)
-			then
+			if elapsed > WallRun.SettleTime and (grounded or not wall) then
 				rig.action = nil
 				startFade(rig, A.Fade.ActionOut, now)
 			else
 				local gap = if wall then wall.Distance else WallRun.Hug
-				pose = wallRunPose(rig, dt, now, flat.Magnitude, action.side, gap)
+				-- Speed along the wall only: the pull toward the wall is not running.
+				local normal = if wall
+					then Vector3.new(wall.Normal.X, 0, wall.Normal.Z)
+					else root.CFrame.RightVector
+				normal = if normal.Magnitude > 0.01 then normal.Unit else root.CFrame.RightVector
+				local along = (flat - normal * flat:Dot(normal)).Magnitude
+				pose = wallRunPose(rig, dt, now, along, action.side, gap)
 				actionWeight = 1
 				floor, contact = 0, nil
 			end
@@ -953,6 +993,15 @@ function Presentation.start(clips: Clips.Library)
 		-- intended clearance using the real rig's proportions.
 		pose.Root = rootPose
 		local rigPose = if rig.r6 then toR6(pose, scratch(rig, 24)) else pose
+		if rig.r6 and action and action.kind == "WallRun" and rig.cling then
+			-- The R6 shoulder pivot is inside the block arm: at the raised drag angle
+			-- it sinks into the torso. Ease the arm outward and slightly up/forward as
+			-- the drag pose takes over; keep the wall-side reach and torso unchanged.
+			local side, weight = action.side, rig.cling
+			local shoulderName = if side < 0 then "Left Shoulder" else "Right Shoulder"
+			rigPose[shoulderName] = CFrame.new(side * 0.35 * weight, 0.15 * weight, -0.3 * weight)
+				* (rigPose[shoulderName] or IDENTITY)
+		end
 		local rootJoint = if rig.r6 then "RootJoint" else "Root"
 		local correction = 0
 		if contact then

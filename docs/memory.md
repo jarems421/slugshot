@@ -1,5 +1,31 @@
 # Project memory
 
+## 2026-10-30 - Drag limb spacing
+
+- **Confirmed:** the overall drag pose is positioned correctly, but the owner sees a compressed wall-side shoulder and odd legs.
+- **Implemented/verified:** an R6 shoulder offset reduces torso overlap and the free leg no longer intersects the other leg in the sampled Studio pose. Automated checks pass; the v7.37 place is reopened. **Unresolved:** owner judgment and the mirrored wall. See [results](movement-verification.md#v737-drag-limb-spacing-2026-10-30).
+
+## 2026-10-30 - Wall drag leg direction
+
+- **Confirmed:** the owner likes the drag body and arm pose but wants the legs sideways like the Mario reference, not forward.
+- **Implemented/verified:** the drag's hip transforms now angle both rigid R6 legs toward the wall; automated checks pass and one Studio client rendered the wall action with angled legs. **Unresolved:** visual assessment and opposite-wall contact; the capture was blank. See [results](movement-verification.md#v736-wall-drag-legs-2026-10-30).
+
+## 2026-10-30 - First-jump reach and wall drag
+
+- **Confirmed:** the owner says wall stopping works; requests a less flat, braced drag pose and a longer, slightly higher first jump, explicitly excluding the double jump.
+- **Implemented/verified:** the ground-jump arc and input speed target were adjusted; one Studio probe comparison measured 13.93 to 15.80 studs of travel and 10.01 to 10.88 studs of height. The R6 drag is braced farther from the wall; a pre-final pose was viewed in Studio. **Unresolved:** final pose, both sides, double-jump regression and subjective feel. See [evidence](movement-verification.md#v735-first-jump-and-drag-pose-2026-10-30).
+
+## 2026-10-30 - Front flip and Studio handoff
+
+- **Confirmed:** the owner wants Studio closed and reopened on the updated movement place after playtestable changes.
+- **Implemented/verified:** the chosen front full step-out is refined with flowing asymmetric arms and a clearer leg step while retaining its rotation and timing. Automated checks passed; the reopened Studio client's source was checked for v7.34. **Unresolved:** the owner's visual assessment. Build after closing Studio: an earlier close overwrote the build with the older place.
+
+## 2026-10-30 - Wall drag input follow-up
+
+- **Confirmed:** the owner still saw unwanted running on no-input wall catches and a long delay after release, and supplied two pose references.
+- **Implemented/verified:** v7.33 uses current wall input, starts a no-input catch without along-wall momentum and brakes quickly; a one-client probe observed a 34-to-zero stop within 0.1 s and a resumed run. Checks and limits are in [movement verification](movement-verification.md#v733-wall-input-and-drag-2026-10-30).
+- **Unresolved:** the revised R6 pose and wall contact need visual review; real-key jump-off and multiplayer were not tested. Studio's temporary test sources were restored.
+
 ## 2026-10-28 ? Foundation setup
 
 - Inspected an empty workspace and read the pasted request and PDF background. Kept the request authoritative; PDF gameplay instructions were not adopted.
@@ -291,3 +317,6 @@
 - v7.28: the owner had no directional control on a wall run. Input along the wall now sets the speed, no input clings (Space: straight up), and back turns round.
 - v7.29: the owner wanted a cling: jumping into a wall and doing nothing (or stopping a wall run) stays on the wall, dragging slowly down. Head-on jumps now attach (unless a ledge is in reach to mantle), and a slow 4 studs/s drag replaces the speeding slide when not running along the wall.
 - 2026-10-30: the owner asked for everything to be pushed and put on `main`. The branch was fast-forwarded into `main`; the movement code stays in `experiments/movement`, separate from the foundation place.
+- v7.30: the owner described the cling: Spider-Man-like, facing the wall, one hand on it, one arm off, feet stuck to it, slowly dragging, a quick stop from a run. Fitted on the renderer; the body moves in to 1.2 studs while clinging so the hand and feet reach the wall.
+- v7.31: the owner shared wall-slide reference images (back to the wall, hand flat on it behind, other arm out) and wanted an instant stop and a straight-down slide. Fitted on the renderer at the blocks' corners. Lesson: contact for R6 blocks must be measured at the block corners, not the end centre, or limbs sink into surfaces.
+- v7.32: the slide began about 2 s after stopping (Space held kept the old 'climb with no direction' rule going), and the pose blend counted the pull toward the wall as running, so the owner saw a half-blended pose. Stopping now always slides; the pose was refitted with the hand at head height.

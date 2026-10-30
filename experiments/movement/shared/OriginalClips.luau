@@ -773,15 +773,16 @@ local FLIP_POSES: { [string]: Key } = {
 	landPrep = flipPose(-10, -6, { 28, 0, 6 }, { 75, 0, 45 }),
 	land = flipPose(-18, -8, { 48, 0, 5 }, { 45, 0, 35 }),
 	cork = flipShape(4, 6, { -22, 0, 10 }, { 18, 0, -10 }, { 80, 0, -42 }, { 174, 0, 5 }),
-	-- Front: the front full step-out (owner's pick, 2026-10-30), after the front full
-	-- twist technique: a layout with winged arms (heels up), the arms close across the
-	-- chest to twist and open and lift to stop, the legs splitting to step out.
-	lwSet = flipPose(-4, 0, { -8, 0, 3 }, { 40, 0, 60 }),
-	lwWings = flipPose(-8, 10, { -18, 0, 3 }, { 10, 0, 88 }),
-	lwStep = flipShape(-4, 8, { 40, 0, 3 }, { -35, 0, -3 }, { 40, 0, 80 }, { 40, 0, -80 }),
-	lwReach = flipShape(-6, 0, { 50, 0, 3 }, { -40, 0, -3 }, { 140, 0, 35 }, { 140, 0, -35 }),
-	ffWrap = flipShape(-6, 5, { -12, 0, 2 }, { -12, 0, -2 }, { 70, 0, -45 }, { 70, 0, 45 }),
-	ffOpen = flipShape(-4, 10, { 20, 0, 4 }, { -25, 0, -4 }, { 150, 0, 60 }, { 150, 0, -60 }),
+	-- Front full step-out refinement: keep the chosen twist and camera-facing rule,
+	-- but carry the arms through the rotation and separate the legs into a clear step.
+	ffSet = flipShape(-5, 0, { -14, 0, 4 }, { 12, 0, -4 }, { 110, 0, 35 }, { 55, 0, -55 }),
+	ffWings = flipShape(-10, 8, { -25, 0, 6 }, { -8, 0, -6 }, { 20, 0, 80 }, { 35, 0, -85 }),
+	ffSweep = flipShape(-7, 5, { -18, 0, 4 }, { 4, 0, -4 }, { 105, 0, 35 }, { 35, 0, -75 }),
+	ffWrap = flipShape(-6, 5, { -12, 0, 3 }, { 8, 0, -3 }, { 105, 0, -18 }, { 60, 0, 25 }),
+	ffUnwind = flipShape(-4, 8, { 8, 0, 5 }, { -22, 0, -5 }, { 155, 0, 40 }, { 50, 0, -75 }),
+	ffStep = flipShape(-4, 6, { 48, 0, 5 }, { -38, 0, -5 }, { 125, 0, 48 }, { 40, 0, -72 }),
+	ffReach = flipShape(-6, 0, { 42, 0, 4 }, { -28, 0, -4 }, { 110, 0, 30 }, { 65, 0, -45 }),
+	ffLand = flipShape(-14, -5, { 32, 0, 4 }, { 14, 0, -4 }, { 62, 0, 32 }, { 48, 0, -35 }),
 	-- Side flips are authored to the right (turning clockwise from above): the left leg
 	-- kicks up first.
 	bWind = flipShape( -- dipping, arms swung across to the left against the turn
@@ -900,22 +901,21 @@ local FLIP_STYLES: { [string]: { pivot: number, vertical: boolean?, keys: { { an
 			{ 0.8, "land", 360, -360, -0.1 },
 		},
 	},
-	-- Front full step-out (owner's pick). The twist tracks the somersault exactly, so the
-	-- face is only ever away from the camera or side-on, never looking back (owner); a
-	-- fraction faster than the candidate (rotation done by 0.46, was 0.48).
+	-- Front full step-out (owner's pick). Spin and twist remain locked together to keep
+	-- the face away from the camera. Arms sweep through and legs open into the step-out.
 	FrontFullStepOut = {
 		pivot = 0.4,
 		keys = {
-			{ 0, "lwSet", 0, 0 },
-			{ 0.067, "lwWings", 40, 40 },
-			{ 0.134, "lwWings", 110, 110 },
+			{ 0, "ffSet", 0, 0 },
+			{ 0.067, "ffWings", 40, 40 },
+			{ 0.134, "ffSweep", 110, 110 },
 			{ 0.192, "ffWrap", 175, 175 },
 			{ 0.259, "ffWrap", 245, 245 },
-			{ 0.326, "ffOpen", 310, 310 },
-			{ 0.394, "lwStep", 345, 345 },
-			{ 0.46, "lwReach", 360, 360 },
-			{ 0.6, "land", 360, 360, -0.1 },
-			{ 0.8, "land", 360, 360, -0.1 },
+			{ 0.326, "ffUnwind", 310, 310 },
+			{ 0.394, "ffStep", 345, 345 },
+			{ 0.46, "ffReach", 360, 360 },
+			{ 0.6, "ffLand", 360, 360, -0.1 },
+			{ 0.8, "ffLand", 360, 360, -0.1 },
 		},
 	},
 	-- Twist peaks near 1650 degrees/s at rate 1.

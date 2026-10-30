@@ -9,7 +9,7 @@ return table.freeze({
 			Acceleration = 180,
 			Braking = 220,
 			TurnRate = 30,
-			JumpPower = 50,
+			JumpPower = 51,
 			JumpGravity = 1, -- stock Roblox jump
 		},
 		Athletic = {
@@ -18,11 +18,9 @@ return table.freeze({
 			Acceleration = 100,
 			Braking = 145,
 			TurnRate = 18,
-			-- Owner (2026-10-30): higher and bouncier, not frog leaps. 8.7 studs (was 6.9)
-			-- with about the same airtime: gravity times JumpGravity during a ground jump
-			-- until the landing, a double jump, a wall kick or another action.
-			JumpPower = 62,
-			JumpGravity = 1.12,
+			-- Slightly higher and a longer arc for more horizontal reach (owner, 2026-10-30).
+			JumpPower = 60.5,
+			JumpGravity = 1,
 		},
 		Precise = {
 			RunSpeed = 21,
@@ -30,8 +28,8 @@ return table.freeze({
 			Acceleration = 130,
 			Braking = 180,
 			TurnRate = 24,
-			JumpPower = 60,
-			JumpGravity = 1.12,
+			JumpPower = 58.5,
+			JumpGravity = 1,
 		},
 	},
 	-- Space again in the air is a double-jump flip; Shift is a slide. There is no
@@ -42,7 +40,7 @@ return table.freeze({
 		-- press is a ground jump while anything is under the body's footprint (radius,
 		-- studs; the server's touchdown check uses it too), or within Coyote seconds of
 		-- walking off without jumping.
-		Jump = { Footprint = 1, Coyote = 0.15 },
+		Jump = { Footprint = 1, Coyote = 0.15, AirSpeedScale = 1.08 },
 		Flip = {
 			MinRate = 0.85,
 			MaxRate = 2.6,
@@ -156,11 +154,13 @@ return table.freeze({
 			Speed = 34, -- run speed on the wall with input along it (owner, 2026-10-30: was 26)
 			-- Steering (studs/s^2): toward the input's speed along the wall (Steer), or down to
 			-- it from a faster attach (Bleed); TurnRate turns the body when it reverses.
-			Steer = 70,
+			Steer = 120, -- toward the input's speed along the wall
+			Stop = 400, -- owner: letting go stops at once (34 to 0 in under 0.1 s)
 			-- Clinging (owner, 2026-10-30): jumping into a wall (moving into it faster than
 			-- Into, or holding into it) attaches without running; below Below studs/s along
-			-- the wall without Space held, the body drags down at Drag studs/s.
-			Cling = { Into = 4, Below = 6, Drag = 4 },
+			-- the wall it turns into the drag pose, held Hug studs from the wall, and drags
+			-- down at Drag, reaching it at Accel (studs/s^2), including with Space held.
+			Cling = { Into = 4, Below = 6, Drag = 4, Hug = 1.85, Accel = 200 },
 			Bleed = 12,
 			TurnRate = 14,
 			-- Owner (2026-10-30): attaching was delayed and stuck lower than the jump was
@@ -198,7 +198,6 @@ return table.freeze({
 			ArmForward = 0.5, -- presentation: wall hand's swing ahead of the shoulder, radians
 			HandGap = 0.1, -- presentation: hand stops this far from the wall surface
 			SettleTime = 0.35, -- presentation: observers' replicated body catches up before end checks
-			ObserverLimit = 12, -- presentation: safety cap on a run that never visibly ends
 		},
 	},
 	Lab = {
