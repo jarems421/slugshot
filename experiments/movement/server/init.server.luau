@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local shared = ReplicatedStorage:WaitForChild("MovementExperiment")
 local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
+local Clips = require(shared.Clips)
 require(script.Arena).create()
 
 local request = Instance.new("RemoteEvent")
@@ -13,11 +14,11 @@ request.Parent = shared
 local states: { [Player]: any } = {}
 Players.CharacterAutoLoads = false
 local ACTION_VARIANTS = {
-	Roll = Config.Validation.RollVariants,
 	Flip = Config.Validation.FlipVariants,
 	Mantle = Config.Validation.MantleVariants,
 	WallHop = Config.Validation.WallHopVariants,
 	WallRun = Config.Validation.WallRunVariants,
+	Slide = Config.Validation.SlideVariants,
 }
 
 local function spawnCharacter(player: Player)
@@ -37,7 +38,9 @@ local function spawnCharacter(player: Player)
 	local ok, character = pcall(function()
 		return Players:CreateHumanoidModelFromDescriptionAsync(
 			description,
-			Enum.HumanoidRigType.R15
+			if Config.Avatar.RigType == "R15"
+				then Enum.HumanoidRigType.R15
+				else Enum.HumanoidRigType.R6
 		)
 	end)
 	description:Destroy()
@@ -51,8 +54,56 @@ local function spawnCharacter(player: Player)
 		return
 	end
 	character.Name = player.Name
+	-- Owner style: longer arms. Stretch each arm part along its length about its centre,
+	-- with its attachments and joint offsets, so the arm still hangs from the shoulder.
+	local scale = Config.Avatar.ArmScale
+	local stretched: { [Instance]: boolean } = {}
+	for _, name in { "LeftUpperArm", "LeftLowerArm", "RightUpperArm", "RightLowerArm" } do
+		local part = character:FindFirstChild(name) :: BasePart?
+		if part then
+			stretched[part] = true
+			part.Size = Vector3.new(part.Size.X, part.Size.Y * scale, part.Size.Z)
+			for _, child in part:GetChildren() do
+				if child:IsA("Attachment") then
+					child.Position =
+						Vector3.new(child.Position.X, child.Position.Y * scale, child.Position.Z)
+				end
+			end
+		end
+	end
+	local function stretch(offset: CFrame): CFrame
+		return CFrame.new(offset.X, offset.Y * scale, offset.Z) * offset.Rotation
+	end
+	for _, joint in character:GetDescendants() do
+		if joint:IsA("Motor6D") then
+			if joint.Part0 and stretched[joint.Part0] then
+				joint.C0 = stretch(joint.C0)
+			end
+			if joint.Part1 and stretched[joint.Part1] then
+				joint.C1 = stretch(joint.C1)
+			end
+		end
+	end
+	-- Owner style: legs further apart. Moving each R6 hip joint sideways keeps the legs
+	-- parallel; the presentation reads joint offsets, so poses and floor contact follow.
+	for _, name in { "Left Hip", "Right Hip" } do
+		local hip = character:FindFirstChild(name, true)
+		if hip and hip:IsA("Motor6D") then
+			local spread = math.sign(hip.C0.X) * Config.Avatar.LegSpread
+			hip.C0 = CFrame.new(hip.C0.X + spread, hip.C0.Y, hip.C0.Z) * hip.C0.Rotation
+		end
+	end
+	-- Owner style: no hands. The parts stay (R15 joints need them) but are hidden.
+	for _, name in { "LeftHand", "RightHand" } do
+		local hand = character:FindFirstChild(name) :: BasePart?
+		if hand then
+			hand.Transparency = 1
+			hand.CanQuery = false
+			hand.CanTouch = false
+		end
+	end
 	character:SetAttribute("MovementProfile", state.profile)
-	character:SetAttribute("PresentationMode", "OriginalProceduralR15")
+	character:SetAttribute("PresentationMode", "Clips")
 	local humanoid = character:FindFirstChildOfClass("Humanoid") :: Humanoid
 	humanoid.UseJumpPower = true
 	humanoid.JumpPower = Config.Profiles[state.profile].JumpPower
@@ -67,11 +118,13 @@ local function spawnCharacter(player: Player)
 	root:SetNetworkOwner(player)
 	state.spawnedAt = workspace:GetServerTimeNow()
 	state.position = root.Position
-	state.lastRoll = -math.huge
 	state.lastMantle = -math.huge
 	state.lastHop = -math.huge
 	state.hops = 0
 	state.history = {}
+	state.boosts = {}
+	state.accepted = {}
+	state.lastVy = nil
 	state.airUsed = false
 	state.violations = 0
 	state.spawning = false
@@ -188,15 +241,43 @@ local function traversalValid(
 	return false
 end
 
-local function grounded(character: Model, root: BasePart, humanoid: Humanoid): boolean
-	local params = RaycastParams.new()
-	params.FilterDescendantsInstances = { character }
-	local distance = humanoid.HipHeight + root.Size.Y / 2 + 0.65
-	return math.abs(root.AssemblyLinearVelocity.Y) < 8
-		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), params) ~= nil
+-- Ray settings that ignore a character, made once per character (the ground checks
+-- run every frame for every player).
+local characterRays: { [Model]: RaycastParams } = setmetatable({}, { __mode = "k" }) :: any
+local function raysFor(character: Model): RaycastParams
+	local params = characterRays[character]
+	if params then
+		return params
+	end
+	local made = RaycastParams.new()
+	made.FilterDescendantsInstances = { character }
+	characterRays[character] = made
+	return made
 end
 
--- Validates a Roll/Flip/Mantle/WallHop/WallRun request against server-observed state and
+-- Adds one to a numeric attribute (request and correction counters for the probe).
+local function bump(instance: Instance, name: string)
+	instance:SetAttribute(name, ((instance:GetAttribute(name) :: number?) or 0) + 1)
+end
+
+local function grounded(character: Model, root: BasePart, humanoid: Humanoid): boolean
+	local distance = Clips.standHeight(humanoid, root) + 0.65
+	return math.abs(root.AssemblyLinearVelocity.Y) < 8
+		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), raysFor(character))
+			~= nil
+end
+
+-- A touchdown, checked every frame: at the ground and not rising. Landing and jumping
+-- straight away spends only a frame or two down (owner: spammed double jumps lost
+-- their flips when the 0.1 s strict check missed the landing).
+local function touchedDown(character: Model, root: BasePart, humanoid: Humanoid): boolean
+	local distance = Clips.standHeight(humanoid, root) + 1
+	return root.AssemblyLinearVelocity.Y < 8
+		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), raysFor(character))
+			~= nil
+end
+
+-- Validates a Flip/Mantle/WallHop/WallRun/Slide request against server-observed state and
 -- publishes it for every client. Returns a rejection reason, or nil on success.
 local function validateAction(
 	player: Player,
@@ -224,14 +305,12 @@ local function validateAction(
 	if not base or not table.find(ACTION_VARIANTS[kind], base) then
 		return "variant"
 	end
-	local roll = Config.Acrobatics.Roll
 	if
 		typeof(rate) ~= "number"
 		or not Math.finite(rate)
-		or (kind == "Roll" and (rate < roll.MinRate - 1e-3 or rate > roll.MaxRate + 1e-3))
 		or (kind == "Flip" and (rate < limits.MinRate - 1e-3 or rate > limits.MaxRate + 1e-3))
 		or (kind == "Mantle" and (rate < 0.5 or rate > Config.Traversal.Mantle.MaxRate + 1e-3))
-		or ((kind == "WallHop" or kind == "WallRun") and rate ~= 1)
+		or ((kind == "WallHop" or kind == "WallRun" or kind == "Slide") and rate ~= 1)
 	then
 		return "rate"
 	end
@@ -241,10 +320,10 @@ local function validateAction(
 		return "target"
 	end
 	-- Native character replication trails the immediately sent action (jump
-	-- start, landing roll, a kick off a wall). Poll server-observed physics for a
+	-- start, a slide, a kick off a wall). Poll server-observed physics for a
 	-- bounded window; never accept a client grounded flag or position. Mantles
 	-- start grounded or airborne.
-	local wantGround = kind == "Roll"
+	local wantGround = kind == "Slide"
 	local onGround, placed
 	local function observe()
 		onGround = grounded(character, root, humanoid)
@@ -269,21 +348,28 @@ local function validateAction(
 	if not placed then
 		return "geometry-" .. kind
 	end
-	if kind == "Roll" then
-		if not onGround or now - state.lastRoll < Config.Acrobatics.Roll.Cooldown * 0.9 then
-			return "roll-state"
-		end
-		state.lastRoll = now
-	elseif kind == "Flip" then
-		if onGround or state.airUsed then
+	if kind == "Flip" then
+		-- One per airtime; FlipInterval after the last one is a backstop for a landing
+		-- the server's replicated view never showed.
+		local recent = now - (state.lastFlip or -math.huge) < Config.Validation.FlipInterval
+		if onGround or (state.airUsed and recent) then
 			return "flip-state"
 		end
 		state.airUsed = true
+		state.lastFlip = now
 	elseif kind == "Mantle" then
 		if now - state.lastMantle < Config.Traversal.Mantle.Cooldown * 0.9 then
 			return "mantle-state"
 		end
 		state.lastMantle = now
+	elseif kind == "Slide" then
+		-- Arrival times jitter and buffered slides start right on the cooldown, so the
+		-- spacing check is looser than the client's.
+		local slide = Config.Acrobatics.Slide
+		if not onGround or now - (state.lastSlide or -math.huge) < slide.Cooldown * 0.6 then
+			return "slide-state"
+		end
+		state.lastSlide = now
 	elseif kind == "WallRun" then
 		-- Attaching needs no hop; jumping off it is a WallHop request.
 		if onGround or now - (state.lastWallRun or -math.huge) < 0.2 then
@@ -321,6 +407,10 @@ local function validateAction(
 	character:SetAttribute("MovementDirection", direction)
 	character:SetAttribute("MovementRate", rate)
 	character:SetAttribute("MovementActionTime", stamp)
+	table.insert(state.accepted, now)
+	if #state.accepted > 16 then
+		table.remove(state.accepted, 1)
+	end
 	return nil
 end
 
@@ -335,7 +425,7 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 	end
 	state.count += 1
 	local function reject(reason: string)
-		player:SetAttribute("RejectedRequests", (player:GetAttribute("RejectedRequests") or 0) + 1)
+		bump(player, "RejectedRequests")
 		if
 			typeof(packet) == "table"
 			and typeof(packet.sequence) == "number"
@@ -427,12 +517,23 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 		reject("kind")
 		return
 	end
-	player:SetAttribute("AcceptedRequests", (player:GetAttribute("AcceptedRequests") or 0) + 1)
+	bump(player, "AcceptedRequests")
 	request:FireClient(player, packet.sequence, true, packet.kind)
 end)
 
 local elapsed = 0
 RunService.Heartbeat:Connect(function(dt)
+	for player, state in states do
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local down = character and root and humanoid and touchedDown(character, root, humanoid)
+		if down then
+			state.airUsed = false
+			state.hops = 0
+			state.downAt = workspace:GetServerTimeNow()
+		end
+	end
 	elapsed += dt
 	if elapsed < 0.1 then
 		return
@@ -446,10 +547,6 @@ RunService.Heartbeat:Connect(function(dt)
 			else nil
 		local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
 		if character and root and humanoid then
-			if grounded(character, root, humanoid) then
-				state.airUsed = false
-				state.hops = 0
-			end
 			local velocity = root.AssemblyLinearVelocity
 			local speed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
 			local delta = root.Position - (state.position or root.Position)
@@ -463,16 +560,40 @@ RunService.Heartbeat:Connect(function(dt)
 				and workspace:GetServerTimeNow() - state.spawnedAt
 					> Config.Validation.SpawnGrace
 			then
-				player:SetAttribute(
-					"MotionCorrections",
-					(player:GetAttribute("MotionCorrections") or 0) + 1
-				)
+				bump(player, "MotionCorrections")
 				local flat = Vector3.new(velocity.X, 0, velocity.Z)
 				root.AssemblyLinearVelocity = (
 					if speed > 0.01 then flat.Unit * math.min(speed, limit) else Vector3.zero
 				) + Vector3.new(0, velocity.Y, 0)
 				if travelled > limit * sampleTime + Config.Validation.DisplacementSlack then
 					character:PivotTo(CFrame.new(state.position) * character:GetPivot().Rotation)
+				end
+			end
+			-- Detection only (no correction yet): an upward boost while airborne with no
+			-- accepted action around it, or a rise faster than any move launches. Client
+			-- physics is trusted, so this is evidence for a server-authority decision.
+			local now = workspace:GetServerTimeNow()
+			local boost = Config.Validation.AirBoost
+			local airborne = now - (state.downAt or -math.huge) > boost.GroundGrace
+			if airborne and state.lastVy and velocity.Y - state.lastVy > boost.Gain then
+				table.insert(state.boosts, now)
+			end
+			if
+				velocity.Y > boost.MaxRise
+				and now - state.spawnedAt > Config.Validation.SpawnGrace
+			then
+				bump(player, "SuspectAirBoosts")
+			end
+			state.lastVy = velocity.Y
+			-- A boost is explained by an action accepted within Window either side of it.
+			while state.boosts[1] and now - state.boosts[1] > boost.Window do
+				local at = table.remove(state.boosts, 1) :: number
+				local explained = false
+				for _, accepted in state.accepted do
+					explained = explained or math.abs(accepted - at) <= boost.Window
+				end
+				if not explained then
+					bump(player, "SuspectAirBoosts")
 				end
 			end
 			state.position = root.Position

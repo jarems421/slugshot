@@ -117,12 +117,13 @@ def rest_frame(armature, bones):
         for member in members:
             reference[member] = align @ rot[member]
     feet_rest = {n: head[n].dot(up) - floor for n in FEET}
-    return to_roblox, up, floor, hip_height, reference, head["Hips"], feet_rest
+    legs = ((head["LeftLeg"] - head["LeftUpLeg"]).length / hip_height, (head["LeftFoot"] - head["LeftLeg"]).length / hip_height)
+    return to_roblox, up, floor, hip_height, reference, head["Hips"], feet_rest, legs
 
 
 def capture(path, spec):
     armature, bones, fps, start, end = load(path)
-    to_roblox, up, floor, unit, reference, hips_rest, feet_rest = rest_frame(armature, bones)
+    to_roblox, up, floor, unit, reference, hips_rest, feet_rest, legs = rest_frame(armature, bones)
     world = armature.matrix_world
     inverse = to_roblox.transposed()
     # Self-test: the bind-pose (T-pose) left arm must map to R15 character-left (-X).
@@ -157,7 +158,7 @@ def capture(path, spec):
         )
         if drift < math.radians(4):
             frames.pop()  # Mixamo loops repeat the first pose at the end.
-    return frames, fps, unit
+    return frames, fps, unit, legs
 
 
 def yaw_of(matrix):
@@ -220,16 +221,75 @@ def scale_about(mean, q, factor):
     return mean @ Quaternion(axis, angle * factor)
 
 
-def stylize(quats, spec):
-    """Optional pose styling: "amplitude" scales the hip ("legs") and shoulder ("arms")
-    swing about the clip's mean pose; "elbows" scales the elbow bend (0 straight)."""
+def leg_drop(quats, i, legs):
+    """Deepest hip-to-ankle drop of either leg in frame i, in hip units."""
+    down = Vector((0, -1, 0))
+    root = quats["Root"][i]
+    drops = []
+    for side in ("Left", "Right"):
+        upper = root @ quats[side + "Hip"][i]
+        lower = upper @ quats[side + "Knee"][i]
+        drops.append(-(upper @ down).y * legs[0] - (lower @ down).y * legs[1])
+    return max(drops)
+
+
+def pitch_of(q):
+    """Forward swing of a limb hanging down (+ forward), about the parent's X axis."""
+    d = q @ Vector((0, -1, 0))
+    return math.atan2(-d.z, -d.y)
+
+
+def stylize(quats, spec, hips, legs):
+    """Optional pose styling: "upright" keeps that fraction of the chest's average
+    forward lean (the legs counter-rotate, so the feet land as before); "planar" lists
+    groups ("arms", "legs") turned into pure forward/back swings with the source timing;
+    "amplitude" scales the hip ("legs") and shoulder ("arms") swing about the clip's
+    mean pose; "armsFromLegs" replaces the shoulders with a forward/back swing opposite
+    the same side's hip, times that gain; "limit" softly caps a planar group's swing (degrees from hanging);
+    "splay" holds planar arms out from the body ("base" degrees, plus up to "back"
+    more at the full back swing);
+    "elbows" and "knees" scale the bend (0 straight). The hips move by the
+    change in leg reach so the planted foot stays on the floor."""
+    before = [leg_drop(quats, i, legs) for i in range(len(hips))]
+    if "upright" in spec:
+        chest = [r @ w for r, w in zip(quats["Root"], quats["Waist"])]
+        up = [c @ Vector((0, 1, 0)) for c in chest]
+        lean = math.atan2(sum(u.z for u in up), sum(u.y for u in up))
+        fix = Quaternion(Vector((1, 0, 0)), -lean * (1 - spec["upright"]))
+        for i, root in enumerate(quats["Root"]):
+            quats["Root"][i] = fix @ root
+            for side in ("Left", "Right"):
+                quats[side + "Hip"][i] = quats["Root"][i].inverted() @ root @ quats[side + "Hip"][i]
+    for group in spec.get("planar", []):
+        for joint in STYLE_JOINTS[group]:
+            quats[joint] = [Quaternion(Vector((1, 0, 0)), pitch_of(q)) for q in quats[joint]]
     for group, factor in spec.get("amplitude", {}).items():
         for joint in STYLE_JOINTS[group]:
             mean = mean_rotation(quats[joint])
             quats[joint] = [scale_about(mean, q, factor) for q in quats[joint]]
-    if "elbows" in spec:
-        for joint in ("LeftElbow", "RightElbow"):
-            quats[joint] = [Quaternion().slerp(q, spec["elbows"]) for q in quats[joint]]
+    if "armsFromLegs" in spec:
+        for side in ("Left", "Right"):
+            hip = [pitch_of(q) for q in quats[side + "Hip"]]
+            mean = sum(hip) / len(hip)
+            quats[side + "Shoulder"] = [Quaternion(Vector((1, 0, 0)), -spec["armsFromLegs"] * (p - mean)) for p in hip]
+    for group, degrees in spec.get("limit", {}).items():
+        limit = math.radians(degrees)
+        for joint in STYLE_JOINTS[group]:
+            quats[joint] = [Quaternion(Vector((1, 0, 0)), limit * math.tanh(pitch_of(q) / limit)) for q in quats[joint]]
+    if "splay" in spec:
+        base, back = math.radians(spec["splay"]["base"]), math.radians(spec["splay"]["back"])
+        reach = math.radians(spec.get("limit", {}).get("arms", 90))
+        for side, sign in (("Left", -1), ("Right", 1)):
+            joint = side + "Shoulder"
+            out = [sign * (base + back * max(0.0, -pitch_of(q)) / reach) for q in quats[joint]]
+            quats[joint] = [Quaternion(Vector((1, 0, 0)), pitch_of(q)) @ Quaternion(Vector((0, 0, 1)), s) for q, s in zip(quats[joint], out)]
+    for flag, joints in (("elbows", ("LeftElbow", "RightElbow")), ("knees", ("LeftKnee", "RightKnee"))):
+        if flag in spec:
+            for joint in joints:
+                quats[joint] = [Quaternion().slerp(q, spec[flag]) for q in quats[joint]]
+    if "knees" in spec or "upright" in spec or "planar" in spec:
+        for i, h in enumerate(hips):
+            h.y += leg_drop(quats, i, legs) - before[i]
 
 
 def floor_curve(frames):
@@ -275,7 +335,7 @@ def loop_analysis(frames, fps, unit):
     return contact, speed
 
 
-def build(name, frames, fps, unit, spec):
+def build(name, frames, fps, unit, legs, spec):
     loop = bool(spec.get("loop"))
     events = {}
     motion = None
@@ -386,7 +446,7 @@ def build(name, frames, fps, unit, spec):
             (f["parts"][child] if parent is None else f["parts"][parent].transposed() @ f["parts"][child]).to_quaternion()
             for f in frames
         ]
-    stylize(quats, spec)
+    stylize(quats, spec, hips, legs)
     if loop and speed:
         speed *= spec.get("amplitude", {}).get("legs", 1)  # a wider stride covers more ground
     joints = {}
@@ -447,7 +507,7 @@ def main():
         if not path.exists():
             report[name] = "missing"
             continue
-        frames, fps, unit = capture(path, spec)
+        frames, fps, unit, legs = capture(path, spec)
         normalize_yaw(frames, bool(spec.get("alignEnd")))
         if spec.get("flattenYaw"):
             flatten_yaw(frames)
@@ -457,7 +517,7 @@ def main():
         if spec.get("mirror"):
             variants.append((spec["mirror"], mirror(frames)))
         for variant, data in variants:
-            clips[variant] = build(variant, data, fps, unit, spec)
+            clips[variant] = build(variant, data, fps, unit, legs, spec)
             info = {k: clips[variant][k] for k in ("fps", "frames", "speed", "direction", "events")}
             info["source"] = spec["file"]
             report[variant] = info

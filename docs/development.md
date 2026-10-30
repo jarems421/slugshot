@@ -16,7 +16,7 @@ Formatting modifies source; verification does not. Rojo binds to loopback port 3
 
 On another machine, obtain approval before external installations. Review [Rokit](https://github.com/rojo-rbx/rokit) and [Rojo installation](https://rojo.space/docs/v7/getting-started/installation/) first. After an approved Rokit installation, review `rokit.toml`, then run `rokit install`. Install a matching Rojo 7 Studio plugin separately; `rojo plugin install` modifies Studio's plugin directory and requires approval. Python is used only for lightweight stdlib verification; no pip dependencies are required.
 
-VS Code recommendations and tasks are checked in. The Luau extension can provide Roblox-aware editor diagnostics; full engine-aware CLI type checking is not configured. Only the engine-independent shared module is type-checked by CI. Editor diagnostics and actual execution must be reviewed in Studio.
+VS Code recommendations and tasks are checked in. The Luau extension can provide Roblox-aware editor diagnostics. The foundation's engine-independent shared module is type-checked without Roblox definitions. The movement experiment is fully type-checked in strict mode by `tools/verify_movement.py` (also run by CI): luau-lsp analyzes every movement script against the Roblox API, using definitions pinned to the luau-lsp release in `rokit.toml` (downloaded with a SHA-256 check into ignored `.tools/luau/`) and a Rojo sourcemap. Type checks do not execute anything: actual behaviour must still be reviewed in Studio. `tools/r6pose/` previews original clip poses on the R6 rig (numpy and matplotlib; development only).
 
 ## Change loop
 

@@ -126,3 +126,140 @@
 - **Mantle.** Mantles can interrupt a wall run or a kick; from a wall they look toward it and always take the top. Duration is 0.2-0.3 s.
 - **Testing.** Two-client tests were not re-run, to avoid popping up test windows while the owner may be playing.
 - Next: the owner reviews v4.4; running animation rework.
+
+## 2026-10-29 - Running style (v4.5)
+
+- The owner finds the Mixamo run too athletic ("a sprinting game") and wants a Robloxy run: straight arms and legs, long strides and arm strokes, same energy.
+- **Restyle, not new clips.** New converter options `knees`, `planar`, `upright` and `limit` act on the existing jog/run/sprint/diagonal loops. Straightening elbows alone was not enough: the source pumps across the chest, so a straight arm swung out sideways, and the 35° lean still read as athletics.
+- **Lesson.** Render the converter output (a stick figure from the generated data is enough) before handing it over. It caught the sideways arm and the overhead arm swing on the Run clip without opening Studio.
+- Next: the owner tries v4.5 in Studio; tune the strength of each option from their feedback.
+
+## 2026-10-29 - Owner feedback on v4.5 (v4.6)
+
+- The owner tested v4.5 in Studio: "looks horrible". Hands showed (they want no hands anywhere in the game) and the arms were tucked in "like a walking stance".
+- **Reference.** The owner pointed to Huss Valley's Runner run (no knife). Approved yt-dlp to fetch their YouTube link; frames came from the Blender sequencer. Look for the role in the HUD: "PRESS SPACE TO CATCH" means a Catcher with a knife, "PRESS SPACE TO DASH" a Runner.
+- **Lesson.** Scaling a source clip's arm swing cannot fix a clip whose arm barely moves (Sprint Forward). Deriving the arms from the legs gave every clip the same even stroke. Measure the swing ranges, not just the renders.
+- Aiming switched off (`Config.Lab.Aim`); the owner says aiming is not in scope yet.
+- Next: the owner tries v4.6.
+
+## 2026-10-29 - Owner feedback on v4.6 (v4.7)
+
+- Owner's final verdict: no elbows, knees or hands, only block limbs. The run was still shaky, slid, was not sharp, and was too upright ("looks disabled").
+- **Root cause of the shake.** Two-sided ground contact pulled the body down whenever straight legs split. Feet now only push up. The forward tier also blended three mocap loops whose cycles did not line up.
+- **Decision.** Stop restyling mocap for locomotion. Run, Sprint and the back-pedal are generated in `OriginalClips` for rigid limbs, and the joints are locked at runtime for everything else ([ADR 0007](decisions/0007-block-limbs-and-original-run.md)).
+- **Lesson.** For a stylised blocky look, a small analytic cycle tuned against reference frames beats bending mocap: speed, sharpness and lean are each one number.
+- Next: the owner tries v4.7. Crouch, landings and mantles may need block-limb versions.
+## 2026-10-29 - Owner feedback on v4.7 (v4.8)
+
+- The owner said the v4.7 run "looks like a basic Roblox run", nothing like the reference. Asked for an honest comparison first, I agreed: an even pendulum swing is the default R6 structure.
+- **Reference, properly read.** It is pose-to-pose: a held kick (trailing leg back near horizontal, the opposite arm reaching forward), then a snap through the pass. The v4.6 "arm flare" was a misread of the forward reach from behind. Before calling a direction, confirm facing from a front view (accessories such as the shoulder cat and the front bag).
+- **Owner also wants:** symmetric arms (the no-knife run); no slow-motion run or gap when stopping; a sharp, smooth reversal with no turn clip sliding after it. All mocap start/stop/turn transitions removed.
+- Next: the owner tries v4.8.
+## 2026-10-29 - Owner feedback on v4.8 (v4.9)
+
+- Arm and leg movement "almost perfect". Asked for: more forward lean but only in the upper half, slightly wider legs, longer arms.
+- Lean split into whole-body `lean` plus waist `bend`; arm angles were compensated so the approved swing keeps its look against the ground. "Wider" was read as sideways spread (6° per leg), with the stride kept; to confirm with the owner.
+- Arms stretched 1.25x on the server (part size, attachments, Motor6D offsets), so peers see the same rig.
+## 2026-10-29 - R6 rig (v5.0)
+
+- The owner was frustrated: v4.9 still looked nothing like the reference ("limbs disconnected", "free where they join"). The real cause was the rig. The reference is classic R6, and its arm pivot sits a quarter of the way down the arm. Approved: switch to R6 and keep comparing until identical, while staying consistent with the other moves.
+- **Lessons:**
+  - Check the reference's rig type first. Plain avatars and line-ups reveal it; a puffy outfit hides it.
+  - Without Studio access, compare with a solid-block renderer of the actual rig geometry. Stick figures hide pivot effects.
+  - Read every frame at 60 fps when timing matters.
+  - Per-limb timing matters: in the reference, the reach is early and the fall back is late.
+- Clips stay in R15 terms and are converted at runtime, so no clip data changed. Mocap jumps and landing clash on R6; next candidates for block versions.
+## 2026-10-29 - Idle fold and wall-run controls (v5.1, v5.2)
+
+- R6 idle looked like floating: the mocap idle's bent knees tipped the block legs forward along the thigh. Limbs are now folded root-to-end (`FoldLimbs`/`chord`).
+- Wall run: the kick fired on release and only under 0.2 s, so owner presses counted as climbs ("double tap to jump off"). It now kicks on press, and the climb is Space held from the jump. The held climb kept full speed for only part of its 2 s taper; it now stays full for 3 s.
+- Lesson: release-timed taps under about 0.25 s read as unresponsive. Prefer acting on press, and give hold behaviour to the press that is already held.
+## 2026-10-29 - Wall-jump direction (v5.3)
+
+- The owner wants full control of the wall-jump direction, from a normal run or a wall run. The v4.4 three-way kick read wrongly: W along a wall run was a "side" kick (mostly forward), and W into a wall was an up-kick, then a forced bounce back on the second press.
+- The kick now follows the camera-relative input, at least 30° off the wall, facing the launch. The up-kick is only for input nearly straight into the wall.
+- Open question for the owner: what should holding straight into the wall do? It currently leaps up once, then bounces out.
+## 2026-10-29 - Double-jump flips (v5.4)
+
+- The owner wants flips as a double jump, with the direction picked by WASD as seen on screen (front, sides, back and diagonals).
+- There were no side-flip downloads, so all eight directions come from one original tucked flip spun about the axis across each direction; the mocap flips were unmapped for one consistent set. The body turns to the camera's facing so the keys read on screen.
+- Trade-off: an early press meant for a wall kick now double-jumps unless the wall is already in reach (the wall-kick buffer only applies once the flip is used).
+## 2026-10-29 - Fast double taps (v5.5)
+
+- A fast double tap gave a small jump with no flip. Likely causes (not reproduced live): presses within 0.12 s were debounced away, presses in the first 0.1 s of a jump were dropped, and the client reset the flip on lagging FloorMaterial, so the server could reject the flip after the relaunch.
+- Lesson: buffer early inputs instead of dropping them, and keep client and server rules for one-per-airtime resources identical.
+## 2026-10-29 - Spammed double jumps (v5.6)
+
+- Flips were still lost when chaining double jumps. The server's 0.1 s, |vy| < 8 landing check missed one- or two-frame touchdowns, so it kept the flip spent and rejected the next one after the client had relaunched.
+- Fix: a per-frame touchdown check on the server, a 0.8 s backstop between accepted flips, and a client reset on the Humanoid's `Landed` state. Lesson: a server rule that depends on seeing a brief event needs per-frame sampling or a backstop.
+## 2026-10-29 - Wall-run tap versus hold (v5.7)
+
+- Kick on press (v5.2) broke climbing that started later in a run. Back to deciding on release, with a 0.3 s tap window (0.2 s was shorter than ordinary taps); a press climbs at once, so holding has no lag. The climb allowance now counts held time.
+- Lesson: when one button means both tap and hold, start the hold behaviour on press and resolve the tap on release, with a generous window.
+## 2026-10-29 - Slide and sprint controls (v5.8)
+
+- Design talk: I recommended a ground dash plus crouch-slide; the owner judged a dash too much movement alongside the double-jump flip and chose **slide on Shift** only (no C slide), with no ground rolls. Sprint is double-tap W.
+- The slide follows CoD/Rivals/Tribes: boosted, momentum-keeping, jump-cancel into a slide-jump, Shift to stand. Air momentum above the run target now bleeds slowly, so slide-jumps carry.
+
+## 2026-10-30 - Faster slide, buffered slide input, new slide pose (v5.9)
+
+- Owner on v5.8: the slide should be noticeably faster; presses straight after a jump or a wall run were lost; the animation should be cooler.
+- Cause of lost presses: the slide was accepted only when already grounded and free, so presses in the air or on the landing frame were dropped. Now they wait 0.4 s, or as long as Shift stays held, and fire on touchdown. Boost became additive (+15, max 46, end 20, 0.8 s).
+- Lesson: every action key that can be pressed slightly early (jump, flip, slide) needs a buffer, not just a state check.
+
+## 2026-10-30 - Higher, bouncier jump (v6.0)
+
+- Owner: the first jump should be noticeably higher and bouncier, not frog leaps. Height comes from JumpPower (52 to 62); the bounce comes from 1.12x gravity during a ground jump only, which keeps airtime about the same (higher power alone adds float). Double jumps, kicks and other actions turn it off, so their tuning is untouched.
+- Next, per the owner: fine-tune flips, then vaults and mounts (mantles). The higher jump now clears some ledges that used to be mantled.
+
+## 2026-10-30 - Flashy flips (v6.1)
+
+- Owner: flips felt like loose tumble rolls; they want them far cooler, compact and distinctive, as Slugterra is about style. Web searches found nothing on the show's choreography, so the set uses real tricking moves: front tuck, back full, aerial, off-axis split, corkscrew.
+- Causes found: an R15 knee tuck folds into straight, splayed legs on R6; rotating about the hips makes the body orbit a point below itself; even spin speed reads as a tumble. Fixes: R6-native poses, a clip pivot at the torso's middle, and spin that is fastest while compact.
+- Lesson: author R6 poses directly. Bent-limb R15 shapes fold into something else on block limbs.
+- v6.2 (same day): the owner liked only the back full (a layout backflip with a full twist, 'a really cool twirl') and disliked the trail. Every direction is now a full-twist spin with that timing, distinct by axis and shape; trail off. Owner taste: twisting spins over plain tucks or splits.
+
+## 2026-10-30 - Ctrl shift lock (v6.3)
+
+- Owner asked for shift lock on Ctrl. Roblox's mouse lock was already off in the lab projects (EnableMouseLockOption false, which keeps Shift free for the slide), so the lab has its own: the mouse is re-locked after the camera's render step, the body turns to the camera when no action runs, and the shoulder offset is computed in camera space.
+- v6.4: the owner standardised the diagonals on the back-side corkscrew; W+A/W+D now use it, tipping forward (the butterfly twist is gone).
+- v6.5: the diagonals are 'perfect'. The front, back and side looked alike (twisting with the legs up), so only the back (now arms overhead) and the diagonals twist. W is a double front tuck with a kick-out; A/D is a parkour side flip with the outside leg leading.
+- v6.6: the double front and side tuck were 'too basic'. After several single guesses were rejected, there are now three candidates per direction (front: Webster, flip kick, swan dive; side: aerial, butterfly kick, barrel roll), switched in the lab with F/G so the owner picks by playing. Remove the unpicked ones afterwards.
+- v6.7: the owner picked the flip kick for W (slowed a little). The side candidates 'all look the same': the selection reaches the animation, so they likely did not read at speed. New side candidates each end or pause in a held, readable shape (side flip kick, tornado kick, aerial holding a split). Lesson: at about 0.4 s of airtime, a flip needs a held silhouette to read; spin alone blurs together.
+- v6.8: the owner wants side flips as a horizontal twist, the flat counterpart of the back and diagonal twists, acrobatic and not a 'torpedo'. Researched the butterfly twist (Wikipedia, FlashMavi, FIG aerobic code): dip, straight-leg kick, flat straddle with wing arms, hands in to twist, open to land on one leg. Three candidates on G: single, double, twist into a side kick.
+- v6.9: the owner picked the single butterfly twist; arms crossed through the twist looked 'restricted', so they now windmill (one overhead along the body, one swept back, swapping). Flip set settled for now: W flip kick, S back full (arms overhead), A/D butterfly twist, diagonals corkscrew.
+
+## 2026-10-30 - Continuous run candidates (v7.0)
+
+- Flips 'pretty much perfect'. The run and sprint are 'still poo': stiff, robotic, choppy, with the arms, legs and lean all off. The owner chose in-game candidates and a sprint more extreme than the run.
+- The pose-to-pose holds matched to the reference read as freeze-and-jerk in motion. Replaced with a continuous generator and three styles (Stride, Power, Dash) on G.
+- Lesson: matching a reference's still frames does not guarantee its motion reads well; judge the cycle in motion.
+- v7.1: the owner picked the Power run and wants it bouncier and more energetic. They reported an arm stuck up when running upstairs (the presentation took any rise over 6 studs/s as airborne, so it played the jump pose) and a poor idle (the mocap breathing idle's slouch reads as rolled-forward shoulders on R6) with a cut into it. Fixes: springier Power, a StepRise grounded rule, three original R6 idles on G, and a gentler idle blend.
+- v7.2: the owner said the idles looked basic, falls were too dramatic (the mocap jump apex has an arm up, held on any fall) and strafes and back-run were underwhelming and slow (the old strafe was built for 16 studs/s, played at 24). Fixes: an R6 Air clip with the flail only on long falls, bolder idle candidates, and strafes and back-run made from the run generator.
+- v7.3: the owner picked the Restless idle (legs not spread) and asked for more animation. They missed the mocap running jump: it only looked wrong when walking off stairs (a rise over 10 studs/s counted as a jump). Real jumps use the mocap again; edge drops use the calm R6 air; the jump test uses StepRise (30).
+
+## 2026-10-30 - Fall transition and R6 mantles (v7.4)
+
+- Owner: falling from stairs cut in (no fade on the first air pose); mantles were too fast (0.2-0.3 s) and the vault was horrendous (mocap on R6). Asked for research into parkour mantles.
+- Walk-offs now blend from the run into the fall. Four original R6 mantles (climb-up, step-up, pop-up, kong vault) were modelled on parkour technique and checked against ledge geometry with the client's root path; 0.38-0.6 s; private mocap mantles skipped via OriginalClips.replaces.
+- Lesson: an earlier 'faster' request can overshoot; when the owner says something is too quick, check the numbers first.
+
+## 2026-10-30 - Wider legs (v7.5)
+
+- Owner: the legs look narrow; move them further apart without splaying them into a V.
+- Each R6 hip joint's C0 moves 0.15 studs out on the server (`Avatar.LegSpread`); renders of 0-0.25 studs showed 0.15 as a clear gap that still reads as one body.
+- v7.6: at 0.15 the legs 'look too disconnected': with the idle's 7-degree stance, the tops stuck out past the torso. Now 0.06, nearly flush. The idle's arms moved too much, so they keep about a third of the swing. The owner asked for a neck stretch and a dust-off with no cut in. Both are original R6 fidgets that alternate after 6-10 s idle, start and end on the idle's centre pose, and fade in over 0.5 s and out over 0.6 s on top of the live idle.
+
+## 2026-10-30 - Mocap neck stretch layered on the idle (v7.7)
+
+- Owner: the original neck stretch looked weird. Use the Mixamo clip, make the transitions smooth (not idle → stretch → idle) and remove the dust-off.
+- The Mixamo clip's body stance differs a lot from the R6 idle, so a weighted blend visibly changed stance. Fix: layer the clip's motion since its first frame onto the live idle (`Clips.layer`). Studio check: body within 6°, head steps up to 10.4° per 0.1 s, no snaps.
+- Lesson: when a mocap one-shot plays over an original idle, layer its motion rather than blending its pose.
+
+## 2026-10-30 - Whole-system review and cleanup pass (v7.8)
+
+- The owner asked for a review of the whole movement system, then for every problem found to be fixed before committing, and confirmed the ground roll should go.
+- Done: roll removed; dead references removed (clip-less start/stop/turn moves, diagonal sprint and jog names, hanging climb, old idle, flip trail, `OriginalClips.replaces`, unused private mappings); full strict type check in `verify_movement.py` with pinned luau-lsp definitions; multi-height, multi-lane ledge detection; per-frame waste trimmed; server counts unexplained air boosts without correcting them; pose preview tool in the repo; private clips audited on R6.
+- Two sessions edited this branch in parallel (v7.7 in another session). Check file timestamps and `docs/memory.md` before building on stale context, and coordinate before large edits.
+- Lesson: checks that type-checked one 17-line file gave false confidence about 6,000 lines marked strict; the full check found 26 errors.
+- Lesson: a review hypothesis (back-diagonal blends cancelling the leg swing) was wrong when measured; check numerically before reporting.

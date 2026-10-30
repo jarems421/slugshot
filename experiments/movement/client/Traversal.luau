@@ -1,5 +1,5 @@
 --!strict
--- Ledge and wall detection for jump-triggered traversal (mantle, wall hop).
+-- Ledge and wall detection for jump-triggered traversal (mantle, vault, wall hop/run).
 -- Adapted from ParkourTraversalController in the Place1 movement system,
 -- https://github.com/alexkkork/place1-movement-system at
 -- 87da75e2f2528291ebf65c4cbc52d1ce83c2f527: the ray layout, ledge/clearance
@@ -27,6 +27,7 @@
 -- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
+local Clips = require(game:GetService("ReplicatedStorage"):WaitForChild("MovementExperiment").Clips)
 local Traversal = {}
 
 export type Ledge = {
@@ -76,7 +77,7 @@ end
 
 -- Root height above the feet when standing.
 function Traversal.standOffset(humanoid: Humanoid, root: BasePart): number
-	return math.max(2.2, humanoid.HipHeight + root.Size.Y * 0.5)
+	return math.max(2.2, Clips.standHeight(humanoid, root))
 end
 
 local function solid(part: Instance): boolean
@@ -98,6 +99,61 @@ local function clearanceOpen(
 		end
 	end
 	return true
+end
+
+-- Forward rays at several heights above the feet and in lanes across the body
+-- (Slugshot addition, not Place1): one knee-height ray missed thin or floating
+-- ledges, and ledges met off-centre. The lowest height with a usable ledge wins,
+-- nearest ray first. The top is probed 1.2 studs in from the face, or closer to the
+-- edge for a thin top.
+local LEDGE_HEIGHTS = { 0.58, 1.6, 2.6, 3.6 }
+local LEDGE_LANES = { 0, -0.7, 0.7 }
+local TOP_DEPTHS = { 1.2, 0.7 }
+
+-- The ledge on top of a wall face hit by a forward ray, or nil.
+local function ledgeAbove(
+	wallHit: RaycastResult,
+	normal: Vector3,
+	feetY: number,
+	offset: number,
+	settings: any,
+	rays: RaycastParams,
+	overlap: OverlapParams
+): Ledge?
+	local wall = wallHit.Instance :: BasePart
+	for _, depth in TOP_DEPTHS do
+		local inside = wallHit.Position - normal * depth
+		local topHit = workspace:Raycast(
+			Vector3.new(inside.X, feetY + settings.MaxHeight + 1.4, inside.Z),
+			Vector3.new(0, -(settings.MaxHeight + 2.2), 0),
+			rays
+		)
+		if
+			not topHit
+			or not solid(topHit.Instance)
+			or topHit.Normal.Y < 0.72
+			or optedOut(topHit.Instance, MANTLE_OPT_OUT)
+		then
+			continue
+		end
+		local top = topHit.Instance :: BasePart
+		local height = topHit.Position.Y - feetY
+		local landing = topHit.Position - normal * 0.32
+		if
+			height >= settings.MinHeight
+			and height <= settings.MaxHeight
+			and clearanceOpen(landing, math.clamp(offset + 2.3, 4.4, 6.7), wall, top, overlap)
+		then
+			local target = Vector3.new(landing.X, topHit.Position.Y + offset + 0.12, landing.Z)
+			return {
+				target = CFrame.lookAt(target, target - normal),
+				height = height,
+				wall = wallHit.Position,
+				normal = normal,
+			}
+		end
+	end
+	return nil
 end
 
 -- A climbable ledge ahead of the movement direction (or `direction`), or nil.
@@ -124,47 +180,36 @@ function Traversal.findLedge(
 	if ground and ground.Normal.Y > 0.55 then
 		feetY = ground.Position.Y
 	end
-	local origin = Vector3.new(root.Position.X, feetY + 0.58, root.Position.Z)
-	local wallHit = workspace:Raycast(origin, move * settings.Reach, rays)
-	if not wallHit or not solid(wallHit.Instance) or math.abs(wallHit.Normal.Y) > 0.4 then
-		return nil
+	local across = move:Cross(Vector3.yAxis)
+	for _, rise in LEDGE_HEIGHTS do
+		local faces: { { any } } = {}
+		for _, lane in LEDGE_LANES do
+			local origin = Vector3.new(root.Position.X, feetY + rise, root.Position.Z)
+				+ across * lane
+			local hit = workspace:Raycast(origin, move * settings.Reach, rays)
+			if
+				hit
+				and solid(hit.Instance)
+				and math.abs(hit.Normal.Y) <= 0.4
+				and not optedOut(hit.Instance, MANTLE_OPT_OUT)
+			then
+				local normal = safeUnit(horizontal(hit.Normal), -move)
+				if move:Dot(-normal) >= 0.45 then
+					table.insert(faces, { hit, normal })
+				end
+			end
+		end
+		table.sort(faces, function(a, b)
+			return a[1].Distance < b[1].Distance
+		end)
+		for _, face in faces do
+			local ledge = ledgeAbove(face[1], face[2], feetY, offset, settings, rays, overlap)
+			if ledge then
+				return ledge
+			end
+		end
 	end
-	local wall = wallHit.Instance :: BasePart
-	if optedOut(wall, MANTLE_OPT_OUT) then
-		return nil
-	end
-	local normal = safeUnit(horizontal(wallHit.Normal), -move)
-	if move:Dot(-normal) < 0.45 then
-		return nil
-	end
-	local inside = wallHit.Position - normal * 1.2
-	local topHit = workspace:Raycast(
-		Vector3.new(inside.X, feetY + settings.MaxHeight + 1.4, inside.Z),
-		Vector3.new(0, -(settings.MaxHeight + 2.2), 0),
-		rays
-	)
-	if not topHit or not solid(topHit.Instance) or topHit.Normal.Y < 0.72 then
-		return nil
-	end
-	local top = topHit.Instance :: BasePart
-	if optedOut(top, MANTLE_OPT_OUT) then
-		return nil
-	end
-	local height = topHit.Position.Y - feetY
-	if height < settings.MinHeight or height > settings.MaxHeight then
-		return nil
-	end
-	local landing = topHit.Position - normal * 0.32
-	if not clearanceOpen(landing, math.clamp(offset + 2.3, 4.4, 6.7), wall, top, overlap) then
-		return nil
-	end
-	local target = Vector3.new(landing.X, topHit.Position.Y + offset + 0.12, landing.Z)
-	return {
-		target = CFrame.lookAt(target, target - normal),
-		height = height,
-		wall = wallHit.Position,
-		normal = normal,
-	}
+	return nil
 end
 
 -- For a found ledge: if the obstacle is thin with open ground beyond, the landing

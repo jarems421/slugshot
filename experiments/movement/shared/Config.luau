@@ -10,6 +10,7 @@ return table.freeze({
 			Braking = 220,
 			TurnRate = 30,
 			JumpPower = 50,
+			JumpGravity = 1, -- stock Roblox jump
 		},
 		Athletic = {
 			RunSpeed = 24,
@@ -17,7 +18,11 @@ return table.freeze({
 			Acceleration = 100,
 			Braking = 145,
 			TurnRate = 18,
-			JumpPower = 52,
+			-- Owner (2026-10-30): higher and bouncier, not frog leaps. 8.7 studs (was 6.9)
+			-- with about the same airtime: gravity times JumpGravity during a ground jump
+			-- until the landing, a double jump, a wall kick or another action.
+			JumpPower = 62,
+			JumpGravity = 1.12,
 		},
 		Precise = {
 			RunSpeed = 21,
@@ -25,30 +30,39 @@ return table.freeze({
 			Acceleration = 130,
 			Braking = 180,
 			TurnRate = 24,
-			JumpPower = 50,
+			JumpPower = 60,
+			JumpGravity = 1.12,
 		},
 	},
-	-- One context-sensitive button: grounded = directional roll, airborne = flip.
+	-- Space again in the air is a double-jump flip; Shift is a slide. There is no
+	-- ground roll (owner, 2026-10-30: removed).
 	Acrobatics = {
-		Roll = {
-			Distance = 12, -- studs covered by the clip's root motion
-			Duration = 0.7, -- seconds to the clip's recover point; sets the playback rate
-			MinRate = 0.8,
-			MaxRate = 2.2,
-			Cooldown = 0.5,
-			JumpCancel = 0.65, -- fraction of the roll after which Jump cancels it
-			FaceInput = false, -- true: always turn into a forward roll
-			WallClearance = 1.5,
-			MaxSpeed = 42,
-		},
 		Flip = {
-			Lift = 14, -- minimum upward speed on a flip; 0 disables
 			MinRate = 0.85,
 			MaxRate = 2.6,
-			BackInputDot = -0.35, -- input this far behind facing selects a backflip
-			DropTime = 0.85, -- seconds to touchdown above which a drop flip (if present) plays
+			-- Owner: a second Space press in the air is a double jump that flips toward
+			-- the keys held (eight ways, as seen on screen). Upward speed it launches with,
+			-- and how soon after leaving the ground it is allowed.
+			DoubleJump = 44,
+			DoubleJumpDelay = 0.1,
+			Buffer = 0.35, -- a second press sooner than the delay is held this long, then fires
 		},
-		LandingRollWindow = 0.18, -- seconds before touchdown that buffer a roll
+		-- Owner (2026-10-29): Shift is a slide, CoD/Rivals style: low and fast, keeping
+		-- momentum, quick to cancel. Jump during it leaps out with its speed; Shift again
+		-- stands up.
+		Slide = {
+			MinSpeed = 12, -- ground speed needed to start
+			Boost = 15, -- start speed: current (at least RunSpeed) plus this
+			MaxSpeed = 46,
+			EndSpeed = 20, -- speed it slows to by Duration
+			Duration = 0.8,
+			Steer = 1.2, -- radians per second it can turn toward the input
+			Cooldown = 0.25, -- between slide starts
+			Buffer = 0.4, -- a press that cannot start yet (airborne, busy, cooldown) waits this long
+			AirDecay = 10, -- studs/s^2 that speed above the run target bleeds in the air
+			CameraDrop = 1.4,
+			WallClearance = 1.2, -- ends the slide this close to a wall ahead
+		},
 	},
 	-- Jump-triggered traversal, adapted from the Place1 movement system (MIT):
 	-- jump into a ledge to climb onto it, jump near a wall in the air to kick off it.
@@ -57,13 +71,14 @@ return table.freeze({
 			Reach = 3.6, -- studs ahead of the root a wall is detected
 			MinHeight = 0.7, -- ledge height above the feet, studs
 			MaxHeight = 5.7,
-			LowHeight = 3.2, -- below: one-hand step vault; above: two-hand climb
-			-- Parkour mantle (one-hand vault, when present) when the jump brings the feet
-			-- within this of the ledge top at its face; further below, a reaching climb.
+			LowHeight = 3.2, -- below: one-hand step-up; above: two-hand climb-up
+			-- Pop-up (MantleVault) when the jump brings the feet within this of the ledge
+			-- top at its face; further below, a step-up or climb-up by height.
 			ParkourReach = 2,
-			Duration = { Base = 0.16, PerStud = 0.025, Min = 0.2, Max = 0.3 }, -- quick, not a climb sequence
-			MaxRate = 5, -- longer clips (motion capture) play up to this fast, then stretch the climb
-			HangHeight = 5, -- at or above: hanging climb clip, when present
+			-- Owner (2026-10-30): 0.2-0.3 s was over before it could be seen; visible and
+			-- frictionless, not slow.
+			Duration = { Base = 0.32, PerStud = 0.05, Min = 0.38, Max = 0.6 },
+			MaxRate = 5, -- a clip longer than Duration plays up to this fast, then stretches the climb
 			HangGap = 0.8, -- root distance from the wall face while the hands plant
 			ExitSpeed = 1, -- fraction of the approach speed kept on top
 			ExitMin = 14,
@@ -88,14 +103,15 @@ return table.freeze({
 			Buffer = 0.35, -- an airborne press too early or out of reach is retried this long
 			LockTime = 0.22, -- seconds the kick owns movement before input resumes
 			RefreshFlip = true, -- a hop restores the airborne flip
-			-- The kick follows the input held on the press: toward the wall leaps up it
-			-- (once per wall per airtime), along it jumps off sideways, away or none
-			-- kicks out. Input counts once its component passes Input.
-			Input = 0.5,
+			-- The kick goes where the input points (camera relative; the camera's facing
+			-- with none), leaving the wall at least asin(MinOut) = 30 degrees out (owner:
+			-- full control of the direction). Input more straight into the wall than UpInto
+			-- (about 32 degrees) leaps up it instead, once per wall per airtime.
+			MinOut = 0.5,
+			UpInto = 0.85,
 			Up = { Speed = 58, Away = 3, Carry = 0.3 },
-			Side = { Speed = 26, Away = 8, Up = 46 },
 		},
-		-- Jumping into a thin, low obstacle at speed vaults over it (needs a Vault clip).
+		-- Jumping into a thin, low obstacle at speed kong-vaults over it.
 		Vault = {
 			MaxHeight = 3.6,
 			MaxDepth = 3.2, -- obstacle thickness
@@ -117,14 +133,20 @@ return table.freeze({
 			MinHeight = 2, -- feet above the ground needed to attach
 			Speed = 26, -- minimum run speed on the wall
 			Rise = { Min = 4, Max = 13, Carry = 0.3 }, -- upward speed on attach: Carry of the jump's, clamped
-			Climb = 11, -- upward speed while Jump is held, easing over ClimbTime into a HeldSlide
-			ClimbTime = 2,
+			-- Jump on a wall run: a press climbs at once and a release within TapTime is a tap
+			-- that kicks off (0.3 s covers ordinary taps; the old 0.2 s needed double taps).
+			-- Held, it climbs at Climb for ClimbTime of holding (owner: the old 2 s taper
+			-- stopped the climb after about a second), then eases over ClimbFade into a
+			-- HeldSlide.
+			TapTime = 0.3,
+			Climb = 11,
+			ClimbTime = 3,
+			ClimbFade = 1,
 			HeldSlide = 2, -- downward speed reached while still holding Jump
 			Slide = 1.5, -- downward speed once Jump is released, growing by SlideGrow per second since
 			SlideGrow = 5,
 			SlideMax = 20,
 			VerticalAccel = 40, -- studs/s^2 toward the climb or slide speed
-			TapTime = 0.2, -- a Jump press released sooner than this kicks off
 			Pull = { Rate = 8, Max = 14, Away = 6 }, -- speed holding the root at Hug distance
 			Release = 8, -- push away from the wall when dropping off
 			Reattach = 0.45, -- seconds before the same wall can be run again
@@ -144,10 +166,27 @@ return table.freeze({
 	Lab = {
 		HurtAmount = 15, -- H: self-damage to preview hit reactions; no combat rules
 		HurtCooldown = 0.5,
+		Aim = false, -- RMB aim pose and click marker; off until aiming is in scope (owner, 2026-10-29)
+		SprintDoubleTap = 0.3, -- seconds between W presses that start a sprint
+	},
+	Avatar = {
+		-- Owner (2026-10-29): the classic R6 rig, as in the reference game. Its limbs are
+		-- single blocks (no hands, elbows or knees) and its arms pivot a quarter of the way
+		-- down, so they swing loose of the shoulder. Clips stay in R15 terms and are
+		-- converted when applied (see Presentation).
+		RigType = "R6",
+		ArmScale = 1.25, -- R15 only: longer upper and lower arms
+		-- Owner (2026-10-30): the legs looked narrow. R6 only: each hip moves this far
+		-- out (studs), so the legs stand apart but stay parallel (no splay). 0.15 looked
+		-- disconnected; this keeps the outer edges nearly flush with the torso.
+		LegSpread = 0.06,
 	},
 	Camera = {
 		Fov = 72,
 		SprintFov = 74,
+		SlideFov = 82,
+		ShiftLock = Vector3.new(1.75, 0, 0), -- camera offset to the right (Roblox's own is 1.75)
+		ShiftLockTurnRate = 30, -- how fast the body turns to the camera under shift lock
 		AimFov = 68,
 		BlendRate = 10,
 		MinZoom = 7,
@@ -156,13 +195,16 @@ return table.freeze({
 	},
 	Animation = {
 		MaxCycleRate = 1.3, -- above this the feet slide instead of faster cadence (longer, calmer strides)
-		MinCycleRate = 0.55,
+		MinCycleRate = 0.85, -- high so braking blends to idle without a slow-motion run (owner: snappy)
 		IdleBlendSpeed = 5,
-		IdleBlendRate = 9, -- how fast the idle/moving mix follows speed
+		IdleBlendRate = 7, -- how fast the idle/moving mix follows speed (owner: no cut into idle)
 		-- Long falls sway gently about the jump clip's apex pose instead of playing a Fall
 		-- clip (seconds of clip either side, and the sway period); nil uses the Fall clip.
 		FallFromJump = { Swing = 0.06, Period = 1.4 },
+		LongFall = { After = 0.6, Blend = 0.6 }, -- seconds falling before the flail fades in, and its fade
+		WalkOff = 0.3, -- seconds over which walking off an edge eases from the run into the fall
 		GroundProbeRadius = 0.85, -- presentation ground check footprint (edges count)
+		StepRise = 30, -- studs/s: rising slower than this from the ground (stairs) stays grounded
 		Fade = { ActionIn = 0.07, ActionOut = 0.2, MantleOut = 0.3, Air = 0.12, Land = 0.08 },
 		Land = {
 			Duration = 0.42,
@@ -178,15 +220,36 @@ return table.freeze({
 		Moves = {
 			Fade = 0.25,
 			FadeOut = 0.35, -- seconds before a transition ends that locomotion takes over
-			Start = { Rate = 1.6, Offset = 0.1, Hold = 0.25, IdleTime = 0.25 },
-			Stop = { MinSpeed = 14, Rate = 1.2, Offset = 0.15 },
-			Turn = { MinSpeed = 14, Dot = -0.4, Rate = 1.5, Hold = 0.45, Window = 0.6 },
 			Crouch = { Rate = 1.5, Fade = 0.3 },
+			-- Idle fidgets, taking turns after standing still After + up to Spread
+			-- seconds. Only their motion is layered on the live idle and eased in and
+			-- out, so the idle never hands over to another stance (owner: no cut in).
+			-- NeckStretch is the owner's Mixamo clip (private; skipped when absent).
+			Fidget = {
+				Clips = { "NeckStretch" },
+				After = 6,
+				Spread = 4,
+				FadeIn = 0.5,
+				FadeOut = 0.6,
+			},
 			InjuredBelow = 0.35, -- health fraction for the injured idle
 		},
-		Lean = { Bank = 0.0016, MaxBank = 0.28, Pitch = 0.0025, MaxPitch = 0.18, Rate = 9 },
-		-- Keeps feet (or the body, for rolls) at each clip's intended floor clearance.
-		GroundContact = { Max = 1.6, Rate = 30 },
+		-- Small caps: a quick reversal spikes both, which read as a skid (owner: sharp turns).
+		Lean = { Bank = 0.0016, MaxBank = 0.1, Pitch = 0.0025, MaxPitch = 0.08, Rate = 9 },
+		-- Keeps feet (or the body, for a slide) at each clip's intended floor clearance.
+		-- Without PullDown, feet only push the body up out of the floor: straight legs
+		-- lift clear in a stride instead of dragging the torso down (owner: steadier).
+		GroundContact = { Max = 1.6, Rate = 30, PullDown = false },
+		-- Owner style: block limbs with no elbows, knees or hands. After every clip, action
+		-- and pose adjustment each limb (upper, lower, end joint) becomes one block aimed
+		-- from its root to its end, so bent-knee stances keep the feet under the body
+		-- instead of tipping the leg forward with the thigh; the lower joints are cleared.
+		FoldLimbs = {
+			{ "LeftShoulder", "LeftElbow", "LeftWrist" },
+			{ "RightShoulder", "RightElbow", "RightWrist" },
+			{ "LeftHip", "LeftKnee", "LeftAnkle" },
+			{ "RightHip", "RightKnee", "RightAnkle" },
+		},
 		AimWeightDuringAction = 0.25,
 		AimRate = 14,
 	},
@@ -197,11 +260,26 @@ return table.freeze({
 		SpawnGrace = 3,
 		StateSettle = 0.35, -- seconds the server waits for replicated ground state
 		-- Clip variants (Name.2, Name.3) of each are also accepted.
-		RollVariants = { "RollForward", "RollBack", "RollLeft", "RollRight", "RollLand" },
-		FlipVariants = { "FlipFront", "FlipBack", "FlipDrop" },
-		MantleVariants = { "MantleLow", "MantleVault", "MantleHigh", "MantleHang", "Vault" },
+		FlipVariants = {
+			"FlipFront",
+			"FlipFrontRight",
+			"FlipRight",
+			"FlipBackRight",
+			"FlipBack",
+			"FlipBackLeft",
+			"FlipLeft",
+			"FlipFrontLeft",
+		},
+		MantleVariants = { "MantleLow", "MantleVault", "MantleHigh", "Vault" },
 		WallHopVariants = { "WallHop", "WallJumpLeft", "WallJumpRight", "WallKickUp" },
 		WallRunVariants = { "WallRunLeft", "WallRunRight" },
+		SlideVariants = { "Slide" },
+		-- Air-boost detection (counted in the SuspectAirBoosts attribute, not corrected): a
+		-- rise in upward speed over Gain between 0.1 s samples while off the ground for
+		-- GroundGrace, with no action accepted within Window of it; or any upward speed over
+		-- MaxRise (the fastest launch is a 62 jump).
+		AirBoost = { Gain = 25, GroundGrace = 0.25, Window = 1, MaxRise = 75 },
 		TraversalSlack = 4, -- studs of replication lag allowed in traversal checks
+		FlipInterval = 0.8, -- a flip this long after the last is accepted even with no landing seen (a double-jump cycle is about 0.9 s)
 	},
 })

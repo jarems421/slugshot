@@ -2,6 +2,96 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v7.8 cleanup pass (2026-10-30)
+
+Automated and offline evidence only. The Studio MCP was not connected in this session, so nothing below ran in Roblox.
+
+- **`python tools/verify_movement.py`: PASS.** Foundation checks; stylua; selene (0 errors, 0 warnings); luau-lsp strict analysis of every movement script with the pinned Roblox definitions (0 errors); public and test builds; private-asset and test isolation.
+- **Type check before fixes: 26 distinct errors.**
+  - Possibly-nil `Humanoid` and `Vector3` upvalues.
+  - Untyped mixed tables (blend anchors and clip specs).
+  - Untyped `GetAttribute` counters.
+  - A dynamic `Enum.HumanoidRigType` lookup.
+  - The runtime-only `PlayerModule` require.
+  - None needed a behaviour change.
+- **Private clips regenerated** with `python tools/build_movement_playtest.py --retarget` (exit 0): 21 clips, against 31 before. Blender printed its usual unsupported "Short" FBX property warnings.
+- **Pose preview tool** (`tools/r6pose/preview.py`) reproduces the v7.4 prototype contacts from the Luau tables:
+  - Kong vault over a 3-stud wall: hands 0.07 below the top and 0.46 past the face at 0.10 s; feet 0.03 above the top at 0.14 s.
+  - Climb-up onto 4.5 studs: hands 1.5-2.2 above the top from 0.30 s as the body passes over.
+- **Back-diagonal blend:** checked because the review suspected a strafe/back-run blend might cancel the leg swing. It does not. The left-hip swing is 89.5° peak to peak at 135°, against 108.1° for the strafe alone and 78.5° for the back-run alone; extremes stay aligned.
+- **Private clip audit on R6** (renders kept in the session scratchpad, not committed). Fourteen clips were checked: jumps, landings, hit reactions, crouch set, injured idle, wall jumps. None is broken. The landing (deep forward slump, arms out) and the crouch set (hunched, arms out) read most like mocap on R6.
+- **Not verified:**
+  - The roll removal, the move-layer cleanup and the new ledge detection (`FloatingLedge`, `NarrowPillar`) have not been checked in Studio.
+  - Neither have the air-boost counter's false-positive rate, two-client replication after the cleanup, or the per-frame savings.
+
+## v5.0 R6 rig and frame-matched run (2026-10-29)
+
+The owner: the limbs in the reference look "disconnected", "free" where they join the body; the torso leans more; "analyse the video better". See [ADR 0008](decisions/0008-r6-rig.md).
+
+| Check | Observed result |
+| --- | --- |
+| Rig | The 5:40 avatar line-up and plain avatars (notDao and Zeno at 2:57, PeepoThe_Frog at 4:16) show classic R6: single-block arms and legs and one torso. Facing is confirmed from accessories in a front view at 3:09 (cat on the left shoulder, bag at the front) |
+| Method | Studio was not reachable from this session (no Studio MCP), so poses were compared offline. A Python solid-block R6 renderer uses the standard R6 joint pivots and the same R15-to-R6 conversion as `Presentation.toR6`, beside every-frame (60 fps) reference crops at matched phases and camera angles |
+| Reference cycle | 0.46-0.47 s per two steps; kick hold about 0.07 s; pass about 0.05 s later. The kicked leg climbs 30-45-70-90° over about 0.1 s; the arm reaches horizontal about 0.05 s before the leg peaks and drops late. Seen from behind, the back-swinging arm sticks out to the side and the kicked leg angles outward. Torso lean is about 35-40° (plain avatars) |
+| Iterations | v4.9 on R6: lean too small, head too upright → 36° with the head following. Shared snap timing: the drop out of the kick was too late and the arm reach too early → per-limb leave/pass/arrive timing. Behind view: arms and legs too tight → outward flare on the back swing (arms 55°, legs 22°) |
+| Other moves on R6 | Rendered through the same conversion: idle, rolls and flips acceptable. Mocap running and standing jumps and the landing clash with the run: knee squats become waist folds and tucks become stiff pikes |
+| Checks | `python tools/verify_movement.py` passes; private lab HUD `MOVEMENT LAB v5.0` |
+
+Not established in Studio: the R6 spawn and physics (stand height, ground checks, traversal heights), the 90° joint-frame conversion on the live rig, peers, and how it all looks in motion. Reference footage, frames and renders stay outside the repository.
+
+## v4.8 pose-to-pose run (2026-10-29)
+
+The owner: v4.7 "looks like a basic Roblox run", not the reference. They also flagged a slow-motion stop with a gap before idle, and a turn clip that kept sliding after a reversal. Arms should be symmetric (the no-knife run).
+
+| Check | Observed result |
+| --- | --- |
+| Reference, closer study | Side-on frames at 2:53.7-2:54.5. Facing was confirmed from the front view at 3:09: dark cat on the left shoulder, bag on the front. Each step holds about 0.1 s in a kick pose (trailing leg straight back near horizontal, planted leg angled forward, opposite arm reaching forward to about horizontal, back arm short), then snaps through the pass. About 0.5 s per two steps, with a forward lean. The v4.6 "outward flare" was a misread of the forward reach seen from behind. That shot has a knife in the right hand, so the arms follow the free left arm, mirrored |
+| v4.7 versus the reference | v4.7 was an even, constant-speed swing about vertical, the same structure as the default R6 run: no holds, no high back kick, no forward reach. Its cadence of about 0.34-0.39 s at Athletic speeds was faster than the reference |
+| Prototype render (v4.8 maths) | Kick holds over frames 0-3 and 7-11 of 16, snaps at 4-5 and 12-15; right leg back at horizontal while the right arm reaches forward, then mirrored; arms close to the sides in the front view |
+| Build | Manifest down to 31 clips (no Start/Stop/StopAim/StopBack/Turn in the generated module). Private lab HUD `MOVEMENT LAB v4.8`; `python tools/verify_movement.py` passes |
+
+Not established in Studio: how the run, stop and reversal look and feel; the actual hip unit (and so the playback rate); the planted foot's contact in the kick hold.
+
+## v4.7 block limbs (2026-10-29)
+
+The owner tested v4.6. Verdict: no elbows, knees or hands. The run was shaky, slid, was not sharp, and was too upright. See [ADR 0007](decisions/0007-block-limbs-and-original-run.md).
+
+| Check | Observed result |
+| --- | --- |
+| Cause of the shake | Ground contact held the lowest foot on the floor. With straight legs at ±60°, both feet rise about 0.5 hip units, so the body was pulled down twice per stride. The forward tier also blended three mocap loops with unaligned cycles |
+| Prototype render | A Python copy of the block-run maths, rendered as a stick figure: straight block limbs; even ±62° legs and ±80° arms on Sprint; arms out to near horizontal on the back swing (front view); 14° lean; body level, feet up to 0.53 hip units clear at the split |
+| Speeds | Natural speed = passing-foot speed: Run 8.98, Sprint 10.70 hip units/s at a 0.433 s cycle. At 2.2 studs per unit, the Athletic profile plays Run at about 1.1x and Sprint at about 1.27x (cap 1.3) |
+| Build | Private manifest down to 36 clips, with no Jog/Run/Sprint/diagonal/strafe entries in the generated module. Private lab rebuilt with HUD `MOVEMENT LAB v4.7`; `python tools/verify_movement.py` passes |
+
+Not established in Studio: the run, crouch, landings and mantles with rigid legs, the real hip-unit size, foot slip at actual speeds, peers, and feel.
+
+## v4.6 reference run (2026-10-29)
+
+The owner tested v4.5 in Studio: "looks horrible". Hands showed and the tucked, planar arms read as a walking stance. The reference is the Huss Valley Runner run (no knife); see [what changed](movement.md#what-changed-in-v46-owner-feedback-on-v45).
+
+| Check | Observed result |
+| --- | --- |
+| Reference frames | yt-dlp download of the owner's link (489 s, 720p60) into ignored `private-assets/reference/`; Blender extracted frames. 2:44.6-2:45.3 (Runner, "PRESS SPACE TO DASH") gave one full cycle from behind; 3:36.9 a side view (that clip is a Catcher holding a knife, so it was used for the arm shape only) |
+| Arm flare only (stroke x1.4) | Run matched the reference's outward back swing. Sprint barely changed even at x1.9: measured left shoulder -10..+38°, because its source arm hardly swings. Rejected in favour of driving the arms from the legs |
+| Arms from legs (v4.6) | Shoulder swing (+ forward): Run -82..+81°, Sprint -75..+82°, SprintForwardLeft -79..+68°, SprintBackLeft -51..+76°, Jog -64..+66°; means within 3° of hanging. Renders show near-horizontal straight strokes flaring out at the back. Lowest ankle 0.00-0.05 hip units in contact frames |
+| Checks | `python tools/verify_movement.py` passes; private lab rebuilt with HUD `MOVEMENT LAB v4.6` |
+
+Not established in Studio: hidden hands on the live rig and on a second client, rolls touching the ground without hands, the wall-run reach, and how the run looks and feels. Aim was disabled by config, not removed.
+
+## v4.5 running style (2026-10-29)
+
+The owner asked for a straight-armed, straight-legged run with long strides that reads as Roblox rather than athletics. Converter-only change; see [what changed](movement.md#what-changed-in-v45-running-style).
+
+| Check | Observed result |
+| --- | --- |
+| Offline render (v4.4 style + straight elbows/knees only) | Stick-figure render of the generated Sprint (approximate R15 proportions; the renderer was first checked on Idle, which stands upright with arms down). Straightening alone left a 35° forward lean and the straight forward arm swung out sideways at shoulder height, because the source pumps across the chest. Rejected |
+| Offline render (planar, no cap) | Run (from Sprint.fbx) swung the straight arms above shoulder height and the forward leg near horizontal. Added a soft cap (`limit`: arms 70°, legs 65°, tanh-shaped) |
+| Offline render (v4.5) | Jog, Run and Sprint: arms hang beside the body and swing forward/back only (front view); the chest leans visibly less; knees near straight; the lowest ankle is 0.00-0.05 hip units above the floor in contact frames (flight frames higher). Jog reads as a pendulum run. Run's back swing still reaches about 70° behind. SprintForwardLeft (before the cap): arm swing follows the turned chest; legs unchanged |
+| Clip speeds | Jog 3.58, Run 8.54, Sprint 10.10 hip units/s (scaled by the 1.4 leg swing, so cadence drops at a given speed) |
+| Checks | `python tools/verify_movement.py` passes; `build_movement_playtest.py --retarget` rebuilt the private lab |
+
+Not established: how it looks on the real rig in Studio, foot slip at actual speeds, transitions into and out of the restyled loops, and feel in hand. The renders show private clip data, so they stay in local temporary storage outside the repository.
+
 ## v4.4 owner feedback pass (2026-10-29)
 
 Changes from the owner's v4.3 playtest ([ADR 0006 addendum](decisions/0006-wall-run-and-v4-feedback.md#addendum-v44-same-day)), tested with real key presses in the private lab. [Sanitized evidence](evidence/2026-10-29-movement-v4.4.json).

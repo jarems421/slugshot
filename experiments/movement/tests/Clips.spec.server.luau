@@ -48,22 +48,35 @@ local blended = Clips.blend(
 )
 local _, blendYaw = blended.Waist:ToOrientation()
 assert(math.abs(blendYaw - math.pi / 8) < 1e-3, "Blend weights need not be normalized")
+
+-- Layering adds only the clip's motion since its first frame, so the base stance stays.
+local base = { Waist = CFrame.Angles(0.3, 0, 0), LeftHip = CFrame.Angles(0, 0, 0.2) }
+local start = Clips.layer(base, clip, 0, 1)
+assert(
+	start.Waist:FuzzyEq(base.Waist) and start.LeftHip == base.LeftHip,
+	"Layering starts on the base"
+)
+local _, layerYaw = (base.Waist:Inverse() * Clips.layer(base, clip, 0.1, 0.5).Waist):ToOrientation()
+assert(math.abs(layerYaw - math.pi / 4) < 1e-3, "Layering scales the clip's motion by weight")
 local original = Clips.load()
 for _, name in
-	{ "Idle", "Run", "Sprint", "RunBack", "StrafeLeft", "StrafeRight", "Jump", "Fall", "Land" }
+	{ "Stand", "Run", "Sprint", "RunBack", "StrafeLeft", "StrafeRight", "Jump", "Air", "Land" }
 do
 	assert(original[name], "Original clip missing: " .. name)
 end
-for _, name in { "RollForward", "RollBack", "RollLeft", "RollRight" } do
-	local roll = original[name]
-	local travel = Clips.motion(roll, roll.events.recover):Dot(roll.direction)
-	assert(roll.contact == "body" and travel > 1, name .. " must travel along its direction")
+assert(original.Slide and original.Slide.contact == "body", "Slide keeps the body on the floor")
+-- Every clip the client can request is original, so the public build has them all.
+local Validation = require(shared.Config).Validation
+for _, list in { Validation.FlipVariants, Validation.MantleVariants, Validation.SlideVariants } do
+	for _, name in list do
+		assert(original[name], "Requested clip missing: " .. name)
+	end
 end
 for _, name in { "FlipFront", "FlipBack" } do
 	local events = original[name].events
 	assert(events.takeoff < events.apex and events.apex < events.land, name .. " air events")
 end
-for _, name in { "MantleLow", "MantleHigh" } do
+for _, name in { "MantleLow", "MantleHigh", "MantleVault" } do
 	local mantle = original[name]
 	assert(mantle and mantle.climb, name .. " needs a climb curve")
 	local first, last = Clips.climb(mantle, 0), Clips.climb(mantle, mantle.duration)
@@ -78,11 +91,19 @@ for _, name in { "MantleLow", "MantleHigh" } do
 		previous = value
 	end
 end
+local kong = Clips.climb(original.Vault, original.Vault.duration)
+assert(kong.X > 0.999 and kong.Y < 1e-3, "The kong vault ends past the wall, back down")
 assert(original.WallHop and not original.WallHop.climb, "Wall hop clip present")
 local synthetic = Clips.climb(clip, clip.duration / 2)
 assert(math.abs(synthetic.X - 0.5) < 1e-3, "Clips without a climb curve ease evenly")
-local _, turn = original.FlipFront.joints.Root[original.FlipFront.frames // 2]:ToAxisAngle()
-assert(turn > math.pi / 2, "Front flip rotates the body through the air")
+for _, name in { "FlipFront", "FlipRight", "FlipBackLeft" } do
+	local turn = 0
+	for _, frame in original[name].joints.Root do
+		local _, angle = frame:ToAxisAngle()
+		turn = math.max(turn, angle)
+	end
+	assert(turn > math.pi * 0.9, name .. " turns the body over in the air")
+end
 for name, entry in original do
 	for joint, frames in entry.joints do
 		for _, frame in frames do
@@ -100,7 +121,7 @@ assert(
 )
 assert(Clips.pick(library, "Missing", 1) == nil, "Pick of an absent clip is nil")
 assert(
-	Clips.baseName("FlipFront.2") == "FlipFront" and Clips.baseName("Roll") == "Roll",
+	Clips.baseName("FlipFront.2") == "FlipFront" and Clips.baseName("Slide") == "Slide",
 	"Variant base names"
 )
 print(

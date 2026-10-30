@@ -52,6 +52,11 @@ function Arena.create(): Model
 			if i % 2 == 0 then amber else blue
 		)
 	end
+	-- Detection checks (east of spawn): a thin floating slab (top 5 studs up, 1 thick,
+	-- nothing under it) and a narrow pillar (1.6 wide; approach along Z), both mantled
+	-- by jumping into them.
+	block("FloatingLedge", Vector3.new(10, 1, 6), CFrame.new(24, 4.5, 50), amber)
+	block("NarrowPillar", Vector3.new(1.6, 4, 3), CFrame.new(38, 2, 50), blue)
 	-- Wall-run corridor: two long facing walls (east of the ledges) to run along and
 	-- kick between.
 	block("RunWallWest", Vector3.new(2, 40, 160), CFrame.new(94, 20, 0), amber)

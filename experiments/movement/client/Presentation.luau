@@ -1,8 +1,8 @@
 --!strict
 -- Clip-driven R15 presentation for every character: directional locomotion whose
 -- cadence follows ground speed, crouch, physics-driven jump/fall, tiered landings,
--- one-shot transitions (start, stop, turn, crouch, settle, fidget, flinch),
--- roll/flip/mantle/vault/wall-hop actions, lean and ground-contact correction.
+-- one-shot transitions (crouch, settle, fidget, flinch), flip/mantle/vault/
+-- wall-hop/wall-run/slide actions, lean and ground-contact correction.
 -- Physics root and camera never rotate. Clips come from Clips.load (original,
 -- optionally private overrides and variants).
 local Players = game:GetService("Players")
@@ -23,6 +23,7 @@ type Link = {
 	c1: CFrame,
 	half: Vector3,
 	foot: boolean,
+	hidden: boolean,
 }
 
 local A = Config.Animation
@@ -39,7 +40,9 @@ local function parts(joint: AnimationJoint): (Instance?, Instance?)
 		constraint.Attachment1 and constraint.Attachment1.Parent
 end
 
--- Joint chain ordered from the root so forward kinematics needs one pass.
+-- Joint chain ordered from the root so forward kinematics needs one pass. Poses
+-- rotate parts about each joint's pivot in the parent's axes, so only the pivot
+-- positions enter here; see jointFrames for R6's rotated joint frames.
 local function buildChain(joints: { [string]: AnimationJoint }): { Link }
 	local byParent: { [string]: { Link } } = {}
 	for name, joint in joints do
@@ -49,10 +52,13 @@ local function buildChain(joints: { [string]: AnimationJoint }): { Link }
 				joint = name,
 				parent = parent.Name,
 				child = child.Name,
-				c0 = Clips.attachmentFrame(joint, "0"),
-				c1 = Clips.attachmentFrame(joint, "1"):Inverse(),
+				c0 = CFrame.new(Clips.attachmentFrame(joint, "0").Position),
+				c1 = CFrame.new(-Clips.attachmentFrame(joint, "1").Position),
 				half = child.Size / 2,
-				foot = child.Name:sub(-4) == "Foot",
+				foot = child.Name:sub(-4) == "Foot"
+					or child.Name == "Left Leg"
+					or child.Name == "Right Leg",
+				hidden = child.Transparency >= 1,
 			}
 			byParent[link.parent] = byParent[link.parent] or {}
 			table.insert(byParent[link.parent], link)
@@ -62,7 +68,8 @@ local function buildChain(joints: { [string]: AnimationJoint }): { Link }
 	local queue = { "HumanoidRootPart" }
 	while #queue > 0 do
 		local part = table.remove(queue, 1) :: string
-		for _, link in byParent[part] or {} do
+		local links: { Link } = byParent[part] or {}
+		for _, link in links do
 			table.insert(chain, link)
 			table.insert(queue, link.child)
 		end
@@ -80,7 +87,7 @@ local function lowestPoint(chain: { Link }, pose: Pose, feetOnly: boolean): numb
 		if parent then
 			local frame = parent * link.c0 * (pose[link.joint] or IDENTITY) * link.c1
 			framesScratch[link.child] = frame
-			if link.foot or not feetOnly then
+			if link.foot or not (feetOnly or link.hidden) then
 				local h = link.half
 				local extent = h.X * math.abs(frame.XVector.Y)
 					+ h.Y * math.abs(frame.YVector.Y)
@@ -97,6 +104,60 @@ local function smoothstep(x: number): number
 	return x * x * (3 - 2 * x)
 end
 
+-- R6 joints carry a 90-degree turn in both C0 and C1 (R15's are pure offsets), so a
+-- pose rotation is wrapped into each joint's own frame: Transform = C0r^-1 * pose * C1r.
+local function jointFrames(joint: AnimationJoint): { CFrame }
+	return {
+		Clips.attachmentFrame(joint, "0").Rotation:Inverse(),
+		Clips.attachmentFrame(joint, "1").Rotation,
+	}
+end
+
+-- A two-segment limb as one block: aim it from its root to its end (segments of
+-- equal length), turning the upper segment by the least rotation so it keeps its twist.
+local DOWN = Vector3.new(0, -1, 0)
+local function chord(upper: CFrame?, lower: CFrame?): CFrame
+	local u = (upper or IDENTITY).Rotation
+	if not lower then
+		return u
+	end
+	local along = u:VectorToWorldSpace(DOWN)
+	local target = along + (u * lower.Rotation):VectorToWorldSpace(DOWN)
+	if target.Magnitude < 1e-6 then
+		return u
+	end
+	target = target.Unit
+	local axis = along:Cross(target)
+	if axis.Magnitude < 1e-9 then
+		return u
+	end
+	return CFrame.fromAxisAngle(axis.Unit, math.acos(math.clamp(along:Dot(target), -1, 1))) * u
+end
+
+-- Clips stay in R15 terms. R6 has one torso and no elbows, knees, wrists or ankles:
+-- the torso takes Root then Waist, turning about the hips and waist as on R15 (the R6
+-- joint pivots at the torso's centre); the legs are re-expressed against that torso;
+-- arms and neck carry over. Points are in torso space.
+local R6_HIPS = Vector3.new(0, -1, 0)
+local R6_WAIST = Vector3.new(0, -0.6, 0)
+local function about(rotation: CFrame, point: Vector3): CFrame
+	return CFrame.new(point) * rotation * CFrame.new(-point)
+end
+local function toR6(pose: Pose, out: Pose): Pose
+	local root = pose.Root or IDENTITY
+	local waist = (pose.Waist or IDENTITY).Rotation
+	local unwaist = waist:Inverse()
+	out.RootJoint = CFrame.new(root.Position)
+		* about(root.Rotation, R6_HIPS)
+		* about(waist, R6_WAIST)
+	out.Neck = pose.Neck or IDENTITY
+	out["Left Shoulder"] = pose.LeftShoulder or IDENTITY
+	out["Right Shoulder"] = pose.RightShoulder or IDENTITY
+	out["Left Hip"] = unwaist * (pose.LeftHip or IDENTITY).Rotation
+	out["Right Hip"] = unwaist * (pose.RightHip or IDENTITY).Rotation
+	return out
+end
+
 local function signedYaw(from: Vector3, to: Vector3): number
 	return math.atan2(from.Z * to.X - from.X * to.Z, from.X * to.X + from.Z * to.Z)
 end
@@ -107,7 +168,7 @@ function Presentation.start(clips: Clips.Library)
 	params.FilterType = Enum.RaycastFilterType.Exclude
 
 	local function refreshFilter()
-		local list = {}
+		local list: { Instance } = {}
 		for character in rigs do
 			table.insert(list, character)
 		end
@@ -125,6 +186,11 @@ function Presentation.start(clips: Clips.Library)
 			end
 		end
 		rig.joints = joints
+		rig.r6 = joints.RootJoint ~= nil
+		rig.frames = {}
+		for name, joint in joints do
+			rig.frames[name] = jointFrames(joint)
+		end
 		rig.chain = buildChain(joints)
 		-- Rest feet rest on the floor, so this is the floor height in root space.
 		rig.ground = lowestPoint(rig.chain, {}, true)
@@ -133,7 +199,7 @@ function Presentation.start(clips: Clips.Library)
 		-- wall-run hand.
 		for _, link in rig.chain do
 			local parent = framesScratch[link.parent]
-			if link.joint == "LeftShoulder" and parent then
+			if (link.joint == "LeftShoulder" or link.joint == "Left Shoulder") and parent then
 				local shoulder = (parent * link.c0).Position
 				rig.shoulder = Vector2.new(math.abs(shoulder.X), shoulder.Y)
 			end
@@ -142,8 +208,15 @@ function Presentation.start(clips: Clips.Library)
 		local upper = character:FindFirstChild("LeftUpperArm") :: BasePart?
 		local lower = character:FindFirstChild("LeftLowerArm") :: BasePart?
 		local hand = character:FindFirstChild("LeftHand") :: BasePart?
+		local arm = character:FindFirstChild("Left Arm") :: BasePart?
+		local shoulderJoint = joints["Left Shoulder"]
 		if upper and lower and hand then
-			rig.armLength = upper.Size.Y + lower.Size.Y + hand.Size.Y * 0.5
+			rig.armLength = upper.Size.Y
+				+ lower.Size.Y
+				+ (if hand.Transparency < 1 then hand.Size.Y * 0.5 else 0)
+		elseif arm and shoulderJoint then
+			-- R6: from the pivot, a quarter of the way down, to the arm's end.
+			rig.armLength = arm.Size.Y / 2 + Clips.attachmentFrame(shoulderJoint, "1").Y
 		end
 		rig.character:SetAttribute("PresentationJointCount", count)
 	end
@@ -175,13 +248,9 @@ function Presentation.start(clips: Clips.Library)
 			health = humanoid.Health,
 			crouched = false,
 			aiming = false,
-			idleSince = 0,
+			fidgetAt = workspace:GetServerTimeNow() + A.Moves.Fidget.After,
+			fidgets = 0,
 			moveMix = 0,
-			fastAt = -math.huge,
-			fastBack = false,
-			stopped = true,
-			wasMoving = false,
-			runDirection = nil,
 			actionStamp = character:GetAttribute("MovementActionTime"),
 			action = nil,
 			fade = nil,
@@ -246,17 +315,15 @@ function Presentation.start(clips: Clips.Library)
 		rig.fade = { from = table.clone(rig.output), start = now, duration = duration }
 	end
 
-	-- Forward clips by speed: jog (if present) -> run -> sprint.
+	-- Forward clips by speed: run -> sprint.
 	local function forwardTier(speed: number, profile: any): { { any } }
+		local run, sprint = clips.Run, clips.Sprint
 		local points = {}
-		if clips.Jog then
-			table.insert(points, { profile.RunSpeed * 0.45, clips.Jog })
+		if run then
+			table.insert(points, { profile.RunSpeed * 0.92, run })
 		end
-		if clips.Run then
-			table.insert(points, { profile.RunSpeed * 0.92, clips.Run })
-		end
-		if clips.Sprint and profile.SprintSpeed > profile.RunSpeed + 0.1 then
-			table.insert(points, { profile.SprintSpeed, clips.Sprint })
+		if sprint and profile.SprintSpeed > profile.RunSpeed + 0.1 then
+			table.insert(points, { profile.SprintSpeed, sprint })
 		end
 		if #points == 0 then
 			return {}
@@ -276,11 +343,11 @@ function Presentation.start(clips: Clips.Library)
 
 	-- Directional anchors (degrees from facing, + right) with the clips each blends.
 	local function anchors(crouched: boolean, front: { { any } }): { { any } }
-		local list = {}
+		local list: { { any } } = {}
 		local function add(angle: number, name: string)
 			local clip = clips[name]
 			if clip then
-				table.insert(list, { angle, { { clip, 1 } } })
+				table.insert(list, { angle, { { clip, 1 } :: { any } } } :: { any })
 			end
 		end
 		if crouched then
@@ -291,17 +358,11 @@ function Presentation.start(clips: Clips.Library)
 			return list
 		end
 		if #front > 0 then
-			table.insert(list, { 0, front })
+			table.insert(list, { 0, front } :: { any })
 		end
-		add(45, "SprintForwardRight")
-		add(-45, "SprintForwardLeft")
 		add(90, "StrafeRight")
 		add(-90, "StrafeLeft")
-		add(135, "SprintBackRight")
-		add(-135, "SprintBackLeft")
-		if not (clips.SprintBackRight and clips.SprintBackLeft) then
-			add(180, "RunBack")
-		end
+		add(180, "RunBack")
 		return list
 	end
 
@@ -378,7 +439,7 @@ function Presentation.start(clips: Clips.Library)
 		local idle = if crouched
 			then clips.CrouchIdle
 			elseif injured and clips.IdleInjured then clips.IdleInjured
-			else clips.Idle
+			else clips.Stand
 		-- Braking reaches zero in a fraction of a second, so the idle mix eases
 		-- toward its speed-based target instead of snapping with it.
 		local target = smoothstep(speed / A.IdleBlendSpeed)
@@ -414,8 +475,12 @@ function Presentation.start(clips: Clips.Library)
 
 	-- Airborne: rise through the jump clip as vertical speed decays, carry the
 	-- apex, then reach for the ground over the clip's final air time.
+	-- Real jumps play the mocap running jump (owner's choice); walking off an edge uses
+	-- the calm original R6 Air clip instead of the jump's arm-up apex.
 	local function airborne(rig: any, now: number, vy: number, height: number): (Pose?, string)
-		local jump = rig.jumpClip or clips.Jump
+		local jump = if rig.jumped
+			then rig.jumpClip or clips.Jump
+			else clips.Air or rig.jumpClip or clips.Jump
 		local events = if jump then jump.events else {}
 		local takeoff, apex, land = events.takeoff, events.apex, events.land
 		if jump and takeoff and apex and land then
@@ -439,9 +504,20 @@ function Presentation.start(clips: Clips.Library)
 			local sway = A.FallFromJump
 			if sway then
 				-- Long falls stay in the jump's own look: a slow sway about its apex.
-				local phase = (now - rig.airStart) * 2 * math.pi / sway.Period
-				return Clips.sample(jump, apex + sway.Swing * math.sin(phase), scratch(rig, 13)),
-					"fall"
+				local fallTime = now - rig.airStart
+				local phase = fallTime * 2 * math.pi / sway.Period
+				local pose =
+					Clips.sample(jump, apex + sway.Swing * math.sin(phase), scratch(rig, 13))
+				-- Only long falls flail (owner: short drops looked like skyscraper falls).
+				local flail = if clips.FallLong and not rig.jumped
+					then smoothstep((fallTime - A.LongFall.After) / A.LongFall.Blend)
+					else 0
+				if flail > 0 then
+					local long =
+						Clips.sample(clips.FallLong :: Clips.Clip, fallTime, scratch(rig, 23))
+					pose = Clips.blend({ pose, long }, { 1 - flail, flail }, scratch(rig, 25))
+				end
+				return pose, "fall"
 			end
 		end
 		if clips.Fall then
@@ -460,15 +536,7 @@ function Presentation.start(clips: Clips.Library)
 
 	-- One-shot transitions over grounded locomotion.
 	local Moves = A.Moves
-	local function startMove(
-		rig: any,
-		kind: string,
-		clip: Clips.Clip?,
-		now: number,
-		rate: number?,
-		offset: number?,
-		hold: number?
-	)
+	local function startMove(rig: any, kind: string, clip: Clips.Clip?, now: number, rate: number?)
 		if not clip then
 			return
 		end
@@ -477,14 +545,12 @@ function Presentation.start(clips: Clips.Library)
 			clip = clip,
 			start = now,
 			rate = rate or 1,
-			offset = offset or 0,
-			hold = hold,
 		}
 		startFade(rig, Moves.Fade, now)
 	end
 
-	-- Picks transitions from what the body is doing (speed, turns, crouch, aim,
-	-- health), so observers derive the same ones from replicated state.
+	-- Picks transitions from what the body is doing (crouch, aim, health, standing
+	-- still), so observers derive the same ones from replicated state.
 	local function watchMoves(rig: any, now: number, flat: Vector3, grounded: boolean)
 		local character, humanoid = rig.character, rig.humanoid
 		local speed = flat.Magnitude
@@ -496,13 +562,13 @@ function Presentation.start(clips: Clips.Library)
 		rig.health = health
 		local wasCrouched, wasAiming = rig.crouched, rig.aiming
 		rig.crouched, rig.aiming = crouched, aiming
-		local idleFor = now - rig.idleSince
-		if speed > 1 or aiming or crouched or not grounded then
-			rig.idleSince = now
+		local fidget = Moves.Fidget
+		local injured = health < humanoid.MaxHealth * Moves.InjuredBelow
+		if speed > 1 or aiming or crouched or injured or not grounded or rig.action then
+			rig.fidgetAt = now + fidget.After + math.random() * fidget.Spread
 		end
 		if not grounded or rig.action then
 			rig.move = nil
-			rig.wasMoving = speed > 1
 			return
 		end
 		if hurt then
@@ -519,46 +585,20 @@ function Presentation.start(clips: Clips.Library)
 			end
 		elseif wasAiming and not aiming and speed < 1 and not crouched then
 			startMove(rig, "Settle", clips.AimSettle, now)
-		elseif not rig.wasMoving and speed > 1 and not crouched then
-			if idleFor > Moves.Start.IdleTime then
-				local start = Moves.Start
-				startMove(rig, "Start", clips.Start, now, start.Rate, start.Offset, start.Hold)
+		elseif speed < 0.5 and not rig.move and now > rig.fidgetAt then
+			-- The idle fidgets take turns, layered on the live idle so it keeps going.
+			rig.fidgets += 1
+			local clip = clips[fidget.Clips[(rig.fidgets - 1) % #fidget.Clips + 1]]
+			startMove(rig, "Fidget", clip, now)
+			if clip and rig.move then
+				rig.move.fadeIn, rig.move.fadeOut = fidget.FadeIn, fidget.FadeOut
+				rig.move.additive = true
 			end
-		elseif speed > Moves.Turn.MinSpeed and not aiming and not crouched then
-			-- A reversal passes through a stop: compare with the last fast direction.
-			local direction = flat.Unit
-			if
-				rig.runDirection
-				and direction:Dot(rig.runDirection) < Moves.Turn.Dot
-				and now - rig.fastAt < Moves.Turn.Window
-			then
-				local turn = Moves.Turn
-				startMove(rig, "Turn", clips.Turn, now, turn.Rate, 0, turn.Hold)
-				rig.runDirection = direction
-			end
-		elseif speed < 4 and now - rig.fastAt < 0.35 and not crouched and not rig.stopped then
-			rig.stopped = true
-			local stop = Moves.Stop
-			local clip = if rig.fastBack and clips.StopBack
-				then clips.StopBack
-				elseif aiming and clips.StopAim then clips.StopAim
-				else clips.Stop
-			startMove(rig, "Stop", clip, now, stop.Rate, stop.Offset)
+			rig.fidgetAt = now
+				+ (if clip then clip.duration else 0)
+				+ fidget.After
+				+ math.random() * fidget.Spread
 		end
-		if speed > Moves.Stop.MinSpeed then
-			rig.fastAt = now
-			rig.stopped = false
-			rig.fastBack = rig.root.CFrame.LookVector:Dot(flat) < -0.3 * speed
-		end
-		if speed > Moves.Turn.MinSpeed then
-			local direction = flat.Unit
-			rig.runDirection = if rig.runDirection
-				then (rig.runDirection:Lerp(direction, 0.15)).Unit
-				else direction
-		elseif now - rig.fastAt > Moves.Turn.Window then
-			rig.runDirection = nil
-		end
-		rig.wasMoving = speed > 1
 	end
 
 	-- Plays the current transition over the base pose; returns the blended pose.
@@ -575,33 +615,44 @@ function Presentation.start(clips: Clips.Library)
 		end
 		local character = rig.character
 		local elapsed = now - move.start
-		local t = move.offset + elapsed * move.rate
+		local t = elapsed * move.rate
 		local kind = move.kind
-		local cancel = (kind == "Start" and speed < 1)
-			or (kind == "Stop" and speed > 6)
-			or (kind == "Settle" and (speed > 1.5 or character:GetAttribute("Aiming")))
+		local cancel = (kind == "Settle" and (speed > 1.5 or character:GetAttribute("Aiming")))
+			or (
+				kind == "Fidget"
+				and (
+					speed > 1.5
+					or character:GetAttribute("Aiming")
+					or character:GetAttribute("Crouching")
+				)
+			)
 		local weight = 1
-		if move.hold then
-			weight = 1 - smoothstep((elapsed - move.hold) / Moves.Fade)
-		elseif kind == "Flinch" then
+		if kind == "Flinch" then
 			weight = 1 - 0.5 * smoothstep(speed / A.IdleBlendSpeed)
+		end
+		if move.fadeIn then
+			weight *= smoothstep(elapsed / move.fadeIn)
 		end
 		-- Hand back to locomotion over the clip's last moments instead of at its end.
 		local remaining = (move.clip.duration - t) / move.rate
-		weight *= smoothstep(remaining / Moves.FadeOut)
-		if cancel or t >= move.clip.duration or weight <= 0 then
+		weight *= smoothstep(remaining / (move.fadeOut or Moves.FadeOut))
+		if cancel or t >= move.clip.duration or (weight <= 0 and elapsed > (move.fadeIn or 0)) then
 			rig.move = nil
 			if weight > 0 then
 				startFade(rig, Moves.Fade, now)
 			end
 			return pose, floor
 		end
+		if move.additive then
+			return Clips.layer(pose, move.clip, t, weight, scratch(rig, 20)), floor
+		end
 		local movePose = Clips.sample(move.clip, t, scratch(rig, 19))
 		local result = Clips.blend({ pose, movePose }, { 1 - weight, weight }, scratch(rig, 20))
 		return result, floor + (Clips.floor(move.clip, t) - floor) * weight
 	end
 
-	local ACTIONS = { Roll = true, Flip = true, Mantle = true, WallHop = true }
+	local ACTIONS = { Flip = true, Mantle = true, WallHop = true, Slide = true }
+	local Slide = Config.Acrobatics.Slide
 	local function startAction(rig: any, stamp: number, now: number)
 		local character = rig.character
 		local kind = character:GetAttribute("MovementAction")
@@ -630,14 +681,6 @@ function Presentation.start(clips: Clips.Library)
 			-- The kick is a fresh rise: hand the jump clip's rise/apex logic over.
 			rig.jumped, rig.airVy0, rig.apexTime = true, Config.Traversal.WallHop.UpSpeed, now
 		end
-		local yaw = 0
-		if kind == "Roll" then
-			local direction = character:GetAttribute("MovementDirection")
-			if typeof(direction) == "Vector3" then
-				local localDirection = rig.root.CFrame:VectorToObjectSpace(direction)
-				yaw = signedYaw(clip.direction, Vector3.new(localDirection.X, 0, localDirection.Z))
-			end
-		end
 		local rate = character:GetAttribute("MovementRate")
 		rig.action = {
 			kind = kind,
@@ -647,7 +690,6 @@ function Presentation.start(clips: Clips.Library)
 			start = if character == Players.LocalPlayer.Character then stamp else now,
 			rate = if typeof(rate) == "number" then rate else 1,
 			offset = if kind == "Flip" or kind == "WallHop" then clip.events.takeoff or 0 else 0,
-			yaw = yaw,
 		}
 		startFade(rig, A.Fade.ActionIn, now)
 	end
@@ -686,7 +728,7 @@ function Presentation.start(clips: Clips.Library)
 		local character, root, humanoid = rig.character, rig.root, rig.humanoid
 		local velocity = root.AssemblyLinearVelocity
 		local flat = Vector3.new(velocity.X, 0, velocity.Z)
-		local stand = humanoid.HipHeight + root.Size.Y / 2
+		local stand = Clips.standHeight(humanoid, root)
 		-- A sphere about the body's footprint, so standing on an edge (centre over
 		-- the drop) still finds the ledge under the feet.
 		local hit = workspace:Spherecast(
@@ -696,7 +738,10 @@ function Presentation.start(clips: Clips.Library)
 			params
 		)
 		local height = if hit then root.Position.Y - hit.Position.Y - stand else math.huge
-		local grounded = height < 0.4 and velocity.Y < 6
+		-- Stairs and slopes lift the body without a jump (owner: an arm stuck up running
+		-- upstairs, from the jump pose): stay grounded while rising slower than a launch.
+		local grounded = height < 0.4
+			and (velocity.Y < 6 or (rig.grounded and velocity.Y < A.StepRise))
 
 		-- Ground/air transitions.
 		if grounded ~= rig.grounded then
@@ -722,7 +767,8 @@ function Presentation.start(clips: Clips.Library)
 				startFade(rig, A.Fade.Land, now)
 			else
 				rig.airStart = now
-				rig.jumped = velocity.Y > 10
+				-- A launch, not stairs: stepping off the top of a staircase can rise past 10.
+				rig.jumped = velocity.Y > A.StepRise
 				rig.airVy0 = velocity.Y
 				rig.airState = ""
 				rig.jumpClip = if rig.jumped then chooseJump(flat, now) else nil
@@ -765,15 +811,25 @@ function Presentation.start(clips: Clips.Library)
 		else
 			local airPose, state = airborne(rig, now, velocity.Y, height)
 			if state ~= rig.airState then
-				if rig.airState ~= "" then
+				-- A jump's takeoff eases in too; walk-offs blend from the run below.
+				if rig.airState ~= "" or rig.jumped then
 					startFade(rig, A.Fade.Air, now)
 				end
 				rig.airState = state
 			end
 			pose = airPose or locomotion(rig, dt, now, flat)
+			-- Walking off an edge keeps running for a moment and eases into the fall
+			-- (owner: stepping off stairs cut straight to falling; wall-run kicks are
+			-- smooth). Short drops down stairs stay in the run.
+			local walkOff = now - rig.airStart
+			if airPose and not rig.jumped and walkOff < A.WalkOff then
+				local running = locomotion(rig, dt, now, flat)
+				local weight = smoothstep(walkOff / A.WalkOff)
+				pose = Clips.blend({ running, airPose }, { 1 - weight, weight }, scratch(rig, 26))
+			end
 		end
 
-		-- Action layer (roll/flip) replaces the base pose; fades cover entry/exit.
+		-- Action layer (flip, mantle, kick, slide) replaces the base pose; fades cover entry/exit.
 		local action = rig.action
 		local actionWeight = 0
 		if action and action.kind == "WallRun" then
@@ -799,15 +855,19 @@ function Presentation.start(clips: Clips.Library)
 			local clip = action.clip
 			local t = action.offset + (now - action.start) * action.rate
 			local finished
-			if action.kind == "Roll" then
-				local recover = clip.events.recover or clip.duration
-				finished = t >= clip.duration
-					or (t >= recover and flat.Magnitude > A.IdleBlendSpeed)
-					or not grounded and now - action.start > 0.25
-			elseif action.kind == "Mantle" then
+			if action.kind == "Mantle" then
 				finished = t >= clip.duration
 			elseif action.kind == "WallHop" then
 				finished = t >= clip.duration or (grounded and now - action.start > 0.1)
+			elseif action.kind == "Slide" then
+				-- The owner's client marks its own end (jump or Shift cancel); observers end
+				-- on leaving the ground or slowing down.
+				local elapsed = now - action.start
+				local ended = character:GetAttribute("MovementActionEnd")
+				finished = elapsed >= Slide.Duration
+					or (typeof(ended) == "number" and ended >= action.start)
+					or (not grounded and elapsed > 0.12)
+					or (elapsed > 0.2 and flat.Magnitude < Slide.EndSpeed * 0.6)
 			else
 				action.airborne = action.airborne or not grounded
 				finished = t >= (clip.events.land or clip.duration)
@@ -823,11 +883,7 @@ function Presentation.start(clips: Clips.Library)
 					now
 				)
 			else
-				local actionPose = Clips.sample(clip, t, scratch(rig, 17))
-				if action.yaw ~= 0 then
-					actionPose.Root = CFrame.Angles(0, action.yaw, 0) * actionPose.Root
-				end
-				pose = actionPose
+				pose = Clips.sample(clip, t, scratch(rig, 17))
 				actionWeight = 1
 				floor, contact = Clips.floor(clip, t), clip.contact
 			end
@@ -881,25 +937,33 @@ function Presentation.start(clips: Clips.Library)
 		rig.bank += (bankTarget - rig.bank) * leanAlpha
 		rig.pitch += (pitchTarget - rig.pitch) * leanAlpha
 
+		for _, limb in A.FoldLimbs do
+			pose[limb[1]] = chord(pose[limb[1]], pose[limb[2]])
+			pose[limb[2]], pose[limb[3]] = nil, nil
+		end
+
 		-- Root: clip translation is in hip units.
 		local rootPose = pose.Root or IDENTITY
 		rootPose = CFrame.new(rootPose.Position * rig.unit) * rootPose.Rotation
 		rootPose = CFrame.Angles(rig.pitch, 0, rig.bank) * rootPose
 
-		-- Ground contact: keep the feet (or, for rolls, the whole body) at the clip's
+		-- Ground contact: keep the feet (or, for a slide, the whole body) at the clip's
 		-- intended clearance using the real rig's proportions.
 		pose.Root = rootPose
+		local rigPose = if rig.r6 then toR6(pose, scratch(rig, 24)) else pose
+		local rootJoint = if rig.r6 then "RootJoint" else "Root"
 		local correction = 0
 		if contact then
-			local lowest = lowestPoint(rig.chain, pose, contact == "feet")
+			local lowest = lowestPoint(rig.chain, rigPose, contact == "feet")
+			local pullDown = contact ~= "feet" or A.GroundContact.PullDown
 			correction = math.clamp(
 				rig.ground + floor * rig.unit - lowest,
-				-A.GroundContact.Max,
+				if pullDown then -A.GroundContact.Max else 0,
 				A.GroundContact.Max
 			)
 		end
 		rig.footOffset += (correction - rig.footOffset) * Math.alpha(A.GroundContact.Rate, dt)
-		pose.Root = CFrame.new(0, rig.footOffset, 0) * rootPose
+		rigPose[rootJoint] = CFrame.new(0, rig.footOffset, 0) * (rigPose[rootJoint] or IDENTITY)
 
 		-- Apply with an optional crossfade from the last rendered pose.
 		local fade = rig.fade
@@ -911,31 +975,39 @@ function Presentation.start(clips: Clips.Library)
 			end
 		end
 		for name, joint in rig.joints do
-			local value = pose[name] or IDENTITY
+			local value = rigPose[name] or IDENTITY
 			if fade and fadeAlpha < 1 then
 				value = (fade.from[name] or IDENTITY):Lerp(value, fadeAlpha)
 			end
 			rig.output[name] = value
-			joint.Transform = value
+			local frames = rig.frames[name]
+			joint.Transform = frames[1] * value * frames[2]
 		end
-		character:SetAttribute("RenderedAction", if action and rig.action then action.kind else "")
-		character:SetAttribute("RenderedMove", if rig.move then rig.move.kind else "")
-		character:SetAttribute(
-			"RenderedLand",
-			if rig.landClip and now - rig.landStart < rig.landDuration
-				then rig.landClip.name
-				else ""
-		)
-		character:SetAttribute("RenderedJump", if rig.jumpClip then rig.jumpClip.name else "")
-		character:SetAttribute(
-			"RenderedClip",
-			if rig.action
-				then (if rig.action.clip then rig.action.clip.name else rig.action.kind)
-				else ""
-		)
-		character:SetAttribute("RenderedAirState", if grounded then "ground" else rig.airState)
-		character:SetAttribute("RenderedCyclePhase", rig.phase)
-		character:SetAttribute("RenderedFootOffset", rig.footOffset)
+		-- What was rendered, for the Studio probe only: attribute writes every frame for
+		-- every character are wasted work in a live game.
+		if DEBUG_POSES then
+			character:SetAttribute(
+				"RenderedAction",
+				if action and rig.action then action.kind else ""
+			)
+			character:SetAttribute("RenderedMove", if rig.move then rig.move.kind else "")
+			character:SetAttribute(
+				"RenderedLand",
+				if rig.landClip and now - rig.landStart < rig.landDuration
+					then rig.landClip.name
+					else ""
+			)
+			character:SetAttribute("RenderedJump", if rig.jumpClip then rig.jumpClip.name else "")
+			character:SetAttribute(
+				"RenderedClip",
+				if rig.action
+					then (if rig.action.clip then rig.action.clip.name else rig.action.kind)
+					else ""
+			)
+			character:SetAttribute("RenderedAirState", if grounded then "ground" else rig.airState)
+			character:SetAttribute("RenderedCyclePhase", rig.phase)
+			character:SetAttribute("RenderedFootOffset", rig.footOffset)
+		end
 	end
 
 	RunService.PreSimulation:Connect(function(dt)

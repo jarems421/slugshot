@@ -170,6 +170,30 @@ function Clips.blend(
 	return result
 end
 
+-- Adds a clip's motion since its first frame on top of a base pose, scaled by
+-- weight. The base keeps its own stance, so a clip from a different rest pose
+-- layers in without pulling the body over to that pose.
+function Clips.layer(
+	base: { [string]: CFrame },
+	clip: Clip,
+	time: number,
+	weight: number,
+	into: { [string]: CFrame }?
+): { [string]: CFrame }
+	local result = into or {}
+	table.clear(result)
+	for joint, value in base do
+		result[joint] = value
+	end
+	local still = CFrame.new()
+	local a, b, f = locate(clip, time)
+	for joint, list in clip.joints do
+		local delta = list[1]:Inverse() * list[a]:Lerp(list[b], f)
+		result[joint] = (base[joint] or still) * still:Lerp(delta, weight)
+	end
+	return result
+end
+
 -- A clip and its variants (Name, Name.2, Name.3, ...), in order. Empty if absent.
 function Clips.variants(library: Library, name: string): { Clip }
 	local list = {}
@@ -224,10 +248,25 @@ local function attachmentFrame(joint: Instance, which: string): CFrame
 end
 Clips.attachmentFrame = attachmentFrame
 
--- Height of the Root joint pivot above the floor: one clip "hip unit" in studs.
+-- Root part centre height above the floor when standing. R6 ignores HipHeight: its
+-- legs hang below the torso, which shares the root part's centre.
+function Clips.standHeight(humanoid: Humanoid, root: BasePart): number
+	if humanoid.RigType == Enum.HumanoidRigType.R6 then
+		local leg = humanoid.Parent and humanoid.Parent:FindFirstChild("Left Leg") :: BasePart?
+		return (if leg then leg.Size.Y else 2) + root.Size.Y / 2
+	end
+	return humanoid.HipHeight + root.Size.Y / 2
+end
+
+-- Height of the Root joint pivot above the floor: one clip "hip unit" in studs. On
+-- R6 it is the hip joints' height (the leg length).
 function Clips.hipUnit(character: Model): number
 	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local leg = character:FindFirstChild("Left Leg") :: BasePart?
+	if humanoid and humanoid.RigType == Enum.HumanoidRigType.R6 and leg then
+		return leg.Size.Y
+	end
 	local lower = character:FindFirstChild("LowerTorso")
 	local joint = lower and (lower:FindFirstChild("Root") :: Instance?)
 	if not root or not humanoid then
