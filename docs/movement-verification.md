@@ -2,6 +2,17 @@
 
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
+## v7.9 light server authority (2026-10-30)
+
+Automated evidence only (no Studio MCP in this session).
+
+- `python tools/verify_movement.py`: PASS, including the strict type check.
+- **Not verified:**
+  - snap-backs actually firing on a client-owned character;
+  - no false positives in normal play (double jumps, kicks, wall runs, mantles, vaults, quick re-jumps) under 0 ms and 60 ms with jitter;
+  - two clients.
+  - The HUD's `Corrections` counter and the probe's `corrections`, `suspectAir` and `suspectWalls` fields are there to check these.
+
 ## v7.8 cleanup pass (2026-10-30)
 
 Automated and offline evidence only. The Studio MCP was not connected in this session, so nothing below ran in Roblox.

@@ -13,7 +13,7 @@ return table.freeze({
 			JumpGravity = 1, -- stock Roblox jump
 		},
 		Athletic = {
-			RunSpeed = 24,
+			RunSpeed = 22, -- owner (2026-10-30): was 24; a clearer step up to the 30 sprint
 			SprintSpeed = 30,
 			Acceleration = 100,
 			Braking = 145,
@@ -37,6 +37,12 @@ return table.freeze({
 	-- Space again in the air is a double-jump flip; Shift is a slide. There is no
 	-- ground roll (owner, 2026-10-30: removed).
 	Acrobatics = {
+		-- Owner (2026-10-30): jumping off the edge of a ledge sometimes did the double-jump
+		-- flip, because the Humanoid's floor check missed the ledge under the feet. A jump
+		-- press is a ground jump while anything is under the body's footprint (radius,
+		-- studs; the server's touchdown check uses it too), or within Coyote seconds of
+		-- walking off without jumping.
+		Jump = { Footprint = 1, Coyote = 0.15 },
 		Flip = {
 			MinRate = 0.85,
 			MaxRate = 2.6,
@@ -93,13 +99,22 @@ return table.freeze({
 		},
 		WallHop = {
 			Reach = 4.5, -- from the root: about 3.5 studs of gap beside the body
-			AwaySpeed = 30,
+			-- Owner (2026-10-30): kicks off a wall should go further, carrying the momentum.
+			AwaySpeed = 40,
 			UpSpeed = 54,
-			TangentCarry = 0.55, -- fraction of along-wall speed kept
-			MaxTangent = 24,
+			TangentCarry = 0.8, -- fraction of along-wall speed kept
+			MaxTangent = 32,
+			-- Horizontal speed kept once a kick hands back control (it then bleeds in the air
+			-- at Slide.AirDecay, as a slide-jump does), instead of dropping to sprint speed.
+			MaxCarry = 44,
 			MaxHops = 8, -- per airtime (wall-run jumps count); enough to climb between two walls
 			Cooldown = 0.15,
-			GroundDelay = 0.13, -- no hop this soon after leaving the ground
+			-- Owner (2026-10-30): wall jumps were not responsive. No hop this soon after leaving
+			-- the ground (was 0.13). An air press with a wall in Reach, or one the body will
+			-- reach within Buffer at its approach speed (looking at most LookAhead further),
+			-- waits for the kick instead of being spent on the flip.
+			GroundDelay = 0.06,
+			LookAhead = 4,
 			Buffer = 0.35, -- an airborne press too early or out of reach is retried this long
 			LockTime = 0.22, -- seconds the kick owns movement before input resumes
 			RefreshFlip = true, -- a hop restores the airborne flip
@@ -115,7 +130,14 @@ return table.freeze({
 		Vault = {
 			MaxHeight = 3.6,
 			MaxDepth = 3.2, -- obstacle thickness
-			LandDistance = 2.4, -- beyond the far edge
+			LandDistance = 2.4, -- beyond the far edge, at least
+			-- Owner (2026-10-30): the vault lost the run's momentum. It keeps the approach
+			-- speed: timed so the hands plant (PlantAt, the clip's plant time over its
+			-- length) as the body reaches the wall, landing as far past it as that speed
+			-- carries (up to MaxLand, on open ground), within Time seconds.
+			PlantAt = 0.15 / 0.58,
+			Time = { Min = 0.4, Max = 0.7 },
+			MaxLand = 8,
 			MinSpeed = 9,
 			LookAhead = 0.12, -- seconds of approach: a jump pressed this early still vaults
 			Clearance = 0.7, -- feet above the top at the peak
@@ -131,14 +153,33 @@ return table.freeze({
 			MaxInto = 0.8, -- travel more head-on than this (dot into the wall) does not attach
 			MinInput = 0.3, -- move input along the wall needed to attach
 			MinHeight = 2, -- feet above the ground needed to attach
-			Speed = 26, -- minimum run speed on the wall
-			Rise = { Min = 4, Max = 13, Carry = 0.3 }, -- upward speed on attach: Carry of the jump's, clamped
+			Speed = 34, -- run speed on the wall with input along it (owner, 2026-10-30: was 26)
+			-- Steering (studs/s^2): toward the input's speed along the wall (Steer), or down to
+			-- it from a faster attach (Bleed); TurnRate turns the body when it reverses.
+			Steer = 70,
+			-- Clinging (owner, 2026-10-30): jumping into a wall (moving into it faster than
+			-- Into, or holding into it) attaches without running; below Below studs/s along
+			-- the wall without Space held, the body drags down at Drag studs/s.
+			Cling = { Into = 4, Below = 6, Drag = 4 },
+			Bleed = 12,
+			TurnRate = 14,
+			-- Owner (2026-10-30): attaching was delayed and stuck lower than the jump was
+			-- heading. It can attach this soon after leaving the ground (MinHeight still keeps
+			-- it off the floor), keeping more of the jump's rise.
+			GroundDelay = 0.03,
+			Rise = { Min = 4, Max = 20, Carry = 0.55 }, -- upward speed on attach: Carry of the jump's, clamped
 			-- Jump on a wall run: a press climbs at once and a release within TapTime is a tap
 			-- that kicks off (0.3 s covers ordinary taps; the old 0.2 s needed double taps).
 			-- Held, it climbs at Climb for ClimbTime of holding (owner: the old 2 s taper
 			-- stopped the climb after about a second), then eases over ClimbFade into a
 			-- HeldSlide.
 			TapTime = 0.3,
+			-- A press while holding away from the wall (move input dot the wall normal over
+			-- this) kicks off at once, without waiting for the release.
+			KickAway = 0.35,
+			-- Studs above the root that must still be beside the wall to keep climbing; above
+			-- this the run holds its height along the top edge.
+			TopMargin = 1,
 			Climb = 11,
 			ClimbTime = 3,
 			ClimbFade = 1,
@@ -150,18 +191,15 @@ return table.freeze({
 			Pull = { Rate = 8, Max = 14, Away = 6 }, -- speed holding the root at Hug distance
 			Release = 8, -- push away from the wall when dropping off
 			Reattach = 0.45, -- seconds before the same wall can be run again
-			JumpAway = 28,
+			JumpAway = 38,
 			JumpUp = 46,
-			JumpCarry = 0.85, -- fraction of the run speed kept on the kick
+			JumpCarry = 1, -- fraction of the run speed kept on the kick
 			Tilt = 0.35, -- presentation: body roll away from the wall, radians
 			ArmForward = 0.5, -- presentation: wall hand's swing ahead of the shoulder, radians
 			HandGap = 0.1, -- presentation: hand stops this far from the wall surface
 			SettleTime = 0.35, -- presentation: observers' replicated body catches up before end checks
 			ObserverLimit = 12, -- presentation: safety cap on a run that never visibly ends
 		},
-	},
-	Crouch = {
-		Speed = 10,
 	},
 	Lab = {
 		HurtAmount = 15, -- H: self-damage to preview hit reactions; no combat rules
@@ -183,12 +221,16 @@ return table.freeze({
 	},
 	Camera = {
 		Fov = 72,
-		SprintFov = 74,
+		SprintFov = 78, -- was 74: a clearer kick into the sprint
 		SlideFov = 82,
 		ShiftLock = Vector3.new(1.75, 0, 0), -- camera offset to the right (Roblox's own is 1.75)
 		ShiftLockTurnRate = 30, -- how fast the body turns to the camera under shift lock
 		AimFov = 68,
 		BlendRate = 10,
+		-- Owner (2026-10-30): make sprinting obvious, but the first shake (bounce, wobble and
+		-- roll) was far too much: only a very subtle bounce on each step (studs), no tilt.
+		-- Steps: footfalls per second; Rate: how fast it fades in and out.
+		SprintShake = { Bounce = 0.05, Steps = 4.6, Rate = 6 },
 		MinZoom = 7,
 		MaxZoom = 18,
 		Shoulder = Vector3.new(1.5, 0.45, 0),
@@ -205,12 +247,21 @@ return table.freeze({
 		WalkOff = 0.3, -- seconds over which walking off an edge eases from the run into the fall
 		GroundProbeRadius = 0.85, -- presentation ground check footprint (edges count)
 		StepRise = 30, -- studs/s: rising slower than this from the ground (stairs) stays grounded
-		Fade = { ActionIn = 0.07, ActionOut = 0.2, MantleOut = 0.3, Air = 0.12, Land = 0.08 },
+		Fade = {
+			ActionIn = 0.07,
+			ActionOut = 0.2,
+			MantleOut = 0.3,
+			Air = 0.12,
+			Land = 0.08,
+			LandMoving = 0.22, -- from the air pose straight into the stride
+		},
+		-- How fast the run, strafe and back-run clips' weights follow the travel direction.
+		DirectionBlendRate = 10,
 		Land = {
 			Duration = 0.42,
 			MinImpact = 20,
 			FullImpact = 75,
-			MovingScale = 0.55,
+			MovingScale = 1, -- landing clip weight lost when moving (1: none on the run)
 			Rate = 1.3,
 			-- Heavier tiers use their own clips when present: impact speed, hold time.
 			Hard = { Impact = 70, Duration = 0.8 },
@@ -220,7 +271,6 @@ return table.freeze({
 		Moves = {
 			Fade = 0.25,
 			FadeOut = 0.35, -- seconds before a transition ends that locomotion takes over
-			Crouch = { Rate = 1.5, Fade = 0.3 },
 			-- Idle fidgets, taking turns after standing still After + up to Spread
 			-- seconds. Only their motion is layered on the live idle and eased in and
 			-- out, so the idle never hands over to another stance (owner: no cut in).
@@ -274,11 +324,14 @@ return table.freeze({
 		WallHopVariants = { "WallHop", "WallJumpLeft", "WallJumpRight", "WallKickUp" },
 		WallRunVariants = { "WallRunLeft", "WallRunRight" },
 		SlideVariants = { "Slide" },
-		-- Air-boost detection (counted in the SuspectAirBoosts attribute, not corrected): a
-		-- rise in upward speed over Gain between 0.1 s samples while off the ground for
-		-- GroundGrace, with no action accepted within Window of it; or any upward speed over
-		-- MaxRise (the fastest launch is a 62 jump).
-		AirBoost = { Gain = 25, GroundGrace = 0.25, Window = 1, MaxRise = 75 },
+		-- Light server authority (owner, 2026-10-30). An air boost is a rise in upward speed
+		-- over Gain between 0.1 s samples while off the ground for GroundGrace; it needs an
+		-- action accepted within Window of it. A wall pass (the path between samples crossing
+		-- an anchored, collidable part) needs a mantle or vault within Window. Upward speed
+		-- over MaxRise is clamped (the fastest launch is a 62 jump). Unexplained cases snap
+		-- the character back to where they started; each kind can be switched off.
+		AirBoost = { Gain = 25, GroundGrace = 0.35, Window = 0.6, MaxRise = 75 },
+		Corrections = { AirBoost = true, Walls = true, Rise = true },
 		TraversalSlack = 4, -- studs of replication lag allowed in traversal checks
 		FlipInterval = 0.8, -- a flip this long after the last is accepted even with no landing seen (a double-jump cycle is about 0.9 s)
 	},

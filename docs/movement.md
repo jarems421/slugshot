@@ -1,6 +1,6 @@
 # Movement lab
 
-Experimental branch: `experiment/movement-sandbox`. The foundation project remains unchanged. This is a playable prototype for review, not an approved final movement set or camera design. Do not merge into `main` until the owner has reviewed the gameplay.
+Developed on `experiment/movement-sandbox` and merged into `main` at the owner's request on 2026-10-30, after reviewing the gameplay. The movement code still lives only in `experiments/movement` and its own Rojo projects; the foundation place is unchanged. Moves, numbers and the camera remain experimental, not final design decisions.
 
 ## Play and compare
 
@@ -12,27 +12,280 @@ python tools/r6pose/preview.py mantleHigh --ledge 4.5 # render an original clip'
 
 Open a place in Studio and press Play. Studio does not reload a rebuilt `.rbxlx`: close and reopen it after rebuilding.
 
-- `SlugshotMovementLabPrivate.rbxlx`: **v7.8**, adding the owner's Mixamo clips (the HUD shows `original + N private clips`): the running jump, landings, crouch set, hit reactions, injured idle, wall jumps and the neck-stretch fidget. Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
-- `SlugshotMovementLab.rbxlx`: the same code with original clips only (HUD: `original clips`). Every move works: run, idle, flips, slide, mantles, kong vault, wall run and wall jumps are original clips. Without the private clips it uses an original jump and landing, plays the wall-hop clip for wall jumps, has no fidget, and crouching only slows you down.
+- `SlugshotMovementLabPrivate.rbxlx`: **v7.29**, adding the owner's Mixamo clips (the HUD shows `original + N private clips`): the running jump, landings, hit reactions, injured idle, wall jumps and the neck-stretch fidget. Built only from privately retargeted clips (see [assets](movement-assets.md)); never commit or publish it.
+- `SlugshotMovementLab.rbxlx`: the same code with original clips only (HUD: `original clips`). Every move works: run, idle, flips, slide, mantles, kong vault, wall run and wall jumps are original clips. Without the private clips it uses an original jump and landing, plays the wall-hop clip for wall jumps, and has no fidget.
 - `SlugshotMovementLab-v2.rbxlx`: v2 (clips, rolls, flips), rebuilt from commit `0b06985`.
 - `SlugshotMovementLab-v1.rbxlx`: the first lab, rebuilt from commit `e2b5688`.
 
 For live editing, serve `movement.project.json` with the Rojo plugin on port **34873**.
 
-| Control | Experimental action (v7.8) |
+| Control | Experimental action (v7.29) |
 | --- | --- |
 | WASD / native movement controls | Run (eight directions: run ahead, strafes either side and the back-run behind, blended between) |
-| Double-tap W / gamepad L3 | Sprint until W is released (gamepad: until the stick is released); also stands up from a crouch |
+| Double-tap W / gamepad L3 | Sprint (30 studs/s; the run is 22) until W is released (gamepad: until the stick is released), with a very slight camera bounce and wider view |
 | Shift / gamepad B | **Slide** while running (12+ studs/s): current speed +15 (max 46), slowing to 20 over 0.8 s, steering a little. Pressed in the air, mid-action or inside the 0.25 s cooldown, it waits 0.4 s (or while Shift is held, until you land) and slides on touchdown. Jump during it leaps out keeping the speed (slide-jump); Shift again stands up. Camera dips 1.4 studs and the FOV kicks to 82 |
 | Ctrl | **Shift lock** toggle: mouse locked to the centre, body faces the camera (strafing on A/D), camera 1.75 studs over the right shoulder. Actions keep their own facing, then the body turns back to the camera |
-| C / gamepad R3 | Crouch toggle (crouch walk in four directions) |
-| Space / native jump | Jump (Athletic: 8.7 studs, a springy arc). **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically, locked on until your feet reach the ground or the wall ends. Hold Space at any point to run up the wall (3 s of full-speed climbing per run, then easing into a slow slide) and over its top when you reach it; release to slide down; tap Space (released within 0.3 s) to kick off. Ledges are mantled only when the jump would not clear them, and never when under 2.2 studs above the ground. **In the air beside a wall**: wall jump; presses up to 0.35 s early count. One press kicks off where you hold (camera relative; where the camera faces if you hold nothing), always at least 30° out from the wall and facing the way you go. This also applies to the tap off a wall run. Holding almost straight into the wall leaps up it instead (once per wall per airtime). Up to 8 kicks per airtime, enough to climb between two walls; each restores the flip. **Anywhere else in the air** (a second press): double jump with a flip toward the keys held, as seen on screen: W flip kick, A/D butterfly twist, S back full (arms overhead), all four diagonals a tilted corkscrew; once per airtime |
+| Space / native jump | Jump (Athletic: 8.7 studs, a springy arc). **Into a ledge** 0.7-5.7 studs above your feet: mantle onto it (holding Space mid-jump reaches higher ledges). **Into a thin wall up to 3.6 studs, at speed**: vault over it. **Jump onto a wall while running along it** (not head-on): wall run along it automatically, locked on until your feet reach the ground or the wall ends. Steer with the keys: along the wall runs, nothing slows to a cling (dragging slowly down), back along it turns round. Jumping straight into a wall and doing nothing clings to it too. Hold Space at any point to run up the wall (3 s of full-speed climbing per run, then easing into a slow slide); at the top it keeps running along the edge. Release to slide down. Press Space again near the top to mantle over; press it holding away from the wall (or back) to jump off at once; a tap lower down (released within 0.3 s) kicks off. Ledges are mantled only when the jump would not clear them, and never when under 2.2 studs above the ground. **In the air beside a wall**: wall jump; presses up to 0.35 s early count. One press kicks off where you hold (camera relative; where the camera faces if you hold nothing), always at least 30° out from the wall and facing the way you go. This also applies to the tap off a wall run. Holding almost straight into the wall leaps up it instead (once per wall per airtime). Up to 8 kicks per airtime, enough to climb between two walls; each restores the flip. **Anywhere else in the air** (a second press): double jump with a flip toward the keys held, as seen on screen: W front full step-out (winged layout twisting a full turn, stepping out), A/D butterfly twist, S back full (arms overhead), all four diagonals a tilted corkscrew; once per airtime |
 | H | Lab only: take 15 damage to preview hit reactions and the injured idle (no combat rules) |
 | P / R | Cycle Baseline, Athletic, Precise profiles / respawn |
 
 There is no ground roll (removed in v7.8) and Q is unbound. Touch/gamepad bindings exist but have not been device-tested.
 
 **Pose tools.** `tools/r6pose/preview.py` renders any literal key table in `OriginalClips.luau` (idle, air, mantles, kong vault) on the R6 block rig with the game's curves. Mantles can be placed on the client's path against a ledge, printing hand and foot positions relative to the top and face; `--help` lists options. It needs numpy and matplotlib, and writes to `build/r6pose/` (ignored). The Luau tables are the only copy of the poses.
+
+## What changed in v7.29 (cling and slow drag)
+
+- **Owner:** jumping onto a wall and doing nothing (no running, no jump off) should stay on it and slowly drag down. The same applies after stopping a wall run.
+- **Cling:** moving into a wall (faster than 4 studs/s) or holding into it while airborne now attaches without running along it, unless there is a ledge in reach to mantle. The usual 2-stud minimum height and re-attach delay still apply.
+- **Slow drag:** below 6 studs/s along the wall without Space held, the body drags down at a steady 4 studs/s (`WallRun.Cling`), instead of the slide speeding up.
+  - Holding Space still climbs.
+  - Steering along the wall runs.
+  - Pressing Space while holding away kicks off.
+- **Legs:** the run cycle slows to a stop as the speed along the wall drops, instead of running in place.
+- **Change of behaviour:** a press while holding into a clung wall now climbs, rather than the old up-kick leap.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.28 (wall-run steering)
+
+- **Owner:** once a wall run started there was no control over its direction. Letting go of W still ran on the same way; only Space did anything.
+- **Steering:** the input sets the run along the wall.
+  - Holding along it runs at 34 studs/s; pushing into the wall counts as forward.
+  - No input slows to a cling. With Space held, that means running straight up the wall.
+  - Input back along the wall brakes, turns round and runs the other way. The body turns smoothly, and the arm moves to the wall's side.
+  - Speed changes at 70 studs/s² (`WallRun.Steer`). A faster attach bleeds down at 12 (`WallRun.Bleed`), keeping the momentum.
+- **Presentation:** the wall's side is found each frame, so other players see the arm on the right side after a turn. The run cycle follows the real speed along the wall.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.27 (crouch removed)
+
+- **Owner:** remove crouch as a feature for now, from everything.
+- **Removed:**
+  - the C / gamepad R3 binding and the client's crouch state, speed and camera dip;
+  - the server's `Crouch` request and the `Crouching` attribute;
+  - the presentation's crouch clips, crouch idle and crossfade;
+  - the original R6 crouch clips and the config;
+  - the Studio probe's `Crouch` command and the HUD entry.
+- The private manifest already had no crouch clips (v7.25).
+- `verify_movement.py` passes.
+
+## What changed in v7.26 (a real squat)
+
+- **Owner:** the v7.25 crouch was horrible. It did not squat at all, it just stayed standing and walked slowly.
+- **Cause:** ground contact only pushes the body up out of the floor (`GroundContact.PullDown = false`). A staggered stance of straight block legs barely lowers the hips, and the clip dropped the body only 0.5 studs, so it read as standing.
+- **Squat:**
+  - Both block legs angle about 60° forward like thighs, knees apart. The hips drop 1.2 studs (contact lifts back about 0.25, so it nets about 1 stud lower).
+  - The chest leans 34° over the knees, the head up and the arms resting forward.
+  - It breathes while idle.
+- **Moving:**
+  - A low duck walk, with the legs alternating between about 54° and 70° forward. A wider swing lifts the body more, since straight legs that come nearer vertical push the hips up.
+  - Side-steps open the leading knee out.
+  - Still 13 studs/s.
+- **Camera:** it dips 1 stud while crouched (`Crouch.CameraDrop`), so the squat also reads from behind.
+- Checked with `tools/r6pose/preview.py`. `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.25 (original R6 crouch, a bit faster)
+
+- **Owner:** the front full step-out is perfect. The crouch animation was horrible: its arms looked like they were holding an imaginary gun. The crouch should also be a bit faster (noticeably, not much).
+- **Original R6 crouch set** (`crouchIdle`, `crouchForward`, `crouchBack`, `crouchLeft`, `crouchRight`) replaces the owner's Mixamo crouch:
+  - Idle: a low staggered stance (left foot forward, right back), leaning in, head up, arms relaxed and hanging a little forward, breathing.
+  - Walk: quick, short sneaking steps with a gentle opposite arm swing; backing up is more upright.
+  - Sideways: side-steps, the leading leg reaching out.
+  - R6 legs are blocks, so the stance is a stagger rather than bent knees, and the walk bobs a little as the legs pass.
+  - Checked with `tools/r6pose/preview.py`.
+- **Into and out of the crouch** is a 0.3 s crossfade; the mocap stand-up clips are no longer used. The workaround for the mocap crouch idle (its hands dropped to the floor) is removed.
+- **Speed:** 13 studs/s (was 10), with the step rate matched so the feet do not slide.
+- The public build now has the crouch too. The private manifest drops the 7 crouch clips (12 entries, 14 clips with the mirrored wall jumps); private clips regenerated.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.24 (front full step-out chosen)
+
+- **Owner:** picked the front full step-out ("really nice"). They want it a fraction faster (not noticeably), and the face should not look back at the camera during the flip.
+- **Face:** the twist lagged the somersault (110° of flip with 20° of twist), so partway round the face turned back toward the camera. The twist now follows the somersault exactly (identical keys). The face is then always away from the camera or side-on: its backward component is -cos²(angle), never toward the camera.
+- **Speed:** about 4% faster (rotation done by 0.46, was 0.48).
+- The twisting aerial, X-out full, their poses and the G key are removed.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.23 (twisting front flip candidates)
+
+- **Owner:** the front aerial did not work. The front flip needs more spin to match the rest, and must not be a basic front flip.
+- **Research:** front full twist technique ([FlashMavi](https://www.flashmavi.com/learn/how-to-do-a-front-flip-full-twist-gymnastics)). Kick the heels up with the arms slightly open, close the arms in front of the chest to twist with the head turned, then open and lift the arms to stop.
+- **Candidates on G**, each twisting a full turn spread over most of the flip (about 1100°/s) through open shapes; the v7.20 twist kick was too fast to see:
+  1. **Twisting aerial** (`FlipFront`): the front aerial's split and windmilling arms. It twists a full turn as the arms wrap in, then flings them open to land.
+  2. **Front full step-out** (`FlipFront.2`): a winged layout. The arms snap across the chest to twist a full turn, fling open and up, and the legs split to step out.
+  3. **X-out full** (`FlipFront.3`): a tuck that bursts into a wide X. The X spins a full twist like a star, then closes to land.
+- All three were rendered on the R6 renderer before porting.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.22 (front aerial chosen)
+
+- **Owner:** use the front aerial, ever so slightly faster, with a bit more flair.
+- **Faster:** the rotation now finishes at 0.44 (was 0.48), peaking near 1100°/s at rate 1.
+- **Flair:** the arms windmill through the split. The right arm reaches overhead along the body while the left sweeps back wide; they swap at the top. The head is thrown back further at the peak. Checked on the R6 renderer.
+- The layout step-out, X-out and the G key are removed.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.21 (researched front flip candidates)
+
+- **Owner:** none of the v7.20 candidates. The twist kick was so fast the animation was hard to see. They asked for research into how nicer, acrobatic front flips look before making them.
+- **Research** (gymnastics and tricking references):
+  - The **front aerial** keeps the legs extended and split along the rotation plane, while the inverted torso stays put and the legs rotate around it.
+  - The **front layout** keeps the body straight with a slight hollow, the arms spread like wings at takeoff and the heels kicked up. It lands with the arms rising.
+  - A **step-out** splits the legs mid-flip and lands one at a time.
+  - An **X-out** splits the arms and legs across the rotation plane into an X.
+  - Sources: [Flip (acrobatic)](https://en.wikipedia.org/wiki/Flip_(acrobatic)), [Front aerial](https://en.wikipedia.org/wiki/Front_aerial), [FlashMavi: front flip layout](https://www.flashmavi.com/learn/how-do-do-a-gymnastic-front-flip-layout), [Double Leg (trick)](https://en.wikipedia.org/wiki/Double_Leg_(trick)).
+- **Candidates on G** (the HUD shows the current one):
+  1. **Front aerial** (`FlipFront`): the rear leg kicks up and over in a wide split, the torso arched with arms swept back and out, landing on the kicking leg first.
+  2. **Layout step-out** (`FlipFront.2`): a straight, winged body with the heels up, splitting late to step out, arms rising to land.
+  3. **X-out** (`FlipFront.3`): a quick tuck that bursts into a wide X held at the top (the spin slows while open), then closes to land.
+- **Speed and checks:**
+  - All three spin at about 1000°/s or less (the twist kick peaked near 1650° plus its twist), through open shapes that read at game speed.
+  - They were rendered on the R6 block renderer before porting.
+  - The old flip kick and the v7.20 candidates are removed.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.20 (front flip candidates)
+
+- **Owner:** the front flip (the flip kick) looked underwhelming and out of place next to the other flips.
+- **Cause:** it was the only flip with no twist. The back, diagonals and sides all spin in a twist.
+- **Three candidates**, cycled with **G** in the lab (the HUD shows the current one). The owner picks one; the others are then removed:
+  1. **Twist kick** (`FlipFront`): the tuck spins a full twist, with one arm thrown overhead so the twist reads, then snaps open into the held flying kick.
+  2. **Tornado kick** (`FlipFront.2`): a faster front tuck that opens into the kick and spins a full turn about the body, the kicking leg sweeping round, before landing.
+  3. **Star full** (`FlipFront.3`): a front flip in a wide star (arms and legs out) that snaps in to twist a full turn, then opens back into the star to land.
+- The old flip kick is no longer used.
+- **HUD text fixed:** a PowerShell edit in v7.14 had garbled the separators (`Â·`). They are restored.
+- `verify_movement.py` passes; not yet run in Studio. The new flips were not checked on the renderer (they are built by the flip generator, which the preview tool cannot read).
+
+## What changed in v7.19 (subtler sprint shake)
+
+- **Owner:** the v7.18 shake was really bad. It should be very subtle but noticeable, with no tilting side to side.
+- The roll and side wobble are removed. Only a 0.05-stud bounce on each footfall remains (was 0.12), sprinting on the ground only.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.18 (clearer sprint)
+
+- **Owner:** make it more obvious when you are sprinting rather than running: a little shake, not too much, and a slower normal run (22).
+- **Run speed:** 22 studs/s (Athletic; was 24). The sprint stays at 30, and the run and sprint clips separate more.
+- **Sprint shake** (`Camera.SprintShake`), sprinting on the ground only, eased in and out:
+  - a 0.12-stud camera bounce on each footfall;
+  - a 0.06-stud side wobble;
+  - a 0.7° roll swaying once per stride.
+- **Sprint field of view:** 78 (was 74; normal is 72).
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.17 (wall-run top: hold, press to mantle, press to jump off)
+
+- **Owner:** holding Space up a wall run mantled onto the top automatically, which was annoying. Holding should keep running along the top. A fresh press should mantle, and a press aimed off the wall should jump off.
+- **Holding Space at the top:** once nothing is beside the head (1 stud above the root, `WallRun.TopMargin`), the climb stops rising and the run holds its height along the top edge. Letting go slides down as before.
+- **A fresh press on a wall run:**
+  - Holding away from the wall, or back against the run: jumps off at once.
+  - Otherwise: mantles over the top when it is in reach.
+  - Lower down, it climbs while held, and a tap still kicks off on release.
+- **The end of the wall** now drops you off instead of mantling.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.16 (wall runs, kicks and mantles out of a flip)
+
+- **Owner:** after v7.13 a jump onto a wall attaches at once, but a double-jump flip onto a wall still slid down it before the run caught.
+- **Cause:** the flip counted as a busy action until it finished. Wall runs, air wall jumps and mantles all waited for it.
+- **Fix:** a flip now gives way immediately to a wall run, a wall jump or a mantle. The flip animation hands over with the action's usual fade.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.15 (vault keeps its momentum; animated start)
+
+- **Owner:** the vault itself was fine, but the part after it was slow and the frictionless movement stopped. They also wanted the start more animated.
+- **Causes:**
+  - A vault always landed 2.4 studs past the wall, over a time set by the wall's height: about 13 studs/s against a 24-30 run.
+  - The clip's travel curve also eased to a stop at the landing before the run speed was handed back.
+- **Momentum:**
+  - The vault keeps the approach speed. Its time is set so the hands plant (`Vault.PlantAt`) as the body reaches the wall at that speed, within 0.4-0.7 s (`Vault.Time`).
+  - The landing is as far past the wall as the speed carries, up to 8 studs (`Vault.MaxLand`), and only on open ground; otherwise the old 2.4.
+  - Travel is even: the face is reached at the plant and the landing at the end, with no easing, so the run carries straight on.
+  - At 27 studs/s from 3 studs out: a 0.43 s vault landing 7 studs past a 1.6-stud wall.
+  - The server's vault reach check uses the longer maximum landing.
+- **Animated start:**
+  - The takeoff winds the arms back with the lead knee driving up.
+  - The arms whip forward as the body tips into the dive, then the superman reach.
+  - The plant is now at 0.15 of a 0.58 s clip.
+- **Contacts** (`preview.py kongVault --vault 3 --depth 1.6 --approach 3 --land 7`): hands on the top at 0.13-0.15 s, feet just over the near edge at 0.18 s, and every foot below the top is past the far side.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.14 (a more animated kong vault)
+
+- **Owner:** make vaults more animated and parkour style.
+- **The kong vault** (short walls) has 9 keys instead of 6, and 0.55 s of clip (the real time still follows the wall height):
+  1. A driving takeoff, with the knee up and arms swinging.
+  2. A stretched superman dive with the arms reaching long.
+  3. A head-down plant with the hips high.
+  4. A tight tuck of the knees through the arms.
+  5. A hard push-off as the arms punch back and the chest lifts.
+  6. A flying stride, with the lead leg reaching, the trail knee still up and the arms thrown open.
+  7. Reaching for the ground.
+  8. A one-foot touchdown leaning into the run.
+  9. Into the stride.
+- **Contacts checked** with `tools/r6pose/preview.py kongVault --vault 3 --depth 1.6` (which now also reports how far past the face the feet are):
+  - Hands on the top at 0.09-0.11 s, 0.6-1.3 studs past the face.
+  - The feet clear the near edge at 0.14 s.
+  - Whenever a foot is below the top, it is past the far side.
+  - A first version swung the trail leg back too early and passed it through the far edge; the trail knee now stays up until clear.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.13 (responsive wall runs and wall jumps)
+
+- **Owner:** jumping onto a wall to run on it always attached after a slight delay, and lower than where they tried to connect. Wall jumps felt even less responsive.
+- **Causes:**
+  - A wall run could not attach until 0.13 s after leaving the ground, and attaching capped the upward speed at 13 (30% of the jump's), so the body stuck below the jump's path.
+  - An air press near a wall became the double-jump flip whenever the kick was not ready yet (just out of reach, within 0.13 s of takeoff, or in the 0.15 s cooldown), so the kick never came.
+  - A kick off a wall run fired only when Space was released (holding climbs).
+- **Fixes:**
+  - The wall run attaches from 0.03 s after takeoff (`WallRun.GroundDelay`; the 2-stud minimum height still keeps it off the floor). It keeps 55% of the jump's rise, up to 20.
+  - Air wall jumps can fire from 0.06 s after takeoff (`WallHop.GroundDelay`). An air press with a wall in reach, or one the body is moving toward and will reach within the 0.35 s buffer (looking up to 4 studs further), waits for the kick instead of being spent on the flip.
+  - On a wall run, pressing Space while holding away from the wall (`WallRun.KickAway`) kicks off on the press. Holding along or into the wall still climbs, and a tap still kicks on release.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.12 (running landings, strafe reversals)
+
+- **Owner:** landing from a wall jump and running straight away showed the legs spread, and should flow into the run, not cut. Strafing left then straight to right cut from one clip to the other.
+- **Running landings:**
+  - The landing clip was still blended in at about 45% while running, which spread the legs; it now fades out completely when moving (`Land.MovingScale = 1`).
+  - The switch from the air pose to the stride is a 0.22 s crossfade (`Fade.LandMoving`; was 0.08).
+  - Landings standing still are unchanged.
+- **Direction changes:** reversing a strafe passes the velocity through zero, so the travel angle, and with it the blend, flipped from the left strafe to the right in one frame. Each direction clip's weight now eases toward its target (`DirectionBlendRate = 10`, about 0.2 s), so the hips turn through the middle instead of cutting. The same smoothing applies to any direction change, such as run to back-run.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.11 (faster wall run, further wall jumps)
+
+- **Owner:** the wall run was quite slow. Wall jumps should go further, since you have momentum and a wall to push off.
+- **Wall run:** the minimum speed on the wall is 34 studs/s (was 26; sprint is 30).
+- **Kicks off a wall:**
+  - From the air: 40 studs/s out (was 30), keeping 80% of the along-wall speed (was 55%, now capped at 32).
+  - Off a wall run: 38 out (was 28), keeping all of the run's speed (was 85%).
+- **Momentum:** after the kick's 0.22 s lock, the speed was cut to sprint speed (30), which lost most of the push. It now keeps up to 44 studs/s (`WallHop.MaxCarry`). It bleeds in the air at the slide-jump rate and brakes on landing. Dropping off a wall run keeps its speed the same way.
+- Every speed stays under the server's 56 studs/s cap. `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.10 (jumping off edges)
+
+- **Owner:** standing on the edge of a ledge or wall and pressing Space sometimes did the double-jump flip instead of the first jump.
+- **Cause:** the Humanoid's floor check can miss the ledge under the feet at an edge and report the body as falling. The press then took the air path (the flip), and the Humanoid's own jump would not fire. Walking off an edge and pressing a moment late did the same.
+- **Fix:**
+  - A jump press is a ground jump while anything is under the body's footprint (a 1-stud sphere below the root, `Acrobatics.Jump.Footprint`), or within 0.15 s of walking off without jumping (`Acrobatics.Jump.Coyote`).
+  - When the Humanoid thinks it is falling, the client launches the jump itself, at the profile's jump power.
+  - The same footprint check restores the flip and kicks on landing.
+- **Server:** the touchdown and ground checks use the same footprint, so an edge jump is not mistaken for an unearned air boost. The air-boost check now starts 0.35 s after leaving the ground (was 0.25), to cover coyote jumps.
+- `verify_movement.py` passes; not yet run in Studio.
+
+## What changed in v7.9 (light server authority)
+
+The owner chose the light option: clients keep running their own movement, so it stays responsive, but the server corrects movement that nothing can explain.
+
+- **Unearned air jumps:** an upward boost while airborne (over 25 studs/s between 0.1 s samples, more than 0.35 s after leaving the ground) needs an accepted action within 0.6 s of it: a double jump, wall kick, wall run or mantle. If none arrives, the character is snapped back to where the boost started, with no velocity.
+- **Through walls:** if the straight path between two samples crosses an anchored, collidable part, it needs an accepted mantle or vault around that time (mantles carry the body over geometry). Otherwise the character is snapped back to the last position before the wall.
+- **Upward speed cap:** over 75 studs/s it is clamped to 75 (the fastest real launch is the 62 jump).
+- **Kept:** the horizontal speed cap (56) and the teleport check.
+- **Timing:** each suspect is resolved 0.6 s after it is seen, so a request that arrives a little after the motion it caused still counts. Nothing is checked in the 3 s after spawning.
+- **Counting and switches:** every correction counts in `MotionCorrections`, plus `SuspectAirBoosts` or `SuspectWallPasses`. The HUD shows `Corrections`. Each kind can be switched off in `Config.Validation.Corrections`.
+- **Limits:**
+  - A client that ignores the server's teleport can keep sending its own position. Enforcing against that needs server ownership or kicks (the strong option).
+  - An honest player is snapped back only if their action was rejected (rare; for example a double jump the server thinks was already used).
 
 ## What changed in v7.8 (cleanup pass)
 
@@ -460,10 +713,9 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 
 ## Boundaries and known rough edges
 
-- **Client-trusted physics.** Each player's client owns its character's physics. The server checks requests (variants, rates, ground state, geometry, cooldowns, rate limit), caps horizontal speed and counts unexplained air boosts. A rejected request only cancels the animation; the client has already applied the velocity. This is not competitive anti-cheat. How much movement the server should own is an open decision before PvP.
+- **Light server authority (v7.9).** Each player's client owns its character's physics. The server checks requests (variants, rates, ground state, geometry, cooldowns, rate limit), caps horizontal and upward speed, and snaps characters back from unexplained air boosts and wall passes. A client that ignores the server's teleport is not stopped, so this is not competitive anti-cheat. The strong option (server-run movement) stays open for later.
 - Roblox speeds outrun natural cadence: it is capped at 1.3x, so feet slip at sprint.
 - The wall-run pose is procedural (the run cycle, a body roll and a reaching arm), with the hand placed by an angle solve rather than IK. Wall running on sloped walls is not implemented.
-- Crouch changes speed and pose only. The collision height is unchanged, so it does not let you fit under anything.
 - The original clips are hand-keyed by an AI author and checked on the R6 renderer, not made by an animator.
 - No foot IK for slopes and steps: ground contact corrects height only.
 - Flips started late in a jump play faster, up to 2.6x.
@@ -474,11 +726,22 @@ All tuning is in `experiments/movement/shared/Config.luau` (`Acrobatics`, `Anima
 
 ## Playtest priorities
 
+1. v7.29: jump straight at a tall wall and let go: you should cling and drag down slowly. Run along a wall and let go: same.
+1. v7.28: on a wall run, let go of W (slow to a cling; hold Space to run straight up), hold back along the wall (turn round), hold forward again.
+1. v7.24: double-jump forward (W): the front full step-out, a fraction faster, the face never turning back to the camera.
+1. v7.18: run, then double-tap W to sprint: is the difference clear, and is the shake subtle enough?
+1. v7.17: hold Space up the 16-stud wall: you should run along its top edge, not mantle. Press Space again to mantle up; press while holding away to jump off.
+1. v7.16: jump, double-jump flip onto a corridor wall: the run should catch at once. Flip next to a wall and press Space: kick at once. Flip into a ledge: mantle.
+1. v7.15: sprint at the short walls west of spawn and vault each: the run should carry straight through at the same speed, landing further past the wall. Try jumping early and late.
+1. v7.13: jump onto the corridor walls from different distances; the run should catch right where you meet the wall. Press Space early toward a wall in the air: it should kick, not flip. On a wall run, hold away from the wall and press: instant kick.
+1. v7.12: land from a wall jump while holding W; strafe A then D and back quickly (with Ctrl shift lock too). Both should flow without cuts.
+1. v7.11: wall run along the corridor walls and kick off; kick between the chimney walls. Is the run fast enough, and do kicks carry far without feeling floaty?
+1. v7.10: stand right on the edge of each ledge and the chimney top and press Space; walk off an edge and press Space just after. Each should be a normal jump, not the flip.
 1. v7.8 regression: run, sprint, slide and slide-jump; double-jump flips in all eight directions; wall run, wall jump and up-kick; and a mantle on each traversal ledge plus the kong vault on the short walls. Note any "Last rejected" reason on the HUD.
 2. New ledge detection: jump into `FloatingLedge` (thin slab, east of spawn) and at `NarrowPillar` slightly off-centre. Both should mantle.
 3. Stand still for 10 s: the neck stretch should ease in and out over the idle.
-4. Two clients: watch each other's flips, slides, mantles and wall runs. Check `SuspectAirBoosts` stays at 0 in normal play; it should only count boosts with no accepted action.
-5. Decide on the landing and crouch clips: keep the mocap, or try original R6 candidates.
-6. Decide how much of movement the server should control before PvP.
+4. Play normally for a few minutes (double jumps, wall kicks, wall runs, mantles, vaults, slides, landing and jumping again quickly): the HUD's `Corrections` should stay at 0. Any snap-back in normal play is a false positive to report. Then two clients: watch each other's flips, slides, mantles and wall runs.
+5. Decide on the landing clip: keep the mocap, or try an original R6 candidate.
+6. Later, before competitive play: whether to move from the light option to server-run movement.
 
 [Research](research/movement.md) · [Assets and Mixamo pipeline](movement-assets.md) · [Results](movement-verification.md) · [ADR 0003](decisions/0003-clip-presentation.md) · [ADR 0004](decisions/0004-place1-traversal.md) · [ADR 0005](decisions/0005-mixamo-variants-transitions.md) · [ADR 0006](decisions/0006-wall-run-and-v4-feedback.md) · [ADR 0007](decisions/0007-block-limbs-and-original-run.md) · [ADR 0008](decisions/0008-r6-rig.md) · [ADR 0009](decisions/0009-cleanup-type-check-and-trusted-physics.md)

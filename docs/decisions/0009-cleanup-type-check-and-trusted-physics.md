@@ -34,3 +34,13 @@ The review of v7.7 found:
 - Detection without correction cannot hurt honest players, but it does not stop cheating either. Its counts from real two-client play are the evidence for the server-authority decision.
 - More rays per ledge check: up to 12 forward rays plus top probes per 0.055 s while Jump is held, on the jumping client only.
 - Not yet run in Studio: the Studio MCP was not connected in the session that made these changes.
+
+## Addendum (v7.9, 2026-10-30): the light option
+
+The owner chose the light option over server-run movement for now. Clients still own their physics. The server now corrects what nothing explains:
+
+- an airborne upward boost with no accepted action within 0.6 s;
+- a path between samples that crosses a solid part, with no mantle or vault around it;
+- upward speed over 75.
+
+Corrections snap the character back to the position before the suspect motion. The horizontal speed cap stays. Each correction is counted and can be switched off (`Config.Validation.Corrections`). A client that ignores server teleports is not stopped, which is why the strong option stays open for competitive play.

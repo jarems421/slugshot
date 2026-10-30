@@ -122,7 +122,7 @@ local function spawnCharacter(player: Player)
 	state.lastHop = -math.huge
 	state.hops = 0
 	state.history = {}
-	state.boosts = {}
+	state.suspects = {}
 	state.accepted = {}
 	state.lastVy = nil
 	state.airUsed = false
@@ -194,7 +194,7 @@ local function traversalValid(
 		then Config.Traversal.Mantle.Reach
 			+ vault.LookAhead * Config.Validation.HorizontalSpeedLimit
 			+ vault.MaxDepth
-			+ vault.LandDistance
+			+ vault.MaxLand
 		else Config.Traversal.Mantle.Reach + 2
 	local near = false
 	for _, position in positions do
@@ -260,21 +260,29 @@ local function bump(instance: Instance, name: string)
 	instance:SetAttribute(name, ((instance:GetAttribute(name) :: number?) or 0) + 1)
 end
 
+-- Something under the body's footprint within `margin` of standing height, so a body
+-- standing on an edge counts (the client's jump check uses the same footprint).
+local function footing(
+	character: Model,
+	root: BasePart,
+	humanoid: Humanoid,
+	margin: number
+): boolean
+	local radius = Config.Acrobatics.Jump.Footprint
+	local drop = Clips.standHeight(humanoid, root) - radius + margin
+	return workspace:Spherecast(root.Position, radius, Vector3.new(0, -drop, 0), raysFor(character))
+		~= nil
+end
+
 local function grounded(character: Model, root: BasePart, humanoid: Humanoid): boolean
-	local distance = Clips.standHeight(humanoid, root) + 0.65
-	return math.abs(root.AssemblyLinearVelocity.Y) < 8
-		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), raysFor(character))
-			~= nil
+	return math.abs(root.AssemblyLinearVelocity.Y) < 8 and footing(character, root, humanoid, 0.65)
 end
 
 -- A touchdown, checked every frame: at the ground and not rising. Landing and jumping
 -- straight away spends only a frame or two down (owner: spammed double jumps lost
 -- their flips when the 0.1 s strict check missed the landing).
 local function touchedDown(character: Model, root: BasePart, humanoid: Humanoid): boolean
-	local distance = Clips.standHeight(humanoid, root) + 1
-	return root.AssemblyLinearVelocity.Y < 8
-		and workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), raysFor(character))
-			~= nil
+	return root.AssemblyLinearVelocity.Y < 8 and footing(character, root, humanoid, 1)
 end
 
 -- Validates a Flip/Mantle/WallHop/WallRun/Slide request against server-observed state and
@@ -407,7 +415,7 @@ local function validateAction(
 	character:SetAttribute("MovementDirection", direction)
 	character:SetAttribute("MovementRate", rate)
 	character:SetAttribute("MovementActionTime", stamp)
-	table.insert(state.accepted, now)
+	table.insert(state.accepted, { time = now, kind = kind })
 	if #state.accepted > 16 then
 		table.remove(state.accepted, 1)
 	end
@@ -492,12 +500,6 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 				math.clamp(math.asin(math.clamp(packet.direction.Y, -1, 1)), -0.8, 0.8)
 			)
 		end
-	elseif packet.kind == "Crouch" then
-		if typeof(packet.value) ~= "boolean" then
-			reject("crouch")
-			return
-		end
-		character:SetAttribute("Crouching", packet.value)
 	elseif packet.kind == "Hurt" then
 		-- Lab-only preview of hit reactions and the injured idle; not combat.
 		if now - (state.lastHurt or -math.huge) < Config.Lab.HurtCooldown then
@@ -520,6 +522,118 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 	bump(player, "AcceptedRequests")
 	request:FireClient(player, packet.sequence, true, packet.kind)
 end)
+
+-- Light server authority (owner, 2026-10-30): client physics stays trusted for feel,
+-- but movement nothing can explain is corrected by snapping the character back. A
+-- suspect air boost or wall pass is resolved Window seconds later, once any action
+-- that explains it (a double jump, kick, wall run or mantle) has been accepted.
+-- Every correction counts in MotionCorrections plus its own counter, and each kind can
+-- be switched off in Config.Validation.Corrections.
+local function explained(state: any, at: number, window: number, kind: string?): boolean
+	for _, accepted in state.accepted do
+		if math.abs(accepted.time - at) <= window and (kind == nil or accepted.kind == kind) then
+			return true
+		end
+	end
+	return false
+end
+
+local function snapBack(player: Player, state: any, character: Model, to: Vector3, reason: string)
+	bump(player, reason)
+	bump(player, "MotionCorrections")
+	character:PivotTo(CFrame.new(to) * character:GetPivot().Rotation)
+	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if root then
+		root.AssemblyLinearVelocity = Vector3.zero
+	end
+	state.position, state.lastVy = to, 0
+	table.clear(state.suspects)
+	table.clear(state.history)
+end
+
+local function solidPart(part: Instance): boolean
+	return part:IsA("BasePart") and part.Anchored and part.CanCollide
+end
+
+-- Every 0.1 s per character, from server-observed physics only.
+local function checkMotion(
+	player: Player,
+	state: any,
+	character: Model,
+	root: BasePart,
+	sampleTime: number
+)
+	local validation = Config.Validation
+	local corrections = validation.Corrections
+	local now = workspace:GetServerTimeNow()
+	local settled = now - state.spawnedAt > validation.SpawnGrace
+	local velocity = root.AssemblyLinearVelocity
+	local previous = state.position or root.Position
+	-- Horizontal speed and teleports: clamp the speed, and put back a jump in position.
+	local speed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+	local delta = root.Position - previous
+	local travelled = Vector3.new(delta.X, 0, delta.Z).Magnitude
+	local limit = validation.HorizontalSpeedLimit
+	local jumped = travelled > limit * sampleTime + validation.DisplacementSlack
+	state.violations = if speed > limit or jumped then (state.violations or 0) + 1 else 0
+	if state.violations >= 2 and settled then
+		bump(player, "MotionCorrections")
+		local flat = Vector3.new(velocity.X, 0, velocity.Z)
+		root.AssemblyLinearVelocity = (
+			if speed > 0.01 then flat.Unit * math.min(speed, limit) else Vector3.zero
+		) + Vector3.new(0, velocity.Y, 0)
+		if jumped then
+			character:PivotTo(CFrame.new(previous) * character:GetPivot().Rotation)
+			state.position = previous
+			return
+		end
+	end
+	if settled then
+		-- Through a wall: the straight path since the last sample crosses a solid part.
+		-- (Mantles and vaults carry the body over geometry; they explain it.)
+		if delta.Magnitude > 0.1 then
+			local hit = workspace:Raycast(previous, delta, raysFor(character))
+			if hit and solidPart(hit.Instance) then
+				table.insert(state.suspects, { at = now, from = previous, kind = "wall" })
+			end
+		end
+		-- An upward boost while airborne, or a rise faster than any move launches.
+		local boost = validation.AirBoost
+		local airborne = now - (state.downAt or -math.huge) > boost.GroundGrace
+		if airborne and state.lastVy and velocity.Y - state.lastVy > boost.Gain then
+			table.insert(state.suspects, { at = now, from = previous, kind = "air" })
+		end
+		if velocity.Y > boost.MaxRise then
+			bump(player, "SuspectAirBoosts")
+			if corrections.Rise then
+				bump(player, "MotionCorrections")
+				root.AssemblyLinearVelocity = Vector3.new(velocity.X, boost.MaxRise, velocity.Z)
+			end
+		end
+	end
+	state.lastVy = root.AssemblyLinearVelocity.Y
+	local window = validation.AirBoost.Window
+	while state.suspects[1] and now - state.suspects[1].at > window do
+		local suspect = table.remove(state.suspects, 1)
+		local wall = suspect.kind == "wall"
+		-- A mantle is accepted as it starts and can carry the body over the edge up to
+		-- its full duration later.
+		local reach = if wall then window + Config.Traversal.Mantle.Duration.Max else window
+		if not explained(state, suspect.at, reach, if wall then "Mantle" else nil) then
+			local reason = if wall then "SuspectWallPasses" else "SuspectAirBoosts"
+			if (wall and corrections.Walls) or (not wall and corrections.AirBoost) then
+				snapBack(player, state, character, suspect.from, reason)
+				return
+			end
+			bump(player, reason)
+		end
+	end
+	state.position = root.Position
+	table.insert(state.history, root.Position)
+	if #state.history > 8 then
+		table.remove(state.history, 1)
+	end
+end
 
 local elapsed = 0
 RunService.Heartbeat:Connect(function(dt)
@@ -547,60 +661,7 @@ RunService.Heartbeat:Connect(function(dt)
 			else nil
 		local humanoid = if character then character:FindFirstChildOfClass("Humanoid") else nil
 		if character and root and humanoid then
-			local velocity = root.AssemblyLinearVelocity
-			local speed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-			local delta = root.Position - (state.position or root.Position)
-			local travelled = Vector3.new(delta.X, 0, delta.Z).Magnitude
-			local limit = Config.Validation.HorizontalSpeedLimit
-			local invalid = speed > limit
-				or travelled > limit * sampleTime + Config.Validation.DisplacementSlack
-			state.violations = if invalid then (state.violations or 0) + 1 else 0
-			if
-				state.violations >= 2
-				and workspace:GetServerTimeNow() - state.spawnedAt
-					> Config.Validation.SpawnGrace
-			then
-				bump(player, "MotionCorrections")
-				local flat = Vector3.new(velocity.X, 0, velocity.Z)
-				root.AssemblyLinearVelocity = (
-					if speed > 0.01 then flat.Unit * math.min(speed, limit) else Vector3.zero
-				) + Vector3.new(0, velocity.Y, 0)
-				if travelled > limit * sampleTime + Config.Validation.DisplacementSlack then
-					character:PivotTo(CFrame.new(state.position) * character:GetPivot().Rotation)
-				end
-			end
-			-- Detection only (no correction yet): an upward boost while airborne with no
-			-- accepted action around it, or a rise faster than any move launches. Client
-			-- physics is trusted, so this is evidence for a server-authority decision.
-			local now = workspace:GetServerTimeNow()
-			local boost = Config.Validation.AirBoost
-			local airborne = now - (state.downAt or -math.huge) > boost.GroundGrace
-			if airborne and state.lastVy and velocity.Y - state.lastVy > boost.Gain then
-				table.insert(state.boosts, now)
-			end
-			if
-				velocity.Y > boost.MaxRise
-				and now - state.spawnedAt > Config.Validation.SpawnGrace
-			then
-				bump(player, "SuspectAirBoosts")
-			end
-			state.lastVy = velocity.Y
-			-- A boost is explained by an action accepted within Window either side of it.
-			while state.boosts[1] and now - state.boosts[1] > boost.Window do
-				local at = table.remove(state.boosts, 1) :: number
-				local explained = false
-				for _, accepted in state.accepted do
-					explained = explained or math.abs(accepted - at) <= boost.Window
-				end
-				if not explained then
-					bump(player, "SuspectAirBoosts")
-				end
-			end
-			state.position = root.Position
-			table.insert(state.history, root.Position)
-			if #state.history > 8 then
-				table.remove(state.history, 1)
-			end
+			checkMotion(player, state, character, root, sampleTime)
 			if root.Position.Y < -40 and not state.spawning then
 				task.spawn(spawnCharacter, player)
 			end

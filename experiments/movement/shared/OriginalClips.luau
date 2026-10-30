@@ -721,8 +721,8 @@ local land: { Key } = {
 -- torso's middle (pivot), not the hips.
 --   Back: layout with a full twist, arms locked overhead ("a really cool twirl").
 --   Diagonals (front-side and back-side): tilted corkscrew, legs split, one arm up.
---   Front: the owner's pick, a tuck that snaps into a flying front kick held to the
---   landing (slowed a little from the first try, still faster than the Webster).
+--   Front: the owner's pick, a front full step-out (winged layout, arms snapping in to
+--   twist a full turn in step with the somersault, stepping out to land).
 --   Side: the owner's pick, a horizontal twist (the flat counterpart of the back and
 --   diagonal twists, acrobatic rather than a torpedo), after tricking's butterfly
 --   twist: the body dips and goes flat, a straight leg kicks up, the legs straddle and
@@ -773,16 +773,15 @@ local FLIP_POSES: { [string]: Key } = {
 	landPrep = flipPose(-10, -6, { 28, 0, 6 }, { 75, 0, 45 }),
 	land = flipPose(-18, -8, { 48, 0, 5 }, { 45, 0, 35 }),
 	cork = flipShape(4, 6, { -22, 0, 10 }, { 18, 0, -10 }, { 80, 0, -42 }, { 174, 0, 5 }),
-	-- Flying front kick: right leg straight forward, leaning back, one arm guarding.
-	kick = flipShape(
-		5,
-		-10,
-		{ 88, 0, 4 },
-		{ -25, 0, -8 },
-		{ -35, 0, 30 },
-		{ 80, 0, -15 },
-		{ 15, 0 }
-	),
+	-- Front: the front full step-out (owner's pick, 2026-10-30), after the front full
+	-- twist technique: a layout with winged arms (heels up), the arms close across the
+	-- chest to twist and open and lift to stop, the legs splitting to step out.
+	lwSet = flipPose(-4, 0, { -8, 0, 3 }, { 40, 0, 60 }),
+	lwWings = flipPose(-8, 10, { -18, 0, 3 }, { 10, 0, 88 }),
+	lwStep = flipShape(-4, 8, { 40, 0, 3 }, { -35, 0, -3 }, { 40, 0, 80 }, { 40, 0, -80 }),
+	lwReach = flipShape(-6, 0, { 50, 0, 3 }, { -40, 0, -3 }, { 140, 0, 35 }, { 140, 0, -35 }),
+	ffWrap = flipShape(-6, 5, { -12, 0, 2 }, { -12, 0, -2 }, { 70, 0, -45 }, { 70, 0, 45 }),
+	ffOpen = flipShape(-4, 10, { 20, 0, 4 }, { -25, 0, -4 }, { 150, 0, 60 }, { 150, 0, -60 }),
 	-- Side flips are authored to the right (turning clockwise from above): the left leg
 	-- kicks up first.
 	bWind = flipShape( -- dipping, arms swung across to the left against the turn
@@ -901,20 +900,22 @@ local FLIP_STYLES: { [string]: { pivot: number, vertical: boolean?, keys: { { an
 			{ 0.8, "land", 360, -360, -0.1 },
 		},
 	},
-	-- Peak about 1650 degrees/s at rate 1 (was 2200; the Webster peaked near 1300).
-	FlipKick = {
-		pivot = 0.45,
+	-- Front full step-out (owner's pick). The twist tracks the somersault exactly, so the
+	-- face is only ever away from the camera or side-on, never looking back (owner); a
+	-- fraction faster than the candidate (rotation done by 0.46, was 0.48).
+	FrontFullStepOut = {
+		pivot = 0.4,
 		keys = {
-			{ 0, "setFront", 0, 0 },
-			{ 0.07, "whip", 40, 0 },
-			{ 0.13, "tight", 135, 0 },
-			{ 0.19, "tight", 235, 0 },
-			{ 0.25, "tight", 325, 0 },
-			{ 0.31, "kick", 360, 0 },
-			{ 0.45, "kick", 360, 0 },
-			{ 0.53, "landPrep", 360, 0 },
-			{ 0.6, "land", 360, 0, -0.1 },
-			{ 0.8, "land", 360, 0, -0.1 },
+			{ 0, "lwSet", 0, 0 },
+			{ 0.067, "lwWings", 40, 40 },
+			{ 0.134, "lwWings", 110, 110 },
+			{ 0.192, "ffWrap", 175, 175 },
+			{ 0.259, "ffWrap", 245, 245 },
+			{ 0.326, "ffOpen", 310, 310 },
+			{ 0.394, "lwStep", 345, 345 },
+			{ 0.46, "lwReach", 360, 360 },
+			{ 0.6, "land", 360, 360, -0.1 },
+			{ 0.8, "land", 360, 360, -0.1 },
 		},
 	},
 	-- Twist peaks near 1650 degrees/s at rate 1.
@@ -938,7 +939,7 @@ local FLIP_STYLES: { [string]: { pivot: number, vertical: boolean?, keys: { { an
 }
 -- Degrees from facing (+ right) and style; left-hand flips mirror the right-hand ones.
 local FLIP_DIRECTIONS: { [string]: { any } } = {
-	FlipFront = { 0, "FlipKick" },
+	FlipFront = { 0, "FrontFullStepOut" },
 	FlipFrontRight = { 45, "FrontSide" },
 	FlipRight = { 90, "BTwist" },
 	FlipBackRight = { 135, "BackSide" },
@@ -1267,81 +1268,128 @@ local mantleVault: { Key } =
 		},
 	}
 -- Kong vault over a thin obstacle (Vault): rise is the arc over it (times the lift).
-local kongVault: { Key } =
-	{ -- dive head-down onto both hands, tuck the legs through, push off, land running
-		{
-			t = 0,
-			Root = { -35, 0, 0 },
-			Waist = { -10, 0, 0 },
-			Neck = { 30, 0, 0 },
-			LeftHip = { -25, 0, -4 },
-			RightHip = { -40, 0, 4 },
-			LeftShoulder = { 120, 0, -14 },
-			RightShoulder = { 120, 0, 14 },
-			advance = 0,
-			rise = 0,
-		},
-		{
-			t = 0.1,
-			Root = { -92, 0, 0 },
-			Waist = { -10, 0, 0 },
-			Neck = { 55, 0, 0 },
-			LeftHip = { -15, 0, -8 },
-			RightHip = { -30, 0, 8 },
-			LeftShoulder = { 88, 0, -16 },
-			RightShoulder = { 88, 0, 16 },
-			advance = 0.24,
-			rise = 0.66,
-		},
-		{
-			t = 0.18,
-			Root = { -55, 0, 0 },
-			Waist = { -8, 0, 0 },
-			Neck = { 40, 0, 0 },
-			LeftHip = { 130, 0, -6 },
-			RightHip = { 122, 0, 6 },
-			LeftShoulder = { 30, 0, -20 },
-			RightShoulder = { 30, 0, 20 },
-			advance = 0.42,
-			rise = 0.82,
-		},
-		{
-			t = 0.27,
-			Root = { -30, 0, 0 },
-			Waist = { -6, 0, 0 },
-			Neck = { 25, 0, 0 },
-			LeftHip = { 80, 0, -6 },
-			RightHip = { 60, 0, 6 },
-			LeftShoulder = { -20, 0, -30 },
-			RightShoulder = { -20, 0, 30 },
-			advance = 0.62,
-			rise = 0.62,
-		},
-		{
-			t = 0.37,
-			Root = { -18, 0, 0 },
-			Waist = { -6, 0, 0 },
-			Neck = { 15, 0, 0 },
-			LeftHip = { 40, 0, -4 },
-			RightHip = { 15, 0, 4 },
-			LeftShoulder = { -25, 0, -35 },
-			RightShoulder = { -25, 0, 35 },
-			advance = 0.82,
-			rise = 0.25,
-		},
-		{
-			t = 0.5,
-			Root = { -14, 0, 0 },
-			Waist = { -8, 0, 0 },
-			Neck = { 10, 0, 0 },
-			LeftHip = { -25, 0, -2 },
-			RightHip = { 30, 0, 2 },
-			LeftShoulder = { 60, 0, -8 },
-			RightShoulder = { -35, 0, 10 },
-			advance = 1,
-			rise = 0,
-		},
-	}
+local kongVault: { Key } = { -- dive, plant, tuck through, push off, fly in a split, land running
+	{
+		t = 0,
+		Root = { -10, 0, 0 },
+		Waist = { -4, 0, 0 },
+		Neck = { 10, 0, 0 },
+		LeftHip = { -40, 0, -4 },
+		RightHip = { 70, 0, 6 },
+		LeftShoulder = { -35, 0, -16 },
+		RightShoulder = { -35, 0, 16 },
+		advance = 0,
+		rise = 0,
+	},
+	{
+		t = 0.05,
+		Root = { -35, 0, 0 },
+		Waist = { -8, 0, 0 },
+		Neck = { 30, 0, 0 },
+		LeftHip = { -45, 0, -6 },
+		RightHip = { 60, 0, 6 },
+		LeftShoulder = { 80, 0, -12 },
+		RightShoulder = { 80, 0, 12 },
+		advance = 0.086,
+		rise = 0.15,
+	},
+	{
+		t = 0.1,
+		Root = { -65, 0, 0 },
+		Waist = { -6, 0, 0 },
+		Neck = { 50, 0, 0 },
+		LeftHip = { -30, 0, -6 },
+		RightHip = { -12, 0, 6 },
+		LeftShoulder = { 165, 0, -10 },
+		RightShoulder = { 165, 0, 10 },
+		advance = 0.172,
+		rise = 0.42,
+	},
+	{
+		t = 0.15,
+		Root = { -92, 0, 0 },
+		Waist = { -10, 0, 0 },
+		Neck = { 60, 0, 0 },
+		LeftHip = { -18, 0, -8 },
+		RightHip = { -30, 0, 8 },
+		LeftShoulder = { 90, 0, -16 },
+		RightShoulder = { 90, 0, 16 },
+		advance = 0.259,
+		rise = 0.68,
+	},
+	{
+		t = 0.21,
+		Root = { -62, 0, 0 },
+		Waist = { -16, 0, 0 },
+		Neck = { 45, 0, 0 },
+		LeftHip = { 138, 0, -6 },
+		RightHip = { 130, 0, 6 },
+		LeftShoulder = { 38, 0, -20 },
+		RightShoulder = { 38, 0, 20 },
+		advance = 0.362,
+		rise = 0.84,
+	},
+	{
+		t = 0.27,
+		Root = { -36, 0, 0 },
+		Waist = { -4, 0, 0 },
+		Neck = { 28, 0, 0 },
+		LeftHip = { 110, 0, -6 },
+		RightHip = { 85, 0, 6 },
+		LeftShoulder = { -40, 0, -28 },
+		RightShoulder = { -40, 0, 28 },
+		advance = 0.466,
+		rise = 0.82,
+	},
+	{
+		t = 0.34,
+		Root = { -16, 0, 0 },
+		Waist = { 2, 4, 0 },
+		Neck = { 14, -4, 0 },
+		LeftHip = { 82, 0, -4 },
+		RightHip = { 40, 0, 4 },
+		LeftShoulder = { -45, 0, -38 },
+		RightShoulder = { 72, 0, 22 },
+		advance = 0.586,
+		rise = 0.62,
+	},
+	{
+		t = 0.42,
+		Root = { -16, 0, 0 },
+		Waist = { -2, 2, 0 },
+		Neck = { 12, -2, 0 },
+		LeftHip = { 45, 0, -3 },
+		RightHip = { -2, 0, 3 },
+		LeftShoulder = { -25, 0, -26 },
+		RightShoulder = { 52, 0, 14 },
+		advance = 0.724,
+		rise = 0.3,
+	},
+	{
+		t = 0.5,
+		Root = { -22, 0, 0 },
+		Waist = { -10, 0, 0 },
+		Neck = { 16, 0, 0 },
+		LeftHip = { 18, 0, -2 },
+		RightHip = { -38, 0, 2 },
+		LeftShoulder = { 25, 0, -12 },
+		RightShoulder = { -30, 0, 12 },
+		advance = 0.862,
+		rise = 0.06,
+	},
+	{
+		t = 0.58,
+		Root = { -14, 0, 0 },
+		Waist = { -8, 0, 0 },
+		Neck = { 10, 0, 0 },
+		LeftHip = { -25, 0, -2 },
+		RightHip = { 30, 0, 2 },
+		LeftShoulder = { 60, 0, -8 },
+		RightShoulder = { -35, 0, 10 },
+		advance = 1,
+		rise = 0,
+	},
+}
 
 -- Wall kick, facing away from the wall: the right foot pushes off behind, the left
 -- knee and both arms drive up, then settle into the jump's apex pose.
@@ -1401,7 +1449,7 @@ function OriginalClips.build(): { [string]: any }
 		MantleLow = { keys = mantleLow, duration = 0.4, climb = true },
 		MantleVault = { keys = mantleVault, duration = 0.45, climb = true },
 		MantleHigh = { keys = mantleHigh, duration = 0.55, climb = true },
-		Vault = { keys = kongVault, duration = 0.5, climb = true },
+		Vault = { keys = kongVault, duration = 0.58, climb = true },
 		WallHop = { keys = wallHop, duration = 0.4 },
 		Slide = { keys = slide, duration = 1.2, contact = "body", fps = FINE_FPS },
 	}

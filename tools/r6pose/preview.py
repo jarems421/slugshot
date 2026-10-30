@@ -123,7 +123,7 @@ def place(keys, t, args):
     if args.vault is not None:
         # Client: (to - from) * advance + lift * rise; the wall face is at z = -0.8.
         start = np.array([0.0, r6.STAND, args.approach - 0.8])
-        target = np.array([0.0, r6.STAND, -(0.8 + args.depth + 2.4)])
+        target = np.array([0.0, r6.STAND, -(0.8 + args.depth + args.land)])
         position = start + (target - start) * advance + np.array([0, (args.vault + 0.7) * rise, 0])
     elif args.ledge is not None:
         # Client: rises with the clip from 0.8 off the face to 1.52 past the edge on top.
@@ -154,6 +154,7 @@ def main():
     parser.add_argument("--vault", type=float, help="vault over a wall this high")
     parser.add_argument("--depth", type=float, default=1.6, help="vault wall thickness")
     parser.add_argument("--approach", type=float, default=2.0, help="vault start distance from the wall")
+    parser.add_argument("--land", type=float, default=2.4, help="vault landing distance past the far edge")
     parser.add_argument("--out", type=Path, help="output image")
     args = parser.parse_args()
     keys = read_table(args.table)
@@ -175,7 +176,8 @@ def main():
             line += (f" advance={advance:.2f} rise={rise:.2f}"
                      f" hands above top {offsets(hands, lambda p: p[1] - height)}"
                      f" past face {offsets(hands, lambda p: -(p[2] + 0.8))}"
-                     f" | feet above top {offsets(feet, lambda p: p[1] - height)}")
+                     f" | feet above top {offsets(feet, lambda p: p[1] - height)}"
+                     f" past face {offsets(feet, lambda p: -(p[2] + 0.8))}")
         print(line)
         for row, (elev, azim, label) in enumerate(views):
             ax = fig.add_subplot(len(views), len(times), row * len(times) + column + 1, projection="3d")
