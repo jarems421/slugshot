@@ -103,9 +103,17 @@ for mesh, part in parts do
 	part.Material = (Enum.Material :: any)[mesh.material]
 	part.Reflectance = mesh.reflectance
 	if mesh.name == CANISTER then
-		-- A see-through shell so the slug inside shows.
+		-- A clear, lightly tinted shell, lit from inside, so the slug shows.
 		part.Material = Enum.Material.Glass
-		part.Transparency = 0.6
+		part.Color = Color3.fromRGB(200, 240, 235)
+		part.Transparency = 0.78
+		local glow = Instance.new("PointLight")
+		glow.Name = "ChamberLight"
+		glow.Color = Color3.fromRGB(240, 255, 235)
+		glow.Brightness = 2.5
+		glow.Range = 1.2
+		glow.Shadows = false
+		glow.Parent = part
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
 end
