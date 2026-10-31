@@ -162,16 +162,19 @@ if not (loaded and result) then
 		part.Shape = shape
 		part.Size = size * SCALE.Y
 		part.Color = Color3.fromHex(color)
-		part.Material = Enum.Material.SmoothPlastic
+		part.Material = if name == "Charger"
+			then Enum.Material.Neon
+			elseif name == "Grip" then Enum.Material.SmoothPlastic
+			else Enum.Material.Metal
 		attach(part, CFrame.new(offset.Position * SCALE) * offset.Rotation)
 	end
 	local lengthwise = CFrame.Angles(0, math.pi / 2, 0) -- cylinders run along X
 	piece(
 		"Nose",
 		Enum.PartType.Block,
-		Vector3.new(0.26, 0.52, 1.0),
+		Vector3.new(0.26, 0.52, 0.9),
 		CFrame.new(0, 0.18, -1.25),
-		"E07A12"
+		"A9572C"
 	)
 	piece(
 		"Canister",
@@ -185,21 +188,21 @@ if not (loaded and result) then
 		Enum.PartType.Block,
 		Vector3.new(0.18, 0.5, 0.62),
 		CFrame.new(0, 0.32, -0.32),
-		"4E5156"
+		"363F48"
 	)
 	piece(
 		"Charger",
 		Enum.PartType.Cylinder,
 		Vector3.new(0.22, 0.32, 0.32),
 		CFrame.new(0, 0.33, -0.48),
-		"0A0A0B"
+		"EBF0ED"
 	)
 	piece(
 		"Grip",
 		Enum.PartType.Block,
-		Vector3.new(0.2, 0.62 * 0.82, 0.28),
-		CFrame.new(0, 0.0058, 0.04) * CFrame.Angles(-0.42, 0, 0),
-		"22304A"
+		Vector3.new(0.2, 0.62 * 0.70, 0.28),
+		CFrame.new(0, 0.043, 0.04) * CFrame.Angles(-0.42, 0, 0),
+		"252C31"
 	)
 end
 

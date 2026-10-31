@@ -382,3 +382,9 @@
 - **Confirmed:** owner requested a shorter handle and about 12% smaller gun while refining Floppy's loaded test.
 - **Implemented:** Rocklock Blaster scale multiplies by 0.88; its private mesh mapping now points to the owner-approved existing gun with geometry below the grip junction shortened to 82%. Native fallback grip is shortened too. The same refit is used by the Floppy test tool. Map/destruction and movement behaviour are unchanged. The reproducible refit script is on `feature/slug-asset-pipeline` under `tools/slugs/refit_floppy_blaster.py`; source input and reusable IDs stay private.
 - **Verified offline:** `python tools/verify_rocklock_v2.py --skip-movement` passes (types, lint, layout, builds and isolation). **Unresolved:** final hand fit/appearance in Studio.
+
+## 2026-10-31 - Angular blaster finish and downward muzzle bevels
+
+- **Confirmed:** owner requested a less toy-like finish, more compact grip/barrel and a white glowing spiral, then specified downward angular tips retaining the open firing channel.
+- **Implemented:** private mesh mapping updated to the final solid-capped downward-bevel version with burnt orange, graphite/steel and white Neon vanes. Native stand-in uses the updated palette, shorter grip/nose and white charger. Existing 0.88 overall scale remains. No map or movement change. Refitter/evidence are on `feature/slug-asset-pipeline` (`docs/slugs/blaster-refinement.md`).
+- **Verified offline:** Rocklock v2 verifier with `--skip-movement` passes. **Unresolved:** owner art/hand-fit judgment and inherited rear contact QA; final lighting changes are scoped to the Floppy test place.
