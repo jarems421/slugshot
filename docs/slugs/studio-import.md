@@ -58,3 +58,14 @@ Importing uploads the mesh and texture assets to the importing account, so the o
 3. Appearance: if the importer didn't create one, add a SurfaceAppearance to `FloppyBody` with ColorMap `floppy-body-color.png` and NormalMap `floppy-body-normal.png`. Each eye gets its own ring texture as ColorMap. Compare with `docs/slugs/catalog/evidence/floppy/blender/game-*.png`.
 4. Animation: add an AnimationController with an Animator to the Model. In the Animation Editor, import `idle.fbx` onto this rig and check that the tracks bind to its Bones and that it loops with no hitch at 12 s. Publishing the clip is a separate, owner-authorised step; record any IDs only under ignored `private-assets/`.
 5. Device check: use Studio's device emulator (phone and tablet) and look at frame rate, texture sharpness of the drool and lip line, and the eye-ring spin. Record the results in [verification](verification.md).
+
+### Floppy uploaded test place (2026-10-31)
+
+With the owner's approval, `model.glb` was uploaded through Open Cloud as a private Model asset on the owner's account. The ID is only in ignored `private-assets/floppy/` (`roblox_assets.json`, `FloppyAsset.luau`). The uploader is `private-assets/floppy/upload_open_cloud.py`, adapted from the blaster upload. Build and open the test place:
+
+```powershell
+rojo build floppy.private.project.json -o build/SlugshotFloppyTest.rbxlx
+Start-Process build/SlugshotFloppyTest.rbxlx
+```
+
+Press Play. The server script loads the asset, anchors it on the floor facing -Z and prints a `Floppy: loaded ...` line (parts, bones, size, SurfaceAppearance). The client script plays the 12 s idle on the Bones, because Bone transforms set on the server don't replicate. The avatar spawns 10 studs in front, facing Floppy. Per the [Studio handoff rule](../development.md), rebuild and reopen this place after each change. **Unresolved:** the actual load, appearance and idle in Studio (pending the owner's Play test or a Studio MCP session).

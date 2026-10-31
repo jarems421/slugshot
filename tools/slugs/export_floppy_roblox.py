@@ -10,7 +10,7 @@ Run with Blender 4.5:
 `blender --background --factory-startup --disable-autoexec --python-exit-code 1
 --python tools/slugs/export_floppy_roblox.py`
 
-Writes build/slugs/floppy/roblox/: model.fbx, idle.fbx, textures/, a review
+Writes build/slugs/floppy/roblox/: model.fbx, model.glb, idle.fbx, textures/, a review
 .blend and export-report.json. Nothing is uploaded.
 """
 import hashlib
@@ -270,6 +270,15 @@ def main():
     scene.frame_start, scene.frame_end = 1, int(LOOP_SECONDS*FPS) + 1
     idle_path = OUT/"idle.fbx"
     bpy.ops.export_scene.fbx(filepath=str(idle_path), bake_anim=True, **dict(EXPORT_SETTINGS))
+    # GLB carries the textures and skin reliably for Open Cloud upload; glTF's
+    # +Z-forward conversion of this +Y-facing model gives Roblox -Z forward.
+    rig.animation_data.action = None
+    for b in rig.pose.bones:
+        b.matrix_basis.identity()
+    select_only([rig] + meshes, active=rig)
+    glb = OUT/"model.glb"
+    bpy.ops.export_scene.gltf(filepath=str(glb), export_format="GLB", use_selection=True, export_skins=True,
+                              export_animations=False, export_yup=True, export_image_format="AUTO")
     bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/"floppy-roblox.blend"), compress=True)
     bones = [b.name for b in rig.data.bones]
@@ -277,7 +286,7 @@ def main():
     report = {"source": str(SOURCE.relative_to(ROOT)), "sourceSha256": digest(SOURCE), "tool": bpy.app.version_string,
               "units": "1 Blender unit = 1 stud", "axes": {"blender": "+Y forward, +Z up", "fbx": "-Z forward, +Y up"},
               "budget": {"bodyTriangles": BODY_TRIANGLES, "eyeTriangles": EYE_TRIANGLES, "texture": TEXTURE, "maxInfluences": 4},
-              "files": {p.relative_to(OUT).as_posix(): digest(p) for p in [model, idle_path] + paths},
+              "files": {p.relative_to(OUT).as_posix(): digest(p) for p in [model, idle_path, glb] + paths},
               "studioImportVerified": False}
     report.update(verify(model, idle_path, bones))
     (OUT/"export-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

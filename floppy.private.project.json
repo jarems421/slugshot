@@ -1,0 +1,29 @@
+{
+  "name": "SlugshotFloppyTest",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34876,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "FloppyAsset": {"$path": "private-assets/floppy/FloppyAsset.luau"}
+    },
+    "ServerScriptService": {"$className": "ServerScriptService", "FloppyTest": {"$path": "experiments/creatures/floppy/server"}},
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {"$className": "StarterPlayerScripts", "FloppyTest": {"$path": "experiments/creatures/floppy/client"}}
+    },
+    "Lighting": {"$className": "Lighting", "$properties": {"Technology": {"Enum": 4}, "Brightness": 2.5}},
+    "Workspace": {
+      "$className": "Workspace",
+      "Floor": {
+        "$className": "Part",
+        "$properties": {"Anchored": true, "Size": [60, 1, 60], "Position": [0, -0.5, 0], "Color": [0.62, 0.64, 0.6]}
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {"Anchored": true, "Size": [4, 1, 4], "Position": [0, 0.01, -10], "Orientation": [0, 180, 0], "Transparency": 1, "CanCollide": false}
+      }
+    }
+  }
+}
