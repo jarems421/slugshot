@@ -8,12 +8,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local asset =
 	require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number, blaster: number? }
 
--- Slugs are blaster-sized (~0.22 studs), so show Floppy on a pedestal at eye level.
+-- Slugs are about 1 stud tall; show Floppy on a pedestal near eye level.
 local PEDESTAL_TOP = 3
 local pedestal = Instance.new("Part")
 pedestal.Name = "Pedestal"
 pedestal.Anchored = true
-pedestal.Size = Vector3.new(1.6, PEDESTAL_TOP, 1.6)
+pedestal.Size = Vector3.new(3.4, PEDESTAL_TOP, 2)
 pedestal.Position = Vector3.new(0, PEDESTAL_TOP / 2, 0)
 pedestal.Color = Color3.fromRGB(70, 74, 68)
 pedestal.Parent = workspace
@@ -84,7 +84,7 @@ end
 if asset.blaster then
 	local blaster = load(asset.blaster, "BlasterForScale")
 	if blaster then
-		standAt(blaster, 0.75, 0)
+		standAt(blaster, 1.2, 0)
 		local _, size = blaster:GetBoundingBox()
 		print(string.format("Blaster for scale: %.2f x %.2f x %.2f studs", size.X, size.Y, size.Z))
 	end

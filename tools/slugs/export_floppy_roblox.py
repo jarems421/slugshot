@@ -31,10 +31,12 @@ OUT = ROOT/"build/slugs/floppy/roblox"
 BODY_TRIANGLES = 8000
 EYE_TRIANGLES = 400
 TEXTURE = 1024
-# Slugs must fit in the blaster: its canister is ~0.22 studs across and the
-# muzzle channel ~0.24, so Floppy ships at 0.09 scale (~0.22 studs tall).
-GAME_SCALE = 0.09
-# Low roughness for a subtle wet, slimy gloss; the eyes are glossier still.
+# Slugs are about 1 stud tall in Roblox so they read clearly; the blaster is
+# resized to fit them (owner, 2026-10-31). Source height 2.47 -> ~1.0 stud.
+GAME_SCALE = 0.405
+# Low roughness for a wet, slimy gloss: wettest low on the body, where it
+# sits in its own slime, a touch less shiny on the head; eyes glossier still.
+SKIN_ROUGHNESS_LOW = 0.10
 SKIN_ROUGHNESS = 0.22
 EYE_ROUGHNESS = 0.08
 FPS = 24
@@ -136,19 +138,56 @@ def roughness_map(name, value):
     return img
 
 
-def add_gloss(mat, value, name):
+def body_roughness_map(body):
+    """Roughness by height on the body's own UVs: glossiest at the base, rising toward the head."""
+    co = np.empty(len(body.data.vertices)*3)
+    body.data.vertices.foreach_get("co", co)
+    z = co.reshape(-1, 3)[:, 2]
+    t = np.clip((z - 0.35)/(1.5 - 0.35), 0.0, 1.0)
+    rough = SKIN_ROUGHNESS_LOW + (SKIN_ROUGHNESS - SKIN_ROUGHNESS_LOW)*t*t*(3 - 2*t)
+    attr = body.data.color_attributes.new("gloss", "FLOAT_COLOR", "POINT")
+    attr.data.foreach_set("color", np.stack([np.ones_like(rough), rough, np.zeros_like(rough), np.ones_like(rough)], 1).astype(np.float32).ravel())
+    target = image("floppy-body-roughness", "Non-Color")
+    mat = bpy.data.materials.new("BakeGloss")
+    mat.use_nodes = True
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    nodes.clear()
+    a = nodes.new("ShaderNodeAttribute")
+    a.attribute_name = "gloss"
+    e = nodes.new("ShaderNodeEmission")
+    o = nodes.new("ShaderNodeOutputMaterial")
+    links.new(a.outputs["Color"], e.inputs["Color"])
+    links.new(e.outputs["Emission"], o.inputs["Surface"])
+    node = nodes.new("ShaderNodeTexImage")
+    node.image = target
+    nodes.active = node
+    saved = list(body.data.materials)
+    body.data.materials.clear()
+    body.data.materials.append(mat)
+    select_only([body])
+    bpy.ops.object.bake(type="EMIT", margin=8)
+    body.data.materials.clear()
+    for m in saved:
+        body.data.materials.append(m)
+    bpy.data.materials.remove(mat)
+    body.data.color_attributes.remove(body.data.color_attributes["gloss"])
+    save(target, "floppy-body-roughness.png")
+    return target
+
+
+def add_gloss(mat, img):
     """Wire a roughness map so the glTF export (and Roblox SurfaceAppearance) carries the gloss."""
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     shader = next(n for n in nodes if n.type == "BSDF_PRINCIPLED")
     tex = nodes.new("ShaderNodeTexImage")
-    tex.image = roughness_map(name, value)
+    tex.image = img
     split = nodes.new("ShaderNodeSeparateColor")
     links.new(tex.outputs["Color"], split.inputs["Color"])
     links.new(split.outputs["Green"], shader.inputs["Roughness"])
     links.new(split.outputs["Blue"], shader.inputs["Metallic"])
 
 
-def game_skin_material(colour, normal):
+def game_skin_material(colour, normal, rough):
     mat = bpy.data.materials.new("FloppySkin")
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -161,7 +200,7 @@ def game_skin_material(colour, normal):
     links.new(c.outputs["Color"], shader.inputs["Base Color"])
     links.new(n.outputs["Color"], nm.inputs["Color"])
     links.new(nm.outputs["Normal"], shader.inputs["Normal"])
-    add_gloss(mat, SKIN_ROUGHNESS, "floppy-body-roughness")
+    add_gloss(mat, rough)
     return mat
 
 
@@ -240,8 +279,8 @@ def verify(model, idle, expected_bones):
     report["boundsBlender"] = {"min": [round(v, 3) for v in lo], "max": [round(v, 3) for v in hi]}
     face = [c for m in meshes if m.name.startswith("Eye") for c in [m.matrix_world @ v.co for v in m.data.vertices]]
     report["facesPlusY"] = sum(c.y for c in face)/len(face) > 0
-    report["fitsBlaster"] = max(hi[0] - lo[0], hi[1] - lo[1]) <= 0.22 and hi[2] - lo[2] <= 0.37
-    assert report["fitsBlaster"], f"too big for the blaster canister: {lo} {hi}"
+    report["heightStuds"] = round(hi[2] - lo[2], 3)
+    assert 0.9 <= report["heightStuds"] <= 1.1, f"Floppy should be about 1 stud tall: {report['heightStuds']}"
     report["sizeStuds"] = [round(hi[i] - lo[i], 3) for i in range(3)]
     assert report["facesPlusY"], "eyes are not on the +Y side"
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -259,7 +298,7 @@ def verify(model, idle, expected_bones):
         scale_drift = max(scale_drift, max(abs(s - 1) for b in rig.pose.bones for s in b.matrix_basis.to_scale()))
     scene.frame_set(int(end))
     seam = max(abs(a[i][j] - b.matrix[i][j]) for a, b in zip(first, rig.pose.bones) for i in range(4) for j in range(4))
-    assert seam < 1e-3 and scale_drift < 1e-4 and motion > 0.0004, (seam, scale_drift, motion)
+    assert seam < 1e-3 and scale_drift < 1e-4 and motion > 0.002, (seam, scale_drift, motion)
     report["idle"] = {"seconds": round((end - start)/FPS, 3), "loopSeam": round(seam, 6),
                       "maxBoneScaleChange": round(scale_drift, 6), "maxBoneTravel": round(motion, 4)}
     return report
@@ -289,7 +328,7 @@ def main():
     bake_to(body, high, "EMIT", colour, emission_of(skin))
     bake_to(body, high, "NORMAL", normal)
     paths = [save(colour, "floppy-body-color.png"), save(normal, "floppy-body-normal.png")]
-    body.data.materials.append(game_skin_material(colour, normal))
+    body.data.materials.append(game_skin_material(colour, normal, body_roughness_map(body)))
 
     eyes = []
     for tag in ("L", "R"):
@@ -299,7 +338,7 @@ def main():
         eye.data.materials[0] = eye.data.materials[0].copy()
         tex = next(n for n in eye.data.materials[0].node_tree.nodes if n.type == "TEX_IMAGE").image
         paths.append(save(tex, tex.name + ".png"))
-        add_gloss(eye.data.materials[0], EYE_ROUGHNESS, "floppy-eye-roughness-" + tag)
+        add_gloss(eye.data.materials[0], roughness_map("floppy-eye-roughness-" + tag, EYE_ROUGHNESS))
         eyes.append(eye)
     for name in ("FloppyBody_Source", "EyeL_Source", "EyeR_Source"):
         bpy.data.objects.remove(bpy.data.objects[name])
@@ -336,7 +375,7 @@ def main():
     report = {"source": str(SOURCE.relative_to(ROOT)), "sourceSha256": digest(SOURCE), "tool": bpy.app.version_string,
               "units": "1 Blender unit = 1 stud", "axes": {"blender": "+Y forward, +Z up", "fbx": "-Z forward, +Y up"},
               "budget": {"bodyTriangles": BODY_TRIANGLES, "eyeTriangles": EYE_TRIANGLES, "texture": TEXTURE, "maxInfluences": 4},
-              "gameScale": GAME_SCALE, "roughness": {"skin": SKIN_ROUGHNESS, "eyes": EYE_ROUGHNESS},
+              "gameScale": GAME_SCALE, "roughness": {"skinBase": SKIN_ROUGHNESS_LOW, "skinHead": SKIN_ROUGHNESS, "eyes": EYE_ROUGHNESS},
               "files": {p.relative_to(OUT).as_posix(): digest(p) for p in [model, idle_path, glb] + paths},
               "studioImportVerified": False}
     report.update(verify(model, idle_path, bones))

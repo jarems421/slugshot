@@ -14,8 +14,6 @@ for _, d in model:GetDescendants() do
 	end
 end
 
--- Floppy ships at 0.09 scale to fit the blaster; motion distances scale with him.
-local SCALE = 0.09
 local TAU = 2 * math.pi
 local LOOP = 12
 local BREATH, WOBBLE_X, WOBBLE_Z = 3 * TAU / LOOP, 4 * TAU / LOOP, 3 * TAU / LOOP
@@ -26,6 +24,11 @@ local SIDEWAYS, UP, FRONT = Vector3.new(-1, 0, 0), Vector3.yAxis, Vector3.new(0,
 local function toLocal(bone: Bone, v: Vector3): Vector3
 	return bone.WorldCFrame:VectorToObjectSpace(v)
 end
+
+-- Motion distances are authored at source size (2.47 tall); scale them to
+-- the model as shipped (about 1 stud).
+local _, modelSize = model:GetBoundingBox()
+local SCALE = modelSize.Y / 2.47
 
 local root = bones.root
 local origin = root.WorldPosition
