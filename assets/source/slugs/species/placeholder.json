@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "id": "placeholder",
+  "placeholder": true,
+  "provenance": "Original Slugshot procedural test geometry; owner authorized pipeline task 2026-10-30. No third-party art.",
+  "palette": {"body": [0.24, 0.58, 0.68], "feature": [0.9, 0.65, 0.23], "eye": [0.08, 0.1, 0.13]},
+  "pattern": "solid",
+  "forms": {
+    "protoform": {
+      "rig": "protoform-v1",
+      "generator": "protoform-placeholder",
+      "source": null,
+      "size": [1.6, 2.8, 1.8],
+      "headScale": 1.0,
+      "eyeSpacing": 1.0,
+      "features": [
+        {"id": "left-eye", "kind": "eye", "socket": "face_left", "offset": [0, 0, 0], "scale": [0.3, 0.3, 0.3], "material": "eye"},
+        {"id": "right-eye", "kind": "eye", "socket": "face_right", "offset": [0, 0, 0], "scale": [0.3, 0.3, 0.3], "material": "eye"},
+        {"id": "test-horn", "kind": "horn", "socket": "crown", "offset": [0, 0, 0], "scale": [0.3, 0.3, 0.65], "material": "feature"}
+      ],
+      "animations": {
+        "idle": {"rig": "protoform-v1", "action": "Idle", "loop": true},
+        "launch": {"rig": "protoform-v1", "action": "Launch", "loop": false},
+        "spin": {"rig": "protoform-v1", "action": "Spin", "loop": true},
+        "prepare": {"rig": "protoform-v1", "action": "Prepare", "loop": false}
+      }
+    },
+    "transformed": {
+      "rig": "expanded-test-v1",
+      "generator": "expanded-placeholder",
+      "source": null,
+      "size": [4, 4.5, 4],
+      "headScale": 1.0,
+      "eyeSpacing": 1.0,
+      "features": [
+        {"id": "test-crest", "kind": "fin", "socket": "crown", "offset": [0, 0, 0], "scale": [0.5, 0.8, 1], "material": "feature"}
+      ],
+      "animations": {
+        "reveal": {"rig": "expanded-test-v1", "action": "Reveal", "loop": false},
+        "attack": {"rig": "expanded-test-v1", "action": "Attack", "loop": false}
+      }
+    }
+  },
+  "transformation": {"enabled": true, "duration": 0.8, "spinTurnsPerSecond": 3, "transitionFraction": 0.65, "revealFraction": 0.85, "effectColor": [1, 0.65, 0.2], "effect": "placeholder-glow"},
+  "budgets": {"trianglesPerMesh": 10000, "totalTriangles": 25000, "maxBones": 64, "maxInfluences": 4}
+}

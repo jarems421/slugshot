@@ -1,0 +1,228 @@
+{
+  "species": "placeholder",
+  "placeholder": true,
+  "tool": "4.5.14 LTS",
+  "inputs": {
+    "assets/source/slugs/species/placeholder.json": "2cf9b68a39fc6fae3688a2132fece740a17a93cf790a9d7f301c0b53a98582df",
+    "tools/slugs/blender_pipeline.py": "634f4954ffda9266a4908d21132e7d680b5c509c13cbc1a04bdb416c52f2c5c3",
+    "tools/slugs/common.py": "0790eaa1ae644fe32ab489835154da157918a1d2cb76e3d4d694223e9f38ffa2",
+    "assets/source/slugs/rigs/protoform-v1.json": "08aa942dd6b1075bc384cce75a830cf30f5e514bbab8c654975238c17fdfa461",
+    "assets/source/slugs/rigs/expanded-test-v1.json": "848b6d7b47c2ca0f34ab136e8be5e60e78e94bcb2c3e162bc2fb73f23648d71b"
+  },
+  "units": "1 Blender unit = 1 intended Roblox stud; Studio roundtrip pending",
+  "axes": {
+    "source": "+Y forward, +Z up",
+    "fbx": "-Z forward, +Y up"
+  },
+  "settings": {
+    "use_selection": true,
+    "object_types": [
+      "ARMATURE",
+      "MESH"
+    ],
+    "global_scale": 1.0,
+    "apply_unit_scale": true,
+    "apply_scale_options": "FBX_SCALE_NONE",
+    "axis_forward": "-Z",
+    "axis_up": "Y",
+    "add_leaf_bones": false,
+    "use_armature_deform_only": true,
+    "bake_anim_use_all_actions": false,
+    "bake_anim_use_nla_strips": false,
+    "bake_anim_simplify_factor": 0.0,
+    "bake_anim_step": 1.0,
+    "use_mesh_modifiers": true,
+    "path_mode": "AUTO"
+  },
+  "provenance": "Original Slugshot procedural test geometry; owner authorized pipeline task 2026-10-30. No third-party art.",
+  "forms": {
+    "protoform": {
+      "triangles": 1134,
+      "meshes": {
+        "Body_PLACEHOLDER": 224,
+        "Head_PLACEHOLDER": 224,
+        "Jaw_PLACEHOLDER": 224,
+        "left-eye": 224,
+        "right-eye": 224,
+        "test-horn": 14
+      },
+      "bones": 6,
+      "actions": [
+        "Idle",
+        "Launch",
+        "Prepare",
+        "Spin"
+      ],
+      "sockets": {
+        "crown": {
+          "bone": "head",
+          "positionBlender": [
+            0.0,
+            0.784,
+            1.8
+          ]
+        },
+        "face_left": {
+          "bone": "head",
+          "positionBlender": [
+            -0.4,
+            1.3159999999999998,
+            1.4400000000000002
+          ]
+        },
+        "face_right": {
+          "bone": "head",
+          "positionBlender": [
+            0.4,
+            1.3159999999999998,
+            1.4400000000000002
+          ]
+        },
+        "face_center": {
+          "bone": "head",
+          "positionBlender": [
+            0.0,
+            1.4,
+            1.4400000000000002
+          ]
+        },
+        "back_left": {
+          "bone": "body_upper",
+          "positionBlender": [
+            -0.7200000000000001,
+            0.0,
+            1.08
+          ]
+        },
+        "back_right": {
+          "bone": "body_upper",
+          "positionBlender": [
+            0.7200000000000001,
+            0.0,
+            1.08
+          ]
+        },
+        "energy": {
+          "bone": "body_upper",
+          "positionBlender": [
+            0.0,
+            0.0,
+            0.9
+          ]
+        }
+      },
+      "restBoundsBlender": [
+        1.5999999642372131,
+        3.135999917984009,
+        2.052999973297119
+      ],
+      "offlineRoundtrip": {
+        "model": true,
+        "animations": {
+          "idle": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.1245,
+            "loopSeamDelta": 0.0
+          },
+          "launch": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.33,
+            "loopSeamDelta": 0.0
+          },
+          "spin": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 2.16,
+            "loopSeamDelta": 0.0
+          },
+          "prepare": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.33,
+            "loopSeamDelta": 0.0
+          }
+        }
+      }
+    },
+    "transformed": {
+      "triangles": 274,
+      "meshes": {
+        "Core_PLACEHOLDER": 224,
+        "Crest_PLACEHOLDER": 12,
+        "Wing_left_PLACEHOLDER": 12,
+        "Wing_right_PLACEHOLDER": 12,
+        "test-crest": 14
+      },
+      "bones": 5,
+      "actions": [
+        "Attack",
+        "Reveal"
+      ],
+      "sockets": {
+        "crown": {
+          "bone": "crest",
+          "positionBlender": [
+            0,
+            1.125,
+            4
+          ]
+        },
+        "energy": {
+          "bone": "core",
+          "positionBlender": [
+            0,
+            0.0,
+            2.0
+          ]
+        },
+        "back_left": {
+          "bone": "wing_left",
+          "positionBlender": [
+            -2.0,
+            0.0,
+            2.2
+          ]
+        },
+        "back_right": {
+          "bone": "wing_right",
+          "positionBlender": [
+            2.0,
+            0.0,
+            2.2
+          ]
+        }
+      },
+      "restBoundsBlender": [
+        6.439999580383301,
+        3.825000047683716,
+        4.399999976158142
+      ],
+      "offlineRoundtrip": {
+        "model": true,
+        "animations": {
+          "reveal": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.71736,
+            "loopSeamDelta": 0.717356
+          },
+          "attack": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.56464,
+            "loopSeamDelta": 0.0
+          }
+        }
+      }
+    }
+  },
+  "files": {
+    "exports/protoform/idle.fbx": "26e1f7978a5f47218814be421b1a806a0f4e57e181caaf6ef4ec7c34c8b4f93e",
+    "exports/protoform/launch.fbx": "2bff41dba53d9c8fa7d85d867847287d0840d0e9dcb8956c4ea036ca4e2f5ff5",
+    "exports/protoform/model.fbx": "57785de74517e7544ceebbcef1152d55c8243daec6f79672ae00624b3bb8d26e",
+    "exports/protoform/prepare.fbx": "d670cf0b85d38248ef639e3531dbf4e5da88bff9cec37fed209669b8a43133a2",
+    "exports/protoform/spin.fbx": "a515ff77fd6891284add33e79cb3585ab3a8485fd4bad07d423b0d83a1849387",
+    "exports/transformed/attack.fbx": "eb4bba490e5d57b3e5be999b4cff576a264f10e49904034f5cd817bb1c81c2ad",
+    "exports/transformed/model.fbx": "f074d5367e19aea8aeb1f3179cdf963022f9014b0a24f95454479d8b31246384",
+    "exports/transformed/reveal.fbx": "5f045b06acf4c2231725f7977b0b47bb08ca7884a0aec38a1042c078af526672",
+    "source/protoform.blend": "816cb8326765a60c1319b9e9259b1c5b5f57f5565d6404dcf418d42b6e468dfd",
+    "source/transformed.blend": "5284155224cd38c83ef182c8171e4cc886321dc72487ccbce0b1324a77337c8d"
+  },
+  "studioImportVerified": false
+}

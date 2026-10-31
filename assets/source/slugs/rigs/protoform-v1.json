@@ -1,0 +1,20 @@
+{
+  "id": "protoform-v1",
+  "bones": [
+    {"name": "root", "parent": null, "position": [0, 0, 0.1]},
+    {"name": "body_lower", "parent": "root", "position": [0, -0.2, 0.35]},
+    {"name": "body_upper", "parent": "body_lower", "position": [0, 0.05, 0.5]},
+    {"name": "head", "parent": "body_upper", "position": [0, 0.3, 0.7]},
+    {"name": "jaw", "parent": "head", "position": [0, 0.42, 0.55]},
+    {"name": "tail", "parent": "body_lower", "position": [0, -0.4, 0.25]}
+  ],
+  "sockets": {
+    "crown": {"bone": "head", "position": [0, 0.28, 1]},
+    "face_left": {"bone": "head", "position": [-0.25, 0.47, 0.8]},
+    "face_right": {"bone": "head", "position": [0.25, 0.47, 0.8]},
+    "face_center": {"bone": "head", "position": [0, 0.5, 0.8]},
+    "back_left": {"bone": "body_upper", "position": [-0.45, 0, 0.6]},
+    "back_right": {"bone": "body_upper", "position": [0.45, 0, 0.6]},
+    "energy": {"bone": "body_upper", "position": [0, 0, 0.5]}
+  }
+}

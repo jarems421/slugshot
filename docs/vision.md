@@ -2,6 +2,8 @@
 
 ## Confirmed
 
+The owner additionally authorized a reusable custom-rig creature **technical pipeline** on 2026-10-30, with temporary test creatures in an isolated worktree. This does not approve finished ProtoformBase art, species or combat. See [ADR 0011](decisions/0011-slug-asset-pipeline.md) and [pipeline](slugs/pipeline.md). Concurrent map and movement work stays separate.
+
 Slugshot is an original Roblox multiplayer creature-combat project. The verified development foundation is preserved. The owner now authorizes isolated movement research, a playable sandbox and relevant free resource evaluation. Use original or appropriately licensed IP. Prototype mechanics, controls and camera parameters are not permanent design decisions; final combat/creature/world systems remain unimplemented.
 
 ## Considering

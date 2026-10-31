@@ -1,0 +1,44 @@
+# Roblox import and creature preview lab
+
+**Implemented:** two isolated Rojo builds on loopback port **34875**. They do not include foundation startup, player movement, Rocklock geometry, destruction, private animation data or uploaded asset IDs.
+
+```powershell
+python tools/verify_slugs.py
+# Playable fixture; no tests in this build:
+Start-Process build/SlugshotCreaturePreview.rbxlx
+# Separate assertions and fixture:
+Start-Process build/SlugshotCreatureTests.rbxlx
+# Optional live sync, only into the dedicated creature place:
+rojo serve creatures.project.json
+```
+
+Preserve existing Studio windows and unsaved work. Connect Rojo only to a disposable creature place. Do not point this project at the movement or Rocklock place. The native fixture needs no uploads. The test place runs the timeline assertion script on the server; expect `PASS: creature timeline ...` in Output. The public preview build excludes assertions. Check [verification](verification.md) before claiming those assertions executed.
+
+## Native fixture checklist
+
+- Play: see a small labeled test proxy and HUD, no player avatar or movement systems.
+- Idle: head moves and body subtly deforms; reset remains idle beyond a second.
+- `2`: small proxy spins/squashes and changes to the five-joint larger proxy; energy Highlight follows the envelope.
+- `1`: compressed 0.06-second transition completes promptly; no artificial travel delay.
+- `I` during a long transition: the transformed proxy is visible immediately at impact.
+- `A` after reveal: the crest performs the one-second attack motion; pressing it before transformation is harmless.
+- `R`, repeat 20 times, stop/restart: only one active form is parented, no leftover models/tracks/connections or new Output errors.
+- Run the separate test place: all timeline assertions pass, including no-transform and zero-distance cases.
+- In the same test place, expect a second client Output line `PASS: native creature visual lifecycle ...`; this checks idle, independent-rig swaps, an updated flight estimate, early impact, collision isolation and twenty create/transition/destroy cycles.
+
+These checks exercise native Motor6D proxies. They do not validate imported skinned meshes or Roblox animation permissions.
+
+## Manual FBX import gate
+
+Current [Roblox Importer](https://create.roblox.com/docs/studio/importer) accepts rigged FBX/glTF and animation data; [rigging documentation](https://create.roblox.com/docs/art/modeling/rigging) describes the resulting Bones. Use a **new local creature place**, never Claude's map. Import may create persistent mesh/animation assets; obtaining any required upload authorization is a separate step. This task did not upload anything.
+
+1. Generate/export the placeholder. Inspect `build/slugs/placeholder/export-report.json`: exact hashes, 24 FPS clips, bone names, source dimensions, settings and provenance are recorded.
+2. Open File → Import and choose `exports/protoform/model.fbx`. Preview warnings before committing any import. Select a general custom rig/model workflow; do not use Avatar Setup, R6/R15 conversion, humanoid auto-rigging or Marketplace avatar assumptions.
+3. Confirm the intended scale in studs and forward direction (Roblox -Z); compare the reported rest bounds. Do not silently compensate with a 100x scale. Retain the custom hierarchy. Inspect applied rotation, skin, normals, material colors, face modules and jaw placement. Save warnings verbatim in sanitized evidence.
+4. Repeat for `exports/transformed/model.fbx`; verify its independent five-bone hierarchy and larger rest dimensions. Name the templates clearly. Set `RigId` to the corresponding JSON rig ID. Set each Model's pivot/PrimaryPart at its authored floor origin and anchor the root. Arrange any additional rigid parts/welds so gravity cannot separate the template; disable collision/query/touch for visual parts. Review each mesh's skin modifier and hierarchy in the imported model.
+5. In the Animation Editor, select each custom rig and import the matching individual clip FBX using the current editor's import workflow. Check that tracks bind to the intended Bones, not a duplicate rig. Preview Idle/Launch/Spin/Prepare and Reveal/Attack, recording actual timing, loop seams and deformation. In particular, check Blender scale channels: CFrame-only Bone transforms do not establish support for animated bone scaling. Supply a tested `onDeform` strategy or retain model-swap presentation where needed.
+6. If clip publication is authorized later, upload under the experience's intended owner/group, confirm permission in that experience, and record verified references **only under ignored `private-assets/`**. [Animator](https://create.roblox.com/docs/reference/engine/classes/Animator) is the playback API; a non-humanoid uses an AnimationController with an Animator. Do not copy sample IDs from documentation.
+7. Supply local templates via `Visual.Options.resolveModel` and verified private clip bindings via `animationIds`. The current preview selects native fixtures by default, so an FBX sitting in Workspace is not automatically a verified integration.
+8. Run stationary playback, rotation, compressed/long transformation, early impact, model swapping, attack and cleanup. Inspect material/UV appearance, bone motion, socket positions and transformed scale. Record results, screenshots, warnings and device/frame-rate limits in the [verification note](verification.md).
+
+No imported Roblox animation, ownership permission, mesh scale or runtime skin deformation is verified by Blender reimport, luau-lsp or a successful Rojo build. If Studio MCP has no connected instance, complete the checklist manually rather than modifying global MCP/security settings or another agent's place.
