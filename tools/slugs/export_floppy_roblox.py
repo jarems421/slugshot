@@ -33,7 +33,7 @@ EYE_TRIANGLES = 400
 TEXTURE = 1024
 # Slugs are about 1 stud tall in Roblox so they read clearly; the blaster is
 # resized to fit them (owner, 2026-10-31); then a third smaller, mostly by a narrower base. Source height 2.47 -> ~0.75 studs.
-GAME_SCALE = 0.304
+GAME_SCALE = 0.34
 # Low roughness for a wet, slimy gloss: wettest low on the body, where it
 # sits in its own slime, a touch less shiny on the head; eyes glossier still.
 SKIN_ROUGHNESS_LOW = 0.10
@@ -305,7 +305,7 @@ def verify(model, idle, expected_bones):
     face = [c for m in meshes if m.name.startswith("Eye") for c in [m.matrix_world @ v.co for v in m.data.vertices]]
     report["facesPlusY"] = sum(c.y for c in face)/len(face) > 0
     report["heightStuds"] = round(hi[2] - lo[2], 3)
-    assert 0.8 <= report["heightStuds"] <= 0.86, f"Floppy should be about 0.83 studs tall: {report['heightStuds']}"
+    assert 0.88 <= report["heightStuds"] <= 0.97, f"Floppy should be about 0.93 studs tall: {report['heightStuds']}"
     report["sizeStuds"] = [round(hi[i] - lo[i], 3) for i in range(3)]
     assert report["facesPlusY"], "eyes are not on the +Y side"
     bpy.ops.wm.read_factory_settings(use_empty=True)

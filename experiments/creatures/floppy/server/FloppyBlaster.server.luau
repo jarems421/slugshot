@@ -1,7 +1,8 @@
 --!strict
--- Floppy test place: a display copy of the owner's blaster, scaled up so a
--- 0.83-stud Floppy fits inside its canister, given to every player as a Tool
--- (hotbar 1). No firing or ammo: this only shows the slug loaded in the gun.
+-- Floppy test place: a display copy of the owner's blaster at the Rocklock
+-- size, given to every player as a Tool (hotbar 1), with Floppy loaded. Slugs
+-- shrink when loaded (owner, 2026-10-31), so the gun stays a normal size and
+-- Floppy is scaled down to fit its canister. No firing or ammo.
 -- The real Rocklock blaster (experiments/movement in the main repo) is left
 -- unchanged. The mesh layout is the private BlasterMesh module (ignored
 -- private-assets/floppy, copied from the blaster pipeline).
@@ -27,11 +28,11 @@ local spec = (require :: any)(ServerStorage:WaitForChild("BlasterMesh")) :: {
 }
 local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number }
 
--- Gun space: X right, Y up, -Z toward the muzzle, origin at the grip.
--- The canister is 0.216 studs across; Floppy is ~0.6 wide and 0.54 deep, so
--- the whole gun grows until the canister is ~0.66 across.
+-- Gun space: X right, Y up, -Z toward the muzzle, origin at the grip. Same
+-- size as the Rocklock blaster: 25% larger than the 2.2-stud mesh, and the
+-- width a further 25%.
+local SCALE = Vector3.new(1.25 * 1.25, 1.25, 1.25)
 local CANISTER = "CanisterTeal"
-local CANISTER_FIT = 0.66
 local canisterSpec: MeshSpec? = nil
 for _, mesh in spec.meshes do
 	if mesh.name == CANISTER then
@@ -39,7 +40,7 @@ for _, mesh in spec.meshes do
 	end
 end
 assert(canisterSpec, "BlasterMesh has no canister")
-local SCALE = CANISTER_FIT / math.min(canisterSpec.size.X, canisterSpec.size.Y)
+local canisterSize = canisterSpec.size * SCALE
 local canisterCentre = canisterSpec.centre * SCALE
 
 local function cosmetic(part: BasePart)
@@ -120,6 +121,15 @@ for _, child in (container :: Instance):GetChildren() do
 	child.Parent = floppy
 end
 (container :: Instance):Destroy()
+-- Loaded form: shrink until he fits the canister lying down (his width across
+-- the gun, his depth up, his height along the barrel), with a little clearance.
+local _, full = floppy:GetBoundingBox()
+local shrink = math.min(
+	canisterSize.X * 0.9 / full.X,
+	canisterSize.Y * 0.9 / full.Z,
+	canisterSize.Z * 0.95 / full.Y
+)
+floppy:ScaleTo(shrink)
 local box, size = floppy:GetBoundingBox()
 -- Model up (+Y) -> gun -Z (muzzle); model face (-Z) -> gun +Y (up).
 local lie = CFrame.fromMatrix(Vector3.zero, Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1))
@@ -133,11 +143,12 @@ end
 floppy.Parent = tool
 print(
 	string.format(
-		"Floppy blaster: scale %.2f, length %.2f studs, canister %.2f across x %.2f long, Floppy %.2f x %.2f x %.2f",
-		SCALE,
-		2.2 * SCALE,
-		canisterSpec.size.X * SCALE,
-		canisterSpec.size.Z * SCALE,
+		"Floppy blaster: length %.2f studs, canister %.2f x %.2f across x %.2f long, Floppy loaded at %.0f%%: %.2f x %.2f x %.2f",
+		2.2 * SCALE.Z,
+		canisterSize.X,
+		canisterSize.Y,
+		canisterSize.Z,
+		shrink * 100,
 		size.X,
 		size.Y,
 		size.Z

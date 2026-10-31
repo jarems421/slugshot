@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number }
 
--- Slugs are about 0.83 studs tall; show Floppy on a pedestal near eye level.
+-- Slugs are about 0.93 studs tall on the ground; show Floppy on a pedestal near eye level.
 -- The blaster with Floppy loaded is a Tool (FloppyBlaster).
 local PEDESTAL_TOP = 3
 local pedestal = Instance.new("Part")

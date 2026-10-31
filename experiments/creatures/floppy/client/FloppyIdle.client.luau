@@ -12,9 +12,10 @@ local TAU = 2 * math.pi
 local LOOP = 12
 local BREATH, WOBBLE_X, WOBBLE_Z = 3 * TAU / LOOP, 4 * TAU / LOOP, 3 * TAU / LOOP
 local LOLL, ANTENNA, EYE = TAU / LOOP, 2 * TAU / LOOP, TAU / LOOP
--- Shipping scale of the Roblox export (GAME_SCALE); motion is authored at
--- source size. The torso stretch moves the antenna tips up by 0.25.
-local SCALE = 0.304
+-- Motion is authored at source size; each Floppy's scale comes from its eye
+-- spacing (0.74 at source), so the ground and shrunken loaded forms both
+-- move in proportion. The torso stretch moves the antenna tips up by 0.25.
+local EYE_SPACING = 0.74
 local TIP = Vector3.new(0.90, 1.44 + 0.25, 0.56)
 
 type Motion = { [Bone]: (number) -> CFrame }
@@ -39,6 +40,7 @@ local function setup(model: Model)
 	local rough = (head.WorldPosition - root.WorldPosition).Unit
 	local up = (rough - sideways * rough:Dot(sideways)).Unit
 	local front = sideways:Cross(up)
+	local SCALE = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / EYE_SPACING
 	local origin = root.WorldPosition
 	local function toLocal(bone: Bone, v: Vector3): Vector3
 		return bone.WorldCFrame:VectorToObjectSpace(v)
