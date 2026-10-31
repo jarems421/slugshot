@@ -37,6 +37,10 @@ GAME_SCALE = 0.304
 # Low roughness for a wet, slimy gloss: wettest low on the body, where it
 # sits in its own slime, a touch less shiny on the head; eyes glossier still.
 SKIN_ROUGHNESS_LOW = 0.10
+# A little taller but no thicker (owner): stretch only the torso, below the
+# face, so the head, eyes and width are unchanged. Source units.
+TORSO_STRETCH = 0.25
+STRETCH_TOP = 1.25
 SKIN_ROUGHNESS = 0.22
 EYE_ROUGHNESS = 0.08
 FPS = 24
@@ -229,6 +233,27 @@ def roblox_idle(rig):
     return action
 
 
+def taller(z):
+    """Height map: the torso below STRETCH_TOP grows by TORSO_STRETCH, everything above moves up rigidly."""
+    t = np.clip((z - 0.05)/(STRETCH_TOP - 0.05), 0.0, 1.0)
+    return z + TORSO_STRETCH*t*t*(3 - 2*t)
+
+
+def stretch_torso(rig, meshes):
+    for m in meshes:
+        co = np.empty(len(m.data.vertices)*3)
+        m.data.vertices.foreach_get("co", co)
+        co = co.reshape(-1, 3)
+        co[:, 2] = taller(co[:, 2])
+        m.data.vertices.foreach_set("co", co.astype(np.float32).ravel())
+        m.data.update()
+    select_only([rig])
+    bpy.ops.object.mode_set(mode="EDIT")
+    for b in rig.data.edit_bones:
+        b.head.z, b.tail.z = float(taller(b.head.z)), float(taller(b.tail.z))
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+
 def scale_to_blaster(rig, meshes):
     """Apply GAME_SCALE to mesh and bones; bone translations in the idle are scaled in roblox_idle."""
     for m in meshes:
@@ -280,7 +305,7 @@ def verify(model, idle, expected_bones):
     face = [c for m in meshes if m.name.startswith("Eye") for c in [m.matrix_world @ v.co for v in m.data.vertices]]
     report["facesPlusY"] = sum(c.y for c in face)/len(face) > 0
     report["heightStuds"] = round(hi[2] - lo[2], 3)
-    assert 0.7 <= report["heightStuds"] <= 0.8, f"Floppy should be about 0.75 studs tall: {report['heightStuds']}"
+    assert 0.8 <= report["heightStuds"] <= 0.86, f"Floppy should be about 0.83 studs tall: {report['heightStuds']}"
     report["sizeStuds"] = [round(hi[i] - lo[i], 3) for i in range(3)]
     assert report["facesPlusY"], "eyes are not on the +Y side"
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -344,6 +369,7 @@ def main():
         bpy.data.objects.remove(bpy.data.objects[name])
 
     meshes = [body] + eyes
+    stretch_torso(rig, meshes)
     face_plus_y(rig, meshes)
     scale_to_blaster(rig, meshes)
     idle = roblox_idle(rig)
@@ -375,7 +401,7 @@ def main():
     report = {"source": str(SOURCE.relative_to(ROOT)), "sourceSha256": digest(SOURCE), "tool": bpy.app.version_string,
               "units": "1 Blender unit = 1 stud", "axes": {"blender": "+Y forward, +Z up", "fbx": "-Z forward, +Y up"},
               "budget": {"bodyTriangles": BODY_TRIANGLES, "eyeTriangles": EYE_TRIANGLES, "texture": TEXTURE, "maxInfluences": 4},
-              "gameScale": GAME_SCALE, "roughness": {"skinBase": SKIN_ROUGHNESS_LOW, "skinHead": SKIN_ROUGHNESS, "eyes": EYE_ROUGHNESS},
+              "gameScale": GAME_SCALE, "torsoStretch": TORSO_STRETCH, "roughness": {"skinBase": SKIN_ROUGHNESS_LOW, "skinHead": SKIN_ROUGHNESS, "eyes": EYE_ROUGHNESS},
               "files": {p.relative_to(OUT).as_posix(): digest(p) for p in [model, idle_path, glb] + paths},
               "studioImportVerified": False}
     report.update(verify(model, idle_path, bones))

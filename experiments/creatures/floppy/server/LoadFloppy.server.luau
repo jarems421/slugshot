@@ -5,10 +5,10 @@
 local InsertService = game:GetService("InsertService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local asset =
-	require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number, blaster: number? }
+local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number }
 
--- Slugs are about 0.75 studs tall; show Floppy on a pedestal near eye level.
+-- Slugs are about 0.83 studs tall; show Floppy on a pedestal near eye level.
+-- The blaster with Floppy loaded is a Tool (FloppyBlaster).
 local PEDESTAL_TOP = 3
 local pedestal = Instance.new("Part")
 pedestal.Name = "Pedestal"
@@ -78,14 +78,4 @@ if floppy then
 			tostring(appearance ~= nil)
 		)
 	)
-end
-
--- The blaster beside Floppy, for a size check.
-if asset.blaster then
-	local blaster = load(asset.blaster, "BlasterForScale")
-	if blaster then
-		standAt(blaster, 1.2, 0)
-		local _, size = blaster:GetBoundingBox()
-		print(string.format("Blaster for scale: %.2f x %.2f x %.2f studs", size.X, size.Y, size.Z))
-	end
 end
