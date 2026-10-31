@@ -36,7 +36,7 @@ def main():
     label(0,-24,"COVER +7")
     label(0,25,"COVER +7")
     for index,text in enumerate([
-        f'{data["config"]["width"]} Ã— {data["config"]["depth"]} playable footprint', f'{data["config"]["spawn_separation"]:.1f} between spawn markers', f'Ceiling approx. +{data["config"]["ceiling"]}', "West: continuous run face", "East: broad stone bridge", 
+        f'{data["config"]["width"]} Ã— {data["config"]["depth"]} playable footprint', f'{data["config"]["spawn_separation"]:.1f} between spawn markers', f'Ceiling approx. +{data["config"]["ceiling"]}', "West: continuous run face", "East: broad stone bridge",
         "Both flanks: gentle ramps", "Open floor / two main heights", "Underpass: -4 floor / +8 roof", "Dashed lines: route connections", "No live combat or destruction", "Interaction markers are disabled", "Primary floor stays connected"]):
         chunks.append(f'<text x="930" y="{140+index*34}" class="small">{html.escape(text)}</text>')
     chunks.extend(['<text x="44" y="960">Config: experiments/movement/rocklock/config.json Â· geometry: tools/rocklock/layout.py</text>',
