@@ -103,15 +103,16 @@ for mesh, part in parts do
 	part.Material = (Enum.Material :: any)[mesh.material]
 	part.Reflectance = mesh.reflectance
 	if mesh.name == CANISTER then
-		-- Deep blue glass that glows like the light source itself: see-through
-		-- blue neon, with a blue light from the glass lighting the slug inside.
+		-- Deep blue glass that glows like the light source itself (see-through
+		-- blue neon). The light inside is neutral warm white, so the slug keeps
+		-- his own colour instead of turning blue.
 		part.Material = Enum.Material.Neon
 		part.Color = Color3.fromRGB(25, 85, 210)
-		part.Transparency = 0.72
+		part.Transparency = 0.82
 		local glow = Instance.new("PointLight")
 		glow.Name = "ChamberLight"
-		glow.Color = Color3.fromRGB(120, 175, 255)
-		glow.Brightness = 3
+		glow.Color = Color3.fromRGB(255, 248, 230)
+		glow.Brightness = 4
 		glow.Range = 1.6
 		glow.Shadows = false
 		glow.Parent = part
