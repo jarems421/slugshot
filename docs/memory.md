@@ -440,3 +440,4 @@
 - Owner: loaded Floppy far too small for the canister. The fit used an inflated bounding box; now sized from eye spacing and source dimensions and centred on the root bone, so he fills the shell.
 - Owner: brighten the chamber so the loaded slug shows better. The canister glass is now clearer (0.78 transparency, pale tint) with a soft PointLight inside.
 - Owner: the clear glass read as dark, not lit. The chamber is now faint see-through neon (0.86 transparency) with a stronger inside light and a soft Highlight fill on the loaded slug.
+- Owner: the slug looked pale/white inside (the white Highlight fill); wanted deep blue glass that glows as the light source. Removed the fill; canister now deep blue see-through neon (0.72) with a blue PointLight.
