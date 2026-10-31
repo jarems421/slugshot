@@ -212,6 +212,8 @@ vec3 bankColor(float idx) {
 // ---------- shared: a rounded mass trimmed by a few broad fracture planes
 float chunk(vec3 p, vec3 c, vec3 r, float seed) {
   vec3 q = p - c;
+  float bs = length(q) - max(r.x, max(r.y, r.z));
+  if (bs > 0.4) return bs;
   float d = sdEll(q, r);
   for (int i = 0; i < 4; i++) {
     float fi = float(i);
@@ -258,6 +260,7 @@ vec2 rockWall(vec3 p) {
   }
   d += 0.07*(noise3(p*0.9) - 0.5);
   vec2 r = vec2(d, 1.0);
+  if (d > 2.2) return vec2(d - 1.7, 1.0);
   // Tiny glowing mushrooms sprouting from cracks here and there (replaced the vines, owner 2026-10-31).
   float tinyStem = 1e5, tinyCap = 1e5, tinyIdx = 0.0;
   for (int i = 0; i < 9; i++) {
@@ -303,6 +306,8 @@ vec2 rockWall(vec3 p) {
 // ---------- 1: crystal cluster (about 5 studs tall)
 float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r) {
   vec3 q = p - base;
+  float bs = length(q) - (h + r + 0.7);
+  if (bs > 0.3) return bs;
   q.xz = rot(yaw)*q.xz;
   q.xy = rot(tilt)*q.xy;
   float hr = max(abs(q.x)*0.8660254 + abs(q.z)*0.5, abs(q.z));
@@ -312,6 +317,8 @@ float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r) {
 // Crystal pointing along any direction (unit dir), faceted hexagonal body and tip.
 float crystalDir(vec3 p, vec3 base, vec3 dir, float h, float r) {
   vec3 q = p - base;
+  float bs = length(q - dir*(h*0.5 - 0.3)) - (h*0.5 + r + 0.6);
+  if (bs > 0.3) return bs;
   vec3 up = abs(dir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
   vec3 ax = normalize(cross(up, dir));
   vec3 az = cross(dir, ax);
@@ -502,7 +509,7 @@ vec2 mushroom(vec3 p) {
   // Mossy mound the mushroom grows out of, with little mushrooms around it.
   float mound = sdEll(p - vec3(0.3, -0.15, 0.2), vec3(4.4, 0.85, 4.1)) + 0.12*(noise3(p*1.1) - 0.5);
   float babyStem = 1e5, babyCap = 1e5, babyIdx = 0.0;
-  for (int i = 0; i < 5; i++) {
+  if (p.y < 3.0) for (int i = 0; i < 5; i++) {
     float fi = float(i);
     float a = fi*1.37 + 0.4;
     vec3 b = vec3(0.3 + cos(a)*(2.4 + 1.2*hash1(fi + 301.0)), 0.25, 0.2 + sin(a)*(2.4 + 1.2*hash1(fi + 301.0)));
@@ -614,10 +621,15 @@ float figure(vec3 p) {
 
 vec2 map(vec3 p) {
   vec2 r;
-  if (uAsset < 0.5) r = rockWall(p);
-  else if (uAsset < 1.5) r = crystals(p);
-  else if (uAsset < 2.5) r = mushroom(p);
-  else { r = portal(p/GS); r.x *= GS; }
+#if ASSET == 0
+  r = rockWall(p);
+#elif ASSET == 1
+  r = crystals(p);
+#elif ASSET == 2
+  r = mushroom(p);
+#else
+  r = portal(p/GS); r.x *= GS;
+#endif
   if (uFig.w > 0.5) { float f = figure(p); if (f < r.x) r = vec2(f, 10.0); }
   if (p.y < r.x) r = vec2(p.y, 11.0);
   return r;
@@ -660,7 +672,7 @@ vec3 normalAt(vec3 p) {
 
 float shadow(vec3 ro, vec3 rd) {
   float res = 1.0, t = 0.08;
-  for (int i = 0; i < 26; i++) {
+  for (int i = 0; i < 18; i++) {
     float h = map(ro + rd*t).x;
     res = min(res, 8.0*h/t);
     t += clamp(h, 0.08, 1.6);
@@ -671,8 +683,8 @@ float shadow(vec3 ro, vec3 rd) {
 
 float ao(vec3 p, vec3 n) {
   float o = 0.0, s = 1.0;
-  for (int i = 1; i <= 5; i++) {
-    float h = 0.18*float(i);
+  for (int i = 1; i <= 4; i++) {
+    float h = 0.22*float(i);
     o += (h - map(p + n*h).x)*s; s *= 0.7;
   }
   return clamp(1.0 - 0.55*o, 0.0, 1.0);
@@ -808,7 +820,7 @@ void main() {
   vec3 bg = mix(vec3(0.012, 0.013, 0.024), vec3(0.05, 0.05, 0.095), smoothstep(-0.3, 0.8, rd.y));
   float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
   bool graze = false; float grazeId = 0.0;
-  for (int i = 0; i < 150; i++) {
+  for (int i = 0; i < 120; i++) {
     vec3 pp = ro + rd*t;
     vec2 h = map(pp);
     if (h.x < 0.002*t) { hitId = h.y; break; }
@@ -817,8 +829,8 @@ void main() {
     // The ray dipped close to a form and is moving away again: a silhouette edge in front.
     if (h.x > prevH && prevH < inkWidth(prevId) && !graze && t > 0.5) { graze = true; grazeId = prevId; }
     prevH = h.x; prevId = h.y;
-    t += h.x*0.8;
-    if (t > 120.0) break;
+    t += h.x*0.85;
+    if (t > 110.0) break;
   }
   vec3 col = bg;
   float ink = 0.0;
@@ -871,7 +883,8 @@ void main() {
     ink = 1.0;
   }
   col = mix(col, inkC, ink);
-  if (uAsset > 1.5 && uAsset < 2.5) {
+#if ASSET == 2
+  {
     // Glowing spores drifting down from the cap, analytic points so they cost almost nothing.
     float tEnd = hitId > 0.0 ? t : 1e4;
     float spore = 0.0;
@@ -890,6 +903,7 @@ void main() {
     }
     col += mix(uCapGlow, vec3(1.0), 0.2)*spore*1.4*TR(5.0).z;
   }
+#endif
   col += glowAcc*uTreat.w*(uAsset > 2.5 ? uGateCore*0.9 : vec3(0.5, 0.9, 0.85));
   col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
   col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
@@ -1104,32 +1118,42 @@ void main() {
   Object.assign(cam, goal);
 
   if (!gl) { fail("This browser can't show the 3D view (WebGL is off or unavailable)."); return; }
-  function sh(type, id) {
+  // One small program per asset, compiled the first time that asset is viewed. A single program with
+  // every asset froze Chrome on Windows (owner report, 2026-10-31).
+  function sh(type, src) {
     const s = gl.createShader(type);
-    gl.shaderSource(s, document.getElementById(id).textContent);
+    gl.shaderSource(s, src);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
     return s;
   }
-  let prog;
-  try {
-    prog = gl.createProgram();
-    gl.attachShader(prog, sh(gl.VERTEX_SHADER, "vs"));
-    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, "fs"));
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-  } catch (e) { console.error(e); fail("The 3D view couldn't start on this device."); return; }
-  gl.useProgram(prog);
-  const bankLoc = gl.getUniformLocation(prog, "uBank");
-  if (bankLoc) gl.uniform3fv(bankLoc, new Float32Array(MUSH.flatMap(m => m.glow)));
+  const VS = document.getElementById("vs").textContent, FS = document.getElementById("fs").textContent;
+  const UNIFORMS = ["uRes", "uT", "uAsset", "uGate", "uCa", "uCb", "uCc", "uCbase", "uCrDeep", "uCrBright", "uCs", "uCrG", "uCapDark", "uCapLight", "uCapGlow", "uGateEdge", "uGateCore", "uGateHot", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"];
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const loc = gl.getAttribLocation(prog, "aPos");
-  gl.enableVertexAttribArray(loc);
-  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  const U = {};
-  ["uRes", "uT", "uAsset", "uGate", "uCa", "uCb", "uCc", "uCbase", "uCrDeep", "uCrBright", "uCs", "uCrG", "uCapDark", "uCapLight", "uCapGlow", "uGateEdge", "uGateCore", "uGateHot", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  const programs = {};
+  let U = null, broken = false;
+  function useProgramFor(shaderIndex) {
+    let P = programs[shaderIndex];
+    if (!P) {
+      const prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS.replace("precision highp float;", "precision highp float;\n#define ASSET " + shaderIndex)));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+      const u = {};
+      UNIFORMS.forEach(n => u[n] = gl.getUniformLocation(prog, n));
+      P = programs[shaderIndex] = { prog, u, loc: gl.getAttribLocation(prog, "aPos") };
+      gl.useProgram(prog);
+      const bankLoc = gl.getUniformLocation(prog, "uBank");
+      if (bankLoc) gl.uniform3fv(bankLoc, new Float32Array(MUSH.flatMap(m => m.glow)));
+    }
+    gl.useProgram(P.prog);
+    gl.enableVertexAttribArray(P.loc);
+    gl.vertexAttribPointer(P.loc, 2, gl.FLOAT, false, 0, 0);
+    U = P.u;
+  }
 
   let drag = null, pinch = null;
   const pointers = new Map();
@@ -1153,20 +1177,31 @@ void main() {
   box.addEventListener("pointercancel", up);
   box.addEventListener("wheel", e => { e.preventDefault(); goal.dist = Math.max(6, Math.min(90, goal.dist*(1 + Math.sign(e.deltaY)*0.08))); }, { passive: false });
 
-  let moving = 0;
+  let moving = 0, quality = 0.45, slow = 0, fast = 0, lastDraw = 0;
   function resize(scale) {
     const w = Math.round(Math.min(860, box.clientWidth)*scale);
     const h = Math.round(w*0.75);
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
   }
   function frame(now) {
-    const dt = Math.min(0.05, (now - last)/1000); last = now;
+    requestAnimationFrame(frame);
+    if (broken) return;
+    const raw = (now - last)/1000;
+    const dt = Math.min(0.05, raw); last = now;
+    // Adaptive resolution: start low, sharpen only while frames stay quick, back off when they don't.
+    if (raw > 0.06) { slow++; fast = 0; } else if (raw < 0.028) { fast++; slow = 0; }
+    if (slow > 3) { quality = Math.max(0.3, quality*0.8); slow = 0; }
+    if (fast > 20) { quality = Math.min(1.0, quality*1.12); fast = 0; }
     if (motion) time += dt;
     let delta = 0;
     for (const k of ["yaw", "pitch", "dist", "tx", "ty", "tz"]) { const d = (goal[k] - cam[k])*Math.min(1, dt*6); cam[k] += d; delta += Math.abs(d); }
     moving = (drag || delta > 0.002) ? 0.4 : Math.max(0, moving - dt);
-    resize(moving > 0 ? 0.6 : Math.min(window.devicePixelRatio || 1, 1.1));
+    if (!moving && now - lastDraw < 40) return;  // idle animation at about 25 fps
+    lastDraw = now;
+    resize(moving > 0 ? Math.min(quality, 0.5) : quality);
     const a = ASSETS[current];
+    try { useProgramFor(a.shader !== undefined ? a.shader : current); }
+    catch (e) { console.error(e); broken = true; fail("The 3D view couldn't start on this device."); return; }
     const cy = Math.cos(cam.pitch);
     const tgt = [cam.tx, cam.ty, cam.tz];
     const ro = [tgt[0] + Math.sin(cam.yaw)*cy*cam.dist, Math.max(0.6, tgt[1] + Math.sin(cam.pitch)*cam.dist), tgt[2] - Math.cos(cam.yaw)*cy*cam.dist];
@@ -1211,7 +1246,6 @@ void main() {
     gl.uniform3fv(U.uCrDeep, CV.deep); gl.uniform3fv(U.uCrBright, CV.bright);
     gl.uniform3fv(U.uGlowCol, V ? V.bright : a.id === "mushroom" ? M.glow : a.glowCol);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 })();

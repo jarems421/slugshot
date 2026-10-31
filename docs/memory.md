@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Asset library freezing Chrome
+
+- **Owner report:** opening the library froze the whole Chrome browser.
+- **Implemented:** one small shader program per asset, compiled lazily (the single all-asset shader was the likely GPU hang on Windows/ANGLE); bounding early-outs for crystals, rock chunks, wall dressing and baby mushrooms; fewer march/shadow/AO samples; adaptive resolution starting at 45% and an idle frame cap of about 25 fps. JS syntax and shader structure checked; **not verified in a browser**.
+- **Unresolved:** owner confirmation that the page now opens smoothly.
+
 ## 2026-10-31 — Concept round 5
 
 - **Owner feedback:** crystals liked except the crimson shard field (shards detached from the rock); wants seven more, more unique designs (14 total). Rock wall vines "ruin it": remove them and add a few tiny glowing mushrooms in cracks. Mushrooms need a colour bank (purple, green, lime, violet, etc.) viewable for the giant mushroom; small mushrooms take a random colour from a bank of 14.
