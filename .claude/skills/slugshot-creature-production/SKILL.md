@@ -5,7 +5,7 @@ description: Step-by-step workflow for Slugshot creature (slug) production in Bl
 
 # Slugshot creature production
 
-The reference manual is [skill routing](../../../docs/slugs/skill-routing.md). Also read [modelling lessons](../../../docs/slugs/blender-lessons.md), the species record in [the catalogue](../../../docs/slugs/catalog/index.md) and, for Roblox, the [Studio import checklist](../../../docs/slugs/studio-import.md). `slugshot-blender-orchestrator` holds the same routing rules in short form; this skill is the full procedure.
+The reference manual is [skill routing](../../../docs/slugs/skill-routing.md). Read [owner design language](../../../docs/slugs/owner-design-language.md) first: what the owner's feedback phrases have meant and how they like to work. Also read [modelling lessons](../../../docs/slugs/blender-lessons.md), the species record in [the catalogue](../../../docs/slugs/catalog/index.md) and, for Roblox, the [Studio import checklist](../../../docs/slugs/studio-import.md). `slugshot-blender-orchestrator` holds the same routing rules in short form; this skill is the full procedure.
 
 1. **Name the problem.** Write one sentence: the creature, the failing view or behaviour, and whether it is technical (errors, geometry, weights, export) or artistic (owner feedback on form, face, colour). Quote owner feedback exactly. If the cause is unknown, inspect before editing.
 2. **Select skills.** Find the matching row in the routing table. Use its primary skill; add a supporting skill only for a real cross-domain dependency. Do not choose a skill by its name alone; read its row in the audited inventory, then read only that installed `SKILL.md` (`~/.agents/skills/` or `~/.claude/skills/`). State the selection and why.
@@ -16,5 +16,5 @@ The reference manual is [skill routing](../../../docs/slugs/skill-routing.md). A
 7. **Render** front, side, back and three-quarter views with fixed camera and light, plus pose extremes for rig or animation work.
 8. **Check technically** with the validation in the routing row and the project checks (`python tools/verify_slugs.py --blender` where relevant). For export: limit to creature objects, reimport and assert clip names. Blender reimport does not prove Roblox playback.
 9. **Judge visually** against the brief and the last accepted iteration. Successful code is not successful design; say what still looks wrong.
-10. **Record** verified fixes, failed approaches and repeated problems in `docs/slugs/blender-lessons.md` (what went wrong, cause, attempts, fix, prevention, verified or not), and update `docs/status.md` and `docs/memory.md` after meaningful work.
+10. **Record** what an owner phrase turned out to mean in `docs/slugs/owner-design-language.md`, and verified fixes, failed approaches and repeated problems in `docs/slugs/blender-lessons.md` (what went wrong, cause, attempts, fix, prevention, verified or not), and update `docs/status.md` and `docs/memory.md` after meaningful work.
 11. **Ask for owner approval** of artistic changes with the renders. Do not upload, publish, or start batch generation of other creatures until the first creature is approved.

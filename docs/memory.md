@@ -478,3 +478,8 @@
 - **Confirmed:** slightly extend barrel; lengthen/flatten downward slants; fill the two oval side vents with orange while keeping the central slug channel.
 - **Implemented/verified offline:** +0.080 stud muzzle reach, 0.24 versus 0.14 source-unit bevel run, solid front panels extruded from the existing cross-section. Orange mesh QA and exact-overlap checks pass; nine channel rays and six solid-panel samples pass; twelve GLB mesh bounds reimport exactly. Private mappings and test builds updated. [Evidence and inherited limits](slugs/blaster-refinement.md#solid-muzzle-and-shallower-bevel-follow-up-2026-10-31).
 - **Unresolved:** owner visual verdict and refreshed Studio playback. Existing rear contact flags remain; accepted files and eight prior Studio windows preserved.
+
+## 2026-10-31 - Owner design language record
+
+- **Confirmed:** owner asked that lessons from the Floppy design rounds be recorded so later slugs avoid the same errors, including what their phrases mean in practice (e.g. "dark spots").
+- **Implemented:** [owner design language](slugs/owner-design-language.md) collects phrase-to-outcome mappings drawn only from recorded rounds, the owner's working style, and the draw/holster runtime lessons from `experiment/rocklock-unified`. The creature-production procedure (both skill copies) now reads it first and records new meanings there.
