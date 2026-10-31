@@ -79,13 +79,13 @@ dd { margin: 2px 0 0; }
       <div class="canvas-box" id="box">
         <canvas id="view" aria-label="Rotatable 3D concept of the selected asset"></canvas>
         <div class="hint">Drag to turn · scroll or pinch to zoom</div>
-        <div class="tag" id="tag">C · Living Comic</div>
+        <div class="tag" id="tag">Inked Cavern</div>
       </div>
       <div class="row" role="group" aria-label="Treatment">
         <span class="label">Treatment</span>
-        <button class="ctl" id="t-a" data-treat="0">A · Comic Cavern</button>
-        <button class="ctl" id="t-b" data-treat="1">B · Enchanted</button>
-        <button class="ctl" id="t-c" data-treat="2">C · Living Comic</button>
+        <button class="ctl" id="t-a" data-treat="0">Comic Cavern</button>
+        <button class="ctl" id="t-inked" data-treat="1">Inked Cavern</button>
+        <button class="ctl" id="t-c" data-treat="2">Living Comic</button>
       </div>
       <div class="row" role="group" aria-label="Camera">
         <span class="label">View</span>
@@ -586,9 +586,10 @@ void main() {
   ];
   const PLANNED = ["Floating spawn rock", "Droopy wooden bridge", "Maelstrom sinkhole", "Sky Well light column", "Training gate", "PvP gate", "Veylume gate", "Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
   const TREAT = [
-    { name: "A · Comic Cavern", t: [1.7, 1.35, 0.85, 0.25], ink: [0.006, 0.006, 0.008], amb: 0.85 },
-    { name: "B · Enchanted", t: [0.55, 0.6, 1.5, 1.25], ink: [0.09, 0.07, 0.15], amb: 1.3 },
-    { name: "C · Living Comic", t: [1.0, 1.0, 1.1, 0.6], ink: [0.03, 0.028, 0.04], amb: 1.0 }
+    { name: "Comic Cavern", t: [1.7, 1.35, 0.85, 0.25], ink: [0.006, 0.006, 0.008], amb: 0.85 },
+    // Owner pick, 2026-10-31: about two-thirds of the way from Living Comic toward Comic Cavern.
+    { name: "Inked Cavern", t: [1.45, 1.23, 0.94, 0.37], ink: [0.014, 0.013, 0.019], amb: 0.9 },
+    { name: "Living Comic", t: [1.0, 1.0, 1.1, 0.6], ink: [0.03, 0.028, 0.04], amb: 1.0 }
   ];
   const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
 
@@ -609,7 +610,7 @@ void main() {
   const gl = canvas.getContext("webgl", { antialias: false });
   function fail(msg) { const d = document.createElement("div"); d.className = "fallback"; d.textContent = msg; box.appendChild(d); }
 
-  let current = 0, treat = 2, figOn = true;
+  let current = 0, treat = 1, figOn = true;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let motion = !reduce, time = 3.0, last = performance.now();
   const cam = { yaw: -0.65, pitch: 0.22, dist: 30, tx: 0, ty: 6, tz: 0 };
@@ -656,7 +657,7 @@ void main() {
 
   const start = ASSETS.findIndex(a => "#" + a.id === location.hash);
   select(start >= 0 ? start : 0);
-  setTreat(2);
+  setTreat(1);
   Object.assign(cam, goal);
 
   if (!gl) { fail("This browser can't show the 3D view (WebGL is off or unavailable)."); return; }

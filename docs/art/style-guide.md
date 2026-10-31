@@ -127,6 +127,6 @@ Everything in a finished scene is deliberately designed and authored, mainly in 
 ## Open questions
 
 - **Unresolved:** outline colour (charcoal vs black) and weights, decided by the style test.
-- **Unresolved:** which treatment wins: A Comic Cavern, B Enchanted Cavern, or C Living Comic Fantasy (the proposal's and the direction's favourite).
+- **Treatment, 2026-10-31:** the owner rejected B Enchanted outright and asked for a midpoint between A Comic Cavern and C Living Comic, closer to Comic Cavern but not as heavy. This became **Inked Cavern** (about two-thirds of the way from C toward A: bolder, darker ink than C, lighter than A's heavy black), the current lead in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Unresolved:** final confirmation, then Studio proof.
 - **Unresolved:** whether creatures use the same hull outlines as props or a stronger Highlight-based treatment.
 - **Unresolved:** the actual palette (owner said colours may change).

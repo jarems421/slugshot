@@ -1,5 +1,9 @@
 # Project memory
 
+## 2026-10-31 — Treatment direction
+
+- **Confirmed:** owner rejected the Enchanted treatment and wants a look between Comic Cavern and Living Comic, closer to Comic Cavern but not as heavy. **Implemented:** Inked Cavern treatment (ink width 1.45x, near-black charcoal ink, slightly reduced glow/bloom) as the asset library's default; Enchanted removed. **Unresolved:** owner confirmation.
+
 ## 2026-10-31 — Lobby branch and asset library
 
 - **Confirmed:** owner agreed with the build order (a few Blender hero assets first to set the look, then a greybox layout, then all assets built in Blender to fit it) and asked for a live 3D concept library like Floppy's.

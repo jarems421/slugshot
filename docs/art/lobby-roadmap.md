@@ -141,7 +141,8 @@ The wall, crystals, mushroom and portal frame are built as first-pass Blender as
 | Treatment | Description |
 | --- | --- |
 | **A: Comic Cavern** | Heavy black outlines, bold hand-painted details, strongest Borderlands influence. |
-| **B: Enchanted Cavern** | Softer outlines, brighter fantasy lighting, beautiful bioluminescence. |
+| ~~B: Enchanted Cavern~~ | Rejected by the owner, 2026-10-31. |
+| **Inked Cavern** (current lead) | Owner-requested midpoint between A and C, closer to A but not as heavy. |
 | **C: Living Comic Fantasy** | Strong outlines on important objects, glowing fantasy environment, detailed but restrained shading. The proposal's favourite. |
 
 Also compare:
