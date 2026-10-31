@@ -67,7 +67,7 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | Boulders and rock clusters (S/M/L) | P2 | Break up edges and frame paths. |
 | Stalactites and stalagmites | P2 | Sell the scale and the "ancient cavern". Exaggerated tapers. |
 | Ceiling and backdrop rock | P2 | Distant cavern shell, lightest ink, low detail. |
-| Crystal clusters (small, medium, giant) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
+| Crystal clusters: seven variants in seven colours (owner, 2026-10-31) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
 | Water feature: pool, drip or small waterfall | P3 | Calm movement and sound. Considering. |
 
 ### Fungi and flora (Slugterra-category, original designs)

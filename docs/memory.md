@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Concept round 4
+
+- **Owner feedback:** raised gate symbols hard to read under bold ink; gates 1.5x bigger; mushroom only needs to look more attached to the ground plus spores; crystals "basically perfect" but need seven variants in seven colours ("we need a lot of variety"); rock wall v3 "the worst", v1 best for simplicity: rebuild simply with moss, cracks, sprouting mushrooms, poking crystals and vines, after Slugterra/fantasy walls.
+- **Implemented (library v6):** symbols as flush glowing inlays with a fine painted edge (no ink outline); gates scaled 1.5x (about 21 studs); mushroom v2 with five ground-diving roots, mossy mound, baby mushrooms and drifting glowing spores; crystals with seven variants (Cyan cluster, Violet spire, Amber fan, Rose crown, Emerald spray, Frost spires, Crimson shard field); rock wall v4 = v1 masses plus painted broken cracks, more moss, three sprouting mushroom clusters, five poking crystals and four vines with glow bulbs. A reference search found only stylised asset packs; the common pattern is simple rock with dressing.
+- **Unresolved:** owner review; page not visually checked by the agent.
+
 ## 2026-10-31 — Gate identities and rock wall v3
 
 - **Confirmed:** Slugshot mix is "amazing". Rock wall v2 still not liked: the lines through the face looked weird and it felt plain. Gates get a symbol on the keystone gem (PvP two swords, exploration a map) and gate colours for energy, bolts and gem: PvP orange, Training green, Veylume purple (owner "100% sure"); symbol grey or matching.
