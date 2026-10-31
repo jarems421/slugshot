@@ -22,7 +22,7 @@ Sources: [Floppy catalogue entry](catalog/flopper-inspired.md), [Blender lessons
 
 ## Voice-dictation slips (this chat)
 
-He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider animation" = spiral animation, "glue" = glow, "class" = glass, "doc under eyes" = dark under-eyes, "slime fits inside the shell" = slug, "slug terror" = Slugterra, "floppy" = the slug's name (not a description). Ask only if the sound-alike is still ambiguous.
+He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider animation" = spiral animation, "glue" = glow, "class" = glass, "doc under eyes" = dark under-eyes, "slime fits inside the shell" = slug, "slug terror" = Slugterra, "floppy" = the slug's name (not a description), "Veilume"/"volume" = Veylume (the exploration world), "jewel board" = duel board, "Badlands"/"Badland" = Borderlands (the comic-ink art style; see [style guide](../art/style-guide.md)). Ask only if the sound-alike is still ambiguous.
 
 ## What phrases have meant
 

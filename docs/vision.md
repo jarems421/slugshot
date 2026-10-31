@@ -8,13 +8,15 @@ The owner additionally authorized a reusable custom-rig creature **technical pip
 
 Slugshot is an original Roblox multiplayer creature-combat project. The verified development foundation is preserved. The owner now authorizes isolated movement research, a playable sandbox and relevant free resource evaluation. Use original or appropriately licensed IP. Prototype mechanics, controls and camera parameters are not permanent design decisions; final combat/creature/world systems remain unimplemented.
 
+On 2026-10-31 the owner set the art direction: **Living Comic-Book Fantasy**, with bold dark ink outlines and stylised painted textures (Borderlands-inspired) and an underground fantasy atmosphere with calm base colours and selective vibrant accents (Slugterra-inspired). Everything is original. Exact palette, outline method and treatment are still to be chosen. See the [style guide](art/style-guide.md). A lobby is planned as an underground outpost in an ancient cavern ([roadmap](art/lobby-roadmap.md)); its layout is Considering.
+
 ## Considering
 
 Fast, skill-based PvP; collectible creatures; transformations; advanced movement; abilities; an underground world. Skiing, sliding, bunny hopping, cinematics, evolution and exploration are examples to investigate, not requirements.
 
 ## Unresolved
 
-Movement model, camera, combat rules, creature identity, abilities, progression, game modes, multiplayer scale, art style and world structure. See [open questions](questions.md).
+Movement model, camera, combat rules, creature identity, abilities, progression, game modes, multiplayer scale, final palette/treatment and world structure. See [open questions](questions.md).
 
 ## Implemented/verified
 

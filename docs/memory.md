@@ -1,5 +1,37 @@
 # Project memory
 
+## 2026-10-31 — Bridge style leaning
+
+- **Considering:** owner is not fully decided but thinks droopy wooden suspension bridges would look best. Recorded in the [roadmap](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md).
+
+## 2026-10-31 — Floating spawn and bridges
+
+- **Confirmed:** spawn is a floating rock above the Maelstrom and below the Sky Well. Four bridges: forward to the portals, back to the entrance, left and right to the two exhibition sides. Each lands on solid mainland where the terrain and biomes are built. Invisible barriers stop players jumping off bridges.
+- **Implemented:** [roadmap layout](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md) updated.
+
+## 2026-10-31 — Hub centrepiece
+
+- **Confirmed:** after rejecting four slug-themed centrepieces, the owner asked for something dramatic and natural, then chose a **Sky Well** (ceiling opening with a light column and floating rocks) above a **Maelstrom** (glowing water spiralling down a central sinkhole), with spawn on a pillar between them and bridges out to the ring.
+- **Implemented:** [roadmap centrepiece](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom) and [asset plan](art/lobby-assets.md) updated.
+- **Unresolved:** fall behaviour into the Maelstrom; Roblox technique for the light column and swirl.
+
+## 2026-10-31 — Veylume, round hub, terrain features
+
+- **Confirmed:** the exploration world is named **Veylume** (owner-typed spelling). Hub is round/octagonal; exhibition positions basically right. Chosen extras: bounty and duel board, a slug workshop (Slugterra-esque, not a real forge), glowing pond, slug murals. The owner's main interest is terrain: spiralling caverns, a little volcano, a ravine with lava pouring down, a waterfall mountain with Slugterra-type greenery. Descent shaft, overlook, canteen and map table not chosen.
+- **Implemented:** [roadmap](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md) updated; dictation slips recorded in owner design language.
+
+## 2026-10-31 — Lobby layout and Slugterra research
+
+- **Confirmed:** owner layout: central spawn facing the PvP gate; Training gate left of PvP, exploration gate right of PvP (mode added later; needs a less generic name); entrance behind spawn; a slug exhibition and a gun exhibition; Slugterra-type terrain and structures all around. The wider map is planned as merging biomes.
+- **Implemented:** [Slugterra environment research](research/slugterra-environment.md) (search-confirmed vs from-memory items; the wiki and TV Tropes refused direct fetches); layout diagram, zone moods, name options and extra-area ideas in the [roadmap](art/lobby-roadmap.md); exhibition, frontier, slug-energy and biome-hint assets in the [asset plan](art/lobby-assets.md).
+- **Unresolved:** exploration name, exhibition positions, which extra areas to include, owner review before Phase 1.
+
+## 2026-10-31 — Art direction and lobby plan
+
+- **Confirmed:** the owner pasted an art-direction chat, agreed with its proposals, and added: Slugterra-type vibrant colours that are not neon, a mix of calm and vibrant, and Borderlands-style ink outlines so nothing goes unnoticed. They asked for general style rules (no strict colours or layout), a lobby roadmap and a plan of Blender assets, including distinct Slugterra-category props such as giant mushrooms, so the lobby doesn't look like AI slop. In the owner's dictation, "Badlands" means Borderlands.
+- **Implemented:** [style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md); links in the index, status and vision.
+- **Unresolved:** owner review; Phase 1 style test (three treatments A/B/C, outline methods, low-graphics check); a separate lobby branch/worktree before any build.
+
 ## 2026-10-31 — Blender skill ecosystem for both agents
 
 - **Confirmed:** owner authorised installing 28 EL4CTEO skills, 30 RobLe3 skills, BlendRelay and MCP for Blender for both Codex and Claude, plus Slugshot routing and quality records. Preserve the current creature and unrelated Rocklock/movement work; no GPU image-to-3D services or publication.
