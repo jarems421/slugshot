@@ -35,11 +35,22 @@ for vertex, sample in zip(body.data.vertices, color.data):
         quadrants[min(3, int(angle / (math.pi / 2)))] += 1
 assert all(value > 5 for value in quadrants), f"Green markings missing around body: {quadrants}"
 names = set(obj.name for obj in bpy.context.scene.objects)
-assert "tiny-tail" in names and not any("foot" in name.lower() or "base-lobe" in name for name in names), "Expected a tiny tail and no feet"
-tail = bpy.data.objects["tiny-tail"]
-tail_back = min(v.co.y for v in tail.data.vertices)
-body_back = min(v.co.y for v in body.data.vertices)
-assert 0 < body_back - tail_back < .25, "Tail must protrude less than a quarter unit behind the body"
+assert body.get("integrated_tail") and "tiny-tail" not in names, "Tail must extend from the continuous body"
+assert not any("foot" in name.lower() or "base-lobe" in name for name in names), "No feet"
+contact = [v for v in body.data.vertices if abs(v.co.z) < .0001]
+assert len(contact) > 100, "Soft body needs a broad flat contact patch"
+assert max(v.co.x for v in contact)-min(v.co.x for v in contact) > 1.3, "Contact should spread across the base"
+assert max(v.co.y for v in contact)-min(v.co.y for v in contact) > .9, "Contact must be broad in depth too"
+main_rear = min(v.co.y for v in body.data.vertices if .5 < v.co.z < .8)
+tail_tip = min(v.co.y for v in body.data.vertices)
+assert .1 < main_rear-tail_tip < .45, "Tail must stay a short extension of the body"
+tail_vertices = [v for v in body.data.vertices if v.co.y < main_rear-.15]
+assert tail_vertices and max(v.co.z for v in tail_vertices) < .23, "Tail must be a low soft wedge"
+for action, frame in (("Idle",1),("Idle",13),("Idle",27),("Impact",13)):
+    pose(action, frame)
+    evaluated = body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    assert max(abs(evaluated.data.vertices[v.index].co.z) for v in contact) < .003, f"{action}: sole must stay relaxed on the ground"
+pose("Idle",1)
 for name in ("eye-left", "eye-right"):
     eye = bpy.data.objects[name]
     for vertex in list(eye.data.vertices)[::20]:
@@ -52,4 +63,4 @@ imported = bpy.data.objects["SoftBody"]
 assert imported.data.color_attributes, "FBX roundtrip lost the body colours"
 colors = imported.data.color_attributes[0].data
 assert max(sample.color[1] - sample.color[0] for sample in colors) > .18, "FBX roundtrip lost green markings"
-print("PASS: idle, uneven blink, hop, squash, surface eyes, tiny tail, all-around spots and FBX vertex colours")
+print("PASS: idle, blink, hop, grounded squash, surface eyes, integrated short tail, all-around spots and FBX vertex colours")

@@ -3,11 +3,11 @@
   "placeholder": false,
   "tool": "4.5.14 LTS",
   "inputs": {
-    "assets/source/slugs/species/flopper-inspired.json": "f77db510f50b03e8ba3a57c9da608fcc556a6ef7ab5045f0b4560510c97cb533",
+    "assets/source/slugs/species/flopper-inspired.json": "c9fd14e53f12afd708e62cef31e79d17b848bb416d89993c81e2583d9d150764",
     "tools/slugs/blender_pipeline.py": "d0465dd638ed7db7f3ad43223bc5d40d6afc482a290d63a7a18cacb8c9778319",
     "tools/slugs/common.py": "5bf6b6cf66322831ce5f7e8d0e69cd285c2ace44df3fff4206804e258bfc6c54",
     "assets/source/slugs/rigs/flopper-inspired-v1.json": "2119716e676086fbce64747bf5d11c31dc321f795e2fecd63632597df53d16e8",
-    "assets/source/slugs/models/flopper-inspired/protoform.blend": "7d4e8a454600ad10ad2973b1749293b01c0f2fc1b8aeb1a644a4827f9cc190a2"
+    "assets/source/slugs/models/flopper-inspired/protoform.blend": "0d210abb01b1482a807824ceac41790f1b480e8d0ec13890ec8a4aee68dd75e0"
   },
   "units": "1 Blender unit = 1 intended Roblox stud; Studio roundtrip pending",
   "axes": {
@@ -37,10 +37,9 @@
   "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
   "forms": {
     "protoform": {
-      "triangles": 11440,
+      "triangles": 13052,
       "meshes": {
-        "SoftBody": 6720,
-        "tiny-tail": 308,
+        "SoftBody": 8640,
         "eye-left": 1120,
         "spiral-left": 964,
         "eye-right": 1120,
@@ -90,9 +89,9 @@
         }
       },
       "restBoundsBlender": [
-        1.5688468217849731,
-        1.3134528994560242,
-        2.249461941421032
+        1.920557975769043,
+        1.6482625007629395,
+        2.2898707389831543
       ],
       "offlineRoundtrip": {
         "model": true,
@@ -114,12 +113,12 @@
           },
           "launch": {
             "durationSeconds": 1.0,
-            "maxBoneMatrixDelta": 0.58784,
+            "maxBoneMatrixDelta": 0.66111,
             "loopSeamDelta": 0.0
           },
           "impact": {
             "durationSeconds": 1.0,
-            "maxBoneMatrixDelta": 0.76695,
+            "maxBoneMatrixDelta": 0.86575,
             "loopSeamDelta": 0.0
           }
         }
@@ -127,17 +126,18 @@
     }
   },
   "files": {
+    "before-grounded-redesign.blend": "7d4e8a454600ad10ad2973b1749293b01c0f2fc1b8aeb1a644a4827f9cc190a2",
     "before-sick-redesign.blend": "6b6ed8a7d6700bf6434b6d2d5cc299ee3fa1c78fb9e34abd689e3aca9bdc74a9",
-    "exports/protoform/blink.fbx": "01caaf2d67d79ab6a482346517efd43a5bde615b4055fde1c6fc6004e723921e",
-    "exports/protoform/hop.fbx": "d6eb9a6ad2278f4c8320c12b6b5587672c200307c406fca93ba82f7c1f64c331",
-    "exports/protoform/idle.fbx": "5d03d8543b46c5063d03330f170807e489a4fe1f7900159359c34d10acb30139",
-    "exports/protoform/impact.fbx": "52abec75608a37b3d62f9ad6d017e069d895424a883c92872fc0228b9ca4eaa7",
-    "exports/protoform/launch.fbx": "12ceffbaa17f0bcf6daea104d949f4d6bd2bde21240de9cd3dd683ffcc5eeb48",
-    "exports/protoform/model.fbx": "c57da63327d471d340de9e061ab66de42dc4b970e1a9ad32e983b3a3e3d3370f",
+    "exports/protoform/blink.fbx": "c143ef655bc8bd9556fda62a97ad23d66d2ff0d3b059516eb842b9eacaa4d914",
+    "exports/protoform/hop.fbx": "3b23f47d8964032a2f05570255328b9bb507212779876cb522a94c291930da15",
+    "exports/protoform/idle.fbx": "738083f57b9da1b4b9e3773b68f72f5bd3cab8ca34cbbfa04af7d4cab2c4bdc4",
+    "exports/protoform/impact.fbx": "7855f29df54a2457522d0900d8b94ed6814dd0f51f40a5c3c0a440138f1839ff",
+    "exports/protoform/launch.fbx": "7ac16600ef616e424424c71f73c22086314325fa16ece7df34d8bdcada12367d",
+    "exports/protoform/model.fbx": "4c52e8edfdb9811cb8dd381648fda76fe50967a523adeb388726b7690500fca1",
     "first-draft.blend": "d9b8db39013ed2769f0675a13693839327e0efce364e6d1fa9e7c08789183c59",
     "fourth-draft.blend": "c80d18a1e769ada8cb6f3bf5f81fd69420f909c6015d6b13b19ded05db16ffce",
     "second-draft.blend": "a1429757ca80c537cd8a639a69350e528cdad315e859a5fb680448aabcd4af97",
-    "source/protoform.blend": "a52730df77e427408cc1fa6a26fb9a453ba776acea03d067b2436e962510a74d",
+    "source/protoform.blend": "2e18e3a104a457577cefe0d38a923d630c03f491167cb22b78487803f402110f",
     "third-draft.blend": "4dda41939d500a5091fcfc9c6f7672d8e345dfbaf848c564e66bebd7d5ed8a24"
   },
   "studioImportVerified": false

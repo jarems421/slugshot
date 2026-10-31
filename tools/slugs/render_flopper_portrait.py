@@ -42,7 +42,7 @@ def main():
     light("Key", (4,5,7), 300, 5)
     light("Fill", (-4,4,4), 140, 4)
     light("Rim", (0,-4,6), 280, 3)
-    bpy.ops.mesh.primitive_plane_add(size=200, location=(0,0,0.01))
+    bpy.ops.mesh.primitive_plane_add(size=200, location=(0,0,0))
     floor = bpy.context.object
     floor.name = "ReviewBackdrop"
     floor_mat = bpy.data.materials.new("Backdrop")

@@ -61,9 +61,12 @@ def tube(name, points, radii, mat, rig, bone, rings=12):
 
 
 PROFILE = [
-    (0.04,0.02,0.02,-0.03), (0.07,0.38,0.30,-0.03),
-    (0.16,0.60,0.47,-0.04), (0.30,0.73,0.55,-0.04),
-    (0.49,0.78,0.59,-0.04), (0.70,0.79,0.60,-0.04),
+    (0.00,0.02,0.02,-0.03), (0.00,0.38,0.28,-0.03),
+    (0.00,0.65,0.47,-0.04), (0.005,0.81,0.58,-0.04),
+    (0.025,0.91,0.65,-0.04), (0.065,0.95,0.68,-0.04),
+    (0.13,0.96,0.69,-0.04), (0.23,0.94,0.68,-0.04),
+    (0.36,0.88,0.65,-0.04), (0.52,0.82,0.62,-0.04),
+    (0.70,0.79,0.60,-0.04),
     (0.91,0.78,0.60,-0.04), (1.12,0.76,0.59,-0.04),
     (1.32,0.74,0.58,-0.04), (1.50,0.72,0.57,-0.04),
     (1.68,0.69,0.55,-0.04), (1.84,0.65,0.52,-0.04),
@@ -74,14 +77,20 @@ PROFILE = [
 
 
 def body(rig, mat):
-    # A plump, continuous body with a tapered head and no separate feet.
+    # Broad flat contact, a softly spread lower body and an integrated tail.
     profile = PROFILE
     n = 48
     verts, faces = [], []
     for z, rx, ry, cy in profile:
         for j in range(n):
             a = math.tau * j / n
-            verts.append((rx * math.cos(a), cy + ry * math.sin(a), z))
+            rear_angle = (a + math.pi/2 + math.pi) % math.tau - math.pi
+            triangular = max(0.0, 1.0 - abs(rear_angle)/0.52) ** 1.15
+            height_fade = math.exp(-max(0.0,z-0.065)**2 / 0.12**2)
+            # One continuous low, wide wedge. It is neither a tube nor a nub.
+            extension = 0.33 * triangular * height_fade * min(1.0,(rx/0.91)**2)
+            relaxed = 1 + math.exp(-(z/.30)**2) * (.035*math.sin(3*a+.7)+.020*math.sin(5*a-.4))
+            verts.append((rx * relaxed * math.cos(a), cy + ry * relaxed * math.sin(a) - extension, z))
     for i in range(len(profile)-1):
         for j in range(n):
             k = (j+1) % n
@@ -101,13 +110,21 @@ def body(rig, mat):
     smooth.levels = 1
     bpy.ops.object.modifier_apply(modifier=smooth.name)
     mesh = obj.data
+    # Subdivision must not turn the flattened underside back into a hovering dome.
+    for vertex in mesh.vertices:
+        vertex.co.z = max(0.0, vertex.co.z)
+        if vertex.co.z < 0.008:
+            vertex.co.z = 0.0
+    obj["integrated_tail"] = True
     for face in obj.data.polygons:
         face.use_smooth = True
     groups = {b.name: obj.vertex_groups.new(name=b.name) for b in rig.data.bones}
     for vert in mesh.vertices:
         z = vert.co.z
         if z < 0.92:
-            weights = {"body_lower": 1}
+            rear_angle = (math.atan2(vert.co.y+.04,vert.co.x) + math.pi/2 + math.pi) % math.tau-math.pi
+            tail_weight = .75 * math.exp(-(rear_angle/.40)**2) * max(0,1-z/.36)
+            weights = {"body_lower": 1-tail_weight, "tail": tail_weight}
         elif z < 1.28:
             t = (z-0.92)/0.36
             weights = {"body_lower":1-t, "body_upper":t}
@@ -280,6 +297,9 @@ def animate(rig, form):
             elif slot in {"launch", "impact"}:
                 squash = math.sin(math.pi*t) * (0.27 if slot == "impact" else 0.18)
                 root.scale = (1+squash, 1/(1+squash)**2, 1+squash)
+                # Compensate for the root's 0.26-unit rest height so the sole
+                # stays on the floor while the body spreads during the squash.
+                root.location.y = -.26 * (1-root.scale.y)
                 head.rotation_euler[0] = 0.15 * math.sin(math.pi*t)
             for bone in rig.pose.bones:
                 for prop in ("location", "rotation_euler", "scale"):
@@ -297,11 +317,14 @@ def main():
     rig = armature_for(form)
     rig["placeholder"] = False
     mats = {name: material(name, rgb) for name, rgb in data["palette"].items()}
+    shader = mats["body"].node_tree.nodes["Principled BSDF"]
+    for name, value in (("Roughness",.55), ("Subsurface Weight",.22),
+                        ("Subsurface Scale",.14), ("Specular IOR Level",.20),
+                        ("Coat Weight",.025), ("Coat Roughness",.35)):
+        if name in shader.inputs:
+            shader.inputs[name].default_value = value
     body_obj = body(rig, mats["body"])
     sick_color(body_obj, mats["body"], data["palette"]["body"], data["palette"]["feature"])
-    # A very small rounded tail bud, largely embedded in the back of the body.
-    tube("tiny-tail", [(0,-.50,.33),(0,-.62,.30),(.02,-.71,.28),(.04,-.75,.27)],
-         [.12,.10,.06,.008], mats["body"], rig, "tail")
     specs = rig_spec(form["rig"])
     for side, sign, feature in (("left",-1,form["features"][0]),("right",1,form["features"][1])):
         cx, cy, cz = feature_position(feature, form, specs)

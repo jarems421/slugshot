@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Grounded resting shape and integrated tail
+
+- **Confirmed:** owner wants slightly dirty/warm off-white rather than clean white or cream, a fully relaxed/slumped base on the floor, and a short squishy triangular tail made from the body's continuation.
+- **Implemented/verified:** spread/flattened underside and tail are one continuous original mesh; lower contour has mild asymmetry, material highlights are softened and the base colour is subtly warm. Idle and impact samples retain a broad flat contact patch; source and five FBX clips, vertex colours, strict Luau and all pipeline checks pass. See [design/evidence](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** subjective softness, colour and tail shape; Roblox import/rendering/scale animation remain unverified. The resting geometry is authored, not simulated soft-body physics.
+
 ## 2026-10-31 — Sick/dizzy slug redesign
 
 - **Confirmed:** owner rejected the blocky/hard first design, oversized head, protruding eyes, green belly and feet; requests a squishy white body with hypnotic spiral eyes on the head, vivid diffused green bacteria-like spots all around and a very small tail.
