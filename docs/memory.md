@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Lobby branch and asset library
+
+- **Confirmed:** owner agreed with the build order (a few Blender hero assets first to set the look, then a greybox layout, then all assets built in Blender to fit it) and asked for a live 3D concept library like Floppy's.
+- **Implemented:** branch `experiment/lobby` in worktree `C:/Users/runni/slugshot-lobby` (private Floppy/blaster files copied, ignored). [Asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) v1 shows four concept assets (rock wall, crystal cluster, giant mushroom, portal frame) with treatments A/B/C, views and a 5-stud figure. A first-pass headless Blender build script exists but was not run; it waits for concept approval.
+- **Unresolved:** owner review of the four concepts and the treatment; the page was not visually checked by the agent before publishing.
+
 ## 2026-10-31 — Bridge style leaning
 
 - **Considering:** owner is not fully decided but thinks droopy wooden suspension bridges would look best. Recorded in the [roadmap](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md).

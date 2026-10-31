@@ -10,6 +10,10 @@ Source: owner request, 2026-10-31 ("build some assets in Blender so that stuff j
 
 Slugterra is the reference for **categories and atmosphere**: giant glowing cave fungi, huge crystals, hideouts built into rock, slug habitats, glowing caverns. Every Slugshot asset is an **original design** in that category with its own silhouette, proportions and details. Never trace or copy a specific show prop. Each asset's note records its references and how ours differs.
 
+## Asset library (live 3D concepts)
+
+Owner request, 2026-10-31: every asset is first agreed as a rotatable 3D concept in the private [asset library page](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), the same workflow that settled Floppy. Source: [asset-library.html](asset-library.html). Each concept is defined in that page as exact signed-distance maths, so the Blender build (`tools/lobby/build_vignette.py`, first pass, paused until concepts are agreed) reproduces the agreed forms. Republish the same file to keep the URL, and add each new asset to it.
+
 ## Production standard (every asset)
 
 1. **Concept first.** Agree a concept or blockout with the owner for distinctive assets: a rotatable concept, quick Blender blockout renders, or an in-Studio blockout.

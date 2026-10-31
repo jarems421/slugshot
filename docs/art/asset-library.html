@@ -1,0 +1,743 @@
+<title>Slugshot Asset Library</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: asset shelf across the top, one large rotatable cavern stage with treatment and view controls, design notes beside it; stacks on phones. */
+:root {
+  --bg: #e4e6ea;
+  --paper: #f3f4f6;
+  --ink: #1d2028;
+  --muted: #5b6070;
+  --rule: #c8ccd5;
+  --accent: #1d7471;
+  --warm: #b4541a;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12141a; --paper: #1b1e26; --ink: #e3e5ec; --muted: #9aa0b2; --rule: #333846; --accent: #6fd0c6; --warm: #f0955a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12141a; --paper: #1b1e26; --ink: #e3e5ec; --muted: #9aa0b2; --rule: #333846; --accent: #6fd0c6; --warm: #f0955a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5.5vw, 52px); line-height: 1; margin: 6px 0 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 24px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 500; }
+p { margin: 0; }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.asset {
+  text-align: left; display: grid; gap: 4px; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; font: inherit;
+}
+.asset .name { font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.2; }
+.asset .meta { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--muted); }
+.asset[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.asset:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip { justify-self: start; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; color: var(--warm); }
+.layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: grid; gap: 10px; min-width: 0; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--rule); background: #0b0c12; touch-action: none; cursor: grab; }
+.canvas-box:active { cursor: grabbing; }
+canvas { width: 100%; height: 100%; display: block; }
+.fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #e3e5ec; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #c9ccd8; background: rgba(12,13,20,.6); padding: 3px 8px; border-radius: 6px; }
+.tag { position: absolute; right: 12px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #c9ccd8; background: rgba(12,13,20,.6); padding: 3px 8px; border-radius: 6px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row .label { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 84px; }
+button.ctl { font-family: var(--mono); font-size: 13px; padding: 7px 11px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+button.ctl[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.notes { display: grid; gap: 16px; min-width: 0; }
+dl { margin: 0; display: grid; gap: 12px; }
+dt { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; }
+.caveat { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+.planned { display: grid; gap: 10px; }
+.planned ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.planned li { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px dashed var(--rule); color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Slugshot · lobby · concept round 1 · 31 Oct 2026</div>
+    <h1>Asset Library</h1>
+  </div>
+
+  <div class="shelf" id="shelf" role="group" aria-label="Assets"></div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" id="box">
+        <canvas id="view" aria-label="Rotatable 3D concept of the selected asset"></canvas>
+        <div class="hint">Drag to turn · scroll or pinch to zoom</div>
+        <div class="tag" id="tag">C · Living Comic</div>
+      </div>
+      <div class="row" role="group" aria-label="Treatment">
+        <span class="label">Treatment</span>
+        <button class="ctl" id="t-a" data-treat="0">A · Comic Cavern</button>
+        <button class="ctl" id="t-b" data-treat="1">B · Enchanted</button>
+        <button class="ctl" id="t-c" data-treat="2">C · Living Comic</button>
+      </div>
+      <div class="row" role="group" aria-label="Camera">
+        <span class="label">View</span>
+        <button class="ctl" id="v-three" data-view="three">Three-quarter</button>
+        <button class="ctl" id="v-front" data-view="front">Front</button>
+        <button class="ctl" id="v-side" data-view="side">Side</button>
+        <button class="ctl" id="v-back" data-view="back">Back</button>
+        <button class="ctl" id="v-player" data-view="player">Player eye</button>
+      </div>
+      <div class="row">
+        <span class="label">Show</span>
+        <button class="ctl" id="fig" aria-pressed="true">Scale figure (5 studs)</button>
+        <button class="ctl" id="motion" aria-pressed="true">Motion on</button>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="eyebrow" id="n-kind"></div>
+      <h2 id="n-name"></h2>
+      <dl id="n-list"></dl>
+      <p class="caveat">Live concept render, not the game model. Agree the shape and feel here; the Blender build then reproduces these forms exactly, with inverted-hull ink lines and painted textures for Roblox.</p>
+      <div class="planned">
+        <h3>Planned, not built yet</h3>
+        <ul id="planned"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes;
+uniform float uT, uAsset;
+uniform vec3 uRo, uRight, uUp, uFwd;
+uniform vec4 uFig;          // xyz position, w = shown
+uniform vec4 uTreat;        // ink width scale, crease sensitivity, glow, bloom
+uniform vec3 uInkCol;
+uniform float uAmb;
+uniform vec3 uGlowPos, uGlowCol;
+
+// Units: 1 = 1 Roblox stud. Front of every asset faces -z.
+const float PI = 3.14159265;
+
+float hash1(float n) { return fract(sin(n*127.1 + 3.7)*43758.5453); }
+float noise3(vec3 x) {
+  vec3 i = floor(x); vec3 f = fract(x); f = f*f*(3.0 - 2.0*f);
+  float n = i.x + i.y*57.0 + 113.0*i.z;
+  return mix(mix(mix(hash1(n), hash1(n + 1.0), f.x), mix(hash1(n + 57.0), hash1(n + 58.0), f.x), f.y),
+             mix(mix(hash1(n + 113.0), hash1(n + 114.0), f.x), mix(hash1(n + 170.0), hash1(n + 171.0), f.x), f.y), f.z);
+}
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+float sdEll(vec3 p, vec3 r) { float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/k1; }
+float sdBox(vec3 p, vec3 b) { vec3 q = abs(p) - b; return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0); }
+
+// Exact distance to a quadratic Bezier (after Inigo Quilez); returns (distance, t).
+vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
+  vec3 a = B - A, b = A - 2.0*B + C, c = a*2.0, d = A - pos;
+  float kk = 1.0/dot(b, b);
+  float kx = kk*dot(a, b);
+  float ky = kk*(2.0*dot(a, a) + dot(d, b))/3.0;
+  float kz = kk*dot(d, a);
+  vec2 res;
+  float p = ky - kx*kx, p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
+  if (h >= 0.0) {
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q)/2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
+    vec3 e = d + (c + b*t)*t;
+    res = vec2(dot(e, e), t);
+  } else {
+    float z = sqrt(-p);
+    float v = acos(q/(p*z*2.0))/3.0;
+    float m = cos(v), n = sin(v)*1.732050808;
+    vec3 t = clamp(vec3(m + m, -n - m, n - m)*z - kx, 0.0, 1.0);
+    vec3 e1 = d + (c + b*t.x)*t.x;
+    vec3 e2 = d + (c + b*t.y)*t.y;
+    res = vec2(dot(e1, e1), t.x);
+    float dis = dot(e2, e2);
+    if (dis < res.x) res = vec2(dis, t.y);
+  }
+  res.x = sqrt(res.x);
+  return res;
+}
+
+// ---------- shared: a rounded mass trimmed by a few broad fracture planes
+float chunk(vec3 p, vec3 c, vec3 r, float seed) {
+  vec3 q = p - c;
+  float d = sdEll(q, r);
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    vec3 n = normalize(vec3(hash1(seed + fi*1.7)*2.0 - 1.0, hash1(seed + fi*3.1)*1.6 - 0.45, hash1(seed + fi*5.3)*2.0 - 1.0));
+    float off = length(r*n)*(0.58 + 0.24*hash1(seed + fi*7.9));
+    d = smax(d, dot(q, n) - off, 0.16);
+  }
+  return d;
+}
+
+// ---------- 0: rock wall module (20 x 12 x 5 studs)
+float rockWall(vec3 p) {
+  float bound = sdBox(p - vec3(0.0, 6.0, -0.6), vec3(12.5, 7.0, 4.6));
+  if (bound > 1.0) return bound;
+  float d = 1e5;
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    vec3 c = vec3(-8.4 + 4.2*fi + 0.6*(hash1(fi + 1.0) - 0.5), 3.0, 0.4*(hash1(fi + 9.0) - 0.5));
+    vec3 r = vec3(2.5 + 0.5*hash1(fi + 3.0), 3.3 + 0.6*hash1(fi + 4.0), 2.3);
+    d = smin(d, chunk(p, c, r, fi*13.0 + 1.0), 0.12);
+  }
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    vec3 c = vec3(-6.3 + 4.2*fi + 0.6*(hash1(fi + 21.0) - 0.5), 8.1 + 0.6*(hash1(fi + 22.0) - 0.5), 0.7);
+    vec3 r = vec3(2.2 + 0.4*hash1(fi + 23.0), 2.6 + 0.5*hash1(fi + 24.0), 2.0);
+    d = smin(d, chunk(p, c, r, fi*17.0 + 40.0), 0.12);
+  }
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec3 c = vec3(-4.6 + 4.6*fi + 0.5*(hash1(fi + 31.0) - 0.5), 11.1, 0.5);
+    vec3 r = vec3(2.0 + 0.5*hash1(fi + 33.0), 1.3, 1.7);
+    d = smin(d, chunk(p, c, r, fi*19.0 + 80.0), 0.12);
+  }
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec3 c = vec3(-7.2 + 6.6*fi + hash1(fi + 41.0) - 0.5, 0.5, -2.9 - 0.4*hash1(fi + 42.0));
+    vec3 r = vec3(1.1 + 0.3*hash1(fi + 43.0), 0.75, 0.95);
+    d = smin(d, chunk(p, c, r, fi*23.0 + 120.0), 0.1);
+  }
+  return d + 0.07*(noise3(p*0.9) - 0.5);
+}
+
+// ---------- 1: crystal cluster (about 5 studs tall)
+float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r) {
+  vec3 q = p - base;
+  q.xz = rot(yaw)*q.xz;
+  q.xy = rot(tilt)*q.xy;
+  float hr = max(abs(q.x)*0.8660254 + abs(q.z)*0.5, abs(q.z));
+  float body = max(hr - r*(1.0 - 0.08*q.y/h), max(-q.y - 0.6, q.y - h));
+  return max(body, q.y + hr*1.35 - h);
+}
+vec2 crystals(vec3 p) {
+  float bound = length(p - vec3(0.0, 2.3, 0.0)) - 5.6;
+  if (bound > 1.0) return vec2(bound, 3.0);
+  float d = crystal(p, vec3(0.0, 0.3, 0.0), 0.0, 0.05, 4.7, 0.72);
+  d = min(d, crystal(p, vec3(0.35, 0.3, 0.15), 0.8, 0.48, 3.3, 0.55));
+  d = min(d, crystal(p, vec3(-0.3, 0.3, 0.3), 2.6, 0.5, 2.6, 0.5));
+  d = min(d, crystal(p, vec3(-0.2, 0.3, -0.35), 4.0, 0.36, 3.6, 0.58));
+  d = min(d, crystal(p, vec3(0.6, 0.2, -0.3), 1.7, 0.72, 1.8, 0.4));
+  d = min(d, crystal(p, vec3(-0.6, 0.2, -0.1), 5.2, 0.66, 2.1, 0.42));
+  d = min(d, crystal(p, vec3(0.1, 0.2, 0.7), 3.3, 0.82, 1.3, 0.3));
+  vec2 r = vec2(d*0.75, 3.0);
+  float base = chunk(p, vec3(0.0, 0.2, 0.0), vec3(2.0, 0.8, 1.7), 71.0) + 0.05*(noise3(p*1.4) - 0.5);
+  if (base < r.x) r = vec2(base, 1.0);
+  return r;
+}
+
+// ---------- 2: giant cave mushroom (about 17 studs tall)
+const vec3 MA = vec3(0.0, 0.0, 0.0), MB = vec3(2.3, 6.4, 0.3), MC = vec3(1.3, 12.6, 0.9);
+vec3 capLocal(vec3 p) {
+  vec3 q = p - (MC + vec3(0.0, 0.3, 0.0));
+  q.xy = rot(0.12)*q.xy;
+  q.yz = rot(-0.1)*q.yz;
+  return q;
+}
+vec2 mushroom(vec3 p) {
+  float bound = sdBox(p - vec3(1.2, 9.0, 0.6), vec3(8.8, 10.0, 8.8));
+  if (bound > 1.0) return vec2(bound, 5.0);
+  vec2 bz = sdBezier(p, MA, MB, MC);
+  float rad = mix(1.25, 0.92, bz.y) + 0.2*sin(bz.y*PI);
+  float stem = bz.x - rad;
+  for (int i = 0; i < 3; i++) {
+    float a = float(i)*2.094 + 0.4;
+    vec3 q = p - vec3(cos(a)*1.25, 0.32, sin(a)*1.25);
+    q.xz = rot(a)*q.xz;
+    stem = smin(stem, sdEll(q, vec3(1.35, 0.55, 0.8)), 0.55);
+  }
+  stem += 0.05*sin(atan(p.z - 0.5, p.x - 1.0)*9.0 + p.y*0.9);
+  stem = smax(stem, -p.y, 0.05);
+  vec3 q = capLocal(p);
+  float ang = atan(q.z, q.x), rr = length(q.xz);
+  float R = 7.0*(1.0 + 0.07*sin(5.0*ang + 0.6) + 0.035*sin(9.0*ang + 2.0));
+  q.y += 0.9*pow(clamp(rr/7.0, 0.0, 1.3), 3.0)*(0.6 + 0.4*sin(2.0*ang + 1.0));
+  float s = 7.0/R;
+  vec3 qs = vec3(q.x*s, q.y, q.z*s);
+  float cap = smax(sdEll(qs, vec3(7.0, 3.4, 7.0)), -sdEll(qs - vec3(0.0, -1.5, 0.0), vec3(6.3, 2.3, 6.3)), 0.35);
+  float gills = smoothstep(0.3, -0.7, q.y)*smoothstep(1.4, 2.3, rr)*smoothstep(6.7, 5.6, rr);
+  cap -= 0.15*gills*pow(abs(sin(14.0*ang)), 2.0);
+  vec2 r = vec2(stem*0.8, 4.0);
+  if (cap*0.75 < r.x) r = vec2(cap*0.75, 5.0);
+  return r;
+}
+
+// ---------- 3: portal frame (about 13 studs tall, 12.5 wide)
+const float PR = 5.2, PHT = 0.8, PSPRING = 6.5, PHD = 1.0;
+// Returns arc-length position along the frame's centreline and the signed radial offset from it.
+vec2 portalFrame(vec3 p) {
+  float L = 2.0*PSPRING + PR*PI;
+  if (p.y > PSPRING) {
+    vec2 v = vec2(p.x, p.y - PSPRING);
+    float a = atan(v.y, v.x);
+    return vec2(PSPRING + PR*(PI - clamp(a, 0.0, PI)), length(v) - PR);
+  }
+  return vec2(p.x < 0.0 ? p.y : L - p.y, abs(p.x) - PR);
+}
+vec2 portal(vec3 p) {
+  float bound = sdBox(p - vec3(0.0, 6.6, 0.0), vec3(7.6, 7.6, 1.8));
+  if (bound > 1.0) return vec2(bound, 6.0);
+  float L = 2.0*PSPRING + PR*PI;
+  float bl = L/19.0;
+  vec2 fr = portalFrame(p);
+  float idx = floor(fr.x/bl);
+  float f = fr.x/bl - idx;
+  float gap = min(f, 1.0 - f)*bl;
+  float key = 1.0 - step(0.5, abs(idx - 9.0));
+  float jit = 0.14*(hash1(idx*3.7) - 0.5) + 0.28*key;
+  float stone = smax(abs(fr.y) - PHT - jit, abs(p.z) - PHD - 0.5*jit - 0.18*key, 0.14);
+  stone = smax(stone, 0.06 - gap, 0.06);
+  for (int i = 0; i < 2; i++) {
+    float sx = i == 0 ? -1.0 : 1.0;
+    stone = min(stone, sdBox(p - vec3(sx*PR, 0.35, 0.0), vec3(1.5, 0.35, 1.35)) - 0.06);
+  }
+  stone = max(stone, -p.y);
+  vec2 r = vec2(stone, 6.0);
+  float band = 1e5;
+  for (int i = 0; i < 4; i++) {
+    float bi = i == 0 ? 2.0 : i == 1 ? 5.0 : i == 2 ? 13.0 : 16.0;
+    float sc = (bi + 0.5)*bl;
+    band = min(band, max(max(abs(fr.y) - PHT - 0.13, abs(p.z) - PHD - 0.12), abs(fr.x - sc) - 0.24));
+  }
+  if (band < r.x) r = vec2(band, 7.0);
+  float plate = sdBox(p - vec3(0.0, PSPRING + PR, -PHD - 0.42), vec3(0.5, 0.72, 0.1)) - 0.03;
+  if (plate < r.x) r = vec2(plate, 8.0);
+  float inner = p.y > PSPRING ? length(vec2(p.x, p.y - PSPRING)) - (PR - PHT) : abs(p.x) - (PR - PHT);
+  float memb = max(max(inner + 0.05, abs(p.z) - 0.04), 0.7 - p.y);
+  if (memb < r.x) r = vec2(memb, 9.0);
+  return r;
+}
+
+// ---------- scale figure: R6 proportions, 5 studs tall
+float figure(vec3 p) {
+  vec3 q = p - uFig.xyz;
+  float d = sdBox(q - vec3(0.0, 3.0, 0.0), vec3(1.0, 1.0, 0.5));
+  d = min(d, sdBox(q - vec3(-0.5, 1.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(0.5, 1.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(-1.5, 3.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(1.5, 3.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(0.0, 4.6, 0.0), vec3(0.55, 0.55, 0.55)) - 0.08);
+  return d;
+}
+
+vec2 map(vec3 p) {
+  vec2 r;
+  if (uAsset < 0.5) r = vec2(rockWall(p), 1.0);
+  else if (uAsset < 1.5) r = crystals(p);
+  else if (uAsset < 2.5) r = mushroom(p);
+  else r = portal(p);
+  if (uFig.w > 0.5) { float f = figure(p); if (f < r.x) r = vec2(f, 10.0); }
+  if (p.y < r.x) r = vec2(p.y, 11.0);
+  return r;
+}
+
+bool emissive(float id) { return abs(id - 3.0) < 0.5 || abs(id - 5.0) < 0.5 || abs(id - 9.0) < 0.5; }
+// Ink width by importance: hero props thick, architecture thinner (style guide §1).
+float inkWidth(float id) {
+  float w = 0.07;
+  if (id < 1.5 || id > 10.5) w = 0.045;
+  if (abs(id - 9.0) < 0.5) w = 0.0;
+  return w*uTreat.x;
+}
+
+vec3 normalAt(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  float h = 0.004;
+  return normalize(k.xyy*map(p + k.xyy*h).x + k.yyx*map(p + k.yyx*h).x + k.yxy*map(p + k.yxy*h).x + k.xxx*map(p + k.xxx*h).x);
+}
+
+float shadow(vec3 ro, vec3 rd) {
+  float res = 1.0, t = 0.08;
+  for (int i = 0; i < 26; i++) {
+    float h = map(ro + rd*t).x;
+    res = min(res, 8.0*h/t);
+    t += clamp(h, 0.08, 1.6);
+    if (res < 0.01 || t > 30.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+float ao(vec3 p, vec3 n) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 5; i++) {
+    float h = 0.18*float(i);
+    o += (h - map(p + n*h).x)*s; s *= 0.7;
+  }
+  return clamp(1.0 - 0.55*o, 0.0, 1.0);
+}
+
+vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
+  emit = vec3(0.0); spec = 0.08;
+  float nz = noise3(p*0.32) + 0.5*noise3(p*0.9) - 0.75;
+  if (id < 1.5) {
+    vec3 c = mix(vec3(0.085, 0.092, 0.13), vec3(0.20, 0.205, 0.26), smoothstep(-0.3, 0.3, nz));
+    float moss = smoothstep(0.55, 0.92, n.y)*smoothstep(0.35, 0.65, noise3(p*0.45));
+    return mix(c, vec3(0.13, 0.22, 0.11), 0.8*moss);
+  }
+  if (id < 3.5) {
+    float h = clamp(p.y/4.7, 0.0, 1.0);
+    vec3 c = mix(vec3(0.02, 0.09, 0.15), vec3(0.42, 0.93, 1.0), h*h);
+    float pulse = 0.85 + 0.15*sin(uT*0.9 + p.y*0.8);
+    emit = c*(0.25 + 1.3*h)*uTreat.z*pulse;
+    spec = 0.6;
+    return c*0.6;
+  }
+  if (id < 4.5) {
+    float streak = noise3(p*vec3(1.6, 0.18, 1.6));
+    vec3 c = mix(vec3(0.46, 0.41, 0.31), vec3(0.68, 0.63, 0.49), streak);
+    emit = vec3(0.18, 0.75, 0.55)*0.35*smoothstep(10.5, 12.8, p.y)*uTreat.z;
+    return c;
+  }
+  if (id < 5.5) {
+    vec3 q = capLocal(p);
+    float under = smoothstep(-0.05, -0.45, n.y);
+    vec3 c = mix(vec3(0.15, 0.24, 0.36), vec3(0.27, 0.41, 0.52), smoothstep(-0.3, 0.3, nz));
+    vec3 g = q*0.55;
+    vec3 gi = floor(g);
+    float best = 9.0;
+    for (int x = -1; x <= 1; x++) for (int y = -1; y <= 1; y++) for (int z = -1; z <= 1; z++) {
+      vec3 cell = gi + vec3(float(x), float(y), float(z));
+      float hh = cell.x*7.1 + cell.y*31.7 + cell.z*113.3;
+      vec3 pt = cell + vec3(hash1(hh), hash1(hh + 1.3), hash1(hh + 2.7));
+      best = min(best, length(g - pt));
+    }
+    float spot = (1.0 - smoothstep(0.2, 0.3, best))*(1.0 - under)*smoothstep(-0.2, 0.3, n.y);
+    float pulse = 0.85 + 0.15*sin(uT*0.7 + q.x*0.4);
+    vec3 glow = vec3(0.30, 1.0, 0.76);
+    c = mix(c, vec3(0.55, 0.95, 0.82), spot);
+    c = mix(c, vec3(0.10, 0.30, 0.24), under);
+    emit = glow*(1.3*spot + 1.5*under)*uTreat.z*pulse;
+    spec = 0.25;
+    return c;
+  }
+  if (id < 6.5) return mix(vec3(0.20, 0.185, 0.20), vec3(0.34, 0.31, 0.31), smoothstep(-0.3, 0.3, nz));
+  if (id < 7.5) {
+    vec2 fr = portalFrame(p);
+    float L = 2.0*PSPRING + PR*PI, bl = L/19.0;
+    float bolt = 0.0;
+    for (int i = 0; i < 4; i++) {
+      float bi = i == 0 ? 2.0 : i == 1 ? 5.0 : i == 2 ? 13.0 : 16.0;
+      vec2 dd = vec2(fr.x - (bi + 0.5)*bl, abs(fr.y) - 0.5);
+      bolt = max(bolt, 1.0 - smoothstep(0.12, 0.16, length(dd)));
+    }
+    spec = 0.5;
+    return mix(vec3(0.085, 0.085, 0.095), vec3(0.72, 0.30, 0.07), bolt);
+  }
+  if (id < 8.5) { spec = 0.45; return vec3(0.72, 0.29, 0.065); }
+  if (id < 9.5) {
+    vec2 v = vec2(p.x, p.y - PSPRING*0.82);
+    float a = atan(v.y, v.x), r = length(v);
+    float sw = 0.5 + 0.5*sin(a*3.0 + r*1.4 - uT*1.3);
+    float sw2 = 0.5 + 0.5*sin(a*5.0 - r*2.1 + uT*0.8);
+    vec3 c = mix(vec3(0.70, 0.17, 0.05), vec3(1.0, 0.66, 0.28), sw*0.75 + sw2*0.25);
+    c = mix(c, vec3(1.0, 0.86, 0.6), smoothstep(3.0, 0.0, r)*0.5);
+    emit = c*1.6*uTreat.z;
+    return c*0.3;
+  }
+  if (id < 10.5) return vec3(0.42, 0.43, 0.47);
+  vec3 c = mix(vec3(0.05, 0.055, 0.075), vec3(0.10, 0.105, 0.13), smoothstep(-0.3, 0.3, nz));
+  float crack = 1.0 - smoothstep(0.0, 0.04, abs(noise3(vec3(p.x, 0.0, p.z)*0.35) - 0.5));
+  return mix(c, c*0.45, crack);
+}
+
+void main() {
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.0*uFwd);
+  vec3 ro = uRo;
+  vec3 bg = mix(vec3(0.012, 0.013, 0.024), vec3(0.05, 0.05, 0.095), smoothstep(-0.3, 0.8, rd.y));
+  float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
+  bool graze = false;
+  for (int i = 0; i < 150; i++) {
+    vec3 pp = ro + rd*t;
+    vec2 h = map(pp);
+    if (h.x < 0.002*t) { hitId = h.y; break; }
+    if (emissive(h.y)) glowAcc += exp(-h.x*1.4)*0.012*min(h.x + 0.2, 1.0);
+    if (h.x < minH) { minH = h.x; minId = h.y; }
+    // The ray dipped close to a form and is moving away again: a silhouette edge in front.
+    if (h.x > prevH && prevH < inkWidth(prevId) && !graze && t > 0.5) graze = true;
+    prevH = h.x; prevId = h.y;
+    t += h.x*0.8;
+    if (t > 120.0) break;
+  }
+  vec3 col = bg;
+  float ink = 0.0;
+  if (hitId > 0.0) {
+    vec3 p = ro + rd*t;
+    vec3 n = normalAt(p);
+    vec3 v = -rd;
+    vec3 emit; float spec;
+    vec3 alb = albedo(hitId, p, n, emit, spec);
+    float occ = ao(p, n);
+    vec3 lk = normalize(vec3(-0.35, 1.0, -0.45));
+    vec3 lw = normalize(vec3(-1.0, 0.35, -0.35));
+    vec3 lr = normalize(vec3(0.6, 0.45, 1.0));
+    float sh = shadow(p + n*0.03, lk);
+    vec3 key = vec3(0.70, 0.78, 1.0)*1.25*max(dot(n, lk), 0.0)*mix(0.25, 1.0, sh);
+    vec3 warm = vec3(1.0, 0.6, 0.3)*0.42*max(dot(n, lw), 0.0);
+    float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+    vec3 rim = vec3(0.55, 0.42, 1.0)*0.7*fres*max(dot(n, lr) + 0.4, 0.0);
+    vec3 amb = mix(vec3(0.03, 0.035, 0.07), vec3(0.09, 0.10, 0.16), n.y*0.5 + 0.5)*occ*uAmb;
+    vec3 gv = uGlowPos - p;
+    float gd = length(gv);
+    vec3 glow = uGlowCol*uTreat.z*max(dot(n, gv/gd), 0.0)*40.0/(gd*gd + 6.0);
+    col = alb*(key + warm + amb + glow) + rim*alb*1.6;
+    vec3 hv = normalize(lk + v);
+    col += spec*sh*pow(max(dot(n, hv), 0.0), 40.0)*vec3(0.75, 0.82, 1.0);
+    col += emit;
+    float fade = smoothstep(70.0, 30.0, t);
+    col = mix(bg, col, fade);
+    // Ink 1: creases between forms (concave curvature), the inked fractures.
+    float e = 0.09*max(uTreat.x, 0.6);
+    vec2 s1 = map(p + vec3(e, -e, -e)), s2 = map(p + vec3(-e, -e, e)), s3 = map(p + vec3(-e, e, -e)), s4 = map(p + vec3(e, e, e));
+    float d0 = map(p).x;
+    float lap = (s1.x + s2.x + s3.x + s4.x - 4.0*d0)/e;
+    // SDF Laplacian is negative in concave creases and positive on convex edges.
+    float crease = smoothstep(0.5/uTreat.y, 1.0/uTreat.y, -lap) + 0.5*smoothstep(1.4/uTreat.y, 2.4/uTreat.y, lap);
+    // Ink 2: material boundaries (stone to iron, stem to cap, object to floor).
+    float idEdge = (abs(s1.y - hitId) + abs(s2.y - hitId) + abs(s3.y - hitId) + abs(s4.y - hitId)) > 0.5 ? 1.0 : 0.0;
+    if (abs(hitId - 9.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
+    ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
+    // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
+    if (graze) ink = max(ink, fade);
+  } else if (minH < inkWidth(minId)) {
+    ink = 1.0;
+  }
+  col = mix(col, uInkCol, ink);
+  col += glowAcc*uTreat.w*vec3(0.5, 0.9, 0.85)*(uAsset > 2.5 ? vec3(1.9, 0.75, 0.35) : vec3(1.0));
+  col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  vec2 q = gl_FragCoord.xy/uRes;
+  col *= 0.85 + 0.15*pow(16.0*q.x*q.y*(1.0 - q.x)*(1.0 - q.y), 0.25);
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script>
+(function () {
+  const ASSETS = [
+    {
+      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs",
+      target: [0, 6, 0], dist: 34, figure: [-3, 0, -5.5], glow: [0, 8, -12], glowCol: [0.5, 0.35, 0.2],
+      notes: [
+        ["Shape", "Tiers of big, rounded rock masses, each trimmed by a few broad fracture planes. Overlapping masses leave deep seams that read as inked cracks. Fallen rubble at the foot breaks the straight base line."],
+        ["Why it looks hand-made", "Big readable shapes, slight irregularity, no photo-scan noise. Moss only settles on upward-facing ledges."],
+        ["Ink", "Architecture weight: thinner than hero props. Seams between masses are inked."],
+        ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
+        ["Status", "Concept v1, awaiting your review."]
+      ]
+    },
+    {
+      id: "crystals", name: "Crystal cluster", kind: "Cavern kit · glow accent", size: "about 5 studs tall",
+      target: [0, 2.4, 0], dist: 15, figure: [3.6, 0, -1.5], glow: [0, 3.0, -1.6], glowCol: [0.45, 0.95, 1.0],
+      notes: [
+        ["Shape", "Seven hexagonal crystals with faceted pyramid tips, fanning out of a chunky rock base at different angles and heights."],
+        ["Glow", "Each crystal darkens toward its root and brightens toward the tip, with a slow pulse. It lights the rock around it: a vibrant accent against calm stone."],
+        ["Ink", "Prop weight. Facet edges stay crisp; the outline holds the glow together."],
+        ["Variants planned", "Small, medium and giant sizes, and a few glow families per biome."],
+        ["Status", "Concept v1, awaiting your review."]
+      ]
+    },
+    {
+      id: "mushroom", name: "Giant cave mushroom", kind: "Fungi and flora · signature", size: "about 17 studs tall, cap 14 studs across",
+      target: [1, 8.5, 0.5], dist: 36, figure: [-5.5, 0, -3], glow: [1.3, 10.5, 0.9], glowCol: [0.3, 1.0, 0.75],
+      notes: [
+        ["Shape", "An original design: a leaning, gently curving stem with ridged bark and three root lobes gripping the floor. The cap is lopsided, its wavy lip droops further on one side and curls under."],
+        ["Glow", "Radial gills underneath glow mint and light the stem from above. Soft glowing spots are scattered over the dusty blue cap, pulsing slowly."],
+        ["Ink", "Hero weight: the thickest lines in the scene."],
+        ["Originality", "It captures Slugterra's giant-cavern-fungus category with its own silhouette: the lean, root lobes, lopsided curled cap and spot pattern are Slugshot's."],
+        ["Variants planned", "Two more silhouettes (a tall slender one and a squat wide one), and small clusters."],
+        ["Status", "Concept v1, awaiting your review."]
+      ]
+    },
+    {
+      id: "portal", name: "Portal frame", kind: "Landmark · gate base design", size: "about 13 studs tall, 12.5 wide",
+      target: [0, 6.5, 0], dist: 28, figure: [-8.5, 0, -2.5], glow: [0, 6, -2.5], glowCol: [1.0, 0.55, 0.22],
+      notes: [
+        ["Shape", "Nineteen chunky stone blocks form a round-topped arch on two plinths. Each block sits slightly out of line, and the keystone is oversized. Graphite iron bands with orange bolts clamp four of the blocks, and a burnt-orange plate sits on the keystone."],
+        ["Energy", "A swirling membrane fills the arch and casts warm light forward. Shown here in PvP orange."],
+        ["Family", "This is the shared base for all three gates. Training, PvP and Veylume each get their own crown, energy colour and dressing."],
+        ["Ties to", "The blaster's burnt orange, graphite and steel."],
+        ["Status", "Concept v1, awaiting your review."]
+      ]
+    }
+  ];
+  const PLANNED = ["Floating spawn rock", "Droopy wooden bridge", "Maelstrom sinkhole", "Sky Well light column", "Training gate", "PvP gate", "Veylume gate", "Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
+  const TREAT = [
+    { name: "A · Comic Cavern", t: [1.7, 1.35, 0.85, 0.25], ink: [0.006, 0.006, 0.008], amb: 0.85 },
+    { name: "B · Enchanted", t: [0.55, 0.6, 1.5, 1.25], ink: [0.09, 0.07, 0.15], amb: 1.3 },
+    { name: "C · Living Comic", t: [1.0, 1.0, 1.1, 0.6], ink: [0.03, 0.028, 0.04], amb: 1.0 }
+  ];
+  const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
+
+  const shelf = document.getElementById("shelf");
+  ASSETS.forEach((a, i) => {
+    const b = document.createElement("button");
+    b.className = "asset"; b.id = "asset-" + a.id; b.dataset.index = i;
+    b.innerHTML = `<span class="name"></span><span class="meta"></span><span class="chip">Concept v1</span>`;
+    b.querySelector(".name").textContent = a.name;
+    b.querySelector(".meta").textContent = a.kind;
+    shelf.appendChild(b);
+  });
+  const plannedEl = document.getElementById("planned");
+  PLANNED.forEach(n => { const li = document.createElement("li"); li.textContent = n; plannedEl.appendChild(li); });
+
+  const canvas = document.getElementById("view");
+  const box = document.getElementById("box");
+  const gl = canvas.getContext("webgl", { antialias: false });
+  function fail(msg) { const d = document.createElement("div"); d.className = "fallback"; d.textContent = msg; box.appendChild(d); }
+
+  let current = 0, treat = 2, figOn = true;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let motion = !reduce, time = 3.0, last = performance.now();
+  const cam = { yaw: -0.65, pitch: 0.22, dist: 30, tx: 0, ty: 6, tz: 0 };
+  const goal = { ...cam };
+
+  function showNotes(a) {
+    document.getElementById("n-kind").textContent = a.kind + " · " + a.size;
+    document.getElementById("n-name").textContent = a.name;
+    const dl = document.getElementById("n-list"); dl.textContent = "";
+    a.notes.forEach(([k, v]) => {
+      const div = document.createElement("div");
+      const dt = document.createElement("dt"); dt.textContent = k;
+      const dd = document.createElement("dd"); dd.textContent = v;
+      div.append(dt, dd); dl.appendChild(div);
+    });
+  }
+  function select(i, keepView) {
+    current = i;
+    const a = ASSETS[i];
+    shelf.querySelectorAll(".asset").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.index === i)));
+    [goal.tx, goal.ty, goal.tz] = a.target; goal.dist = a.dist;
+    if (!keepView) { goal.yaw = VIEWS.three[0]; goal.pitch = VIEWS.three[1]; }
+    showNotes(a);
+    try { history.replaceState(null, "", "#" + a.id); } catch (e) {}
+  }
+  function setTreat(i) {
+    treat = i;
+    document.querySelectorAll("[data-treat]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.treat === i)));
+    document.getElementById("tag").textContent = TREAT[i].name;
+  }
+  shelf.addEventListener("click", e => { const b = e.target.closest(".asset"); if (b) select(+b.dataset.index); });
+  document.querySelectorAll("[data-treat]").forEach(b => b.addEventListener("click", () => setTreat(+b.dataset.treat)));
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+    const v = VIEWS[b.dataset.view]; goal.yaw = v[0]; goal.pitch = v[1];
+    const a = ASSETS[current];
+    goal.dist = b.dataset.view === "player" ? a.dist*0.6 : a.dist;
+  }));
+  const figBtn = document.getElementById("fig");
+  figBtn.addEventListener("click", () => { figOn = !figOn; figBtn.setAttribute("aria-pressed", String(figOn)); });
+  const motionBtn = document.getElementById("motion");
+  function setMotion(on) { motion = on; motionBtn.setAttribute("aria-pressed", String(on)); motionBtn.textContent = on ? "Motion on" : "Motion off"; }
+  setMotion(motion);
+  motionBtn.addEventListener("click", () => setMotion(!motion));
+
+  const start = ASSETS.findIndex(a => "#" + a.id === location.hash);
+  select(start >= 0 ? start : 0);
+  setTreat(2);
+  Object.assign(cam, goal);
+
+  if (!gl) { fail("This browser can't show the 3D view (WebGL is off or unavailable)."); return; }
+  function sh(type, id) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, document.getElementById(id).textContent);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  let prog;
+  try {
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, "vs"));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, "fs"));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  } catch (e) { console.error(e); fail("The 3D view couldn't start on this device."); return; }
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "aPos");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = {};
+  ["uRes", "uT", "uAsset", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uInkCol", "uAmb", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+
+  let drag = null, pinch = null;
+  const pointers = new Map();
+  box.addEventListener("pointerdown", e => { pointers.set(e.pointerId, [e.clientX, e.clientY]); box.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY }; });
+  box.addEventListener("pointermove", e => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (pinch) goal.dist = Math.max(6, Math.min(90, goal.dist*pinch/d));
+      pinch = d; return;
+    }
+    if (!drag) return;
+    goal.yaw -= (e.clientX - drag.x)*0.008;
+    goal.pitch = Math.max(-0.05, Math.min(1.2, goal.pitch + (e.clientY - drag.y)*0.005));
+    drag = { x: e.clientX, y: e.clientY };
+  });
+  function up(e) { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (pointers.size === 0) drag = null; }
+  box.addEventListener("pointerup", up);
+  box.addEventListener("pointercancel", up);
+  box.addEventListener("wheel", e => { e.preventDefault(); goal.dist = Math.max(6, Math.min(90, goal.dist*(1 + Math.sign(e.deltaY)*0.08))); }, { passive: false });
+
+  let moving = 0;
+  function resize(scale) {
+    const w = Math.round(Math.min(860, box.clientWidth)*scale);
+    const h = Math.round(w*0.75);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
+  }
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last)/1000); last = now;
+    if (motion) time += dt;
+    let delta = 0;
+    for (const k of ["yaw", "pitch", "dist", "tx", "ty", "tz"]) { const d = (goal[k] - cam[k])*Math.min(1, dt*6); cam[k] += d; delta += Math.abs(d); }
+    moving = (drag || delta > 0.002) ? 0.4 : Math.max(0, moving - dt);
+    resize(moving > 0 ? 0.6 : Math.min(window.devicePixelRatio || 1, 1.1));
+    const a = ASSETS[current];
+    const cy = Math.cos(cam.pitch);
+    const tgt = [cam.tx, cam.ty, cam.tz];
+    const ro = [tgt[0] + Math.sin(cam.yaw)*cy*cam.dist, Math.max(0.6, tgt[1] + Math.sin(cam.pitch)*cam.dist), tgt[2] - Math.cos(cam.yaw)*cy*cam.dist];
+    let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+    let r = [f[2], 0, -f[0]]; const rl = Math.hypot(...r); r = r.map(v => -v/rl);
+    const u = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+    const T = TREAT[treat];
+    gl.uniform2f(U.uRes, canvas.width, canvas.height);
+    gl.uniform1f(U.uT, time);
+    gl.uniform1f(U.uAsset, current);
+    gl.uniform3fv(U.uRo, ro); gl.uniform3fv(U.uRight, r); gl.uniform3fv(U.uUp, u); gl.uniform3fv(U.uFwd, f);
+    gl.uniform4f(U.uFig, a.figure[0], a.figure[1], a.figure[2], figOn ? 1 : 0);
+    gl.uniform4fv(U.uTreat, T.t); gl.uniform3fv(U.uInkCol, T.ink); gl.uniform1f(U.uAmb, T.amb);
+    gl.uniform3fv(U.uGlowPos, a.glow); gl.uniform3fv(U.uGlowCol, a.glowCol);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>

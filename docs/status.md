@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-10-31 (`experiment/lobby`):** [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) with four rotatable concept assets and treatments A/B/C. **Unresolved:** owner review; Blender build waits for concept approval.
+
 **Confirmed, 2026-10-31:** spawn is a floating rock between the Sky Well and Maelstrom, with four bridges to solid mainland (portals, entrance, gun side, slug side) and invisible bridge barriers ([layout](art/lobby-roadmap.md#layout)).
 
 **Confirmed, 2026-10-31:** hub centrepiece is the **Sky Well** above and the **Maelstrom** below, with spawn on a pillar between them ([roadmap](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom)). Nothing built yet.
