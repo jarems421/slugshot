@@ -466,3 +466,9 @@
 - **Confirmed:** owner approved the burnt-orange/graphite preview, rejected upward-flared tips, and specified downward angular cuts retaining the central firing gap and barrel reach. Slug animation is for the next pass.
 - **Implemented/verified offline:** compact proportions, solid capped downward muzzle bevels and nine clear channel rays; white spiral vanes, metal/grip separation. Broad shadowless fills and constant albedo-modulated material emission replace dependence on tiny light pools. Full creature/Blender checks and targeted Rocklock verifier pass. [Evidence, QA findings and limitations](slugs/blaster-refinement.md).
 - **Unresolved:** owner verdict on the final angular tips and lighting over time; generic gun QA retains rear mechanical-contact flags. Studio launch reported low resources with eight existing windows, which were preserved. No slug animation changes or experience publication.
+
+## 2026-10-31 — Original blaster draw/holster
+
+- **Confirmed:** owner wants quick, expressive wrist twists for drawing/putting away, fitted to the Roblox hand, with no throws or body spins.
+- **Implemented/verified offline:** original 0.42/0.34 s gestures, shared Floppy/Rocklock driver, native-grip additive poses and skinned/PBR-preserving cosmetic holster. Creature/movement/type/lint and numerical R6 sampling pass; [sources and evidence](slugs/blaster-motion.md).
+- **Unresolved:** actual Studio feel, rapid switching/death, peer rendering and owner art approval; official trailers were located but could not be downloaded, so no shot-specific motion claim.

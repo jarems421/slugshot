@@ -59,6 +59,7 @@ local tool = Instance.new("Tool")
 tool.Name = "Blaster"
 tool.ToolTip = "Blaster (Floppy loaded)"
 tool.CanBeDropped = false
+tool:SetAttribute("BlasterMotionDriver", true)
 -- Rocklock's pistol grip: barrel tilted 0.2 rad above the arm, grip 0.14 studs into the hand.
 local tilt, inset = 0.2, 0.14
 tool.Grip = CFrame.new(Vector3.new(0, -math.sin(tilt), -math.cos(tilt)) * inset)
