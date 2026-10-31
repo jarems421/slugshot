@@ -394,3 +394,9 @@
 - **Confirmed:** owner requests brief wrist twists/twirls for equip/unequip, with no throws or body spins.
 - **Implemented/verified offline:** shared original 0.42/0.34 s Floppy/Rocklock gestures, palm-pivot additive driver and material-preserving holster clone; removed the competing old full spin. Movement/foundation and Rocklock v1/v2 checks pass. See [motion notes](blaster-motion.md).
 - **Unresolved:** actual Studio hand fit, rapid switching/death and peer playback. Maximum Studio windows blocked the new test window; existing sessions preserved.
+
+## 2026-10-31 ? Solid muzzle private mesh update
+
+- **Confirmed:** owner requests slightly longer, flatter angular muzzle tips and solid orange replacing both oval vents.
+- **Implemented/verified offline:** new private model mapping, with prior mapping preserved; Rocklock private places rebuilt and v2 checks pass. Source and geometry validation live on feature/slug-asset-pipeline. [Record](solid-muzzle.md).
+- **Unresolved:** refreshed Studio art/runtime; no map, movement or draw/holster code changed in this follow-up.

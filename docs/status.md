@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified offline, 2026-10-31:** private blaster mapping and Rocklock builds now use solid orange muzzle panels with longer downward bevels and about 0.080 stud more reach. Both oval vents are filled; central channel remains clear. Geometry is authored in the slug worktree; v2 checks pass. **Unresolved:** owner visual approval and refreshed Studio playback. [Source/evidence record](solid-muzzle.md).
+
 **Implemented/verified offline, 2026-10-31:** original quick gun draw (0.42 s) and holster (0.34 s), with controlled wrist rolls and additive native-grip poses, replace the previous full-spin effect for the marked blaster. G carry styles remain. Foundation/movement/type/lint and Rocklock v1/v2 checks pass. **Unresolved:** actual Studio playback/hand fit and switching/respawn; a new Floppy test window was blocked by the maximum-open-windows limit. [Implementation, research and checks](blaster-motion.md).
 
 **Implemented/verified offline, 2026-10-31:** angular downward-bevel private blaster mesh and compact burnt-orange/graphite/steel finish with white glowing spiral now match the Floppy test pass; native fallback palette/proportions updated. Rocklock v2 verifier passes. Owner visual/hand-fit approval remains open; map, movement and destruction were preserved.
