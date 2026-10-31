@@ -52,6 +52,7 @@ local function cosmetic(part: BasePart)
 	part.CanTouch = false
 	part.Massless = true
 	part.Anchored = false
+	part.CastShadow = false
 end
 
 local tool = Instance.new("Tool")
@@ -113,14 +114,6 @@ for mesh, part in parts do
 		part.Color = Color3.fromRGB(120, 170, 255)
 		part.Transparency = 0.9
 		part.Reflectance = 0.1
-		-- A faint light-blue spill onto the gun and hand.
-		local glow = Instance.new("PointLight")
-		glow.Name = "ChamberGlow"
-		glow.Color = Color3.fromRGB(170, 215, 255)
-		glow.Brightness = 0.8
-		glow.Range = 3
-		glow.Shadows = false
-		glow.Parent = part
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
 end
@@ -167,7 +160,7 @@ for _, child in (container :: Instance):GetChildren() do
 	child.Parent = floppy
 end
 (container :: Instance):Destroy()
-Appearance.apply(floppy)
+Appearance.apply(floppy, 0.16)
 -- Use actual bone axes to handle importer rotations, then move the complete
 -- skinned model as one assembly. Never place its mesh pieces independently.
 local SOURCE_SIZE = Vector3.new(1.966, 2.72, 1.774)
@@ -219,23 +212,23 @@ for _, descendant in floppy:GetDescendants() do
 end
 floppy.Parent = tool
 
--- A broad, dim neutral light faces inward from above the shell. It lights
--- surfaces rather than painting an unlit Highlight over the slug's texture.
+-- One broad, low-intensity fill instead of sub-stud light pools. The
+-- albedo-modulated material floor keeps the slug readable if local lighting
+-- changes quality/visibility; the white coil is a constant Neon surface.
 local emitter = Instance.new("Part")
 emitter.Name = "ChamberInteriorEmitter"
-emitter.Size = Vector3.new(canisterSize.X * 0.65, 0.01, canisterSize.Z * 0.75)
+emitter.Size = Vector3.new(0.05, 0.05, 0.05)
 emitter.Transparency = 1
 emitter.CastShadow = false
-attach(emitter, CFrame.new(canisterCentre + Vector3.yAxis * radius * 0.82), tool)
-local fill = Instance.new("SurfaceLight")
-fill.Name = "ChamberInteriorFill"
-fill.Face = Enum.NormalId.Bottom
-fill.Angle = 120
-fill.Color = Color3.fromRGB(255, 249, 237)
-fill.Brightness = 0.45
-fill.Range = 0.75
+attach(emitter, CFrame.new(canisterCentre + Vector3.yAxis * 0.35), tool)
+local fill = Instance.new("PointLight")
+fill.Name = "ChamberBroadFill"
+fill.Color = Color3.fromRGB(245, 246, 244)
+fill.Brightness = 0.35
+fill.Range = 8
 fill.Shadows = false
 fill.Parent = emitter
+
 print(
 	string.format(
 		"Floppy blaster: canister %.2f x %.2f x %.2f studs; Floppy loaded at %.0f%% of ground size,"

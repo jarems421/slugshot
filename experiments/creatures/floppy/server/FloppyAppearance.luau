@@ -5,7 +5,7 @@ local Appearance = {}
 
 local templates = game:GetService("ServerStorage"):WaitForChild("FloppyMaterials")
 
-function Appearance.apply(model: Model)
+function Appearance.apply(model: Model, minimumLight: number?)
 	local applied = 0
 	for _, part in model:GetDescendants() do
 		if not part:IsA("MeshPart") then
@@ -28,6 +28,8 @@ function Appearance.apply(model: Model)
 		-- templates serialized into the private build instead of setting them live.
 		local surface = template:Clone()
 		surface.Name = "FloppyMaterial"
+		surface.EmissiveStrength = minimumLight or 0.08
+		surface.EmissiveTint = Color3.new(1, 1, 1)
 		surface.Parent = part
 		applied += 1
 	end

@@ -31,6 +31,8 @@ def main():
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     maps = {"bodyColor": "floppy-body-color.png", "bodyNormal": "floppy-body-normal.png",
             "eyeLColor": "floppy-eye-left.png", "eyeRColor": "floppy-eye-right.png"}
+    Image.new("L", (8, 8), 255).save(TEXTURES / "floppy-visibility-mask.png")
+    maps["visibilityMask"] = "floppy-visibility-mask.png"
     for tag, filename in (("body", "floppy-body-roughness.png"),
                           ("eyeL", "floppy-eye-roughness-L.png"),
                           ("eyeR", "floppy-eye-roughness-R.png")):
@@ -93,6 +95,10 @@ def main():
             property_name = {"color": "ColorMap", "normal": "NormalMap", "roughness": "RoughnessMap"}[key]
             content = ET.SubElement(properties, "Content", name=property_name)
             ET.SubElement(content, "url").text = "rbxassetid://" + str(value)
+        # Small albedo-modulated emission provides a stable visibility floor;
+        # it does not replace the real, broader lighting on surrounding objects.
+        content = ET.SubElement(properties, "Content", name="EmissiveMaskContent")
+        ET.SubElement(content, "uri").text = "rbxassetid://" + str(cache["visibilityMask"]["id"])
     ET.ElementTree(document).write(PRIVATE / "materials.rbxmx", encoding="utf-8", xml_declaration=True)
     print("PASS: explicit image mapping and material templates written privately")
 

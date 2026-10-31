@@ -24,8 +24,9 @@ pedestal.Parent = workspace
 -- pedestal Floppy visible.
 local lamp = Instance.new("PointLight")
 lamp.Color = Color3.fromRGB(255, 240, 215)
-lamp.Brightness = 1.5
-lamp.Range = 6
+lamp.Brightness = 0.8
+lamp.Range = 12
+lamp.Shadows = false
 local lampAttachment = Instance.new("Attachment")
 lampAttachment.Position = Vector3.new(0, PEDESTAL_TOP / 2 + 2.5, -1.5)
 lampAttachment.Parent = pedestal

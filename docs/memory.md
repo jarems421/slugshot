@@ -460,3 +460,9 @@
 - **Implemented/verified offline:** preserved source baseline, added repaired variant; source/game QA clear of prior errors; FBX and full creature checks pass. Grip shortened 18% and tools scaled 0.88. Uniform whole-model placement, duplicate bone-set motion, inward neutral SurfaceLight. Explicit Image maps plus private PBR templates replace unavailable importer textures confirmed in Studio logs. New ColoursFixed place opened.
 - **Unresolved:** final material/pose/light/fit approval and imported runtime evidence. [Detailed repair](slugs/floppy-chamber-repair.md).
 - **Verified, limited Studio sample:** owner-started ColoursFixed Play logged four loaded parts, eight bones, a material, completed belly-down placement, and pedestal/equipped idle initialization; no earlier texture-pack or Floppy errors in that sample. Colour/light/contact still need owner visual approval.
+
+## 2026-10-31 - Angular blaster and lighting visibility
+
+- **Confirmed:** owner approved the burnt-orange/graphite preview, rejected upward-flared tips, and specified downward angular cuts retaining the central firing gap and barrel reach. Slug animation is for the next pass.
+- **Implemented/verified offline:** compact proportions, solid capped downward muzzle bevels and nine clear channel rays; white spiral vanes, metal/grip separation. Broad shadowless fills and constant albedo-modulated material emission replace dependence on tiny light pools. Full creature/Blender checks and targeted Rocklock verifier pass. [Evidence, QA findings and limitations](slugs/blaster-refinement.md).
+- **Unresolved:** owner verdict on the final angular tips and lighting over time; generic gun QA retains rear mechanical-contact flags. Studio launch reported low resources with eight existing windows, which were preserved. No slug animation changes or experience publication.
