@@ -49,7 +49,7 @@ p { margin: 0; }
 .canvas-box:active { cursor: grabbing; }
 canvas { width: 100%; height: 100%; display: block; }
 .fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #e3e5ec; }
-.sprite { position: absolute; inset: 0; background-color: #0b0c12; background-repeat: no-repeat; background-size: 400% 400%; }
+.sprite { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #0b0c12; }
 .loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 13px; color: #c9ccd8; }
 .note { font-size: 13px; color: var(--muted); }
 button.ctl:disabled { opacity: .45; cursor: default; }
@@ -83,7 +83,7 @@ dd { margin: 2px 0 0; }
     <div class="stage">
       <div class="canvas-box" id="box">
         <canvas id="view" aria-label="Rotatable 3D concept of the selected asset" hidden></canvas>
-        <div class="sprite" id="sprite" role="img" aria-label="Turntable render of the selected asset"></div>
+        <canvas class="sprite" id="sprite" aria-label="Turntable render of the selected asset"></canvas>
         <div class="loading" id="loading" hidden>Loading render…</div>
         <div class="hint">Drag to turn</div>
         <div class="tag" id="tag">Slugshot mix</div>
@@ -120,7 +120,7 @@ dd { margin: 2px 0 0; }
       <div class="eyebrow" id="n-kind"></div>
       <h2 id="n-name"></h2>
       <dl id="n-list"></dl>
-      <p class="caveat">Concept render, not the game model. The default view is a 16-frame turntable rendered from the same shader; Live 3D runs it in your browser with zoom, tilt, animation and treatment comparison. Agree the shape and feel here; the Blender build then reproduces these forms exactly, with inverted-hull ink lines and painted textures for Roblox.</p>
+      <p class="caveat">Concept render, not the game model. The default view is a 36-frame turntable rendered from the same shader; Live 3D runs it in your browser with zoom, tilt, animation and treatment comparison. Agree the shape and feel here; the Blender build then reproduces these forms exactly, with inverted-hull ink lines and painted textures for Roblox.</p>
       <div class="planned">
         <h3>Planned, not built yet</h3>
         <ul id="planned"></ul>
@@ -1026,7 +1026,7 @@ void main() {
     { name: "Slugshot mix", t: [1.7, 0.95, 1.1, 0.5], mix: true }
   ];
   const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
-  const FRAMES = 16, BASE_YAW = -0.65, PITCH = 0.22;
+  const FRAMES = 36, SHEET = { cols: 6, w: 512, h: 384 }, BASE_YAW = -0.65, PITCH = 0.22;
 
   function shaderIndex(i) { const a = ASSETS[i]; return a.shader !== undefined ? a.shader : i; }
   function variantCount(i) { const a = ASSETS[i]; return a.variants ? a.variants.length : 1; }
@@ -1086,7 +1086,7 @@ void main() {
     const vw = variantView(ASSETS[i], v);
     return { yaw: BASE_YAW + frame*2*Math.PI/FRAMES, pitch: PITCH, dist: vw.dist*0.8, tx: vw.target[0], ty: vw.target[1], tz: vw.target[2] };
   }
-  root.SlugLib = { MUSH, CRYSTALS, ASSETS, PLANNED, TREAT, VIEWS, FRAMES, BASE_YAW, PITCH, BANK,
+  root.SlugLib = { MUSH, CRYSTALS, ASSETS, PLANNED, TREAT, VIEWS, FRAMES, SHEET, BASE_YAW, PITCH, BANK,
     shaderIndex, variantCount, frameKey, variantView, cameraBasis, uniformsFor, renderCam };
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
@@ -1198,17 +1198,27 @@ void main() {
     if (key === spriteKey) return;
     spriteKey = key;
     const url = "renders/" + key + ".jpg";
-    const apply = () => { if (spriteKey === key) { sprite.style.backgroundImage = `url("${url}")`; loading.hidden = true; } };
+    const apply = () => { if (spriteKey === key) { sheet = loaded[url]; drawn = -1; loading.hidden = true; } };
     if (loaded[url]) { apply(); return; }
     loading.hidden = false;
     const img = new Image();
-    img.onload = () => { loaded[url] = true; apply(); };
+    img.decoding = "async";
+    img.onload = () => { loaded[url] = img; apply(); };
     img.onerror = () => { if (spriteKey === key) { loading.hidden = true; fail("This render couldn't load. Reload the page to try again."); } };
     img.src = url;
   }
+  let sheet = null, drawn = -1;
+  const sctx = sprite.getContext("2d");
   function drawSprite() {
-    const k = frameIndex(cam.yaw), cols = 4, rows = FRAMES/4;
-    sprite.style.backgroundPosition = `${(k % cols)*100/(cols - 1)}% ${Math.floor(k/cols)*100/(rows - 1)}%`;
+    if (!sheet) return;
+    const w = Math.round(box.clientWidth*Math.min(window.devicePixelRatio || 1, 2)), h = Math.round(w*0.75);
+    if (sprite.width !== w || sprite.height !== h) { sprite.width = w; sprite.height = h; drawn = -1; }
+    const k = frameIndex(cam.yaw);
+    if (k === drawn) return;
+    drawn = k;
+    const { cols, w: fw, h: fh } = L.SHEET;
+    sctx.imageSmoothingQuality = "high";
+    sctx.drawImage(sheet, (k % cols)*fw, Math.floor(k/cols)*fh, fw, fh, 0, 0, w, h);
   }
 
   shelf.addEventListener("click", e => { const b = e.target.closest(".asset"); if (b) select(+b.dataset.index); });
@@ -1238,7 +1248,7 @@ void main() {
       pinch = d; return;
     }
     if (!drag) return;
-    goal.yaw -= (e.clientX - drag.x)*(live ? 0.008 : 0.012);
+    goal.yaw -= (e.clientX - drag.x)*0.008;
     if (live) goal.pitch = Math.max(-0.05, Math.min(1.2, goal.pitch + (e.clientY - drag.y)*0.005));
     drag = { x: e.clientX, y: e.clientY };
   });
@@ -1305,7 +1315,7 @@ void main() {
   }
   liveBtn.addEventListener("click", () => setLive(!live));
 
-  let moving = 0, quality = 0.45, slow = 0, fast = 0, lastDraw = 0;
+  let moving = 0, quality = 0.9, slow = 0, fast = 0;
   function resize(scale) {
     const w = Math.round(Math.min(860, box.clientWidth)*scale);
     const h = Math.round(w*0.75);
@@ -1323,11 +1333,10 @@ void main() {
     // Adaptive resolution: start low, sharpen only while frames stay quick, back off when they don't.
     if (raw > 0.06) { slow++; fast = 0; } else if (raw < 0.028) { fast++; slow = 0; }
     if (slow > 3) { quality = Math.max(0.3, quality*0.8); slow = 0; }
-    if (fast > 20) { quality = Math.min(1.0, quality*1.12); fast = 0; }
+    if (fast > 10) { quality = Math.min(1.1, quality*1.1); fast = 0; }
     moving = (drag || delta > 0.002) ? 0.4 : Math.max(0, moving - dt);
-    if (!moving && now - lastDraw < 40) return;  // idle animation at about 25 fps
-    lastDraw = now;
-    resize(moving > 0 ? Math.min(quality, 0.5) : quality);
+    if (!moving && !motion) return;  // nothing changes on screen
+    resize(moving > 0 ? quality*0.8 : quality);
     const S = L.uniformsFor({ asset: current, variant, treat, figOn, time, cam, width: canvas.width, height: canvas.height });
     try { useProgramFor(L.shaderIndex(current), Object.keys(S)); }
     catch (e) { console.error(e); broken = true; setLive(false); fail("Live 3D couldn't start on this device, so the page switched back to rendered views."); return; }

@@ -7,7 +7,7 @@ owner's Windows machine. Asset data and uniform maths come from the page's `<scr
 Requires Node on PATH and a Python with moderngl, numpy and Pillow (an isolated venv is fine):
     python tools/lobby/render_library.py [--page docs/art/asset-library.html] [--out build/lobby/renders]
         [--only rock-wall-1 crystals-8 ...]
-Writes one JPEG per asset variant: a 4 x 4 sheet of 16 frames (yaw steps of 22.5 degrees).
+Writes one JPEG per asset variant: a 6 x 6 sheet of 36 frames (yaw steps of 10 degrees).
 """
 
 import argparse
@@ -22,8 +22,8 @@ import moderngl
 import numpy as np
 from PIL import Image
 
-FRAME_W, FRAME_H, COLS = 640, 480, 4
-TILES = 4  # split each frame into horizontal bands so no single draw runs long on the GPU
+FRAME_W, FRAME_H, COLS = 512, 384, 6  # must match SHEET in the page's lib script
+TILES = 3  # split each frame into horizontal bands so no single draw runs long on the GPU
 
 
 def extract(page: str, pattern: str) -> str:

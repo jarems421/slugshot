@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-10-31 — Smoother library viewing
+
+- **Owner report:** views now render but moving around feels laggy and glitchy compared with the first version.
+- **Implemented:** turntables now 36 frames (10 degree steps) drawn to a 2D canvas only when the frame changes (was 16 frames moved as a large CSS background every frame); Live 3D restored to near-original smoothness (starts at 90% resolution, keeps 80% while dragging, full frame rate when animating, no draws when idle with motion off). Library v11. **Unresolved:** owner confirmation.
+
 ## 2026-10-31 — Library without WebGL
 
 - **Owner report:** WebGL stayed disabled after a full Chrome restart with graphics acceleration on; asked for a working approach, suggesting rendering on open rather than all at once.

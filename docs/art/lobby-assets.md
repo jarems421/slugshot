@@ -14,7 +14,7 @@ Slugterra is the reference for **categories and atmosphere**: giant glowing cave
 
 Owner request, 2026-10-31: every asset is first agreed as a rotatable 3D concept in the private [asset library page](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), the same workflow that settled Floppy. Source: [asset-library.html](asset-library.html). Each concept is defined in that page as exact signed-distance maths, so the Blender build (`tools/lobby/build_vignette.py`, first pass, paused until concepts are agreed) reproduces the agreed forms. Republish to the same URL and add each new asset to it.
 
-**Rendered turntables (2026-10-31):** live WebGL froze Chrome on the owner's Windows machine and Chrome then disabled WebGL entirely, so the page now shows offline-rendered 16-frame turntables by default, with Live 3D as an opt-in button. After changing the page, re-render and publish:
+**Rendered turntables (2026-10-31):** live WebGL froze Chrome on the owner's Windows machine and Chrome then disabled WebGL entirely, so the page now shows offline-rendered 36-frame turntables (10 degree steps, drawn on a 2D canvas) by default, with Live 3D as an opt-in button. After changing the page, re-render and publish:
 
 1. `python tools/lobby/render_library.py` (needs Node plus a Python with moderngl, numpy and Pillow; about 20 s on the owner's RTX 3070). It evaluates the page's own `lib` script and shader, so renders match the live view. Output goes to ignored `build/lobby/renders/`.
 2. Copy `docs/art/asset-library.html` and `build/lobby/renders/` into the session scratchpad and publish the page with `url` set to the library and `files` listing `renders/*.jpg` (the publish tool only accepts supporting files from the working directory or scratchpad).
