@@ -1,0 +1,21 @@
+{
+  "name": "SlugshotFloppyTypeCheck",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "FloppyTest": {
+        "$path": "experiments/creatures/floppy/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "FloppyTest": {
+          "$path": "experiments/creatures/floppy/client"
+        }
+      }
+    }
+  }
+}

@@ -23,16 +23,18 @@ local floppies: { [Model]: Motion } = {}
 
 local function setup(model: Model)
 	local bones: { [string]: Bone } = {}
+	local allBones: { Bone } = {}
 	for _, d in model:GetDescendants() do
 		if d:IsA("Bone") then
-			bones[d.Name] = d
+			bones[d.Name] = bones[d.Name] or d
+			table.insert(allBones, d)
 		end
 	end
 	local root, head, eyeL, eyeR = bones.root, bones.head, bones.eye_L, bones.eye_R
 	if not (root and head and eyeL and eyeR) then
 		return
 	end
-	for _, bone in bones do
+	for _, bone in allBones do
 		bone.Transform = CFrame.identity
 	end
 	-- Concept axes: +x sideways (eye_L to eye_R), up, and toward the face.
@@ -83,6 +85,18 @@ local function setup(model: Model)
 		local direction = side < 0 and 1 or -1
 		motion[eye] = function(t: number): CFrame
 			return CFrame.fromAxisAngle(axis, direction * EYE * t)
+		end
+	end
+	-- Roblox can create one skeleton per skinned mesh. Animate every copy;
+	-- a name-keyed dictionary alone silently leaves the other meshes at rest.
+	for _, bone in allBones do
+		local primary = bones[bone.Name]
+		local sourceMotion = motion[primary]
+		if bone ~= primary and sourceMotion then
+			local axes = bone.WorldCFrame.Rotation:ToObjectSpace(primary.WorldCFrame.Rotation)
+			motion[bone] = function(t: number): CFrame
+				return axes * sourceMotion(t) * axes:Inverse()
+			end
 		end
 	end
 	floppies[model] = motion

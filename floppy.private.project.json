@@ -106,6 +106,9 @@
       "$className": "ServerStorage",
       "BlasterMesh": {
         "$path": "private-assets/floppy/BlasterMesh.luau"
+      },
+      "FloppyMaterials": {
+        "$path": "private-assets/floppy/materials.rbxmx"
       }
     }
   }

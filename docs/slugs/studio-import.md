@@ -69,3 +69,9 @@ Start-Process build/SlugshotFloppyTest.rbxlx
 ```
 
 Press Play. The server script loads the asset, anchors it on the floor facing -Z and prints a `Floppy: loaded ...` line (parts, bones, size, SurfaceAppearance). The client script plays the 12 s idle on the Bones, because Bone transforms set on the server don't replicate. The avatar spawns 10 studs in front, facing Floppy. Per the [Studio handoff rule](../development.md), rebuild and reopen this place after each change. **Unresolved:** the actual load, appearance and idle in Studio (pending the owner's Play test or a Studio MCP session).
+
+### Repaired Floppy and explicit image maps (2026-10-31)
+
+The exporter now reads the repaired source variant, with the approved `floppy.blend` preserved. The game model is about 0.924 studs tall. See [repair evidence](floppy-chamber-repair.md). After the owner reported both copies lost colour, Studio logs confirmed unavailable generated texture packs. `python tools/slugs/upload_floppy_images.py` uploads/caches explicit Image maps and writes private `FloppyAsset.luau` and `materials.rbxmx`. The private Rojo project maps those three preconfigured PBR templates under ServerStorage; `FloppyAppearance` clones them rather than assigning plugin-only texture properties during Play. Do not commit the mapping, templates or upload receipts.
+
+The latest test place is `build/SlugshotFloppyTest-ColoursFixed.rbxlx`; it includes the belly-down chamber pose, shortened grip, 0.88 gun scale and real inward neutral light. Confirm both pedestal and loaded colours, then equip hotbar 1 and judge fit/light/idle. A complete GLB or an upload receipt does not establish imported material availability.

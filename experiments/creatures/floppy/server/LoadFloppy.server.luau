@@ -5,7 +5,10 @@
 local InsertService = game:GetService("InsertService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number }
+local Appearance = require(script.Parent.FloppyAppearance)
+local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: {
+	model: number,
+}
 
 -- Slugs are about 0.93 studs tall on the ground; show Floppy on a pedestal near eye level.
 -- The blaster with Floppy loaded is a Tool (FloppyBlaster).
@@ -62,6 +65,7 @@ end
 
 local floppy = load(asset.model, "Floppy")
 if floppy then
+	Appearance.apply(floppy)
 	standAt(floppy, 0, 0)
 	local meshes, bones = {}, {}
 	for _, d in floppy:GetDescendants() do

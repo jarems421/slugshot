@@ -74,3 +74,7 @@ A weak slippery patch, small smoke puff, a carefully placed tripwire or a squash
 ## Unresolved
 
 Owner review of the reference-matched cream, drooping antennae, softness and integrated tail; actual Roblox import/display of vertex colours, material appearance, skinning, bone-scale channels and playback; gameplay role and final name. Studio runtime remains unverified. The detailed review mesh and animation need production optimisation/device testing before use at scale. No upload or publication is authorized by the reference brief.
+
+## Floppy technical repair follow-up (2026-10-31)
+
+**Implemented/verified offline:** preserved the approved source and created `models/floppy/floppy-repaired.blend`; source/game topology defects are fixed without changing the face brief. Current game export remains 8.8k triangles, eight bones and a seamless 12-second idle. Loaded form is now belly-down, fitted with wall/idle clearance; gun grip is 18% shorter and the gun 12% smaller. Studio logs exposed unavailable importer texture packs after re-upload, so both copies use explicit private Image maps via cloned PBR templates. **Confirmed:** owner found the first geometry repair fine. **Unresolved:** final ColoursFixed-window material/pose/light/fit approval. [Repair report](../floppy-chamber-repair.md).

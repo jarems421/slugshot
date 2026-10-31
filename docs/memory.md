@@ -453,3 +453,10 @@
 - **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
 - **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
 - **Unresolved:** game-mesh winding/degenerate-face cleanup, genuine chamber illumination, Studio runtime/peers, slower-controller map integration and owner verdict. Art unchanged; private assets/IDs remain ignored.
+
+## 2026-10-31 - Floppy chamber and gun repairs
+
+- **Confirmed:** owner reported corruption, asked for a shorter handle, 12% smaller gun, topology and actual chamber illumination fixes. Follow-up: geometry looked fine; requested belly-down and reported both copies lost colour.
+- **Implemented/verified offline:** preserved source baseline, added repaired variant; source/game QA clear of prior errors; FBX and full creature checks pass. Grip shortened 18% and tools scaled 0.88. Uniform whole-model placement, duplicate bone-set motion, inward neutral SurfaceLight. Explicit Image maps plus private PBR templates replace unavailable importer textures confirmed in Studio logs. New ColoursFixed place opened.
+- **Unresolved:** final material/pose/light/fit approval and imported runtime evidence. [Detailed repair](slugs/floppy-chamber-repair.md).
+- **Verified, limited Studio sample:** owner-started ColoursFixed Play logged four loaded parts, eight bones, a material, completed belly-down placement, and pedestal/equipped idle initialization; no earlier texture-pack or Floppy errors in that sample. Colour/light/contact still need owner visual approval.

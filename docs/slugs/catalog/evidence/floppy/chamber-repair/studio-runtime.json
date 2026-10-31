@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-31",
+  "context": "Owner-started one-client Play in latest ColoursFixed window; local Studio log inspection",
+  "loadedParts": 4,
+  "loadedBones": 8,
+  "loadedMaterialPresent": true,
+  "pedestalIdleObserved": true,
+  "equippedIdleObserved": true,
+  "chamberPlacementCompleted": true,
+  "materialOrFloppyErrors": 0,
+  "visualAppearanceVerified": false,
+  "limits": "Log confirms initialization and absence of the earlier material errors during this sample; colour fidelity, lighting, belly contact and subjective quality require owner review."
+}

@@ -20,13 +20,17 @@ import sys
 from pathlib import Path
 
 import bpy
+import bmesh
 import numpy as np
+from mathutils import Vector
+from mathutils.bvhtree import BVHTree
+from mathutils.geometry import barycentric_transform
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import ROOT
 from blender_pipeline import EXPORT_SETTINGS
 
-SOURCE = ROOT/"assets/source/slugs/models/floppy/floppy.blend"
+SOURCE = ROOT/"assets/source/slugs/models/floppy/floppy-repaired.blend"
 OUT = ROOT/"build/slugs/floppy/roblox"
 BODY_TRIANGLES = 8000
 EYE_TRIANGLES = 400
@@ -73,10 +77,60 @@ def low_copy(high, name, target):
     low.name = name
     bpy.context.collection.objects.link(low)
     reduce(low, target)
+    repair_surface(low)
     select_only([low])
     bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
     bpy.ops.object.vertex_group_normalize_all(lock_active=False)
     return low
+
+
+def repair_surface(obj):
+    """Replace tiny self-touching surface-net junctions before UVs and baking.
+
+    Recalculating normals alone cannot orient an edge shared by four faces.
+    Open a one-ring patch around those junctions, cap its boundary, then weld
+    numerical duplicates. The approved high-detail source is never overwritten.
+    """
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    uv_layer = bm.loops.layers.uv.active
+    # Preserve the source's existing paint when repairing the authored variant.
+    # Low-poly UVs are subsequently unwrapped and baked again.
+    original = obj.data
+    original.calc_loop_triangles()
+    triangles = list(original.loop_triangles)
+    tree = BVHTree.FromPolygons([v.co for v in original.vertices],
+                               [t.vertices for t in triangles], all_triangles=True)
+    bad = [edge for edge in bm.edges if len(edge.link_faces) > 2]
+    faces = {face for edge in bad for face in edge.link_faces}
+    for face in list(faces):
+        for vertex in face.verts:
+            faces.update(vertex.link_faces)
+    if faces:
+        bmesh.ops.delete(bm, geom=list(faces), context="FACES")
+        caps = bmesh.ops.holes_fill(bm, edges=[e for e in bm.edges if e.is_boundary], sides=64)["faces"]
+        if uv_layer:
+            for face in caps:
+                _, _, index, _ = tree.find_nearest(face.calc_center_median())
+                triangle = triangles[index]
+                points = [original.vertices[i].co for i in triangle.vertices]
+                uvs = [Vector((*original.uv_layers.active.data[i].uv, 0)) for i in triangle.loops]
+                for loop in face.loops:
+                    loop[uv_layer].uv = barycentric_transform(loop.vert.co, *points, *uvs).xy
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-5)
+    bmesh.ops.dissolve_degenerate(bm, edges=list(bm.edges), dist=1e-5)
+    if any(e.is_boundary for e in bm.edges):
+        bmesh.ops.triangle_fill(bm, edges=[e for e in bm.edges if e.is_boundary], use_beauty=True)
+    bmesh.ops.triangulate(bm, faces=list(bm.faces))
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    print("repair metrics", obj.name, "boundary", sum(e.is_boundary for e in bm.edges), "overfull", sum(len(e.link_faces)>2 for e in bm.edges), "winding", sum(e.is_manifold and not e.is_contiguous for e in bm.edges))
+    assert all(e.is_manifold and e.is_contiguous for e in bm.edges), f"Unrepaired surface: {obj.name}"
+    assert all(f.calc_area() > 1e-12 for f in bm.faces), f"Degenerate face: {obj.name}"
+    for face in bm.faces:
+        face.smooth = True
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
 
 
 def image(name, colorspace, alpha=False):

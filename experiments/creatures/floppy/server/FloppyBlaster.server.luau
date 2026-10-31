@@ -1,6 +1,6 @@
 --!strict
 -- Floppy test place: a display copy of the owner's blaster at the Rocklock
--- size, given to every player as a Tool (hotbar 1), with Floppy loaded. Slugs
+-- size reduced by 12%, given to every player as a Tool (hotbar 1), with Floppy loaded. Slugs
 -- shrink when loaded (owner, 2026-10-31), so the gun stays a normal size and
 -- Floppy is scaled down to fit its canister. No firing or ammo.
 -- The real Rocklock blaster (experiments/movement in the main repo) is left
@@ -26,12 +26,15 @@ local spec = (require :: any)(ServerStorage:WaitForChild("BlasterMesh")) :: {
 	rotation: CFrame?,
 	meshes: { MeshSpec },
 }
-local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: { model: number }
+local Appearance = require(script.Parent.FloppyAppearance)
+local asset = require(ReplicatedStorage:WaitForChild("FloppyAsset")) :: {
+	model: number,
+}
 
 -- Gun space: X right, Y up, -Z toward the muzzle, origin at the grip. Same
 -- size as the Rocklock blaster: 25% larger than the 2.2-stud mesh, and the
 -- width a further 25%.
-local SCALE = Vector3.new(1.25 * 1.25, 1.25, 1.25)
+local SCALE = Vector3.new(1.25 * 1.25, 1.25, 1.25) * 0.88
 local CANISTER = "CanisterTeal"
 local canisterSpec: MeshSpec? = nil
 for _, mesh in spec.meshes do
@@ -105,7 +108,7 @@ for mesh, part in parts do
 	if mesh.name == CANISTER then
 		-- Clear, faintly blue shell. Not Glass (it blurs and darkens what's
 		-- behind it) and not Neon (it tints the slug): the glow comes from the
-		-- trim, and the slug carries his own soft glow (below).
+		-- trim and the inward-facing surface light below.
 		part.Material = Enum.Material.SmoothPlastic
 		part.Color = Color3.fromRGB(120, 170, 255)
 		part.Transparency = 0.9
@@ -155,8 +158,7 @@ for i, y in { -1, 1 } do
 	)
 end
 
--- Floppy inside the canister: lying head-first toward the muzzle, on his back
--- so his face shows through the glass.
+-- Floppy inside the canister: lying head-first toward the muzzle, belly down.
 local ok2, container = pcall(InsertService.LoadAsset, InsertService, asset.model)
 assert(ok2, "could not load Floppy: " .. tostring(container))
 local floppy = Instance.new("Model")
@@ -165,46 +167,75 @@ for _, child in (container :: Instance):GetChildren() do
 	child.Parent = floppy
 end
 (container :: Instance):Destroy()
--- Loaded form: shrink until he fills the canister lying down (his width
--- across the gun, his depth up, his height along the barrel). His true size
--- comes from his eye spacing (0.74 at source) and his source dimensions,
--- because the bounding box of an imported skinned model can be inflated.
-local SOURCE_SIZE = Vector3.new(1.7, 2.72, 1.77) -- body width (no antenna tips), height, depth
+Appearance.apply(floppy)
+-- Use actual bone axes to handle importer rotations, then move the complete
+-- skinned model as one assembly. Never place its mesh pieces independently.
+local SOURCE_SIZE = Vector3.new(1.966, 2.72, 1.774)
 local EYE_SPACING = 0.74
 local eyeL = floppy:FindFirstChild("eye_L", true) :: Bone
 local eyeR = floppy:FindFirstChild("eye_R", true) :: Bone
+local rootBone = floppy:FindFirstChild("root", true) :: Bone
+local head = floppy:FindFirstChild("head", true) :: Bone
+assert(eyeL and eyeR and rootBone and head, "Floppy is missing its reference bones")
+for _, descendant in floppy:GetDescendants() do
+	if descendant:IsA("Bone") then
+		descendant.Transform = CFrame.identity
+	end
+end
 local _, reported = floppy:GetBoundingBox()
 local current = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / EYE_SPACING
+assert(current > 1e-5, "Floppy eye spacing is zero")
+-- Leave room for the antenna tips, idle motion and the chamber walls.
 local target = math.min(
-	canisterSize.X * 0.95 / SOURCE_SIZE.X,
-	canisterSize.Y * 0.97 / SOURCE_SIZE.Z,
-	canisterSize.Z * 0.95 / SOURCE_SIZE.Y
+	canisterSize.X * 0.84 / SOURCE_SIZE.X,
+	canisterSize.Y * 0.82 / SOURCE_SIZE.Z,
+	canisterSize.Z * 0.86 / SOURCE_SIZE.Y
 )
 local shrink = target / current
-floppy:ScaleTo(shrink)
--- His middle: the root bone sits at the centre of his base, so go up half his height.
-local root = floppy:FindFirstChild("root", true) :: Bone
-local middle = CFrame.new(root.WorldPosition + Vector3.yAxis * SOURCE_SIZE.Y * target / 2)
--- Model up (+Y) -> gun -Z (muzzle); model face (-Z) -> gun +Y (up).
-local lie = CFrame.fromMatrix(Vector3.zero, Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1))
-local placed = CFrame.new(canisterCentre) * lie
-for _, d in floppy:GetDescendants() do
-	if d:IsA("BasePart") then
-		local relative = middle:ToObjectSpace(d.CFrame)
-		attach(d, placed * relative, d.Parent :: Instance)
+floppy:ScaleTo(floppy:GetScale() * shrink)
+local up = (head.WorldPosition - rootBone.WorldPosition).Unit
+local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
+local front = (face - up * face:Dot(up)).Unit
+local back = -front
+local reference = CFrame.fromMatrix(
+	rootBone.WorldPosition + up * SOURCE_SIZE.Y * target / 2,
+	up:Cross(back),
+	up,
+	back
+)
+-- Head toward the muzzle, belly down and back upward, irrespective of import axes.
+local placed = CFrame.fromMatrix(canisterCentre, Vector3.xAxis, -Vector3.zAxis)
+floppy:PivotTo(placed * reference:Inverse() * floppy:GetPivot())
+local loadedUp = (head.WorldPosition - rootBone.WorldPosition).Unit
+local loadedFace = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
+local loadedFront = (loadedFace - loadedUp * loadedFace:Dot(loadedUp)).Unit
+assert(loadedUp:Dot(-Vector3.zAxis) > 0.995, "Loaded Floppy's head must face the muzzle")
+assert(loadedFront:Dot(-Vector3.yAxis) > 0.995, "Loaded Floppy must rest on its belly")
+for _, descendant in floppy:GetDescendants() do
+	if descendant:IsA("BasePart") then
+		local offset = handle.CFrame:ToObjectSpace(descendant.CFrame)
+		attach(descendant, offset, descendant.Parent :: Instance)
 	end
 end
 floppy.Parent = tool
--- Lit from within: a constant, unlit fill in his own sage green, so he reads
--- clearly in the chamber whatever the lighting. Small lights inside the gun
--- flickered on and off with Roblox's light culling and flared the prongs.
-local inner = Instance.new("Highlight")
-inner.Name = "ChamberGlow"
-inner.FillColor = Color3.fromRGB(176, 180, 138)
-inner.FillTransparency = 0.72
-inner.OutlineTransparency = 1
-inner.DepthMode = Enum.HighlightDepthMode.Occluded
-inner.Parent = floppy
+
+-- A broad, dim neutral light faces inward from above the shell. It lights
+-- surfaces rather than painting an unlit Highlight over the slug's texture.
+local emitter = Instance.new("Part")
+emitter.Name = "ChamberInteriorEmitter"
+emitter.Size = Vector3.new(canisterSize.X * 0.65, 0.01, canisterSize.Z * 0.75)
+emitter.Transparency = 1
+emitter.CastShadow = false
+attach(emitter, CFrame.new(canisterCentre + Vector3.yAxis * radius * 0.82), tool)
+local fill = Instance.new("SurfaceLight")
+fill.Name = "ChamberInteriorFill"
+fill.Face = Enum.NormalId.Bottom
+fill.Angle = 120
+fill.Color = Color3.fromRGB(255, 249, 237)
+fill.Brightness = 0.45
+fill.Range = 0.75
+fill.Shadows = false
+fill.Parent = emitter
 print(
 	string.format(
 		"Floppy blaster: canister %.2f x %.2f x %.2f studs; Floppy loaded at %.0f%% of ground size,"
