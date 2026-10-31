@@ -17,8 +17,9 @@ local Hold = Config.Animation.Hold
 
 -- Gun space: X right, Y up, -Z toward the muzzle, origin at the middle of the grip.
 -- The meshes are authored as a 2.2-stud pistol; the owner asked for it larger overall and
--- a bit thicker, so everything grows 25% and the width a further 25%.
-local SCALE = Vector3.new(1.25 * 1.25, 1.25, 1.25)
+-- a bit thicker, so everything grew 25% and the width a further 25%.
+-- Owner 2026-10-31: reduce the complete blaster by 12%; private meshes also shorten the grip.
+local SCALE = Vector3.new(1.25 * 1.25, 1.25, 1.25) * 0.88
 
 local function cosmetic(part: BasePart)
 	part.CanCollide = false
@@ -196,8 +197,8 @@ if not (loaded and result) then
 	piece(
 		"Grip",
 		Enum.PartType.Block,
-		Vector3.new(0.2, 0.62, 0.28),
-		CFrame.new(0, -0.05, 0.04) * CFrame.Angles(-0.42, 0, 0),
+		Vector3.new(0.2, 0.62 * 0.82, 0.28),
+		CFrame.new(0, 0.0058, 0.04) * CFrame.Angles(-0.42, 0, 0),
 		"22304A"
 	)
 end

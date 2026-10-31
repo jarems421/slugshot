@@ -376,3 +376,9 @@
 - **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
 - **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
 - **Unresolved:** game-mesh winding/degenerate-face cleanup, genuine chamber illumination, Studio runtime/peers, slower-controller map integration and owner verdict. Art unchanged; private assets/IDs remain ignored.
+
+## 2026-10-31 - Shorter blaster grip and 12% smaller gun
+
+- **Confirmed:** owner requested a shorter handle and about 12% smaller gun while refining Floppy's loaded test.
+- **Implemented:** Rocklock Blaster scale multiplies by 0.88; its private mesh mapping now points to the owner-approved existing gun with geometry below the grip junction shortened to 82%. Native fallback grip is shortened too. The same refit is used by the Floppy test tool. Map/destruction and movement behaviour are unchanged. The reproducible refit script is on `feature/slug-asset-pipeline` under `tools/slugs/refit_floppy_blaster.py`; source input and reusable IDs stay private.
+- **Verified offline:** `python tools/verify_rocklock_v2.py --skip-movement` passes (types, lint, layout, builds and isolation). **Unresolved:** final hand fit/appearance in Studio.
