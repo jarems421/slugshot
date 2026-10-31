@@ -49,9 +49,9 @@
       "Bloom": {
         "$className": "BloomEffect",
         "$properties": {
-          "Intensity": 0.9,
-          "Size": 28,
-          "Threshold": 0.95
+          "Intensity": 1.4,
+          "Size": 36,
+          "Threshold": 0.8
         }
       }
     },

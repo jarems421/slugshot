@@ -103,18 +103,21 @@ for mesh, part in parts do
 	part.Material = (Enum.Material :: any)[mesh.material]
 	part.Reflectance = mesh.reflectance
 	if mesh.name == CANISTER then
-		-- Clear, lightly blue glass that doesn't tint the slug. The glow comes
-		-- from neon trim on the tube (below); the light inside is warm white so
-		-- Floppy shows his own green and lights a little of the area around.
-		part.Material = Enum.Material.Glass
-		part.Color = Color3.fromRGB(90, 150, 235)
-		part.Transparency = 0.88
+		-- Clear, faintly blue shell. Not Glass (it blurs and darkens what's
+		-- behind it) and not Neon (it tints the slug): the glow comes from the
+		-- trim and lights below.
+		part.Material = Enum.Material.SmoothPlastic
+		part.Color = Color3.fromRGB(120, 170, 255)
+		part.Transparency = 0.9
+		part.Reflectance = 0.1
+		-- Blue glow that spills onto the gun, hand and surroundings.
 		local glow = Instance.new("PointLight")
-		glow.Name = "ChamberLight"
-		glow.Color = Color3.fromRGB(255, 246, 225)
-		glow.Brightness = 3
-		glow.Range = 3
+		glow.Name = "ChamberGlow"
+		glow.Color = Color3.fromRGB(60, 140, 255)
+		glow.Brightness = 4
+		glow.Range = 6
 		glow.Shadows = false
+		glow.Parent = part
 		glow.Parent = part
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
@@ -138,7 +141,7 @@ end
 for i, z in { -1, 1 } do
 	local ring = trim(
 		"ChamberRing" .. i,
-		Vector3.new(0.025, radius * 2.04, radius * 2.04),
+		Vector3.new(0.05, radius * 2.06, radius * 2.06),
 		CFrame.new(canisterCentre + Vector3.new(0, 0, z * (canisterSize.Z / 2 - 0.04)))
 			* CFrame.Angles(0, math.pi / 2, 0)
 	)
@@ -147,9 +150,29 @@ end
 for i, y in { -1, 1 } do
 	trim(
 		"ChamberStrip" .. i,
-		Vector3.new(0.02, 0.02, canisterSize.Z - 0.08),
+		Vector3.new(0.03, 0.03, canisterSize.Z - 0.08),
 		CFrame.new(canisterCentre + Vector3.new(0, y * radius * 0.98, 0))
 	)
+end
+
+-- Warm white lights right beside the slug, at both ends of the tube, so he is
+-- lit in his own colours.
+for i, z in { -1, 1 } do
+	local holder = Instance.new("Part")
+	holder.Name = "ChamberLamp" .. i
+	holder.Size = Vector3.new(0.05, 0.05, 0.05)
+	holder.Transparency = 1
+	attach(
+		holder,
+		CFrame.new(canisterCentre + Vector3.new(0, radius * 0.5, z * canisterSize.Z * 0.3)),
+		tool
+	)
+	local lamp = Instance.new("PointLight")
+	lamp.Color = Color3.fromRGB(255, 248, 230)
+	lamp.Brightness = 6
+	lamp.Range = 1.4
+	lamp.Shadows = false
+	lamp.Parent = holder
 end
 
 -- Floppy inside the canister: lying head-first toward the muzzle, on his back
