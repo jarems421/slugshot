@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Reference cream and fused floppy antennae
+
+- **Confirmed:** owner requested downward-flopping antennae that extend from the slug; rejected the guessed yellow/brown and instructed the base colour to match their original Flopper image.
+- **Implemented/verified:** cream sampled from the supplied 3D reference, neutral lighting, two curved antennae voxel-fused into the head with blended head/feeler weights. All source/model/clip and strict Luau checks pass, including a single connected skin, downward tips, grounded squash and vertex colours. See [design/evidence](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** colour and antenna art review, higher-detail mesh optimisation, Roblox materials/skin/animation playback. No external model or reference texture imported and no asset uploaded.
+
 ## 2026-10-31 — Grounded resting shape and integrated tail
 
 - **Confirmed:** owner wants slightly dirty/warm off-white rather than clean white or cream, a fully relaxed/slumped base on the floor, and a short squishy triangular tail made from the body's continuation.

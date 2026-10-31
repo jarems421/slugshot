@@ -4,7 +4,7 @@
   "placeholder": false,
   "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
   "palette": {
-    "body": [0.80,0.80,0.735],
+    "body": [0.7758,0.7305,0.4793],
     "feature": [0.04,0.72,0.025],
     "eye": [0.04,0.25,0.05],
     "white": [0.99,1.0,0.96],
@@ -22,8 +22,8 @@
       "headScale":1.0,
       "eyeSpacing":1.0,
       "features":[
-        {"id":"eye-left", "kind":"eye", "socket":"face_left", "offset":[0,0.03384,0], "scale":[0.44,0.01,0.48], "material":"white"},
-        {"id":"eye-right", "kind":"eye", "socket":"face_right", "offset":[0,0.03386,0], "scale":[0.44,0.01,0.48], "material":"white"}
+        {"id":"eye-left", "kind":"eye", "socket":"face_left", "offset":[0,0.0327424,0], "scale":[0.44,0.01,0.48], "material":"white"},
+        {"id":"eye-right", "kind":"eye", "socket":"face_right", "offset":[0,0.03251138,0], "scale":[0.44,0.01,0.48], "material":"white"}
       ],
       "animations":{
         "idle":{"rig":"flopper-inspired-v1", "action":"Idle", "loop":true},
@@ -35,5 +35,5 @@
     }
   },
   "transformation":{"enabled":false, "duration":0.8, "spinTurnsPerSecond":2.0, "transitionFraction":0.65, "revealFraction":0.85, "effectColor":[0.7,0.78,0.48], "effect":"none"},
-  "budgets":{"trianglesPerMesh":10000, "totalTriangles":30000, "maxBones":64, "maxInfluences":4}
+  "budgets":{"trianglesPerMesh":20000, "totalTriangles":40000, "maxBones":64, "maxInfluences":4}
 }

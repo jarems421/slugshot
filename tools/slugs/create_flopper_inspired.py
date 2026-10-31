@@ -75,6 +75,30 @@ PROFILE = [
     (2.28,0.06,0.05,-0.04), (2.29,0.005,0.005,-0.04),
 ]
 
+ANTENNAE = {
+    "left": [(-.42,0,2.09),(-.46,.01,2.26),(-.52,.06,2.43),(-.63,.12,2.49),
+             (-.74,.20,2.43),(-.79,.25,2.29),(-.78,.28,2.12)],
+    "right": [(.42,0,2.08),(.48,.02,2.24),(.58,.07,2.39),(.69,.14,2.42),
+              (.77,.22,2.31),(.76,.27,2.15),(.72,.29,2.04)],
+}
+
+
+def antenna_influence(point, side):
+    """Smooth head-to-feeler weights across the fused roots."""
+    path = ANTENNAE[side]
+    best_distance, best_progress = float("inf"), 0.0
+    for index, (a,b) in enumerate(zip(path,path[1:])):
+        start, end = Vector(a), Vector(b)
+        delta = end-start
+        t = max(0,min(1,(point-start).dot(delta)/delta.length_squared))
+        distance = (point-(start+t*delta)).length
+        if distance < best_distance:
+            best_distance = distance
+            best_progress = (index+t)/(len(path)-1)
+    if best_distance > .19:
+        return 0.0
+    return min(1.0,max(0.0,best_progress/.30)) * max(0,min(1,(.19-best_distance)/.06))
+
 
 def body(rig, mat):
     # Broad flat contact, a softly spread lower body and an integrated tail.
@@ -109,13 +133,41 @@ def body(rig, mat):
     smooth = obj.modifiers.new("SculptSmooth", "SUBSURF")
     smooth.levels = 1
     bpy.ops.object.modifier_apply(modifier=smooth.name)
+    # Fuse the antenna roots into the head before weighting/colouring. Voxel
+    # union removes intersecting shell seams and creates one connected skin.
+    antenna_objects = []
+    for side,path in ANTENNAE.items():
+        antenna = tube("AntennaConstruction_"+side,path,[.15,.125,.105,.09,.08,.065,.045],mat,rig,"feelers_"+side,rings=16)
+        antenna.modifiers.clear()
+        antenna.vertex_groups.clear()
+        antenna.parent = None
+        antenna_objects.append(antenna)
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    for antenna in antenna_objects:
+        antenna.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.join()
+    fusion = obj.modifiers.new("FusedSoftSkin","REMESH")
+    fusion.mode = "VOXEL"
+    fusion.voxel_size = .045
+    fusion.use_smooth_shade = True
+    bpy.ops.object.modifier_apply(modifier=fusion.name)
+    relax = obj.modifiers.new("RelaxRoots","SMOOTH")
+    relax.factor, relax.iterations = .55, 3
+    bpy.ops.object.modifier_apply(modifier=relax.name)
+    obj.data.calc_loop_triangles()
+    reduction = obj.modifiers.new("ExportBudget","DECIMATE")
+    reduction.ratio = min(1.0,18000/max(1,len(obj.data.loop_triangles)))
+    bpy.ops.object.modifier_apply(modifier=reduction.name)
     mesh = obj.data
     # Subdivision must not turn the flattened underside back into a hovering dome.
     for vertex in mesh.vertices:
         vertex.co.z = max(0.0, vertex.co.z)
-        if vertex.co.z < 0.008:
+        if vertex.co.z < 0.035:
             vertex.co.z = 0.0
     obj["integrated_tail"] = True
+    obj["integrated_antennae"] = True
     for face in obj.data.polygons:
         face.use_smooth = True
     groups = {b.name: obj.vertex_groups.new(name=b.name) for b in rig.data.bones}
@@ -133,6 +185,12 @@ def body(rig, mat):
             weights = {"body_upper":1-t, "head":t}
         else:
             weights = {"head":1}
+        if z > 1.9:
+            for side in ANTENNAE:
+                influence = antenna_influence(vert.co,side)
+                if influence > 0:
+                    weights = {name:value*(1-influence) for name,value in weights.items()}
+                    weights["feelers_"+side] = influence
         for name, value in weights.items():
             if value > 0.00001:
                 groups[name].add([vert.index], value, "REPLACE")

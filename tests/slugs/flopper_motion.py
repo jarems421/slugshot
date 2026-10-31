@@ -26,6 +26,25 @@ assert impact["root"].scale.y < 0.65, "Impact should squash vertically"
 assert impact["root"].scale.x > 1.2, "Impact should spread horizontally"
 pose("Idle", 1)
 body = bpy.data.objects["SoftBody"]
+assert body.get("integrated_antennae"), "Antennae must grow from the body skin"
+adjacent = [[] for _ in body.data.vertices]
+for edge in body.data.edges:
+    a,b = edge.vertices
+    adjacent[a].append(b)
+    adjacent[b].append(a)
+visited, pending = set(), [0]
+while pending:
+    index = pending.pop()
+    if index in visited:
+        continue
+    visited.add(index)
+    pending.extend(other for other in adjacent[index] if other not in visited)
+assert len(visited) == len(body.data.vertices), "Head, tail and antennae must be one connected skin"
+for side,sign in (("left",-1),("right",1)):
+    group = body.vertex_groups["feelers_"+side].index
+    antenna = [v for v in body.data.vertices if any(g.group == group and g.weight > .6 for g in v.groups)]
+    tips = [v for v in antenna if sign*v.co.x > .68 and v.co.y > .17]
+    assert tips and max(v.co.z for v in antenna)-min(v.co.z for v in tips) > .15, f"{side} antenna should droop downward"
 color = body.data.color_attributes.get("Color")
 assert color is not None and color.domain == "POINT", "Body needs painted vertex colours"
 quadrants = [0, 0, 0, 0]
@@ -63,4 +82,4 @@ imported = bpy.data.objects["SoftBody"]
 assert imported.data.color_attributes, "FBX roundtrip lost the body colours"
 colors = imported.data.color_attributes[0].data
 assert max(sample.color[1] - sample.color[0] for sample in colors) > .18, "FBX roundtrip lost green markings"
-print("PASS: idle, blink, hop, grounded squash, surface eyes, integrated short tail, all-around spots and FBX vertex colours")
+print("PASS: idle, blink, hop, grounded squash, connected drooping antennae, surface eyes, integrated tail, spots and FBX colours")

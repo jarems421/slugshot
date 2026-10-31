@@ -36,7 +36,7 @@ def main():
     scene.view_settings.view_transform = "Standard"
     world = bpy.data.worlds.new("PortraitWorld")
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.35,0.40,0.34,1)
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.38,0.38,0.38,1)
     world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.25
     scene.world = world
     light("Key", (4,5,7), 300, 5)
@@ -46,7 +46,7 @@ def main():
     floor = bpy.context.object
     floor.name = "ReviewBackdrop"
     floor_mat = bpy.data.materials.new("Backdrop")
-    floor_mat.diffuse_color = (0.30,0.34,0.27,1)
+    floor_mat.diffuse_color = (0.32,0.32,0.32,1)
     floor.data.materials.append(floor_mat)
     data = bpy.data.cameras.new("ReviewCamera")
     data.type, data.ortho_scale = "ORTHO", 3.7

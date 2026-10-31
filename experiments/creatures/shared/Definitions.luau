@@ -7,8 +7,8 @@ return {
 			["budgets"] = {
 				["maxBones"] = 64,
 				["maxInfluences"] = 4,
-				["totalTriangles"] = 30000,
-				["trianglesPerMesh"] = 10000,
+				["totalTriangles"] = 40000,
+				["trianglesPerMesh"] = 20000,
 			},
 			["forms"] = {
 				["protoform"] = {
@@ -45,7 +45,7 @@ return {
 							["id"] = "eye-left",
 							["kind"] = "eye",
 							["material"] = "white",
-							["offset"] = { 0, 0.03384, 0 },
+							["offset"] = { 0, 0.0327424, 0 },
 							["scale"] = { 0.44, 0.01, 0.48 },
 							["socket"] = "face_left",
 						},
@@ -53,7 +53,7 @@ return {
 							["id"] = "eye-right",
 							["kind"] = "eye",
 							["material"] = "white",
-							["offset"] = { 0, 0.03386, 0 },
+							["offset"] = { 0, 0.03251138, 0 },
 							["scale"] = { 0.44, 0.01, 0.48 },
 							["socket"] = "face_right",
 						},
@@ -67,7 +67,7 @@ return {
 			},
 			["id"] = "flopper-inspired",
 			["palette"] = {
-				["body"] = { 0.8, 0.8, 0.735 },
+				["body"] = { 0.7758, 0.7305, 0.4793 },
 				["cheek"] = { 0.65, 0.82, 0.5 },
 				["eye"] = { 0.04, 0.25, 0.05 },
 				["feature"] = { 0.04, 0.72, 0.025 },
