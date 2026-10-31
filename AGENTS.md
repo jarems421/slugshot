@@ -14,6 +14,8 @@ For creature infrastructure use `python tools/verify_slugs.py --blender` with an
 
 During slug modelling, update `docs/slugs/blender-lessons.md` after meaningful problems or fixes, preserving owner feedback and relevant render references. Distinguish offline checks from subjective art approval and Studio evidence; accumulate lessons without rebuilding the pipeline unless the owner requests it.
 
+For Blender tool selection, use the Slugshot Blender orchestration skill and `docs/slugs/skill-routing.md`; check `docs/slugs/install-audit.md` before invoking a newly installed skill or live backend. Keep the first creature baseline intact during tooling tests.
+
 Use the relevant procedure skill in `.agents/skills` (Codex) or `.claude/skills` (Claude), keeping copies identical. Review third-party source/licences before execution or installation. Follow the current task's existing authorization: relevant verified free movement resources and pushing this experimental branch are approved. Ask before paid purchases, new external accounts, elevated permissions/security changes, destructive operations or publishing an experience. Never push restricted animation source or reusable IDs.
 
 ## Memory

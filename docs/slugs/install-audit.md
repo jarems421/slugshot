@@ -1,0 +1,52 @@
+# Blender ecosystem installation audit
+
+Updated 2026-10-31. Installation is separate from skill discovery, execution, and owner approval. The first creature remains the preserved baseline in [its catalogue record](catalog/flopper-inspired.md); no source model was opened for this integration.
+
+## Environment and source inventory
+
+| Item | Finding |
+| --- | --- |
+| Host | Windows 10.0.26200, x64; Python 3.13.15; Codex CLI 0.164.0-alpha.11.1; Claude Code 2.1.302. `uv` is absent; isolated Python `venv` and pip were used. |
+| Existing Blender | Portable 4.5.14 LTS at `C:/Users/runni/slugshot/.tools/blender-4.5.14-windows-x64/blender.exe`. Preserved as the creature and movement pipeline default. |
+| Side-by-side Blender | Official [5.2.3 LTS portable build](https://download.blender.org/release/Blender5.2/blender-5.2.3-windows-x64.zip) at `C:/Users/runni/slugshot/.tools/blender-5.2.3-windows-x64/blender.exe`; archive SHA-256 `723f08a4401502561eb763cdeacf8745b31e5f3f154d287d3830d97cf75dc2fb` matches the [Blender checksum file](https://download.blender.org/release/Blender5.2/blender-5.2.3.sha256). The older Blender remains untouched. |
+| Worktree | `C:/Users/runni/slugshot-slug-pipeline`, `feature/slug-asset-pipeline`, initially clean at `3a4d82e`. Original Rocklock checkout had 36 existing changed/untracked paths and was not edited. |
+| Skills already present | Slugshot Roblox procedure skills in the worktree, Codex system skills and Claude `synced`; no conflicting global Blender skills. Existing Codex NexusTrade and Claude Roblox/connected services were preserved. |
+| EL4CTEO skills | [Source](https://github.com/EL4CTEO/blender-skills) `fb92cfb4cc5a238c22113a6a230b09f535bd0656`, MIT, 28 `SKILL.md`, upstream Blender 5.2+. Vendored under `vendor/blender-skills/el4cteo`. |
+| RobLe3 skills | [Source](https://github.com/RobLe3/cc-blender-skill) `a2634b588e80265e796aa53f8ab178d75105c2af`, MIT, v1.4.0, 30 `SKILL.md`. Upstream live-tested on Blender 5.1.1; 4.x compatibility is not established. Vendored under `vendor/blender-skills/roble3`. |
+| BlendRelay | [Source](https://github.com/shefq/blendrelay-mcp) `abc6ed564e7e5a6ee3a09daee4553158aa79b4e6`, Python package 0.7.4, MIT server and GPL-3.0-or-later Blender extension. Requires Blender 4.5+. |
+| MCP for Blender | [Source](https://github.com/ahujasid/mcp-for-blender) `992233bb258975a05eec8b5691465c50c2831e34`, Python package 2.2.6, MIT, addon protocol 15. Current server requires Python >=3.10 and `mcp>=1.26,<2`; installed `mcp` 1.30.0 and `httpx` 0.28.1. |
+
+## Installed locations and conflict policy
+
+Both collections were copied from the pinned vendor source into `~/.agents/skills/` and `~/.claude/skills/` with `el4cteo-` and `roble3-` names, 58 skills per host. Each installed `SKILL.md` frontmatter name and its cross-skill prose references were namespaced. The two `blender-animation` and two `blender-rendering` implementations remain separate. The one upstream RobLe3 README link pointing outside its skill package was redirected to the pinned source's implementation log. Original scripts and local assets were kept. `python tools/slugs/install_blender_skills.py` updates only marked Slugshot copies and refuses to replace unmanaged or manually changed skills; `--check` verifies all 116 copies, source/installed digests and frontmatter. A separate link check found 29 valid relative links per host and none broken. See [skill-by-skill routing](skill-routing.md).
+
+The Slugshot orchestration skill is copied identically into this worktree's `.agents/skills/slugshot-blender-orchestrator/` and `.claude/skills/slugshot-blender-orchestrator/`. Use the brief, routing document and lessons before selecting a source skill. Fresh Codex and Claude sessions each discovered `el4cteo-blender-core`, `roble3-text-to-blender` and the project router; both explicitly invoked the router and selected BlendRelay for a hypothetical local eye edit. Automatic routing and all 58 individual invocations remain untested.
+
+The two Python MCP packages were built from the audited Git commits and installed into `C:/Users/runni/.local/share/slugshot-blender-mcp/`. Their executables are registered globally for **both** Codex and Claude as `blendrelay` and `blender`. Registration used each host's CLI; pre-change Codex/Claude config backups and the raw pip freeze are in ignored `build/blender-ecosystem-backups/` and `build/blender-mcp-freeze.txt`; the normalised [full dependency version list](mcp-python-freeze.txt) is tracked. Both 4.5 and 5.2 user add-on/extension directories contain both add-ons, and both enabled successfully. Existing installations were absent at first setup; the 4.5 MCP add-on was later overwritten with the same version when the installer selected its existing location. The Blender 4.5 preference file had not existed before enablement. No new account or GPU image-to-3D package was installed.
+
+BlendRelay uses a private local token and connects to `127.0.0.1`; its unrestricted Python action is separately gated. MCP for Blender binds to `localhost:9876` and can execute arbitrary Blender Python. The MCP process is configured with `DISABLE_TELEMETRY=true` and `BLENDER_HOST=localhost`; optional asset/model-generation toggles remain off by default. Blender's addon also schedules an update check on startup; this is an upstream behavior, not an asset-generation request. Do not paste private scenes or credentials into either backend. Only one backend should edit a given scene at a time.
+
+## Verification and precise limits
+
+| Check | Result |
+| --- | --- |
+| EL4CTEO source validator | **Passed:** 28 skills, spec/link/script checks. |
+| RobLe3 source contracts | **Passed:** 4 tests, 1 optional skip with `PYTHONUTF8=1`; the first Windows run hit a console decoding error, then passed unchanged. |
+| Global skill installation | **Passed:** 58 source definitions copied for each host, marker/source-digest/frontmatter check, no broken relative links. |
+| Native host discovery/invocation | **Passed for a representative sample:** fresh Codex and Claude sessions found two source skills and the project router; both explicitly invoked the router and returned the expected BlendRelay/visual-review guidance without edits. Automatic routing and the other 57 source skill invocations were not tested. |
+| Portable Blender 5.2.3 | **Passed:** official checksum, executable version, 67 EL4CTEO headless tests with no failures/skips; RobLe3 12 Blender export regressions passed. These are source suite checks, not owner art approval. |
+| Disposable production example | **Passed on 5.2.3:** `tools/slugs/blender_ecosystem_smoke.py` built an organic probe mesh, material, one-bone skin, 16-frame squash clip, four-angle renders, FBX, `.blend` save/reopen and geometry checks. Art quality was intentionally not judged. Results are ignored under `build/blender-ecosystem-smoke-5.2/`. |
+| BlendRelay 4.5 add-on and gateway | **Passed:** doctor, installed extension, live disposable-scene query, selected cube mesh normal edit, checkpoint and restore. Restored vertex coordinates were exactly ±0.5. `blendrelay_blender_sessions` returned a list in a structured-content field that the Python MCP client expected to be an object; use `get_scene_info` for the working scene query until upstream fixes this. |
+| MCP for Blender 4.5 add-on and gateway | **Passed:** add-on registration, live disposable-scene query and reversible cube transform through `execute_blender_code`. Both tests used a separate hidden Blender process and ignored `build/mcp-disposable.blend`. |
+| Both live backends on Blender 5.2 | **Passed:** separate hidden disposable process; MCP for Blender query/reversible edit, BlendRelay query, selected normal edit, checkpoint/restore and exact restored cube coordinates. The 5.2 BlendRelay query needed its gateway kept open while Blender registered the session. |
+| Both client MCP registrations | **Passed:** `codex mcp list` shows both enabled; `claude mcp list` reports both connected. This establishes transport, not artistic or all-skill behavior. |
+| Existing Slugshot pipeline | **Passed:** `BLENDER=<preserved 4.5.14> python tools/verify_slugs.py --blender`, including foundation, 23 slug configuration tests, source/export roundtrips and the first-creature motion/geometry checks. This does not establish Studio playback or owner approval. |
+| Current creature | **Unchanged:** source remains the baseline; prior offline pipeline checks are in [creature verification](verification.md). The owner still reports a generic cylinder, weak silhouette, attached-looking eyes/appendages and limited expression; those are open art issues. |
+
+The present MCP for Blender exposes nine consolidated tools. RobLe3 v1.4.0 lists several older tool names in `allowed-tools`, including viewport and object-detail calls that this server no longer exposes under those names. Core `mcp__blender__execute_blender_code` and `get_scene_info` work; substitute current `look` or a reviewed `execute_blender_code` recipe only after a disposable test. Do not mark the entire RobLe3 stack executable solely because it is installed. EL4CTEO's 5.2 source suite passed, but not every skill has been invoked through an agent. Blender-to-Roblox import and art approval are still unverified.
+
+**Installation gotchas observed:** `mcp-for-blender install-addon` preferred the existing 4.5 installation even with `BLENDERMCP_ADDONS_DIR` set; `--addons-dir <5.2 path>` selected the intended 5.2 target. Its first Windows command printed Unicode through a cp1252 console and exited after copying the add-on; `PYTHONIOENCODING=utf-8` fixed the command output. Neither issue affected the creature source.
+
+## Update and recovery
+
+Keep the four Git revisions above pinned. Review upstream changes and licences before updating `vendor/blender-skills` or the MCP venv. Run the installer, metadata/link checks, disposable live tests and `python tools/verify_slugs.py --blender` as applicable. Back up Codex/Claude and Blender preferences before changing registrations or add-ons. To restore agent configuration, use the ignored dated backup made before this task; the independent existing MCP registrations must be preserved. Disconnect and close only the disposable Blender process after tests. The [routing policy](skill-routing.md) is the operator entrypoint.

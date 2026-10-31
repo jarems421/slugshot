@@ -16,6 +16,8 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Slug asset pipeline](slugs/pipeline.md), [rig contract](slugs/rig-specification.md), [species guide](slugs/species-guide.md), [transformation API](slugs/transformation-system.md), [Studio import](slugs/studio-import.md) and [evidence](slugs/verification.md)
 - [Slug design catalogue and records](slugs/catalog/index.md)
 - [Blender modelling lessons](slugs/blender-lessons.md)
+- [Blender skill routing](slugs/skill-routing.md) and [installation audit](slugs/install-audit.md)
+- [Blender tooling decision](decisions/0012-blender-tool-routing.md)
 - [Creature proposal template](templates/creature.md)
 - [ADR template](templates/adr.md), [foundation ADR](decisions/0001-foundation.md), [movement ADR](decisions/0002-movement-experiment.md), [clip presentation ADR](decisions/0003-clip-presentation.md), [Place1 traversal ADR](decisions/0004-place1-traversal.md), [Mixamo variants ADR](decisions/0005-mixamo-variants-transitions.md), [wall run / v4 feedback ADR](decisions/0006-wall-run-and-v4-feedback.md), [block limbs ADR](decisions/0007-block-limbs-and-original-run.md), [R6 rig ADR](decisions/0008-r6-rig.md) and [cleanup / type check ADR](decisions/0009-cleanup-type-check-and-trusted-physics.md)
 - [Roadmap](roadmap.md)

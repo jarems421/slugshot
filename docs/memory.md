@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Blender skill ecosystem for both agents
+
+- **Confirmed:** owner authorised installing 28 EL4CTEO skills, 30 RobLe3 skills, BlendRelay and MCP for Blender for both Codex and Claude, plus Slugshot routing and quality records. Preserve the current creature and unrelated Rocklock/movement work; no GPU image-to-3D services or publication.
+- **Implemented/verified:** pinned source libraries and all 58 namespaced skill copies per host; source validators and representative fresh Codex/Claude discovery/invocation; two local MCP registrations per host; both add-ons enabled and live-tested in Blender 4.5.14 and checksum-verified side-by-side 5.2.3. EL's 67 tests, RobLe3's 12 export tests and a disposable four-view modelling/rig/animation/export example passed. BlendRelay queried and edited a disposable cube, then restored a checkpoint exactly. See [installation audit](slugs/install-audit.md) and [routing](slugs/skill-routing.md).
+- **Unresolved:** automatic routing, all 58 individual invocations, RobLe3 recipes referencing older MCP tool names, Roblox import and owner artistic approval. The owner still reports weak silhouette/cohesion/expression in the first creature; its source remains intact.
+
 ## 2026-10-31 — Symmetric antennae and modelling lessons
 
 - **Confirmed:** owner wants the outward antenna to match the more inward one, with both clear of the forehead; capture actionable visual/technical lessons without rebuilding the pipeline or treating automated checks as art approval.
