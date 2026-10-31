@@ -725,6 +725,19 @@ function Presentation.start(clips: Clips.Library)
 		local forward = rig.root.CFrame.LookVector * speed
 		local stride = dt * math.clamp(speed / WallRun.Cling.Below, 0, 1)
 		local pose = locomotion(rig, stride, now, Vector3.new(forward.X, 0, forward.Z))
+		-- A short brace follows the actual turn, including on replicated peers.
+		local facing = rig.root.CFrame.LookVector
+		local previous = rig.wallFacing or facing
+		local yawRate = math.atan2(previous:Cross(facing).Y, previous:Dot(facing))
+			/ math.max(dt, 0.001)
+		rig.wallFacing = facing
+		local turn = math.clamp(yawRate / WallRun.Surface.CornerRate, -1, 1)
+		rig.wallBrace = (rig.wallBrace or 0) + (turn - (rig.wallBrace or 0)) * Math.alpha(16, dt)
+		local brace = math.abs(rig.wallBrace)
+		pose.Root = CFrame.new(0, -0.18 * brace, 0)
+			* CFrame.Angles(-0.12 * brace, 0, -0.14 * rig.wallBrace)
+			* (pose.Root or IDENTITY)
+		pose.Neck = CFrame.Angles(0, 0.22 * rig.wallBrace, 0) * (pose.Neck or IDENTITY)
 		local tilt = WallRun.Tilt
 		pose.Root = CFrame.Angles(0, 0, side * tilt) * (pose.Root or IDENTITY)
 		-- Spread the wall arm just enough for the hand to meet the wall (gap: root to
@@ -906,6 +919,9 @@ function Presentation.start(clips: Clips.Library)
 
 		-- Action layer (flip, mantle, kick, slide) replaces the base pose; fades cover entry/exit.
 		local action = rig.action
+		if not action or action.kind ~= "WallRun" then
+			rig.wallFacing, rig.wallBrace = nil, 0
+		end
 		local actionWeight = 0
 		if action and action.kind == "WallRun" then
 			-- Ends on the ground or once the wall is no longer beside the body.
@@ -922,7 +938,12 @@ function Presentation.start(clips: Clips.Library)
 			elseif onRight then
 				action.side = 1
 			end
-			if elapsed > WallRun.SettleTime and (grounded or not wall) then
+			if wall then
+				action.lastWall = now
+			end
+			local lostWall = not wall
+				and now - (action.lastWall or action.start) > WallRun.Surface.Grace + 0.2
+			if elapsed > WallRun.SettleTime and (grounded or lostWall) then
 				rig.action = nil
 				startFade(rig, A.Fade.ActionOut, now)
 			else

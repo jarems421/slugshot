@@ -40,7 +40,7 @@ local bouncing = false -- a ground jump in the air (Profiles.JumpGravity applies
 -- Ctrl shift lock (owner, 2026-10-30; Roblox's own is off so Shift can slide): mouse
 -- locked to the centre, body facing the camera, camera over the right shoulder.
 local shiftLocked, lockBlend, cameraBase = false, 0, Vector3.zero
-local sprintShake = 0 -- 0..1, how much of the sprint camera shake is applied
+local movementShake, shakePhase = 0, 0 -- ground bounce blend and continuous footfall phase
 local testMove: Vector3? = nil
 local testUntil = 0
 local testJumpUntil = 0
@@ -260,7 +260,11 @@ local function startFlip(input: Vector3?, now: number): boolean
 	lastFlip = variant
 	local events = library[variant].events
 	local airDuration = (events.land or 0.6) - (events.takeoff or 0)
-	local rate = math.clamp(airDuration / landIn, settings.MinRate, settings.MaxRate)
+	local rate = math.clamp(
+		airDuration / landIn * settings.PlaybackScale,
+		settings.MinRate,
+		settings.MaxRate
+	)
 	airUsed = true
 	acro = { kind = "Flip", start = now, duration = airDuration / rate }
 	announce("Flip", variant, facing, rate, now)
@@ -585,7 +589,9 @@ local function kickLaunch(
 	local out = math.max(wanted:Dot(away), settings.MinOut)
 	local side = flat(wanted - away * wanted:Dot(away))
 	local direction = if side then side * math.sqrt(1 - out * out) + away * out else away
-	return direction * math.max(kickSpeed, along:Dot(direction)), up, nil
+	return direction * math.min(math.max(kickSpeed, along:Dot(direction)), settings.MaxCarry),
+		up,
+		nil
 end
 -- The wall last kicked off or run, which is not run again straight away.
 local lastWallPart: Instance? = nil
@@ -714,7 +720,7 @@ local function tryWallRun(now: number, input: Vector3): boolean
 		side = side,
 		part = hit.Instance,
 		contact = hit.Position,
-		speed = if running then math.max(along.Magnitude, run.Speed) else 0,
+		speed = if running then run.Speed else 0,
 		-- Keep part of the jump's rise; Jump held then climbs, released slides down.
 		vy = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
 	}
@@ -1067,12 +1073,58 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		-- Locked on: follow the wall surface until it ends or the feet reach the
 		-- ground (a Jump tap kicks off; see InputEnded).
 		local run = Trav.WallRun
-		local hit = workspace:Raycast(root.Position, -acro.away * (run.Reach + 0.6), rays)
-		local away = hit and math.abs(hit.Normal.Y) < 0.35 and flat(hit.Normal)
-		if away then
-			local along = acro.direction - away * acro.direction:Dot(away)
-			acro.away, acro.contact = away, hit.Position
-			acro.direction = flat(along) or acro.direction
+		local hit, surfaceKind =
+			Traversal.followWall(root.Position, acro.away, acro.direction, acro.speed, run, rays)
+		local away = hit and flat(hit.Normal)
+		if hit and away and surfaceKind == "outside" and not acro.corner then
+			local old = acro.away
+			local determinant = old.X * away.Z - old.Z * away.X
+			if math.abs(determinant) > 0.1 then
+				local d0, d1 = old:Dot(acro.contact), away:Dot(hit.Position)
+				local pivot = Vector3.new(
+					(d0 * away.Z - d1 * old.Z) / determinant,
+					root.Position.Y,
+					(old.X * d1 - away.X * d0) / determinant
+				)
+				if (pivot - root.Position).Magnitude <= run.Surface.CornerReach + run.Hug then
+					acro.part = hit.Instance
+					acro.corner = {
+						pivot = pivot,
+						normal = old,
+						direction = acro.direction,
+						progress = 0,
+						angle = math.atan2(old:Cross(away).Y, old:Dot(away)),
+					}
+				end
+			end
+		end
+		if acro.corner then
+			local corner = acro.corner
+			local cornerRate = math.min(run.Surface.CornerRate, acro.speed / run.Hug)
+			local advance = cornerRate * dt * (if corner.reverse then -1 else 1)
+			corner.progress = math.clamp(corner.progress + advance, 0, math.abs(corner.angle))
+			local rotation = CFrame.Angles(0, math.sign(corner.angle) * corner.progress, 0)
+			acro.away = rotation:VectorToWorldSpace(corner.normal)
+			acro.direction = rotation:VectorToWorldSpace(corner.direction)
+				* (if corner.reverse then -1 else 1)
+			acro.contact = corner.pivot
+			away = acro.away
+			acro.surfaceAt = now
+			if
+				corner.progress >= math.abs(corner.angle)
+				or (corner.reverse and corner.progress <= 0)
+			then
+				acro.corner = nil
+			end
+		elseif hit and away then
+			-- A cross product retains travel around a 90 degree corner; projecting the
+			-- old tangent onto the new face would collapse it to zero.
+			local side = math.sign(acro.direction:Dot(acro.away:Cross(Vector3.yAxis)))
+			acro.direction = away:Cross(Vector3.yAxis) * side
+			acro.away, acro.contact, acro.part = away, hit.Position, hit.Instance
+			acro.surfaceAt = now
+		elseif now - (acro.surfaceAt or acro.start) <= run.Surface.Grace then
+			away = acro.away
 		end
 		-- Near the top (nothing beside the head): the climb holds the height and runs
 		-- along the top edge. Owner (2026-10-30): it used to mantle over by itself; a
@@ -1090,6 +1142,13 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		-- input back along the wall brakes, turns round and runs the other way.
 		local wanted =
 			math.clamp(desired:Dot(acro.direction) + math.max(desired:Dot(-acro.away), 0), -1, 1)
+		if
+			acro.corner
+			and not acro.corner.reverse
+			and desired:Dot(acro.corner.direction) > run.MinInput
+		then
+			wanted = math.max(wanted, 0.6)
+		end
 		local steerTarget = run.Speed * wanted
 		-- Letting go stops at once (owner: straight into the slide, no slowing down);
 		-- a faster attach bleeds down to the run speed while the run is held.
@@ -1100,6 +1159,9 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 			else run.Steer
 		local signed = Math.approach(acro.speed, steerTarget, steerRate, dt)
 		if signed < 0 then
+			if acro.corner then
+				acro.corner.reverse = not acro.corner.reverse
+			end
 			acro.direction = -acro.direction
 			signed = -signed
 		end
@@ -1211,15 +1273,17 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		dt
 	)
 	local shoulder = Config.Camera.ShiftLock * lockBlend
-	-- Sprint shake (owner: make sprinting obvious, very subtle, no tilting): a small
-	-- bounce on each footfall while sprinting on the ground, eased in and out.
-	local shake = Config.Camera.SprintShake
-	local shaking = sprinting and onGround and not acro and speed > settings.RunSpeed + 1
-	sprintShake += ((if shaking then 1 else 0) - sprintShake) * Math.alpha(shake.Rate, dt)
-	local bounce = math.abs(math.sin(os.clock() * math.pi * shake.Steps)) * shake.Bounce
+	-- A subtle ground bounce follows the slower gait; sprint is only a little
+	-- quicker. Integrate phase so changing pace never jumps the camera's phase.
+	local shake = if sprinting then Config.Camera.SprintShake else Config.Camera.RunShake
+	local shaking = onGround and not acro and speed > 2
+	movementShake += ((if shaking then 1 else 0) - movementShake) * Math.alpha(shake.Rate, dt)
+	local paceSpeed = if sprinting then settings.SprintSpeed else settings.RunSpeed
+	shakePhase = (shakePhase + dt * shake.Steps * math.clamp(speed / paceSpeed, 0, 1)) % 1
+	local bounce = (math.abs(math.sin(shakePhase * math.pi)) - 0.5) * shake.Bounce
 	humanoid.CameraOffset = cameraBase
 		+ root.CFrame:VectorToObjectSpace(right * shoulder.X)
-		+ Vector3.new(0, shoulder.Y + (bounce - shake.Bounce * 0.5) * sprintShake, 0)
+		+ Vector3.new(0, shoulder.Y + bounce * movementShake, 0)
 	local fov = if aiming
 		then Config.Camera.AimFov
 		elseif sliding then Config.Camera.SlideFov
@@ -1227,10 +1291,10 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		else Config.Camera.Fov
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v7.37   •   %s   •   %s\nWASD move · Ctrl shift lock · double-tap W sprint · Shift slide (works in the air: slides on landing; jump out of it to keep the speed) · Space jump · Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\n%sH test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
+		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  double-tap W sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  P profiles  /  R reset\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
-		if Config.Lab.Aim then "RMB aim · Click marker · " else "",
+		if Config.Lab.Aim then "RMB aim Â· Click marker Â· " else "",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
 		if humanoid.FloorMaterial == Enum.Material.Air then "Airborne" else "Grounded",
 		if Config.Lab.Aim then `Markers {markers}   |   ` else "",
@@ -1294,7 +1358,10 @@ RunService.PreSimulation:Connect(function(dt)
 		local hug = run.Hug + (run.Cling.Hug - run.Hug) * cling
 		local gap = (root.Position - acro.contact):Dot(acro.away)
 		local pull = math.clamp((gap - hug) * run.Pull.Rate, -run.Pull.Away, run.Pull.Max)
-		root.AssemblyLinearVelocity = acro.direction * acro.speed
+		local travelSpeed = if acro.corner
+			then math.min(acro.speed, run.Surface.CornerRate * hug)
+			else acro.speed
+		root.AssemblyLinearVelocity = acro.direction * travelSpeed
 			- acro.away * pull
 			+ Vector3.new(0, acro.vy, 0)
 		return

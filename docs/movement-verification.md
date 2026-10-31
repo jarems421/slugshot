@@ -308,3 +308,36 @@ Live tests exposed the installed rig's AnimationConstraint joints, a blend-state
 [Sanitized evidence](evidence/2026-10-28-movement.json) contains measured results and source hashes. Raw logs, private captures and temporary IDs remain ignored. CI validates public source/builds only; Studio evidence is local and separate.
 
 [Public-safe sandbox capture](evidence/movement-lab.jpg) shows only the original procedural study on a native Roblox rig, not downloaded animation playback.
+
+## v7.38 uneven walls and corners (2026-10-31)
+
+**Confirmed:** owner requested bump/ledge continuity, corner turns with animation and a new Studio window.
+
+**Implemented:** `Traversal.followWall` checks anchored, collidable near-vertical faces and existing opt-outs; anticipates parallel offsets ?0.85 studs, samples three heights, detects inside corners and adjacent outside faces. The controller uses a shared-edge arc for outside corners, preserves stop/reverse/jump behavior in code, and tolerates missing seam support for 0.12 s. Presentation adds a turn-dependent brace, bank and head lead. Added northwest test geometry. No new third-party code or assets.
+
+**Verified offline:** `python tools/verify_movement.py` passed: foundation and movement formatting, lint (0 warnings), full strict Luau analysis, public/test place construction and private/test isolation. `rojo build movement.private.project.json --output build/SlugshotMovementLabPrivate.rbxlx` passed with the pre-existing private clip module, copied into ignored local storage. `WallSurface.spec.server.luau` compiles and is present only in the test build; its assertions have not executed. The type checker printed its existing configuration/watch-registration notices; these are not runtime evidence.
+
+**Studio launch:** started a new `RobloxStudioBeta.exe` process with the updated private place from `C:/Users/runni/slugshot-wallrun-terrain/build/`. Existing Studio windows were preserved. Launch/window confirmation is separate from Play execution.
+
+**Unresolved / Studio checklist:**
+
+- Run and climb across each 0.25/0.5/0.8-stud strip and thin ledge, from both sides; check collisions, body/hand contact and speed continuity.
+- Run around the tower's outside corners and the L's inside corner in both directions; inspect bracing and body/camera turns. Stop, reverse and jump off mid-turn.
+- Check unsupported ends, large obstacles, opted-out walls, top-edge holds, mantles, drag, respawn and existing wall kicks.
+- Execute the movement test place and confirm the wall-surface fixture PASS output.
+- Check `Corrections` and action rejections, and run a two-client peer/respawn trial. No latency settings were changed.
+- Owner judges smoothness and animation quality. No rendered frame-rate, device, arbitrary slope/Terrain voxel, acute-corner or multiplayer evidence was gathered; Studio MCP tools are unavailable in this session.
+
+## v7.39 slower movement pace (2026-10-31)
+
+**Confirmed:** owner requested run 18, sprint/wall run 24, slide cap 26 studs/s; slower limbs and camera bounce, slightly slower flips, and shorter horizontal jump distances with height retained.
+
+**Implemented:** the default Athletic and alternate Precise profiles run/sprint at 18/24. Baseline remains 16/16. Wall attachment starts at 24 rather than retaining a faster approach. Slide's cap is 26 with its prior +15 boost, 20 ending speed and 0.8-second quadratic decay; steering, buffering, cooldown and airborne decay remain unchanged. Animation speed matching now clamps at 0.65?1.15 instead of 0.85?1.3, enabling a slower gait. Tiny run/sprint bounce uses a continuous speed-scaled phase (0.018/0.035 stud amplitude, 3.2/3.7 footfalls/s). Flip playback is multiplied by 0.92, minimum 0.78. First-jump horizontal target multiplier is 1.04 rather than 1.08. Wall kick speeds are 34 (air) and 32 (wall run); tangent/carry limits are 26/36 and wall-run kick carry fraction is 0.9. Kick launch itself also respects the carry cap. Existing turn/terrain tracking is retained.
+
+**Verified offline:** `python tools/verify_movement.py` passed foundation and movement format/lint/strict typing, public/test builds and isolation. Private Rojo build passed. An inline comparison to `build/checkpoints/v7.38-before-speed-retune/Config.luau` confirmed unchanged JumpPower/JumpGravity in all profiles, double-jump upward launch, wall-hop/up-kick/wall-run vertical launches and wall climb, as well as the slide timing/decay parameters listed above. No runtime tests are implied by those checks.
+
+**Analytical estimates only:** at constant horizontal target speed on flat ground, using JumpPower 60.5 and gravity 196.2, the first-jump reach is approximately 14.65?11.54 studs running, 19.98?15.39 sprinting. This is a ballistic calculation, not a Studio measurement; actual takeoff speed, acceleration, landing height and collisions affect reach. Vertical settings are unchanged.
+
+**Studio:** started a fresh visible Studio process on `build/SlugshotMovementLabPrivate-v7.39.rbxlx`; existing windows were preserved. HUD identifies v7.39. Studio MCP tools remain unavailable, so Play execution, warnings, correction counts and peer playback were not observed.
+
+**Unresolved checklist:** compare run/sprint/wall-run speed and limb cadence; slide 26?20 over 0.8 s and slide-jump carry; first/second jump and each wall-kick height/reach; all eight flip directions near high/low landings; camera comfort; corner/ledge continuation at 24, stop/reverse/jump-off; respawn and two-client presentation. Owner judges subjective feel.

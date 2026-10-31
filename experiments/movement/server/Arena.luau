@@ -61,6 +61,21 @@ function Arena.create(): Model
 	-- kick between.
 	block("RunWallWest", Vector3.new(2, 40, 160), CFrame.new(94, 20, 0), amber)
 	block("RunWallEast", Vector3.new(2, 40, 160), CFrame.new(108, 20, 0), blue)
+	-- North-west terrain lane: raised strips, a thin ledge and a connected
+	-- rectangular tower (outside corners), plus an L for an inside corner.
+	block("UnevenRunWall", Vector3.new(3, 34, 100), CFrame.new(-90, 17, -10), blue)
+	for i, depth in { 0.25, 0.5, 0.8 } do
+		block(
+			"RunBump" .. i,
+			Vector3.new(depth, 34, 3),
+			CFrame.new(-88.5 + depth / 2, 17, 18 - i * 17),
+			amber
+		)
+	end
+	block("ThinWallLedge", Vector3.new(0.6, 0.45, 22), CFrame.new(-88.2, 9, -10), amber)
+	block("CornerTower", Vector3.new(24, 34, 24), CFrame.new(-55, 17, -78), blue)
+	block("InsideCornerLong", Vector3.new(3, 34, 38), CFrame.new(-12, 17, -80), blue)
+	block("InsideCornerReturn", Vector3.new(25, 34, 3), CFrame.new(0, 17, -97.5), amber)
 	block("ChimneyLedge", Vector3.new(8, 14, 14), CFrame.new(70, 7, -6), blue)
 	block("ChimneyWall", Vector3.new(2, 22, 14), CFrame.new(83, 11, -6), amber)
 	for i = 0, 5 do

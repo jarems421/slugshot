@@ -13,8 +13,8 @@ return table.freeze({
 			JumpGravity = 1, -- stock Roblox jump
 		},
 		Athletic = {
-			RunSpeed = 22, -- owner (2026-10-30): was 24; a clearer step up to the 30 sprint
-			SprintSpeed = 30,
+			RunSpeed = 18, -- owner speed retune (2026-10-31)
+			SprintSpeed = 24,
 			Acceleration = 100,
 			Braking = 145,
 			TurnRate = 18,
@@ -23,8 +23,8 @@ return table.freeze({
 			JumpGravity = 1,
 		},
 		Precise = {
-			RunSpeed = 21,
-			SprintSpeed = 27,
+			RunSpeed = 18,
+			SprintSpeed = 24,
 			Acceleration = 130,
 			Braking = 180,
 			TurnRate = 24,
@@ -40,9 +40,10 @@ return table.freeze({
 		-- press is a ground jump while anything is under the body's footprint (radius,
 		-- studs; the server's touchdown check uses it too), or within Coyote seconds of
 		-- walking off without jumping.
-		Jump = { Footprint = 1, Coyote = 0.15, AirSpeedScale = 1.08 },
+		Jump = { Footprint = 1, Coyote = 0.15, AirSpeedScale = 1.04 },
 		Flip = {
-			MinRate = 0.85,
+			MinRate = 0.78,
+			PlaybackScale = 0.92, -- slightly slower flips, without changing the upward launch
 			MaxRate = 2.6,
 			-- Owner: a second Space press in the air is a double jump that flips toward
 			-- the keys held (eight ways, as seen on screen). Upward speed it launches with,
@@ -57,7 +58,7 @@ return table.freeze({
 		Slide = {
 			MinSpeed = 12, -- ground speed needed to start
 			Boost = 15, -- start speed: current (at least RunSpeed) plus this
-			MaxSpeed = 46,
+			MaxSpeed = 26,
 			EndSpeed = 20, -- speed it slows to by Duration
 			Duration = 0.8,
 			Steer = 1.2, -- radians per second it can turn toward the input
@@ -97,14 +98,14 @@ return table.freeze({
 		},
 		WallHop = {
 			Reach = 4.5, -- from the root: about 3.5 studs of gap beside the body
-			-- Owner (2026-10-30): kicks off a wall should go further, carrying the momentum.
-			AwaySpeed = 40,
+			-- Horizontal wall-kick reach reduced for the slower movement pace; height retained.
+			AwaySpeed = 34,
 			UpSpeed = 54,
 			TangentCarry = 0.8, -- fraction of along-wall speed kept
-			MaxTangent = 32,
+			MaxTangent = 26,
 			-- Horizontal speed kept once a kick hands back control (it then bleeds in the air
 			-- at Slide.AirDecay, as a slide-jump does), instead of dropping to sprint speed.
-			MaxCarry = 44,
+			MaxCarry = 36,
 			MaxHops = 8, -- per airtime (wall-run jumps count); enough to climb between two walls
 			Cooldown = 0.15,
 			-- Owner (2026-10-30): wall jumps were not responsive. No hop this soon after leaving
@@ -151,7 +152,7 @@ return table.freeze({
 			MaxInto = 0.8, -- travel more head-on than this (dot into the wall) does not attach
 			MinInput = 0.3, -- move input along the wall needed to attach
 			MinHeight = 2, -- feet above the ground needed to attach
-			Speed = 34, -- run speed on the wall with input along it (owner, 2026-10-30: was 26)
+			Speed = 24, -- owner speed retune (2026-10-31)
 			-- Steering (studs/s^2): toward the input's speed along the wall (Steer), or down to
 			-- it from a faster attach (Bleed); TurnRate turns the body when it reverses.
 			Steer = 120, -- toward the input's speed along the wall
@@ -163,6 +164,14 @@ return table.freeze({
 			Cling = { Into = 4, Below = 6, Drag = 4, Hug = 1.85, Accel = 200 },
 			Bleed = 12,
 			TurnRate = 14,
+			Surface = {
+				LookAhead = 5, -- anticipate small raised strips before the body reaches them
+				MaxStep = 0.85, -- maximum automatic outward surface offset, studs
+				ProbeHeight = 1.1, -- support above/below a thin horizontal seam
+				CornerReach = 3.2, -- only wrap onto an adjacent face near the old edge
+				CornerRate = 7, -- maximum convex turn speed, radians/s
+				Grace = 0.12, -- brief seam tolerance; does not search across large gaps
+			},
 			-- Owner (2026-10-30): attaching was delayed and stuck lower than the jump was
 			-- heading. It can attach this soon after leaving the ground (MinHeight still keeps
 			-- it off the floor), keeping more of the jump's rise.
@@ -188,12 +197,12 @@ return table.freeze({
 			SlideGrow = 5,
 			SlideMax = 20,
 			VerticalAccel = 40, -- studs/s^2 toward the climb or slide speed
-			Pull = { Rate = 8, Max = 14, Away = 6 }, -- speed holding the root at Hug distance
+			Pull = { Rate = 12, Max = 14, Away = 12 }, -- anticipate shallow protrusions without moving the root through them
 			Release = 8, -- push away from the wall when dropping off
 			Reattach = 0.45, -- seconds before the same wall can be run again
-			JumpAway = 38,
+			JumpAway = 32,
 			JumpUp = 46,
-			JumpCarry = 1, -- fraction of the run speed kept on the kick
+			JumpCarry = 0.9, -- fraction of the run speed kept on the kick
 			Tilt = 0.35, -- presentation: body roll away from the wall, radians
 			ArmForward = 0.5, -- presentation: wall hand's swing ahead of the shoulder, radians
 			HandGap = 0.1, -- presentation: hand stops this far from the wall surface
@@ -226,17 +235,18 @@ return table.freeze({
 		ShiftLockTurnRate = 30, -- how fast the body turns to the camera under shift lock
 		AimFov = 68,
 		BlendRate = 10,
-		-- Owner (2026-10-30): make sprinting obvious, but the first shake (bounce, wobble and
-		-- roll) was far too much: only a very subtle bounce on each step (studs), no tilt.
+		-- Owner (2026-10-31): calmer bounce for running, slightly quicker for sprinting.
+		-- Keep both subtle, without wobble or camera roll.
 		-- Steps: footfalls per second; Rate: how fast it fades in and out.
-		SprintShake = { Bounce = 0.05, Steps = 4.6, Rate = 6 },
+		RunShake = { Bounce = 0.018, Steps = 3.2, Rate = 6 },
+		SprintShake = { Bounce = 0.035, Steps = 3.7, Rate = 6 },
 		MinZoom = 7,
 		MaxZoom = 18,
 		Shoulder = Vector3.new(1.5, 0.45, 0),
 	},
 	Animation = {
-		MaxCycleRate = 1.3, -- above this the feet slide instead of faster cadence (longer, calmer strides)
-		MinCycleRate = 0.85, -- high so braking blends to idle without a slow-motion run (owner: snappy)
+		MaxCycleRate = 1.15, -- calmer cadence at the new run/sprint speeds
+		MinCycleRate = 0.65, -- allow speed-matched slower limbs at 18/24 studs/s
 		IdleBlendSpeed = 5,
 		IdleBlendRate = 7, -- how fast the idle/moving mix follows speed (owner: no cut into idle)
 		-- Long falls sway gently about the jump clip's apex pose instead of playing a Fall

@@ -94,3 +94,7 @@ Decisions:
 - **Mantle speed.** Target 0.2-0.3 s, with the approach speed kept.
 
 Evidence: [results](../movement-verification.md#v41-owner-feedback-pass-2026-10-29) and the [sanitized evidence](../evidence/2026-10-29-movement-v4.1.json).
+
+## 2026-10-31 addendum: bounded surface continuation (v7.38)
+
+**Confirmed:** owner requested small bump/ledge support and animated corner turns. Keep the existing WallRun action/protocol; continuation is local geometry tracking, with the current root replication and procedural peer presentation. Parallel outward offsets are bounded to 0.85 studs, seam loss to 0.12 s, and corner searches to adjacent near-vertical static faces. Outside edges use the intersection of the two wall planes and a clearance-radius arc; inside turns occur before the body hits the next face. No root teleport, new traversal request, weakened server correction or promise of arbitrary terrain compatibility is introduced. See [results and outstanding runtime gates](../movement-verification.md#v738-uneven-walls-and-corners-2026-10-31).
