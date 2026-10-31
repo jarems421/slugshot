@@ -125,12 +125,15 @@ function Visual.update(
 	end
 	local player = self.players[self.active]
 	if not self.manualSlot then
-		local slot = if sample.transformed
-			then "reveal"
+		local available = self.species.forms[self.active].animations
+		local slot = if sample.stage == "impact" and available.impact
+			then "impact"
+			elseif sample.transformed then "reveal"
 			elseif sample.stage == "energy" then "prepare"
-			elseif sample.stage == "launch" then "launch"
-			else "spin"
-		if self.species.forms[self.active].animations[slot] then
+			elseif sample.stage == "launch" and available.launch then "launch"
+			elseif available.spin then "spin"
+			else "idle"
+		if available[slot] then
 			player:play(slot)
 		end
 		local progress = if sample.transformed
@@ -139,7 +142,9 @@ function Visual.update(
 			elseif sample.stage == "energy" then (sample.progress - 0.35)
 				/ (self.species.transformation.transitionFraction - 0.35)
 			else (elapsed * self.species.transformation.spinTurnsPerSecond) % 1
-		player:seek(progress)
+		if slot ~= "impact" and slot ~= "idle" then
+			player:seek(progress)
+		end
 	end
 	local model = self.models[self.active]
 	local orientation = self.options.orientation or CFrame.identity

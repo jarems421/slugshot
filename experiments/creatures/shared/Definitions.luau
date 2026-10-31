@@ -3,6 +3,92 @@
 local Types = require(script.Parent.Types)
 return {
 	species = {
+		["flopper-inspired"] = {
+			["budgets"] = {
+				["maxBones"] = 64,
+				["maxInfluences"] = 4,
+				["totalTriangles"] = 30000,
+				["trianglesPerMesh"] = 10000,
+			},
+			["forms"] = {
+				["protoform"] = {
+					["animations"] = {
+						["blink"] = {
+							["action"] = "Blink",
+							["loop"] = false,
+							["rig"] = "flopper-inspired-v1",
+						},
+						["hop"] = {
+							["action"] = "Hop",
+							["loop"] = false,
+							["rig"] = "flopper-inspired-v1",
+						},
+						["idle"] = {
+							["action"] = "Idle",
+							["loop"] = true,
+							["rig"] = "flopper-inspired-v1",
+						},
+						["impact"] = {
+							["action"] = "Impact",
+							["loop"] = false,
+							["rig"] = "flopper-inspired-v1",
+						},
+						["launch"] = {
+							["action"] = "Launch",
+							["loop"] = false,
+							["rig"] = "flopper-inspired-v1",
+						},
+					},
+					["eyeSpacing"] = 1.0,
+					["features"] = {
+						{
+							["id"] = "eye-left",
+							["kind"] = "eye",
+							["material"] = "white",
+							["offset"] = { 0, 0, 0 },
+							["scale"] = { 0.52, 0.16, 0.52 },
+							["socket"] = "face_left",
+						},
+						{
+							["id"] = "eye-right",
+							["kind"] = "eye",
+							["material"] = "white",
+							["offset"] = { 0, 0, 0 },
+							["scale"] = { 0.52, 0.16, 0.52 },
+							["socket"] = "face_right",
+						},
+					},
+					["generator"] = "authored",
+					["headScale"] = 1.0,
+					["rig"] = "flopper-inspired-v1",
+					["size"] = { 2.2, 1.8, 2.6 },
+					["source"] = "assets/source/slugs/models/flopper-inspired/protoform.blend",
+				},
+			},
+			["id"] = "flopper-inspired",
+			["palette"] = {
+				["body"] = { 0.87, 0.86, 0.67 },
+				["cheek"] = { 0.78, 0.58, 0.45 },
+				["eye"] = { 0.055, 0.085, 0.065 },
+				["feature"] = { 0.37, 0.48, 0.2 },
+				["iris"] = { 0.28, 0.38, 0.21 },
+				["mouth"] = { 0.12, 0.085, 0.07 },
+				["white"] = { 0.92, 0.94, 0.82 },
+			},
+			["pattern"] = "solid",
+			["placeholder"] = false,
+			["provenance"] = "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
+			["transformation"] = {
+				["duration"] = 0.8,
+				["effect"] = "none",
+				["effectColor"] = { 0.7, 0.78, 0.48 },
+				["enabled"] = false,
+				["revealFraction"] = 0.85,
+				["spinTurnsPerSecond"] = 2.0,
+				["transitionFraction"] = 0.65,
+			},
+			["version"] = 1,
+		},
 		["placeholder"] = {
 			["budgets"] = {
 				["maxBones"] = 64,
@@ -165,6 +251,79 @@ return {
 				["energy"] = {
 					["bone"] = "core",
 					["position"] = { 0, 0, 0.5 },
+				},
+			},
+		},
+		["flopper-inspired-v1"] = {
+			["bones"] = {
+				{
+					["name"] = "root",
+					["parent"] = nil,
+					["position"] = { 0, 0, 0.1 },
+				},
+				{
+					["name"] = "body_lower",
+					["parent"] = "root",
+					["position"] = { 0, -0.2, 0.35 },
+				},
+				{
+					["name"] = "body_upper",
+					["parent"] = "body_lower",
+					["position"] = { 0, 0.05, 0.5 },
+				},
+				{
+					["name"] = "head",
+					["parent"] = "body_upper",
+					["position"] = { 0, 0.3, 0.7 },
+				},
+				{
+					["name"] = "jaw",
+					["parent"] = "head",
+					["position"] = { 0, 0.42, 0.55 },
+				},
+				{
+					["name"] = "tail",
+					["parent"] = "body_lower",
+					["position"] = { 0, -0.4, 0.25 },
+				},
+				{
+					["name"] = "eye_left",
+					["parent"] = "head",
+					["position"] = { -0.26, 0.35, 0.7 },
+				},
+				{
+					["name"] = "eye_right",
+					["parent"] = "head",
+					["position"] = { 0.26, 0.35, 0.7 },
+				},
+				{
+					["name"] = "feelers_left",
+					["parent"] = "head",
+					["position"] = { -0.25, 0.04, 0.83 },
+				},
+				{
+					["name"] = "feelers_right",
+					["parent"] = "head",
+					["position"] = { 0.25, 0.04, 0.83 },
+				},
+			},
+			["id"] = "flopper-inspired-v1",
+			["sockets"] = {
+				["crown"] = {
+					["bone"] = "head",
+					["position"] = { 0, 0.0, 0.88 },
+				},
+				["energy"] = {
+					["bone"] = "body_upper",
+					["position"] = { 0, 0, 0.5 },
+				},
+				["face_left"] = {
+					["bone"] = "eye_left",
+					["position"] = { -0.26, 0.35, 0.7 },
+				},
+				["face_right"] = {
+					["bone"] = "eye_right",
+					["position"] = { 0.26, 0.35, 0.7 },
 				},
 			},
 		},

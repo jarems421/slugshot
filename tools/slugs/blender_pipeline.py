@@ -353,6 +353,7 @@ def render_setup():
     scene.render.resolution_x, scene.render.resolution_y = 360, 360
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
+    scene.view_settings.view_transform = "Standard"
     scene.display.shading.light = "STUDIO"
     scene.display.shading.color_type = "MATERIAL"
     scene.display.shading.show_shadows = True
@@ -372,7 +373,8 @@ def render_frame(path):
 def set_action(rig, action, t):
     rig.animation_data_create()
     rig.animation_data.action = bpy.data.actions[action]
-    bpy.context.scene.frame_set(1 + int(max(0, min(1, t)) * FPS))
+    start, end = rig.animation_data.action.frame_range
+    bpy.context.scene.frame_set(round(start + max(0, min(1, t)) * (end - start)))
 
 
 def render(species, output, frames):
@@ -383,8 +385,16 @@ def render(species, output, frames):
         source_matches(species, form)
     bpy.ops.wm.open_mainfile(filepath=str(output / "source/protoform.blend"))
     rig = rig_object()
+    animated_modes = [slot for slot in ("blink", "hop", "launch", "impact") if slot in proto["animations"]]
+    modes = ["turntable", "idle"] + animated_modes + (["transformation"] if species["transformation"]["enabled"] else [])
+    durations = {"turntable": 2.0}
+    for slot in ["idle"] + animated_modes:
+        action = bpy.data.actions[proto["animations"][slot]["action"]]
+        durations[slot] = (action.frame_range[1] - action.frame_range[0]) / FPS
+    if species["transformation"]["enabled"]:
+        durations["transformation"] = species["transformation"]["duration"]
     render_setup()
-    span = max(proto["size"]) * 1.7
+    span = max(proto["size"]) * 1.35
     h = proto["size"][2] * 0.5
     views = {"front": (0, 10, h), "side": (10, 0, h), "three-quarter": (7, 10, h + 3)}
     cam = camera(views["front"], (0, 0, h), span)
@@ -402,6 +412,10 @@ def render(species, output, frames):
     for index in range(frames):
         set_action(rig, proto["animations"]["idle"]["action"], index / frames)
         render_frame(previews / "idle" / f"{index:03}.png")
+    for slot in animated_modes:
+        for index in range(frames):
+            set_action(rig, proto["animations"][slot]["action"], index / (frames - 1))
+            render_frame(previews / slot / f"{index:03}.png")
     # Bone-only diagnostic view (actual rest hierarchy, distinct from skin previews).
     rig.animation_data.action = None
     for b in rig.pose.bones:
@@ -451,19 +465,20 @@ def render(species, output, frames):
             set_action(large_rig, large_form["animations"]["reveal"]["action"], reveal_t)
             render_frame(previews / "transformation" / f"{index:03}.png")
     # Browser viewer of PNG sequences needs no dependency or local server.
-    modes = ["turntable", "idle"] + (["transformation"] if species["transformation"]["enabled"] else [])
     options = "".join(f"<option>{mode}</option>" for mode in modes)
+    title = "Technical placeholder" if species["placeholder"] else "Slug design — owner review draft"
     html = f'''<!doctype html><meta charset="utf-8"><title>{species['id']} pipeline preview</title>
 <style>body{{background:#202129;color:#eee;font:16px system-ui;max-width:750px;margin:30px auto}}img{{width:360px}}label{{display:block;margin:10px}}</style>
-<h1>Technical placeholder — not a species design</h1><p>Blender inspection only. Roblox import/deformation remain a separate verification.</p>
+<h1>{title}</h1><p>Blender preview. Use the controls to inspect the shape and motion.</p>
 <img id="view" alt="Generated creature preview"><label>Sequence <select id="mode">{options}</select></label>
 <label><input id="play" type="checkbox" checked> Play</label><label>Frame <input id="frame" type="range" min="0" max="{frames - 1}" value="0"></label>
 <p><a href="front.png">Front</a> · <a href="side.png">Side</a> · <a href="three-quarter.png">Three quarter</a> · <a href="rig.png">Rig</a></p>
-<script>const mode=document.querySelector('#mode'), frame=document.querySelector('#frame'), play=document.querySelector('#play'), view=document.querySelector('#view');
+<script>const mode=document.querySelector('#mode'), frame=document.querySelector('#frame'), play=document.querySelector('#play'), view=document.querySelector('#view'), durations={json.dumps(durations)};
 function draw(){{view.src=mode.value+'/'+String(frame.value).padStart(3,'0')+'.png'}};
-frame.oninput=draw;mode.onchange=draw;setInterval(()=>{{if(play.checked){{frame.value=(Number(frame.value)+1)%{frames};draw()}}}},1000/{FPS});draw();</script>'''
+frame.oninput=draw;mode.onchange=()=>{{frame.value=0;draw()}};
+function tick(){{if(play.checked){{frame.value=(Number(frame.value)+1)%{frames};draw()}};setTimeout(tick,1000*durations[mode.value]/{frames})}};draw();setTimeout(tick,1000*durations[mode.value]/{frames});</script>'''
     (previews / "index.html").write_text(html, encoding="utf-8")
-    (previews / "preview-report.json").write_text(json.dumps({"frames": frames, "fps": FPS, "modes": modes, "sources": {name: digest(output / "source" / f"{name}.blend") for name in species["forms"]}, "renderer": "Blender Workbench", "transformationDuration": frames / FPS, "note": "Inspection sequence sampled by normalized phase; not gameplay timing"}, indent=2), encoding="utf-8")
+    (previews / "preview-report.json").write_text(json.dumps({"frames": frames, "sourceFps": FPS, "modes": modes, "durations": durations, "sources": {name: digest(output / "source" / f"{name}.blend") for name in species["forms"]}, "renderer": "Blender Workbench", "note": "Action sequences sampled over their authored durations; transformation is an inspection sequence"}, indent=2), encoding="utf-8")
 
 
 def validate_outputs(species, config, output):
@@ -484,7 +499,8 @@ def validate_outputs(species, config, output):
         validate_scene(species, form)
     preview_report = json.loads((output / "previews/preview-report.json").read_text(encoding="utf-8"))
     require(preview_report["sources"] == {name: digest(output / "source" / f"{name}.blend") for name in species["forms"]}, "Stale previews: source changed; run render")
-    require(preview_report["modes"] == ["turntable", "idle"] + (["transformation"] if species["transformation"]["enabled"] else []), "Missing required preview sequences")
+    extra_modes = [slot for slot in ("blink", "hop", "launch", "impact") if slot in species["forms"]["protoform"]["animations"]]
+    require(preview_report["modes"] == ["turntable", "idle"] + extra_modes + (["transformation"] if species["transformation"]["enabled"] else []), "Missing required preview sequences")
     for name in ("front", "side", "three-quarter", "rig"):
         require((output / "previews" / f"{name}.png").is_file(), f"Missing preview: {name}")
     for mode in preview_report["modes"]:

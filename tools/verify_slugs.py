@@ -47,8 +47,10 @@ def main():
             text = i.findtext("Properties/*[@name='Source']") or ""
             assert "rbxassetid://" not in text or i.findtext("Properties/string[@name='Name']") == "Playback", "Public IDs leaked into lab"
     if args.blender:
-        run(sys.executable, "tools/slugs/cli.py", "all")
+        for config in sorted((ROOT / "assets/source/slugs/species").glob("*.json")):
+            run(sys.executable, "tools/slugs/cli.py", "all", "--species", config.stem)
         run(blender_executable(), "--background", "--factory-startup", "--disable-autoexec", "--python-exit-code", "1", "--python", ROOT / "tests/slugs/blender_failures.py")
+        run(blender_executable(), "--background", "--factory-startup", "--disable-autoexec", "--python-exit-code", "1", "--python", ROOT / "tests/slugs/flopper_motion.py")
     print("PASS: creature contracts, generated-data parity, Luau, foundation and lab/test isolation. Studio execution is separate.")
 
 

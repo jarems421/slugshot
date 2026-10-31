@@ -27,6 +27,11 @@ end
 local disabled = table.clone(p)
 disabled.enabled = false
 assert(not Timeline.sample(disabled, 1, 0.06, true).transformed, "Non-transforming exception")
+local firstSlug = Definitions.species["flopper-inspired"].transformation
+assert(
+	not firstSlug.enabled and not Timeline.sample(firstSlug, 0.01, 0.06, true).transformed,
+	"First slug stays in protoform at impact"
+)
 assert(not pcall(Timeline.sample, p, -1, 1, false), "Negative elapsed rejected")
 assert(not pcall(Timeline.sample, p, 0, 0 / 0, false), "NaN estimate rejected")
 print(

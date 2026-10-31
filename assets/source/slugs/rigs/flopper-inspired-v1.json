@@ -1,0 +1,21 @@
+{
+  "id": "flopper-inspired-v1",
+  "bones": [
+    {"name":"root", "parent":null, "position":[0,0,0.1]},
+    {"name":"body_lower", "parent":"root", "position":[0,-0.2,0.35]},
+    {"name":"body_upper", "parent":"body_lower", "position":[0,0.05,0.5]},
+    {"name":"head", "parent":"body_upper", "position":[0,0.3,0.7]},
+    {"name":"jaw", "parent":"head", "position":[0,0.42,0.55]},
+    {"name":"tail", "parent":"body_lower", "position":[0,-0.4,0.25]},
+    {"name":"eye_left", "parent":"head", "position":[-0.26,0.35,0.70]},
+    {"name":"eye_right", "parent":"head", "position":[0.26,0.35,0.70]},
+    {"name":"feelers_left", "parent":"head", "position":[-0.25,0.04,0.83]},
+    {"name":"feelers_right", "parent":"head", "position":[0.25,0.04,0.83]}
+  ],
+  "sockets": {
+    "face_left":{"bone":"eye_left", "position":[-0.26,0.35,0.70]},
+    "face_right":{"bone":"eye_right", "position":[0.26,0.35,0.70]},
+    "crown":{"bone":"head", "position":[0,0.0,0.88]},
+    "energy":{"bone":"body_upper", "position":[0,0,0.5]}
+  }
+}

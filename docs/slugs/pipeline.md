@@ -1,6 +1,6 @@
 # Slug asset pipeline
 
-**Confirmed — 2026-10-30:** the owner authorized reusable creature tooling and a deliberately temporary proof of concept. No finished ProtoformBase, species, combat system or artistic style is approved by this work. [Architecture decision](../decisions/0011-slug-asset-pipeline.md).
+**Confirmed — 2026-10-30:** the owner authorized reusable creature tooling and a deliberately temporary proof of concept. On 2026-10-31 they additionally requested the first original Flopper-inspired creature draft and a [catalogue for all slug descriptions](catalog/index.md). The model awaits review; no final species, combat system or artistic style is approved. [Architecture decision](../decisions/0011-slug-asset-pipeline.md).
 
 **Implemented:** native Blender Python generation, authored-source loading, custom skeletal rigs, modular anatomy, baked actions, FBX model/clip exports, offline reimport checks, inspection renders, a browser sequence viewer, JSON validation and an isolated strict Luau preview lab. [Actual checks and remaining gates](verification.md).
 
@@ -37,7 +37,7 @@ python tools/verify_slugs.py --blender
 Start-Process build/slugs/placeholder/previews/index.html
 ```
 
-`verify_slugs.py --blender` runs the foundation checks, configuration tests, generated JSON/Luau parity, formatting, linting, full Roblox strict type analysis, Rojo builds, packaging isolation, Blender generation, FBX export/reimport, previews, output validation, deliberate asset-corruption checks and a second anatomical variant. All generated assets are original test geometry. Type definitions use the existing hash-pinned verification helper; no new package is installed.
+`verify_slugs.py --blender` runs the foundation checks, configuration tests, generated JSON/Luau parity, formatting, linting, full Roblox strict type analysis, Rojo builds, packaging isolation, Blender generation for all registered species, FBX export/reimport, previews, output validation, deliberate asset-corruption checks, a second anatomical variant and the first draft's motion checks. The placeholder and first slug are original project geometry. Type definitions use the existing hash-pinned verification helper; no new package is installed.
 
 Individual steps:
 
@@ -56,7 +56,7 @@ python tools/verify_slugs.py
 
 Start with the [species guide](species-guide.md) and [rig specification](rig-specification.md). Geometry generation is intentionally limited to two placeholder generators. Real art uses `generator: "authored"` and a `.blend` source; the pipeline validates and exports it rather than pretending to design it. Each authored form must contain one armature and its skinned meshes, applied object transforms, the declared rest skeleton, palette/materials and declared actions at 24 FPS. Constraints/modifiers beyond a single armature modifier must be baked into an export copy first. This v1 rejects unsupported modifier stacks instead of silently exporting different geometry.
 
-Front, side and three-quarter renders use Blender Workbench and diffuse material colors. The turntable and idle loop each contain 24 PNG frames by default. The transformation preview demonstrates a spinning, squashing small rig replaced by the distinct larger rig. The browser viewer has playback, sequence selection and frame scrubbing. Its normalized inspection duration is not gameplay timing. The bone-only view visualizes rest bones and parent links. Bone names/positions are in the rig JSON and export report. These are inspection tools, not polished art renders or Roblox lighting evidence.
+Front, side and three-quarter renders use Blender Workbench and diffuse material colors. The turntable, idle and configured blink/hop/launch/impact previews each contain 24 PNG frames by default. The placeholder transformation preview demonstrates a spinning, squashing small rig replaced by a distinct larger rig. The browser viewer has playback, sequence selection and frame scrubbing; authored action durations are respected. The bone-only view visualizes rest bones and parent links. Bone names/positions are in the rig JSON and export report. These are inspection tools, not Roblox lighting evidence.
 
 ## Export contract and tooling review
 

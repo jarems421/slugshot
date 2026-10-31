@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — First slug and permanent design catalogue
+
+- **Confirmed:** owner supplied two Flopper images and a description, requesting a distinct original soft, expressive, non-transforming slug and reusable notes for every future species. Slippery patch, smoke and tripwire are gameplay ideas rather than approved implemented rules.
+- **Implemented/verified:** [first design record](slugs/catalog/flopper-inspired.md), [catalogue/template](slugs/catalog/index.md), original editable Blender draft, rig and five animation slots. Headless Blender renders and FBX reimports passed, as did project checks; see that record for exact hashes, measurements and limits. The named Sketchfab collection was inaccessible; only the supplied screenshots and a search-indexed community wiki entry were reviewed.
+- **Unresolved:** owner visual feedback, Studio native/import runtime and animation-scale behavior, 21-mesh device performance, final name and any gameplay design. No assets uploaded or published, and unrelated work was not touched.
+
 ## 2026-10-31 — Isolated slug asset tooling
 
 - **Confirmed:** the owner's attached request authorizes universal creature tooling and original temporary placeholders, while Claude owns concurrent Rocklock/map/destruction work. No final creatures, full combat, merge into main or asset publication authorized.

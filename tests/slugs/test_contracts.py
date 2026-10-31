@@ -107,6 +107,20 @@ class SpeciesContracts(unittest.TestCase):
         self.data["transformation"]["revealFraction"] = 0.5
         self.rejected("ordering")
 
+    def test_first_slug_is_authored_and_has_no_transformed_form(self):
+        design = load_species(SOURCE / "species/flopper-inspired.json")
+        self.assertFalse(design["placeholder"])
+        self.assertFalse(design["transformation"]["enabled"])
+        self.assertNotIn("transformed", design["forms"])
+        self.assertTrue((ROOT / design["forms"]["protoform"]["source"]).is_file())
+
+    def test_first_slug_has_requested_motion_slots(self):
+        design = load_species(SOURCE / "species/flopper-inspired.json")
+        form = design["forms"]["protoform"]
+        self.assertTrue({"idle", "blink", "hop", "launch", "impact"} <= set(form["animations"]))
+        bones = {bone["name"] for bone in rig_spec(form["rig"])["bones"]}
+        self.assertTrue({"eye_left", "eye_right", "feelers_left", "feelers_right"} <= bones)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "assets/source/slugs"
 SLOTS = {
-    "protoform": {"idle", "blink", "breathing", "happy", "angry", "surprised", "hop", "launch", "spin", "prepare"},
+    "protoform": {"idle", "blink", "breathing", "happy", "angry", "surprised", "hop", "launch", "spin", "prepare", "impact"},
     "transformed": {"reveal", "movement", "attackStartup", "attack", "impact", "recovery"},
 }
 GENERATORS = {"protoform-placeholder": "protoform-v1", "expanded-placeholder": "expanded-test-v1"}

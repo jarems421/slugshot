@@ -33,7 +33,7 @@ The generator loads that file, validates it, and writes a separate editable buil
 
 | Form | Slots |
 | --- | --- |
-| Small | `idle`, `blink`, `breathing`, `happy`, `angry`, `surprised`, `hop`, `launch`, `spin`, `prepare` |
+| Small | `idle`, `blink`, `breathing`, `happy`, `angry`, `surprised`, `hop`, `launch`, `spin`, `prepare`, `impact` |
 | Transformed | `reveal`, `movement`, `attackStartup`, `attack`, `impact`, `recovery` |
 
 `idle` is required for protoforms; enabled transformations require `reveal` and `attack` on the transformed form. Other slots are optional conventions. An omitted optional slot is not a missing required reference. Declared slots must point to existing source actions and match the form's rig ID. The initial generator authors only Idle/Launch/Spin/Prepare and Reveal/Attack as technical motion tests. Do not treat those motions as style decisions.
