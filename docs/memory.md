@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Symmetric antennae and modelling lessons
+
+- **Confirmed:** owner wants the outward antenna to match the more inward one, with both clear of the forehead; capture actionable visual/technical lessons without rebuilding the pipeline or treating automated checks as art approval.
+- **Implemented/verified:** mirrored rest curves, geometry-based tip symmetry and forehead-clearance checks across sampled idle poses; full offline generation/export/project checks pass. [Blender lessons](slugs/blender-lessons.md) links preserved historical renders and distinguishes confirmed fixes from unresolved Studio/visual review.
+- **Unresolved:** owner review of symmetry and clearance, and Roblox import/runtime.
+
 ## 2026-10-31 — Image-right antenna clearance
 
 - **Confirmed:** owner reports the right antenna still touches the forehead.

@@ -12,6 +12,8 @@ Run `python tools/verify.py` for foundation changes and `python tools/verify_mov
 
 For creature infrastructure use `python tools/verify_slugs.py --blender` with an existing Blender executable selected by `BLENDER` if necessary. Generated source/export/preview files stay under ignored `build/slugs`; authored source is separate. Follow `docs/slugs/studio-import.md`; native fixtures and offline FBX reimport do not prove imported Roblox playback.
 
+During slug modelling, update `docs/slugs/blender-lessons.md` after meaningful problems or fixes, preserving owner feedback and relevant render references. Distinguish offline checks from subjective art approval and Studio evidence; accumulate lessons without rebuilding the pipeline unless the owner requests it.
+
 Use the relevant procedure skill in `.agents/skills` (Codex) or `.claude/skills` (Claude), keeping copies identical. Review third-party source/licences before execution or installation. Follow the current task's existing authorization: relevant verified free movement resources and pushing this experimental branch are approved. Ask before paid purchases, new external accounts, elevated permissions/security changes, destructive operations or publishing an experience. Never push restricted animation source or reusable IDs.
 
 ## Memory

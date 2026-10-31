@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified offline, 2026-10-31:** owner requested both antennae match the more inward shape while staying clear of the forehead, and requested a concise record of lessons from this modelling cycle. The [current draft](slugs/catalog/flopper-inspired.md) uses mirrored curves; rest-tip symmetry and forehead clearance in sampled idle poses pass, as do full source/export checks. [Blender lessons](slugs/blender-lessons.md) preserve visual feedback, historical renders, technical failures, fixes and remaining gates. **Unresolved:** owner visual approval and Roblox import/runtime.
+
 **Implemented/verified offline, 2026-10-31:** owner flagged the image-right antenna still touching the forehead. Its tip has been moved outward/forward; new geometry checks and the front/three-quarter renders confirm visible forehead clearance. Full slug checks pass. [Current source and views](slugs/catalog/flopper-inspired.md); visual approval and Roblox import/runtime remain unresolved.
 
 **Implemented/verified offline, 2026-10-31:** owner requested a small forehead, head depth in side view and softer-looking head/flanks. The [current draft](slugs/catalog/flopper-inspired.md) has a forward rounded forehead, fuller upper depth, gentle settling asymmetry and subtle head deformation in idle. Head-depth, forehead, antenna-clearance, ground-contact and all export checks pass. Six meshes, 22,412 triangles. **Unresolved:** subjective softness/art approval, production optimisation and Roblox import/runtime.

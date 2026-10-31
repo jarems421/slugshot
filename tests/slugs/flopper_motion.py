@@ -4,6 +4,7 @@ import math
 import json
 
 import bpy
+from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[2]
 bpy.ops.wm.open_mainfile(filepath=str(ROOT / "assets/source/slugs/models/flopper-inspired/protoform.blend"))
@@ -49,13 +50,36 @@ for side,sign in (("left",-1),("right",1)):
     tips = [v for v in antenna if v.co.y > .35]
     assert tips and max(v.co.z for v in antenna)-min(v.co.z for v in tips) > .15, f"{side} antenna should droop downward"
     assert sum(v.co.y for v in tips)/len(tips) > .4, f"{side} antenna should curl a little forward"
-image_right_group = body.vertex_groups["feelers_left"].index
-image_right_tip = [v.co for v in body.data.vertices if v.co.y > .82 and v.co.z < 2.18
-                   and any(g.group == image_right_group and g.weight > .6 for g in v.groups)]
-forehead_section = [v.co for v in body.data.vertices if 1.95 < v.co.z < 2.18
-                    and not any(body.vertex_groups[g.group].name.startswith("feelers_") and g.weight > .15 for g in v.groups)]
-assert image_right_tip and min(v.x for v in image_right_tip) < min(v.x for v in forehead_section)-.045, "Image-right tip needs visible front-view clearance"
-assert min(v.y for v in image_right_tip) > max(v.y for v in forehead_section)+.04, "Image-right tip needs side-view clearance"
+tips_by_side = {}
+tip_indices_by_side = {}
+forehead_faces = []
+body.data.calc_loop_triangles()
+for triangle in body.data.loop_triangles:
+    vertices = [body.data.vertices[i] for i in triangle.vertices]
+    if all(v.co.z > 1.85 and not any(body.vertex_groups[g.group].name.startswith("feelers_") and g.weight > .15 for g in v.groups) for v in vertices):
+        forehead_faces.append(tuple(triangle.vertices))
+forehead = BVHTree.FromPolygons([v.co for v in body.data.vertices], forehead_faces, all_triangles=True)
+for side, sign in (("left",-1),("right",1)):
+    group = body.vertex_groups["feelers_"+side].index
+    tip_vertices = [v for v in body.data.vertices if v.co.y > .78 and 2.08 < v.co.z < 2.23
+                    and any(g.group == group and g.weight > .6 for g in v.groups)]
+    tips = [v.co for v in tip_vertices]
+    assert tips, f"{side} tip must stay free and visible"
+    tip_indices_by_side[side] = [v.index for v in tip_vertices]
+    distances = [forehead.find_nearest(tip)[3] for tip in tips]
+    assert min(distances) > .025, f"{side} antenna tip is too close to the forehead"
+    tips_by_side[side] = tuple(sum(v[i] for v in tips)/len(tips) for i in range(3))
+    assert sign*tips_by_side[side][0] > .56, f"{side} tip must remain outside the forehead"
+left, right = tips_by_side["left"], tips_by_side["right"]
+assert abs(left[0]+right[0]) < .06 and abs(left[1]-right[1]) < .06 and abs(left[2]-right[2]) < .06, "Resting antenna tips should be symmetrical"
+for frame in range(1, 50, 4):
+    pose("Idle", frame)
+    evaluated = body.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    positions = [v.co.copy() for v in evaluated.data.vertices]
+    animated_forehead = BVHTree.FromPolygons(positions, forehead_faces, all_triangles=True)
+    for side, indices in tip_indices_by_side.items():
+        assert min(animated_forehead.find_nearest(positions[index])[3] for index in indices) > .01, f"{side} tip touches forehead during idle at frame {frame}"
+pose("Idle", 1)
 color = body.data.color_attributes.get("Color")
 assert color is not None and color.domain == "POINT", "Body needs painted vertex colours"
 palette = json.loads((ROOT / "assets/source/slugs/species/flopper-inspired.json").read_text(encoding="utf-8"))["palette"]

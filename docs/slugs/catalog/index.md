@@ -2,6 +2,8 @@
 
 This is the shared home for every slug's design brief, source research, visual references, artwork, animation intent, gameplay ideas and verification. Add one entry per creature and keep this index current. Keep source references and rights notes separate from the original Slugshot deliverables. Never assume a fan model is licensed for reuse.
 
+Review the [Blender lessons](../blender-lessons.md) for recurring visual and technical problems before starting another design. Update that record after meaningful modelling issues or fixes, and distinguish actual verification from pending owner and Studio review.
+
 | Design | Status | Design and sources |
 | --- | --- | --- |
 | First sick/dizzy slug | Revised Blender draft following owner feedback; further review and Studio import pending | [Design and reference notes](flopper-inspired.md) |
