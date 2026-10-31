@@ -14,6 +14,8 @@ for _, d in model:GetDescendants() do
 	end
 end
 
+-- Floppy ships at 0.09 scale to fit the blaster; motion distances scale with him.
+local SCALE = 0.09
 local TAU = 2 * math.pi
 local LOOP = 12
 local BREATH, WOBBLE_X, WOBBLE_Z = 3 * TAU / LOOP, 4 * TAU / LOOP, 3 * TAU / LOOP
@@ -37,7 +39,7 @@ local function offsetMotion(name: string, fn: (number) -> (number, number, numbe
 	local sx, up, fr = toLocal(bone, SIDEWAYS), toLocal(bone, UP), toLocal(bone, FRONT)
 	motion[bone] = function(t: number): CFrame
 		local x, y, z = fn(t)
-		return CFrame.new(sx * x + up * y + fr * z)
+		return CFrame.new((sx * x + up * y + fr * z) * SCALE)
 	end
 end
 
@@ -54,7 +56,7 @@ if head then
 		local offset = sx * 0.008 * math.sin(t * WOBBLE_X - 3.0)
 			+ up * 0.005 * math.sin(t * BREATH)
 			+ fr * 0.006 * math.sin(t * WOBBLE_Z - 2.3)
-		return CFrame.new(offset) * CFrame.fromAxisAngle(fr, 0.04 * math.sin(t * LOLL))
+		return CFrame.new(offset * SCALE) * CFrame.fromAxisAngle(fr, 0.04 * math.sin(t * LOLL))
 	end
 end
 
@@ -63,7 +65,7 @@ for _, side in { -1, 1 } do
 	local antenna = bones["antenna_" .. tag]
 	if antenna then
 		-- Tip position from the concept: (side*0.90, 1.44, 0.56).
-		local tip = origin + SIDEWAYS * (side * 0.90) + UP * 1.44 + FRONT * 0.56
+		local tip = origin + (SIDEWAYS * (side * 0.90) + UP * 1.44 + FRONT * 0.56) * SCALE
 		local along = (tip - antenna.WorldPosition).Unit
 		local drift = (SIDEWAYS * 0.04 + FRONT * 0.02).Unit
 		local axis = toLocal(antenna, along:Cross(drift).Unit)

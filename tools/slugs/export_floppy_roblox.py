@@ -31,6 +31,12 @@ OUT = ROOT/"build/slugs/floppy/roblox"
 BODY_TRIANGLES = 8000
 EYE_TRIANGLES = 400
 TEXTURE = 1024
+# Slugs must fit in the blaster: its canister is ~0.22 studs across and the
+# muzzle channel ~0.24, so Floppy ships at 0.09 scale (~0.22 studs tall).
+GAME_SCALE = 0.09
+# Low roughness for a subtle wet, slimy gloss; the eyes are glossier still.
+SKIN_ROUGHNESS = 0.22
+EYE_ROUGHNESS = 0.08
 FPS = 24
 LOOP_SECONDS = 12.0
 
@@ -121,6 +127,27 @@ def save(img, name):
     return path
 
 
+def roughness_map(name, value):
+    """glTF metallic-roughness texture: roughness in G, metalness (0) in B."""
+    img = bpy.data.images.new(name, 64, 64, alpha=False, float_buffer=False)
+    img.colorspace_settings.name = "Non-Color"
+    img.pixels.foreach_set(np.tile([1.0, value, 0.0, 1.0], 64*64).astype(np.float32))
+    save(img, name + ".png")
+    return img
+
+
+def add_gloss(mat, value, name):
+    """Wire a roughness map so the glTF export (and Roblox SurfaceAppearance) carries the gloss."""
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    shader = next(n for n in nodes if n.type == "BSDF_PRINCIPLED")
+    tex = nodes.new("ShaderNodeTexImage")
+    tex.image = roughness_map(name, value)
+    split = nodes.new("ShaderNodeSeparateColor")
+    links.new(tex.outputs["Color"], split.inputs["Color"])
+    links.new(split.outputs["Green"], shader.inputs["Roughness"])
+    links.new(split.outputs["Blue"], shader.inputs["Metallic"])
+
+
 def game_skin_material(colour, normal):
     mat = bpy.data.materials.new("FloppySkin")
     mat.use_nodes = True
@@ -134,7 +161,7 @@ def game_skin_material(colour, normal):
     links.new(c.outputs["Color"], shader.inputs["Base Color"])
     links.new(n.outputs["Color"], nm.inputs["Color"])
     links.new(nm.outputs["Normal"], shader.inputs["Normal"])
-    shader.inputs["Roughness"].default_value = 0.35
+    add_gloss(mat, SKIN_ROUGHNESS, "floppy-body-roughness")
     return mat
 
 
@@ -148,15 +175,32 @@ def roblox_idle(rig):
     for fc in list(action.fcurves):
         if fc.data_path.endswith(".scale"):
             action.fcurves.remove(fc)
+        elif fc.data_path.endswith(".location"):
+            for kp in fc.keyframe_points:
+                kp.co[1] *= GAME_SCALE
+            fc.update()
     for bone, amount in (("body_upper", 0.010), ("head", 0.005)):
         fc = action.fcurves.find(f'pose.bones["{bone}"].location', index=1)
         for kp in fc.keyframe_points:
             t = (kp.co[0] - 1)/FPS
-            kp.co[1] = amount*math.sin(t*breath_w)
+            kp.co[1] = GAME_SCALE*amount*math.sin(t*breath_w)
             kp.handle_left_type = kp.handle_right_type = "AUTO_CLAMPED"
         fc.update()
     rig.animation_data.action = action
     return action
+
+
+def scale_to_blaster(rig, meshes):
+    """Apply GAME_SCALE to mesh and bones; bone translations in the idle are scaled in roblox_idle."""
+    for m in meshes:
+        select_only([m])
+        bpy.ops.object.parent_clear(type="CLEAR_KEEP_TRANSFORM")
+    for o in [rig] + meshes:
+        o.scale = (GAME_SCALE,)*3
+    select_only([rig] + meshes, active=rig)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    for m in meshes:
+        m.parent = rig
 
 
 def face_plus_y(rig, meshes):
@@ -196,6 +240,9 @@ def verify(model, idle, expected_bones):
     report["boundsBlender"] = {"min": [round(v, 3) for v in lo], "max": [round(v, 3) for v in hi]}
     face = [c for m in meshes if m.name.startswith("Eye") for c in [m.matrix_world @ v.co for v in m.data.vertices]]
     report["facesPlusY"] = sum(c.y for c in face)/len(face) > 0
+    report["fitsBlaster"] = max(hi[0] - lo[0], hi[1] - lo[1]) <= 0.22 and hi[2] - lo[2] <= 0.37
+    assert report["fitsBlaster"], f"too big for the blaster canister: {lo} {hi}"
+    report["sizeStuds"] = [round(hi[i] - lo[i], 3) for i in range(3)]
     assert report["facesPlusY"], "eyes are not on the +Y side"
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.fbx(filepath=str(idle), automatic_bone_orientation=False)
@@ -212,7 +259,7 @@ def verify(model, idle, expected_bones):
         scale_drift = max(scale_drift, max(abs(s - 1) for b in rig.pose.bones for s in b.matrix_basis.to_scale()))
     scene.frame_set(int(end))
     seam = max(abs(a[i][j] - b.matrix[i][j]) for a, b in zip(first, rig.pose.bones) for i in range(4) for j in range(4))
-    assert seam < 1e-3 and scale_drift < 1e-4 and motion > 0.005, (seam, scale_drift, motion)
+    assert seam < 1e-3 and scale_drift < 1e-4 and motion > 0.0004, (seam, scale_drift, motion)
     report["idle"] = {"seconds": round((end - start)/FPS, 3), "loopSeam": round(seam, 6),
                       "maxBoneScaleChange": round(scale_drift, 6), "maxBoneTravel": round(motion, 4)}
     return report
@@ -249,14 +296,17 @@ def main():
         src = bpy.data.objects["Eye" + tag]
         src.name = "Eye" + tag + "_Source"
         eye = low_copy(src, "Eye" + tag, EYE_TRIANGLES)
+        eye.data.materials[0] = eye.data.materials[0].copy()
         tex = next(n for n in eye.data.materials[0].node_tree.nodes if n.type == "TEX_IMAGE").image
         paths.append(save(tex, tex.name + ".png"))
+        add_gloss(eye.data.materials[0], EYE_ROUGHNESS, "floppy-eye-roughness-" + tag)
         eyes.append(eye)
     for name in ("FloppyBody_Source", "EyeL_Source", "EyeR_Source"):
         bpy.data.objects.remove(bpy.data.objects[name])
 
     meshes = [body] + eyes
     face_plus_y(rig, meshes)
+    scale_to_blaster(rig, meshes)
     idle = roblox_idle(rig)
     for b in rig.pose.bones:
         b.matrix_basis.identity()
@@ -286,6 +336,7 @@ def main():
     report = {"source": str(SOURCE.relative_to(ROOT)), "sourceSha256": digest(SOURCE), "tool": bpy.app.version_string,
               "units": "1 Blender unit = 1 stud", "axes": {"blender": "+Y forward, +Z up", "fbx": "-Z forward, +Y up"},
               "budget": {"bodyTriangles": BODY_TRIANGLES, "eyeTriangles": EYE_TRIANGLES, "texture": TEXTURE, "maxInfluences": 4},
+              "gameScale": GAME_SCALE, "roughness": {"skin": SKIN_ROUGHNESS, "eyes": EYE_ROUGHNESS},
               "files": {p.relative_to(OUT).as_posix(): digest(p) for p in [model, idle_path, glb] + paths},
               "studioImportVerified": False}
     report.update(verify(model, idle_path, bones))

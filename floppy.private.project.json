@@ -22,7 +22,7 @@
       },
       "SpawnLocation": {
         "$className": "SpawnLocation",
-        "$properties": {"Anchored": true, "Size": [4, 1, 4], "Position": [0, 0.01, -10], "Orientation": [0, 180, 0], "Transparency": 1, "CanCollide": false}
+        "$properties": {"Anchored": true, "Size": [4, 1, 4], "Position": [0, 0.01, -5], "Orientation": [0, 180, 0], "Transparency": 1, "CanCollide": false}
       }
     }
   }
