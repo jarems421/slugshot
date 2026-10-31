@@ -79,12 +79,13 @@ dd { margin: 2px 0 0; }
       <div class="canvas-box" id="box">
         <canvas id="view" aria-label="Rotatable 3D concept of the selected asset"></canvas>
         <div class="hint">Drag to turn · scroll or pinch to zoom</div>
-        <div class="tag" id="tag">Inked Cavern</div>
+        <div class="tag" id="tag">Slugshot mix</div>
       </div>
       <div class="row" role="group" aria-label="Treatment">
         <span class="label">Treatment</span>
-        <button class="ctl" id="t-a" data-treat="0">Comic Cavern</button>
+        <button class="ctl" id="t-mix" data-treat="3">Slugshot mix</button>
         <button class="ctl" id="t-inked" data-treat="1">Inked Cavern</button>
+        <button class="ctl" id="t-a" data-treat="0">Comic Cavern</button>
         <button class="ctl" id="t-c" data-treat="2">Living Comic</button>
       </div>
       <div class="row" role="group" aria-label="Camera">
@@ -125,10 +126,13 @@ uniform vec2 uRes;
 uniform float uT, uAsset;
 uniform vec3 uRo, uRight, uUp, uFwd;
 uniform vec4 uFig;          // xyz position, w = shown
-uniform vec4 uTreat;        // ink width scale, crease sensitivity, glow, bloom
-uniform vec3 uInkCol;
-uniform float uAmb;
-uniform vec2 uShade;        // shadow floor, comic shadow-edge hardness (0 soft, 1 hard)
+uniform vec4 uTreat;        // current mode's ink width scale, crease sensitivity, glow, bloom (bloom used globally)
+// Treatment sets: 0 Comic Cavern, 1 Inked Cavern, 2 Living Comic.
+uniform vec4 uTr0, uTr1, uTr2;
+uniform vec3 uInk0, uInk1, uInk2;
+uniform vec2 uSh0, uSh1, uSh2;   // shadow floor, comic shadow-edge hardness (0 soft, 1 hard)
+uniform vec3 uAm;
+uniform float uMode;             // 0-2 = one treatment everywhere, 3 = Slugshot mix (per material)
 uniform vec3 uGlowPos, uGlowCol;
 
 // Units: 1 = 1 Roblox stud. Front of every asset faces -z.
@@ -193,10 +197,15 @@ float chunk(vec3 p, vec3 c, vec3 r, float seed) {
   return d;
 }
 
-// ---------- 0: rock wall module (20 x 12 x 5 studs)
-float rockWall(vec3 p) {
-  float bound = sdBox(p - vec3(0.0, 6.0, -0.6), vec3(12.5, 7.0, 4.6));
-  if (bound > 1.0) return bound;
+// ---------- 0: rock wall module v2 (20 x 17 x 6 studs)
+float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r);
+vec2 rockWall(vec3 p) {
+  float bound = sdBox(p - vec3(0.0, 7.5, -0.9), vec3(12.5, 8.6, 4.9));
+  if (bound > 1.0) return vec2(bound, 1.0);
   float d = 1e5;
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
@@ -222,7 +231,31 @@ float rockWall(vec3 p) {
     vec3 r = vec3(1.1 + 0.3*hash1(fi + 43.0), 0.75, 0.95);
     d = smin(d, chunk(p, c, r, fi*23.0 + 120.0), 0.1);
   }
-  return d + 0.07*(noise3(p*0.9) - 0.5);
+  // v2: an uneven skyline (two leaning spires and a notch), a jutting overhang ledge, carved strata.
+  d = smin(d, chunk(p, vec3(-7.4, 13.0, 0.6), vec3(1.5, 2.8, 1.4), 151.0), 0.25);
+  d = smin(d, chunk(p, vec3(5.6, 13.8, 0.3), vec3(1.7, 3.3, 1.5), 163.0), 0.25);
+  d = smin(d, chunk(p, vec3(1.6, 10.2, -1.7), vec3(4.6, 0.95, 2.1), 177.0), 0.18);
+  d = smax(d, -sdEll(p - vec3(-1.6, 12.6, 0.0), vec3(1.6, 1.8, 3.0)), 0.3);
+  float strata = abs(fract(p.y/1.55 + 0.25*noise3(p*0.35)) - 0.5);
+  d += 0.13*(1.0 - smoothstep(0.0, 0.07, strata))*smoothstep(1.2, 2.0, p.y);
+  d += 0.07*(noise3(p*0.9) - 0.5);
+  vec2 r = vec2(d, 1.0);
+  // Moss and roots hanging from the ledge.
+  float moss = 1e5;
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    float x = -1.8 + 1.7*fi + 0.5*(hash1(fi + 61.0) - 0.5);
+    vec3 top = vec3(x, 9.5, -3.0 - 0.4*hash1(fi + 62.0));
+    vec3 bot = top + vec3(0.25*(hash1(fi + 63.0) - 0.5), -1.6 - 1.8*hash1(fi + 64.0), -0.15);
+    moss = min(moss, capT(p, top, bot, 0.24, 0.07));
+  }
+  if (moss < r.x) r = vec2(moss, 12.0);
+  // A few small glowing crystal shards growing out of a crack near the foot.
+  float shard = crystal(p, vec3(-3.0, 1.0, -2.2), 1.9, 0.75, 1.5, 0.28);
+  shard = min(shard, crystal(p, vec3(-2.5, 0.9, -2.3), 1.2, 0.45, 1.1, 0.22));
+  shard = min(shard, crystal(p, vec3(-3.4, 0.8, -2.0), 2.6, 0.95, 0.9, 0.2));
+  if (shard*0.75 < r.x) r = vec2(shard*0.75, 3.0);
+  return r;
 }
 
 // ---------- 1: crystal cluster (about 5 studs tall)
@@ -346,7 +379,7 @@ float figure(vec3 p) {
 
 vec2 map(vec3 p) {
   vec2 r;
-  if (uAsset < 0.5) r = vec2(rockWall(p), 1.0);
+  if (uAsset < 0.5) r = rockWall(p);
   else if (uAsset < 1.5) r = crystals(p);
   else if (uAsset < 2.5) r = mushroom(p);
   else r = portal(p);
@@ -355,13 +388,33 @@ vec2 map(vec3 p) {
   return r;
 }
 
+// Slugshot mix (owner rule, 2026-10-31): dark rock, stone and floor use Comic Cavern; glowing, clear,
+// organic things and characters use Inked Cavern; small metal details keep a thick outline but
+// Living Comic's light inner lines so the ink doesn't swallow them.
+float group(float id) {
+  if (uMode < 2.5) return uMode;
+  if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5) return 0.0;
+  return 1.0;
+}
+bool metalDetail(float id) { return uMode > 2.5 && (abs(id - 7.0) < 0.5 || abs(id - 8.0) < 0.5); }
+vec4 TR(float id) {
+  float g = group(id);
+  vec4 r = g < 0.5 ? uTr0 : g < 1.5 ? uTr1 : uTr2;
+  if (metalDetail(id)) r.y = uTr2.y;
+  return r;
+}
+float creaseScale(float id) { return metalDetail(id) ? uTr2.x : TR(id).x; }
+vec3 INK(float id) { float g = group(id); return g < 0.5 ? uInk0 : g < 1.5 ? uInk1 : uInk2; }
+vec2 SH(float id) { float g = group(id); return g < 0.5 ? uSh0 : g < 1.5 ? uSh1 : uSh2; }
+float AM(float id) { float g = group(id); return g < 0.5 ? uAm.x : g < 1.5 ? uAm.y : uAm.z; }
+
 bool emissive(float id) { return abs(id - 3.0) < 0.5 || abs(id - 5.0) < 0.5 || abs(id - 9.0) < 0.5; }
 // Ink width by importance: hero props thick, architecture thinner (style guide §1).
 float inkWidth(float id) {
   float w = 0.07;
-  if (id < 1.5 || id > 10.5) w = 0.045;
+  if (id < 1.5 || abs(id - 11.0) < 0.5) w = 0.045;
   if (abs(id - 9.0) < 0.5) w = 0.0;
-  return w*uTreat.x;
+  return w*TR(id).x;
 }
 
 vec3 normalAt(vec3 p) {
@@ -399,17 +452,17 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return mix(c, vec3(0.13, 0.22, 0.11), 0.8*moss);
   }
   if (id < 3.5) {
-    float h = clamp(p.y/4.7, 0.0, 1.0);
+    float h = clamp(p.y/(uAsset < 0.5 ? 2.2 : 4.7), 0.0, 1.0);
     vec3 c = mix(vec3(0.02, 0.09, 0.15), vec3(0.42, 0.93, 1.0), h*h);
     float pulse = 0.85 + 0.15*sin(uT*0.9 + p.y*0.8);
-    emit = c*(0.25 + 1.3*h)*uTreat.z*pulse;
+    emit = c*(0.25 + 1.3*h)*TR(id).z*pulse;
     spec = 0.6;
     return c*0.6;
   }
   if (id < 4.5) {
     float streak = noise3(p*vec3(1.6, 0.18, 1.6));
     vec3 c = mix(vec3(0.46, 0.41, 0.31), vec3(0.68, 0.63, 0.49), streak);
-    emit = vec3(0.18, 0.75, 0.55)*0.35*smoothstep(10.5, 12.8, p.y)*uTreat.z;
+    emit = vec3(0.18, 0.75, 0.55)*0.35*smoothstep(10.5, 12.8, p.y)*TR(id).z;
     return c;
   }
   if (id < 5.5) {
@@ -430,7 +483,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 glow = vec3(0.30, 1.0, 0.76);
     c = mix(c, vec3(0.55, 0.95, 0.82), spot);
     c = mix(c, vec3(0.10, 0.30, 0.24), under);
-    emit = glow*(1.3*spot + 1.5*under)*uTreat.z*pulse;
+    emit = glow*(1.3*spot + 1.5*under)*TR(id).z*pulse;
     spec = 0.25;
     return c;
   }
@@ -455,10 +508,14 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     float sw2 = 0.5 + 0.5*sin(a*5.0 - r*2.1 + uT*0.8);
     vec3 c = mix(vec3(0.70, 0.17, 0.05), vec3(1.0, 0.66, 0.28), sw*0.75 + sw2*0.25);
     c = mix(c, vec3(1.0, 0.86, 0.6), smoothstep(3.0, 0.0, r)*0.5);
-    emit = c*1.6*uTreat.z;
+    emit = c*1.6*TR(id).z;
     return c*0.3;
   }
   if (id < 10.5) return vec3(0.42, 0.43, 0.47);
+  if (id > 11.5) {
+    float tip = smoothstep(9.0, 6.0, p.y);
+    return mix(vec3(0.10, 0.19, 0.09), vec3(0.20, 0.32, 0.13), noise3(p*1.8))*(1.0 - 0.3*tip);
+  }
   vec3 c = mix(vec3(0.05, 0.055, 0.075), vec3(0.10, 0.105, 0.13), smoothstep(-0.3, 0.3, nz));
   float crack = 1.0 - smoothstep(0.0, 0.04, abs(noise3(vec3(p.x, 0.0, p.z)*0.35) - 0.5));
   return mix(c, c*0.45, crack);
@@ -470,7 +527,7 @@ void main() {
   vec3 ro = uRo;
   vec3 bg = mix(vec3(0.012, 0.013, 0.024), vec3(0.05, 0.05, 0.095), smoothstep(-0.3, 0.8, rd.y));
   float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
-  bool graze = false;
+  bool graze = false; float grazeId = 0.0;
   for (int i = 0; i < 150; i++) {
     vec3 pp = ro + rd*t;
     vec2 h = map(pp);
@@ -478,13 +535,14 @@ void main() {
     if (emissive(h.y)) glowAcc += exp(-h.x*1.4)*0.012*min(h.x + 0.2, 1.0);
     if (h.x < minH) { minH = h.x; minId = h.y; }
     // The ray dipped close to a form and is moving away again: a silhouette edge in front.
-    if (h.x > prevH && prevH < inkWidth(prevId) && !graze && t > 0.5) graze = true;
+    if (h.x > prevH && prevH < inkWidth(prevId) && !graze && t > 0.5) { graze = true; grazeId = prevId; }
     prevH = h.x; prevId = h.y;
     t += h.x*0.8;
     if (t > 120.0) break;
   }
   vec3 col = bg;
   float ink = 0.0;
+  vec3 inkC = INK(hitId > 0.0 ? hitId : minId);
   if (hitId > 0.0) {
     vec3 p = ro + rd*t;
     vec3 n = normalAt(p);
@@ -498,16 +556,17 @@ void main() {
     float sh = shadow(p + n*0.03, lk);
     // Comic shadowing: the light-to-shadow turn and cast shadows get a crisper, graphic edge.
     float ndl = max(dot(n, lk), 0.0);
-    ndl = mix(ndl, smoothstep(0.12, 0.3, ndl)*mix(0.75, 1.0, ndl), uShade.y);
-    sh = mix(sh, smoothstep(0.35, 0.6, sh), uShade.y);
-    vec3 key = vec3(0.70, 0.78, 1.0)*1.25*ndl*mix(uShade.x, 1.0, sh);
+    vec2 shade = SH(hitId);
+    ndl = mix(ndl, smoothstep(0.12, 0.3, ndl)*mix(0.75, 1.0, ndl), shade.y);
+    sh = mix(sh, smoothstep(0.35, 0.6, sh), shade.y);
+    vec3 key = vec3(0.70, 0.78, 1.0)*1.25*ndl*mix(shade.x, 1.0, sh);
     vec3 warm = vec3(1.0, 0.6, 0.3)*0.42*max(dot(n, lw), 0.0);
     float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
     vec3 rim = vec3(0.55, 0.42, 1.0)*0.7*fres*max(dot(n, lr) + 0.4, 0.0);
-    vec3 amb = mix(vec3(0.03, 0.035, 0.07), vec3(0.09, 0.10, 0.16), n.y*0.5 + 0.5)*occ*uAmb;
+    vec3 amb = mix(vec3(0.03, 0.035, 0.07), vec3(0.09, 0.10, 0.16), n.y*0.5 + 0.5)*occ*AM(hitId);
     vec3 gv = uGlowPos - p;
     float gd = length(gv);
-    vec3 glow = uGlowCol*uTreat.z*max(dot(n, gv/gd), 0.0)*40.0/(gd*gd + 6.0);
+    vec3 glow = uGlowCol*TR(hitId).z*max(dot(n, gv/gd), 0.0)*40.0/(gd*gd + 6.0);
     col = alb*(key + warm + amb + glow) + rim*alb*1.6;
     vec3 hv = normalize(lk + v);
     col += spec*sh*pow(max(dot(n, hv), 0.0), 40.0)*vec3(0.75, 0.82, 1.0);
@@ -515,22 +574,23 @@ void main() {
     float fade = smoothstep(70.0, 30.0, t);
     col = mix(bg, col, fade);
     // Ink 1: creases between forms (concave curvature), the inked fractures.
-    float e = 0.09*max(uTreat.x, 0.6);
+    float e = 0.09*max(creaseScale(hitId), 0.6);
+    float cs = TR(hitId).y;
     vec2 s1 = map(p + vec3(e, -e, -e)), s2 = map(p + vec3(-e, -e, e)), s3 = map(p + vec3(-e, e, -e)), s4 = map(p + vec3(e, e, e));
     float d0 = map(p).x;
     float lap = (s1.x + s2.x + s3.x + s4.x - 4.0*d0)/e;
     // SDF Laplacian is negative in concave creases and positive on convex edges.
-    float crease = smoothstep(0.5/uTreat.y, 1.0/uTreat.y, -lap) + 0.5*smoothstep(1.4/uTreat.y, 2.4/uTreat.y, lap);
+    float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + 0.5*smoothstep(1.4/cs, 2.4/cs, lap);
     // Ink 2: material boundaries (stone to iron, stem to cap, object to floor).
     float idEdge = (abs(s1.y - hitId) + abs(s2.y - hitId) + abs(s3.y - hitId) + abs(s4.y - hitId)) > 0.5 ? 1.0 : 0.0;
     if (abs(hitId - 9.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
-    if (graze) ink = max(ink, fade);
+    if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }
   } else if (minH < inkWidth(minId)) {
     ink = 1.0;
   }
-  col = mix(col, uInkCol, ink);
+  col = mix(col, inkC, ink);
   col += glowAcc*uTreat.w*vec3(0.5, 0.9, 0.85)*(uAsset > 2.5 ? vec3(1.9, 0.75, 0.35) : vec3(1.0));
   col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
   col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
@@ -544,14 +604,14 @@ void main() {
 (function () {
   const ASSETS = [
     {
-      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs",
-      target: [0, 6, 0], dist: 34, figure: [-3, 0, -5.5], glow: [0, 8, -12], glowCol: [0.5, 0.35, 0.2],
+      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 17 × 6 studs", version: "v2",
+      target: [0, 7.5, 0], dist: 38, figure: [-6.5, 0, -5.5], glow: [-3, 2.2, -4.5], glowCol: [0.45, 0.95, 1.0],
       notes: [
-        ["Shape", "Tiers of big, rounded rock masses, each trimmed by a few broad fracture planes. Overlapping masses leave deep seams that read as inked cracks. Fallen rubble at the foot breaks the straight base line."],
-        ["Why it looks hand-made", "Big readable shapes, slight irregularity, no photo-scan noise. Moss only settles on upward-facing ledges."],
-        ["Ink", "Architecture weight: thinner than hero props. Seams between masses are inked."],
+        ["v2 changes", "You said v1 looked too basic. v2 adds an uneven skyline with two leaning spires and a notch, a ledge jutting out over the player, carved horizontal strata, moss and roots hanging from the ledge, and a few small glowing crystal shards in a crack near the foot."],
+        ["Shape", "Tiers of big, rounded rock masses, each trimmed by a few broad fracture planes. The seams between masses read as inked cracks. Fallen rubble at the foot breaks the straight base line."],
+        ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss and crystal shards use Inked Cavern."],
         ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
-        ["Status", "Concept v1, awaiting your review."]
+        ["Status", "Concept v2, awaiting your review."]
       ]
     },
     {
@@ -583,6 +643,7 @@ void main() {
       notes: [
         ["Shape", "Nineteen chunky stone blocks form a round-topped arch on two plinths. Each block sits slightly out of line, and the keystone is oversized. Graphite iron bands with orange bolts clamp four of the blocks, and a burnt-orange plate sits on the keystone."],
         ["Energy", "A swirling membrane fills the arch and casts warm light forward. Shown here in PvP orange."],
+        ["Treatment", "Slugshot mix: the stone uses Comic Cavern ink. The iron bands and orange bolts keep a thick outline but only light inner lines, so the heavy ink no longer swallows them."],
         ["Family", "This is the shared base for all three gates. Training, PvP and Veylume each get their own crown, energy colour and dressing."],
         ["Ties to", "The blaster's burnt orange, graphite and steel."],
         ["Status", "Concept v1, awaiting your review."]
@@ -595,7 +656,9 @@ void main() {
     // Owner direction, 2026-10-31: Living Comic's clean surfaces (few interior lines, its glow)
     // with Comic Cavern's thick near-black ink and deeper, crisper comic shadows.
     { name: "Inked Cavern", t: [1.7, 0.95, 1.1, 0.5], ink: [0.006, 0.006, 0.008], amb: 0.8, shade: [0.1, 0.65] },
-    { name: "Living Comic", t: [1.0, 1.0, 1.1, 0.6], ink: [0.03, 0.028, 0.04], amb: 1.0, shade: [0.25, 0.0] }
+    { name: "Living Comic", t: [1.0, 1.0, 1.1, 0.6], ink: [0.03, 0.028, 0.04], amb: 1.0, shade: [0.25, 0.0] },
+    // Default: per-material rule. Global bloom follows Inked Cavern.
+    { name: "Slugshot mix", t: [1.7, 0.95, 1.1, 0.5], mix: true }
   ];
   const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
 
@@ -603,7 +666,8 @@ void main() {
   ASSETS.forEach((a, i) => {
     const b = document.createElement("button");
     b.className = "asset"; b.id = "asset-" + a.id; b.dataset.index = i;
-    b.innerHTML = `<span class="name"></span><span class="meta"></span><span class="chip">Concept v1</span>`;
+    b.innerHTML = `<span class="name"></span><span class="meta"></span><span class="chip"></span>`;
+    b.querySelector(".chip").textContent = "Concept " + (a.version || "v1");
     b.querySelector(".name").textContent = a.name;
     b.querySelector(".meta").textContent = a.kind;
     shelf.appendChild(b);
@@ -616,7 +680,7 @@ void main() {
   const gl = canvas.getContext("webgl", { antialias: false });
   function fail(msg) { const d = document.createElement("div"); d.className = "fallback"; d.textContent = msg; box.appendChild(d); }
 
-  let current = 0, treat = 1, figOn = true;
+  let current = 0, treat = 3, figOn = true;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let motion = !reduce, time = 3.0, last = performance.now();
   const cam = { yaw: -0.65, pitch: 0.22, dist: 30, tx: 0, ty: 6, tz: 0 };
@@ -663,7 +727,7 @@ void main() {
 
   const start = ASSETS.findIndex(a => "#" + a.id === location.hash);
   select(start >= 0 ? start : 0);
-  setTreat(1);
+  setTreat(3);
   Object.assign(cam, goal);
 
   if (!gl) { fail("This browser can't show the 3D view (WebGL is off or unavailable)."); return; }
@@ -690,7 +754,7 @@ void main() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = {};
-  ["uRes", "uT", "uAsset", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uInkCol", "uAmb", "uShade", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  ["uRes", "uT", "uAsset", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
 
   let drag = null, pinch = null;
   const pointers = new Map();
@@ -740,7 +804,11 @@ void main() {
     gl.uniform1f(U.uAsset, current);
     gl.uniform3fv(U.uRo, ro); gl.uniform3fv(U.uRight, r); gl.uniform3fv(U.uUp, u); gl.uniform3fv(U.uFwd, f);
     gl.uniform4f(U.uFig, a.figure[0], a.figure[1], a.figure[2], figOn ? 1 : 0);
-    gl.uniform4fv(U.uTreat, T.t); gl.uniform3fv(U.uInkCol, T.ink); gl.uniform1f(U.uAmb, T.amb); gl.uniform2fv(U.uShade, T.shade);
+    gl.uniform4fv(U.uTreat, T.t); gl.uniform1f(U.uMode, treat);
+    [0, 1, 2].forEach(k => {
+      gl.uniform4fv(U["uTr" + k], TREAT[k].t); gl.uniform3fv(U["uInk" + k], TREAT[k].ink); gl.uniform2fv(U["uSh" + k], TREAT[k].shade);
+    });
+    gl.uniform3f(U.uAm, TREAT[0].amb, TREAT[1].amb, TREAT[2].amb);
     gl.uniform3fv(U.uGlowPos, a.glow); gl.uniform3fv(U.uGlowCol, a.glowCol);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     requestAnimationFrame(frame);

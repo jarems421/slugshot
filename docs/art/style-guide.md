@@ -34,6 +34,19 @@ The outlines are the signature. They unify everything and make sure nothing goes
 - **Outline the silhouette and the key interior forms.** Borderlands-style inking includes interior lines (creases, panel seams, rock fractures), not just the outer edge.
 - **Roblox constraint:** no single effect outlines the whole world the way a custom shader would. Expect a combination of methods (see [technical approach](#7-roblox-technical-approach)).
 
+### Treatment rule: "Slugshot mix" (Confirmed, 2026-10-31)
+
+Ink treatment is chosen **per material**, not per scene. The owner said Inked Cavern looks "beautiful" and is the main treatment, but dark natural forms look better with Comic Cavern:
+
+| Material | Treatment |
+| --- | --- |
+| Glowing, clear and organic things (crystals, fungi, portal energy, moss) | **Inked Cavern**: Comic Cavern's thick near-black ink, clean surfaces with few interior lines, deep shadows with a crisp comic edge, full glow |
+| **Characters (slugs, players): always** | **Inked Cavern** |
+| Dark rock, stone, cave floor | **Comic Cavern**: heavy near-black ink, more interior crease lines |
+| Small metal details (bands, bolts, trim) | Thick outline but **Living Comic's light interior lines**, so heavy ink doesn't swallow small detail (owner: Comic Cavern "engulfs" the portal's grey bands and orange bolts) |
+
+The [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) implements this as its default "Slugshot mix" mode. Enchanted was rejected; Comic Cavern, Inked Cavern and Living Comic remain available for comparison. For Roblox, this maps to per-asset hull widths, painted interior-line density and shadow treatment, to be proven in Studio.
+
 ## 2. Colour philosophy: calm base, vibrant accents
 
 The owner's formula: **calm base tones + selective vibrant accents + bold dark outlining.**
@@ -127,6 +140,6 @@ Everything in a finished scene is deliberately designed and authored, mainly in 
 ## Open questions
 
 - **Unresolved:** outline colour (charcoal vs black) and weights, decided by the style test.
-- **Treatment, 2026-10-31:** the owner rejected B Enchanted outright and asked for a midpoint between A Comic Cavern and C Living Comic, closer to Comic Cavern but not as heavy. This became **Inked Cavern** (about two-thirds of the way from C toward A: bolder, darker ink than C, lighter than A's heavy black), the current lead in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Unresolved:** final confirmation, then Studio proof.
+- **Superseded by the Slugshot mix rule above.** Earlier treatment history, 2026-10-31: the owner rejected B Enchanted outright and asked for a midpoint between A Comic Cavern and C Living Comic, closer to Comic Cavern but not as heavy. This became **Inked Cavern** (about two-thirds of the way from C toward A: bolder, darker ink than C, lighter than A's heavy black), the current lead in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Unresolved:** final confirmation, then Studio proof.
 - **Unresolved:** whether creatures use the same hull outlines as props or a stronger Highlight-based treatment.
 - **Unresolved:** the actual palette (owner said colours may change).

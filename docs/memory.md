@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Slugshot mix treatment and rock wall v2
+
+- **Confirmed:** owner loves Inked Cavern and wants it as the main treatment, but keeps the others: dark rocks look better with Comic Cavern; glowing/clear things (mushroom, crystals) with Inked Cavern; characters always Inked Cavern. Comic Cavern swallowed the portal's grey bands and orange bolts, which Living Comic did not. Rock wall v1 "too basic".
+- **Implemented:** per-material "Slugshot mix" default in the asset library (rock/stone/floor = Comic, glow/organic/characters = Inked, metal details = thick outline with Living Comic inner lines) and rock wall v2 (skyline spires and notch, overhang ledge, strata, hanging moss, glowing crystal shards). Recorded in the [style guide](art/style-guide.md#treatment-rule-slugshot-mix-confirmed-2026-10-31).
+- **Unresolved:** owner review of v2 and the remaining critiques.
+
 ## 2026-10-31 — Treatment direction
 
 - **Confirmed:** owner rejected the Enchanted treatment and wants a look between Comic Cavern and Living Comic, closer to Comic Cavern but not as heavy. **Implemented:** Inked Cavern treatment (ink width 1.45x, near-black charcoal ink, slightly reduced glow/bloom) as the asset library's default; Enchanted removed. **Unresolved:** owner confirmation.
