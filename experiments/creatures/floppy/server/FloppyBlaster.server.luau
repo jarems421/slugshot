@@ -110,12 +110,12 @@ for mesh, part in parts do
 		part.Color = Color3.fromRGB(120, 170, 255)
 		part.Transparency = 0.9
 		part.Reflectance = 0.1
-		-- Blue glow that spills onto the gun, hand and surroundings.
+		-- A faint light-blue spill onto the gun and hand; the inside light leads.
 		local glow = Instance.new("PointLight")
 		glow.Name = "ChamberGlow"
-		glow.Color = Color3.fromRGB(60, 140, 255)
-		glow.Brightness = 4
-		glow.Range = 6
+		glow.Color = Color3.fromRGB(170, 215, 255)
+		glow.Brightness = 1.2
+		glow.Range = 3.5
 		glow.Shadows = false
 		glow.Parent = part
 		glow.Parent = part
@@ -124,9 +124,9 @@ for mesh, part in parts do
 end
 model:Destroy()
 
--- Glowing blue trim on the chamber: a ring at each end and a thin strip along
+-- Soft light-blue trim on the chamber: a ring at each end and a thin strip along
 -- the top and bottom edges, so the tube glows without covering the slug.
-local GLOW = Color3.fromRGB(40, 120, 255)
+local GLOW = Color3.fromRGB(165, 210, 255)
 local radius = math.min(canisterSize.X, canisterSize.Y) / 2
 local function trim(name: string, size: Vector3, offset: CFrame)
 	local part = Instance.new("Part")
@@ -134,6 +134,7 @@ local function trim(name: string, size: Vector3, offset: CFrame)
 	part.Material = Enum.Material.Neon
 	part.Color = GLOW
 	part.Size = size
+	part.Transparency = 0.45
 	part.CastShadow = false
 	attach(part, offset, tool)
 	return part
@@ -141,7 +142,7 @@ end
 for i, z in { -1, 1 } do
 	local ring = trim(
 		"ChamberRing" .. i,
-		Vector3.new(0.05, radius * 2.06, radius * 2.06),
+		Vector3.new(0.03, radius * 2.04, radius * 2.04),
 		CFrame.new(canisterCentre + Vector3.new(0, 0, z * (canisterSize.Z / 2 - 0.04)))
 			* CFrame.Angles(0, math.pi / 2, 0)
 	)
@@ -150,7 +151,7 @@ end
 for i, y in { -1, 1 } do
 	trim(
 		"ChamberStrip" .. i,
-		Vector3.new(0.03, 0.03, canisterSize.Z - 0.08),
+		Vector3.new(0.02, 0.02, canisterSize.Z - 0.08),
 		CFrame.new(canisterCentre + Vector3.new(0, y * radius * 0.98, 0))
 	)
 end
@@ -169,8 +170,8 @@ for i, z in { -1, 1 } do
 	)
 	local lamp = Instance.new("PointLight")
 	lamp.Color = Color3.fromRGB(255, 248, 230)
-	lamp.Brightness = 6
-	lamp.Range = 1.4
+	lamp.Brightness = 7
+	lamp.Range = 1.5
 	lamp.Shadows = false
 	lamp.Parent = holder
 end
