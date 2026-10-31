@@ -387,3 +387,9 @@
 - v7.30: the owner described the cling: Spider-Man-like, facing the wall, one hand on it, one arm off, feet stuck to it, slowly dragging, a quick stop from a run. Fitted on the renderer; the body moves in to 1.2 studs while clinging so the hand and feet reach the wall.
 - v7.31: the owner shared wall-slide reference images (back to the wall, hand flat on it behind, other arm out) and wanted an instant stop and a straight-down slide. Fitted on the renderer at the blocks' corners. Lesson: contact for R6 blocks must be measured at the block corners, not the end centre, or limbs sink into surfaces.
 - v7.32: the slide began about 2 s after stopping (Space held kept the old 'climb with no direction' rule going), and the pose blend counted the pull toward the wall as running, so the owner saw a half-blended pose. Stopping now always slides; the pose was refitted with the hand at head height.
+
+## 2026-10-31 - Blender skill routing guide
+
+- Rewrote `docs/slugs/skill-routing.md` from the actual installed `SKILL.md` files (28 EL4CTEO, 30 RobLe3, 1 project). Replaced the generated inventory and removed `build_skill_routing.py`; `check_skill_routing.py` now checks coverage.
+- Confirmed: the installed `blender` MCP lacks RobLe3's legacy tool names, local Python has no `cv2`, and RobLe3's world reset must not run on existing scenes.
+- A disposable 5.2 probe passed all five routing cases. FBX roundtrip renames clips and can copy actions to stray objects (see lessons).
