@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Forehead, side depth and upper-body softness
+
+- **Confirmed:** owner likes the general direction but wants a forehead, head depth in side view, and a squishier-looking head and perimeter rather than softness only at the floor.
+- **Implemented/verified:** fuller forward crown/cheeks, gently settled flanks, softer Blender light scattering and subtle idle head-volume deformation. Antenna tips were advanced to stay free of the fuller forehead; a closed-volume topology check caught and prevented a tip/head loop. Full offline pipeline, side-depth/forehead and existing contact/colour/motion checks pass. [Art and evidence](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner softness verdict, real Roblox material/skin/scale playback and production optimisation. No soft-body simulation or gameplay introduced.
+
 ## 2026-10-31 — Muddy markings and gentle head/waist contour
 
 - **Confirmed:** owner wants the markings slightly darker and muddy rather than vibrant, and the upper head a little wider to create a gentle, non-exaggerated hourglass shape.

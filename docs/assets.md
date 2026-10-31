@@ -1,5 +1,7 @@
 # Asset management and register
 
+**Forehead/soft-volume refinement, 2026-10-31:** original source has a rounder forward forehead, fuller head depth, gently settled flanks and subtle idle head deformation. Six meshes, 22,412 triangles, 10 bones. [Current design](slugs/catalog/flopper-inspired.md) and [export evidence](slugs/catalog/evidence/flopper-inspired-export.json) updated after offline source/model/five-clip checks. Subjective softness, production optimisation and Roblox import remain pending.
+
 **Marking/profile refinement, 2026-10-31:** owner-directed muted olive stains and a slightly wider upper head/gentle waist replace the bright green and straighter profile. Original source and [export evidence](slugs/catalog/evidence/flopper-inspired-export.json) updated; six meshes, 22,204 triangles, 10 bones. Full offline checks pass, including source palette coverage and restrained head/waist proportions. [Design record](slugs/catalog/flopper-inspired.md); visual approval and Roblox import remain pending.
 
 **Antenna refinement, 2026-10-31:** current source has softer, locally blended roots and slightly forward/downward curves with gradual skin weights. Six meshes, 21,528 triangles, 10 bones. The [design record](slugs/catalog/flopper-inspired.md) and [export evidence](slugs/catalog/evidence/flopper-inspired-export.json) contain the latest original source hashes and offline checks; owner approval, production optimisation and Roblox import remain pending.

@@ -68,18 +68,18 @@ PROFILE = [
     (0.36,0.88,0.65,-0.04), (0.52,0.82,0.62,-0.04),
     (0.70,0.79,0.60,-0.04),
     (0.91,0.75,0.59,-0.04), (1.12,0.72,0.58,-0.04),
-    (1.32,0.73,0.59,-0.04), (1.50,0.77,0.60,-0.04),
-    (1.68,0.80,0.60,-0.04), (1.84,0.79,0.58,-0.04),
-    (1.98,0.72,0.52,-0.04), (2.11,0.59,0.45,-0.04),
-    (2.20,0.43,0.33,-0.04), (2.26,0.24,0.19,-0.04),
-    (2.28,0.06,0.05,-0.04), (2.29,0.005,0.005,-0.04),
+    (1.32,0.73,0.60,-0.035), (1.50,0.77,0.64,-0.025),
+    (1.68,0.80,0.68,-0.005), (1.84,0.79,0.69,0.025),
+    (1.98,0.73,0.66,0.065), (2.11,0.61,0.56,0.095),
+    (2.21,0.46,0.43,0.10), (2.28,0.26,0.25,0.085),
+    (2.32,0.07,0.07,0.07), (2.33,0.005,0.005,0.07),
 ]
 
 ANTENNAE = {
     "left": [(-.38,-.015,1.99),(-.43,.025,2.16),(-.46,.065,2.31),(-.50,.14,2.43),
-             (-.57,.235,2.46),(-.63,.34,2.37),(-.64,.43,2.20),(-.61,.465,2.06)],
+             (-.57,.255,2.46),(-.63,.42,2.37),(-.64,.65,2.20),(-.61,.79,2.06)],
     "right": [(.38,-.015,1.99),(.43,.035,2.15),(.47,.075,2.29),(.53,.155,2.38),
-              (.60,.25,2.40),(.66,.355,2.29),(.64,.44,2.13),(.59,.48,2.01)],
+              (.60,.27,2.40),(.66,.45,2.29),(.64,.67,2.13),(.59,.82,2.01)],
 }
 
 
@@ -114,7 +114,13 @@ def body(rig, mat):
             # One continuous low, wide wedge. It is neither a tube nor a nub.
             extension = 0.33 * triangular * height_fade * min(1.0,(rx/0.91)**2)
             relaxed = 1 + math.exp(-(z/.30)**2) * (.035*math.sin(3*a+.7)+.020*math.sin(5*a-.4))
-            verts.append((rx * relaxed * math.cos(a), cy + ry * relaxed * math.sin(a) - extension, z))
+            soft_envelope = math.sin(min(1,z/.55)*math.pi/2)**2 * math.exp(-((z-1.4)/1.0)**4)
+            soft_volume = 1 + soft_envelope*(.025*math.sin(2*a+.5)+.018*math.sin(3*a-1.3))
+            # Broad, low-frequency settling keeps the sides softly uneven
+            # without adding wrinkles or a hard ridge around the head.
+            sag = .025*soft_envelope*math.sin(a+.8)
+            verts.append((rx * relaxed * soft_volume * math.cos(a),
+                          cy + ry * relaxed * soft_volume * math.sin(a) - extension, z-sag))
     for i in range(len(profile)-1):
         for j in range(n):
             k = (j+1) % n
@@ -351,6 +357,8 @@ def animate(rig, form):
                 upper.rotation_euler[2] = 0.035 * math.sin(t * math.tau)
                 breath = 1 + 0.025 * math.sin(t * math.tau)
                 upper.scale = (breath, 1 / breath**2, breath)
+                head_breath = 1 + .025*(math.sin(t*math.tau+.5)-math.sin(.5))
+                head.scale = (1/math.sqrt(head_breath),head_breath,1/math.sqrt(head_breath))
                 rig.pose.bones["feelers_left"].rotation_euler[0] = 0.10 * math.sin(t * math.tau)
                 rig.pose.bones["feelers_right"].rotation_euler[0] = -0.12 * math.sin(t * math.tau + 0.4) + 0.12 * math.sin(0.4)
                 left_blink = max(0, 1 - abs(t - 0.57) / 0.06)
@@ -389,8 +397,8 @@ def main():
     rig["placeholder"] = False
     mats = {name: material(name, rgb) for name, rgb in data["palette"].items()}
     shader = mats["body"].node_tree.nodes["Principled BSDF"]
-    for name, value in (("Roughness",.55), ("Subsurface Weight",.22),
-                        ("Subsurface Scale",.14), ("Specular IOR Level",.20),
+    for name, value in (("Roughness",.48), ("Subsurface Weight",.32),
+                        ("Subsurface Scale",.20), ("Specular IOR Level",.18),
                         ("Coat Weight",.025), ("Coat Roughness",.35)):
         if name in shader.inputs:
             shader.inputs[name].default_value = value

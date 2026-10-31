@@ -18,6 +18,7 @@ def pose(action, frame):
 
 idle = pose("Idle", 13)
 assert abs(idle["body_upper"].scale.y - 1) > 0.02, "Idle should visibly breathe"
+assert abs(idle["head"].scale.y - 1) > .005, "Idle should softly deform the head volume"
 idle = pose("Idle", 27)
 assert idle["eye_left"].scale.y < idle["eye_right"].scale.y - 0.1, "Idle blink must be offset between eyes"
 hop = pose("Hop", 13)
@@ -41,6 +42,7 @@ while pending:
     visited.add(index)
     pending.extend(other for other in adjacent[index] if other not in visited)
 assert len(visited) == len(body.data.vertices), "Head, tail and antennae must be one connected skin"
+assert len(body.data.vertices)-len(body.data.edges)+len(body.data.polygons) == 2, "Antenna tips must not reconnect to the head as closed handles"
 for side,sign in (("left",-1),("right",1)):
     group = body.vertex_groups["feelers_"+side].index
     antenna = [v for v in body.data.vertices if any(g.group == group and g.weight > .35 for g in v.groups)]
@@ -66,6 +68,14 @@ def section_width(low,high):
 waist, head = section_width(.98,1.20), section_width(1.58,1.87)
 assert 1.025 < head/waist < 1.18, "Head should be slightly wider than the middle"
 assert section_width(.05,.30) > head, "Relaxed base should remain the widest part"
+head_section = [v.co for v in body.data.vertices if 1.58 < v.co.z < 1.87]
+waist_section = [v.co for v in body.data.vertices if .98 < v.co.z < 1.20]
+head_depth = max(v.y for v in head_section)-min(v.y for v in head_section)
+waist_depth = max(v.y for v in waist_section)-min(v.y for v in waist_section)
+assert head_depth > 1.08*waist_depth, "Head must have rounded depth in side view"
+forehead = [v.co.y for v in body.data.vertices if 1.94 < v.co.z < 2.10 and abs(v.co.x) < .16]
+lower_face = [v.co.y for v in body.data.vertices if 1.28 < v.co.z < 1.44 and abs(v.co.x) < .16]
+assert max(forehead) > max(lower_face)+.07, "Forehead should project gently forward"
 names = set(obj.name for obj in bpy.context.scene.objects)
 assert body.get("integrated_tail") and "tiny-tail" not in names, "Tail must extend from the continuous body"
 assert not any("foot" in name.lower() or "base-lobe" in name for name in names), "No feet"

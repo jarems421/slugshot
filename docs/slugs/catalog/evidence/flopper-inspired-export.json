@@ -3,11 +3,11 @@
   "placeholder": false,
   "tool": "4.5.14 LTS",
   "inputs": {
-    "assets/source/slugs/species/flopper-inspired.json": "9f0ebe04491d9a5ff3cb002e0208b6eca1dd9b2394d607aef4fd6017ea73b791",
+    "assets/source/slugs/species/flopper-inspired.json": "e1a842e831b0e4dabc2373c9d0c84e224c9a8d94f8f957ddd05176ff7a0d39b8",
     "tools/slugs/blender_pipeline.py": "d0465dd638ed7db7f3ad43223bc5d40d6afc482a290d63a7a18cacb8c9778319",
     "tools/slugs/common.py": "5bf6b6cf66322831ce5f7e8d0e69cd285c2ace44df3fff4206804e258bfc6c54",
     "assets/source/slugs/rigs/flopper-inspired-v1.json": "2119716e676086fbce64747bf5d11c31dc321f795e2fecd63632597df53d16e8",
-    "assets/source/slugs/models/flopper-inspired/protoform.blend": "bff790411bd4a908f5aafd85ca08f9207826693e78f75e47aa2e9305487d1d28"
+    "assets/source/slugs/models/flopper-inspired/protoform.blend": "bf9392851fa33b42a3b80546e5cc61d537d6f1e24e0269db8668356c83285bfb"
   },
   "units": "1 Blender unit = 1 intended Roblox stud; Studio roundtrip pending",
   "axes": {
@@ -37,9 +37,9 @@
   "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
   "forms": {
     "protoform": {
-      "triangles": 22204,
+      "triangles": 22412,
       "meshes": {
-        "SoftBody": 17792,
+        "SoftBody": 18000,
         "eye-left": 1120,
         "spiral-left": 964,
         "eye-right": 1120,
@@ -89,16 +89,16 @@
         }
       },
       "restBoundsBlender": [
-        1.9097042083740234,
-        1.6282443404197693,
-        2.5206704139709473
+        1.9099180102348328,
+        1.8046756982803345,
+        2.520548105239868
       ],
       "offlineRoundtrip": {
         "model": true,
         "animations": {
           "idle": {
             "durationSeconds": 2.0,
-            "maxBoneMatrixDelta": 0.16369,
+            "maxBoneMatrixDelta": 0.15814,
             "loopSeamDelta": 0.0
           },
           "blink": {
@@ -127,20 +127,21 @@
   },
   "files": {
     "before-cream-antennae.blend": "0d210abb01b1482a807824ceac41790f1b480e8d0ec13890ec8a4aee68dd75e0",
+    "before-forehead-and-soft-volume.blend": "bff790411bd4a908f5aafd85ca08f9207826693e78f75e47aa2e9305487d1d28",
     "before-forward-antennae.blend": "cc637086e982137a84279394e0fa2ae326fd2fd1a3b5f0f993bbac2929863aca",
     "before-grounded-redesign.blend": "7d4e8a454600ad10ad2973b1749293b01c0f2fc1b8aeb1a644a4827f9cc190a2",
     "before-head-and-muted-spots.blend": "2cda6d2629e51a07f997c36cb7d45d09e37b282a3ea080a7a863717efe10cf3c",
     "before-sick-redesign.blend": "6b6ed8a7d6700bf6434b6d2d5cc299ee3fa1c78fb9e34abd689e3aca9bdc74a9",
-    "exports/protoform/blink.fbx": "0108ef4ae443ec20f2b9e9c30ad5ee9f985d37c34fad8b0c6adb64fa89c668b7",
-    "exports/protoform/hop.fbx": "b2d4f00e12e7863f8ca4f6d45e52febdd4ee9edd6efeff8122664355e4aeda75",
-    "exports/protoform/idle.fbx": "832f0d66aa62433348356926849ab36664cea6f1474370f8220a685bdd60e53b",
-    "exports/protoform/impact.fbx": "547967de8b6c6d5a6d9c31c752826311d76dd7bc89b42d558080b74c4e5d7347",
-    "exports/protoform/launch.fbx": "b5fb643ce6e7fd0026c3dd88198c361fe22284e6cd1414dfdb033b275fc8e8fe",
-    "exports/protoform/model.fbx": "f67ea4fbd20717313d40e7518eec426f87112dd359baf37678b9338548bf1502",
+    "exports/protoform/blink.fbx": "cefc733ef7825a49b9eaa5a5968afeb024ece36adcf85a3388edf17c186636b1",
+    "exports/protoform/hop.fbx": "29ff538863176444f9f9af850477db290ce31f747483bf5f6c617f7e2e3bac61",
+    "exports/protoform/idle.fbx": "91e319c6265df496b402bafe14ed0154a9b4619a1e6f71c30a38f68497689ec4",
+    "exports/protoform/impact.fbx": "0a915d7e6575097516e3b589c83d8751836a84ec73abfaa9d5e93a26404a2a01",
+    "exports/protoform/launch.fbx": "c70db85787b3626bcee51fac30caac5feca7b765f4d9acdc1ecb932172f51bbc",
+    "exports/protoform/model.fbx": "688adb3912951183e3e5922fb579c1433ff0847f4a79c0a150c9456c5b2c7664",
     "first-draft.blend": "d9b8db39013ed2769f0675a13693839327e0efce364e6d1fa9e7c08789183c59",
     "fourth-draft.blend": "c80d18a1e769ada8cb6f3bf5f81fd69420f909c6015d6b13b19ded05db16ffce",
     "second-draft.blend": "a1429757ca80c537cd8a639a69350e528cdad315e859a5fb680448aabcd4af97",
-    "source/protoform.blend": "f8ec37f502abbeec4a4a03e2acd1dd1df7a651138a21ef001c8b40b30325ee55",
+    "source/protoform.blend": "a39924cc57cb88b80ef8ed7be32d37c78d9ab29fa9e061d5e059a75ce6ab7f4c",
     "third-draft.blend": "4dda41939d500a5091fcfc9c6f7672d8e345dfbaf848c564e66bebd7d5ed8a24"
   },
   "studioImportVerified": false

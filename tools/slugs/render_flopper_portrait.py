@@ -55,7 +55,8 @@ def main():
     scene.camera = camera
     output = ROOT / "build/slugs/flopper-inspired/previews"
     output.mkdir(parents=True, exist_ok=True)
-    for name, position in (("portrait",(4.2,7,3.5)), ("portrait-front",(0,8,1.45)), ("portrait-rear",(4,-7,3.1))):
+    for name, position in (("portrait",(4.2,7,3.5)), ("portrait-front",(0,8,1.45)),
+                           ("portrait-rear",(4,-7,3.1)), ("portrait-side",(8,0,1.55))):
         camera.location = position
         camera.rotation_euler = (Vector((0,0,1.32))-camera.location).to_track_quat("-Z", "Y").to_euler()
         scene.render.filepath = str(output / f"{name}.png")
