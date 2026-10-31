@@ -42,9 +42,10 @@ while pending:
 assert len(visited) == len(body.data.vertices), "Head, tail and antennae must be one connected skin"
 for side,sign in (("left",-1),("right",1)):
     group = body.vertex_groups["feelers_"+side].index
-    antenna = [v for v in body.data.vertices if any(g.group == group and g.weight > .6 for g in v.groups)]
-    tips = [v for v in antenna if sign*v.co.x > .68 and v.co.y > .17]
+    antenna = [v for v in body.data.vertices if any(g.group == group and g.weight > .35 for g in v.groups)]
+    tips = [v for v in antenna if v.co.y > .35]
     assert tips and max(v.co.z for v in antenna)-min(v.co.z for v in tips) > .15, f"{side} antenna should droop downward"
+    assert sum(v.co.y for v in tips)/len(tips) > .4, f"{side} antenna should curl a little forward"
 color = body.data.color_attributes.get("Color")
 assert color is not None and color.domain == "POINT", "Body needs painted vertex colours"
 quadrants = [0, 0, 0, 0]

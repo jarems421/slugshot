@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Softer forward antennae
+
+- **Confirmed:** owner wants antennae less stiff/attached and turned a little forward rather than to the sides.
+- **Implemented/verified:** deeper/smoothed roots, thinner drooping curves and a longer head-to-feeler weight gradient in the same connected skin. Both antenna tips now bend down/forward; all offline source, FBX and project checks pass. Sampled cream and existing body/face directions are retained. See [design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner visual verdict and actual Roblox skin/animation/material import.
+
 ## 2026-10-31 — Reference cream and fused floppy antennae
 
 - **Confirmed:** owner requested downward-flopping antennae that extend from the slug; rejected the guessed yellow/brown and instructed the base colour to match their original Flopper image.

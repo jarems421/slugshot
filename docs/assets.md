@@ -1,5 +1,7 @@
 # Asset management and register
 
+**Antenna refinement, 2026-10-31:** current source has softer, locally blended roots and slightly forward/downward curves with gradual skin weights. Six meshes, 21,528 triangles, 10 bones. The [design record](slugs/catalog/flopper-inspired.md) and [export evidence](slugs/catalog/evidence/flopper-inspired-export.json) contain the latest original source hashes and offline checks; owner approval, production optimisation and Roblox import remain pending.
+
 **Cream/antenna refinement, 2026-10-31:** current original source uses a pale cream sampled from the user-supplied reference and two downward-curving antennae fused into the same skin as the head/tail. Six mesh objects, 21,776 triangles, 10 bones; the connected skin is 17,364 triangles. Updated [source/export evidence](slugs/catalog/evidence/flopper-inspired-export.json) and [design notes](slugs/catalog/flopper-inspired.md) record Blender/FBX checks. This detailed art-review mesh still needs production optimisation and Roblox import verification.
 
 **Grounded slug refinement, 2026-10-31:** the same original Blender source now contains the spread underside and short triangular tail in one continuous mesh, plus a slightly dirty warm off-white palette and softer preview material. Six mesh objects, 13,052 triangles, 10 bones. Source/export hashes and actual offline checks are updated in the [design record](slugs/catalog/flopper-inspired.md) and [export evidence](slugs/catalog/evidence/flopper-inspired-export.json). No imported/published Roblox asset is claimed.

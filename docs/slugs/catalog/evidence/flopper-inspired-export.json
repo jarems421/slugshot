@@ -7,7 +7,7 @@
     "tools/slugs/blender_pipeline.py": "d0465dd638ed7db7f3ad43223bc5d40d6afc482a290d63a7a18cacb8c9778319",
     "tools/slugs/common.py": "5bf6b6cf66322831ce5f7e8d0e69cd285c2ace44df3fff4206804e258bfc6c54",
     "assets/source/slugs/rigs/flopper-inspired-v1.json": "2119716e676086fbce64747bf5d11c31dc321f795e2fecd63632597df53d16e8",
-    "assets/source/slugs/models/flopper-inspired/protoform.blend": "cc637086e982137a84279394e0fa2ae326fd2fd1a3b5f0f993bbac2929863aca"
+    "assets/source/slugs/models/flopper-inspired/protoform.blend": "2cda6d2629e51a07f997c36cb7d45d09e37b282a3ea080a7a863717efe10cf3c"
   },
   "units": "1 Blender unit = 1 intended Roblox stud; Studio roundtrip pending",
   "axes": {
@@ -37,9 +37,9 @@
   "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
   "forms": {
     "protoform": {
-      "triangles": 21776,
+      "triangles": 21528,
       "meshes": {
-        "SoftBody": 17364,
+        "SoftBody": 17116,
         "eye-left": 1120,
         "spiral-left": 964,
         "eye-right": 1120,
@@ -89,9 +89,9 @@
         }
       },
       "restBoundsBlender": [
-        1.9097041487693787,
+        1.9097042083740234,
         1.6282444596290588,
-        2.5708720684051514
+        2.520669937133789
       ],
       "offlineRoundtrip": {
         "model": true,
@@ -127,18 +127,19 @@
   },
   "files": {
     "before-cream-antennae.blend": "0d210abb01b1482a807824ceac41790f1b480e8d0ec13890ec8a4aee68dd75e0",
+    "before-forward-antennae.blend": "cc637086e982137a84279394e0fa2ae326fd2fd1a3b5f0f993bbac2929863aca",
     "before-grounded-redesign.blend": "7d4e8a454600ad10ad2973b1749293b01c0f2fc1b8aeb1a644a4827f9cc190a2",
     "before-sick-redesign.blend": "6b6ed8a7d6700bf6434b6d2d5cc299ee3fa1c78fb9e34abd689e3aca9bdc74a9",
-    "exports/protoform/blink.fbx": "6024660d65e72a495aaab9e92feb59b997e8ce206adad8864f51426a907484b8",
-    "exports/protoform/hop.fbx": "43c1da466c0d6777f9cc37494577615a5e9c3104adcb2d2cc28fbbf1b8f768dc",
-    "exports/protoform/idle.fbx": "df33314d1937f22d555a81f2cb2e5cf8e14cbaef0a3df5e689e52241a7ab5e40",
-    "exports/protoform/impact.fbx": "4e82203dfc7d85cf88e357a86abe1c7e764145ec65f87e313353ab1c7a7def40",
-    "exports/protoform/launch.fbx": "6a0a6bb891ec63b24362657f2b642a18b45c65f4d9b9a9cdeacce875777540c6",
-    "exports/protoform/model.fbx": "16bc927de8283213dff3e9b6f10c7b8dc33fcdd97858023d7fb6a3b6e27510f5",
+    "exports/protoform/blink.fbx": "acf278d1beec2a5b4f3e3a2a3ecfa44e4e75a67dddc10682dacc8d04118324b4",
+    "exports/protoform/hop.fbx": "16479e8b3fbd1aca0f135584c328854c25122f765040bcd651def680022c98c9",
+    "exports/protoform/idle.fbx": "62dc5b0652420e3faae54b78ae9ef01182b50e66a3425801c961314db7c69eb4",
+    "exports/protoform/impact.fbx": "81278546786b325f23333e6ac4b67e4e91368482492f7fe0b805af02bf982370",
+    "exports/protoform/launch.fbx": "cb13f9a9c73183a48dec6c22bdc44faecc2e632fd288205035bd00bdd0197dc6",
+    "exports/protoform/model.fbx": "8d309596be453f1e219b0b7cd01d7c59e437a793f08023357be4c124d97c01c1",
     "first-draft.blend": "d9b8db39013ed2769f0675a13693839327e0efce364e6d1fa9e7c08789183c59",
     "fourth-draft.blend": "c80d18a1e769ada8cb6f3bf5f81fd69420f909c6015d6b13b19ded05db16ffce",
     "second-draft.blend": "a1429757ca80c537cd8a639a69350e528cdad315e859a5fb680448aabcd4af97",
-    "source/protoform.blend": "72c4e8cea23dec644700b75286071d5a735115d4ba1882b0f0d31f24692f75d2",
+    "source/protoform.blend": "64455047ee63cc864ce7eb137e4f053d872a950f6f7c369771e894866a6f122c",
     "third-draft.blend": "4dda41939d500a5091fcfc9c6f7672d8e345dfbaf848c564e66bebd7d5ed8a24"
   },
   "studioImportVerified": false

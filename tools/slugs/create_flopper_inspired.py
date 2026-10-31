@@ -76,10 +76,10 @@ PROFILE = [
 ]
 
 ANTENNAE = {
-    "left": [(-.42,0,2.09),(-.46,.01,2.26),(-.52,.06,2.43),(-.63,.12,2.49),
-             (-.74,.20,2.43),(-.79,.25,2.29),(-.78,.28,2.12)],
-    "right": [(.42,0,2.08),(.48,.02,2.24),(.58,.07,2.39),(.69,.14,2.42),
-              (.77,.22,2.31),(.76,.27,2.15),(.72,.29,2.04)],
+    "left": [(-.38,-.015,1.99),(-.43,.025,2.16),(-.46,.065,2.31),(-.50,.14,2.43),
+             (-.57,.235,2.46),(-.63,.34,2.37),(-.64,.43,2.20),(-.61,.465,2.06)],
+    "right": [(.38,-.015,1.99),(.43,.035,2.15),(.47,.075,2.29),(.53,.155,2.38),
+              (.60,.25,2.40),(.66,.355,2.29),(.64,.44,2.13),(.59,.48,2.01)],
 }
 
 
@@ -97,7 +97,7 @@ def antenna_influence(point, side):
             best_progress = (index+t)/(len(path)-1)
     if best_distance > .19:
         return 0.0
-    return min(1.0,max(0.0,best_progress/.30)) * max(0,min(1,(.19-best_distance)/.06))
+    return min(1.0,max(0.0,best_progress/.75)) * max(0,min(1,(.19-best_distance)/.06))
 
 
 def body(rig, mat):
@@ -137,7 +137,7 @@ def body(rig, mat):
     # union removes intersecting shell seams and creates one connected skin.
     antenna_objects = []
     for side,path in ANTENNAE.items():
-        antenna = tube("AntennaConstruction_"+side,path,[.15,.125,.105,.09,.08,.065,.045],mat,rig,"feelers_"+side,rings=16)
+        antenna = tube("AntennaConstruction_"+side,path,[.20,.15,.10,.075,.066,.057,.050,.045],mat,rig,"feelers_"+side,rings=16)
         antenna.modifiers.clear()
         antenna.vertex_groups.clear()
         antenna.parent = None
@@ -156,6 +156,19 @@ def body(rig, mat):
     relax = obj.modifiers.new("RelaxRoots","SMOOTH")
     relax.factor, relax.iterations = .55, 3
     bpy.ops.object.modifier_apply(modifier=relax.name)
+    root_blend = obj.vertex_groups.new(name="RootBlendConstruction")
+    for vertex in obj.data.vertices:
+        distance = min((vertex.co-Vector(path[1])).length for path in ANTENNAE.values())
+        weight = math.exp(-(distance/.23)**2)
+        if weight > .001:
+            root_blend.add([vertex.index],weight,"REPLACE")
+    soften = obj.modifiers.new("SoftenAntennaRoots","SMOOTH")
+    soften.vertex_group = root_blend.name
+    soften.factor, soften.iterations = .60, 5
+    bpy.ops.object.modifier_apply(modifier=soften.name)
+    construction_group = obj.vertex_groups.get("RootBlendConstruction")
+    if construction_group:
+        obj.vertex_groups.remove(construction_group)
     obj.data.calc_loop_triangles()
     reduction = obj.modifiers.new("ExportBudget","DECIMATE")
     reduction.ratio = min(1.0,18000/max(1,len(obj.data.loop_triangles)))
