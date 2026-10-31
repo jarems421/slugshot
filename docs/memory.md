@@ -429,3 +429,4 @@
 - Owner: the folds looked like creases; wanted actual folds. Changed the profile to overhanging rolls (steep tucked underside, gentle top), made them fewer and fuller. Reference refreshed.
 - Owner: upper lids a little darker than the skin but less dark than the lower lids. Applied #888F68; reference refreshed.
 - Owner: 'this is perfect... this is the Floppy design. This is our Floppy.' Renamed the page and record to Floppy, replaced the V1 save with docs/slugs/catalog/evidence/floppy/ (floppy.html plus five renders). The committed baseline Blender model is still kept pending the owner's decision.
+- Built Floppy in Blender with tools/slugs/build_floppy.py (concept SDF ported to NumPy, surface nets, exact texture bake, ring-eye textures, 9-bone rig, 12 s looping idle). Concept motion rates aligned to the loop. Opened in the owner's Blender. Game-budget version and FBX/Studio are next.

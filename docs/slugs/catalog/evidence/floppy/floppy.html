@@ -157,14 +157,14 @@ vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
 
 vec3 deform(vec3 p) {
   float t = uT;
-  float b = sin(t*1.6);
+  float b = sin(t*1.5708);
   float up = smoothstep(0.0, 2.2, p.y);
   p.y /= 1.0 + 0.02*b*up;
   p.xz /= 1.0 - 0.015*b*(1.0 - 0.6*up);
   float w = smoothstep(0.15, 1.0, p.y)*(1.0 - 0.6*smoothstep(1.0, 1.8, p.y));
-  p.x -= 0.01*sin(t*2.2 - p.y*2.6)*w;
-  p.z -= 0.008*sin(t*1.8 - p.y*2.2 + 1.0)*w;
-  float a = 0.04*sin(t*0.7)*smoothstep(0.9, 1.5, p.y);
+  p.x -= 0.01*sin(t*2.0944 - p.y*2.6)*w;
+  p.z -= 0.008*sin(t*1.5708 - p.y*2.2 + 1.0)*w;
+  float a = 0.04*sin(t*0.5236)*smoothstep(0.9, 1.5, p.y);
   vec2 q = p.xy - vec2(0.0, 1.05);
   float c = cos(a), s = sin(a);
   p.xy = vec2(c*q.x + s*q.y, -s*q.x + c*q.y) + vec2(0.0, 1.05);
@@ -206,7 +206,7 @@ float foldRoll(vec3 p) {
 }
 
 void antenna(float s, out vec3 A, out vec3 B, out vec3 C) {
-  float sw = sin(uT*1.2 + s*1.3)*0.04;
+  float sw = sin(uT*1.0472 + s*1.3)*0.04;
   A = vec3(s*0.26, 2.10, 0.42);
   B = vec3(s*0.84 + sw*0.3, 2.52, 0.50);
   C = vec3(s*0.90 + sw, 1.44, 0.56 + sw*0.5);
@@ -323,7 +323,7 @@ float ring(vec2 uv, vec2 c, float r, float w) { return 1.0 - smoothstep(w*0.5 - 
 vec3 eyeColor(vec3 dp, float side) {
   vec3 l = eyeLocal(dp, side);
   vec2 uv = l.xy/EYE_DIM.x;
-  float ang = uT*(side < 0.0 ? 0.55 : -0.45);
+  float ang = uT*(side < 0.0 ? 0.5236 : -0.5236);
   uv = mat2(cos(ang), -sin(ang), sin(ang), cos(ang))*uv;
   float m = 0.0;
   if (side < 0.0) {
