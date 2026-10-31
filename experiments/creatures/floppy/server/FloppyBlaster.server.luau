@@ -121,37 +121,49 @@ for _, child in (container :: Instance):GetChildren() do
 	child.Parent = floppy
 end
 (container :: Instance):Destroy()
--- Loaded form: shrink until he fits the canister lying down (his width across
--- the gun, his depth up, his height along the barrel), with a little clearance.
-local _, full = floppy:GetBoundingBox()
-local shrink = math.min(
-	canisterSize.X * 0.9 / full.X,
-	canisterSize.Y * 0.9 / full.Z,
-	canisterSize.Z * 0.95 / full.Y
+-- Loaded form: shrink until he fills the canister lying down (his width
+-- across the gun, his depth up, his height along the barrel). His true size
+-- comes from his eye spacing (0.74 at source) and his source dimensions,
+-- because the bounding box of an imported skinned model can be inflated.
+local SOURCE_SIZE = Vector3.new(1.7, 2.72, 1.77) -- body width (no antenna tips), height, depth
+local EYE_SPACING = 0.74
+local eyeL = floppy:FindFirstChild("eye_L", true) :: Bone
+local eyeR = floppy:FindFirstChild("eye_R", true) :: Bone
+local _, reported = floppy:GetBoundingBox()
+local current = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / EYE_SPACING
+local target = math.min(
+	canisterSize.X * 0.95 / SOURCE_SIZE.X,
+	canisterSize.Y * 0.97 / SOURCE_SIZE.Z,
+	canisterSize.Z * 0.95 / SOURCE_SIZE.Y
 )
+local shrink = target / current
 floppy:ScaleTo(shrink)
-local box, size = floppy:GetBoundingBox()
+-- His middle: the root bone sits at the centre of his base, so go up half his height.
+local root = floppy:FindFirstChild("root", true) :: Bone
+local middle = CFrame.new(root.WorldPosition + Vector3.yAxis * SOURCE_SIZE.Y * target / 2)
 -- Model up (+Y) -> gun -Z (muzzle); model face (-Z) -> gun +Y (up).
 local lie = CFrame.fromMatrix(Vector3.zero, Vector3.new(-1, 0, 0), Vector3.new(0, 0, -1))
 local placed = CFrame.new(canisterCentre) * lie
 for _, d in floppy:GetDescendants() do
 	if d:IsA("BasePart") then
-		local relative = CFrame.new(box.Position):ToObjectSpace(d.CFrame)
+		local relative = middle:ToObjectSpace(d.CFrame)
 		attach(d, placed * relative, d.Parent :: Instance)
 	end
 end
 floppy.Parent = tool
 print(
 	string.format(
-		"Floppy blaster: length %.2f studs, canister %.2f x %.2f across x %.2f long, Floppy loaded at %.0f%%: %.2f x %.2f x %.2f",
-		2.2 * SCALE.Z,
+		"Floppy blaster: canister %.2f x %.2f x %.2f studs; Floppy loaded at %.0f%% of ground size,"
+			.. " %.2f wide x %.2f long (bounding box said %.2f x %.2f x %.2f)",
 		canisterSize.X,
 		canisterSize.Y,
 		canisterSize.Z,
 		shrink * 100,
-		size.X,
-		size.Y,
-		size.Z
+		SOURCE_SIZE.X * target,
+		SOURCE_SIZE.Y * target,
+		reported.X,
+		reported.Y,
+		reported.Z
 	)
 )
 
