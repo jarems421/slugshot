@@ -19,8 +19,10 @@ import numpy as np
 GRIP_TOP = 0.03
 GRIP_LENGTH_SCALE = 0.70
 BARREL_START = -0.80
-BARREL_LENGTH_SCALE = 0.90
-TIP_BEVEL_LENGTH = 0.14
+BARREL_LENGTH_SCALE = 0.96
+# A longer run at the same tip height makes the downward cut shallower,
+# without extending the point below the existing prong or closing the gap.
+TIP_BEVEL_LENGTH = 0.24
 TIP_EDGE_HEIGHT = 0.012
 
 # Keep the orange identity, with a darker coated housing and clearer metal/grip
@@ -38,6 +40,38 @@ FINISH = {
     "ChargerVane": ("EBF0ED", "Neon", 0.0, 0.40, 0.0),
     "CyanGlow": ("A5CDD0", "Neon", 0.0, 0.40, 0.0),
 }
+
+
+def solid_barrel_tips(obj, points, tip_end):
+    """Extend the existing housing cross-section into solid, unvented panels."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=5e-4)
+    bmesh.ops.dissolve_degenerate(bm, edges=list(bm.edges), dist=1e-7)
+    plane = Vector((0, 1.20, 0))-obj.location
+    bmesh.ops.bisect_plane(bm, geom=list(bm.verts)+list(bm.edges)+list(bm.faces),
+                          plane_co=plane, plane_no=Vector((0, 1, 0)), dist=1e-7,
+                          clear_outer=True, clear_inner=False)
+    seam_vertices = [v for v in bm.verts if abs(v.co.y-plane.y) < 2e-6]
+    bmesh.ops.remove_doubles(bm, verts=seam_vertices, dist=5e-4)
+    seam = [e for e in bm.edges if e.is_boundary
+            and all(abs(v.co.y-plane.y) < 2e-6 for v in e.verts)]
+    assert seam, "Missing barrel cross-section"
+    result = bmesh.ops.extrude_edge_only(bm, edges=seam)
+    for vertex in result["geom"]:
+        if isinstance(vertex, bmesh.types.BMVert):
+            vertex.co.y = -tip_end-obj.location.y
+    end = [e for e in bm.edges if e.is_boundary
+           and all(abs(v.co.y+tip_end+obj.location.y) < 2e-6 for v in e.verts)]
+    bmesh.ops.holes_fill(bm, edges=end, sides=0)
+    assert not [e for e in bm.edges if e.is_boundary
+                and all(abs(v.co.y+tip_end+obj.location.y) < 2e-6 for v in e.verts)], "Open solid panel"
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    bm.to_mesh(obj.data)
+    bm.free()
+    current = np.array([(obj.location + v.co)[:] for v in obj.data.vertices])
+    current = current[:, [0, 2, 1]] * np.array([1, 1, -1])
+    bevel_barrel_tips(obj, current, tip_end)
 
 
 def bevel_barrel_tips(obj, points, tip_end):
@@ -67,11 +101,11 @@ def bevel_barrel_tips(obj, points, tip_end):
         on_plane = [v for v in bm.verts
                     if abs(normal.dot(v.co - plane)) < 2e-6
                     and ((v.co.z + obj.location.z > 0.30) == upper_prong)]
-        bmesh.ops.remove_doubles(bm, verts=on_plane, dist=2e-6)
+        bmesh.ops.remove_doubles(bm, verts=on_plane, dist=5e-4)
         cut = [e for e in bm.edges if e.is_boundary
                and all(abs(normal.dot(v.co - plane)) < 2e-6 for v in e.verts)]
         if cut:
-            bmesh.ops.triangle_fill(bm, edges=cut, use_beauty=True)
+            bmesh.ops.holes_fill(bm, edges=cut, sides=0)
         assert not [e for e in bm.edges if e.is_boundary
                     and all(abs(normal.dot(v.co - plane)) < 2e-6 for v in e.verts)], "Open muzzle cap"
     bmesh.ops.triangulate(bm, faces=list(bm.faces))
@@ -121,7 +155,7 @@ def main():
         bpy.context.collection.objects.link(obj)
         obj.location = (centre[0], -centre[2], centre[1])
         if item["name"] == "Orange":
-            bevel_barrel_tips(obj, points, tip_end)
+            solid_barrel_tips(obj, points, tip_end)
             # Recompute exported dimensions from the cut geometry, retaining
             # exact correspondence between mesh coordinates and runtime bounds.
             local = np.array([v.co[:] for v in obj.data.vertices])
@@ -140,7 +174,7 @@ def main():
             if obj.data.has_custom_normals:
                 bpy.ops.mesh.customdata_custom_splitnormals_clear()
             obj.data.shade_smooth()
-            obj.data.set_sharp_from_angle(angle=math.radians(18))
+            obj.data.set_sharp_from_angle(angle=math.radians(12))
             weighted = obj.modifiers.new("CrispPanelNormals", "WEIGHTED_NORMAL")
             weighted.keep_sharp = True
             weighted.mode = "FACE_AREA"

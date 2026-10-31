@@ -472,3 +472,9 @@
 - **Confirmed:** owner wants quick, expressive wrist twists for drawing/putting away, fitted to the Roblox hand, with no throws or body spins.
 - **Implemented/verified offline:** original 0.42/0.34 s gestures, shared Floppy/Rocklock driver, native-grip additive poses and skinned/PBR-preserving cosmetic holster. Creature/movement/type/lint and numerical R6 sampling pass; [sources and evidence](slugs/blaster-motion.md).
 - **Unresolved:** actual Studio feel, rapid switching/death, peer rendering and owner art approval; official trailers were located but could not be downloaded, so no shot-specific motion claim.
+
+## 2026-10-31 ? Solid angular blaster muzzle
+
+- **Confirmed:** slightly extend barrel; lengthen/flatten downward slants; fill the two oval side vents with orange while keeping the central slug channel.
+- **Implemented/verified offline:** +0.080 stud muzzle reach, 0.24 versus 0.14 source-unit bevel run, solid front panels extruded from the existing cross-section. Orange mesh QA and exact-overlap checks pass; nine channel rays and six solid-panel samples pass; twelve GLB mesh bounds reimport exactly. Private mappings and test builds updated. [Evidence and inherited limits](slugs/blaster-refinement.md#solid-muzzle-and-shallower-bevel-follow-up-2026-10-31).
+- **Unresolved:** owner visual verdict and refreshed Studio playback. Existing rear contact flags remain; accepted files and eight prior Studio windows preserved.
