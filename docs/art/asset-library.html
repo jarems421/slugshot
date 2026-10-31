@@ -134,7 +134,14 @@ uniform vec3 uGateEdge, uGateCore, uGateHot;
 // uCb (tilt min, tilt max, radius, ring layout), uCc (lean-forward layout, lift, base height, seed).
 uniform vec4 uCa, uCb, uCc;
 uniform vec3 uCbase, uCrDeep, uCrBright;
-uniform float uCrH;          // height for the root-to-tip colour gradient; 0 = fixed mid glow
+uniform float uCs;           // special crystal design 1-7 (0 = authored or generated)
+// Crystal colour gradient: x mode (0 height/a, 1 constant a, 2 hanging (a - y)/b, 3 bright toward centre at
+// height b over radius a, 4 bright toward tips away from centre at height b over radius a).
+uniform vec4 uCrG;
+// Mushroom colour bank (owner, 2026-10-31): 14 glow colours. The giant mushroom shows the chosen one;
+// small mushrooms each pick one at random. Small caps carry their bank index in the id: 15 + index*0.05.
+uniform vec3 uBank[14];
+uniform vec3 uCapDark, uCapLight, uCapGlow;
 const float GS = 1.5;        // gates are 1.5x the original concept (owner, 2026-10-31)
 uniform vec3 uRo, uRight, uUp, uFwd;
 uniform vec4 uFig;          // xyz position, w = shown
@@ -196,6 +203,12 @@ vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
   return res;
 }
 
+vec3 bankColor(float idx) {
+  vec3 c = uBank[0];
+  for (int i = 0; i < 14; i++) { if (abs(float(i) - idx) < 0.5) c = uBank[i]; }
+  return c;
+}
+
 // ---------- shared: a rounded mass trimmed by a few broad fracture planes
 float chunk(vec3 p, vec3 c, vec3 r, float seed) {
   vec3 q = p - c;
@@ -209,7 +222,7 @@ float chunk(vec3 p, vec3 c, vec3 r, float seed) {
   return d;
 }
 
-// ---------- 0: rock wall module v4 (20 x 12 x 5 studs): v1's simple masses, dressed
+// ---------- 0: rock wall module v5 (20 x 12 x 5 studs): v1's simple masses, dressed, no vines
 float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
   vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
   return length(pa - ba*h) - mix(ra, rb, h);
@@ -245,24 +258,22 @@ vec2 rockWall(vec3 p) {
   }
   d += 0.07*(noise3(p*0.9) - 0.5);
   vec2 r = vec2(d, 1.0);
-  // Vines: wavy strands hanging over the top, each ending in a small glowing bulb.
-  float vine = 1e5, bulb = 1e5;
-  for (int i = 0; i < 4; i++) {
+  // Tiny glowing mushrooms sprouting from cracks here and there (replaced the vines, owner 2026-10-31).
+  float tinyStem = 1e5, tinyCap = 1e5, tinyIdx = 0.0;
+  for (int i = 0; i < 9; i++) {
     float fi = float(i);
-    float x0 = -7.0 + 4.6*fi + 0.8*(hash1(fi + 201.0) - 0.5);
-    float len = 5.0 + 3.5*hash1(fi + 202.0);
-    vec3 a = vec3(x0, 11.9, -1.4);
-    for (int j = 0; j < 5; j++) {
-      float fj = float(j);
-      float y1 = 11.9 - len*(fj + 1.0)/5.0;
-      vec3 b = vec3(x0 + 0.45*sin(fj*1.7 + fi*2.0), y1, -1.6 - 1.0*smoothstep(10.0, 3.0, y1) + 0.2*sin(fj*2.3 + fi));
-      vine = min(vine, capT(p, a, b, 0.11, 0.1));
-      a = b;
-    }
-    bulb = min(bulb, length(p - a - vec3(0.0, -0.15, 0.0)) - 0.22);
+    float k = mod(fi, 6.0);
+    vec3 site = k < 0.5 ? vec3(-2.2, 4.6, -2.4) : k < 1.5 ? vec3(6.8, 1.6, -2.5) : k < 2.5 ? vec3(2.6, 7.6, -1.6)
+              : k < 3.5 ? vec3(-7.6, 8.0, -1.4) : k < 4.5 ? vec3(0.8, 3.2, -2.5) : vec3(-4.9, 10.2, -1.2);
+    vec3 b = site + vec3(0.45*(hash1(fi + 221.0) - 0.5) + step(5.5, fi)*0.4, 0.3*(hash1(fi + 222.0) - 0.5), 0.0);
+    float h = 0.3 + 0.3*hash1(fi + 223.0);
+    vec3 tip = b + vec3(0.1*(hash1(fi + 224.0) - 0.5), h, -0.35*h);
+    tinyStem = min(tinyStem, capT(p, b, tip, 0.06, 0.045));
+    float td = smax(sdEll(p - tip, vec3(1.0, 0.6, 1.0)*(0.16 + 0.12*hash1(fi + 225.0))), -(p.y - tip.y + 0.03), 0.02);
+    if (td < tinyCap) { tinyCap = td; tinyIdx = floor(hash1(fi + 226.0)*13.99); }
   }
-  if (vine < r.x) r = vec2(vine, 12.0);
-  if (bulb < r.x) r = vec2(bulb, 14.0);
+  if (tinyStem < r.x) r = vec2(tinyStem, 4.0);
+  if (tinyCap < r.x) r = vec2(tinyCap, 15.0 + tinyIdx*0.05);
   // Crystals poking out of the face in a few places.
   float cr = crystal(p, vec3(1.4, 1.0, -2.0), 1.5708, 0.9, 1.6, 0.3);
   cr = min(cr, crystal(p, vec3(1.9, 0.8, -2.1), 1.9, 0.6, 1.1, 0.24));
@@ -271,7 +282,7 @@ vec2 rockWall(vec3 p) {
   cr = min(cr, crystal(p, vec3(7.3, 3.8, -2.0), 1.7, 1.0, 1.2, 0.26));
   if (cr*0.75 < r.x) r = vec2(cr*0.75, 3.0);
   // Clusters of little mushrooms sprouting out of cracks, angled out and up.
-  float stems = 1e5, caps = 1e5;
+  float stems = 1e5, caps = 1e5, capIdx = 0.0;
   for (int i = 0; i < 9; i++) {
     float fi = float(i);
     float cl = floor(fi/3.0);
@@ -281,10 +292,11 @@ vec2 rockWall(vec3 p) {
     vec3 tip = b + vec3(0.25*(hash1(fi + 214.0) - 0.5), h, -0.45*h);
     stems = min(stems, capT(p, b, tip, 0.12, 0.08));
     float cs = 0.32 + 0.22*hash1(fi + 215.0);
-    caps = min(caps, smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*cs), -(p.y - tip.y + 0.06), 0.04));
+    float cd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*cs), -(p.y - tip.y + 0.06), 0.04);
+    if (cd < caps) { caps = cd; capIdx = floor(hash1(fi + 216.0)*13.99); }
   }
   if (stems < r.x) r = vec2(stems, 4.0);
-  if (caps*0.85 < r.x) r = vec2(caps*0.85, 5.0);
+  if (caps*0.85 < r.x) r = vec2(caps*0.85, 15.0 + capIdx*0.05);
   return r;
 }
 
@@ -296,6 +308,124 @@ float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r) {
   float hr = max(abs(q.x)*0.8660254 + abs(q.z)*0.5, abs(q.z));
   float body = max(hr - r*(1.0 - 0.08*q.y/h), max(-q.y - 0.6, q.y - h));
   return max(body, q.y + hr*1.35 - h);
+}
+// Crystal pointing along any direction (unit dir), faceted hexagonal body and tip.
+float crystalDir(vec3 p, vec3 base, vec3 dir, float h, float r) {
+  vec3 q = p - base;
+  vec3 up = abs(dir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+  vec3 ax = normalize(cross(up, dir));
+  vec3 az = cross(dir, ax);
+  vec3 l = vec3(dot(q, ax), dot(q, dir), dot(q, az));
+  float hr = max(abs(l.x)*0.8660254 + abs(l.z)*0.5, abs(l.z));
+  float body = max(hr - r*(1.0 - 0.08*l.y/h), max(-l.y - 0.6, l.y - h));
+  return max(body, l.y + hr*1.35 - h);
+}
+// Unit direction on a golden-angle spiral over the sphere; k in 0..1 runs from the top downward.
+vec3 spiralDir(float i, float k) {
+  float y = 1.0 - k;
+  float rr = sqrt(max(0.0, 1.0 - y*y));
+  float a = i*2.39996;
+  return vec3(cos(a)*rr, y, sin(a)*rr);
+}
+vec2 crystalSpecial(vec3 p) {
+  float bound = length(p - vec3(0.0, 3.5, 0.0)) - 8.0;
+  if (bound > 1.0) return vec2(bound, 3.0);
+  float d = 1e5, rock = 1e5;
+  if (uCs < 1.5) {
+    // 8 Geode: a thick rock shell broken open at the front, lined with crystals pointing inward.
+    vec3 c = vec3(0.0, 1.7, 0.2);
+    rock = abs(sdEll(p - c, vec3(2.7, 2.2, 2.5))) - 0.45;
+    rock = smax(rock, -p.z - 0.5 - 0.35*noise3(p*1.3), 0.25);
+    rock = smax(rock, -p.y, 0.1) + 0.08*(noise3(p*1.2) - 0.5);
+    for (int i = 0; i < 12; i++) {
+      float fi = float(i);
+      vec3 o = spiralDir(fi, (fi + 0.5)/12.0*0.95);
+      o.z = abs(o.z) + 0.25; o = normalize(o);
+      d = min(d, crystalDir(p, c + o*vec3(2.1, 1.7, 1.9), -normalize(o + vec3(0.0, -0.2, 0.0)), 0.9 + 0.6*hash1(fi + 501.0), 0.24 + 0.08*hash1(fi + 502.0)));
+    }
+  } else if (uCs < 2.5) {
+    // 9 Floating heart: a double-pointed crystal hovering and bobbing over its rock, shards circling it.
+    rock = chunk(p, vec3(0.0, 0.25, 0.0), vec3(1.7, 0.7, 1.5), 511.0);
+    float bob = 0.25*sin(uT*1.2);
+    vec3 hc = vec3(0.0, 3.4 + bob, 0.0);
+    d = min(crystalDir(p, hc, vec3(0.0, 1.0, 0.0), 2.3, 0.62), crystalDir(p, hc, vec3(0.0, -1.0, 0.0), 1.5, 0.62));
+    for (int i = 0; i < 6; i++) {
+      float fi = float(i);
+      float a = fi*1.0472 + uT*0.35;
+      vec3 sp = vec3(cos(a)*1.9, 3.0 + 0.7*sin(fi*2.1 + uT*0.8), sin(a)*1.9);
+      vec3 dir = normalize(vec3(cos(a)*0.4, 1.0, sin(a)*0.4));
+      d = min(d, crystalDir(p, sp, dir, 0.55, 0.14));
+      d = min(d, crystalDir(p, sp, -dir, 0.35, 0.14));
+    }
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float a = fi*2.094 + 0.5;
+      d = min(d, crystalDir(p, vec3(cos(a)*0.7, 0.5, sin(a)*0.7), normalize(vec3(cos(a)*0.5, 1.0, sin(a)*0.5)), 0.8, 0.2));
+    }
+  } else if (uCs < 3.5) {
+    // 10 Crystal tree: a trunk crystal that branches into smaller crystals near the top.
+    rock = chunk(p, vec3(0.0, 0.25, 0.0), vec3(2.0, 0.8, 1.8), 521.0);
+    d = crystalDir(p, vec3(0.0, 0.2, 0.0), normalize(vec3(0.08, 1.0, 0.0)), 5.4, 0.6);
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      float a = fi*2.39996 + 0.4;
+      float y = 2.0 + 0.45*fi;
+      vec3 dir = normalize(vec3(cos(a), 0.9 + 0.12*fi, sin(a)));
+      d = min(d, crystalDir(p, vec3(0.08*y/1.0*0.1 + cos(a)*0.25, y, sin(a)*0.25), dir, 1.9 - 0.15*fi, 0.3 - 0.02*fi));
+    }
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float a = fi*2.094 + 1.2;
+      d = min(d, crystalDir(p, vec3(cos(a)*0.9, 0.3, sin(a)*0.9), normalize(vec3(cos(a), 1.2, sin(a))), 1.0, 0.22));
+    }
+  } else if (uCs < 4.5) {
+    // 11 Spiral: crystals rising like a spiral staircase around a central spire.
+    rock = chunk(p, vec3(0.0, 0.25, 0.0), vec3(2.3, 0.8, 2.1), 531.0);
+    d = crystalDir(p, vec3(0.0, 0.2, 0.0), vec3(0.0, 1.0, 0.0), 5.6, 0.55);
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float a = fi*0.78;
+      float rr = 1.55 - 0.06*fi;
+      vec3 dir = normalize(vec3(cos(a)*0.35, 1.0, sin(a)*0.35));
+      d = min(d, crystalDir(p, vec3(cos(a)*rr, 0.15, sin(a)*rr), dir, 0.7 + 0.42*fi, 0.26 + 0.012*fi));
+    }
+  } else if (uCs < 5.5) {
+    // 12 Split boulder: a boulder cracked in two, crystals bursting up out of the widening crack.
+    float boulder = chunk(p, vec3(0.0, 1.6, 0.0), vec3(2.6, 2.0, 2.3), 541.0);
+    float crack = abs(p.x - 0.25*(p.z) - 0.15*sin(p.z*1.7)) - (0.12 + 0.28*clamp(p.y/3.0, 0.0, 1.0));
+    rock = smax(boulder, -crack, 0.12) + 0.06*(noise3(p*1.2) - 0.5);
+    for (int i = 0; i < 8; i++) {
+      float fi = float(i);
+      float z = -1.6 + 3.2*(fi + 0.5)/8.0;
+      float x = 0.25*z + 0.15*sin(z*1.7);
+      float side = mod(fi, 2.0) < 0.5 ? -1.0 : 1.0;
+      vec3 dir = normalize(vec3(side*(0.25 + 0.25*hash1(fi + 551.0)), 1.0, 0.15*(hash1(fi + 552.0) - 0.5)));
+      d = min(d, crystalDir(p, vec3(x, 0.4, z), dir, 2.6 + 1.8*sin((fi + 0.5)/8.0*PI)*hash1(fi + 553.0) + 1.0, 0.3 + 0.08*hash1(fi + 554.0)));
+    }
+  } else if (uCs < 6.5) {
+    // 13 Hanging cluster: crystals pointing down from a ceiling rock, for cavern ceilings.
+    rock = chunk(p, vec3(0.0, 8.0, 0.0), vec3(2.6, 1.0, 2.2), 561.0) + 0.06*(noise3(p*1.2) - 0.5);
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float k = (fi + 0.5)/9.0;
+      float a = fi*2.39996;
+      float rr = fi < 0.5 ? 0.0 : 1.5*sqrt(k);
+      vec3 dir = normalize(vec3(cos(a)*rr*0.35, -1.0, sin(a)*rr*0.35));
+      d = min(d, crystalDir(p, vec3(cos(a)*rr, 7.6, sin(a)*rr), dir, mix(3.6, 1.2, k)*(0.85 + 0.3*hash1(fi + 571.0)), mix(0.48, 0.26, k)));
+    }
+  } else {
+    // 14 Urchin: thin needles radiating out of a half-buried rock ball.
+    vec3 c = vec3(0.0, 0.5, 0.0);
+    rock = sdEll(p - c, vec3(1.3, 1.1, 1.3)) + 0.08*(noise3(p*1.6) - 0.5);
+    for (int i = 0; i < 14; i++) {
+      float fi = float(i);
+      vec3 o = spiralDir(fi, (fi + 0.5)/14.0*0.62);
+      d = min(d, crystalDir(p, c + o*0.8, o, 1.6 + 0.9*hash1(fi + 581.0), 0.17 + 0.05*hash1(fi + 582.0)));
+    }
+  }
+  vec2 r = vec2(d*0.75, 3.0);
+  if (rock < r.x) r = vec2(rock, 1.0);
+  return r;
 }
 vec2 crystalVariant(vec3 p) {
   float bound = length(p - vec3(0.0, uCa.z*0.5, 0.0)) - (uCa.y + uCa.z + 1.5);
@@ -323,6 +453,7 @@ vec2 crystalVariant(vec3 p) {
   return r;
 }
 vec2 crystals(vec3 p) {
+  if (uCs > 0.5) return crystalSpecial(p);
   if (uCa.x > 0.5) return crystalVariant(p);
   float bound = length(p - vec3(0.0, 2.3, 0.0)) - 5.6;
   if (bound > 1.0) return vec2(bound, 3.0);
@@ -370,7 +501,7 @@ vec2 mushroom(vec3 p) {
   stem = smax(stem, -p.y, 0.05);
   // Mossy mound the mushroom grows out of, with little mushrooms around it.
   float mound = sdEll(p - vec3(0.3, -0.15, 0.2), vec3(4.4, 0.85, 4.1)) + 0.12*(noise3(p*1.1) - 0.5);
-  float babyStem = 1e5, babyCap = 1e5;
+  float babyStem = 1e5, babyCap = 1e5, babyIdx = 0.0;
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
     float a = fi*1.37 + 0.4;
@@ -378,7 +509,8 @@ vec2 mushroom(vec3 p) {
     float h = 0.6 + 0.8*hash1(fi + 302.0);
     vec3 tip = b + vec3(0.2*cos(a), h, 0.2*sin(a));
     babyStem = min(babyStem, capT(p, b, tip, 0.14, 0.1));
-    babyCap = min(babyCap, smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*(0.38 + 0.25*hash1(fi + 303.0))), -(p.y - tip.y + 0.06), 0.04));
+    float bd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*(0.38 + 0.25*hash1(fi + 303.0))), -(p.y - tip.y + 0.06), 0.04);
+    if (bd < babyCap) { babyCap = bd; babyIdx = floor(hash1(fi + 304.0)*13.99); }
   }
   stem = min(stem, babyStem);
   vec3 q = capLocal(p);
@@ -390,9 +522,9 @@ vec2 mushroom(vec3 p) {
   float cap = smax(sdEll(qs, vec3(7.0, 3.4, 7.0)), -sdEll(qs - vec3(0.0, -1.5, 0.0), vec3(6.3, 2.3, 6.3)), 0.35);
   float gills = smoothstep(0.3, -0.7, q.y)*smoothstep(1.4, 2.3, rr)*smoothstep(6.7, 5.6, rr);
   cap -= 0.15*gills*pow(abs(sin(14.0*ang)), 2.0);
-  cap = min(cap, babyCap);
   vec2 r = vec2(stem*0.8, 4.0);
   if (cap*0.75 < r.x) r = vec2(cap*0.75, 5.0);
+  if (babyCap*0.8 < r.x) r = vec2(babyCap*0.8, 15.0 + babyIdx*0.05);
   if (mound < r.x) r = vec2(mound, 12.0);
   return r;
 }
@@ -511,7 +643,7 @@ vec3 INK(float id) { float g = group(id); return g < 0.5 ? uInk0 : g < 1.5 ? uIn
 vec2 SH(float id) { float g = group(id); return g < 0.5 ? uSh0 : g < 1.5 ? uSh1 : uSh2; }
 float AM(float id) { float g = group(id); return g < 0.5 ? uAm.x : g < 1.5 ? uAm.y : uAm.z; }
 
-bool emissive(float id) { return abs(id - 3.0) < 0.5 || abs(id - 5.0) < 0.5 || abs(id - 9.0) < 0.5 || abs(id - 14.0) < 0.5; }
+bool emissive(float id) { return abs(id - 3.0) < 0.5 || abs(id - 5.0) < 0.5 || abs(id - 9.0) < 0.5 || id > 13.5; }
 // Ink width by importance: hero props thick, architecture thinner (style guide §1).
 float inkWidth(float id) {
   float w = 0.07;
@@ -561,7 +693,12 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return mix(c, vec3(0.13, 0.22, 0.11), 0.85*moss);
   }
   if (id < 3.5) {
-    float h = uCrH > 0.0 ? clamp(p.y/uCrH, 0.0, 1.0) : 0.75;
+    float h;
+    if (uCrG.x < 0.5) h = clamp(p.y/uCrG.y, 0.0, 1.0);
+    else if (uCrG.x < 1.5) h = uCrG.y;
+    else if (uCrG.x < 2.5) h = clamp((uCrG.y - p.y)/uCrG.z, 0.0, 1.0);
+    else if (uCrG.x < 3.5) h = 1.0 - clamp((length(p - vec3(0.0, uCrG.z, 0.0)) - 0.4)/uCrG.y, 0.0, 1.0);
+    else h = clamp((length(p - vec3(0.0, uCrG.z, 0.0)) - 0.6)/uCrG.y, 0.0, 1.0);
     vec3 c = mix(uCrDeep, uCrBright, h*h);
     float pulse = 0.85 + 0.15*sin(uT*0.9 + p.y*0.8);
     emit = c*(0.25 + 1.3*h)*TR(id).z*pulse;
@@ -571,13 +708,13 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   if (id < 4.5) {
     float streak = noise3(p*vec3(1.6, 0.18, 1.6));
     vec3 c = mix(vec3(0.46, 0.41, 0.31), vec3(0.68, 0.63, 0.49), streak);
-    emit = vec3(0.18, 0.75, 0.55)*0.35*smoothstep(10.5, 12.8, p.y)*TR(id).z;
+    emit = uCapGlow*0.6*0.35*smoothstep(10.5, 12.8, p.y)*TR(id).z;
     return c;
   }
   if (id < 5.5) {
     vec3 q = capLocal(p);
     float under = smoothstep(-0.05, -0.45, n.y);
-    vec3 c = mix(vec3(0.15, 0.24, 0.36), vec3(0.27, 0.41, 0.52), smoothstep(-0.3, 0.3, nz));
+    vec3 c = mix(uCapDark, uCapLight, smoothstep(-0.3, 0.3, nz));
     vec3 g = q*0.55;
     vec3 gi = floor(g);
     float best = 9.0;
@@ -589,9 +726,9 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     }
     float spot = (1.0 - smoothstep(0.2, 0.3, best))*(1.0 - under)*smoothstep(-0.2, 0.3, n.y);
     float pulse = 0.85 + 0.15*sin(uT*0.7 + q.x*0.4);
-    vec3 glow = vec3(0.30, 1.0, 0.76);
-    c = mix(c, vec3(0.55, 0.95, 0.82), spot);
-    c = mix(c, vec3(0.10, 0.30, 0.24), under);
+    vec3 glow = uCapGlow;
+    c = mix(c, mix(uCapGlow, vec3(1.0), 0.25), spot);
+    c = mix(c, uCapGlow*0.3, under);
     emit = glow*(1.3*spot + 1.5*under)*TR(id).z*pulse;
     spec = 0.25;
     return c;
@@ -639,6 +776,15 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return c*0.3;
   }
   if (id < 10.5) return vec3(0.42, 0.43, 0.47);
+  if (id > 14.5) {
+    // Small mushroom cap: a random colour from the bank, glowing softly, brightest underneath.
+    vec3 bc = bankColor(floor((id - 15.0)/0.05 + 0.5));
+    float under = smoothstep(-0.05, -0.45, n.y);
+    float pulse = 0.85 + 0.15*sin(uT*1.1 + p.x*2.0 + p.y);
+    emit = bc*(0.55 + 1.0*under)*TR(id).z*pulse;
+    spec = 0.35;
+    return bc*0.45;
+  }
   if (id > 13.5) {
     float pulse = 0.8 + 0.2*sin(uT*1.2 + p.x);
     emit = vec3(0.75, 1.0, 0.5)*1.2*TR(id).z*pulse;
@@ -742,7 +888,7 @@ void main() {
         spore += exp(-dd*dd*90.0/(1.0 + along*0.02))*(1.0 - fall)*smoothstep(0.0, 0.1, fall);
       }
     }
-    col += vec3(0.45, 1.0, 0.8)*spore*1.4*TR(5.0).z;
+    col += mix(uCapGlow, vec3(1.0), 0.2)*spore*1.4*TR(5.0).z;
   }
   col += glowAcc*uTreat.w*(uAsset > 2.5 ? uGateCore*0.9 : vec3(0.5, 0.9, 0.85));
   col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
@@ -755,6 +901,17 @@ void main() {
 
 <script>
 (function () {
+  // Mushroom colour bank (owner, 2026-10-31). Colour 1 is the approved original blue cap with mint glow.
+  const MUSH = [
+    ["Mint", [0.30, 1.0, 0.76]], ["Cyan", [0.35, 0.9, 1.0]], ["Azure", [0.35, 0.55, 1.0]], ["Violet", [0.65, 0.45, 1.0]],
+    ["Purple", [0.8, 0.35, 0.95]], ["Magenta", [1.0, 0.4, 0.8]], ["Pink", [1.0, 0.6, 0.75]], ["Coral", [1.0, 0.55, 0.4]],
+    ["Amber", [1.0, 0.75, 0.3]], ["Gold", [1.0, 0.92, 0.45]], ["Lime", [0.7, 1.0, 0.35]], ["Green", [0.4, 0.95, 0.45]],
+    ["Teal", [0.25, 0.85, 0.7]], ["Frost", [0.88, 0.95, 1.0]]
+  ].map(([name, glow], i) => ({
+    name, bright: glow, colour: true, glow,
+    dark: i === 0 ? [0.15, 0.24, 0.36] : glow.map((v, k) => v*0.16 + [0.05, 0.06, 0.09][k]),
+    light: i === 0 ? [0.27, 0.41, 0.52] : glow.map((v, k) => v*0.32 + [0.07, 0.08, 0.11][k])
+  }));
   // Crystal variants (owner, 2026-10-31: seven shapes, seven colours). Variant 1 is the hand-authored cluster.
   const CRYSTALS = [
     { name: "Cyan cluster", deep: [0.02, 0.09, 0.15], bright: [0.42, 0.93, 1.0], authored: true },
@@ -763,34 +920,45 @@ void main() {
     { name: "Rose crown", deep: [0.16, 0.02, 0.07], bright: [1.0, 0.55, 0.75], a: [9, 1.7, 3.2, 2.0], b: [0.2, 0.45, 0.5, 1], c: [0, 0.3, 0.25, 37], base: [2.3, 0.8, 2.3] },
     { name: "Emerald spray", deep: [0.0, 0.11, 0.05], bright: [0.5, 0.95, 0.62], a: [8, 1.0, 2.4, 1.2], b: [0.7, 1.15, 0.42, 0], c: [1, 2.4, 0.5, 41], base: [1.6, 2.1, 1.4] },
     { name: "Frost spires", deep: [0.06, 0.09, 0.14], bright: [0.88, 0.95, 1.0], a: [5, 0.7, 6.6, 3.4], b: [0.04, 0.3, 0.75, 0], c: [0, 0.2, 0.25, 53], base: [1.7, 0.8, 1.5] },
-    { name: "Crimson shard field", deep: [0.16, 0.0, 0.02], bright: [1.0, 0.35, 0.3], a: [9, 3.4, 1.7, 0.6], b: [0.2, 0.9, 0.3, 0], c: [0, 0.1, 0.1, 67], base: [3.6, 0.35, 3.0] }
+    // Crimson v2: tighter spread on a larger rock so every shard grows out of it (owner, 2026-10-31).
+    { name: "Crimson shard field", deep: [0.16, 0.0, 0.02], bright: [1.0, 0.35, 0.3], a: [9, 2.1, 1.7, 0.6], b: [0.2, 0.8, 0.3, 0], c: [0, 0.1, 0.1, 67], base: [3.9, 0.55, 3.4] },
+    // Designs 8-14: hand-built shapes (owner: "more unique and cool").
+    { name: "Sapphire geode", deep: [0.01, 0.03, 0.16], bright: [0.3, 0.5, 1.0], special: 1, g: [3, 2.0, 1.7], view: [[0, 1.8, 0], 17], glow: [0, 1.7, -1.2] },
+    { name: "Magenta floating heart", deep: [0.14, 0.0, 0.12], bright: [1.0, 0.4, 0.85], special: 2, g: [1, 0.8, 0], view: [[0, 2.8, 0], 17], glow: [0, 3.4, -1.6] },
+    { name: "Jade crystal tree", deep: [0.0, 0.1, 0.07], bright: [0.35, 0.95, 0.75], special: 3, g: [0, 6.0, 0], view: [[0, 3.2, 0], 19], glow: [0, 3.5, -2.0] },
+    { name: "Gold spiral", deep: [0.16, 0.11, 0.0], bright: [1.0, 0.9, 0.4], special: 4, g: [0, 5.8, 0], view: [[0, 3.0, 0], 18], glow: [0, 3.0, -2.2] },
+    { name: "Molten split boulder", deep: [0.18, 0.04, 0.0], bright: [1.0, 0.48, 0.12], special: 5, g: [0, 5.0, 0], view: [[0, 2.6, 0], 19], glow: [0, 3.0, -2.5] },
+    { name: "Pearl hanging cluster", deep: [0.14, 0.09, 0.12], bright: [1.0, 0.82, 0.9], special: 6, g: [2, 7.6, 3.8], view: [[0, 5.6, 0], 19], glow: [0, 5.0, -1.8] },
+    { name: "Aurora urchin", deep: [0.0, 0.22, 0.24], bright: [0.8, 0.5, 1.0], special: 7, g: [4, 2.4, 0.5], view: [[0, 1.6, 0], 15], glow: [0, 1.6, -2.0] }
   ];
   const ASSETS = [
     {
-      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs", version: "v4",
+      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs", version: "v5",
       target: [0, 6, 0], dist: 34, figure: [-3, 0, -5.5], glow: [1.6, 1.6, -3.6], glowCol: [0.45, 0.95, 1.0],
       notes: [
-        ["v4", "You said v3 was the worst and v1 the best because it was simple, so v3 is scrapped. v4 goes back to v1's simple rock masses and dresses them: more moss on the upward faces, broken painted cracks, three clusters of little mushrooms sprouting from cracks, crystals poking out in a few places, and four wavy vines hanging over the top with small glowing bulbs at their tips."],
+        ["v5", "Vines removed (they looked wrong on the rock). In their place, tiny glowing mushrooms sprout from cracks here and there. Kept from v4: v1's simple rock masses, more moss, broken painted cracks, three small mushroom clusters and crystals poking out in a few places."],
         ["References", "Stylised fantasy cave walls generally keep the rock simple and let the dressing carry the interest: moss, vines, glowing fungi and crystals in a few accent spots."],
-        ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss, vines, mushrooms and crystals use Inked Cavern."],
+        ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss, mushrooms and crystals use Inked Cavern."],
         ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
-        ["Status", "Concept v4, awaiting your review."]
+        ["Status", "Concept v5, awaiting your review."]
       ]
     },
     {
-      id: "crystals", name: "Crystals", kind: "Cavern kit · glow accent", size: "seven variants, 2-8 studs tall", version: "v2",
+      id: "crystals", name: "Crystals", kind: "Cavern kit · glow accent", size: "fourteen designs, 2-9 studs tall", version: "v3",
       variants: CRYSTALS,
       target: [0, 2.4, 0], dist: 15, figure: [3.6, 0, -1.5], glow: [0, 3.0, -1.6], glowCol: [0.45, 0.95, 1.0],
       notes: [
         ["Shape", "Seven hexagonal crystals with faceted pyramid tips, fanning out of a chunky rock base at different angles and heights."],
         ["Glow", "Each crystal darkens toward its root and brightens toward the tip, with a slow pulse. It lights the rock around it: a vibrant accent against calm stone."],
         ["Ink", "Prop weight. Facet edges stay crisp; the outline holds the glow together."],
-        ["Variants", "Seven shapes in seven colours (owner: \"we need a lot of variety\"): Cyan cluster (the original), Violet spire, Amber fan, Rose crown, Emerald spray out of a rock face, Frost spires, and a Crimson shard field. Pick one with the Variant buttons."],
-        ["Status", "Variant 1 approved as \"basically perfect\"; variants 2-7 awaiting your review."]
+        ["Designs 1-7", "Cyan cluster (the original), Violet spire, Amber fan, Rose crown, Emerald spray out of a rock face, Frost spires, and a Crimson shard field (v2: every shard now grows out of its rock)."],
+        ["Designs 8-14", "More unique, hand-built shapes: a Sapphire geode broken open and lined with crystals, a Magenta floating heart that hovers and bobs with shards circling it, a Jade crystal tree, a Gold spiral staircase of crystals, a Molten split boulder with crystals bursting from the crack, a Pearl hanging cluster for cavern ceilings, and an Aurora urchin whose needles fade from teal to violet."],
+        ["Status", "Designs 1-6 approved; Crimson v2 and designs 8-14 awaiting your review."]
       ]
     },
     {
       id: "mushroom", name: "Giant cave mushroom", kind: "Fungi and flora · signature", size: "about 17 studs tall, cap 14 studs across", version: "v2",
+      variants: MUSH, variantLabel: "Colour",
       target: [1, 8.5, 0.5], dist: 36, figure: [-5.5, 0, -3], glow: [1.3, 10.5, 0.9], glowCol: [0.3, 1.0, 0.75],
       notes: [
         ["Shape", "An original design: a leaning, gently curving stem with ridged bark and three root lobes gripping the floor. The cap is lopsided, its wavy lip droops further on one side and curls under."],
@@ -798,6 +966,7 @@ void main() {
         ["Ink", "Hero weight: the thickest lines in the scene."],
         ["Originality", "It captures Slugterra's giant-cavern-fungus category with its own silhouette: the lean, root lobes, lopsided curled cap and spot pattern are Slugshot's."],
         ["v2 changes", "More attached to the ground: five roots spread out and dive into the floor, it grows out of a low mossy mound, and little mushrooms sprout around its base. Glowing spores drift slowly down from the cap."],
+        ["Colour bank", "Fourteen glow colours: mint (the original), cyan, azure, violet, purple, magenta, pink, coral, amber, gold, lime, green, teal and frost. Pick one with the Colour buttons. Small mushrooms everywhere, including the ones around this mushroom's base and on the rock wall, each take a random colour from the same bank."],
         ["Variants planned", "Two more silhouettes (a tall slender one and a squat wide one), and small clusters."],
         ["Status", "Concept v2, awaiting your review."]
       ]
@@ -857,7 +1026,8 @@ void main() {
   const rgb = c => `rgb(${c.map(v => Math.round(Math.min(1, v)*255)).join(",")})`;
   function variantView(a) {
     const v = a.variants && a.variants[variant];
-    if (!v || v.authored) return { target: a.target, dist: a.dist };
+    if (!v || v.authored || v.colour) return { target: a.target, dist: a.dist };
+    if (v.special) return { target: v.view[0], dist: v.view[1] };
     const h = v.a[2] + v.c[1];
     return { target: [0, h*0.45, 0], dist: Math.max(15, v.a[1]*3 + h*2.2) };
   }
@@ -871,6 +1041,7 @@ void main() {
     varBtns.textContent = "";
     varRow.hidden = !a.variants;
     if (!a.variants) return;
+    varRow.querySelector(".label").textContent = a.variantLabel || "Variant";
     a.variants.forEach((v, i) => {
       const b = document.createElement("button");
       b.className = "ctl"; b.id = "variant-" + (i + 1); b.dataset.v = i;
@@ -949,6 +1120,8 @@ void main() {
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
   } catch (e) { console.error(e); fail("The 3D view couldn't start on this device."); return; }
   gl.useProgram(prog);
+  const bankLoc = gl.getUniformLocation(prog, "uBank");
+  if (bankLoc) gl.uniform3fv(bankLoc, new Float32Array(MUSH.flatMap(m => m.glow)));
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -956,7 +1129,7 @@ void main() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = {};
-  ["uRes", "uT", "uAsset", "uGate", "uCa", "uCb", "uCc", "uCbase", "uCrDeep", "uCrBright", "uCrH", "uGateEdge", "uGateCore", "uGateHot", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  ["uRes", "uT", "uAsset", "uGate", "uCa", "uCb", "uCc", "uCbase", "uCrDeep", "uCrBright", "uCs", "uCrG", "uCapDark", "uCapLight", "uCapGlow", "uGateEdge", "uGateCore", "uGateHot", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
 
   let drag = null, pinch = null;
   const pointers = new Map();
@@ -1007,27 +1180,36 @@ void main() {
     gl.uniform1f(U.uGate, a.gate || 0);
     gl.uniform3fv(U.uGateEdge, a.edge || [0.7, 0.17, 0.05]); gl.uniform3fv(U.uGateCore, a.core || [1, 0.62, 0.25]); gl.uniform3fv(U.uGateHot, a.hot || [1, 0.86, 0.6]);
     gl.uniform3fv(U.uRo, ro); gl.uniform3fv(U.uRight, r); gl.uniform3fv(U.uUp, u); gl.uniform3fv(U.uFwd, f);
-    const fv = a.variants && !a.variants[variant].authored ? a.variants[variant] : null;
-    gl.uniform4f(U.uFig, fv ? fv.a[1] + fv.base[0] + 2.0 : a.figure[0], a.figure[1], a.figure[2], figOn ? 1 : 0);
+    const isCrystal = a.id === "crystals";
+    const fv = isCrystal && !a.variants[variant].authored ? a.variants[variant] : null;
+    const figX = fv ? (fv.special ? 5.0 : fv.a[1] + fv.base[0] + 2.0) : a.figure[0];
+    gl.uniform4f(U.uFig, figX, a.figure[1], a.figure[2], figOn ? 1 : 0);
     gl.uniform4fv(U.uTreat, T.t); gl.uniform1f(U.uMode, treat);
     [0, 1, 2].forEach(k => {
       gl.uniform4fv(U["uTr" + k], TREAT[k].t); gl.uniform3fv(U["uInk" + k], TREAT[k].ink); gl.uniform2fv(U["uSh" + k], TREAT[k].shade);
     });
     gl.uniform3f(U.uAm, TREAT[0].amb, TREAT[1].amb, TREAT[2].amb);
-    const V = a.variants ? a.variants[variant] : null;
+    const V = isCrystal ? a.variants[variant] : null;
+    const M = a.id === "mushroom" ? MUSH[variant] : MUSH[0];
+    gl.uniform3fv(U.uCapDark, M.dark); gl.uniform3fv(U.uCapLight, M.light); gl.uniform3fv(U.uCapGlow, M.glow);
     const cy0 = CRYSTALS[0];
-    if (V && !V.authored) {
+    gl.uniform1f(U.uCs, V && V.special ? V.special : 0);
+    if (V && V.special) {
+      gl.uniform4f(U.uCa, 0, 0, 0, 0); gl.uniform4f(U.uCb, 0, 0, 0, 0); gl.uniform4f(U.uCc, 0, 0, 0, 0); gl.uniform3f(U.uCbase, 1, 1, 1);
+      gl.uniform4f(U.uCrG, V.g[0], V.g[1], V.g[2], 0);
+      gl.uniform3fv(U.uGlowPos, V.glow);
+    } else if (V && !V.authored) {
       gl.uniform4fv(U.uCa, V.a); gl.uniform4fv(U.uCb, V.b); gl.uniform4fv(U.uCc, V.c); gl.uniform3fv(U.uCbase, V.base);
-      gl.uniform1f(U.uCrH, V.a[2] + V.c[1] + V.c[2]);
+      gl.uniform4f(U.uCrG, 0, V.a[2] + V.c[1] + V.c[2], 0, 0);
       gl.uniform3fv(U.uGlowPos, [0, V.a[2]*0.6 + V.c[1]*0.5, -2.2]);
     } else {
       gl.uniform4f(U.uCa, 0, 0, 0, 0); gl.uniform4f(U.uCb, 0, 0, 0, 0); gl.uniform4f(U.uCc, 0, 0, 0, 0); gl.uniform3f(U.uCbase, 1, 1, 1);
-      gl.uniform1f(U.uCrH, a.id === "crystals" ? 4.7 : 0);
+      if (a.id === "crystals") gl.uniform4f(U.uCrG, 0, 4.7, 0, 0); else gl.uniform4f(U.uCrG, 1, 0.75, 0, 0);
       gl.uniform3fv(U.uGlowPos, a.glow);
     }
     const CV = V || cy0;
     gl.uniform3fv(U.uCrDeep, CV.deep); gl.uniform3fv(U.uCrBright, CV.bright);
-    gl.uniform3fv(U.uGlowCol, V ? V.bright : a.glowCol);
+    gl.uniform3fv(U.uGlowCol, V ? V.bright : a.id === "mushroom" ? M.glow : a.glowCol);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     requestAnimationFrame(frame);
   }

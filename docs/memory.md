@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Concept round 5
+
+- **Owner feedback:** crystals liked except the crimson shard field (shards detached from the rock); wants seven more, more unique designs (14 total). Rock wall vines "ruin it": remove them and add a few tiny glowing mushrooms in cracks. Mushrooms need a colour bank (purple, green, lime, violet, etc.) viewable for the giant mushroom; small mushrooms take a random colour from a bank of 14.
+- **Implemented (library v7):** crimson v2 (tighter spread on a larger rock); designs 8-14: Sapphire geode, Magenta floating heart, Jade crystal tree, Gold spiral, Molten split boulder, Pearl hanging cluster, Aurora urchin; rock wall v5 without vines, plus tiny glowing mushrooms; a 14-colour mushroom bank (mint, cyan, azure, violet, purple, magenta, pink, coral, amber, gold, lime, green, teal, frost) with a Colour selector for the giant mushroom and random bank colours for every small mushroom.
+- **Unresolved:** owner review; not visually checked by the agent.
+
 ## 2026-10-31 — Concept round 4
 
 - **Owner feedback:** raised gate symbols hard to read under bold ink; gates 1.5x bigger; mushroom only needs to look more attached to the ground plus spores; crystals "basically perfect" but need seven variants in seven colours ("we need a lot of variety"); rock wall v3 "the worst", v1 best for simplicity: rebuild simply with moss, cracks, sprouting mushrooms, poking crystals and vines, after Slugterra/fantasy walls.

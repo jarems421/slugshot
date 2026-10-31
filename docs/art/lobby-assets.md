@@ -67,15 +67,15 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | Boulders and rock clusters (S/M/L) | P2 | Break up edges and frame paths. |
 | Stalactites and stalagmites | P2 | Sell the scale and the "ancient cavern". Exaggerated tapers. |
 | Ceiling and backdrop rock | P2 | Distant cavern shell, lightest ink, low detail. |
-| Crystal clusters: seven variants in seven colours (owner, 2026-10-31) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
+| Crystals: fourteen designs in fourteen colours (owner, 2026-10-31) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
 | Water feature: pool, drip or small waterfall | P3 | Calm movement and sound. Considering. |
 
 ### Fungi and flora (Slugterra-category, original designs)
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
-| Giant cave mushrooms (2–3 distinct silhouettes) | P1→P2 | Signature environment prop. Glowing caps, characterful stems. Some tall enough to canopy paths or act as platforms. |
-| Mushroom clusters (small) | P2 | Ground dressing around rocks and paths, glow in clumps. |
+| Giant cave mushrooms (2–3 distinct silhouettes; any colour from the 14-colour mushroom bank) | P1→P2 | Signature environment prop. Glowing caps, characterful stems. Some tall enough to canopy paths or act as platforms. |
+| Mushroom clusters (small; each mushroom a random colour from the 14-colour bank) | P2 | Ground dressing around rocks and paths, glow in clumps. |
 | Shelf fungi on walls | P3 | Bracket fungi on rock faces, small glow spots. |
 | Glowing moss and lichen patches | P2 | Soft colour on rock; may be texture/decal rather than mesh. |
 | Hanging vines and glow-bulb plants | P3 | Vertical life from the ceiling; gentle sway. |
