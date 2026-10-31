@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified offline, 2026-10-31:** original quick gun draw (0.42 s) and holster (0.34 s), with controlled wrist rolls and additive native-grip poses, replace the previous full-spin effect for the marked blaster. G carry styles remain. Foundation/movement/type/lint and Rocklock v1/v2 checks pass. **Unresolved:** actual Studio playback/hand fit and switching/respawn; a new Floppy test window was blocked by the maximum-open-windows limit. [Implementation, research and checks](blaster-motion.md).
+
 **Implemented/verified offline, 2026-10-31:** angular downward-bevel private blaster mesh and compact burnt-orange/graphite/steel finish with white glowing spiral now match the Floppy test pass; native fallback palette/proportions updated. Rocklock v2 verifier passes. Owner visual/hand-fit approval remains open; map, movement and destruction were preserved.
 
 **Implemented/verified offline, 2026-10-31:** owner requested the blaster 12% smaller and its long handle shorter. Blaster runtime scale is now 0.88 of the previous size; private game-mesh grip is 18% shorter, matching the Floppy test tool; native fallback grip shortened too. Rocklock v2 offline verifier passes. Map and movement remain on their existing branch versions. **Unresolved:** final hand-fit/appearance approval.

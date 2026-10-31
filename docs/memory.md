@@ -388,3 +388,9 @@
 - **Confirmed:** owner requested a less toy-like finish, more compact grip/barrel and a white glowing spiral, then specified downward angular tips retaining the open firing channel.
 - **Implemented:** private mesh mapping updated to the final solid-capped downward-bevel version with burnt orange, graphite/steel and white Neon vanes. Native stand-in uses the updated palette, shorter grip/nose and white charger. Existing 0.88 overall scale remains. No map or movement change. Refitter/evidence are on `feature/slug-asset-pipeline` (`docs/slugs/blaster-refinement.md`).
 - **Verified offline:** Rocklock v2 verifier with `--skip-movement` passes. **Unresolved:** owner art/hand-fit judgment and inherited rear contact QA; final lighting changes are scoped to the Floppy test place.
+
+## 2026-10-31 — Original gun draw and holster
+
+- **Confirmed:** owner requests brief wrist twists/twirls for equip/unequip, with no throws or body spins.
+- **Implemented/verified offline:** shared original 0.42/0.34 s Floppy/Rocklock gestures, palm-pivot additive driver and material-preserving holster clone; removed the competing old full spin. Movement/foundation and Rocklock v1/v2 checks pass. See [motion notes](blaster-motion.md).
+- **Unresolved:** actual Studio hand fit, rapid switching/death and peer playback. Maximum Studio windows blocked the new test window; existing sessions preserved.

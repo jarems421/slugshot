@@ -1,102 +1,19 @@
 --!strict
--- Rocklock blaster effects on every client. G cycles the hold-style candidates (owner
--- picks; the movement presentation reads the HoldVariant attribute). Taking the blaster
--- out fades it in while the presentation spins it about the trigger finger; putting it
--- away spins a local copy back out of the hand and fades it, so it never just vanishes.
+-- Shared original draw/holster driver; existing G hold-style selection remains.
 local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Config = require(ReplicatedStorage:WaitForChild("MovementExperiment"):WaitForChild("Config"))
 local Hold = Config.Animation.Hold
 local player = Players.LocalPlayer
-
-local FADE_IN = TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local HOLSTER_TIME = 0.24
--- R6 hand frame at the end of the arm, as the tool's RightGrip weld uses it.
-local HAND = CFrame.new(0, -1, 0) * CFrame.Angles(-math.pi / 2, 0, 0)
+-- The player's client script is cloned at runtime, outside a static service map.
+local movement = player:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
+local animator = (require :: any)(movement:WaitForChild("BlasterAnimator"))
+animator.start()
 
 local function isBlaster(item: Instance): boolean
-	return item:IsA("Tool") and item:GetAttribute("HoldStyle") == "Pistol"
-end
-
-local function visibleParts(tool: Instance): { BasePart }
-	local list = {}
-	for _, item in tool:GetDescendants() do
-		if item:IsA("BasePart") and item.Name ~= "Handle" then
-			table.insert(list, item)
-		end
-	end
-	return list
-end
-
-local function fadeIn(tool: Tool)
-	for _, part in visibleParts(tool) do
-		part.LocalTransparencyModifier = 1
-		TweenService:Create(part, FADE_IN, { LocalTransparencyModifier = 0 }):Play()
-	end
-end
-
--- A local copy follows the hand, turns half a spin back and fades out.
-local function holster(character: Model, tool: Tool)
-	local arm = character:FindFirstChild("Right Arm")
-	if not (arm and arm:IsA("BasePart")) then
-		return
-	end
-	local hand = arm.CFrame * HAND
-	local copies: { { part: BasePart, offset: CFrame } } = {}
-	local folder = Instance.new("Folder")
-	folder.Name = "BlasterHolster"
-	for _, part in visibleParts(tool) do
-		local copy = part:Clone()
-		copy:ClearAllChildren()
-		copy.Anchored = true
-		copy.CanCollide, copy.CanQuery, copy.CanTouch = false, false, false
-		copy.LocalTransparencyModifier = 0
-		copy.Parent = folder
-		table.insert(copies, { part = copy, offset = hand:Inverse() * part.CFrame })
-	end
-	folder.Parent = workspace
-	local start = os.clock()
-	local connection: RBXScriptConnection
-	connection = RunService.RenderStepped:Connect(function()
-		local t = math.clamp((os.clock() - start) / HOLSTER_TIME, 0, 1)
-		if t >= 1 or not arm.Parent then
-			connection:Disconnect()
-			folder:Destroy()
-			return
-		end
-		local frame = arm.CFrame * HAND * CFrame.Angles(math.pi * t * t, 0, 0)
-		for _, copy in copies do
-			copy.part.CFrame = frame * copy.offset
-			copy.part.Transparency = t
-		end
-	end)
-end
-
-local function watchCharacter(character: Model)
-	character.ChildAdded:Connect(function(item)
-		if isBlaster(item) then
-			fadeIn(item :: Tool)
-		end
-	end)
-	character.ChildRemoved:Connect(function(item)
-		if isBlaster(item) then
-			holster(character, item :: Tool)
-		end
-	end)
-end
-
-local function watchPlayer(other: Player)
-	other.CharacterAdded:Connect(watchCharacter)
-	if other.Character then
-		watchCharacter(other.Character)
-	end
-end
-Players.PlayerAdded:Connect(watchPlayer)
-for _, other in Players:GetPlayers() do
-	watchPlayer(other)
+	return item:IsA("Tool") and item:GetAttribute("BlasterMotionDriver") == true
 end
 
 -- Hold-style candidates for the owner to choose between (local only).

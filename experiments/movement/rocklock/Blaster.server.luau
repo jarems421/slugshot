@@ -34,6 +34,7 @@ tool.Name = "Blaster"
 tool.ToolTip = "Blaster"
 tool.CanBeDropped = false
 tool:SetAttribute("HoldStyle", "Pistol")
+tool:SetAttribute("BlasterMotionDriver", true)
 -- The R6 hand frame's -Z runs out along the arm. The barrel tilts GripTilt above the
 -- arm's line, and the grip's middle sits GripInset inside the hand block, so the fist
 -- wraps the handle while the guard and front stay out ahead. Each hold style turns the

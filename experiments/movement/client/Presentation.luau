@@ -1083,7 +1083,10 @@ function Presentation.start(clips: Clips.Library)
 		)
 		-- Draw: the blaster spins about the trigger finger (ease-out, ending a whole turn
 		-- round so it settles without a jump) while the arm flourishes up.
-		local draw = math.clamp((now - rig.drawStart) / Hold.DrawTime, 0, 1)
+		local externalDraw = tool ~= nil and tool:GetAttribute("BlasterMotionDriver") == true
+		local draw = if externalDraw
+			then 1
+			else math.clamp((now - rig.drawStart) / Hold.DrawTime, 0, 1)
 		local spin = if holding then -2 * math.pi * Hold.DrawSpins * (1 - (1 - draw) ^ 3) else 0
 		local lift = if holding then Hold.DrawLift * math.sin(math.pi * draw) else 0
 		rig.wrist = current.wrist * math.min(rig.holdWeight, 1) + spin
