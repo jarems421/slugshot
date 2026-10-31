@@ -103,15 +103,16 @@ for mesh, part in parts do
 	part.Material = (Enum.Material :: any)[mesh.material]
 	part.Reflectance = mesh.reflectance
 	if mesh.name == CANISTER then
-		-- A clear, lightly tinted shell, lit from inside, so the slug shows.
-		part.Material = Enum.Material.Glass
-		part.Color = Color3.fromRGB(200, 240, 235)
-		part.Transparency = 0.78
+		-- A glowing chamber: faint see-through neon, plus a light inside, so the
+		-- shell reads as lit rather than as dark clear glass.
+		part.Material = Enum.Material.Neon
+		part.Color = Color3.fromRGB(190, 255, 225)
+		part.Transparency = 0.86
 		local glow = Instance.new("PointLight")
 		glow.Name = "ChamberLight"
-		glow.Color = Color3.fromRGB(240, 255, 235)
-		glow.Brightness = 2.5
-		glow.Range = 1.2
+		glow.Color = Color3.fromRGB(225, 255, 235)
+		glow.Brightness = 5
+		glow.Range = 2
 		glow.Shadows = false
 		glow.Parent = part
 	end
@@ -159,6 +160,14 @@ for _, d in floppy:GetDescendants() do
 	end
 end
 floppy.Parent = tool
+-- A soft fill so he stays bright inside the glowing shell.
+local fill = Instance.new("Highlight")
+fill.Name = "ChamberFill"
+fill.FillColor = Color3.fromRGB(255, 255, 230)
+fill.FillTransparency = 0.72
+fill.OutlineTransparency = 1
+fill.DepthMode = Enum.HighlightDepthMode.Occluded
+fill.Parent = floppy
 print(
 	string.format(
 		"Floppy blaster: canister %.2f x %.2f x %.2f studs; Floppy loaded at %.0f%% of ground size,"
