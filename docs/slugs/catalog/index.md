@@ -4,7 +4,7 @@ This is the shared home for every slug's design brief, source research, visual r
 
 | Design | Status | Design and sources |
 | --- | --- | --- |
-| Flopper-inspired first slug | Original Blender review draft; owner feedback and Studio import pending | [Design and reference notes](flopper-inspired.md) |
+| First sick/dizzy slug | Revised Blender draft following owner feedback; further review and Studio import pending | [Design and reference notes](flopper-inspired.md) |
 
 Copy the [new slug record template](template.md) for each future creature. Record:
 

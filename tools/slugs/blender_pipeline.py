@@ -394,6 +394,8 @@ def render(species, output, frames):
     if species["transformation"]["enabled"]:
         durations["transformation"] = species["transformation"]["duration"]
     render_setup()
+    if any(o.type == "MESH" and o.data.color_attributes for o in bpy.context.scene.objects):
+        bpy.context.scene.display.shading.color_type = "VERTEX"
     span = max(proto["size"]) * 1.35
     h = proto["size"][2] * 0.5
     views = {"front": (0, 10, h), "side": (10, 0, h), "three-quarter": (7, 10, h + 3)}

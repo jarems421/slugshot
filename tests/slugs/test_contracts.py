@@ -107,6 +107,10 @@ class SpeciesContracts(unittest.TestCase):
         self.data["transformation"]["revealFraction"] = 0.5
         self.rejected("ordering")
 
+    def test_organic_spots_require_authored_colours(self):
+        self.data["pattern"] = "organic-spots"
+        self.rejected("require authored vertex colours")
+
     def test_first_slug_is_authored_and_has_no_transformed_form(self):
         design = load_species(SOURCE / "species/flopper-inspired.json")
         self.assertFalse(design["placeholder"])

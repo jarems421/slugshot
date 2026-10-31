@@ -17,19 +17,6 @@ from common import ROOT
 from blender_pipeline import FPS, armature_for, feature_position, material, reset, rig_spec, skin, validate_scene
 
 
-def sphere(name, center, size, mat, rig, bone):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, location=center)
-    obj = bpy.context.object
-    obj.name = name
-    obj.scale = [x / 2 for x in size]
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    obj.data.materials.append(mat)
-    for face in obj.data.polygons:
-        face.use_smooth = True
-    skin(obj, rig, bone)
-    return obj
-
-
 def tube(name, points, radii, mat, rig, bone, rings=12):
     # Catmull-Rom samples give the flexible appendages smooth bends without
     # keeping an unsupported modifier in the export-ready asset.
@@ -74,21 +61,20 @@ def tube(name, points, radii, mat, rig, bone, rings=12):
 
 
 PROFILE = [
-    (0.03,0.06,0.06,-0.02), (0.06,0.57,0.38,-0.02),
-    (0.14,0.78,0.49,-0.03), (0.27,0.78,0.52,-0.04),
-    (0.45,0.67,0.47,-0.04), (0.65,0.56,0.42,-0.03),
-    (0.85,0.49,0.40,-0.01), (1.04,0.48,0.40,0.00),
-    (1.20,0.55,0.44,0.00), (1.34,0.67,0.49,-0.01),
-    (1.49,0.81,0.57,-0.02), (1.65,0.92,0.61,-0.03),
-    (1.83,0.97,0.63,-0.03), (2.01,0.93,0.60,-0.03),
-    (2.17,0.78,0.52,-0.04), (2.29,0.54,0.37,-0.04),
-    (2.36,0.20,0.16,-0.04), (2.37,0.005,0.005,-0.04),
+    (0.04,0.02,0.02,-0.03), (0.07,0.38,0.30,-0.03),
+    (0.16,0.60,0.47,-0.04), (0.30,0.73,0.55,-0.04),
+    (0.49,0.78,0.59,-0.04), (0.70,0.79,0.60,-0.04),
+    (0.91,0.78,0.60,-0.04), (1.12,0.76,0.59,-0.04),
+    (1.32,0.74,0.58,-0.04), (1.50,0.72,0.57,-0.04),
+    (1.68,0.69,0.55,-0.04), (1.84,0.65,0.52,-0.04),
+    (1.98,0.59,0.48,-0.04), (2.11,0.49,0.41,-0.04),
+    (2.20,0.36,0.30,-0.04), (2.26,0.20,0.17,-0.04),
+    (2.28,0.06,0.05,-0.04), (2.29,0.005,0.005,-0.04),
 ]
 
 
 def body(rig, mat):
-    # A hand-shaped profile, made from rings: broad head, pinched waist,
-    # and flared foot. It is original geometry, not a converted reference mesh.
+    # A plump, continuous body with a tapered head and no separate feet.
     profile = PROFILE
     n = 48
     verts, faces = [], []
@@ -135,46 +121,123 @@ def body(rig, mat):
                 groups[name].add([vert.index], value, "REPLACE")
     obj.parent = rig
     obj.modifiers.new("Skin", "ARMATURE").object = rig
+    return obj
 
 
-def belly_mark(rig, mat):
-    # A thin closed shell following the body's curved surface, rather than a
-    # floating intersecting ellipsoid. Uses the same original body profile.
-    rows, columns = 16, 16
+def sick_color(obj, mat, base, green):
+    """Blend uneven, soft-edged green clusters directly into vertex colours."""
+    spots = [
+        (0.12,.40,.19,.14),(.48,1.05,.23,.18),(.88,.22,.15,.11),
+        (1.17,.67,.23,.17),(1.60,.34,.15,.11),(1.84,1.19,.17,.13),
+        (2.22,.53,.20,.14),(2.55,1.42,.16,.13),(2.91,.20,.17,.12),
+        (3.28,.83,.23,.16),(3.65,1.68,.18,.14),(4.02,.35,.22,.15),
+        (4.38,1.13,.18,.13),(4.76,.64,.23,.17),(5.12,1.54,.17,.13),
+        (5.48,.22,.17,.13),(5.81,.93,.22,.16),(6.12,1.48,.16,.12),
+        (2.01,.78,.11,.08),(4.57,1.76,.11,.08),(.31,1.75,.12,.09),
+    ]
+    attrs = obj.data.color_attributes
+    colors = attrs.new(name="Color", type="FLOAT_COLOR", domain="POINT")
+    for vert in obj.data.vertices:
+        x,y,z = vert.co
+        angle = math.atan2(y+0.04,x) % math.tau
+        intensity = 0.0
+        for a, h, width, height in spots:
+            delta = (angle-a+math.pi) % math.tau-math.pi
+            # Uneven merged lobes produce diffuse organic clusters, not flat dots.
+            wobble = 1 + .18*math.sin(3*angle+11*z+a) + .11*math.sin(19*z-a)
+            d2 = ((delta*.68)/(width*wobble))**2 + ((z-h)/(height*wobble))**2
+            intensity += 1.60 * math.exp(-0.85*d2)
+        # A soft exponential response avoids flat, square-edged saturated cores.
+        intensity = 1 - math.exp(-intensity)
+        colors.data[vert.index].color = tuple((1-intensity)*base[i] + intensity*green[i] for i in range(3)) + (1,)
+    attrs.active_color = colors
+    nodes = mat.node_tree.nodes
+    vertex_color = nodes.new("ShaderNodeVertexColor")
+    vertex_color.layer_name = "Color"
+    mat.node_tree.links.new(vertex_color.outputs["Color"], nodes["Principled BSDF"].inputs["Base Color"])
+
+
+def uniform_color(obj, rgba):
+    if obj.data.color_attributes.get("Color"):
+        return
+    attr = obj.data.color_attributes.new(name="Color", type="FLOAT_COLOR", domain="POINT")
+    for item in attr.data:
+        item.color = rgba
+    obj.data.color_attributes.active_color = attr
+
+
+def on_body(obj, x, z, depth):
+    hit, point, _normal, _face = obj.ray_cast(Vector((x,4,z)), Vector((0,-1,0)))
+    if not hit:
+        raise ValueError(f"Face decoration outside the body: x={x:.3f} z={z:.3f}")
+    return (x, point.y+depth, z)
+
+
+def eye_surface(name, body_obj, center, size, mat, rig, bone):
+    """Thin, skinned sclera follows the body's surface; no protruding eyeball."""
+    cx, _cy, cz = center
+    segments, rings = 40, 6
     verts, faces = [], []
-    for depth in (0.012, -0.012):
-        for row in range(rows + 1):
-            t = -0.995 + 1.99 * row / rows
-            z = 0.57 + 0.40*t
-            a, b = next((a,b) for a,b in zip(PROFILE, PROFILE[1:]) if a[0] <= z <= b[0])
-            u = (z-a[0])/(b[0]-a[0])
-            rx, ry, cy = [(1-u)*a[i] + u*b[i] for i in (1,2,3)]
-            width = 0.45 * math.sqrt(max(0,1-t*t))
-            for col in range(columns + 1):
-                x = width * (2*col/columns-1)
-                y = cy + ry * math.sqrt(max(0,1-(x/rx)**2)) + depth
-                verts.append((x,y,z))
-    layer = (rows+1)*(columns+1)
-    for offset in (0, layer):
-        for row in range(rows):
-            for col in range(columns):
-                a=offset+row*(columns+1)+col
-                quad=(a,a+1,a+columns+2,a+columns+1)
-                faces.append(tuple(reversed(quad)) if offset == 0 else quad)
-    edges = (list(range(columns+1)) + [r*(columns+1)+columns for r in range(1,rows+1)]
-             + [rows*(columns+1)+c for c in range(columns-1,-1,-1)]
-             + [r*(columns+1) for r in range(rows-1,0,-1)])
-    for a,b in zip(edges, edges[1:]+edges[:1]):
+    for depth in (0.012, 0.008):
+        for ring in range(rings+1):
+            radius = max(.0001, ring/rings)
+            for i in range(segments):
+                angle = math.tau*i/segments
+                verts.append(on_body(body_obj, cx+size[0]*.5*radius*math.cos(angle),
+                                     cz+size[2]*.5*radius*math.sin(angle), depth))
+    layer = (rings+1)*segments
+    for side in (0, 1):
+        for ring in range(rings):
+            for i in range(segments):
+                j = (i+1)%segments
+                a = side*layer+ring*segments+i
+                b = side*layer+ring*segments+j
+                quad = (a,b,b+segments,a+segments)
+                faces.append(tuple(reversed(quad)) if side == 0 else quad)
+    for i in range(segments):
+        a = rings*segments+i
+        b = rings*segments+(i+1)%segments
         faces.append((a,b,b+layer,a+layer))
-    mesh = bpy.data.meshes.new("BellyMark")
+        faces.append((i+layer,(i+1)%segments+layer,(i+1)%segments,i))
+    mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(verts, [], faces)
     mesh.update()
-    obj = bpy.data.objects.new("BellyMark", mesh)
+    obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
     obj.data.materials.append(mat)
-    for face in mesh.polygons:
-        face.use_smooth = True
-    skin(obj, rig, "body_lower")
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    skin(obj, rig, bone)
+    return obj
+
+
+def surface_line(name, body_obj, points, thickness, mat, rig, bone, depth=0.019):
+    """A narrow coloured strip follows the actual head surface."""
+    verts, faces = [], []
+    for offset in (depth, depth-.003):
+        for i,(x,z) in enumerate(points):
+            prev = points[max(0,i-1)]
+            nxt = points[min(len(points)-1,i+1)]
+            dx,dz = nxt[0]-prev[0], nxt[1]-prev[1]
+            length = max(0.00001, math.hypot(dx,dz))
+            nx,nz = -dz/length,dx/length
+            for sign in (-1,1):
+                verts.append(on_body(body_obj,x+sign*nx*thickness,z+sign*nz*thickness,offset))
+    layer = 2*len(points)
+    for i in range(1,len(points)):
+        a,b = 2*i-2,2*i
+        faces.extend(((a,a+1,b+1,b),(a+layer,b+layer,b+layer+1,a+layer+1),
+                      (a,b,b+layer,a+layer),(a+1,a+layer+1,b+layer+1,b+1)))
+    last = layer-2
+    faces.extend(((0,layer,layer+1,1),(last,last+1,last+1+layer,last+layer)))
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(mat)
+    skin(obj, rig, bone)
+    return obj
 
 
 def animate(rig, form):
@@ -234,32 +297,30 @@ def main():
     rig = armature_for(form)
     rig["placeholder"] = False
     mats = {name: material(name, rgb) for name, rgb in data["palette"].items()}
-    body(rig, mats["body"])
-    # Low, broad base with small side lobes rather than separate human-like feet.
-    for side, sign in (("left", -1), ("right", 1)):
-        sphere("base-lobe-"+side, (sign*0.66, -0.02, 0.19), (0.48,0.72,0.26), mats["body"], rig, "body_lower")
-        tube("side-fin-"+side,
-             [(sign*.53,0,1.22),(sign*.70,.03,1.12),(sign*.76,.04,.94),(sign*.73,.06,.86)],
-             [.12,.10,.07,.015], mats["body"], rig, "body_upper")
-        # Offset short, leaf-tipped feelers give the draft its own silhouette.
-        x = sign*.53
-        bend = 0.04 if side == "left" else -0.05
-        pts = [(x,0.07,2.15),(x+sign*.03,0.06,2.36),(x+sign*.10,0.04,2.58+bend),
-               (x+sign*.20,0.04,2.65+bend),(x+sign*.27,0.05,2.59+bend)]
-        tube("feeler-"+side, pts, [.085,.07,.055,.04,.008], mats["feature"], rig, "feelers_"+side)
-    belly_mark(rig, mats["feature"])
+    body_obj = body(rig, mats["body"])
+    sick_color(body_obj, mats["body"], data["palette"]["body"], data["palette"]["feature"])
+    # A very small rounded tail bud, largely embedded in the back of the body.
+    tube("tiny-tail", [(0,-.50,.33),(0,-.62,.30),(.02,-.71,.28),(.04,-.75,.27)],
+         [.12,.10,.06,.008], mats["body"], rig, "tail")
     specs = rig_spec(form["rig"])
     for side, sign, feature in (("left",-1,form["features"][0]),("right",1,form["features"][1])):
         cx, cy, cz = feature_position(feature, form, specs)
-        sphere("eye-patch-"+side, (cx,0.52,cz), (0.77,0.10,0.76), mats["feature"], rig, "head")
-        sphere(feature["id"], (cx,cy,cz), feature["scale"], mats["white"], rig, "eye_"+side)
-        sphere("iris-"+side, (cx-sign*.025,0.716,cz+0.02), (0.30,0.055,0.35), mats["iris"], rig, "eye_"+side)
-        sphere("pupil-"+side, (cx-sign*.025,0.746,cz+0.04), (0.22,0.035,0.26), mats["eye"], rig, "eye_"+side)
-        sphere("glint-"+side, (cx-sign*.06,0.766,cz+0.105), (0.065,0.018,0.07), mats["white"], rig, "eye_"+side)
-        sphere("cheek-"+side, (sign*.75,0.51,1.48), (0.16,0.07,0.10), mats["cheek"], rig, "head")
-    # A small asymmetric curved smile gives this version a warmer expression.
-    points = [(x,0.624,1.47 + 0.10*(x/.33)**2 + 0.015*x) for x in (-.33,-.22,-.11,0,.11,.22,.33)]
-    tube("smile", points, [.008,.025,.03,.03,.03,.025,.008], mats["mouth"], rig, "jaw", rings=8)
+        eye = eye_surface(feature["id"], body_obj, (cx,cy,cz), feature["scale"], mats["white"], rig, "eye_"+side)
+        actual = [(min(v.co[i] for v in eye.data.vertices)+max(v.co[i] for v in eye.data.vertices))/2 for i in range(3)]
+        print("eye attachment", side, "actual", actual, "expected", [cx,cy,cz], "y offset", actual[1]-cy)
+        spiral = []
+        for step in range(121):
+            t = step/120
+            angle = sign*math.tau*2.35*t + .35
+            radius = .012 + .165*t
+            spiral.append((cx+radius*math.cos(angle),cz+radius*math.sin(angle)))
+        surface_line("spiral-"+side, body_obj, spiral, .013, mats["iris"], rig, "eye_"+side)
+    # A small downturned mouth supports the queasy expression.
+    mouth = [(x,1.35-.055*(x/.19)**2) for x in [-.19+.38*i/30 for i in range(31)]]
+    surface_line("mouth", body_obj, mouth, .012, mats["mouth"], rig, "jaw", depth=.014)
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH":
+            uniform_color(obj, obj.data.materials[0].diffuse_color)
     animate(rig, form)
     validate_scene(data, form)
     destination = ROOT / form["source"]

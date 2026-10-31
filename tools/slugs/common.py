@@ -82,7 +82,7 @@ def _validate_species(data):
     require(identifier(data.get("id")), "Invalid species id")
     require(isinstance(data.get("placeholder"), bool), "placeholder must be boolean")
     require(bool(data.get("provenance")), "Missing provenance/permission statement")
-    require(data.get("pattern") in {"solid", "bands"}, "Unknown pattern (supported: solid, bands)")
+    require(data.get("pattern") in {"solid", "bands", "organic-spots"}, "Unknown pattern (supported: solid, bands, organic-spots)")
     palette = data["palette"]
     require(all(k in palette for k in ("body", "feature", "eye")), "Missing required palette material")
     require(all(identifier(k) and vector(v, 0, 1) for k, v in palette.items()), "Invalid palette colors")
@@ -99,6 +99,7 @@ def _validate_species(data):
     for key, limit in (("trianglesPerMesh", 20000), ("totalTriangles", 100000), ("maxBones", 128), ("maxInfluences", 4)):
         require(type(budgets[key]) is int and 1 <= budgets[key] <= limit, f"Invalid budget: {key}")
     for form_name, form in forms.items():
+        require(data["pattern"] != "organic-spots" or form["generator"] == "authored", "Organic spots require authored vertex colours")
         rig = rig_spec(form["rig"])
         require(len(rig["bones"]) <= budgets["maxBones"], f"Bone budget exceeded: {form_name}")
         require(vector(form["size"], 0.1, 50), f"Invalid model scale: {form_name}")

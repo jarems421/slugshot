@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Sick/dizzy slug redesign
+
+- **Confirmed:** owner rejected the blocky/hard first design, oversized head, protruding eyes, green belly and feet; requests a squishy white body with hypnotic spiral eyes on the head, vivid diffused green bacteria-like spots all around and a very small tail.
+- **Implemented/verified:** an original seven-mesh Blender draft replaces the prior art; no feet, small tail, surface-fitted spiral eyes, full-circumference blended vertex colours, retained rig and idle/blink/hop/launch/impact. Full offline Blender/FBX and Luau checks pass, including body quadrant colours, tail length, eye offset and FBX vertex-colour preservation. See [design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner review; Roblox rendering of vertex colours, animated bone scaling and skin deformation; no Studio runtime/import claim. No gameplay or asset publication.
+
 ## 2026-10-31 — First slug and permanent design catalogue
 
 - **Confirmed:** owner supplied two Flopper images and a description, requesting a distinct original soft, expressive, non-transforming slug and reusable notes for every future species. Slippery patch, smoke and tripwire are gameplay ideas rather than approved implemented rules.

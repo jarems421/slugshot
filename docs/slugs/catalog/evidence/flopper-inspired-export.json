@@ -3,11 +3,11 @@
   "placeholder": false,
   "tool": "4.5.14 LTS",
   "inputs": {
-    "assets/source/slugs/species/flopper-inspired.json": "ab06e336da8b3c976690ebb8c91af8bb559f3b29a273f07e6a387b740d9bd775",
-    "tools/slugs/blender_pipeline.py": "8b62337630e847c1a667512af1025b12aa41cd1c7758a442d7e448f9044290ca",
-    "tools/slugs/common.py": "6429bd50e07b96749594585d691580d1c2a24e19e7d1fd301b936c82e42dfde5",
-    "assets/source/slugs/rigs/flopper-inspired-v1.json": "c49a266b6d648c338c8f9358c18dcd3f6e2d653d0bc375ba5244b5f30a9302de",
-    "assets/source/slugs/models/flopper-inspired/protoform.blend": "6b6ed8a7d6700bf6434b6d2d5cc299ee3fa1c78fb9e34abd689e3aca9bdc74a9"
+    "assets/source/slugs/species/flopper-inspired.json": "f77db510f50b03e8ba3a57c9da608fcc556a6ef7ab5045f0b4560510c97cb533",
+    "tools/slugs/blender_pipeline.py": "d0465dd638ed7db7f3ad43223bc5d40d6afc482a290d63a7a18cacb8c9778319",
+    "tools/slugs/common.py": "5bf6b6cf66322831ce5f7e8d0e69cd285c2ace44df3fff4206804e258bfc6c54",
+    "assets/source/slugs/rigs/flopper-inspired-v1.json": "2119716e676086fbce64747bf5d11c31dc321f795e2fecd63632597df53d16e8",
+    "assets/source/slugs/models/flopper-inspired/protoform.blend": "7d4e8a454600ad10ad2973b1749293b01c0f2fc1b8aeb1a644a4827f9cc190a2"
   },
   "units": "1 Blender unit = 1 intended Roblox stud; Studio roundtrip pending",
   "axes": {
@@ -37,29 +37,15 @@
   "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
   "forms": {
     "protoform": {
-      "triangles": 23132,
+      "triangles": 11440,
       "meshes": {
         "SoftBody": 6720,
-        "base-lobe-left": 960,
-        "side-fin-left": 308,
-        "feeler-left": 404,
-        "base-lobe-right": 960,
-        "side-fin-right": 308,
-        "feeler-right": 404,
-        "BellyMark": 1152,
-        "eye-patch-left": 960,
-        "eye-left": 960,
-        "iris-left": 960,
-        "pupil-left": 960,
-        "glint-left": 960,
-        "cheek-left": 960,
-        "eye-patch-right": 960,
-        "eye-right": 960,
-        "iris-right": 960,
-        "pupil-right": 960,
-        "glint-right": 960,
-        "cheek-right": 960,
-        "smile": 396
+        "tiny-tail": 308,
+        "eye-left": 1120,
+        "spiral-left": 964,
+        "eye-right": 1120,
+        "spiral-right": 964,
+        "mouth": 244
       },
       "bones": 10,
       "actions": [
@@ -73,17 +59,17 @@
         "face_left": {
           "bone": "eye_left",
           "positionBlender": [
-            -0.5720000000000001,
-            0.63,
-            1.8199999999999998
+            -0.33,
+            0.36000000000000004,
+            1.7160000000000002
           ]
         },
         "face_right": {
           "bone": "eye_right",
           "positionBlender": [
-            0.5720000000000001,
-            0.63,
-            1.8199999999999998
+            0.33,
+            0.36000000000000004,
+            1.7160000000000002
           ]
         },
         "crown": {
@@ -104,9 +90,9 @@
         }
       },
       "restBoundsBlender": [
-        1.9139995574951172,
-        1.424893856048584,
-        2.699479304254055
+        1.5688468217849731,
+        1.3134528994560242,
+        2.249461941421032
       ],
       "offlineRoundtrip": {
         "model": true,
@@ -141,16 +127,17 @@
     }
   },
   "files": {
-    "exports/protoform/blink.fbx": "49b861ed54ae0a3833c09c10eec3fc7ba58f5cbf192f3495a01b067bdffe578b",
-    "exports/protoform/hop.fbx": "5fb07abf501407e60b5a52dac7b3b7fc7a7f4db499b5cf0733cfd4eeecd0e872",
-    "exports/protoform/idle.fbx": "da692dae848703bdf94785c9856084bcc7c7ac4602948f9ec697fcf3a3ec9af4",
-    "exports/protoform/impact.fbx": "a874b5e0c53ffa3de8d795b02160a950521bde62211f5552a11bb599cb860b68",
-    "exports/protoform/launch.fbx": "5464bfa72f1f014fb5bd9a00737cf2ccdbeeace9e60157e57cbd4c4529c10a00",
-    "exports/protoform/model.fbx": "2dee73c61ccc6365c29ebc9fb1e2226399999d1feab539a1b1e864bcb0069740",
+    "before-sick-redesign.blend": "6b6ed8a7d6700bf6434b6d2d5cc299ee3fa1c78fb9e34abd689e3aca9bdc74a9",
+    "exports/protoform/blink.fbx": "01caaf2d67d79ab6a482346517efd43a5bde615b4055fde1c6fc6004e723921e",
+    "exports/protoform/hop.fbx": "d6eb9a6ad2278f4c8320c12b6b5587672c200307c406fca93ba82f7c1f64c331",
+    "exports/protoform/idle.fbx": "5d03d8543b46c5063d03330f170807e489a4fe1f7900159359c34d10acb30139",
+    "exports/protoform/impact.fbx": "52abec75608a37b3d62f9ad6d017e069d895424a883c92872fc0228b9ca4eaa7",
+    "exports/protoform/launch.fbx": "12ceffbaa17f0bcf6daea104d949f4d6bd2bde21240de9cd3dd683ffcc5eeb48",
+    "exports/protoform/model.fbx": "c57da63327d471d340de9e061ab66de42dc4b970e1a9ad32e983b3a3e3d3370f",
     "first-draft.blend": "d9b8db39013ed2769f0675a13693839327e0efce364e6d1fa9e7c08789183c59",
     "fourth-draft.blend": "c80d18a1e769ada8cb6f3bf5f81fd69420f909c6015d6b13b19ded05db16ffce",
     "second-draft.blend": "a1429757ca80c537cd8a639a69350e528cdad315e859a5fb680448aabcd4af97",
-    "source/protoform.blend": "753d0dfe30a97a4c07aa4d2ea05348d7db46eaf12b94bcdbc0b3a4b4d5cabbea",
+    "source/protoform.blend": "a52730df77e427408cc1fa6a26fb9a453ba776acea03d067b2436e962510a74d",
     "third-draft.blend": "4dda41939d500a5091fcfc9c6f7672d8e345dfbaf848c564e66bebd7d5ed8a24"
   },
   "studioImportVerified": false

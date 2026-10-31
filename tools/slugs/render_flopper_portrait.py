@@ -33,15 +33,15 @@ def main():
     scene.render.resolution_y = 720
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
-    scene.view_settings.view_transform = "AgX"
+    scene.view_settings.view_transform = "Standard"
     world = bpy.data.worlds.new("PortraitWorld")
     world.use_nodes = True
     world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.35,0.40,0.34,1)
-    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.42
+    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.25
     scene.world = world
-    light("Key", (4,5,7), 550, 5)
-    light("Fill", (-4,4,4), 320, 4)
-    light("Rim", (0,-4,6), 500, 3)
+    light("Key", (4,5,7), 300, 5)
+    light("Fill", (-4,4,4), 140, 4)
+    light("Rim", (0,-4,6), 280, 3)
     bpy.ops.mesh.primitive_plane_add(size=200, location=(0,0,0.01))
     floor = bpy.context.object
     floor.name = "ReviewBackdrop"
@@ -55,7 +55,7 @@ def main():
     scene.camera = camera
     output = ROOT / "build/slugs/flopper-inspired/previews"
     output.mkdir(parents=True, exist_ok=True)
-    for name, position in (("portrait",(4.2,7,3.5)), ("portrait-front",(0,8,1.45))):
+    for name, position in (("portrait",(4.2,7,3.5)), ("portrait-front",(0,8,1.45)), ("portrait-rear",(4,-7,3.1))):
         camera.location = position
         camera.rotation_euler = (Vector((0,0,1.32))-camera.location).to_track_quat("-Z", "Y").to_euler()
         scene.render.filepath = str(output / f"{name}.png")
