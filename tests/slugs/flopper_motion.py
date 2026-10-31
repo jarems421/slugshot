@@ -1,6 +1,7 @@
 """Check that the first draft's meaningful motion survives in its saved source."""
 from pathlib import Path
 import math
+import json
 
 import bpy
 
@@ -48,12 +49,23 @@ for side,sign in (("left",-1),("right",1)):
     assert sum(v.co.y for v in tips)/len(tips) > .4, f"{side} antenna should curl a little forward"
 color = body.data.color_attributes.get("Color")
 assert color is not None and color.domain == "POINT", "Body needs painted vertex colours"
+palette = json.loads((ROOT / "assets/source/slugs/species/flopper-inspired.json").read_text(encoding="utf-8"))["palette"]
+base, stain = palette["body"], palette["feature"]
+direction = [b-a for a,b in zip(base,stain)]
+def stain_strength(rgba):
+    return sum((rgba[i]-base[i])*direction[i] for i in range(3))/sum(value*value for value in direction)
 quadrants = [0, 0, 0, 0]
 for vertex, sample in zip(body.data.vertices, color.data):
-    if sample.color[1] - sample.color[0] > .18:
+    if stain_strength(sample.color) > .28:
         angle = math.atan2(vertex.co.y + .04, vertex.co.x) % math.tau
         quadrants[min(3, int(angle / (math.pi / 2)))] += 1
 assert all(value > 5 for value in quadrants), f"Green markings missing around body: {quadrants}"
+def section_width(low,high):
+    section = [v.co.x for v in body.data.vertices if low < v.co.z < high]
+    return max(section)-min(section)
+waist, head = section_width(.98,1.20), section_width(1.58,1.87)
+assert 1.025 < head/waist < 1.18, "Head should be slightly wider than the middle"
+assert section_width(.05,.30) > head, "Relaxed base should remain the widest part"
 names = set(obj.name for obj in bpy.context.scene.objects)
 assert body.get("integrated_tail") and "tiny-tail" not in names, "Tail must extend from the continuous body"
 assert not any("foot" in name.lower() or "base-lobe" in name for name in names), "No feet"
@@ -82,5 +94,5 @@ bpy.ops.import_scene.fbx(filepath=str(ROOT / "build/slugs/flopper-inspired/expor
 imported = bpy.data.objects["SoftBody"]
 assert imported.data.color_attributes, "FBX roundtrip lost the body colours"
 colors = imported.data.color_attributes[0].data
-assert max(sample.color[1] - sample.color[0] for sample in colors) > .18, "FBX roundtrip lost green markings"
+assert max(stain_strength(sample.color) for sample in colors) > .3, "FBX roundtrip lost green markings"
 print("PASS: idle, blink, hop, grounded squash, connected drooping antennae, surface eyes, integrated tail, spots and FBX colours")

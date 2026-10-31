@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Muddy markings and gentle head/waist contour
+
+- **Confirmed:** owner wants the markings slightly darker and muddy rather than vibrant, and the upper head a little wider to create a gentle, non-exaggerated hourglass shape.
+- **Implemented/verified:** muted olive vertex colours, a slightly broadened/rounded head and gentle middle narrowing; base remains widest. Source, full offline pipeline, FBX clips/colours, contact, connected skin and new silhouette checks pass. See [current design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner review and Roblox materials/skin/animation import. No gameplay or publication added.
+
 ## 2026-10-31 — Softer forward antennae
 
 - **Confirmed:** owner wants antennae less stiff/attached and turned a little forward rather than to the sides.

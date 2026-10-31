@@ -5,7 +5,7 @@
   "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
   "palette": {
     "body": [0.7758,0.7305,0.4793],
-    "feature": [0.04,0.72,0.025],
+    "feature": [0.16,0.34,0.075],
     "eye": [0.04,0.25,0.05],
     "white": [0.99,1.0,0.96],
     "iris": [0.025,0.52,0.035],
@@ -22,8 +22,8 @@
       "headScale":1.0,
       "eyeSpacing":1.0,
       "features":[
-        {"id":"eye-left", "kind":"eye", "socket":"face_left", "offset":[0,0.0327424,0], "scale":[0.44,0.01,0.48], "material":"white"},
-        {"id":"eye-right", "kind":"eye", "socket":"face_right", "offset":[0,0.03251138,0], "scale":[0.44,0.01,0.48], "material":"white"}
+        {"id":"eye-left", "kind":"eye", "socket":"face_left", "offset":[0,0.11376765,0], "scale":[0.44,0.01,0.48], "material":"white"},
+        {"id":"eye-right", "kind":"eye", "socket":"face_right", "offset":[0,0.11363319,0], "scale":[0.44,0.01,0.48], "material":"white"}
       ],
       "animations":{
         "idle":{"rig":"flopper-inspired-v1", "action":"Idle", "loop":true},
