@@ -382,9 +382,9 @@ def skin_material(image):
     tex.image = image
     mat.node_tree.links.new(tex.outputs["Color"], shader.inputs["Base Color"])
     # Wet, soft skin: light scattering, a moist coat and broad sheen.
-    set_inputs(shader, {"Roughness": 0.42, "Subsurface Weight": 0.35, "Subsurface Scale": 0.12,
+    set_inputs(shader, {"Roughness": 0.42, "Subsurface Weight": 0.15, "Subsurface Scale": 0.08,
                         "Subsurface Radius": (1.0, 0.8, 0.4), "Coat Weight": 0.45, "Coat Roughness": 0.08,
-                        "Sheen Weight": 0.2, "Specular IOR Level": 0.4})
+                        "Sheen Weight": 0.08, "Specular IOR Level": 0.4})
     return mat
 
 
@@ -447,15 +447,45 @@ def bake_body_texture(body, concept, normals, size=2048):
         bpy.data.images.remove(image)
         bpy.data.materials.remove(mat)
     mesh.materials.clear()
+    ao = bake_occlusion(body, size)
     mask = baked["rest"][..., 3] > 0.5
     pts = (baked["rest"][..., :3][mask].astype(float) - 0.5)/0.25
     ns = baked["rest_normal"][..., :3][mask].astype(float)*2.0 - 1.0
     ns /= np.maximum(np.linalg.norm(ns, axis=1), 1e-9)[:, None]
     rgb = np.tile(BODY, (size, size, 1))
     rgb[mask] = skin_albedo(pts, ns)
+    # Depth: baked contact shadow in folds, lids and creases, plus a slightly
+    # deeper, richer grade, so the skin doesn't read pale and flat (owner
+    # request). Baked in, so it also shows under Roblox's flatter lighting.
+    rgb *= (0.5 + 0.5*ao)[..., None]
+    lum = rgb @ np.array([0.2126, 0.7152, 0.0722])
+    rgb = np.clip(lum[..., None] + (rgb - lum[..., None])*1.18, 0.0, 1.0)**1.12
     for name in ("rest", "rest_normal"):
         mesh.attributes.remove(mesh.attributes[name])
     return save_texture("floppy-body", rgb, size)
+
+
+def bake_occlusion(body, size):
+    world = bpy.data.worlds.new("BakeWorld")
+    world.light_settings.distance = 0.22
+    bpy.context.scene.world = world
+    bpy.context.scene.cycles.samples = 96
+    image = bpy.data.images.new("bake_ao", size, size, alpha=False, float_buffer=True)
+    image.colorspace_settings.name = "Non-Color"
+    mat = bpy.data.materials.new("Bake_ao")
+    mat.use_nodes = True
+    target = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    target.image = image
+    mat.node_tree.nodes.active = target
+    body.data.materials.append(mat)
+    bpy.ops.object.bake(type="AO", margin=12)
+    px = np.empty(size*size*4, np.float32)
+    image.pixels.foreach_get(px)
+    body.data.materials.clear()
+    bpy.data.materials.remove(mat)
+    bpy.data.images.remove(image)
+    bpy.context.scene.cycles.samples = 1
+    return px.reshape(size, size, 4)[..., 0].astype(float)
 
 
 def eye_material(side, image):

@@ -42,3 +42,19 @@ Current [Roblox Importer](https://create.roblox.com/docs/studio/importer) accept
 8. Run stationary playback, rotation, compressed/long transformation, early impact, model swapping, attack and cleanup. Inspect material/UV appearance, bone motion, socket positions and transformed scale. Record results, screenshots, warnings and device/frame-rate limits in the [verification note](verification.md).
 
 No imported Roblox animation, ownership permission, mesh scale or runtime skin deformation is verified by Blender reimport, luau-lsp or a successful Rojo build. If Studio MCP has no connected instance, complete the checklist manually rather than modifying global MCP/security settings or another agent's place.
+
+## Floppy import (owner step)
+
+Run `blender --background --factory-startup --disable-autoexec --python-exit-code 1 --python tools/slugs/export_floppy_roblox.py` with Blender 4.5. It writes `build/slugs/floppy/roblox/`:
+- `model.fbx`: skinned body (8,000 triangles) and two eyes (400 each), 8 bones, textures embedded;
+- `idle.fbx`: 12 s looping idle with no bone scale;
+- `textures/`: `floppy-body-color.png`, `floppy-body-normal.png` (1024) and `floppy-eye-left/right.png`;
+- `export-report.json`: hashes, bounds and offline reimport checks.
+
+Importing uploads the mesh and texture assets to the importing account, so the owner performs it. Agents have no Studio connection.
+
+1. Open a new, empty local place, not the game or Rocklock places. Choose File > Import 3D and select `model.fbx`. Leave the rig as a custom rig, not R15/avatar. Keep the scale at 1 stud per unit. Floppy is about 2.5 studs tall and should face the place's -Z (LookVector). Record any importer warnings.
+2. Check the result: one Model with `FloppyBody`, `EyeL` and `EyeR` MeshParts, and Bones `root > body_lower > body_upper > head > antenna_L/R, eye_L/R`. Anchor the root part, and turn off CanCollide, CanQuery and CanTouch on the visual parts.
+3. Appearance: if the importer didn't create one, add a SurfaceAppearance to `FloppyBody` with ColorMap `floppy-body-color.png` and NormalMap `floppy-body-normal.png`. Each eye gets its own ring texture as ColorMap. Compare with `docs/slugs/catalog/evidence/floppy/blender/game-*.png`.
+4. Animation: add an AnimationController with an Animator to the Model. In the Animation Editor, import `idle.fbx` onto this rig and check that the tracks bind to its Bones and that it loops with no hitch at 12 s. Publishing the clip is a separate, owner-authorised step; record any IDs only under ignored `private-assets/`.
+5. Device check: use Studio's device emulator (phone and tablet) and look at frame rate, texture sharpness of the drool and lip line, and the eye-ring spin. Record the results in [verification](verification.md).
