@@ -101,3 +101,22 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | Holstered copy trailed the body when running/jumping: it was positioned in the render step, a physics step behind. | Re-place it in `PostSimulation` from the part it follows (the right leg). | Attach visuals to the limb they belong to and update after animation/physics. |
 | Flourish hidden while running: the run arm swing and the low hip position kept it out of the camera's view. | The arm lifts into the hold during the flourish; a moving variant raises the arm forward (not out) and tosses higher. | Review animation from the gameplay camera (behind and above, while running), not only standing. |
 | No Studio MCP connection all session. | Studio log files (`%LOCALAPPDATA%\Roblox\logs`) carry Output, warnings and prints; targeted `warn` diagnostics plus one owner reproduction found every runtime bug. | When MCP is unavailable, instrument and read the log rather than iterating blind. |
+
+## Combat and first person (2026-10-31, `experiment/rocklock-unified`, see its `docs/combat.md`)
+
+| The owner says | What satisfied it (recorded) | What failed or was rejected |
+| --- | --- | --- |
+| "frictionless", "fast-paced", "easy to keep track of" (ammo) | One rule: a cooldown from firing (1.5 s), shown on an ammo slot; the slug hops back quickly as a visual. | A visible return that decides reload timing. |
+| "hop back" | Quick, bouncy 1-3 hops in a fixed ~0.5 s, puffing away if the cooldown ends first. | A zip/streak back. |
+| "tiny bit of damage" | 5 of 100 HP, splat, no knockback. | Knockback. |
+| Tap vs hold | A tap still fires decently and (for later slugs) transforms; holding = faster, earlier transform, less drop. No failed transforms. | Requiring a charge to transform. |
+| "temporary" (test spaces) | Label it everywhere: file name, banner, in-world sign. The map is a placeholder, never a source of truth. | Unlabelled test areas. |
+| "Rivals-style first person", "not a setting" | Scroll in snaps to first person, scroll out snaps back. Settings (M) hold FOV and the holster choice. | A first-person toggle; extra option keys. |
+| "one-handed" | A light pistol is held in one hand. | A two-handed hold ("very inconsistent"). |
+| "feel the legs, not a floating camera" | Camera driven by the animated body (head motion), legs visible, gun reacting to that motion. | Added screen shake or a synthetic bob. |
+| "feels like an aneurysm", "forced to look at the ground/sky" | Root cause was a camera feedback bug (additions compounding through Roblox's camera scripts), fixed by undoing them each frame. | Repeating the tilt every frame on top of the read-back camera. |
+| "choppy", "crosshair flying around" (flips) | Unresolved: aim must stay stable; consider following only part of the flip. | Following the head's full flip rotation. |
+| "arms look elongated" | Unresolved: arms must look exactly like third-person R6 arms at any FOV. | Thin, long viewmodel arm blocks. |
+| "almost perfect" (wall run), "fine" (slide) | 10 degree roll away from the wall, gun hand never grabs the wall on its side; slide lean and canted gun. | — |
+
+Working style seen this session: the owner judges by playtest and reports in short rounds; research what successful games do before building ("do research", "what makes it feel good"), cite it, then implement; keep one option per thing ("concrete foundation"); confirm fixes from the Studio log (`%LOCALAPPDATA%\Roblox\logs`) when MCP is unavailable.
