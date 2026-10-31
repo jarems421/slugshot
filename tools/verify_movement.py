@@ -52,7 +52,7 @@ def main():
         assert "MovementSandbox" in names and "Presentation" in names and "MotionMath" in names
         assert "Clips" in names and "OriginalClips" in names
         assert "MovementPrivateClips" not in names, "Private clip data must stay out of public builds"
-        for spec in ("Math.spec", "Clips.spec"):
+        for spec in ("Math.spec", "Clips.spec", "WallSurface.spec"):
             assert (spec in names) == (name == "movement.test.project.json"), "Test scripts leaked into playable sandbox"
         assert not any(i.attrib.get("class") in {"KeyframeSequence", "Animation"} for i in tree.iter("Item")), "Public build must remain independent of restricted clips and IDs"
     private = json.loads((ROOT / "movement.private.project.json").read_text(encoding="utf-8"))

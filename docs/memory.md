@@ -1,5 +1,19 @@
 # Project memory
 
+## 2026-10-31 ? Slower movement pace (v7.39)
+
+- **Confirmed:** owner asked for run 18, sprint/wall run 24, slide cap 26, slower locomotion and camera bounce, slightly slower flips and shorter jump reach at the existing heights.
+- **Implemented:** speed/cadence/camera/horizontal launch retune in the existing movement worktree; v7.38 source checkpoint retained under ignored `build/checkpoints/`. Baseline remains a stock-speed comparison. No private animation source edits or uploads.
+- **Implemented/verified offline:** full movement verifier and private build pass. Compared all profile jump power/gravity and action vertical launches plus slide decay/timing to the checkpoint; unchanged. New Studio process launched on the private v7.39 build, preserving other windows.
+- **Unresolved:** live gameplay and multiplayer checks, feet/limb cadence and flip/landing timing, camera comfort and owner verdict. [Details](movement-verification.md#v739-slower-movement-pace-2026-10-31).
+
+## 2026-10-31 ? Wall-run terrain continuation
+
+- **Confirmed:** owner requested smooth traversal over small wall bumps/ledges, a corner-turn animation, and a new Studio test window.
+- **Implemented:** v7.38 on isolated branch/worktree `experiment/wallrun-terrain` / `C:/Users/runni/slugshot-wallrun-terrain`; bounded lookahead, multi-height probes, seam grace, inside turns and outside arcs, turn brace and test course. Existing private clip module copied only into ignored private storage for the local build. No external resources added.
+- **Implemented/verified offline:** `python tools/verify_movement.py` passed (foundation and movement formatting/lint/types, public/test builds, isolation); private Rojo build passed. New engine-raycast test fixtures compile and are isolated to the test place, but have not executed in Studio.
+- **Unresolved:** runtime and multiplayer evidence, collision/contact at speed, input reversals and owner visual approval. [Evidence and playtest checklist](movement-verification.md#v738-uneven-walls-and-corners-2026-10-31).
+
 ## 2026-10-31 — Blender skill ecosystem for both agents
 
 - **Confirmed:** owner authorised installing 28 EL4CTEO skills, 30 RobLe3 skills, BlendRelay and MCP for Blender for both Codex and Claude, plus Slugshot routing and quality records. Preserve the current creature and unrelated Rocklock/movement work; no GPU image-to-3D services or publication.
@@ -447,3 +461,9 @@
 - Owner: blue too strong/neon; wanted a clear, light-blue, subtler glow with the inside of the shell well lit. Trim now pale blue at 0.45 transparency and thinner, spill light pale and weak (1.2, 3.5 studs), bloom reduced, inside lamps slightly stronger.
 - Owner: lighting flickered between an orange-flare state and a dark state; the inside wasn't lit. Small PointLights inside the gun flicker with Roblox light culling and flared the orange prongs. Removed them; the loaded slug now has a constant sage-green Highlight fill (0.55); one faint pale-blue spill light remains. Lesson: don't rely on tiny interior lights for visibility.
 - Owner: light the inside calmly and lightly, not pale. Inner sage glow softened to 0.72 fill transparency. Session paused here at the owner's request; open items: owner verdict on the chamber glow, resizing the real Rocklock blaster (other branch), Studio MCP available after a session restart.
+
+## 2026-10-31 ? Review and backup of all local work
+
+- **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
+- **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
+- **Unresolved:** game-mesh winding/degenerate-face cleanup, genuine chamber illumination, Studio runtime/peers, slower-controller map integration and owner verdict. Art unchanged; private assets/IDs remain ignored.
