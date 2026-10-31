@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Gate identities and rock wall v3
+
+- **Confirmed:** Slugshot mix is "amazing". Rock wall v2 still not liked: the lines through the face looked weird and it felt plain. Gates get a symbol on the keystone gem (PvP two swords, exploration a map) and gate colours for energy, bolts and gem: PvP orange, Training green, Veylume purple (owner "100% sure"); symbol grey or matching.
+- **Implemented:** library v5: three gate variants (Training symbol chosen as a target; symbol in grey metal); rock wall v3 with strata removed, a crystal-lit alcove, bracket fungi, ledge mushrooms and painted warm/cool stone patches.
+- **Unresolved:** owner review; crystal cluster and mushroom critiques pending.
+
 ## 2026-10-31 — Slugshot mix treatment and rock wall v2
 
 - **Confirmed:** owner loves Inked Cavern and wants it as the main treatment, but keeps the others: dark rocks look better with Comic Cavern; glowing/clear things (mushroom, crystals) with Inked Cavern; characters always Inked Cavern. Comic Cavern swallowed the portal's grey bands and orange bolts, which Living Comic did not. Rock wall v1 "too basic".

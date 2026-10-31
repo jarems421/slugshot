@@ -54,7 +54,7 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | PvP gate | P2 | Straight ahead of spawn and the grandest gate. Warmer, more dramatic frame with orange energy. |
 | Training gate | P2 | Left of PvP. Cool, clean, practical frame. |
 | Veylume gate | P2 | Right of PvP; the exploration world. Mysterious: overgrown, sealed or dormant, hinting at the biomes beyond. Green/teal/violet glow. |
-| Portal frame | P1 | Base design that the three gates vary from: a shared frame language with a distinct crown and energy per mode. |
+| Portal frame | P1 | Base design that the three gates vary from. Confirmed 2026-10-31: each gate has a symbol on the keystone gem (PvP crossed swords, Training target, Veylume map; symbol in grey metal) and its own colour for the energy, gem and bolts: **PvP orange, Training green, Veylume purple**. |
 | Entrance | P2 | Behind spawn, on the far side of the round hub from PvP. |
 | Gate signage | P2 | A large painted sign over each gate, readable from spawn. |
 

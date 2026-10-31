@@ -123,7 +123,8 @@ void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
 <script id="fs" type="x-shader/x-fragment">
 precision highp float;
 uniform vec2 uRes;
-uniform float uT, uAsset;
+uniform float uT, uAsset, uGate;   // uGate: 0 PvP, 1 Training, 2 Veylume
+uniform vec3 uGateEdge, uGateCore, uGateHot;
 uniform vec3 uRo, uRight, uUp, uFwd;
 uniform vec4 uFig;          // xyz position, w = shown
 uniform vec4 uTreat;        // current mode's ink width scale, crease sensitivity, glow, bloom (bloom used globally)
@@ -236,8 +237,8 @@ vec2 rockWall(vec3 p) {
   d = smin(d, chunk(p, vec3(5.6, 13.8, 0.3), vec3(1.7, 3.3, 1.5), 163.0), 0.25);
   d = smin(d, chunk(p, vec3(1.6, 10.2, -1.7), vec3(4.6, 0.95, 2.1), 177.0), 0.18);
   d = smax(d, -sdEll(p - vec3(-1.6, 12.6, 0.0), vec3(1.6, 1.8, 3.0)), 0.3);
-  float strata = abs(fract(p.y/1.55 + 0.25*noise3(p*0.35)) - 0.5);
-  d += 0.13*(1.0 - smoothstep(0.0, 0.07, strata))*smoothstep(1.2, 2.0, p.y);
+  // v3: no carved strata (owner: the lines through the face looked weird). A recessed alcove instead.
+  d = smax(d, -sdEll(p - vec3(2.6, 3.0, -2.6), vec3(2.7, 2.5, 2.3)), 0.45);
   d += 0.07*(noise3(p*0.9) - 0.5);
   vec2 r = vec2(d, 1.0);
   // Moss and roots hanging from the ledge.
@@ -250,11 +251,33 @@ vec2 rockWall(vec3 p) {
     moss = min(moss, capT(p, top, bot, 0.24, 0.07));
   }
   if (moss < r.x) r = vec2(moss, 12.0);
-  // A few small glowing crystal shards growing out of a crack near the foot.
-  float shard = crystal(p, vec3(-3.0, 1.0, -2.2), 1.9, 0.75, 1.5, 0.28);
-  shard = min(shard, crystal(p, vec3(-2.5, 0.9, -2.3), 1.2, 0.45, 1.1, 0.22));
-  shard = min(shard, crystal(p, vec3(-3.4, 0.8, -2.0), 2.6, 0.95, 0.9, 0.2));
+  // Glowing crystals growing inside the alcove light it from within.
+  float shard = crystal(p, vec3(2.6, 0.7, -1.2), 1.9, 0.35, 2.2, 0.36);
+  shard = min(shard, crystal(p, vec3(3.3, 0.6, -1.5), 1.2, 0.6, 1.5, 0.28));
+  shard = min(shard, crystal(p, vec3(1.9, 0.6, -1.6), 2.6, 0.75, 1.2, 0.24));
+  shard = min(shard, crystal(p, vec3(2.9, 0.5, -2.3), 3.5, 0.9, 0.8, 0.18));
   if (shard*0.75 < r.x) r = vec2(shard*0.75, 3.0);
+  // Bracket fungi stepping up the face, with glowing undersides and spots.
+  float fungi = 1e5;
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    vec3 c = vec3(-6.2 + 1.1*fi + 0.4*hash1(fi + 81.0), 4.2 + 1.5*fi, -2.4 - 0.3*hash1(fi + 82.0));
+    float s = 0.7 + 0.35*hash1(fi + 83.0);
+    float shelf = sdEll(p - c, vec3(1.0, 0.2, 0.7)*s);
+    fungi = min(fungi, smax(shelf, (p.z - c.z) - 0.25*s, 0.1));
+  }
+  // Small mushrooms sprouting on top of the ledge.
+  float stems = 1e5, caps = 1e5;
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec3 b = vec3(-0.6 + 1.3*fi + 0.3*hash1(fi + 91.0), 10.7, -2.4 + 0.4*hash1(fi + 92.0));
+    float h = 0.7 + 0.5*hash1(fi + 93.0);
+    stems = min(stems, capT(p, b, b + vec3(0.1, h, 0.0), 0.11, 0.08));
+    caps = min(caps, smax(sdEll(p - b - vec3(0.1, h, 0.0), vec3(0.42, 0.24, 0.42)*(0.8 + 0.4*hash1(fi + 94.0))), -(p.y - b.y - h + 0.05), 0.05));
+  }
+  fungi = min(fungi, caps);
+  if (stems < r.x) r = vec2(stems, 4.0);
+  if (fungi*0.85 < r.x) r = vec2(fungi*0.85, 5.0);
   return r;
 }
 
@@ -331,6 +354,28 @@ vec2 portalFrame(vec3 p) {
   }
   return vec2(p.x < 0.0 ? p.y : L - p.y, abs(p.x) - PR);
 }
+float sdBox2(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+float sword(vec2 p) {
+  float blade = max(sdBox2(p - vec2(0.0, 0.2), vec2(0.075, 0.6)), p.y - 0.78 + abs(p.x)*1.6);
+  float guard = sdBox2(p - vec2(0.0, -0.44), vec2(0.27, 0.06));
+  float grip = sdBox2(p - vec2(0.0, -0.62), vec2(0.05, 0.13));
+  return min(min(blade, guard), min(grip, length(p - vec2(0.0, -0.8)) - 0.085));
+}
+// Gate symbols in symbol space (about -0.9..0.9): crossed swords, target, folded map.
+float gateSymbol(vec2 p) {
+  if (uGate < 0.5) return min(sword(rot(0.72)*p), sword(rot(-0.72)*p));
+  if (uGate < 1.5) {
+    float r = length(p);
+    return min(min(abs(r - 0.66) - 0.08, abs(r - 0.38) - 0.08), r - 0.13);
+  }
+  float zig = abs(fract(p.x/0.5 + 0.5) - 0.5)*2.0;
+  float sheet = sdBox2(vec2(p.x, p.y - 0.08*zig + 0.04), vec2(0.75, 0.52));
+  vec2 xm = p - vec2(0.33, 0.14);
+  float xMark = min(sdBox2(rot(0.785)*xm, vec2(0.16, 0.035)), sdBox2(rot(-0.785)*xm, vec2(0.16, 0.035)));
+  float folds = abs(abs(p.x) - 0.25) - 0.018;
+  float trail = max(abs(length(p - vec2(-0.2, -0.55)) - 0.55) - 0.025, abs(fract(atan(p.y + 0.55, p.x + 0.2)*4.0) - 0.5) - 0.22);
+  return max(sheet, -min(min(xMark, folds), trail));
+}
 vec2 portal(vec3 p) {
   float bound = sdBox(p - vec3(0.0, 6.6, 0.0), vec3(7.6, 7.6, 1.8));
   if (bound > 1.0) return vec2(bound, 6.0);
@@ -357,8 +402,13 @@ vec2 portal(vec3 p) {
     band = min(band, max(max(abs(fr.y) - PHT - 0.13, abs(p.z) - PHD - 0.12), abs(fr.x - sc) - 0.24));
   }
   if (band < r.x) r = vec2(band, 7.0);
-  float plate = sdBox(p - vec3(0.0, PSPRING + PR, -PHD - 0.42), vec3(0.5, 0.72, 0.1)) - 0.03;
-  if (plate < r.x) r = vec2(plate, 8.0);
+  // Keystone gem: a faceted rhombus with a flat table carrying the gate's symbol in raised metal.
+  vec3 g = p - vec3(0.0, PSPRING + PR, -PHD - 0.42);
+  float rh = abs(g.x)/0.85 + abs(g.y)/1.2;
+  float gem = max((rh - 1.0)*0.55, max(-g.z - 0.3 + 0.12*rh, g.z - 0.1));
+  if (gem < r.x) r = vec2(gem, 8.0);
+  float sym = max(gateSymbol(g.xy/0.6)*0.6, abs(g.z + 0.25) - 0.05);
+  if (sym < r.x) r = vec2(sym, 13.0);
   float inner = p.y > PSPRING ? length(vec2(p.x, p.y - PSPRING)) - (PR - PHT) : abs(p.x) - (PR - PHT);
   float memb = max(max(inner + 0.05, abs(p.z) - 0.04), 0.7 - p.y);
   if (memb < r.x) r = vec2(memb, 9.0);
@@ -396,7 +446,7 @@ float group(float id) {
   if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5) return 0.0;
   return 1.0;
 }
-bool metalDetail(float id) { return uMode > 2.5 && (abs(id - 7.0) < 0.5 || abs(id - 8.0) < 0.5); }
+bool metalDetail(float id) { return uMode > 2.5 && (abs(id - 7.0) < 0.5 || abs(id - 8.0) < 0.5 || abs(id - 13.0) < 0.5); }
 vec4 TR(float id) {
   float g = group(id);
   vec4 r = g < 0.5 ? uTr0 : g < 1.5 ? uTr1 : uTr2;
@@ -448,6 +498,8 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   float nz = noise3(p*0.32) + 0.5*noise3(p*0.9) - 0.75;
   if (id < 1.5) {
     vec3 c = mix(vec3(0.085, 0.092, 0.13), vec3(0.20, 0.205, 0.26), smoothstep(-0.3, 0.3, nz));
+    float warmPatch = smoothstep(0.45, 0.75, noise3(p*0.11 + vec3(4.0, 1.0, 2.0)));
+    c = mix(c, c*vec3(1.35, 1.1, 0.85), 0.6*warmPatch);
     float moss = smoothstep(0.55, 0.92, n.y)*smoothstep(0.35, 0.65, noise3(p*0.45));
     return mix(c, vec3(0.13, 0.22, 0.11), 0.8*moss);
   }
@@ -498,21 +550,28 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       bolt = max(bolt, 1.0 - smoothstep(0.12, 0.16, length(dd)));
     }
     spec = 0.5;
-    return mix(vec3(0.085, 0.085, 0.095), vec3(0.72, 0.30, 0.07), bolt);
+    emit = uGateCore*0.35*bolt*TR(id).z;
+    return mix(vec3(0.085, 0.085, 0.095), mix(uGateEdge, uGateCore, 0.55), bolt);
   }
-  if (id < 8.5) { spec = 0.45; return vec3(0.72, 0.29, 0.065); }
+  if (id < 8.5) {
+    spec = 0.8;
+    float facet = 0.5 + 0.5*sin(dot(n, vec3(9.0, 7.0, 5.0)));
+    emit = mix(uGateEdge, uGateCore, 0.4 + 0.3*facet)*0.55*TR(id).z*(0.9 + 0.1*sin(uT*1.1));
+    return mix(uGateEdge, uGateCore, 0.35);
+  }
   if (id < 9.5) {
     vec2 v = vec2(p.x, p.y - PSPRING*0.82);
     float a = atan(v.y, v.x), r = length(v);
     float sw = 0.5 + 0.5*sin(a*3.0 + r*1.4 - uT*1.3);
     float sw2 = 0.5 + 0.5*sin(a*5.0 - r*2.1 + uT*0.8);
-    vec3 c = mix(vec3(0.70, 0.17, 0.05), vec3(1.0, 0.66, 0.28), sw*0.75 + sw2*0.25);
-    c = mix(c, vec3(1.0, 0.86, 0.6), smoothstep(3.0, 0.0, r)*0.5);
+    vec3 c = mix(uGateEdge, uGateCore, sw*0.75 + sw2*0.25);
+    c = mix(c, uGateHot, smoothstep(3.0, 0.0, r)*0.5);
     emit = c*1.6*TR(id).z;
     return c*0.3;
   }
   if (id < 10.5) return vec3(0.42, 0.43, 0.47);
-  if (id > 11.5) {
+  if (id > 12.5) { spec = 0.55; return vec3(0.55, 0.56, 0.6); }
+  if (id > 11.5 && id < 12.5) {
     float tip = smoothstep(9.0, 6.0, p.y);
     return mix(vec3(0.10, 0.19, 0.09), vec3(0.20, 0.32, 0.13), noise3(p*1.8))*(1.0 - 0.3*tip);
   }
@@ -591,7 +650,7 @@ void main() {
     ink = 1.0;
   }
   col = mix(col, inkC, ink);
-  col += glowAcc*uTreat.w*vec3(0.5, 0.9, 0.85)*(uAsset > 2.5 ? vec3(1.9, 0.75, 0.35) : vec3(1.0));
+  col += glowAcc*uTreat.w*(uAsset > 2.5 ? uGateCore*0.9 : vec3(0.5, 0.9, 0.85));
   col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
   col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
   vec2 q = gl_FragCoord.xy/uRes;
@@ -604,14 +663,15 @@ void main() {
 (function () {
   const ASSETS = [
     {
-      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 17 × 6 studs", version: "v2",
-      target: [0, 7.5, 0], dist: 38, figure: [-6.5, 0, -5.5], glow: [-3, 2.2, -4.5], glowCol: [0.45, 0.95, 1.0],
+      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 17 × 6 studs", version: "v3",
+      target: [0, 7.5, 0], dist: 38, figure: [-7.5, 0, -5.5], glow: [2.6, 1.8, -3.0], glowCol: [0.45, 0.95, 1.0],
       notes: [
-        ["v2 changes", "You said v1 looked too basic. v2 adds an uneven skyline with two leaning spires and a notch, a ledge jutting out over the player, carved horizontal strata, moss and roots hanging from the ledge, and a few small glowing crystal shards in a crack near the foot."],
+        ["v3 changes", "The carved lines across the face are gone. Instead: a recessed alcove lit from inside by glowing crystals, bracket fungi with glowing undersides stepping up the face, small mushrooms sprouting on the ledge, and broad warm and cool patches painted into the stone."],
+        ["Kept from v2", "The uneven skyline with two leaning spires and a notch, the overhang ledge, and moss and roots hanging from it."],
         ["Shape", "Tiers of big, rounded rock masses, each trimmed by a few broad fracture planes. The seams between masses read as inked cracks. Fallen rubble at the foot breaks the straight base line."],
-        ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss and crystal shards use Inked Cavern."],
+        ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss, fungi and crystals use Inked Cavern."],
         ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
-        ["Status", "Concept v2, awaiting your review."]
+        ["Status", "Concept v3, awaiting your review."]
       ]
     },
     {
@@ -636,21 +696,27 @@ void main() {
         ["Variants planned", "Two more silhouettes (a tall slender one and a squat wide one), and small clusters."],
         ["Status", "Concept v1, awaiting your review."]
       ]
-    },
-    {
-      id: "portal", name: "Portal frame", kind: "Landmark · gate base design", size: "about 13 studs tall, 12.5 wide",
-      target: [0, 6.5, 0], dist: 28, figure: [-8.5, 0, -2.5], glow: [0, 6, -2.5], glowCol: [1.0, 0.55, 0.22],
-      notes: [
-        ["Shape", "Nineteen chunky stone blocks form a round-topped arch on two plinths. Each block sits slightly out of line, and the keystone is oversized. Graphite iron bands with orange bolts clamp four of the blocks, and a burnt-orange plate sits on the keystone."],
-        ["Energy", "A swirling membrane fills the arch and casts warm light forward. Shown here in PvP orange."],
-        ["Treatment", "Slugshot mix: the stone uses Comic Cavern ink. The iron bands and orange bolts keep a thick outline but only light inner lines, so the heavy ink no longer swallows them."],
-        ["Family", "This is the shared base for all three gates. Training, PvP and Veylume each get their own crown, energy colour and dressing."],
-        ["Ties to", "The blaster's burnt orange, graphite and steel."],
-        ["Status", "Concept v1, awaiting your review."]
-      ]
     }
   ];
-  const PLANNED = ["Floating spawn rock", "Droopy wooden bridge", "Maelstrom sinkhole", "Sky Well light column", "Training gate", "PvP gate", "Veylume gate", "Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
+  const GATE_SHARED = [
+    ["Frame", "Nineteen chunky stone blocks form a round-topped arch on two plinths, each block slightly out of line. Graphite iron bands clamp four blocks, studded with bolts in the gate's colour."],
+    ["Keystone gem", "A large faceted gem in the gate's colour, with the gate's symbol raised in grey metal on its flat face so you can tell at a glance where it leads."],
+    ["Treatment", "Slugshot mix: the stone uses Comic Cavern ink; the gem, symbol, bands and bolts keep a thick outline with light inner lines so the detail stays readable."],
+    ["Colour", "The energy, bolts and gem all take the gate's colour: PvP orange, Training green, Veylume purple (owner choice, 2026-10-31)."]
+  ];
+  const GATES = [
+    { id: "gate-pvp", name: "PvP gate", gate: 0, symbol: "Crossed swords", edge: [0.70, 0.17, 0.05], core: [1.0, 0.62, 0.25], hot: [1.0, 0.86, 0.6] },
+    { id: "gate-training", name: "Training gate", gate: 1, symbol: "Target", edge: [0.05, 0.42, 0.12], core: [0.42, 1.0, 0.45], hot: [0.85, 1.0, 0.75] },
+    { id: "gate-veylume", name: "Veylume gate", gate: 2, symbol: "Folded map with a marked trail", edge: [0.30, 0.09, 0.58], core: [0.78, 0.5, 1.0], hot: [0.95, 0.86, 1.0] }
+  ];
+  GATES.forEach(g => ASSETS.push({
+    id: g.id, name: g.name, kind: "Landmark · gate", size: "about 14 studs tall, 12.5 wide", version: "v2", shader: 3, gate: g.gate,
+    edge: g.edge, core: g.core, hot: g.hot,
+    target: [0, 6.8, 0], dist: 28, figure: [-8.5, 0, -2.5], glow: [0, 6, -2.5], glowCol: g.core,
+    notes: [["Symbol", g.symbol + ", in raised grey metal on the keystone gem."], ...GATE_SHARED,
+            ["Status", "Concept v2, awaiting your review."]]
+  }));
+  const PLANNED = ["Floating spawn rock", "Droopy wooden bridge", "Maelstrom sinkhole", "Sky Well light column", "Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
   const TREAT = [
     { name: "Comic Cavern", t: [1.7, 1.35, 0.85, 0.25], ink: [0.006, 0.006, 0.008], amb: 0.85, shade: [0.25, 0.0] },
     // Owner direction, 2026-10-31: Living Comic's clean surfaces (few interior lines, its glow)
@@ -754,7 +820,7 @@ void main() {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U = {};
-  ["uRes", "uT", "uAsset", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  ["uRes", "uT", "uAsset", "uGate", "uGateEdge", "uGateCore", "uGateHot", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"].forEach(n => U[n] = gl.getUniformLocation(prog, n));
 
   let drag = null, pinch = null;
   const pointers = new Map();
@@ -801,7 +867,9 @@ void main() {
     const T = TREAT[treat];
     gl.uniform2f(U.uRes, canvas.width, canvas.height);
     gl.uniform1f(U.uT, time);
-    gl.uniform1f(U.uAsset, current);
+    gl.uniform1f(U.uAsset, a.shader !== undefined ? a.shader : current);
+    gl.uniform1f(U.uGate, a.gate || 0);
+    gl.uniform3fv(U.uGateEdge, a.edge || [0.7, 0.17, 0.05]); gl.uniform3fv(U.uGateCore, a.core || [1, 0.62, 0.25]); gl.uniform3fv(U.uGateHot, a.hot || [1, 0.86, 0.6]);
     gl.uniform3fv(U.uRo, ro); gl.uniform3fv(U.uRight, r); gl.uniform3fv(U.uUp, u); gl.uniform3fv(U.uFwd, f);
     gl.uniform4f(U.uFig, a.figure[0], a.figure[1], a.figure[2], figOn ? 1 : 0);
     gl.uniform4fv(U.uTreat, T.t); gl.uniform1f(U.uMode, treat);
