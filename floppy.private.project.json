@@ -31,7 +31,28 @@
         "Technology": {
           "Enum": 4
         },
-        "Brightness": 2.5
+        "ClockTime": 0,
+        "Brightness": 1,
+        "Ambient": [
+          0.07,
+          0.07,
+          0.1
+        ],
+        "OutdoorAmbient": [
+          0.1,
+          0.1,
+          0.15
+        ],
+        "EnvironmentDiffuseScale": 0.3,
+        "EnvironmentSpecularScale": 0.6
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.9,
+          "Size": 28,
+          "Threshold": 0.95
+        }
       }
     },
     "Workspace": {

@@ -17,6 +17,16 @@ pedestal.Size = Vector3.new(3.4, PEDESTAL_TOP, 2)
 pedestal.Position = Vector3.new(0, PEDESTAL_TOP / 2, 0)
 pedestal.Color = Color3.fromRGB(70, 74, 68)
 pedestal.Parent = workspace
+-- The place is at night (to show the blaster's glow); a soft lamp keeps the
+-- pedestal Floppy visible.
+local lamp = Instance.new("PointLight")
+lamp.Color = Color3.fromRGB(255, 240, 215)
+lamp.Brightness = 1.5
+lamp.Range = 6
+local lampAttachment = Instance.new("Attachment")
+lampAttachment.Position = Vector3.new(0, PEDESTAL_TOP / 2 + 2.5, -1.5)
+lampAttachment.Parent = pedestal
+lamp.Parent = lampAttachment
 
 local function load(id: number, name: string): Model?
 	local ok, container = pcall(InsertService.LoadAsset, InsertService, id)

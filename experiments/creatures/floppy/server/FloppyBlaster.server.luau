@@ -103,23 +103,54 @@ for mesh, part in parts do
 	part.Material = (Enum.Material :: any)[mesh.material]
 	part.Reflectance = mesh.reflectance
 	if mesh.name == CANISTER then
-		-- Deep blue glass that glows like the light source itself (see-through
-		-- blue neon). The light inside is neutral warm white, so the slug keeps
-		-- his own colour instead of turning blue.
-		part.Material = Enum.Material.Neon
-		part.Color = Color3.fromRGB(25, 85, 210)
-		part.Transparency = 0.82
+		-- Clear, lightly blue glass that doesn't tint the slug. The glow comes
+		-- from neon trim on the tube (below); the light inside is warm white so
+		-- Floppy shows his own green and lights a little of the area around.
+		part.Material = Enum.Material.Glass
+		part.Color = Color3.fromRGB(90, 150, 235)
+		part.Transparency = 0.88
 		local glow = Instance.new("PointLight")
 		glow.Name = "ChamberLight"
-		glow.Color = Color3.fromRGB(255, 248, 230)
-		glow.Brightness = 4
-		glow.Range = 1.6
+		glow.Color = Color3.fromRGB(255, 246, 225)
+		glow.Brightness = 3
+		glow.Range = 3
 		glow.Shadows = false
 		glow.Parent = part
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
 end
 model:Destroy()
+
+-- Glowing blue trim on the chamber: a ring at each end and a thin strip along
+-- the top and bottom edges, so the tube glows without covering the slug.
+local GLOW = Color3.fromRGB(40, 120, 255)
+local radius = math.min(canisterSize.X, canisterSize.Y) / 2
+local function trim(name: string, size: Vector3, offset: CFrame)
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Material = Enum.Material.Neon
+	part.Color = GLOW
+	part.Size = size
+	part.CastShadow = false
+	attach(part, offset, tool)
+	return part
+end
+for i, z in { -1, 1 } do
+	local ring = trim(
+		"ChamberRing" .. i,
+		Vector3.new(0.025, radius * 2.04, radius * 2.04),
+		CFrame.new(canisterCentre + Vector3.new(0, 0, z * (canisterSize.Z / 2 - 0.04)))
+			* CFrame.Angles(0, math.pi / 2, 0)
+	)
+	ring.Shape = Enum.PartType.Cylinder
+end
+for i, y in { -1, 1 } do
+	trim(
+		"ChamberStrip" .. i,
+		Vector3.new(0.02, 0.02, canisterSize.Z - 0.08),
+		CFrame.new(canisterCentre + Vector3.new(0, y * radius * 0.98, 0))
+	)
+end
 
 -- Floppy inside the canister: lying head-first toward the muzzle, on his back
 -- so his face shows through the glass.

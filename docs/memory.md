@@ -442,3 +442,4 @@
 - Owner: the clear glass read as dark, not lit. The chamber is now faint see-through neon (0.86 transparency) with a stronger inside light and a soft Highlight fill on the loaded slug.
 - Owner: the slug looked pale/white inside (the white Highlight fill); wanted deep blue glass that glows as the light source. Removed the fill; canister now deep blue see-through neon (0.72) with a blue PointLight.
 - Owner: glass good, but the slug looked dark blue. Inside light now neutral warm white (brightness 4); glass more see-through (0.82) but still glowing blue.
+- Owner: slug still deep blue; glass should glow without tinting the slug; dark sky to show the glow. A neon shell tints whatever is behind it, so the canister is now clear lightly-blue Glass (0.88) with neon blue rings and edge strips, a warm 3-stud light inside, and the test place is at night with bloom and a lamp on the pedestal.
