@@ -105,17 +105,17 @@ for mesh, part in parts do
 	if mesh.name == CANISTER then
 		-- Clear, faintly blue shell. Not Glass (it blurs and darkens what's
 		-- behind it) and not Neon (it tints the slug): the glow comes from the
-		-- trim and lights below.
+		-- trim, and the slug carries his own soft glow (below).
 		part.Material = Enum.Material.SmoothPlastic
 		part.Color = Color3.fromRGB(120, 170, 255)
 		part.Transparency = 0.9
 		part.Reflectance = 0.1
-		-- A faint light-blue spill onto the gun and hand; the inside light leads.
+		-- A faint light-blue spill onto the gun and hand.
 		local glow = Instance.new("PointLight")
 		glow.Name = "ChamberGlow"
 		glow.Color = Color3.fromRGB(170, 215, 255)
-		glow.Brightness = 1.2
-		glow.Range = 3.5
+		glow.Brightness = 0.8
+		glow.Range = 3
 		glow.Shadows = false
 		glow.Parent = part
 		glow.Parent = part
@@ -154,26 +154,6 @@ for i, y in { -1, 1 } do
 		Vector3.new(0.02, 0.02, canisterSize.Z - 0.08),
 		CFrame.new(canisterCentre + Vector3.new(0, y * radius * 0.98, 0))
 	)
-end
-
--- Warm white lights right beside the slug, at both ends of the tube, so he is
--- lit in his own colours.
-for i, z in { -1, 1 } do
-	local holder = Instance.new("Part")
-	holder.Name = "ChamberLamp" .. i
-	holder.Size = Vector3.new(0.05, 0.05, 0.05)
-	holder.Transparency = 1
-	attach(
-		holder,
-		CFrame.new(canisterCentre + Vector3.new(0, radius * 0.5, z * canisterSize.Z * 0.3)),
-		tool
-	)
-	local lamp = Instance.new("PointLight")
-	lamp.Color = Color3.fromRGB(255, 248, 230)
-	lamp.Brightness = 7
-	lamp.Range = 1.5
-	lamp.Shadows = false
-	lamp.Parent = holder
 end
 
 -- Floppy inside the canister: lying head-first toward the muzzle, on his back
@@ -216,6 +196,16 @@ for _, d in floppy:GetDescendants() do
 	end
 end
 floppy.Parent = tool
+-- Lit from within: a constant, unlit fill in his own sage green, so he reads
+-- clearly in the chamber whatever the lighting. Small lights inside the gun
+-- flickered on and off with Roblox's light culling and flared the prongs.
+local inner = Instance.new("Highlight")
+inner.Name = "ChamberGlow"
+inner.FillColor = Color3.fromRGB(176, 180, 138)
+inner.FillTransparency = 0.55
+inner.OutlineTransparency = 1
+inner.DepthMode = Enum.HighlightDepthMode.Occluded
+inner.Parent = floppy
 print(
 	string.format(
 		"Floppy blaster: canister %.2f x %.2f x %.2f studs; Floppy loaded at %.0f%% of ground size,"
