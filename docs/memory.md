@@ -3,6 +3,7 @@
 ## 2026-10-31 — Treatment direction
 
 - **Confirmed:** owner rejected the Enchanted treatment and wants a look between Comic Cavern and Living Comic, closer to Comic Cavern but not as heavy. **Implemented:** Inked Cavern treatment (ink width 1.45x, near-black charcoal ink, slightly reduced glow/bloom) as the asset library's default; Enchanted removed. **Unresolved:** owner confirmation.
+- **Owner follow-up:** Inked Cavern was "not there enough": the owner wants Living Comic's clean look with Comic Cavern's thick ink and shadowing. **Implemented:** treatments now set ink, interior-line density, shadow depth and shadow-edge hardness separately. Inked Cavern = Comic Cavern ink (1.7x, near-black), slightly fewer interior lines than Living Comic, Living Comic glow, deeper shadows (floor 0.1) with a crisp comic light-to-shadow edge (0.65).
 
 ## 2026-10-31 — Lobby branch and asset library
 
