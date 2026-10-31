@@ -1,0 +1,44 @@
+{
+  "name": "Rocklock / Collapsed Cavern",
+  "version": 3,
+  "seed": 27031,
+  "width": 212.8,
+  "depth": 186.2,
+  "ceiling": 84,
+  "coordinate_note": "Coordinates below use a 100x90 authoring frame. build/rocklock/layout.json contains the final scaled world coordinates.",
+  "shelf_height": 10,
+  "route_width": 14,
+  "tunnel_floor": -4,
+  "tunnel_roof": 8,
+  "rock_sides": 5,
+  "native_part_budget": 6500,
+  "palette": {
+    "floor": [92, 85, 104],
+    "stone": [84, 91, 118],
+    "shelf": [110, 109, 130],
+    "wall": [62, 74, 105],
+    "ceiling": [53, 65, 93],
+    "fracture": [133, 128, 151],
+    "west": [112, 154, 164],
+    "east": [186, 151, 105]
+  },
+  "spawns": [
+    {"name": "North", "position": [0, 3.15, -37], "look_at": [0, 3.15, 0]},
+    {"name": "South", "position": [0, 3.15, 37], "look_at": [0, 3.15, 0]}
+  ],
+  "interactions": [
+    {"id": "Keystone", "kind": "Rockfall", "position": [0, 41, 0], "size": [10, 8, 10], "target": "Collapse", "preserve": "West,East,Underpass"},
+    {"id": "NorthCover", "kind": "DestructibleCover", "position": [0, 3.5, -24], "size": [14, 7, 5], "target": "NorthBaffle", "preserve": "West,East"},
+    {"id": "SouthCover", "kind": "DestructibleCover", "position": [0, 3.5, 24], "size": [14, 7, 5], "target": "SouthBaffle", "preserve": "West,East"},
+    {"id": "WestBarrier", "kind": "TemporaryBarrier", "position": [-18, 0.2, 0], "size": [8, 0.2, 10], "target": "Ground", "preserve": "East,Underpass"},
+    {"id": "EastSlow", "kind": "SlowingZone", "position": [18, 0.2, 0], "size": [8, 0.2, 10], "target": "Ground", "preserve": "West,Underpass"},
+    {"id": "WestDisplacement", "kind": "DisplacementEdge", "position": [-29, 10, 4], "size": [4, 0.2, 10], "target": "WestShelf", "preserve": "Ground"},
+    {"id": "EastAbility", "kind": "AbilityLanding", "position": [36, 10, -12], "size": [8, 0.2, 10], "target": "EastShelf-1", "preserve": "Ground"}
+  ],
+  "routes": {
+    "West": [[0, 0, -37], [-36, 0, -40], [-36, 10, -18], [-36, 10, 18], [-36, 0, 40], [0, 0, 37]],
+    "Centre": [[0, 0, -37], [-16, 0, -32], [-22, 0, -16], [-22, 0, 16], [-16, 0, 32], [0, 0, 37]],
+    "East": [[0, 0, -37], [36, 0, -40], [36, 10, -18], [36, 10, 18], [36, 0, 40], [0, 0, 37]],
+    "Underpass": [[0, 0, -18], [0, -4, -8], [0, -4, 8], [0, 0, 18]]
+  }
+}

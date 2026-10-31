@@ -1,0 +1,82 @@
+{
+  "name": "SlugshotRocklock",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34874,
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "Rocklock": {
+        "$path": "build/rocklock/generated/map.rbxmx"
+      },
+      "$properties": {
+        "FallenPartsDestroyHeight": -60
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "RocklockColorGrade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {"Brightness": 0.02, "Contrast": 0.08, "Saturation": 0.03, "TintColor": [0.93, 0.97, 1]}
+      },
+      "RocklockBloom": {
+        "$className": "BloomEffect",
+        "$properties": {"Intensity": 0.15, "Size": 20, "Threshold": 1.2}
+      },
+      "$properties": {
+        "Ambient": [0.2, 0.22, 0.3],
+        "OutdoorAmbient": [0.2, 0.22, 0.3],
+        "Brightness": 1,
+        "ClockTime": 13,
+        "GlobalShadows": true,
+        "ExposureCompensation": 0,
+        "Technology": "Voxel"
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "MovementExperiment": {
+        "$path": "experiments/movement/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      },
+      "MovementSandbox": {
+        "$path": "build/rocklock/generated/server",
+        "Arena": {
+          "$path": "experiments/movement/rocklock/Arena.luau"
+        },
+        "RocklockSpawns": {
+          "$path": "experiments/movement/rocklock/Spawns.luau"
+        }
+      },
+      "RocklockBlaster": {
+        "$path": "experiments/movement/rocklock/Blaster.server.luau"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "EnableMouseLockOption": false
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        },
+        "MovementSandbox": {
+          "$path": "experiments/movement/client"
+        },
+        "RocklockBlaster": {
+          "$path": "experiments/movement/rocklock/BlasterClient.client.luau"
+        }
+      }
+    }
+  }
+}

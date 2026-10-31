@@ -10,6 +10,8 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Integrations and approval-dependent setup](integrations.md)
 - [Technical research and specialist tooling](research/tooling.md)
 - [Skill evaluation](research/skills.md)
+- [Rocklock cavern map](rocklock.md), [layout](diagrams/rocklock-layout.svg) and [validation](rocklock-verification.md)
+- [Rocklock V2 redesign and destruction](rocklock-v2.md), [routes](diagrams/rocklock-v2-routes.svg), [interactions](diagrams/rocklock-v2-interactions.svg) and [ADR 0011](decisions/0011-rocklock-v2-destruction.md)
 - [Movement lab and playtest plan](movement.md)
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Asset register and conventions](assets.md)

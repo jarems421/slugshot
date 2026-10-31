@@ -1,0 +1,28 @@
+# Review and Git backup ? 2026-10-31
+
+## Confirmed scope
+
+Owner supplied the Claude handoff and requested review of the approved Floppy, blaster and other local work, followed by committing/pushing all outstanding work including movement. Branches remain separate; this request is not an instruction to merge them or publish a Roblox experience. Restricted animation data, private reusable IDs, credentials and generated private places remain ignored.
+
+## Findings
+
+- **Confirmed:** Claude completed and committed the final handoff adjustment locally as `dc5c239` (inner Highlight transparency 0.72). The slug branch was clean but had 31 commits beyond the remote baseline. Movement v7.38/v7.39 and Rocklock/map/blaster work were uncommitted in separate worktrees.
+- **Reviewed visually:** the live Blender 5.2.3 scene is the saved approved `assets/source/slugs/models/floppy/floppy.blend`, with no unsaved edits at initial inspection. Front/side/back/three-quarter material views and five idle frames show the drowsy uneven lids, ring eyes, drooping antennae, short integrated tail and pooled folded belly. The accepted silhouette and art were not edited. This is a strong improvement over the rejected primitive-based draft; glossy viewport lighting is not evidence of Roblox appearance.
+- **Verified offline:** source has 367,936 triangles (360,000 skin + 3,968 per eye), three meshes, eight bones and packed textures. Source/export SHA-256 checks match the existing export report. Fresh FBX model/idle reimport confirms 8,800 triangles (8,000 + 400 + 400), at most three influences, eight bones, 0.924-stud height, intended facing, 12-second loop, zero seam delta and no bone-scale animation.
+- **Unresolved mesh QA:** the render-source QA passes its render profile with warnings: 18 inconsistent-winding edges, five duplicate vertices and stacked eye UVs; high source triangle count skips its generic intermesh overlap check. The Roblox-budget QA fails its stricter profile: 18 inconsistent-winding edges and one degenerate face in the skin; it also reports nine non-manifold edges and three duplicate vertices. Eye UVs overlap on the lens shells; body UV overlap is 0.02%. Eye/body back-to-back pairs are reported at the inset sockets. These are recorded for technical cleanup on a checkpoint/variant; the approved model was not silently replaced and this review does not grant a production-ready geometry claim.
+- **Unresolved chamber lighting:** a Highlight makes the loaded slug visible but does not illuminate surrounding shell surfaces. Claude's final transparency tweak is committed, but the owner's last request for calm actual interior illumination remains unresolved. The repeated PointLight assignment was removed as harmless duplicate code. The Rocklock blaster's hold/draw/holster prototype is separate from the Floppy display tool; combining those is not established.
+- **Reviewed code:** Rocklock hold poses layer over locomotion, use private optional mesh data with a native stand-in and keep reusable asset IDs out of source. Hold-style cycling is local only; remote peers do not receive the selected candidate. Floppy idle is client-driven for every visible clone; the saved export has matching loop rates, but actual skin playback/visibility and cloning/streaming need Studio evidence. Rocklock destruction computes effects from server rays, limits requests and restricts affected structures/terrain zones; competitive/network guarantees are not established.
+- **Integration limit:** Rocklock remains on its existing v7.37 controller with blaster hold changes. v7.38/v7.39 terrain continuation and slower speeds live on `experiment/wallrun-terrain`. The map routes have not been revalidated against the slower controller; a combined gameplay build needs a separate integration pass.
+
+## Checks rerun
+
+- `python tools/verify_slugs.py --blender` with the audited Blender 4.5.14: PASS (foundation, contracts, Python tests, strict Luau, species builds/renders/FBX roundtrips and corrupted-asset checks). This legacy species check is separate from final Floppy review above.
+- Final Floppy private-project sourcemap, strict Luau and private place build: PASS. Dedicated current-export FBX reimport and file/source hashes: PASS. Generic source/render and game mesh QA findings are listed above.
+- `python tools/verify_movement.py` in the movement worktree: PASS after normalizing Config line endings with StyLua. New wall-surface regression scripts are included in the test build; they have not executed in Roblox.
+- `python tools/verify_rocklock_v2.py`: PASS (layout/destruction data, strict Luau, public/private builds, controller fidelity and isolation).
+- Rocklock v1 initially checked an older unsuffixed place and failed the crystal-presence check. Rebuilt current cached reviewed geometry with `python tools/rocklock/build.py --reuse-geometry --private --output-suffix=-review`, then `python tools/verify_rocklock.py --map-only --output-suffix=-review`: PASS. No accepted source geometry regenerated.
+- Candidate tracked/untracked files and unpushed path history were checked for ignored private/generated paths and common credential patterns; no matches found. Original editable assets and review renders are included; private source/downloads and generated places are excluded.
+
+## Remaining gates
+
+Owner chamber-lighting verdict; variant-based mesh cleanup; actual Studio import/animation/fit evidence; movement/corner/flip/camera playtest and multiplayer; combined map reachability at 18/24 speeds; final name/IP review before publication. No new upload, experience publication, art redesign or branch merge was performed.

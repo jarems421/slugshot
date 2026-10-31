@@ -1,0 +1,149 @@
+{
+  "name": "SlugshotRocklockV2Private",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34875,
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FallenPartsDestroyHeight": -60
+      },
+      "Rocklock": {
+        "$path": "build/rocklock-v2/generated/map.rbxmx"
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "Ambient": [
+          0.36,
+          0.33,
+          0.3
+        ],
+        "OutdoorAmbient": [
+          0.32,
+          0.3,
+          0.28
+        ],
+        "Brightness": 2.2,
+        "ClockTime": 14.2,
+        "GeographicLatitude": 20,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.3,
+        "EnvironmentSpecularScale": 0.2,
+        "ExposureCompensation": 0.1
+      },
+      "RocklockV2Haze": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.32,
+          "Offset": 0.1,
+          "Color": [
+            0.78,
+            0.72,
+            0.64
+          ],
+          "Decay": [
+            0.45,
+            0.4,
+            0.36
+          ],
+          "Glare": 0.2,
+          "Haze": 1.6
+        }
+      },
+      "RocklockV2Grade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Contrast": 0.08,
+          "Saturation": -0.05,
+          "TintColor": [
+            1,
+            0.97,
+            0.92
+          ]
+        }
+      },
+      "RocklockV2Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.2,
+          "Size": 24,
+          "Threshold": 1.3
+        }
+      },
+      "RocklockV2SunRays": {
+        "$className": "SunRaysEffect",
+        "$properties": {
+          "Intensity": 0.08,
+          "Spread": 0.6
+        }
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "MovementExperiment": {
+        "$path": "experiments/movement/shared"
+      },
+      "RocklockV2": {
+        "$path": "experiments/rocklock-v2/shared"
+      },
+      "MovementPrivateClips": {
+        "$path": "private-assets/generated/MovementClips.luau"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      },
+      "MovementSandbox": {
+        "$path": "build/rocklock-v2/generated/server",
+        "Arena": {
+          "$path": "experiments/movement/rocklock/Arena.luau"
+        },
+        "RocklockSpawns": {
+          "$path": "experiments/movement/rocklock/Spawns.luau"
+        }
+      },
+      "RocklockBlaster": {
+        "$path": "experiments/movement/rocklock/Blaster.server.luau"
+      },
+      "RocklockV2": {
+        "$path": "experiments/rocklock-v2/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "EnableMouseLockOption": false
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        },
+        "MovementSandbox": {
+          "$path": "experiments/movement/client"
+        },
+        "RocklockBlaster": {
+          "$path": "experiments/movement/rocklock/BlasterClient.client.luau"
+        },
+        "RocklockV2": {
+          "$path": "experiments/rocklock-v2/client"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "RocklockBlasterMesh": {
+        "$path": "private-assets/generated/blaster/BlasterMesh.luau"
+      }
+    }
+  }
+}

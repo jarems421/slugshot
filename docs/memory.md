@@ -1,5 +1,29 @@
 # Project memory
 
+## 2026-10-30 - Rocklock cavern art pass
+
+- **Confirmed:** owner approved the Slugterra-inspired visual recommendations and asked for hanging rock icicles (stalactites), all authored in Blender.
+- **Implemented/verified, limited:** original Blender stone and crystal revisions, 12 overhead stalactites, new separately named source/export/place, full automated checks and FBX roundtrips. In one Studio client, west shelf, underpass and a west wall run worked. [Preview and details](rocklock.md); [test evidence and limits](rocklock-verification.md).
+- **Unresolved:** owner judgment, actual Roblox visual capture, clipping and collision seams, opposite route, multiplayer and performance. Gun and animation files were not edited.
+
+## 2026-10-30 - Rocklock visual comparison
+
+- **Confirmed:** owner requested comparison against actual Slugterra cavern imagery to identify visual improvements.
+- **Considering:** more irregular layered cavern silhouettes, a natural central arch, textured blue-violet stone and less uniform crystal clusters while retaining open combat space and close-fitting collision. Sources, reference limits and priorities are in [visual comparison](research/rocklock-slugterra-visual-comparison.md).
+- **Unresolved:** the existing Rocklock renders predate crystal lighting, and a Studio capture was blank; current in-game visuals need a successful capture and owner review. No map or gun/animation work was changed by this research.
+
+## 2026-10-30 - Rocklock rock collision
+
+- **Confirmed:** owner requested solid cavern walls and collision closely following visible rocks, including dips instead of broad invisible boxes.
+- **Implemented:** the original Blender rock triangles now form collidable native wedge surfaces; hidden skinned-box proxies are noncolliding. The crystal geometry remains noncolliding. The separately named `-accurate` place preserves earlier builds and concurrent gun/animation work.
+- **Verified, limited:** automated foundation, movement and map checks passed; a Studio client landed on the arch and crossed the west shelf and underpass. A slide into the wall stopped, but one wall-run rejection followed, and a visual capture was blank. Facets have finite authored thickness; limb clipping, traversal seams, multiplayer and performance require further checks. See [Rocklock](rocklock.md) and [validation](rocklock-verification.md).
+
+## 2026-10-30 - Rocklock crystal lighting
+
+- **Confirmed:** owner requested Slugterra-inspired crystal formations as cavern light sources and asked that concurrent gun and animation work be preserved.
+- **Implemented:** five original Blender designs, 16 formations, visible crystal-hosted point lights and a cool native Roblox post-processing look, in separately named `-crystals` place builds.
+- **Verified, limited:** Blender FBX roundtrip and automated movement, foundation and map checks passed. **Unresolved:** subjective visual review and Studio/device performance. See [research](research/rocklock-crystals.md) and [Rocklock](rocklock.md).
+
 ## 2026-10-30 - Drag limb spacing
 
 - **Confirmed:** the overall drag pose is positioned correctly, but the owner sees a compressed wall-side shoulder and odd legs.
@@ -320,3 +344,35 @@
 - v7.30: the owner described the cling: Spider-Man-like, facing the wall, one hand on it, one arm off, feet stuck to it, slowly dragging, a quick stop from a run. Fitted on the renderer; the body moves in to 1.2 studs while clinging so the hand and feet reach the wall.
 - v7.31: the owner shared wall-slide reference images (back to the wall, hand flat on it behind, other arm out) and wanted an instant stop and a straight-down slide. Fitted on the renderer at the blocks' corners. Lesson: contact for R6 blocks must be measured at the block corners, not the end centre, or limbs sink into surfaces.
 - v7.32: the slide began about 2 s after stopping (Space held kept the old 'climb with no direction' rule going), and the pose blend counted the pull toward the wall as running, so the owner saw a half-blended pose. Stopping now always slides; the pose was refitted with the hand at head height.
+
+## 2026-10-30 ? Rocklock spacious cavern greybox
+
+- **Confirmed:** the pasted owner request authorized the isolated playable map, original procedural Blender geometry, source/exports/previews and Studio tests; no controller/camera rebalance, main merge, publication or private-asset redistribution. Work is on `experiment/rocklock-greybox`.
+- **Confirmed correction:** the owner saw the first map and found it crowded. They want wide Slugterra-like caverns for gunplay and larger transformed slugs, not many closely packed structures. v2 expands 100 ? 90 to 160 ? 140, removes crowns, tower stairs, shoulder blocks and training stones, and uses broad ordinary ramps. Keep that spaciousness preference in later iterations.
+- **Implemented/verified:** shared layout ? headless Blender ? native, noncolliding faceted art plus 35 simple collision pieces; editable `.blend`, FBX roundtrip, eight previews, structured coordinates and disabled interaction metadata. Separate Rojo projects preserve the lab/foundation. A generated server copy adapts only initial placement through stable opposite spawn slots before validation history initializes; controller and camera sources are untouched. [ADR 0010](decisions/0010-rocklock-map.md).
+- **Implemented/verified:** full offline checks passed. Two Studio clients completed flank ramp/crossing, wall-run/kick, underpass, first jump, flip, slide/slide-jump, peer action observation and stable opposite respawn; each had 6 accepted actions, 0 rejected requests, 0 corrections. Two first-jump samples: about 16.46 travel and 10.87?10.88 rise. 108 enclosure rays hit boundary collision. [Results and limits](rocklock-verification.md).
+- **Unresolved:** subjective feel/scale, gunfight timing/balance, actual larger-form dimensions, exhaustive camera/escape/stuck tests, devices/controlled FPS/network impairments. One test client averaged ~68 ms/frame, the other ~16.85 ms; window focus/throttling was not controlled. A first harness failed because plugin-only settings() was called inside a game Script; it was corrected and rerun.
+- **Workflow lesson:** a fresh Studio file can show a Lighting Technology Migration dialog if the generated place defaults to Compatibility. Rocklock explicitly uses Voxel. Close the generated test window and discard temporary QA edits before rebuilding; preserve unrelated unsaved windows. Never save a stale open place over the rebuild.
+- **Implemented/verified final handoff:** the public original-clip build passed a spawn/flip/slide smoke (0 rejections/corrections). The final private map was rebuilt and reopened; W/Space reached the north cover with 0 rejections/corrections, then play stopped. Two noncolliding fill-light hosts improve the expanded floor visibility; final count 4,854 Parts / 35 solid pieces. QA fixtures are absent.
+
+## 2026-10-30 ? Rocklock v3 size change
+
+- **Confirmed:** the owner said v2 was too small and requested about 33% more size as the first change. **Implemented:** v3 scales both horizontal dimensions and the existing geometry/coordinates by 1.33, from 160 ? 140 to 212.8 ? 186.2 studs; floor area rises about 76.9%. Traversal heights, movement and camera stay unchanged.
+- **Implemented:** separate `-v3` public/private build outputs leave the owner?s already-playing v2 place and its unsaved session alone. Existing Blender source and export matched their recorded hashes before regeneration.
+- **Verified, limited:** full automated foundation/movement/map checks passed; the v3 Studio place opened with 153.10-stud spawn separation, direct spawn cover, and all 108 boundary rays hitting collision. One correction was observed in an active play session; cause and repeatability remain unresolved. Two-client checks are recorded separately.
+- **Verified, v3 two-client rerun:** both clients completed their flank and underpass routes, wall runs/kicks, flips, slides/slide-jumps, observed peer actions and respawned to opposite ends; each had 6 accepted, 0 rejected and 0 corrections. The first attempt timed out at the old seven-second spawn-route limit under background throttling; the rerun used twice the limit. The separate owner play session had 1 correction and 1 suspect air boost (42 accepted, 0 rejected); cause unresolved and not reproduced by the scripted routes. [Evidence](evidence/2026-10-30-rocklock-v3.json).
+
+## 2026-10-31 - Rocklock V2 redesign (Claude)
+
+- **Confirmed:** the owner's Rocklock V2 brief and addendum: all attacks damage all ordinary destructibles via structural HP; four categories; anchored large rubble; no mid-round regeneration; exact reset; build alongside v1 (Codex continues the existing map).
+- **Implemented:** `tools/rocklock_v2` (layout, Blender geology, build, render, diagram), `experiments/rocklock-v2` (destruction config/server/self-test/client), `rocklock-v2*.project.json`, `tools/verify_rocklock_v2.py`, [docs](rocklock-v2.md), [ADR 0011](decisions/0011-rocklock-v2-destruction.md).
+- **Verified offline:** 105 v2 checks and the movement/foundation suites pass; 6,107 parts.
+- **Owner feedback:** 140 × 112 felt "tiny and packed"; scaled to 210 × 168 with movement-tuned heights and gaps fixed. The first draft also had the Eyrie brace blocking the shaft seal (fixed with two side legs). **Not run:** Studio, self-test, two clients. The owner's PC froze several times on 2026-10-30 while Studio was driven automatically (a local upload plugin, stacked Studio windows and disk paging errors), so Claude now leaves Studio runs to the owner.
+- **Research limits:** the Rocklock wiki (HTTP 402) and Slug Arsenal pages (certificate failure) were unreadable; Rammstone and Armashelt abilities were confirmed via search results only.
+
+
+## 2026-10-31 ? Review and backup of all local work
+
+- **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
+- **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
+- **Unresolved:** game-mesh winding/degenerate-face cleanup, genuine chamber illumination, Studio runtime/peers, slower-controller map integration and owner verdict. Art unchanged; private assets/IDs remain ignored.

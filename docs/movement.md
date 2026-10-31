@@ -2,6 +2,8 @@
 
 Developed on `experiment/movement-sandbox` and merged into `main` at the owner's request on 2026-10-30, after reviewing the gameplay. The movement code still lives only in `experiments/movement` and its own Rojo projects; the foundation place is unchanged. Moves, numbers and the camera remain experimental, not final design decisions.
 
+**New map playtest:** [Rocklock cavern v3](rocklock.md) reuses this exact controller in a separate spacious place. The original lab is preserved.
+
 ## Play and compare
 
 ```powershell

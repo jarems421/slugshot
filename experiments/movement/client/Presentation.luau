@@ -259,6 +259,24 @@ function Presentation.start(clips: Clips.Library)
 			lastLook = root.CFrame.LookVector,
 			lastVelocity = Vector3.zero,
 			aimWeight = 0,
+			holdWeight = 0,
+			holdStill = 0,
+			holdOn = 0,
+			holdVy = 0,
+			holdSpring = { x = Vector2.zero, v = Vector2.zero },
+			holding = false,
+			drawStart = -math.huge,
+			wrist = 0,
+			holdStyle = {
+				arm = CFrame.identity,
+				waist = CFrame.identity,
+				neck = CFrame.identity,
+				wrist = 0,
+				follow = 0.3,
+				sway = 0,
+			},
+			gripWeld = nil,
+			gripBase = CFrame.identity,
 			footOffset = 0,
 			scratch = {},
 		}
@@ -749,6 +767,32 @@ function Presentation.start(clips: Clips.Library)
 	end
 
 	local aimPose: Pose = {}
+	local Hold = A.Hold
+	local holdPose: Pose = { RightElbow = IDENTITY, RightWrist = IDENTITY }
+	local function euler(v: { number }): CFrame
+		return CFrame.fromEulerAnglesYXZ(v[1], v[2], v[3])
+	end
+	type HoldStyle = {
+		arm: CFrame,
+		waist: CFrame,
+		neck: CFrame,
+		wrist: number,
+		weight: number,
+		follow: number,
+		sway: number,
+	}
+	local holdStyles: { [string]: HoldStyle } = {}
+	for name, style in Hold.Styles :: { [string]: any } do
+		holdStyles[name] = {
+			arm = euler(style.Arm),
+			waist = euler(style.Waist),
+			neck = euler(style.Neck),
+			wrist = style.Wrist,
+			weight = style.Weight,
+			follow = style.TorsoFollow,
+			sway = style.Sway,
+		}
+	end
 	local function evaluate(rig: any, dt: number, now: number)
 		local character, root, humanoid = rig.character, rig.root, rig.humanoid
 		local velocity = root.AssemblyLinearVelocity
@@ -979,6 +1023,95 @@ function Presentation.start(clips: Clips.Library)
 		rig.bank += (bankTarget - rig.bank) * leanAlpha
 		rig.pitch += (pitchTarget - rig.pitch) * leanAlpha
 
+		-- Held pistol in the selected style (HoldVariant, cycled on G), layered over the
+		-- body's own motion (Hold.Carry): full when standing, looser when running, sprinting
+		-- or airborne, and light in actions, so runs, slides and flips keep their swing. A
+		-- standing arm is partly steadied against the torso; a moving one rides it. A spring
+		-- adds follow-through from turns, take-offs and landings. Style changes ease in.
+		local tool = character:FindFirstChildOfClass("Tool")
+		local holding = tool ~= nil and tool:GetAttribute("HoldStyle") == "Pistol"
+		if holding and not rig.holding then
+			rig.drawStart = now
+		end
+		rig.holding = holding
+		local style = holdStyles[character:GetAttribute("HoldVariant") or ""]
+			or holdStyles[Hold.Default]
+		local carry = Hold.Carry
+		local running = math.clamp(flat.Magnitude / carry.RunSpeed, 0, 1)
+		local sprinting = math.clamp(
+			(flat.Magnitude - carry.RunSpeed) / (carry.SprintSpeed - carry.RunSpeed),
+			0,
+			1
+		)
+		local presence, still = 0, 0
+		if holding then
+			if actionWeight > 0 and action then
+				presence = (carry.Actions :: { [string]: number })[action.kind] or carry.Air
+			elseif not grounded then
+				presence = carry.Air
+			else
+				presence = carry.Idle
+					+ (carry.Run - carry.Idle) * running
+					+ (carry.Sprint - carry.Run) * sprinting
+				still = 1 - running
+			end
+			presence *= style.weight
+		end
+		local holdAlpha = Math.alpha(Hold.Rate, dt)
+		rig.holdWeight += (presence - rig.holdWeight) * holdAlpha
+		rig.holdStill += (still - rig.holdStill) * holdAlpha
+		rig.holdOn += ((if holding then 1 else 0) - rig.holdOn) * holdAlpha
+		local current = rig.holdStyle
+		current.arm = current.arm:Lerp(style.arm, holdAlpha)
+		current.waist = current.waist:Lerp(style.waist, holdAlpha)
+		current.neck = current.neck:Lerp(style.neck, holdAlpha)
+		current.wrist += (style.wrist - current.wrist) * holdAlpha
+		current.follow += (style.follow - current.follow) * holdAlpha
+		current.sway += (style.sway - current.sway) * holdAlpha
+		-- Follow-through spring (pitch, yaw): turns push the gun behind, take-offs kick it
+		-- up and landings dip it; it settles back with a little bounce.
+		local spring = rig.holdSpring
+		local dVy = if holding then velocity.Y - rig.holdVy else 0
+		rig.holdVy = velocity.Y
+		spring.v += Vector2.new(-dVy * carry.Dip, -yawRate * carry.Lag * dt)
+		local k = carry.Spring
+		spring.v += (-k * spring.x - 2 * math.sqrt(k) * carry.Damping * spring.v) * dt
+		spring.x += spring.v * dt
+		spring.x = Vector2.new(
+			math.clamp(spring.x.X, -carry.MaxSway, carry.MaxSway),
+			math.clamp(spring.x.Y, -carry.MaxSway, carry.MaxSway)
+		)
+		-- Draw: the blaster spins about the trigger finger (ease-out, ending a whole turn
+		-- round so it settles without a jump) while the arm flourishes up.
+		local draw = math.clamp((now - rig.drawStart) / Hold.DrawTime, 0, 1)
+		local spin = if holding then -2 * math.pi * Hold.DrawSpins * (1 - (1 - draw) ^ 3) else 0
+		local lift = if holding then Hold.DrawLift * math.sin(math.pi * draw) else 0
+		rig.wrist = current.wrist * math.min(rig.holdWeight, 1) + spin
+		if rig.holdWeight > 0.001 then
+			local styled = rig.holdWeight * rig.holdStill
+			local waist = pose.Waist or IDENTITY
+			pose.Waist = waist:Lerp(current.waist * waist, styled)
+			local neck = pose.Neck or IDENTITY
+			pose.Neck = neck:Lerp(current.neck * neck, styled)
+			local torso = CFrame.Angles(rig.pitch, 0, rig.bank)
+				* (pose.Root or IDENTITY).Rotation
+				* (pose.Waist or IDENTITY).Rotation
+			local level = IDENTITY:Lerp(torso:Inverse(), rig.holdStill * (1 - current.follow))
+			local drift = CFrame.Angles(
+				math.sin(now * 2.1) * current.sway * rig.holdStill + lift,
+				math.sin(now * 1.3 + 1) * current.sway * rig.holdStill,
+				0
+			)
+			holdPose.RightShoulder = level * drift * current.arm
+			for name, value in holdPose do
+				pose[name] = (pose[name] or IDENTITY):Lerp(value, rig.holdWeight)
+			end
+		end
+		if rig.holdOn > 0.001 then
+			local x = spring.x * rig.holdOn
+			pose.RightShoulder = CFrame.Angles(x.X, x.Y, 0) * (pose.RightShoulder or IDENTITY)
+		end
+
 		for _, limb in A.FoldLimbs do
 			pose[limb[1]] = chord(pose[limb[1]], pose[limb[2]])
 			pose[limb[2]], pose[limb[3]] = nil, nil
@@ -1033,6 +1166,15 @@ function Presentation.start(clips: Clips.Library)
 			rig.output[name] = value
 			local frames = rig.frames[name]
 			joint.Transform = frames[1] * value * frames[2]
+		end
+		-- Wrist: R6 has none, so the tool's grip weld turns the held blaster about the hand.
+		local arm = character:FindFirstChild("Right Arm")
+		local grip = arm and arm:FindFirstChild("RightGrip")
+		if grip and grip:IsA("Weld") then
+			if rig.gripWeld ~= grip then
+				rig.gripWeld, rig.gripBase = grip, grip.C0
+			end
+			grip.C0 = rig.gripBase * CFrame.Angles(if holding then rig.wrist else 0, 0, 0)
 		end
 		-- What was rendered, for the Studio probe only: attribute writes every frame for
 		-- every character are wasted work in a live game.

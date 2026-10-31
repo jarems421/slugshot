@@ -301,6 +301,78 @@ return table.freeze({
 		},
 		AimWeightDuringAction = 0.25,
 		AimRate = 14,
+		-- One-handed pistol hold for a Tool with HoldStyle "Pistol" (Rocklock blaster,
+		-- owner 2026-10-30: smooth, clean, a large pistol, not "basic", and not stiff; styles
+		-- on G). The tool's grip tilts the barrel GripTilt above the arm's line and sets the
+		-- grip's centre GripInset studs inside the R6 hand block, so the fist closes round it.
+		-- Per style, in character (root) space:
+		--   Arm   = raise from hanging, inward yaw, roll (fromEulerAnglesYXZ order)
+		--   Wrist = extra barrel pitch about the hand (R6 has no wrist: the grip weld turns)
+		--   Waist / Neck = torso turn and head counter-turn, shown mostly when standing
+		--   Weight = scales the whole hold; TorsoFollow = how much a standing arm rides the
+		--   torso instead of being steadied (a moving arm always rides it); Sway = idle drift.
+		-- Carry layers the hold over the body's own motion the way action games layer a
+		-- weapon pose over full-body locomotion: full when standing, less when running,
+		-- sprinting and airborne, and little in actions so slides and flips keep their swing.
+		-- A spring adds follow-through: turning swings the gun behind (Lag per rad/s of turn),
+		-- take-offs kick it and landings dip it (Dip per stud/s change of vertical speed).
+		-- Taking it out spins the blaster DrawSpins times about the trigger finger.
+		Hold = {
+			GripTilt = 0.2,
+			GripInset = 0.14,
+			Rate = 10,
+			Default = "Gunslinger",
+			Order = { "Gunslinger", "Hero", "Bladed" },
+			Carry = {
+				Idle = 1,
+				Run = 0.6,
+				Sprint = 0.4,
+				Air = 0.45,
+				RunSpeed = 22,
+				SprintSpeed = 30,
+				Actions = { Slide = 0.3, WallRun = 0.2, WallHop = 0.2, Mantle = 0.12, Flip = 0.1 },
+				Spring = 90,
+				Damping = 0.35, -- fraction of critical damping: lower bounces more
+				Lag = 3,
+				Dip = 0.05,
+				MaxSway = 0.45,
+			},
+			Styles = {
+				-- Low and loose at the hip, barrel angled at the floor ahead.
+				Gunslinger = {
+					Arm = { 0.7, 0.14, -0.08 },
+					Wrist = 0.32,
+					Waist = { 0, -0.1, 0 },
+					Neck = { 0, 0.08, 0 },
+					Weight = 0.9,
+					TorsoFollow = 0.85,
+					Sway = 0.025,
+				},
+				-- Blaster up beside the face, barrel to the sky.
+				Hero = {
+					Arm = { 1.95, 0.55, 0.18 },
+					Wrist = 0.8,
+					Waist = { 0.04, 0.12, 0 },
+					Neck = { 0, -0.12, 0 },
+					Weight = 1,
+					TorsoFollow = 0.7,
+					Sway = 0.015,
+				},
+				-- Side-on stance, right shoulder forward, arm on the target line.
+				Bladed = {
+					Arm = { 1.37, 0, 0 },
+					Wrist = 0,
+					Waist = { 0, 0.7, 0 },
+					Neck = { 0, -0.55, 0 },
+					Weight = 1,
+					TorsoFollow = 0.6,
+					Sway = 0.012,
+				},
+			},
+			DrawTime = 0.45,
+			DrawSpins = 1,
+			DrawLift = 0.35, -- extra arm raise at the middle of the spin
+		},
 	},
 	Validation = {
 		RequestsPerSecond = 12,

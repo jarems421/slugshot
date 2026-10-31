@@ -19,3 +19,5 @@ Shared code is readable by clients. Future authority and networking choices need
 See [ADR 0001](decisions/0001-foundation.md).
 
 The authorized movement study has separate `movement.project.json` / `movement.test.project.json` mappings under `experiments/movement`; neither is referenced by the foundation projects. See [ADR 0002](decisions/0002-movement-experiment.md). Private downloaded clips are excluded from every tracked mapping. The experimental server creates its functional arena/R15 avatars at runtime; native PlayerModule/Humanoid remain the input/physics substrate.
+
+The isolated [Rocklock map](rocklock.md) has dedicated public/private projects on port 34874. Blender art and simple Roblox collision share one seeded layout. Its generated server copy adapts only initial spawn selection; the controller and camera remain unchanged. See [ADR 0010](decisions/0010-rocklock-map.md).

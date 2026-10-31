@@ -2,7 +2,7 @@
 
 ## Confirmed
 
-Slugshot is an original Roblox multiplayer creature-combat project. The verified development foundation is preserved. The owner now authorizes isolated movement research, a playable sandbox and relevant free resource evaluation. Use original or appropriately licensed IP. Prototype mechanics, controls and camera parameters are not permanent design decisions; final combat/creature/world systems remain unimplemented.
+Slugshot is an original Roblox multiplayer creature-combat project. The verified development foundation is preserved. The owner authorizes isolated movement research, a playable sandbox, relevant free resource evaluation and the original Rocklock cavern greybox (2026-10-30). The later spaciousness feedback governs the map iteration; final environment/combat design is still open. Use original or appropriately licensed IP. Prototype mechanics, controls and camera parameters are not permanent design decisions; final combat/creature/world systems remain unimplemented.
 
 ## Considering
 
