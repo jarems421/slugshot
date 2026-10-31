@@ -447,3 +447,9 @@
 - Owner: blue too strong/neon; wanted a clear, light-blue, subtler glow with the inside of the shell well lit. Trim now pale blue at 0.45 transparency and thinner, spill light pale and weak (1.2, 3.5 studs), bloom reduced, inside lamps slightly stronger.
 - Owner: lighting flickered between an orange-flare state and a dark state; the inside wasn't lit. Small PointLights inside the gun flicker with Roblox light culling and flared the orange prongs. Removed them; the loaded slug now has a constant sage-green Highlight fill (0.55); one faint pale-blue spill light remains. Lesson: don't rely on tiny interior lights for visibility.
 - Owner: light the inside calmly and lightly, not pale. Inner sage glow softened to 0.72 fill transparency. Session paused here at the owner's request; open items: owner verdict on the chamber glow, resizing the real Rocklock blaster (other branch), Studio MCP available after a session restart.
+
+## 2026-10-31 ? Review and backup of all local work
+
+- **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
+- **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
+- **Unresolved:** game-mesh winding/degenerate-face cleanup, genuine chamber illumination, Studio runtime/peers, slower-controller map integration and owner verdict. Art unchanged; private assets/IDs remain ignored.

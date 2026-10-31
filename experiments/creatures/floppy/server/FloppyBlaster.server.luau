@@ -118,7 +118,6 @@ for mesh, part in parts do
 		glow.Range = 3
 		glow.Shadows = false
 		glow.Parent = part
-		glow.Parent = part
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
 end
