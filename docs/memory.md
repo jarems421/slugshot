@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Image-right antenna clearance
+
+- **Confirmed:** owner reports the right antenna still touches the forehead.
+- **Implemented/verified:** moved the image-right tip (model `feelers_left`) outward/forward; checked the front/side projected gap with geometry assertions and reviewed the new renders. All offline project/source/FBX checks pass; evidence updated in the [design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner visual approval and Roblox import/runtime.
+
 ## 2026-10-31 — Forehead, side depth and upper-body softness
 
 - **Confirmed:** owner likes the general direction but wants a forehead, head depth in side view, and a squishier-looking head and perimeter rather than softness only at the floor.

@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified offline, 2026-10-31:** owner flagged the image-right antenna still touching the forehead. Its tip has been moved outward/forward; new geometry checks and the front/three-quarter renders confirm visible forehead clearance. Full slug checks pass. [Current source and views](slugs/catalog/flopper-inspired.md); visual approval and Roblox import/runtime remain unresolved.
+
 **Implemented/verified offline, 2026-10-31:** owner requested a small forehead, head depth in side view and softer-looking head/flanks. The [current draft](slugs/catalog/flopper-inspired.md) has a forward rounded forehead, fuller upper depth, gentle settling asymmetry and subtle head deformation in idle. Head-depth, forehead, antenna-clearance, ground-contact and all export checks pass. Six meshes, 22,412 triangles. **Unresolved:** subjective softness/art approval, production optimisation and Roblox import/runtime.
 
 **Implemented/verified offline, 2026-10-31:** owner requested darker/muddier markings and a slightly wider head over the middle for a subtle hourglass contour. The [current art](slugs/catalog/flopper-inspired.md) uses muted olive stains and a rounder upper profile while retaining the widest lower base. Full slug checks, five clip/model FBX roundtrips, palette-aware marking coverage and silhouette checks pass. Six meshes, 22,204 triangles. **Unresolved:** owner visual verdict, production optimisation and Roblox import/runtime.

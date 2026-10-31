@@ -49,6 +49,13 @@ for side,sign in (("left",-1),("right",1)):
     tips = [v for v in antenna if v.co.y > .35]
     assert tips and max(v.co.z for v in antenna)-min(v.co.z for v in tips) > .15, f"{side} antenna should droop downward"
     assert sum(v.co.y for v in tips)/len(tips) > .4, f"{side} antenna should curl a little forward"
+image_right_group = body.vertex_groups["feelers_left"].index
+image_right_tip = [v.co for v in body.data.vertices if v.co.y > .82 and v.co.z < 2.18
+                   and any(g.group == image_right_group and g.weight > .6 for g in v.groups)]
+forehead_section = [v.co for v in body.data.vertices if 1.95 < v.co.z < 2.18
+                    and not any(body.vertex_groups[g.group].name.startswith("feelers_") and g.weight > .15 for g in v.groups)]
+assert image_right_tip and min(v.x for v in image_right_tip) < min(v.x for v in forehead_section)-.045, "Image-right tip needs visible front-view clearance"
+assert min(v.y for v in image_right_tip) > max(v.y for v in forehead_section)+.04, "Image-right tip needs side-view clearance"
 color = body.data.color_attributes.get("Color")
 assert color is not None and color.domain == "POINT", "Body needs painted vertex colours"
 palette = json.loads((ROOT / "assets/source/slugs/species/flopper-inspired.json").read_text(encoding="utf-8"))["palette"]
