@@ -881,12 +881,6 @@ local function markAim(): Vector3?
 	return position
 end
 
-local profiles = { "Baseline", "Athletic", "Precise" }
-local function cycleProfile()
-	local index = table.find(profiles, player:GetAttribute("MovementProfile")) or 2
-	send("Profile", profiles[index % #profiles + 1])
-end
-
 local function bind(name: string, callback: any, title: string, ...: EnumItem)
 	ContextActionService:BindAction(name, callback, true, ...)
 	ContextActionService:SetTitle(name, title)
@@ -969,11 +963,6 @@ ContextActionService:BindAction("ExperimentHurt", function(_, state)
 		send("Hurt")
 	end
 end, false, Enum.KeyCode.H)
-ContextActionService:BindAction("ExperimentProfile", function(_, state)
-	if state == Enum.UserInputState.Begin then
-		cycleProfile()
-	end
-end, false, Enum.KeyCode.P)
 ContextActionService:BindAction("ExperimentRespawn", function(_, state)
 	if state == Enum.UserInputState.Begin then
 		send("Respawn")

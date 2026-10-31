@@ -105,11 +105,21 @@ end
 
 -- R6 joints carry a 90-degree turn in both C0 and C1 (R15's are pure offsets), so a
 -- pose rotation is wrapped into each joint's own frame: Transform = C0r^-1 * pose * C1r.
+-- Each joint's frames are read once, the first time it is seen. A rescan (any part
+-- added, e.g. equipping a tool) used to re-read the live C0, and the blaster's draw
+-- layer tilts the shoulder C0 mid-flourish: a rescan landing then baked that tilt in,
+-- leaving the gun arm stuck at a timing-dependent angle (owner, 2026-10-31).
+local knownFrames: { [AnimationJoint]: { CFrame } } = setmetatable({}, { __mode = "k" }) :: any
 local function jointFrames(joint: AnimationJoint): { CFrame }
-	return {
-		Clips.attachmentFrame(joint, "0").Rotation:Inverse(),
-		Clips.attachmentFrame(joint, "1").Rotation,
-	}
+	local frames = knownFrames[joint]
+	if not frames then
+		frames = {
+			Clips.attachmentFrame(joint, "0").Rotation:Inverse(),
+			Clips.attachmentFrame(joint, "1").Rotation,
+		}
+		knownFrames[joint] = frames
+	end
+	return frames
 end
 
 -- A two-segment limb as one block: aim it from its root to its end (segments of
@@ -1007,6 +1017,17 @@ function Presentation.start(clips: Clips.Library)
 			rig.fade = nil
 		end
 
+		-- The layers below edit the pose in place. Work on a per-frame copy: the base can
+		-- be a clip's reused sample table, refreshed only for the joints that clip has, so
+		-- in-place edits (the hold spring multiplies the shoulder each frame) piled up and
+		-- left the gun arm stuck back after equip spam (owner, 2026-10-31).
+		local working = scratch(rig, 28)
+		table.clear(working)
+		for name, value in pose do
+			working[name] = value
+		end
+		pose = working
+
 		-- Aim layer: arms only, reduced while acrobatics play.
 		local aimTarget = if character:GetAttribute("Aiming") then 1 else 0
 		if actionWeight > 0 then
@@ -1064,24 +1085,34 @@ function Presentation.start(clips: Clips.Library)
 			0,
 			1
 		)
+		-- A draw/holster flourish (BlasterAnimator, client-local attribute) lifts the gun
+		-- arm fully out of the run swing, and holds it through the holster after the tool
+		-- has gone, so the flip reads while running (owner); actions keep their own arms.
+		-- While the gun is stowed ("stow") the arm is released back to its own pose.
+		local stage = character:GetAttribute("BlasterFlourish")
+		local flourish = stage == "draw" or stage == "holster"
+		local carried = holding or flourish
 		local presence, still = 0, 0
-		if holding then
+		if carried then
 			if actionWeight > 0 and action then
 				presence = (carry.Actions :: { [string]: number })[action.kind] or carry.Air
 			elseif not grounded then
-				presence = carry.Air
+				presence = if flourish then carry.Flourish else carry.Air
 			else
 				presence = carry.Idle
 					+ (carry.Run - carry.Idle) * running
 					+ (carry.Sprint - carry.Run) * sprinting
+				if flourish then
+					presence = math.max(presence, carry.Flourish)
+				end
 				still = 1 - running
 			end
 			presence *= style.weight
 		end
-		local holdAlpha = Math.alpha(Hold.Rate, dt)
+		local holdAlpha = Math.alpha(if stage ~= nil then carry.FlourishRate else Hold.Rate, dt)
 		rig.holdWeight += (presence - rig.holdWeight) * holdAlpha
 		rig.holdStill += (still - rig.holdStill) * holdAlpha
-		rig.holdOn += ((if holding then 1 else 0) - rig.holdOn) * holdAlpha
+		rig.holdOn += ((if carried then 1 else 0) - rig.holdOn) * holdAlpha
 		local current = rig.holdStyle
 		current.arm = current.arm:Lerp(style.arm, holdAlpha)
 		current.waist = current.waist:Lerp(style.waist, holdAlpha)
@@ -1132,7 +1163,8 @@ function Presentation.start(clips: Clips.Library)
 			end
 		end
 		if rig.holdOn > 0.001 then
-			local x = spring.x * rig.holdOn
+			-- Follow-through only as strong as the hold, so a free-swinging arm stays free.
+			local x = spring.x * rig.holdOn * math.min(rig.holdWeight, 1)
 			pose.RightShoulder = CFrame.Angles(x.X, x.Y, 0) * (pose.RightShoulder or IDENTITY)
 		end
 

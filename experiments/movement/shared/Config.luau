@@ -1,17 +1,10 @@
 --!strict
 -- Experimental profiles, not final game balance or controls.
 return table.freeze({
+	-- Owner (2026-10-31): one movement profile as the foundation; the Baseline and
+	-- Precise comparison profiles and the P switch were removed.
 	DefaultProfile = "Athletic",
 	Profiles = {
-		Baseline = {
-			RunSpeed = 16,
-			SprintSpeed = 16,
-			Acceleration = 180,
-			Braking = 220,
-			TurnRate = 30,
-			JumpPower = 51,
-			JumpGravity = 1, -- stock Roblox jump
-		},
 		Athletic = {
 			RunSpeed = 18, -- owner speed retune (2026-10-31)
 			SprintSpeed = 24,
@@ -20,15 +13,6 @@ return table.freeze({
 			TurnRate = 18,
 			-- Slightly higher and a longer arc for more horizontal reach (owner, 2026-10-30).
 			JumpPower = 60.5,
-			JumpGravity = 1,
-		},
-		Precise = {
-			RunSpeed = 18,
-			SprintSpeed = 24,
-			Acceleration = 130,
-			Braking = 180,
-			TurnRate = 24,
-			JumpPower = 58.5,
 			JumpGravity = 1,
 		},
 	},
@@ -331,52 +315,41 @@ return table.freeze({
 			GripTilt = 0.2,
 			GripInset = 0.14,
 			Rate = 10,
-			Default = "Gunslinger",
-			Order = { "Gunslinger", "Hero", "Bladed" },
+			Default = "Relaxed",
+			Order = { "Relaxed" }, -- owner kept only Relaxed (2026-10-31)
+			-- Owner (2026-10-31): a light pistol should not restrict the arms; moving,
+			-- airborne or in an action the gun arm swings exactly as an empty one. The
+			-- hold only applies standing (fading out by RunSpeed).
 			Carry = {
 				Idle = 1,
-				Run = 0.6,
-				Sprint = 0.4,
-				Air = 0.45,
-				RunSpeed = 22,
+				Run = 0,
+				Sprint = 0,
+				Air = 0,
+				RunSpeed = 10,
 				SprintSpeed = 30,
-				Actions = { Slide = 0.3, WallRun = 0.2, WallHop = 0.2, Mantle = 0.12, Flip = 0.1 },
+				Actions = { Slide = 0, WallRun = 0, WallHop = 0, Mantle = 0, Flip = 0 },
 				Spring = 90,
 				Damping = 0.35, -- fraction of critical damping: lower bounces more
 				Lag = 3,
 				Dip = 0.05,
 				MaxSway = 0.45,
+				-- During a draw/holster flourish: full hold out of the run swing, eased
+				-- in faster than a normal carry change.
+				Flourish = 1,
+				FlourishRate = 20,
 			},
 			Styles = {
-				-- Low and loose at the hip, barrel angled at the floor ahead.
-				Gunslinger = {
-					Arm = { 0.7, 0.14, -0.08 },
-					Wrist = 0.32,
-					Waist = { 0, -0.1, 0 },
-					Neck = { 0, 0.08, 0 },
-					Weight = 0.9,
-					TorsoFollow = 0.85,
-					Sway = 0.025,
-				},
-				-- Blaster up beside the face, barrel to the sky.
-				Hero = {
-					Arm = { 1.95, 0.55, 0.18 },
-					Wrist = 0.8,
-					Waist = { 0.04, 0.12, 0 },
-					Neck = { 0, -0.12, 0 },
+				-- Owner (2026-10-31): the set poses read goofy and basic. A light pistol
+				-- carried casually: the arm hangs naturally, a little forward, the barrel
+				-- angled down and ahead.
+				Relaxed = {
+					Arm = { 0.22, 0, 0.05 },
+					Wrist = 0.75,
+					Waist = { 0, 0, 0 },
+					Neck = { 0, 0, 0 },
 					Weight = 1,
-					TorsoFollow = 0.7,
-					Sway = 0.015,
-				},
-				-- Side-on stance, right shoulder forward, arm on the target line.
-				Bladed = {
-					Arm = { 1.37, 0, 0 },
-					Wrist = 0,
-					Waist = { 0, 0.7, 0 },
-					Neck = { 0, -0.55, 0 },
-					Weight = 1,
-					TorsoFollow = 0.6,
-					Sway = 0.012,
+					TorsoFollow = 1,
+					Sway = 0.02,
 				},
 			},
 			DrawTime = 0.45,
