@@ -24,18 +24,18 @@ def main() -> None:
         duplicates = sorted({name for name in rows if rows.count(name) != 1})
         if missing or extra or duplicates:
             problems.append(f"{source}: missing={missing}, extra={extra}, duplicates={duplicates}")
-    project = "slugshot-blender-orchestrator"
-    project_skill = ROOT / ".agents/skills" / project / "SKILL.md"
-    claude_skill = ROOT / ".claude/skills" / project / "SKILL.md"
-    if not project_skill.is_file() or not claude_skill.is_file():
-        problems.append("project router skill missing from Codex or Claude")
-    elif project_skill.read_bytes() != claude_skill.read_bytes():
-        problems.append("project router skill copies differ")
-    if len(re.findall(rf"^\| `{project}` \|", guide, re.M)) != 1:
-        problems.append("project router is not documented exactly once")
+    for project in ("slugshot-blender-orchestrator", "slugshot-creature-production"):
+        project_skill = ROOT / ".agents/skills" / project / "SKILL.md"
+        claude_skill = ROOT / ".claude/skills" / project / "SKILL.md"
+        if not project_skill.is_file() or not claude_skill.is_file():
+            problems.append(f"{project} missing from Codex or Claude")
+        elif project_skill.read_bytes() != claude_skill.read_bytes():
+            problems.append(f"{project} copies differ")
+        if len(re.findall(rf"^\| `{project}` \|", guide, re.M)) != 1:
+            problems.append(f"{project} is not documented exactly once")
     if problems:
         raise SystemExit("\n".join(problems))
-    print("Routing inventory: 28 EL4CTEO + 30 RobLe3 + 1 project skill documented; project copies match")
+    print("Routing inventory: 28 EL4CTEO + 30 RobLe3 + 2 project skills documented; project copies match")
 
 
 if __name__ == "__main__":

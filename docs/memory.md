@@ -393,3 +393,4 @@
 - Rewrote `docs/slugs/skill-routing.md` from the actual installed `SKILL.md` files (28 EL4CTEO, 30 RobLe3, 1 project). Replaced the generated inventory and removed `build_skill_routing.py`; `check_skill_routing.py` now checks coverage.
 - Confirmed: the installed `blender` MCP lacks RobLe3's legacy tool names, local Python has no `cv2`, and RobLe3's world reset must not run on existing scenes.
 - A disposable 5.2 probe passed all five routing cases. FBX roundtrip renames clips and can copy actions to stray objects (see lessons).
+- Added `slugshot-creature-production`, an 11-step creature procedure using the routing guide as its manual. The orchestrator is kept as its short summary. A fresh Claude session auto-selected it and routed correctly. The Codex test was blocked by its usage limit.
