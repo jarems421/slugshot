@@ -227,6 +227,20 @@ return table.freeze({
 		MinZoom = 7,
 		MaxZoom = 18,
 		Shoulder = Vector3.new(1.5, 0.45, 0),
+		-- First person: the camera follows the animated head (per axis, root space) after
+		-- a slow baseline (rate, 1/s) removes steady offsets; Max caps each axis (studs).
+		-- Actions: the flip turns the view with the body (blend rate); wall runs roll away
+		-- from the wall and slides lean, in degrees, easing at TiltRate.
+		FirstPerson = {
+			Follow = Vector3.new(0.5, 0.8, 0.5),
+			Baseline = 2.5,
+			Max = 0.4,
+			FlipBlend = 18,
+			WallRoll = 10,
+			SlideRoll = 4,
+			SlidePitch = 3,
+			TiltRate = 10,
+		},
 	},
 	Animation = {
 		MaxCycleRate = 1.15, -- calmer cadence at the new run/sprint speeds
@@ -352,6 +366,7 @@ return table.freeze({
 					Sway = 0.02,
 				},
 			},
+			PointRate = 28, -- how fast the gun arm comes up to point when shooting
 			DrawTime = 0.45,
 			DrawSpins = 1,
 			DrawLift = 0.35, -- extra arm raise at the middle of the spin

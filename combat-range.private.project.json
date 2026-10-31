@@ -1,0 +1,166 @@
+{
+  "name": "SlugshotTempRange",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34876,
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FallenPartsDestroyHeight": -60
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "Ambient": [
+          0.36,
+          0.33,
+          0.3
+        ],
+        "OutdoorAmbient": [
+          0.32,
+          0.3,
+          0.28
+        ],
+        "Brightness": 2.2,
+        "ClockTime": 13.5,
+        "GeographicLatitude": 20,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.3,
+        "EnvironmentSpecularScale": 0.2,
+        "ExposureCompensation": 0.1
+      },
+      "RocklockV2Grade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Contrast": 0.08,
+          "Saturation": -0.05,
+          "TintColor": [
+            1,
+            0.97,
+            0.92
+          ]
+        }
+      },
+      "RocklockV2Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.2,
+          "Size": 24,
+          "Threshold": 1.3
+        }
+      },
+      "RangeAtmosphere": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.18,
+          "Offset": 0.05,
+          "Color": [
+            0.8,
+            0.78,
+            0.72
+          ],
+          "Decay": [
+            0.55,
+            0.52,
+            0.48
+          ],
+          "Glare": 0.1,
+          "Haze": 0.8
+        }
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "MovementExperiment": {
+        "$path": "experiments/movement/shared"
+      },
+      "MovementPrivateClips": {
+        "$path": "private-assets/generated/MovementClips.luau"
+      },
+      "FloppyAsset": {
+        "$path": "private-assets/floppy/FloppyAsset.luau"
+      },
+      "Combat": {
+        "$path": "experiments/combat/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      },
+      "MovementSandbox": {
+        "$path": "build/combat-range/generated/server",
+        "Arena": {
+          "$path": "experiments/combat/range/RangeArena.luau"
+        }
+      },
+      "FloppyIntegration": {
+        "$className": "Folder",
+        "FloppyBlaster": {
+          "$path": "experiments/creatures/floppy/server/FloppyBlaster.server.luau"
+        },
+        "FloppyAppearance": {
+          "$path": "experiments/creatures/floppy/server/FloppyAppearance.luau"
+        },
+        "ReadyBlaster": {
+          "$path": "experiments/integration/rocklock/ReadyBlaster.server.luau"
+        }
+      },
+      "Combat": {
+        "$path": "experiments/combat/server/CombatServer.server.luau"
+      },
+      "TargetRange": {
+        "$className": "Folder",
+        "RangeServer": {
+          "$path": "experiments/combat/range/RangeServer.server.luau"
+        },
+        "CombatSelfTest": {
+          "$path": "experiments/combat/range/CombatSelfTest.server.luau"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "EnableMouseLockOption": false
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        },
+        "MovementSandbox": {
+          "$path": "experiments/movement/client"
+        },
+        "RocklockBlaster": {
+          "$path": "experiments/movement/rocklock/BlasterClient.client.luau"
+        },
+        "FloppyIdle": {
+          "$path": "experiments/creatures/floppy/client/FloppyIdle.client.luau"
+        },
+        "Combat": {
+          "$path": "experiments/combat/client"
+        },
+        "TargetRange": {
+          "$path": "experiments/combat/range/RangeClient.client.luau"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "BlasterMesh": {
+        "$path": "private-assets/floppy/BlasterMesh.luau"
+      },
+      "FloppyMaterials": {
+        "$path": "private-assets/floppy/materials.rbxmx"
+      }
+    }
+  }
+}

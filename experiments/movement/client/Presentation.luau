@@ -275,6 +275,8 @@ function Presentation.start(clips: Clips.Library)
 			holdVy = 0,
 			holdSpring = { x = Vector2.zero, v = Vector2.zero },
 			holding = false,
+			pointWeight = 0,
+			pointDir = Vector3.new(0, 0, -1),
 			drawStart = -math.huge,
 			wrist = 0,
 			holdStyle = {
@@ -758,9 +760,15 @@ function Presentation.start(clips: Clips.Library)
 		local reach = (gap - lateral - WallRun.HandGap) / ((rig.armLength or 2.3) * math.cos(swing))
 		local spread = math.max(math.asin(math.clamp(reach, 0, 1)) - tilt, 0)
 		local prefix = if side < 0 then "Left" else "Right"
-		pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * swing, side * spread)
-		pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
-		pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
+		-- The gun hand never reaches for the wall (see the cling below).
+		local held = rig.character:FindFirstChildOfClass("Tool")
+		if prefix == "Right" and held and held:GetAttribute("HoldStyle") == "Pistol" then
+			pose.RightShoulder = CFrame.Angles(math.rad(72), 0, math.rad(6))
+		else
+			pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * swing, side * spread)
+			pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
+			pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
+		end
 		-- Drag: lean away from the wall, brace with one raised arm and the wall-side
 		-- leg. Both legs angle toward the wall instead of kicking forward; R6 limbs
 		-- are straight blocks and cannot bend at the knee.
@@ -778,6 +786,14 @@ function Presentation.start(clips: Clips.Library)
 			clingPose[wall .. "Shoulder"] = CFrame.Angles(math.rad(-30), 0, side * math.rad(110))
 			clingPose[free .. "Shoulder"] =
 				CFrame.Angles(math.rad(65 + 2 * sway), 0, -side * math.rad(30))
+			-- With the blaster out and the wall on the gun side, the gun hand never grabs
+			-- the wall (owner question, 2026-10-31): it holds the gun forward, ready to
+			-- fire, and the free arm swings out for balance instead.
+			local tool = rig.character:FindFirstChildOfClass("Tool")
+			if wall == "Right" and tool and tool:GetAttribute("HoldStyle") == "Pistol" then
+				clingPose.RightShoulder = CFrame.Angles(math.rad(72 + 2 * sway), 0, math.rad(6))
+				clingPose.LeftShoulder = CFrame.Angles(math.rad(25), 0, -math.rad(55 + 3 * sway))
+			end
 			clingPose[wall .. "Hip"] = CFrame.Angles(math.rad(10), 0, side * math.rad(15))
 			-- Keep the legs side-on without driving the free leg through the wall-side leg.
 			clingPose[free .. "Hip"] = CFrame.Angles(0, 0, side * math.rad(10 + 2 * sway))
@@ -1141,7 +1157,18 @@ function Presentation.start(clips: Clips.Library)
 			else math.clamp((now - rig.drawStart) / Hold.DrawTime, 0, 1)
 		local spin = if holding then -2 * math.pi * Hold.DrawSpins * (1 - (1 - draw) ^ 3) else 0
 		local lift = if holding then Hold.DrawLift * math.sin(math.pi * draw) else 0
-		rig.wrist = current.wrist * math.min(rig.holdWeight, 1) + spin
+		-- Pointing to shoot (combat client, local attribute BlasterPoint = aim direction):
+		-- the gun arm points along the aim and the wrist straightens so the barrel lines up.
+		local point = character:GetAttribute("BlasterPoint")
+		local aiming = typeof(point) == "Vector3"
+		if aiming then
+			rig.pointDir = point
+		end
+		rig.pointWeight += ((if aiming then 1 else 0) - rig.pointWeight) * Math.alpha(
+			if aiming then Hold.PointRate else Hold.Rate,
+			dt
+		)
+		rig.wrist = current.wrist * math.min(rig.holdWeight, 1) * (1 - rig.pointWeight) + spin
 		if rig.holdWeight > 0.001 then
 			local styled = rig.holdWeight * rig.holdStill
 			local waist = pose.Waist or IDENTITY
@@ -1166,6 +1193,22 @@ function Presentation.start(clips: Clips.Library)
 			-- Follow-through only as strong as the hold, so a free-swinging arm stays free.
 			local x = spring.x * rig.holdOn * math.min(rig.holdWeight, 1)
 			pose.RightShoulder = CFrame.Angles(x.X, x.Y, 0) * (pose.RightShoulder or IDENTITY)
+		end
+
+		if rig.pointWeight > 0.001 then
+			local torsoPart = character:FindFirstChild("Torso")
+				or character:FindFirstChild("UpperTorso")
+			if torsoPart and torsoPart:IsA("BasePart") then
+				-- The rotation taking the hanging arm (down) onto the aim, in torso axes.
+				local target = torsoPart.CFrame:VectorToObjectSpace(rig.pointDir).Unit
+				local axis = DOWN:Cross(target)
+				local turn = math.acos(math.clamp(DOWN:Dot(target), -1, 1))
+				local arm = if axis.Magnitude > 1e-4
+					then CFrame.fromAxisAngle(axis.Unit, turn)
+					else IDENTITY
+				pose.RightShoulder = (pose.RightShoulder or IDENTITY):Lerp(arm, rig.pointWeight)
+				pose.RightElbow = (pose.RightElbow or IDENTITY):Lerp(IDENTITY, rig.pointWeight)
+			end
 		end
 
 		for _, limb in A.FoldLimbs do

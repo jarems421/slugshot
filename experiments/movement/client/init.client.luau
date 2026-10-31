@@ -11,6 +11,8 @@ local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
 local Traversal = require(script.Traversal)
+local FirstPerson = require(script.FirstPerson)
+FirstPerson.start()
 local request = shared:WaitForChild("MovementRequest") :: RemoteEvent
 -- Roblox's own PlayerModule only exists at run time, so it is required untyped.
 local playerModule = player.PlayerScripts:WaitForChild("PlayerModule") :: ModuleScript
@@ -41,6 +43,21 @@ local bouncing = false -- a ground jump in the air (Profiles.JumpGravity applies
 -- locked to the centre, body facing the camera, camera over the right shoulder.
 local shiftLocked, lockBlend, cameraBase = false, 0, Vector3.zero
 local movementShake, shakePhase = 0, 0 -- ground bounce blend and continuous footfall phase
+local headBase: Vector3? = nil -- first person: slow baseline of the head's offset from the root
+-- First-person action views (owner: flips, wall runs and slides must feel like them).
+-- Mirror's Edge spins the camera with the character through a roll; Titanfall tilts the
+-- view on a wall run (Respawn: it "immediately made it feel much better"); slides drop
+-- and lean. Applied after the camera scripts by the SlugshotActionView render step.
+local headRest: CFrame? = nil -- the head's rest rotation relative to the root, on foot
+local flipWeight, viewRoll, viewPitch = 0, 0, 0
+local viewTurn = CFrame.identity -- world rotation of the view (the body's flip)
+local shownAction: string? = nil
+-- What the action view added to the camera last frame. Roblox's camera scripts read the
+-- camera's orientation back each frame, and movement reads it at input, so the addition
+-- is removed first thing every frame; otherwise it compounds (owner: one flip spun the
+-- screen many times and landed looking at the ground; the slide's lean rose to the sky).
+local appliedView: { turn: CFrame, tilt: CFrame }? = nil
+local FirstView = Config.Camera.FirstPerson
 local testMove: Vector3? = nil
 local testUntil = 0
 local testJumpUntil = 0
@@ -112,6 +129,7 @@ local function attach(newCharacter: Model)
 		end
 	end
 	speed, move, acro, airUsed, slideBuffer = 0, Vector3.zero, nil, false, 0
+	headBase = nil
 	bouncing = false
 	sprinting, aiming, testMove = false, false, nil
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
@@ -915,6 +933,28 @@ bind("ExperimentShiftLock", function(_, state)
 	end
 	return Enum.ContextActionResult.Sink
 end, "Shift lock", Enum.KeyCode.LeftControl, Enum.KeyCode.RightControl)
+RunService:BindToRenderStep("SlugshotActionViewUndo", Enum.RenderPriority.First.Value, function()
+	local camera = workspace.CurrentCamera
+	if camera and appliedView then
+		local view = camera.CFrame
+		camera.CFrame = CFrame.new(view.Position)
+			* appliedView.turn:Inverse()
+			* view.Rotation
+			* appliedView.tilt:Inverse()
+	end
+	appliedView = nil
+end)
+RunService:BindToRenderStep("SlugshotActionView", Enum.RenderPriority.Camera.Value + 5, function()
+	local camera = workspace.CurrentCamera
+	if
+		camera and (flipWeight > 1e-3 or math.abs(viewRoll) > 1e-4 or math.abs(viewPitch) > 1e-4)
+	then
+		local view = camera.CFrame
+		local tilt = CFrame.Angles(viewPitch, 0, viewRoll)
+		camera.CFrame = CFrame.new(view.Position) * viewTurn * view.Rotation * tilt
+		appliedView = { turn = viewTurn, tilt = tilt }
+	end
+end)
 -- The camera scripts reset the mouse every frame, so the lock is reapplied after them.
 RunService:BindToRenderStep("SlugshotShiftLock", Enum.RenderPriority.Camera.Value + 1, function()
 	if shiftLocked then
@@ -1261,7 +1301,60 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		Config.Camera.BlendRate,
 		dt
 	)
-	local shoulder = Config.Camera.ShiftLock * lockBlend
+	-- First person (scrolled in; owner: feel the legs, not a floating camera): no shoulder
+	-- offset and no synthetic bounce. The camera follows the animated head's motion
+	-- relative to the body - footfalls, weight shift, landing compression - damped and
+	-- without its rotation (eyes stay steady). A slow baseline removes steady lean.
+	local first = FirstPerson.active()
+	local follow = Vector3.zero
+	local head = character:FindFirstChild("Head")
+	if head and head:IsA("BasePart") then
+		local offset = root.CFrame:PointToObjectSpace(head.Position)
+		local base = if headBase
+			then headBase:Lerp(offset, Math.alpha(FirstView.Baseline, dt))
+			else offset
+		headBase = base
+		-- The flip turns the view exactly as the body turns: the head's rotation relative
+		-- to the root, against its rest on foot.
+		local rotation = root.CFrame:ToObjectSpace(head.CFrame).Rotation
+		if onGround and not acro then
+			headRest = if headRest then headRest:Lerp(rotation, Math.alpha(4, dt)) else rotation
+		end
+		local flipping = first and acro ~= nil and acro.kind == "Flip"
+		flipWeight += ((if flipping then 1 else 0) - flipWeight) * Math.alpha(
+			FirstView.FlipBlend,
+			dt
+		)
+		local turned = if headRest then headRest:Inverse() * rotation else CFrame.identity
+		local rootTurn = root.CFrame.Rotation
+		viewTurn = rootTurn * CFrame.new():Lerp(turned, flipWeight) * rootTurn:Inverse()
+		if first then
+			local moved = (offset - base) * FirstView.Follow
+			follow = Vector3.new(
+				math.clamp(moved.X, -FirstView.Max, FirstView.Max),
+				math.clamp(moved.Y, -FirstView.Max, FirstView.Max),
+				math.clamp(moved.Z, -FirstView.Max, FirstView.Max)
+			)
+		end
+	end
+	-- Wall run: roll away from the wall; slide: a small lean back and roll.
+	local rollTarget, pitchTarget = 0, 0
+	if first and kind == "WallRun" then
+		rollTarget = math.rad(FirstView.WallRoll) * (if acro.side == "Left" then -1 else 1)
+	elseif first and kind == "Slide" then
+		rollTarget, pitchTarget = math.rad(FirstView.SlideRoll), math.rad(FirstView.SlidePitch)
+	end
+	viewRoll += (rollTarget - viewRoll) * Math.alpha(FirstView.TiltRate, dt)
+	viewPitch += (pitchTarget - viewPitch) * Math.alpha(FirstView.TiltRate, dt)
+	-- The first-person viewmodel and leg visibility read the current action (local only).
+	local action = if first and kind
+		then `{kind}{if kind == "WallRun" then acro.side else ""}`
+		else nil
+	if action ~= shownAction then
+		shownAction = action
+		character:SetAttribute("FirstPersonAction", action)
+	end
+	local shoulder = Config.Camera.ShiftLock * lockBlend * (if first then 0 else 1)
 	-- A subtle ground bounce follows the slower gait; sprint is only a little
 	-- quicker. Integrate phase so changing pace never jumps the camera's phase.
 	local shake = if sprinting then Config.Camera.SprintShake else Config.Camera.RunShake
@@ -1272,15 +1365,22 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	local bounce = (math.abs(math.sin(shakePhase * math.pi)) - 0.5) * shake.Bounce
 	humanoid.CameraOffset = cameraBase
 		+ root.CFrame:VectorToObjectSpace(right * shoulder.X)
-		+ Vector3.new(0, shoulder.Y + bounce * movementShake, 0)
-	local fov = if aiming
-		then Config.Camera.AimFov
-		elseif sliding then Config.Camera.SlideFov
-		elseif sprinting then Config.Camera.SprintFov
-		else Config.Camera.Fov
+		+ Vector3.new(0, shoulder.Y + (if first then 0 else bounce * movementShake), 0)
+		+ follow
+	-- The player's FOV setting moves the whole range (sprint/slide kicks stay relative).
+	local fieldOfView = (player:GetAttribute("FieldOfView") or Config.Camera.Fov) :: number
+	local fov = fieldOfView
+		- Config.Camera.Fov
+		+ (
+			if aiming
+				then Config.Camera.AimFov
+				elseif sliding then Config.Camera.SlideFov
+				elseif sprinting then Config.Camera.SprintFov
+				else Config.Camera.Fov
+		)
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  double-tap W sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  P profiles  /  R reset\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
+		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  double-tap W sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		if Config.Lab.Aim then "RMB aim Â· Click marker Â· " else "",
