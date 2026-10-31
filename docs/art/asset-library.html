@@ -49,6 +49,10 @@ p { margin: 0; }
 .canvas-box:active { cursor: grabbing; }
 canvas { width: 100%; height: 100%; display: block; }
 .fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #e3e5ec; }
+.sprite { position: absolute; inset: 0; background-color: #0b0c12; background-repeat: no-repeat; background-size: 400% 400%; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 13px; color: #c9ccd8; }
+.note { font-size: 13px; color: var(--muted); }
+button.ctl:disabled { opacity: .45; cursor: default; }
 .hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #c9ccd8; background: rgba(12,13,20,.6); padding: 3px 8px; border-radius: 6px; }
 .tag { position: absolute; right: 12px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #c9ccd8; background: rgba(12,13,20,.6); padding: 3px 8px; border-radius: 6px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -78,8 +82,10 @@ dd { margin: 2px 0 0; }
   <div class="layout">
     <div class="stage">
       <div class="canvas-box" id="box">
-        <canvas id="view" aria-label="Rotatable 3D concept of the selected asset"></canvas>
-        <div class="hint">Drag to turn · scroll or pinch to zoom</div>
+        <canvas id="view" aria-label="Rotatable 3D concept of the selected asset" hidden></canvas>
+        <div class="sprite" id="sprite" role="img" aria-label="Turntable render of the selected asset"></div>
+        <div class="loading" id="loading" hidden>Loading render…</div>
+        <div class="hint">Drag to turn</div>
         <div class="tag" id="tag">Slugshot mix</div>
       </div>
       <div class="row" role="group" aria-label="Treatment">
@@ -88,6 +94,7 @@ dd { margin: 2px 0 0; }
         <button class="ctl" id="t-inked" data-treat="1">Inked Cavern</button>
         <button class="ctl" id="t-a" data-treat="0">Comic Cavern</button>
         <button class="ctl" id="t-c" data-treat="2">Living Comic</button>
+        <span class="note" id="treat-note">Rendered views use Slugshot mix. Turn on Live 3D to compare treatments.</span>
       </div>
       <div class="row" role="group" aria-label="Camera">
         <span class="label">View</span>
@@ -105,6 +112,7 @@ dd { margin: 2px 0 0; }
         <span class="label">Show</span>
         <button class="ctl" id="fig" aria-pressed="true">Scale figure (5 studs)</button>
         <button class="ctl" id="motion" aria-pressed="true">Motion on</button>
+        <button class="ctl" id="live" aria-pressed="false">Live 3D off</button>
       </div>
     </div>
 
@@ -112,7 +120,7 @@ dd { margin: 2px 0 0; }
       <div class="eyebrow" id="n-kind"></div>
       <h2 id="n-name"></h2>
       <dl id="n-list"></dl>
-      <p class="caveat">Live concept render, not the game model. Agree the shape and feel here; the Blender build then reproduces these forms exactly, with inverted-hull ink lines and painted textures for Roblox.</p>
+      <p class="caveat">Concept render, not the game model. The default view is a 16-frame turntable rendered from the same shader; Live 3D runs it in your browser with zoom, tilt, animation and treatment comparison. Agree the shape and feel here; the Blender build then reproduces these forms exactly, with inverted-hull ink lines and painted textures for Roblox.</p>
       <div class="planned">
         <h3>Planned, not built yet</h3>
         <ul id="planned"></ul>
@@ -913,8 +921,10 @@ void main() {
 }
 </script>
 
-<script>
-(function () {
+<script id="lib">
+// Shared by the page and by tools/lobby/render_library.py (offline turntable renders): asset data and
+// the pure camera/uniform maths. No DOM access here.
+(function (root) {
   // Mushroom colour bank (owner, 2026-10-31). Colour 1 is the approved original blue cap with mint glow.
   const MUSH = [
     ["Mint", [0.30, 1.0, 0.76]], ["Cyan", [0.35, 0.9, 1.0]], ["Azure", [0.35, 0.55, 1.0]], ["Violet", [0.65, 0.45, 1.0]],
@@ -1016,6 +1026,74 @@ void main() {
     { name: "Slugshot mix", t: [1.7, 0.95, 1.1, 0.5], mix: true }
   ];
   const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
+  const FRAMES = 16, BASE_YAW = -0.65, PITCH = 0.22;
+
+  function shaderIndex(i) { const a = ASSETS[i]; return a.shader !== undefined ? a.shader : i; }
+  function variantCount(i) { const a = ASSETS[i]; return a.variants ? a.variants.length : 1; }
+  function frameKey(i, v) { return ASSETS[i].id + "-" + (v + 1); }
+  function variantView(a, variant) {
+    const v = a.variants && a.variants[variant];
+    if (!v || v.authored || v.colour) return { target: a.target, dist: a.dist };
+    if (v.special) return { target: v.view[0], dist: v.view[1] };
+    const h = v.a[2] + v.c[1];
+    return { target: [0, h*0.45, 0], dist: Math.max(15, v.a[1]*3 + h*2.2) };
+  }
+  function cameraBasis(cam) {
+    const cy = Math.cos(cam.pitch);
+    const tgt = [cam.tx, cam.ty, cam.tz];
+    const ro = [tgt[0] + Math.sin(cam.yaw)*cy*cam.dist, Math.max(0.6, tgt[1] + Math.sin(cam.pitch)*cam.dist), tgt[2] - Math.cos(cam.yaw)*cy*cam.dist];
+    let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+    let r = [f[2], 0, -f[0]]; const rl = Math.hypot(...r); r = r.map(v => -v/rl);
+    const u = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+    return { ro, r, u, f };
+  }
+  // Every uniform for one view, as name -> array of floats. s: {asset, variant, treat, figOn, time, cam, width, height}
+  function uniformsFor(s) {
+    const a = ASSETS[s.asset], variant = s.variant, U = {};
+    const T = TREAT[s.treat], B = cameraBasis(s.cam);
+    U.uRes = [s.width, s.height]; U.uT = [s.time]; U.uAsset = [shaderIndex(s.asset)]; U.uGate = [a.gate || 0];
+    U.uGateEdge = a.edge || [0.7, 0.17, 0.05]; U.uGateCore = a.core || [1, 0.62, 0.25]; U.uGateHot = a.hot || [1, 0.86, 0.6];
+    U.uRo = B.ro; U.uRight = B.r; U.uUp = B.u; U.uFwd = B.f;
+    const isCrystal = a.id === "crystals";
+    const V = isCrystal ? a.variants[variant] : null;
+    const fv = V && !V.authored ? V : null;
+    const figX = fv ? (fv.special ? 5.0 : fv.a[1] + fv.base[0] + 2.0) : a.figure[0];
+    U.uFig = [figX, a.figure[1], a.figure[2], s.figOn ? 1 : 0];
+    U.uTreat = T.t; U.uMode = [s.treat];
+    [0, 1, 2].forEach(k => { U["uTr" + k] = TREAT[k].t; U["uInk" + k] = TREAT[k].ink; U["uSh" + k] = TREAT[k].shade; });
+    U.uAm = [TREAT[0].amb, TREAT[1].amb, TREAT[2].amb];
+    const M = a.id === "mushroom" ? MUSH[variant] : MUSH[0];
+    U.uCapDark = M.dark; U.uCapLight = M.light; U.uCapGlow = M.glow;
+    U.uCs = [V && V.special ? V.special : 0];
+    if (V && V.special) {
+      U.uCa = [0, 0, 0, 0]; U.uCb = [0, 0, 0, 0]; U.uCc = [0, 0, 0, 0]; U.uCbase = [1, 1, 1];
+      U.uCrG = [V.g[0], V.g[1], V.g[2], 0]; U.uGlowPos = V.glow;
+    } else if (V && !V.authored) {
+      U.uCa = V.a; U.uCb = V.b; U.uCc = V.c; U.uCbase = V.base;
+      U.uCrG = [0, V.a[2] + V.c[1] + V.c[2], 0, 0]; U.uGlowPos = [0, V.a[2]*0.6 + V.c[1]*0.5, -2.2];
+    } else {
+      U.uCa = [0, 0, 0, 0]; U.uCb = [0, 0, 0, 0]; U.uCc = [0, 0, 0, 0]; U.uCbase = [1, 1, 1];
+      U.uCrG = isCrystal ? [0, 4.7, 0, 0] : [1, 0.75, 0, 0]; U.uGlowPos = a.glow;
+    }
+    const CV = V || CRYSTALS[0];
+    U.uCrDeep = CV.deep; U.uCrBright = CV.bright;
+    U.uGlowCol = V ? V.bright : a.id === "mushroom" ? M.glow : a.glowCol;
+    return U;
+  }
+  const BANK = MUSH.flatMap(m => m.glow);
+  // The turntable frames rendered offline: yaw steps of 360/FRAMES degrees from the three-quarter view.
+  function renderCam(i, v, frame) {
+    const vw = variantView(ASSETS[i], v);
+    return { yaw: BASE_YAW + frame*2*Math.PI/FRAMES, pitch: PITCH, dist: vw.dist*0.8, tx: vw.target[0], ty: vw.target[1], tz: vw.target[2] };
+  }
+  root.SlugLib = { MUSH, CRYSTALS, ASSETS, PLANNED, TREAT, VIEWS, FRAMES, BASE_YAW, PITCH, BANK,
+    shaderIndex, variantCount, frameKey, variantView, cameraBasis, uniformsFor, renderCam };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>
+(function () {
+  const L = window.SlugLib;
+  const { ASSETS, MUSH, PLANNED, TREAT, VIEWS, FRAMES, BASE_YAW } = L;
 
   const shelf = document.getElementById("shelf");
   ASSETS.forEach((a, i) => {
@@ -1032,29 +1110,27 @@ void main() {
 
   const canvas = document.getElementById("view");
   const box = document.getElementById("box");
-  const glOpts = { antialias: false, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false };
-  const gl = canvas.getContext("webgl", glOpts) || canvas.getContext("experimental-webgl", glOpts);
+  const sprite = document.getElementById("sprite");
+  const loading = document.getElementById("loading");
   function fail(msg) {
     box.querySelectorAll(".fallback").forEach(n => n.remove());
     const d = document.createElement("div"); d.className = "fallback"; d.textContent = msg; box.appendChild(d);
+    setTimeout(() => d.remove(), 6000);
   }
-  const RESTART = "The 3D view is switched off in this browser. After a graphics crash, Chrome turns 3D off until it restarts: quit Chrome completely (every window), reopen it and load this page again. If that doesn't help, turn on \"Use graphics acceleration when available\" in Chrome's system settings and relaunch.";
 
+  // Two modes. "Rendered" (default) shows turntable frames rendered offline from the same shader: light,
+  // works without WebGL. "Live 3D" runs the shader in the browser and is opt-in, because the live shader
+  // froze Chrome on the owner's Windows machine (2026-10-31).
+  let live = false;
   let current = 0, treat = 3, figOn = true, variant = 0;
   const varRow = document.getElementById("var-row"), varBtns = document.getElementById("var-btns");
   const rgb = c => `rgb(${c.map(v => Math.round(Math.min(1, v)*255)).join(",")})`;
-  function variantView(a) {
-    const v = a.variants && a.variants[variant];
-    if (!v || v.authored || v.colour) return { target: a.target, dist: a.dist };
-    if (v.special) return { target: v.view[0], dist: v.view[1] };
-    const h = v.a[2] + v.c[1];
-    return { target: [0, h*0.45, 0], dist: Math.max(15, v.a[1]*3 + h*2.2) };
-  }
   function setVariant(i) {
     variant = i;
     varBtns.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === i)));
-    const a = ASSETS[current], vw = variantView(a);
+    const vw = L.variantView(ASSETS[current], variant);
     [goal.tx, goal.ty, goal.tz] = vw.target; goal.dist = vw.dist;
+    showSprite();
   }
   function buildVariants(a) {
     varBtns.textContent = "";
@@ -1072,7 +1148,7 @@ void main() {
   }
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let motion = !reduce, time = 3.0, last = performance.now();
-  const cam = { yaw: -0.65, pitch: 0.22, dist: 30, tx: 0, ty: 6, tz: 0 };
+  const cam = { yaw: BASE_YAW, pitch: 0.22, dist: 30, tx: 0, ty: 6, tz: 0 };
   const goal = { ...cam };
 
   function showNotes(a) {
@@ -1095,20 +1171,52 @@ void main() {
     showNotes(a);
     variant = 0;
     buildVariants(a);
-    if (a.variants) setVariant(0);
+    if (a.variants) setVariant(0); else showSprite();
     try { history.replaceState(null, "", "#" + a.id); } catch (e) {}
   }
   function setTreat(i) {
     treat = i;
     document.querySelectorAll("[data-treat]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.treat === i)));
-    document.getElementById("tag").textContent = TREAT[i].name;
+    updateTag();
   }
+  function updateTag() {
+    document.getElementById("tag").textContent = live ? TREAT[treat].name : "Slugshot mix · rendered";
+    document.querySelectorAll("[data-treat]").forEach(b => { b.disabled = !live; });
+    document.getElementById("treat-note").hidden = live;
+  }
+
+  // ---------- rendered turntable
+  const loaded = {};
+  let spriteKey = "";
+  function frameIndex(yaw) {
+    const step = 2*Math.PI/FRAMES;
+    return ((Math.round((yaw - BASE_YAW)/step) % FRAMES) + FRAMES) % FRAMES;
+  }
+  function showSprite() {
+    if (live) return;
+    const key = L.frameKey(current, variant);
+    if (key === spriteKey) return;
+    spriteKey = key;
+    const url = "renders/" + key + ".jpg";
+    const apply = () => { if (spriteKey === key) { sprite.style.backgroundImage = `url("${url}")`; loading.hidden = true; } };
+    if (loaded[url]) { apply(); return; }
+    loading.hidden = false;
+    const img = new Image();
+    img.onload = () => { loaded[url] = true; apply(); };
+    img.onerror = () => { if (spriteKey === key) { loading.hidden = true; fail("This render couldn't load. Reload the page to try again."); } };
+    img.src = url;
+  }
+  function drawSprite() {
+    const k = frameIndex(cam.yaw), cols = 4, rows = FRAMES/4;
+    sprite.style.backgroundPosition = `${(k % cols)*100/(cols - 1)}% ${Math.floor(k/cols)*100/(rows - 1)}%`;
+  }
+
   shelf.addEventListener("click", e => { const b = e.target.closest(".asset"); if (b) select(+b.dataset.index); });
   document.querySelectorAll("[data-treat]").forEach(b => b.addEventListener("click", () => setTreat(+b.dataset.treat)));
   document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
     const v = VIEWS[b.dataset.view]; goal.yaw = v[0]; goal.pitch = v[1];
-    const a = ASSETS[current];
-    goal.dist = b.dataset.view === "player" ? a.dist*0.6 : a.dist;
+    const vw = L.variantView(ASSETS[current], variant);
+    goal.dist = b.dataset.view === "player" ? vw.dist*0.6 : vw.dist;
   }));
   const figBtn = document.getElementById("fig");
   figBtn.addEventListener("click", () => { figOn = !figOn; figBtn.setAttribute("aria-pressed", String(figOn)); });
@@ -1116,51 +1224,6 @@ void main() {
   function setMotion(on) { motion = on; motionBtn.setAttribute("aria-pressed", String(on)); motionBtn.textContent = on ? "Motion on" : "Motion off"; }
   setMotion(motion);
   motionBtn.addEventListener("click", () => setMotion(!motion));
-
-  const start = ASSETS.findIndex(a => "#" + a.id === location.hash);
-  select(start >= 0 ? start : 0);
-  setTreat(3);
-  Object.assign(cam, goal);
-
-  if (!gl) { fail(RESTART); return; }
-  // If the graphics driver drops the context, stop drawing instead of hammering it, and say why.
-  canvas.addEventListener("webglcontextlost", e => { e.preventDefault(); broken = true; fail("The 3D view lost its graphics connection. Reload the page; if it keeps happening, restart Chrome."); });
-  // One small program per asset, compiled the first time that asset is viewed. A single program with
-  // every asset froze Chrome on Windows (owner report, 2026-10-31).
-  function sh(type, src) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
-    return s;
-  }
-  const VS = document.getElementById("vs").textContent, FS = document.getElementById("fs").textContent;
-  const UNIFORMS = ["uRes", "uT", "uAsset", "uGate", "uCa", "uCb", "uCc", "uCbase", "uCrDeep", "uCrBright", "uCs", "uCrG", "uCapDark", "uCapLight", "uCapGlow", "uGateEdge", "uGateCore", "uGateHot", "uRo", "uRight", "uUp", "uFwd", "uFig", "uTreat", "uTr0", "uTr1", "uTr2", "uInk0", "uInk1", "uInk2", "uSh0", "uSh1", "uSh2", "uAm", "uMode", "uGlowPos", "uGlowCol"];
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const programs = {};
-  let U = null, broken = false;
-  function useProgramFor(shaderIndex) {
-    let P = programs[shaderIndex];
-    if (!P) {
-      const prog = gl.createProgram();
-      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
-      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS.replace("precision highp float;", "precision highp float;\n#define ASSET " + shaderIndex)));
-      gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-      const u = {};
-      UNIFORMS.forEach(n => u[n] = gl.getUniformLocation(prog, n));
-      P = programs[shaderIndex] = { prog, u, loc: gl.getAttribLocation(prog, "aPos") };
-      gl.useProgram(prog);
-      const bankLoc = gl.getUniformLocation(prog, "uBank");
-      if (bankLoc) gl.uniform3fv(bankLoc, new Float32Array(MUSH.flatMap(m => m.glow)));
-    }
-    gl.useProgram(P.prog);
-    gl.enableVertexAttribArray(P.loc);
-    gl.vertexAttribPointer(P.loc, 2, gl.FLOAT, false, 0, 0);
-    U = P.u;
-  }
 
   let drag = null, pinch = null;
   const pointers = new Map();
@@ -1171,18 +1234,76 @@ void main() {
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
-      if (pinch) goal.dist = Math.max(6, Math.min(90, goal.dist*pinch/d));
+      if (pinch && live) goal.dist = Math.max(6, Math.min(90, goal.dist*pinch/d));
       pinch = d; return;
     }
     if (!drag) return;
-    goal.yaw -= (e.clientX - drag.x)*0.008;
-    goal.pitch = Math.max(-0.05, Math.min(1.2, goal.pitch + (e.clientY - drag.y)*0.005));
+    goal.yaw -= (e.clientX - drag.x)*(live ? 0.008 : 0.012);
+    if (live) goal.pitch = Math.max(-0.05, Math.min(1.2, goal.pitch + (e.clientY - drag.y)*0.005));
     drag = { x: e.clientX, y: e.clientY };
   });
   function up(e) { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (pointers.size === 0) drag = null; }
   box.addEventListener("pointerup", up);
   box.addEventListener("pointercancel", up);
-  box.addEventListener("wheel", e => { e.preventDefault(); goal.dist = Math.max(6, Math.min(90, goal.dist*(1 + Math.sign(e.deltaY)*0.08))); }, { passive: false });
+  box.addEventListener("wheel", e => { if (!live) return; e.preventDefault(); goal.dist = Math.max(6, Math.min(90, goal.dist*(1 + Math.sign(e.deltaY)*0.08))); }, { passive: false });
+
+  // ---------- live 3D (opt-in)
+  let gl = null, U = null, broken = false;
+  const programs = {};
+  function sh(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const VS = document.getElementById("vs").textContent, FS = document.getElementById("fs").textContent;
+  function startGL() {
+    if (gl) return true;
+    const opts = { antialias: false, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false };
+    gl = canvas.getContext("webgl", opts) || canvas.getContext("experimental-webgl", opts);
+    if (!gl) return false;
+    canvas.addEventListener("webglcontextlost", e => { e.preventDefault(); broken = true; setLive(false); fail("Live 3D lost its graphics connection, so the page switched back to rendered views."); });
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    return true;
+  }
+  // One small program per asset, compiled the first time that asset is viewed live.
+  function useProgramFor(shaderIndex, names) {
+    let P = programs[shaderIndex];
+    if (!P) {
+      const prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS.replace("precision highp float;", "precision highp float;\n#define ASSET " + shaderIndex)));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+      const u = {};
+      names.forEach(n => u[n] = gl.getUniformLocation(prog, n));
+      P = programs[shaderIndex] = { prog, u, loc: gl.getAttribLocation(prog, "aPos") };
+      gl.useProgram(prog);
+      const bankLoc = gl.getUniformLocation(prog, "uBank");
+      if (bankLoc) gl.uniform3fv(bankLoc, new Float32Array(L.BANK));
+    }
+    gl.useProgram(P.prog);
+    gl.enableVertexAttribArray(P.loc);
+    gl.vertexAttribPointer(P.loc, 2, gl.FLOAT, false, 0, 0);
+    U = P.u;
+  }
+  const liveBtn = document.getElementById("live");
+  function setLive(on) {
+    if (on && (broken || !startGL())) {
+      on = false;
+      fail("Live 3D isn't available in this browser right now, so the rendered views stay on.");
+    }
+    live = on;
+    liveBtn.setAttribute("aria-pressed", String(on));
+    liveBtn.textContent = on ? "Live 3D on" : "Live 3D off";
+    canvas.hidden = !on; sprite.hidden = on;
+    if (!on) { cam.pitch = goal.pitch = 0.22; spriteKey = ""; showSprite(); }
+    updateTag();
+  }
+  liveBtn.addEventListener("click", () => setLive(!live));
 
   let moving = 0, quality = 0.45, slow = 0, fast = 0, lastDraw = 0;
   function resize(scale) {
@@ -1192,68 +1313,40 @@ void main() {
   }
   function frame(now) {
     requestAnimationFrame(frame);
-    if (broken) return;
     const raw = (now - last)/1000;
     const dt = Math.min(0.05, raw); last = now;
+    if (motion) time += dt;
+    let delta = 0;
+    for (const k of ["yaw", "pitch", "dist", "tx", "ty", "tz"]) { const d = (goal[k] - cam[k])*Math.min(1, dt*6); cam[k] += d; delta += Math.abs(d); }
+    if (!live) { drawSprite(); return; }
+    if (broken) return;
     // Adaptive resolution: start low, sharpen only while frames stay quick, back off when they don't.
     if (raw > 0.06) { slow++; fast = 0; } else if (raw < 0.028) { fast++; slow = 0; }
     if (slow > 3) { quality = Math.max(0.3, quality*0.8); slow = 0; }
     if (fast > 20) { quality = Math.min(1.0, quality*1.12); fast = 0; }
-    if (motion) time += dt;
-    let delta = 0;
-    for (const k of ["yaw", "pitch", "dist", "tx", "ty", "tz"]) { const d = (goal[k] - cam[k])*Math.min(1, dt*6); cam[k] += d; delta += Math.abs(d); }
     moving = (drag || delta > 0.002) ? 0.4 : Math.max(0, moving - dt);
     if (!moving && now - lastDraw < 40) return;  // idle animation at about 25 fps
     lastDraw = now;
     resize(moving > 0 ? Math.min(quality, 0.5) : quality);
-    const a = ASSETS[current];
-    try { useProgramFor(a.shader !== undefined ? a.shader : current); }
-    catch (e) { console.error(e); broken = true; fail("The 3D view couldn't start on this device."); return; }
-    const cy = Math.cos(cam.pitch);
-    const tgt = [cam.tx, cam.ty, cam.tz];
-    const ro = [tgt[0] + Math.sin(cam.yaw)*cy*cam.dist, Math.max(0.6, tgt[1] + Math.sin(cam.pitch)*cam.dist), tgt[2] - Math.cos(cam.yaw)*cy*cam.dist];
-    let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
-    let r = [f[2], 0, -f[0]]; const rl = Math.hypot(...r); r = r.map(v => -v/rl);
-    const u = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
-    const T = TREAT[treat];
-    gl.uniform2f(U.uRes, canvas.width, canvas.height);
-    gl.uniform1f(U.uT, time);
-    gl.uniform1f(U.uAsset, a.shader !== undefined ? a.shader : current);
-    gl.uniform1f(U.uGate, a.gate || 0);
-    gl.uniform3fv(U.uGateEdge, a.edge || [0.7, 0.17, 0.05]); gl.uniform3fv(U.uGateCore, a.core || [1, 0.62, 0.25]); gl.uniform3fv(U.uGateHot, a.hot || [1, 0.86, 0.6]);
-    gl.uniform3fv(U.uRo, ro); gl.uniform3fv(U.uRight, r); gl.uniform3fv(U.uUp, u); gl.uniform3fv(U.uFwd, f);
-    const isCrystal = a.id === "crystals";
-    const fv = isCrystal && !a.variants[variant].authored ? a.variants[variant] : null;
-    const figX = fv ? (fv.special ? 5.0 : fv.a[1] + fv.base[0] + 2.0) : a.figure[0];
-    gl.uniform4f(U.uFig, figX, a.figure[1], a.figure[2], figOn ? 1 : 0);
-    gl.uniform4fv(U.uTreat, T.t); gl.uniform1f(U.uMode, treat);
-    [0, 1, 2].forEach(k => {
-      gl.uniform4fv(U["uTr" + k], TREAT[k].t); gl.uniform3fv(U["uInk" + k], TREAT[k].ink); gl.uniform2fv(U["uSh" + k], TREAT[k].shade);
-    });
-    gl.uniform3f(U.uAm, TREAT[0].amb, TREAT[1].amb, TREAT[2].amb);
-    const V = isCrystal ? a.variants[variant] : null;
-    const M = a.id === "mushroom" ? MUSH[variant] : MUSH[0];
-    gl.uniform3fv(U.uCapDark, M.dark); gl.uniform3fv(U.uCapLight, M.light); gl.uniform3fv(U.uCapGlow, M.glow);
-    const cy0 = CRYSTALS[0];
-    gl.uniform1f(U.uCs, V && V.special ? V.special : 0);
-    if (V && V.special) {
-      gl.uniform4f(U.uCa, 0, 0, 0, 0); gl.uniform4f(U.uCb, 0, 0, 0, 0); gl.uniform4f(U.uCc, 0, 0, 0, 0); gl.uniform3f(U.uCbase, 1, 1, 1);
-      gl.uniform4f(U.uCrG, V.g[0], V.g[1], V.g[2], 0);
-      gl.uniform3fv(U.uGlowPos, V.glow);
-    } else if (V && !V.authored) {
-      gl.uniform4fv(U.uCa, V.a); gl.uniform4fv(U.uCb, V.b); gl.uniform4fv(U.uCc, V.c); gl.uniform3fv(U.uCbase, V.base);
-      gl.uniform4f(U.uCrG, 0, V.a[2] + V.c[1] + V.c[2], 0, 0);
-      gl.uniform3fv(U.uGlowPos, [0, V.a[2]*0.6 + V.c[1]*0.5, -2.2]);
-    } else {
-      gl.uniform4f(U.uCa, 0, 0, 0, 0); gl.uniform4f(U.uCb, 0, 0, 0, 0); gl.uniform4f(U.uCc, 0, 0, 0, 0); gl.uniform3f(U.uCbase, 1, 1, 1);
-      if (a.id === "crystals") gl.uniform4f(U.uCrG, 0, 4.7, 0, 0); else gl.uniform4f(U.uCrG, 1, 0.75, 0, 0);
-      gl.uniform3fv(U.uGlowPos, a.glow);
+    const S = L.uniformsFor({ asset: current, variant, treat, figOn, time, cam, width: canvas.width, height: canvas.height });
+    try { useProgramFor(L.shaderIndex(current), Object.keys(S)); }
+    catch (e) { console.error(e); broken = true; setLive(false); fail("Live 3D couldn't start on this device, so the page switched back to rendered views."); return; }
+    for (const n in S) {
+      const loc = U[n], v = S[n];
+      if (!loc) continue;
+      if (v.length === 1) gl.uniform1f(loc, v[0]);
+      else if (v.length === 2) gl.uniform2fv(loc, v);
+      else if (v.length === 3) gl.uniform3fv(loc, v);
+      else gl.uniform4fv(loc, v);
     }
-    const CV = V || cy0;
-    gl.uniform3fv(U.uCrDeep, CV.deep); gl.uniform3fv(U.uCrBright, CV.bright);
-    gl.uniform3fv(U.uGlowCol, V ? V.bright : a.id === "mushroom" ? M.glow : a.glowCol);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
+
+  const startAt = ASSETS.findIndex(a => "#" + a.id === location.hash);
+  select(startAt >= 0 ? startAt : 0);
+  setTreat(3);
+  setLive(false);
+  Object.assign(cam, goal);
   requestAnimationFrame(frame);
 })();
 </script>

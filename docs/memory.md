@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-10-31 — Library without WebGL
+
+- **Owner report:** WebGL stayed disabled after a full Chrome restart with graphics acceleration on; asked for a working approach, suggesting rendering on open rather than all at once.
+- **Implemented/verified:** the page is split into a shared `lib` script (asset data and pure uniform maths) and page logic. `tools/lobby/render_library.py` renders 32 turntable sheets (16 frames each) offline from the same shader in about 17 s; the agent inspected the rock wall sheet and a contact sheet of six assets. The page defaults to these rendered views, loading each sheet only when that asset/variant is opened; Live 3D (per-asset shaders, adaptive resolution) is opt-in and falls back to renders on failure. Published as library v10 with the renders as artifact files.
+- **Unresolved:** owner confirmation in their browser. Noted while inspecting renders: PvP energy reads pale yellow rather than orange, the geode interior is hard to read, and the crimson field's rock is a flat slab.
+
 ## 2026-10-31 — Asset library freezing Chrome
 
 - **Owner report:** opening the library froze the whole Chrome browser.
