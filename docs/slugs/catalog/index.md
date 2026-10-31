@@ -6,7 +6,7 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 
 | Design | Status | Design and sources |
 | --- | --- | --- |
-| First sick/dizzy slug | Revised Blender draft following owner feedback; further review and Studio import pending | [Design and reference notes](flopper-inspired.md) |
+| Floppy (first slug) | Final design confirmed as a 3D concept; Blender game model and Studio import pending | [Design and reference notes](flopper-inspired.md) |
 
 Copy the [new slug record template](template.md) for each future creature. Record:
 
