@@ -909,8 +909,9 @@ vec2 topFissure(vec2 x) {
     vec2 cl = crackLine(rot(fi*0.698 + 0.45*hash1(fi + 71.0))*x, vec3(6.9, 6.9, 1.0), fi*17.3 + 3.0, 0.2 + 0.09*hash1(fi + 72.0), 1.0);
     if (cl.x < best.x) best = cl;
   }
-  return best;
+  return vec2(best.x - best.y*1.2, best.y*2.2);
 }
+float fissureDepth(float halfWidth) { return min(0.25 + halfWidth*3.0, 1.0); }
 float rockBody(vec3 q) {
   vec3 bc, bs; float bseed;
   float d = rockBlocks(q, bc, bs, bseed);
@@ -924,6 +925,12 @@ float rockBody(vec3 q) {
   envelope = max(envelope, -q.y - ROCK_DEEP - 2.0);
   d = min(d, max(max(envelope, q.y), 0.0) + ROCK_CELL*0.7);
   d = smax(d, q.y, 0.05);
+  if (q.y > -1.1 && rr < 8.4) {
+    vec2 fc = topFissure(q.xz);
+    float deep = fissureDepth(fc.y);
+    float groove = fc.x + fc.y*clamp(-q.y/deep, 0.0, 1.0);
+    d = max(d, -max(groove, -q.y - deep*0.6));
+  }
   float lower = smoothstep(0.1, -0.7, q.y);
   return d + lower*(0.05*(noise3(q*1.6) - 0.5) + 0.018*(noise3(q*5.0) - 0.5));
 }
@@ -1264,42 +1271,45 @@ void rockSmallCrystals(vec3 q, inout vec2 res) {
 }
 void rockSprouts(vec3 q, inout vec2 res) {
   float stems = 1e5, caps = 1e5, capIdx = 0.0;
-  wallShroom(q, vec3(-3.646, -0.060, -0.657), vec3(0.0, 1.0, 0.0), 300.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.546, -0.060, -0.774), vec3(0.0, 1.0, 0.0), 301.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.362, -0.060, -0.748), vec3(0.0, 1.0, 0.0), 302.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.151, -0.060, 2.486), vec3(0.0, 1.0, 0.0), 303.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-1.937, -0.060, 2.741), vec3(0.0, 1.0, 0.0), 304.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.095, -0.060, 2.578), vec3(0.0, 1.0, 0.0), 305.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.155, -0.060, 2.476), vec3(0.0, 1.0, 0.0), 306.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.236, -0.060, 2.552), vec3(0.0, 1.0, 0.0), 307.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.371, -0.060, 2.727), vec3(0.0, 1.0, 0.0), 308.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(0.838, -0.060, -3.563), vec3(0.0, 1.0, 0.0), 309.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(0.666, -0.060, -3.554), vec3(0.0, 1.0, 0.0), 310.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.075, -0.060, -2.420), vec3(0.0, 1.0, 0.0), 311.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.904, -0.060, -2.731), vec3(0.0, 1.0, 0.0), 312.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.969, -0.060, -2.612), vec3(0.0, 1.0, 0.0), 313.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(5.454, -0.060, -1.468), vec3(0.0, 1.0, 0.0), 314.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(5.430, -0.060, -1.302), vec3(0.0, 1.0, 0.0), 315.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(5.532, -0.060, -1.275), vec3(0.0, 1.0, 0.0), 316.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(4.857, -0.060, 1.447), vec3(0.0, 1.0, 0.0), 317.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(4.834, -0.060, 1.235), vec3(0.0, 1.0, 0.0), 318.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(4.791, -0.060, 1.163), vec3(0.0, 1.0, 0.0), 319.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.617, -0.060, -0.338), vec3(0.0, 1.0, 0.0), 320.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.807, -0.060, -0.177), vec3(0.0, 1.0, 0.0), 321.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.739, -0.060, -0.428), vec3(0.0, 1.0, 0.0), 322.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.140, -0.060, -3.024), vec3(0.0, 1.0, 0.0), 323.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.249, -0.060, -2.977), vec3(0.0, 1.0, 0.0), 324.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.156, -0.060, -2.856), vec3(0.0, 1.0, 0.0), 325.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.060, -0.060, 1.940), vec3(0.0, 1.0, 0.0), 300.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.151, -0.060, 2.041), vec3(0.0, 1.0, 0.0), 301.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.100, -0.060, 2.380), vec3(0.0, 1.0, 0.0), 302.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.060, -0.060, 2.140), vec3(0.0, 1.0, 0.0), 303.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.380, -0.060, -0.460), vec3(0.0, 1.0, 0.0), 304.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.500, -0.060, 3.020), vec3(0.0, 1.0, 0.0), 305.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.460, -0.060, -2.940), vec3(0.0, 1.0, 0.0), 306.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.060, -0.060, 3.860), vec3(0.0, 1.0, 0.0), 307.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.460, -0.060, 1.340), vec3(0.0, 1.0, 0.0), 308.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.260, -0.060, 1.420), vec3(0.0, 1.0, 0.0), 309.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.172, -0.060, 1.549), vec3(0.0, 1.0, 0.0), 310.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.780, -0.060, 0.500), vec3(0.0, 1.0, 0.0), 311.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.220, -0.060, -3.700), vec3(0.0, 1.0, 0.0), 312.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.110, -0.060, -3.795), vec3(0.0, 1.0, 0.0), 313.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.860, -0.060, -0.020), vec3(0.0, 1.0, 0.0), 314.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.993, -0.060, -0.141), vec3(0.0, 1.0, 0.0), 315.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.180, -0.060, -4.260), vec3(0.0, 1.0, 0.0), 316.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.263, -0.060, -4.271), vec3(0.0, 1.0, 0.0), 317.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-5.740, -0.060, -1.500), vec3(0.0, 1.0, 0.0), 318.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-5.340, -0.060, -2.340), vec3(0.0, 1.0, 0.0), 319.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.780, -0.060, -1.220), vec3(0.0, 1.0, 0.0), 320.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.940, -0.060, -1.420), vec3(0.0, 1.0, 0.0), 321.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.922, -0.060, -1.341), vec3(0.0, 1.0, 0.0), 322.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.220, -0.060, -1.780), vec3(0.0, 1.0, 0.0), 323.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.380, -0.060, -2.940), vec3(0.0, 1.0, 0.0), 324.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.328, -0.060, -2.962), vec3(0.0, 1.0, 0.0), 325.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.020, -0.060, -1.260), vec3(0.0, 1.0, 0.0), 326.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.939, -0.060, -1.140), vec3(0.0, 1.0, 0.0), 327.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.820, -0.060, -5.020), vec3(0.0, 1.0, 0.0), 328.0, 1.0, stems, caps, capIdx);
   if (stems < res.x) res = vec2(stems, 13.0);
   if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);
-  smallCrystal(q, vec3(3.540, -0.050, 2.180), vec3(0.345, 0.938, 0.019), 0.64, 0.091, 2.0, res);
-  smallCrystal(q, vec3(2.540, -0.050, -4.500), vec3(-0.062, 0.948, -0.313), 0.63, 0.125, 10.0, res);
-  smallCrystal(q, vec3(-4.980, -0.050, -1.620), vec3(-0.104, 0.994, -0.045), 0.59, 0.104, 1.0, res);
-  smallCrystal(q, vec3(-2.660, -0.050, 4.220), vec3(-0.111, 0.990, 0.092), 0.60, 0.105, 3.0, res);
-  smallCrystal(q, vec3(2.660, -0.050, -3.620), vec3(0.251, 0.907, -0.337), 0.50, 0.092, 4.0, res);
-  smallCrystal(q, vec3(4.660, -0.050, 2.580), vec3(0.247, 0.941, 0.231), 0.53, 0.134, 10.0, res);
-  smallCrystal(q, vec3(-2.340, -0.050, 3.460), vec3(-0.134, 0.984, 0.118), 0.74, 0.102, 13.0, res);
-  smallCrystal(q, vec3(3.980, -0.050, 1.340), vec3(0.366, 0.920, 0.138), 0.76, 0.129, 10.0, res);
+  smallCrystal(q, vec3(4.060, -0.050, 1.380), vec3(0.174, 0.983, 0.063), 0.72, 0.119, 3.0, res);
+  smallCrystal(q, vec3(2.780, -0.050, -3.540), vec3(0.257, 0.966, 0.020), 0.64, 0.108, 1.0, res);
+  smallCrystal(q, vec3(-2.900, -0.050, 4.980), vec3(-0.306, 0.918, 0.251), 0.55, 0.134, 6.0, res);
+  smallCrystal(q, vec3(-4.820, -0.050, -1.740), vec3(-0.340, 0.926, -0.166), 0.73, 0.134, 0.0, res);
+  smallCrystal(q, vec3(4.260, -0.050, 2.740), vec3(0.355, 0.898, 0.260), 0.67, 0.122, 12.0, res);
+  smallCrystal(q, vec3(2.380, -0.050, -4.500), vec3(0.270, 0.926, -0.266), 0.60, 0.099, 8.0, res);
+  smallCrystal(q, vec3(-2.260, -0.050, 3.540), vec3(-0.070, 0.956, 0.286), 0.78, 0.130, 6.0, res);
+  smallCrystal(q, vec3(3.380, -0.050, 2.260), vec3(-0.043, 0.997, 0.069), 0.71, 0.118, 10.0, res);
 }
 // @rock-dressing-end
 vec2 spawnRock(vec3 p) {
@@ -1635,16 +1645,17 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
         s *= 1.0 + 0.55*smoothstep(1.8, 5.0, lap);
         float hatch = 1.0 - smoothstep(0.08, 0.13, abs(fract(dot(l, vec3(0.7, 0.7, 0.2))*5.0) - 0.5));
         s *= 1.0 - 0.7*(1.0 - flat0)*hatch*(1.0 - smoothstep(-3.5, -0.5, lap))*step(0.38, noise3(l*2.5));
-        if (l.y > -0.3 && n.y > 0.6 && rr < 8.2) {
-          // Fissures: teal light welling up through a dark-edged crack and spilling softly onto the stone.
-          float fc = topFissure(l.xz).x;
-          // A calmer, darker top, so the glow carries it.
-          s *= 0.68;
-          fissure = 1.0 - smoothstep(-0.012, 0.012, fc);
-          fissureHalo = exp(-max(fc, 0.0)*3.6);
-          float rim = smoothstep(-0.015, 0.0, fc) - smoothstep(0.018, 0.05, fc);
-          s = mix(s, vec3(0.012, 0.022, 0.03), rim*0.9);
-          s = mix(s, vec3(0.15, 0.6, 0.56), fissure);
+        if (l.y > -1.1 && l.y < 0.03 && rr < 8.2) {
+          // Fissures: carved grooves with dark walls, lit from the bottom, spilling light onto the stone around them.
+          vec2 fq = topFissure(l.xz);
+          if (l.y > -0.3 && n.y > 0.6) s *= 0.68;  // a calmer, darker top, so the glow carries it
+          float inside = 1.0 - smoothstep(-0.01, 0.012, fq.x);
+          float depthT = clamp(-l.y/(fissureDepth(fq.y)*0.6), 0.0, 1.0);
+          float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));
+          fissure = inside*(0.02 + 0.24*depthT*depthT + 1.7*core);
+          fissureHalo = exp(-max(fq.x, 0.0)*7.0)*(1.0 - smoothstep(0.02, 0.1, l.y))*step(0.0, fq.x)*smoothstep(0.015, 0.06, fq.x);
+          s = mix(s, mix(vec3(0.012, 0.016, 0.022), vec3(0.22, 0.75, 0.7), core), inside);
+          s = mix(s, vec3(0.008, 0.01, 0.014), (smoothstep(-0.01, 0.0, fq.x) - smoothstep(0.02, 0.05, fq.x))*0.95);
         }
         if (l.y < -0.15) {
           float crack = rockCrackAt(l);
@@ -1663,8 +1674,8 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       emit = s*(0.34 + 0.3*smoothstep(0.1, 0.7, -n.y))*(rr < 9.5 && l.y < 3.0 ? 1.0 : 0.3);
       emit *= 0.55 + 0.45*occ0;
       vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));
-      emit += fissureLight*(1.1*fissure + 0.3*fissureHalo*fissureHalo)*TR(id).z;
-      m *= 1.0 - fissureHalo*0.8;
+      emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;
+      m *= 1.0 - fissureHalo*0.85;
       return mix(s, vec3(0.13, 0.22, 0.11), 0.85*m);
     }
 #endif
@@ -1866,7 +1877,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return vec3(0.55, 0.75, 0.35);
   }
 #if ASSET >= 4
-  if (id > 12.5 && id < 13.5) return vec3(0.62, 0.58, 0.46);
+  if (id > 12.5 && id < 13.5) { emit = vec3(0.62, 0.58, 0.46)*0.45; return vec3(0.62, 0.58, 0.46); }
 #endif
   if (id > 12.5) { spec = 0.55; return vec3(0.55, 0.56, 0.6); }
   if (id > 11.5 && id < 12.5) {
@@ -1893,10 +1904,18 @@ void main() {
   vec3 bg = mix(vec3(0.012, 0.013, 0.024), vec3(0.05, 0.05, 0.095), smoothstep(-0.3, 0.8, rd.y));
   float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
   bool graze = false; float grazeId = 0.0;
+#if ASSET >= 4
+  for (int i = 0; i < 260; i++) {
+#else
   for (int i = 0; i < 120; i++) {
+#endif
     vec3 pp = ro + rd*t;
     vec2 h = map(pp);
+#if ASSET >= 4
+    if (h.x < 0.0005*t) { hitId = h.y; break; }
+#else
     if (h.x < 0.002*t) { hitId = h.y; break; }
+#endif
     if (emissive(h.y)) glowAcc += exp(-h.x*1.4)*0.012*min(h.x + 0.2, 1.0);
     if (h.x < minH) { minH = h.x; minId = h.y; }
     // The ray dipped close to a form and is moving away again: a silhouette edge in front.
@@ -1906,7 +1925,7 @@ void main() {
     if (t > 110.0) break;
   }
   vec3 col = bg;
-  float ink = 0.0;
+  float ink = 0.0, inkClear = 0.0;
   vec3 inkC = INK(hitId > 0.0 ? hitId : minId);
   if (hitId > 0.0) {
     vec3 p = ro + rd*t;
@@ -1960,7 +1979,15 @@ void main() {
     float convex = hitId < 1.5 && uRockLayers.x + uRockLayers.y > 0.5 ? 0.0 : uAsset > 3.5 ? 0.1 : 0.5;
     float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
 #if ASSET >= 4
-    if (hitId < 1.5) crease = smoothstep(1.6/cs, 3.2/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
+    if (hitId < 1.5) {
+      crease = smoothstep(1.6/cs, 3.2/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
+      vec3 fl = centreLocal(p);
+      if (fl.y > -1.1 && fl.y < 0.06 && length(fl.xz) < 8.2) {
+        float fx = topFissure(fl.xz).x;
+        if (fx < 0.05) crease = 0.0;
+        inkClear = 1.0 - smoothstep(-0.015, 0.012, fx);
+      }
+    }
 #endif
     // Ink 2: material boundaries (stone to iron, stem to cap, object to floor).
     float idEdge = (abs(s1.y - hitId) + abs(s2.y - hitId) + abs(s3.y - hitId) + abs(s4.y - hitId)) > 0.5 ? 1.0 : 0.0;
@@ -1977,7 +2004,7 @@ void main() {
         if (abs(map(q - normalAt(q)*0.01).y - hitId) > 0.5) idEdge = 1.0;
       }
     }
-    if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
+    if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5)) { crease = 0.0; idEdge *= 0.6; }
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
     if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }
@@ -1991,12 +2018,30 @@ void main() {
     if (length(top.xz) < 7.0) col = stormSky(rd);
   }
 #endif
-  col = mix(col, inkC, ink);
+  col = mix(col, inkC, ink*(1.0 - inkClear));
 #if ASSET == 5
   col += lightColumn(ro, rd, hitId > 0.0 ? t : 1e4);
 #elif ASSET == 6
   col += pitMist(ro, rd, hitId > 0.0 ? t : 75.0);
 #elif ASSET == 4
+  {
+    // Soft light rising out of the fissures into the air above them.
+    float dy = abs(rd.y) > 1e-4 ? rd.y : 1e-4;
+    float ta = (ROCK_TOP - ro.y)/dy, tb = (ROCK_TOP + 1.0 - ro.y)/dy;
+    float t0 = max(min(ta, tb), 0.0), t1 = min(max(ta, tb), hitId > 0.0 ? t : 1e4);
+    if (t1 > t0) {
+      float air = 0.0;
+      float offset = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)))*43758.5453);
+      for (int i = 0; i < 12; i++) {
+        vec3 a = ro + rd*mix(t0, t1, (float(i) + offset)/12.0);
+        if (length(a.xz) < 8.0) {
+          float near = exp(-max(topFissure(a.xz).x + 0.05, 0.0)*4.0);
+          air += near*near*(1.0 - (a.y - ROCK_TOP))*(1.0 - (a.y - ROCK_TOP));
+        }
+      }
+      col += vec3(0.2, 0.85, 0.8)*air/12.0*min(t1 - t0, 3.0)*0.13;
+    }
+  }
   {
     // Glowing drips falling away from the shard tips.
     float tEnd = hitId > 0.0 ? t : 1e4;
@@ -2171,7 +2216,7 @@ void main() {
   // Hub centrepiece, one vertical axis (owner, 2026-11-01). Variants here are camera views of one design.
   const CENTRE_CORE = [0.3, 0.95, 0.9];
   ASSETS.push({
-    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v7", concept: true, noLive: true, shader: 4,
+    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v8", concept: true, noLive: true, shader: 4,
     variantLabel: "View",
     variants: [
       { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 7.5, 0], dist: 27, pitch: 0.34 } },
@@ -2190,10 +2235,10 @@ void main() {
       ["Vines", "Fifteen vines with sparse leaves: nine hanging from the rim and six growing out of the rock lower down. Small glowing spores sit in the stems all the way down, each partly set into the stem so it reads as attached."],
       ["Moss", "The wall's soft sage moss on upward-facing rock, with a few patches down the sides. The middle of the top stays clear to walk on."],
       ["Treatment", "Slugshot mix, with thinner ink on the leaves and spores so it doesn't swallow them."],
-      ["Top", "Glowing fissures run in from the rim, with teal light welling up from inside as if the Maelstrom shows through, stopping short of the middle so the spawn area stays clear. Tiny mushrooms from the 14-colour bank sprout from the cracks, with a few small crystals near the edges. Mushrooms appear only here, not on the underside."],
+      ["Top", "Deep cracks carved into the stone run in from the rim, stopping short of the middle so the spawn area stays clear. Their walls are dark and teal light wells up from the bottom, spills onto the stone around them and rises softly into the air. Tiny mushrooms from the 14-colour bank are scattered here and there along the crack edges, with a few small crystals growing out of the cracks near the rim. Mushrooms appear only on top, not on the underside."],
       ["Bridge markers", "A broken stone pillar with half an arch on one side of each bridge mouth, a stump and rubble on the other. Glowing symbols are set flush into the pillars: crossed swords in orange toward the portals, a blaster in gold toward the gun side, a slug in mint toward the slug side, and a cave mouth in pale blue toward the entrance. The gaps are about 17 studs wide, for the 10-stud bridges."],
       ["In the game", "The floating rocks and debris get a slow floating animation when this goes into the map. It stays visual only, so it never moves players."],
-      ["Status", "Concept v7, awaiting your review."]
+      ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
     id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v1", concept: true, noLive: true, shader: 5,

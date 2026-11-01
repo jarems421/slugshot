@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v8, cracks with depth
+
+- **Confirmed:** owner said the cracks had no depth, just coloured in, and wanted teal glow coming out of them, with mushrooms scattered on the crack edges. Owner said they are good once this is done.
+- **Implemented/verified offline:** real V-shaped grooves with dark walls and light from the bottom, plus soft light rising into the air; mushrooms moved onto the stone along the crack edges. Renders inspected.
+- **Unresolved:** owner's confirmation; proving the depth and rising glow in Roblox, where the grooves must be real mesh and the rising light needs a separate effect.
+
 ## 2026-11-01 - Spawn rock v7, the top
 
 - **Confirmed:** owner called v6 "perfect" apart from the plain top, which players see 90% of the time. From five ideas, they chose glowing fissures, small mushrooms sprouting through the cracks, and the four bridge markers.

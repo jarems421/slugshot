@@ -139,9 +139,9 @@ void main() {
     return data, size
 
 
-def crack_sites(data, size, count, spacing, inner, outer, rnd, taken):
-    """Spots inside the cracks, spaced apart, clear of the middle and the bridge mouths."""
-    ys, xs = np.nonzero(data < 0.012)
+def crack_sites(data, size, count, spacing, inner, outer, rnd, taken, band=(-1.0, -0.02)):
+    """Spots a chosen distance from the cracks, spaced apart, clear of the middle and the bridge mouths."""
+    ys, xs = np.nonzero((data > band[0]) & (data < band[1]))
     order = list(range(len(xs)))
     rnd.shuffle(order)
     sites = []
@@ -170,9 +170,10 @@ def sprouts(vs, fs, ctx):
         crystals.append(f"  smallCrystal(q, {vec([x, -0.05, z])}, {vec(direction)}, {rnd.uniform(0.45, 0.85):.2f}, {rnd.uniform(0.09, 0.14):.3f}, {float(rnd.randrange(14)):.1f}, res);")
     lines = []
     seed = 300.0
-    for x, z in crack_sites(data, size, 13, 0.8, 2.6, 7.0, rnd, taken):
-        for j in range(rnd.choice((2, 3, 3))):
-            ox, oz = rnd.uniform(-0.17, 0.17), rnd.uniform(-0.17, 0.17)
+    # Mushrooms stand on the stone along the crack edges, scattered here and there: mostly singles, the odd pair.
+    for x, z in crack_sites(data, size, 21, 0.75, 2.4, 7.0, rnd, taken, band=(0.08, 0.3)):
+        for j in range(rnd.choice((1, 1, 1, 2))):
+            ox, oz = rnd.uniform(-0.14, 0.14)*j, rnd.uniform(-0.14, 0.14)*j
             lines.append(f"  wallShroom(q, {vec([x + ox, -0.06, z + oz])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 1.0, stems, caps, capIdx);")
             seed += 1.0
     print(f"{seed - 300:.0f} crack mushrooms, {len(crystals)} crack crystals anchored")
