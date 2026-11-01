@@ -1049,9 +1049,11 @@ void crystalCluster(vec3 q, vec3 site, vec3 dir, float k, float L, float R, floa
   }
   if (d < res.x) res = vec2(d, 18.0 + k*0.05);
 }
-// Four bridge markers: a broken stone pillar and half-arch on one side of each bridge mouth and a stump on the other.
-// Each pillar has a glowing symbol set flush into it, facing both ways. dir: 0 PvP, 1 slug side, 2 entrance, 3 gun side.
-const float MARK_R = 6.0, MARK_U = 1.75, MARK_PLATE_Y = 1.36;
+// Four gateways at the island's edge, one per bridge: two standing runestones with a lintel across them, like a small
+// Stonehenge. A glowing keystone in the lintel shows where the bridge leads. dir: 0 PvP, 1 slug side, 2 entrance, 3 gun side.
+const float MARK_U = 1.9, MARK_TOP = 2.3, MARK_PLATE_Y = 2.52, TIE_HIGH = 0.88, TIE_LOW = 0.22;
+float markR(float dir) { return dir < 0.5 ? 6.6 : dir < 1.5 ? 6.85 : dir < 2.5 ? 6.25 : 6.3; }
+vec3 markerColor(float dir) { return dir < 0.5 ? vec3(1.0, 0.62, 0.25) : dir < 1.5 ? vec3(0.3, 1.0, 0.76) : dir < 2.5 ? vec3(0.72, 0.87, 1.0) : vec3(1.0, 0.82, 0.35); }
 void markerLocal(vec2 xz, out float u, out float w, out float dir, out float side) {
   vec2 f = abs(xz);
   if (f.y > f.x) { w = f.y; u = xz.x; dir = xz.y < 0.0 ? 0.0 : 2.0; }
@@ -1063,34 +1065,88 @@ float tiltedBox(vec3 l, vec3 size, float yaw, float tilt) {
   l.xy = rot(tilt)*l.xy;
   return sdBox(l, size) - 0.05;
 }
+// A runestone's own frame: leaning in slightly and turned a little, so no two stand alike.
+vec3 stoneFrame(float u, float y, float w, float s, float dir) {
+  vec3 l = vec3(u - s*MARK_U + s*0.05*y, y, w - markR(dir));
+  l.xz = rot(0.18*(hash1(dir*7.3 + s*3.1 + 5.0) - 0.5))*l.xz;
+  return l;
+}
+// The stone's outline at a height, with one long edge chamfered. The rope wraps follow this exact shape.
+float stoneSection(vec2 xz, float y, float s, float inset) {
+  vec2 b = vec2(0.44, 0.38)*(1.0 - 0.09*clamp(y/MARK_TOP, 0.0, 1.0)) - inset;
+  return max(sdBox2(xz, b), dot(vec2(xz.x*s, xz.y), vec2(0.78, 0.62)) - 0.47 + inset);
+}
 void bridgeMarkers(vec3 q, inout vec2 res) {
   float u, w, dir, side;
   markerLocal(q.xz, u, w, dir, side);
-  float far = length(vec3(abs(u) - MARK_U, q.y - 1.3, w - MARK_R)) - 3.0;
-  if (far > res.x) return;
-  float h = hash1(dir*7.3 + 1.0), h2 = hash1(dir*5.1 + 2.0);
-  vec3 tall = vec3(u - side*MARK_U, q.y, w - MARK_R);
-  float taper = 1.0 + 0.1*clamp(1.2 - q.y, 0.0, 1.2);
-  vec3 tt = vec3(tall.x/taper, tall.y, tall.z/taper);
-  float d = tiltedBox(tt - vec3(0.0, 0.42, 0.0), vec3(0.46, 0.46, 0.42), 0.14 + 0.1*h, 0.0);
-  d = smin(d, tiltedBox(tt - vec3(0.03, 1.35, 0.0), vec3(0.38, 0.52, 0.34), -0.1, 0.03), 0.04);
-  // The top leans out over the bridge and breaks off: half an arch.
-  float top = tiltedBox(tall - vec3(-side*0.3, 2.14, 0.0), vec3(0.66, 0.27, 0.32), 0.05, side*0.5);
-  top = smax(top, dot(tall - vec3(-side*0.72, 2.4, 0.0), normalize(vec3(-side, 0.55 + 0.4*h2, 0.25))), 0.04);
-  d = smin(d, top, 0.04);
-  vec3 stump = vec3(u + side*MARK_U, q.y, w - MARK_R);
-  float st = tiltedBox(stump - vec3(0.0, 0.34, 0.0), vec3(0.44, 0.42, 0.38), -0.2 - 0.1*h2, 0.0);
-  st = smax(st, dot(stump - vec3(0.0, 0.52 + 0.14*h, 0.0), normalize(vec3(side*0.55, 1.0, -0.25))), 0.04);
-  d = min(d, st);
-  d = min(d, tiltedBox(stump - vec3(side*0.72, 0.1, -0.4), vec3(0.16, 0.1, 0.14), 0.9, 0.2));
-  d += 0.09*(noise3(q*1.5 + dir*9.0) - 0.5) + 0.03*(noise3(q*4.0) - 0.5);
-  if (d < res.x) res = vec2(d, 1.0);
-  // The symbol stone sits flush in the pillar's face, on both sides.
-  float plate = sdBox(tall - vec3(0.03, MARK_PLATE_Y, 0.0), vec3(0.33, 0.33, 0.43));
-  if (plate < res.x) res = vec2(plate, 16.0 + dir*0.1);
+  float R = markR(dir);
+  float far = sdBox(vec3(u, q.y - 1.0, w - R), vec3(3.0, 2.2, 1.1));
+  if (far > res.x + 0.05) return;
+  float h = hash1(dir*7.3 + 1.0);
+  float rock = 1e3, rope = 1e3;
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    vec3 l = stoneFrame(u, q.y, w, s, dir);
+    // Shallow grooves are worn where the rope goes, and the stone stays smooth there, so the wraps sit on its surface.
+    float waist = max(1.0 - smoothstep(0.17, 0.25, abs(q.y - TIE_HIGH)), 1.0 - smoothstep(0.11, 0.19, abs(q.y - TIE_LOW)));
+    vec2 v = vec2(stoneSection(l.xz, q.y, s, 0.03 + 0.025*waist), abs(q.y - 1.0) - 1.34);
+    float d = min(max(v.x, v.y), 0.0) + length(max(v, 0.0)) - 0.03;
+    d += (1.0 - waist)*(0.16*(noise3(q*1.2 + dir*9.0 + s*4.0) - 0.5) + 0.05*(noise3(q*3.4) - 0.5));
+    rock = min(rock, d);
+    // A footing set into the cliff, so the stone can stand right at the edge.
+    rock = min(rock, tiltedBox(vec3(u - s*MARK_U, q.y + 0.46, w - R - 0.03), vec3(0.58, 0.5, 0.5), s*0.2, 0.0) + 0.05*(noise3(q*2.0 + 3.0) - 0.5));
+    // Rope wound round the stone, a thick knot on the bridge side where the rail ties on, and a loose tail.
+    for (int k = 0; k < 3; k++) {
+      float yk = TIE_HIGH + (float(k) - 1.0)*0.12;
+      rope = min(rope, length(vec2(stoneSection(l.xz, yk, s, 0.0) - 0.012, q.y - yk - 0.035*l.x*s)) - 0.06);
+    }
+    for (int k = 0; k < 2; k++) {
+      float yk = TIE_LOW + (float(k) - 0.5)*0.12;
+      rope = min(rope, length(vec2(stoneSection(l.xz, yk, s, 0.0) - 0.012, q.y - yk - 0.035*l.x*s)) - 0.06);
+    }
+    for (int k = 0; k < 2; k++) {
+      vec3 K = vec3(-s*0.31, k == 0 ? TIE_HIGH : TIE_LOW, 0.4);
+      rope = min(rope, sdEll(l - K, vec3(0.14, 0.115, 0.1)));
+      rope = min(rope, sdEll(l - K - vec3(s*0.08, -0.05, 0.015), vec3(0.09, 0.08, 0.08)));
+      rope = min(rope, capT(l, K, K + vec3(s*0.07, k == 0 ? -0.46 : -0.3, 0.05), 0.034, 0.024));
+    }
+  }
+  // A threshold slab between the stones, and a little rubble.
+  rock = min(rock, tiltedBox(vec3(u, q.y + 0.2, w - R - 0.02), vec3(1.62, 0.15, 0.52), 0.03*(h - 0.5), 0.0) + 0.04*(noise3(q*2.4) - 0.5));
+  rock = min(rock, tiltedBox(vec3(u - side*2.72, q.y - 0.02, w - R + 0.42), vec3(0.17, 0.1, 0.14), 0.9, 0.2));
+  // The lintel lies across the tops, slightly askew.
+  vec3 lq = vec3(u - 0.05*(h - 0.5), q.y - MARK_TOP - 0.23, w - R);
+  lq.xz = rot(0.05*(h - 0.5))*lq.xz;
+  lq.xy = rot(0.025*(hash1(dir*5.1 + 2.0) - 0.5))*lq.xy;
+  float lintel = sdBox(lq, vec3(2.32, 0.2, 0.3)) - 0.05;
+  lintel = smax(lintel, abs(lq.x) - 2.2 + 0.12*sin(lq.y*9.0 + lq.z*7.0 + dir), 0.03);
+  rock = min(rock, lintel + 0.09*(noise3(q*1.5 + dir*5.0) - 0.5) + 0.03*(noise3(q*4.0 + 7.0) - 0.5));
+  if (rock*0.85 < res.x) res = vec2(rock*0.85, 1.3);
+  if (rope*0.9 < res.x) res = vec2(rope*0.9, 2.4);
+  // The glowing keystone, wider at the top, set into the lintel and facing both ways.
+  vec3 kq = vec3(u, q.y - MARK_PLATE_Y, w - R);
+  float taper = 1.0 + 0.2*kq.y/0.4;
+  float plate = sdBox(vec3(kq.x/taper, kq.y, kq.z), vec3(0.31, 0.37, 0.37)) - 0.03;
+  plate += 0.03*(noise3(q*3.5 + dir*3.0) - 0.5);
+  if (plate*0.8 < res.x) res = vec2(plate*0.8, 16.0 + dir*0.1);
 }
 float box2(vec2 p, vec2 b) { vec2 e = abs(p) - b; return length(max(e, 0.0)) + min(max(e.x, e.y), 0.0); }
 float seg2(vec2 p, vec2 a, vec2 b) { float h; return sdSeg2(p, a, b, h); }
+// A column of three angular carved runes on a stone's face. g is relative to the stone's centre line. Negative is inside.
+float gateRunes(vec2 g, float seed) {
+  float best = 1e3;
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i), k = seed*3.7 + fi*11.0;
+    vec2 c = (g - vec2(0.0, 1.38 + fi*0.3))/0.115;
+    float d = seg2(c, vec2(0.0, -1.0), vec2(0.0, 1.0));
+    float a = 2.0*hash1(k + 1.0) - 1.0, b = hash1(k + 2.0) > 0.5 ? 1.0 : -1.0;
+    d = min(d, seg2(c, vec2(0.0, a*0.7), vec2(b*0.75, a*0.7 + 0.5)));
+    float a2 = 2.0*hash1(k + 3.0) - 1.0, same = hash1(k + 4.0) > 0.6 ? 1.0 : -1.0;
+    d = min(d, seg2(c, vec2(0.0, a2*0.7), vec2(same*b*0.75, a2*0.7 - 0.45)));
+    best = min(best, (d - 0.12)*0.115);
+  }
+  return best;
+}
 // Original symbols, in a roughly -1 to 1 square.
 float markerSymbol(vec2 g, float dir) {
   if (dir < 0.5) {
@@ -1769,6 +1825,7 @@ void treeShrooms(vec3 p, inout vec2 res) {
 }
 vec2 hookedBridges(vec3 p);
 vec3 hookedLanternGlow(vec3 ro, vec3 rd, float tEnd);
+vec3 gateGlow(vec3 ro, vec3 rd, float tEnd, float top);
 vec2 maelstrom(vec3 p) {
   float rr = length(p.xz), a = atan(p.z, p.x);
   float R = 17.6 + 0.45*sin(a*5.0 + 1.0) + 0.3*sin(a*11.0 + 2.0);
@@ -1902,6 +1959,7 @@ vec3 pitMist(vec3 ro, vec3 rd, float tEnd) {
   }
   result += vec3(0.5, 1.0, 0.92)*motes*1.2;
   result += hookedLanternGlow(ro, rd, tEnd);
+  result += gateGlow(ro, rd, tEnd, 0.0);
   // A burst of light and spray at the foot of each fall.
   for (int i = 0; i < 4; i++) {
     float fi = float(i), af = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
@@ -1925,8 +1983,9 @@ void lanternAt(int i, out vec3 top, out vec3 core) {
   top = vec3(x, railY(x), side*2.25);
   core = top + vec3(0.0, -0.78, side*0.12);
 }
-// The rail: on a hooked bridge it dips at the island end to tie onto the pillar and stump.
-float railAt(float x, bool hooked) { return hooked ? mix(railY(x), 1.02, smoothstep(-7.0, -10.7, x)) : railY(x); }
+// On a hooked bridge the ropes end at the knots on the runestones. Bridge-local x, y and z of those knots follow.
+const float TIE_X = -10.08, TIE_RAIL_Y = 1.725, TIE_RAIL_Z = 3.03, TIE_DECK_Y = 0.43, TIE_DECK_Z = 3.1;
+float railAt(float x, bool hooked) { return hooked ? mix(railY(x), TIE_RAIL_Y, smoothstep(-7.6, TIE_X, x)) : railY(x); }
 float runnerX(float spin) { return -11.0 + 22.0*fract(spin*2.0/6.2832); }
 float bridgeDip(float x, float spin) {
   float dx = x - runnerX(spin), u = clamp(x/10.0, -1.0, 1.0);
@@ -1945,7 +2004,7 @@ vec2 ropeBridge(vec3 p, float seedO, bool hooked) {
   float planks = 1e3, cell = floor((x + 10.2)/PLANK_PITCH);
   for (int j = -1; j <= 1; j++) {
     float i = cell + float(j);
-    if (i < 0.0 || i > 33.0 || abs(i - 9.0) < 0.5 || abs(i - 23.0) < 0.5) continue;
+    if (i < (hooked ? 1.0 : 0.0) || i > 33.0 || abs(i - 9.0) < 0.5 || abs(i - 23.0) < 0.5) continue;
     float xc = -10.2 + (i + 0.5)*PLANK_PITCH + 0.07*(hash1(i + seedO + 801.0) - 0.5);
     float wsp = uT*ORBIT, near = hooked ? 0.0 : exp(-(xc - runnerX(wsp))*(xc - runnerX(wsp))/3.6);
     float rock = sin(wsp*(18.0 + mod(i, 5.0)*2.0) + i*2.3);
@@ -1960,11 +2019,12 @@ vec2 ropeBridge(vec3 p, float seedO, bool hooked) {
   }
   vec2 res = vec2(planks*0.9, 2.0);
   // Ropes: two carrying the deck, two rails at hip height, and hangers between them with a knot at the top of each.
-  float span = hooked ? max(x - 10.7, -10.85 - x) : abs(x) - 10.7;
-  float railZ = hooked ? 2.25 + 0.25*smoothstep(-9.5, -10.7, x) : 2.25;
-  float rope = max(length(vec2(p.y - railAt(x, hooked), az - railZ)) - 0.08, span);
-  rope = min(rope, max(length(vec2(p.y - deckY(x) + 0.17, az - 1.45)) - 0.085, span));
-  float cx = clamp(floor(x/1.2 + 0.5), -8.0, 8.0)*1.2;
+  float span = hooked ? max(x - 10.7, TIE_X - x) : abs(x) - 10.7;
+  float rt = hooked ? smoothstep(-7.6, TIE_X, x) : 0.0, dt = hooked ? smoothstep(-8.2, TIE_X, x) : 0.0;
+  float rope = max(length(vec2(p.y - railAt(x, hooked), az - mix(2.25, TIE_RAIL_Z, rt))) - (0.08 + 0.04*rt), span);
+  rope = min(rope, max(length(vec2(p.y - mix(deckY(x) - 0.17, TIE_DECK_Y, dt*dt), az - mix(1.45, TIE_DECK_Z, dt))) - (0.085 + 0.035*dt), span));
+  if (hooked) rope *= 0.7;
+  float cx = clamp(floor(x/1.2 + 0.5), hooked ? -6.0 : -8.0, 8.0)*1.2;
   float hang = length(vec2(x - cx, az - 2.25)) - 0.035;
   hang = max(hang, max(p.y - railAt(cx, hooked), deckY(cx) - 0.14 - p.y));
   rope = min(rope, hang);
@@ -2017,16 +2077,17 @@ vec2 ropeBridge(vec3 p, float seedO, bool hooked) {
   rockStrand(p, vec3(8.2, railY(8.2) - 0.04, 2.33), vec3(8.3, railY(8.3) + 0.05, 2.25), 1.5, 5.3, res);
   return res;
 }
-// The four real bridges in the hub. Each deck runs onto the island between its marker's pillar and stump, and the rail
-// ropes lash around them, so the marker is what holds the bridge up. The far end keeps timber posts on the shore.
-const float HOOK_C = 11.8, HOOK_S = 0.54;
+// The four real bridges in the hub. Each deck lands on the threshold slab between its gateway's two runestones, and the
+// ropes end in knots on the wraps round the stones. The far end keeps timber posts on the shore.
+const float HOOK_S = 0.51;
+float hookC(float dir) { return markR(dir) + 0.45 + 10.0*HOOK_S; }
 vec3 bridgeLocal(vec3 p) {
   float u, w, dir, side;
   markerLocal(p.xz, u, w, dir, side);
-  return vec3((w - HOOK_C)/HOOK_S, p.y/HOOK_S, u/HOOK_S);
+  return vec3((w - hookC(dir))/HOOK_S, p.y/HOOK_S, u/HOOK_S);
 }
 vec3 bridgeWorld(vec3 l, float dir) {
-  float w = l.x*HOOK_S + HOOK_C, u = l.z*HOOK_S, y = l.y*HOOK_S;
+  float w = l.x*HOOK_S + hookC(dir), u = l.z*HOOK_S, y = l.y*HOOK_S;
   if (dir < 0.5) return vec3(u, y, -w);
   if (dir < 1.5) return vec3(w, y, u);
   if (dir < 2.5) return vec3(u, y, w);
@@ -2035,18 +2096,24 @@ vec3 bridgeWorld(vec3 l, float dir) {
 vec2 hookedBridges(vec3 p) {
   float u, w, dir, side;
   markerLocal(p.xz, u, w, dir, side);
-  vec2 r = ropeBridge(vec3((w - HOOK_C)/HOOK_S, p.y/HOOK_S, u/HOOK_S), dir*41.0, true);
+  vec2 r = ropeBridge(vec3((w - hookC(dir))/HOOK_S, p.y/HOOK_S, u/HOOK_S), dir*41.0, true);
   r.x *= HOOK_S;
-  // Rope lashed three times round the pillar and the stump.
-  vec2 tall = vec2(u - side*MARK_U, w - MARK_R), stump = vec2(u + side*MARK_U, w - MARK_R);
-  float lash = 1e3;
-  for (int k = 0; k < 3; k++) {
-    float y = p.y - 0.45 - float(k)*0.11;
-    lash = min(lash, length(vec2(sdBox2(tall, vec2(0.5, 0.46)), y)) - 0.05);
-    lash = min(lash, length(vec2(sdBox2(stump, vec2(0.47, 0.41)), y)) - 0.05);
-  }
-  if (lash < r.x) r = vec2(lash, 2.4);
   return r;
+}
+// The soft halo round each gateway's keystone.
+vec3 gateGlow(vec3 ro, vec3 rd, float tEnd, float top) {
+  vec3 result = vec3(0.0);
+  for (int d = 0; d < 4; d++) {
+    float fd = float(d), R = markR(fd);
+    vec3 at = fd < 0.5 ? vec3(0.0, 0.0, -R) : fd < 1.5 ? vec3(R, 0.0, 0.0) : fd < 2.5 ? vec3(0.0, 0.0, R) : vec3(-R, 0.0, 0.0);
+    vec3 v = at + vec3(0.0, top + MARK_PLATE_Y, 0.0) - ro;
+    float along = dot(v, rd);
+    if (along > 0.0 && along < tEnd + 1.0) {
+      float dd = length(v - rd*along);
+      result += markerColor(fd)*(0.16*exp(-dd*dd*3.5) + 0.035*exp(-dd*dd*0.45));
+    }
+  }
+  return result;
 }
 vec3 hookedLanternGlow(vec3 ro, vec3 rd, float tEnd) {
   vec3 result = vec3(0.0);
@@ -2154,9 +2221,11 @@ float inkWidth(float id) {
   if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5) w = 0.0;
   if (uAsset > 3.5) {
     if (abs(id - 10.0) < 0.5) w = 0.012;
-    if (uAsset > 5.5 && id > 1.9 && id < 3.0) w = id > 2.3 && id < 2.7 ? 0.014 : 0.022;
+    if (id > 1.9 && id < 3.0) w = id > 2.3 && id < 2.7 ? 0.014 : 0.022;
     if (id > 15.69 && id < 15.89) w = 0.03;
+    if (id > 15.95 && id < 16.5) w = 0.014;
     if (uAsset > 4.5 && uAsset < 5.5 && id < 1.5) w = 0.02;
+    if (id > 1.2 && id < 1.5) w = 0.018;
     if (abs(id - 12.0) < 0.5) w = 0.012;
     if (abs(id - 14.0) < 0.5) w = 0.008;
     if (abs(id - 4.0) < 0.5) w = 0.02;
@@ -2196,6 +2265,14 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   emit = vec3(0.0); spec = 0.08;
   if (uAsset > 2.5 && id > 5.5 && id < 9.5) p /= GS;
   float nz = noise3(p*0.32) + 0.5*noise3(p*0.9) - 0.75;
+#if ASSET == 4 || ASSET == 5
+  if (id > 2.3 && id < 2.5) {
+    float twist = 0.5 + 0.5*sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*17.0);
+    vec3 c = mix(vec3(0.38, 0.3, 0.19), vec3(0.62, 0.52, 0.34), twist);
+    emit = c*0.2;
+    return c;
+  }
+#endif
 #if ASSET >= 6
   if (abs(id - 13.8) < 0.1) {
     emit = vec3(1.0, 0.62, 0.24)*1.9;
@@ -2222,8 +2299,8 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       c = mix(c, vec3(0.1, 0.19, 0.075), 0.85*moss);
     } else if (id < 2.5) {
       // Rope: pale and twisted.
-      float twist = 0.5 + 0.5*sin((p.x*1.0 + p.y*2.0 + abs(p.z)*2.0)*17.0);
-      c = mix(vec3(0.29, 0.22, 0.13), vec3(0.62, 0.52, 0.34), twist);
+      float twist = 0.5 + 0.5*sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*17.0);
+      c = mix(vec3(0.38, 0.3, 0.19), vec3(0.62, 0.52, 0.34), twist);
     } else if (id < 2.7) {
       c = vec3(0.08, 0.08, 0.09);
       spec = 0.5;
@@ -2255,7 +2332,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       float scale = ASSET == 5 ? 0.5 : 1.0;
       bool mini = ASSET == 5 && (l.y >= 3.0 || rr >= 9.5) && (l.y < 48.0 || rr < 15.5);
       bool pitWall = ASSET == 6 && rr >= 9.5 && l.y < -0.12;
-      float calm = rr < 9.5 || mini || pitWall ? 1.0 : 0.2;
+      float calm = rr < 9.5 || mini || pitWall ? (id > 1.2 ? 0.45 : 1.0) : 0.2;
       s *= 1.0 + calm*0.4*(noise3(p*1.8/scale) - 0.5);
       float flat0 = smoothstep(0.75, 0.95, n.y);
       s *= 1.0 - calm*(0.45 - 0.27*flat0)*smoothstep(0.72, 0.82, noise3(p*9.0/scale));
@@ -2327,6 +2404,23 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));
       emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;
       m *= 1.0 - fissureHalo*0.85;
+      if (id > 1.2) {
+        float gu, gw, gDir, gSide;
+        markerLocal(l.xz, gu, gw, gDir, gSide);
+        vec3 gateCol = markerColor(gDir);
+        vec3 dk = vec3(gu, l.y - MARK_PLATE_Y, gw - markR(gDir));
+        emit += gateCol*(s + 0.04)*1.3/(dot(dk, dk) + 0.45)*TR(id).z;
+        float gs = gu > 0.0 ? 1.0 : -1.0;
+        vec3 rl = stoneFrame(gu, l.y, gw, gs, gDir);
+        float faces = abs(mod(gDir, 2.0) < 0.5 ? n.z : n.x);
+        if (faces > 0.5 && abs(rl.x) < 0.3 && l.y > 1.2 && l.y < 2.2) {
+          float rune = gateRunes(rl.xy, gDir*2.0 + gs + (rl.z > 0.0 ? 7.0 : 0.0));
+          float fill = 1.0 - smoothstep(-0.004, 0.006, rune);
+          emit += gateCol*(0.95*fill + 0.1*exp(-max(rune, 0.0)*30.0))*TR(id).z*(0.9 + 0.1*sin(uT*0.9 + gDir));
+          s = mix(s, gateCol*0.5, fill);
+          m *= 1.0 - fill;
+        }
+      }
       return mix(s, vec3(0.13, 0.22, 0.11), 0.85*m);
     }
 #endif
@@ -2490,13 +2584,20 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 l = centreLocal(p);
     float u, w, d0, side;
     markerLocal(l.xz, u, w, d0, side);
-    vec2 g = vec2(u - side*MARK_U - 0.03, l.y - MARK_PLATE_Y)/0.3;
+    // The symbol reads the right way round from the island and from the bridge.
+    float outward = mod(d0, 2.0) < 0.5 ? (d0 < 0.5 ? -n.z : n.z) : (d0 < 1.5 ? n.x : -n.x);
+    float flip = (d0 < 1.5 ? 1.0 : -1.0)*(outward > 0.0 ? -1.0 : 1.0);
+    vec2 g = vec2(u*flip, l.y - MARK_PLATE_Y)/0.27;
     float sym = markerSymbol(g, dir);
-    vec3 col = dir < 0.5 ? vec3(1.0, 0.62, 0.25) : dir < 1.5 ? vec3(0.3, 1.0, 0.76) : dir < 2.5 ? vec3(0.72, 0.87, 1.0) : vec3(1.0, 0.82, 0.35);
+    vec3 col = markerColor(dir);
     float fill = 1.0 - smoothstep(-0.015, 0.015, sym);
-    float halo = exp(-max(sym, 0.0)*7.0);
-    vec3 stone = vec3(0.07, 0.072, 0.095);
-    emit = col*(1.25*fill + 0.2*halo)*TR(id).z*(0.9 + 0.1*sin(uT*0.9 + dir));
+    float halo = exp(-max(sym, 0.0)*9.0);
+    // Dark stone with a light inside it, strongest around the symbol, with pale veins catching it.
+    vec3 kc = vec3(u, l.y - MARK_PLATE_Y, w - markR(d0));
+    float inner = exp(-dot(kc.xy, kc.xy)/0.1);
+    float vein = 1.0 - smoothstep(0.0, 0.035, abs(noise3(l*5.0 + d0*4.0) - 0.5));
+    vec3 stone = mix(vec3(0.05, 0.05, 0.07), col*0.3, 0.3 + 0.5*inner);
+    emit = col*(1.6*fill + 0.34*halo + 0.05 + 0.24*inner + 0.3*vein*(0.35 + inner))*TR(id).z*(0.9 + 0.1*sin(uT*0.9 + dir));
     return mix(stone, col, fill);
   }
 #endif
@@ -2720,7 +2821,7 @@ void main() {
         if (abs(map(q - normalAt(q)*0.01).y - hitId) > 0.5) idEdge = 1.0;
       }
     }
-    if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 5.5 && hitId > 2.3 && hitId < 2.5)) { crease = 0.0; idEdge *= 0.6; }
+    if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 3.5 && hitId > 2.3 && hitId < 2.5)) { crease = 0.0; idEdge *= 0.6; }
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
     if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }
@@ -2743,6 +2844,7 @@ void main() {
 #elif ASSET == 7
   col += lanternGlow(ro, rd, hitId > 0.0 ? t : 1e4);
 #elif ASSET == 4
+  col += gateGlow(ro, rd, hitId > 0.0 ? t : 1e4, ROCK_TOP);
   {
     // Soft light rising out of the fissures into the air above them.
     float dy = abs(rd.y) > 1e-4 ? rd.y : 1e-4;
@@ -2935,13 +3037,14 @@ void main() {
   // Hub centrepiece, one vertical axis (owner, 2026-11-01). Variants here are camera views of one design.
   const CENTRE_CORE = [0.3, 0.95, 0.9];
   ASSETS.push({
-    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v10", noLive: true, shader: 4,
+    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v11", noLive: true, shader: 4,
     variantLabel: "View",
     variants: [
       { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 7.5, 0], dist: 27, pitch: 0.34 } },
       { name: "From below", bright: [0.3, 0.95, 0.9], camera: { target: [0, 7, 0], dist: 27, pitch: -0.16 } },
       { name: "On top", bright: [1.0, 0.62, 0.25], camera: { target: [0, 13, 0], dist: 25, pitch: 0.62 } },
-      { name: "From spawn", bright: [0.72, 0.87, 1.0], camera: { target: [0, 14.1, 0], dist: 5.6, pitch: 0.08 } }
+      { name: "From spawn", bright: [0.72, 0.87, 1.0], camera: { target: [0, 14.1, 0], dist: 5.6, pitch: 0.08 } },
+      { name: "Runestone gateway", bright: [0.3, 1.0, 0.76], camera: { target: [6.85, 14.3, 0], dist: 9, pitch: 0.14 } }
     ],
     core: CENTRE_CORE, crG: [2, 11, 8], target: [0, 7.5, 0], dist: 27, figure: [3.2, 13, -2.6], glow: [0, -1.5, 0], glowCol: [0.3, 0.95, 0.9],
     notes: [
@@ -2955,9 +3058,9 @@ void main() {
       ["Moss", "The wall's soft sage moss on upward-facing rock, with a few patches down the sides. The middle of the top stays clear to walk on."],
       ["Treatment", "Slugshot mix, with thinner ink on the leaves and spores so it doesn't swallow them."],
       ["Top", "Deep cracks carved into the stone run in from the rim, stopping short of the middle so the spawn area stays clear. Their walls are dark and teal light wells up from the bottom, spills onto the stone around them and rises softly into the air. Just a few tiny mushrooms from the 14-colour bank stand along the edge of each crack, with a few small crystals growing out of the cracks near the rim. Mushrooms appear only on top, not on the underside."],
-      ["Bridge markers", "A broken stone pillar with half an arch on one side of each bridge mouth, a stump and rubble on the other. Glowing symbols are set flush into the pillars: crossed swords in orange toward the portals, a blaster in gold toward the gun side, a slug in mint toward the slug side, and a cave mouth in pale blue toward the entrance. The gaps are about 17 studs wide, for the 10-stud bridges."],
+      ["Runestone gateways", "One small Stonehenge-style gateway at the island's edge for each bridge: two standing runestones with a lintel across them, on footings set into the cliff, with a threshold slab between. Carved runes glow on the stones' faces. A glowing keystone in the lintel shows where the bridge leads, from both sides: crossed swords in orange toward the portals, a blaster in gold toward the gun side, a slug in mint toward the slug side, and a cave mouth in pale blue toward the entrance. About 12 studs of headroom and 14 wide, for the 10-stud bridges. See the Runestone gateway view."],
       ["In the game", "The floating rocks and debris get a slow floating animation when this goes into the map. It stays visual only, so it never moves players."],
-      ["Status", "Concept v8, awaiting your review."]
+      ["Status", "Concept v11, with the gateways awaiting your review. The rest of the rock is approved."]
     ]
   }, {
     id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v10", concept: true, noLive: true, shader: 5,
@@ -2981,13 +3084,14 @@ void main() {
       ["Status", "Approved for now by the owner on 1 Nov 2026. Can be revisited once it is in the game."]
     ]
   }, {
-    id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, slug juice 50 below the shore", version: "v4", concept: true, noLive: true, shader: 6,
+    id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, slug juice 50 below the shore", version: "v5", concept: true, noLive: true, shader: 6,
     variantLabel: "View",
     variants: [
       { name: "Overview", bright: [0.1, 0.82, 0.78], camera: { target: [0, -6, 0], dist: 58, pitch: 0.95 } },
       { name: "From the shore", bright: [0.02, 0.12, 0.4], camera: { target: [0, -12, 0], dist: 42, pitch: 0.55 } },
       { name: "In motion (sped up)", bright: [0.5, 1.0, 0.93], play: true, camera: { target: [0, -6, 0], dist: 58, pitch: 0.95 } },
-      { name: "Bridge hook-up", bright: [0.62, 0.52, 0.34], camera: { target: [0, 0.2, -7.2], dist: 18, pitch: 0.36 } }
+      { name: "Bridge hook-up", bright: [0.62, 0.52, 0.34], camera: { target: [0, 0.7, -7.2], dist: 11.5, pitch: 0.24 } },
+      { name: "Rope tie, close up", bright: [1.0, 0.62, 0.25], camera: { target: [-1.6, 0.75, -7.0], dist: 5.0, pitch: 0.36 } }
     ],
     core: CENTRE_CORE, crG: [2, -2, 8], target: [0, -6, 0], dist: 58, figure: [-14, 0.2, -14], glow: [0, -9, 0], glowCol: [0.2, 0.9, 0.85],
     notes: [
@@ -2999,11 +3103,11 @@ void main() {
       ["Greenery", "Moss on the ledges and round the rim, patches down the cliff faces, plenty of leafy vines hanging down it and bushes along the top."],
       ["Mist", "Soft mist rises off the swirl and picks up its glow. This is also where the long plunge will fall through."],
       ["Water level", "50 studs below the shore, your choice."],
-      ["Bridges", "The real rope bridges, hooked to the markers on the spawn rock. See the Bridge hook-up view."],
+      ["Bridges", "The real rope bridges, tied to the runestone gateways on the spawn rock. See the Bridge hook-up and Rope tie views."],
       ["Status", "Approved by the owner on 1 Nov 2026."]
     ]
   }, {
-    id: "bridge", name: "Wooden rope bridge", kind: "Landmark · hub", size: "50 studs long, 10 wide, about 5 of droop", version: "v1", concept: true, noLive: true, shader: 7,
+    id: "bridge", name: "Wooden rope bridge", kind: "Landmark · hub", size: "50 studs long, 10 wide, about 5 of droop", version: "v2", concept: true, noLive: true, shader: 7,
     variantLabel: "View",
     variants: [
       { name: "Whole bridge", bright: [0.41, 0.28, 0.155], camera: { target: [0, -0.6, 0], dist: 37, pitch: 0.34 } },
@@ -3015,7 +3119,7 @@ void main() {
       ["Idea", "A rickety frontier rope bridge, one for each of the four crossings from the spawn island to the shore."],
       ["Deck", "Uneven weathered planks lying flat along the curve, each its own length and tone and slightly out of line, with two missing and one snapped off. Moss grows on a few of them."],
       ["Ropes", "Two thick ropes carry the deck, with hip-height rope rails on both sides and hangers between them, knotted where they meet. You can still jump over."],
-      ["Ends", "On the shore, thick crooked timber posts lashed with rope. On the spawn rock the deck runs onto the island through its marker, and the rail ropes lash around the pillar and the stump, so the marker holds the bridge up. See it in the Maelstrom's Bridge hook-up view."],
+      ["Ends", "On the shore, thick crooked timber posts lashed with rope. On the spawn rock the deck lands on a threshold slab between two runestones. The rail and carrying ropes each end in a thick knot on rope wound round the stones, in worn grooves, so the stones visibly hold the bridge up. See it in the Maelstrom's Bridge hook-up and Rope tie views."],
       ["Details", "Three hanging lanterns with warm cores in small iron cages, lighting the wood around them, plus a few leafy vines on the rails."],
       ["Alive", "It sways very slightly at all times. Under anyone crossing, the deck dips and the nearby planks bounce and rock a little. Pick In motion to see a figure cross. That preview is sped up and choppy."],
       ["In the game", "The sway and dip are visual, driven by where players are on the bridge, while players walk on a smooth invisible slope, so nobody jitters or gets thrown off. The gaps are visual too."],

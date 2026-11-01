@@ -206,3 +206,9 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Looking up a shaft:** a volume that stops at the rim reads as a flat disc. A spiral converging on a hollow, bright eye gives depth, and cloud crossing the rim breaks the circle.
 - **Tone mapping lifts dark values a lot:** cloud colours that look dark in code came out pale lavender. Test dark storm values low.
 
+
+### Bridge hook-up: rope that looks attached (2026-11-01)
+
+- **A wrap must share the shape it wraps:** a ring built from a plain box sank in and out of a turned, tapered, noisy stone and read as neither inside nor outside it. Build the ring from the stone's own frame and outline, smooth the stone under it, and cut a shallow groove.
+- **Show the load path:** a rope reads as tied when it ends in a visible knot sitting proud of the wraps, with a loose tail. Thicken it near the tie so it reads from a distance.
+- **Check a repeated stray shape by colour:** painting each part a flat colour showed that a line at all four gates was the first plank, tilted up by the deck's slope and poking through the slab.

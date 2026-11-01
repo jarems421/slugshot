@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Runestone gateways replace the bridge markers
+
+- **Owner feedback:** the hook-up looked wrong (two screenshots). Move the runes closer to the edge, make the rope really wrap around something instead of looking half inside it, and use two full runestones per bridge: a little Stonehenge entrance with a glowing stone showing the destination.
+- **Cause of the rope problem:** the old ring wasn't aligned with the turned, tapered, noisy stone, so it sank in and out of it, and the rail ended inside the block.
+- **Implemented/verified offline:** four gateways at the island's edge (two runestones, lintel, glowing keystone, carved runes, footings and a threshold slab). Rope wraps follow each stone's exact outline in worn grooves, with knots and tails; rail and carrying ropes end at the knots. New Rope tie and Runestone gateway views. Renders inspected, including a straight-down view of all four gates.
+- **Unresolved:** owner review. The designs are not marked final until they approve.
+
 ## 2026-11-01 - Bridge planks fixed; sway and weight
 
 - **Owner feedback:** planks poke out like stairs (screenshot), asked whether the character caused it; add very slight sway and weight logic, with the bridge drooping and moving when someone runs on it.

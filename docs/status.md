@@ -1,6 +1,6 @@
 # Current status
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well v10 approved for now by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Maelstrom v4 approved by the owner in the same library. Wooden rope bridge concept, hooked to the spawn rock's markers, with plank fix, sway and weight motion, in the same library. **Unresolved:** owner review of the hook-up and motion.
+**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well v10 approved for now by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Maelstrom v4 approved by the owner in the same library. Wooden rope bridge concept with plank fix, sway and weight motion, tied to new runestone gateways at the spawn rock's edge (two stones, a lintel and a glowing keystone per bridge), in the same library. **Unresolved:** owner review of the gateways, hook-up and motion.
 
 **Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Next: Sky Well, owner's choice. Not yet built for Roblox.
 
