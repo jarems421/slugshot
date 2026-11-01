@@ -1501,7 +1501,8 @@ vec3 stormSky(vec3 rd) {
   float arms = 0.5 + 0.5*sin(a*3.0 + 4.5*log(r + 0.2) - uT*ORBIT*3.0);
   vec3 c = mix(vec3(0.008, 0.008, 0.035), vec3(0.1, 0.085, 0.24), smoothstep(0.38, 0.62, n*0.8 + 0.34*arms));
   c = mix(c, vec3(0.42, 0.36, 0.72), smoothstep(0.7, 0.86, n*0.9 + 0.3*arms));
-  c += vec3(0.5, 0.56, 0.85)*exp(-r*r*34.0)*0.7;
+  c = mix(c, vec3(dot(c, vec3(0.333)))*vec3(1.0, 0.96, 1.12), 0.65);
+  c += vec3(0.62, 0.6, 0.74)*exp(-r*r*34.0)*0.7;
   // Sheet lightning glowing inside the far cloud, changing every few seconds.
   for (int i = 0; i < 3; i++) {
     float fi = float(i), seed = fi + floor(uT*0.3 + fi*0.37)*3.1;
@@ -1516,7 +1517,7 @@ vec3 stormSky(vec3 rd) {
 // The storm straining to escape while being sucked back into the sky: a spiral vortex held inside the opening around a
 // hollow, lit eye, with a few short tongues reaching down past the mouth and curling inward. Its texture flows up and in.
 // All motion is a whole multiple of ORBIT, so the preview loops.
-const float CLOUD_LOW = WELL_LOW - 5.0;
+const float CLOUD_LOW = WELL_LOW - 7.5;
 const float CLOUD_HIGH = WELL_HIGH + 9.0;
 const float CLOUD_REACH = 9.2;
 float stormCloud(vec3 q, float spin, out float shade) {
@@ -1526,11 +1527,11 @@ float stormCloud(vec3 q, float spin, out float shade) {
   float ang = atan(q.z, q.x), radius = 8.7, tail = 1.0;
   if (y < 0.0) {
     // Tongues: each reaches down a little, narrowing and curling back toward the centre, and they strain and retreat.
-    float lobe = pow(0.5 + 0.5*sin(ang*5.0 + spin + 0.55*y), 3.0);
-    float reach = 0.9 + 3.3*lobe*(0.65 + 0.35*sin(spin*3.0 + ang*2.0));
+    float lobe = pow(0.5 + 0.5*sin(ang*4.0 + spin + 0.4*y), 2.0);
+    float reach = 2.2 + 5.2*lobe*(0.7 + 0.3*sin(spin*3.0 + ang*2.0));
     float tt = -y/reach;
     if (tt >= 1.0) return 0.0;
-    radius = 8.4*(1.0 - 0.6*tt*tt);
+    radius = 8.4*(1.0 - 0.72*tt*tt);
     tail = 1.0 - smoothstep(0.55, 1.0, tt);
   }
   float edge = 1.0 - smoothstep(radius*0.8, radius, rr);
@@ -1540,14 +1541,14 @@ float stormCloud(vec3 q, float spin, out float shade) {
   float flow = spin*3.0/6.2832, f1 = fract(flow), f2 = fract(flow + 0.5), w1 = 1.0 - abs(2.0*f1 - 1.0);
   vec3 n0 = vec3(cos(sw)*rr*0.46, q.y*0.2 - f1*2.4, sin(sw)*rr*0.46);
   vec3 n1 = vec3(cos(sw)*rr*0.46 + 5.0, q.y*0.2 - f2*2.4, sin(sw)*rr*0.46);
-  float na = 0.62*noise3(n0) + 0.38*noise3(n0*2.2 + 7.0);
-  float nb = 0.62*noise3(n1) + 0.38*noise3(n1*2.2 + 7.0);
+  float na = 0.55*noise3(n0) + 0.3*noise3(n0*2.2 + 7.0) + 0.15*noise3(n0*4.7 + 3.0);
+  float nb = 0.55*noise3(n1) + 0.3*noise3(n1*2.2 + 7.0) + 0.15*noise3(n1*4.7 + 3.0);
   float n = mix(nb, na, w1);
-  float v = 0.62*n + 0.48*(0.5 + 0.5*sin(sw*3.0));
+  float v = 0.8*n + 0.3*(0.5 + 0.5*sin(sw*3.0));
   shade = v;
-  float gate = y > 0.5 ? 0.5 : 0.56;
+  float gate = y > 0.5 ? 0.44 : 0.46;
   float eye = smoothstep(0.7 + 0.12*max(y, 0.0), 1.8 + 0.2*max(y, 0.0), rr);
-  return smoothstep(gate, gate + 0.08, v)*edge*eye*tail;
+  return smoothstep(gate, gate + 0.07, v)*edge*eye*tail;
 }
 float stormCycle(float spin) { return floor(mod(spin/6.2832*18.0, 18.0)); }
 // ---- Lightning as you see it in a real storm: mostly the cloud lighting up from inside. The zaps themselves are hidden by
@@ -1649,15 +1650,17 @@ vec3 stormVolume(vec3 ro, vec3 rd, float tEnd, vec3 col) {
       vec3 q = ro + rd*t;
       float shade, den = stormCloud(q, spin, shade);
       if (den > 0.0) {
-        float take = 1.0 - exp(-den*dt*1.5);
-        vec3 cl = mix(vec3(0.003, 0.003, 0.014), vec3(0.016, 0.014, 0.055), smoothstep(0.56, 0.62, shade));
-        cl = mix(cl, vec3(0.1, 0.085, 0.27), smoothstep(0.77, 0.82, shade));
+        float take = 1.0 - exp(-den*dt*2.2);
+        float shade2, near = stormCloud(q + vec3(0.0, -0.75, 0.0), spin, shade2);
+        float exposed = 1.0 - near;
+        vec3 cl = mix(vec3(0.007, 0.0065, 0.012), vec3(0.036, 0.03, 0.062), smoothstep(0.48, 0.6, shade));
+        cl = mix(cl, vec3(0.19, 0.162, 0.28), exposed*smoothstep(0.52, 0.72, shade));
         float toEye = exp(-length(q.xz)*0.8)*smoothstep(0.0, 8.0, q.y - WELL_LOW);
-        cl += vec3(0.4, 0.38, 0.85)*toEye;
+        cl += vec3(0.3, 0.28, 0.42)*toEye;
         // The flash: the cloud lit from inside around each zap. This is what you mostly see.
         float lit = 0.0;
         for (int z = 0; z < 6; z++) { vec3 dz = q - zc[z]; lit += zs[z]*exp(-dot(dz, dz)*0.3); }
-        cl += vec3(0.5, 0.5, 1.0)*lit*(0.16 + 1.1*smoothstep(0.56, 0.82, shade));
+        cl += vec3(0.58, 0.55, 0.92)*lit*(0.3 + 1.5*exposed*smoothstep(0.5, 0.75, shade));
         sum += (1.0 - alpha)*take*cl;
         alpha += (1.0 - alpha)*take;
         if (alpha > 0.985) break;
@@ -1668,9 +1671,9 @@ vec3 stormVolume(vec3 ro, vec3 rd, float tEnd, vec3 col) {
   for (int z = 0; z < 6; z++) {
     if (zs[z] <= 0.0) continue;
     float seen = zSeen[z] < 0.0 ? 1.0 - alpha : zSeen[z];
-    seen = smoothstep(0.02, 0.4, seen)*zs[z];
+    seen = smoothstep(0.004, 0.16, seen)*zs[z];
     float best = zBest[z];
-    result += vec3(0.42, 0.42, 1.0)*0.22*(0.25 + 0.75*seen)*zs[z]/(1.0 + 0.05*best*best);
+    result += vec3(0.5, 0.48, 1.0)*0.3*(0.35 + 0.65*seen)*zs[z]/(1.0 + 0.05*best*best);
     result += vec3(0.12, 0.3, 1.0)*(1.0 - smoothstep(1.9, 2.3, best))*seen*0.8;
     result += vec3(1.0, 0.98, 1.0)*(1.0 - smoothstep(0.5, 0.75, best))*seen*1.8;
   }
@@ -2496,7 +2499,7 @@ void main() {
       ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v9", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v10", concept: true, noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
@@ -2507,14 +2510,14 @@ void main() {
     notes: [
       ["Idea", "A huge opening in the cavern roof, wider than the Maelstrom below it, so it reads as a main centrepiece. Your two ideas combined: giant crystals line the opening, and the shaft climbs away to a distant storm."],
       ["Storm", "Dramatic but distant: bands of indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom, with clear silent lightning now and then. It is noticeable when you look up, but it does not light the lobby."],
-      ["Storm", "The storm looks like it is straining to escape while being sucked back into the sky. A spiral vortex stays inside the opening around a hollow, lit eye, a few short tongues reach down past the mouth and curl back inward, and the cloud flows up and in. It stays clear of the rocks and crystals."],
+      ["Storm", "A grey-purple storm cloud, close in colour to the surrounding stone, with light and shadow on its billows. A vortex fills the opening around a hollow, lit eye, and large tongues of cloud bulge down out of the mouth and curl back inward, so it looks like it is trying to escape while being sucked back into the sky. It stays inside the rim."],
       ["Lightning", "Hidden by the cloud, as in a real storm. What you mostly see is the cloud flashing from inside. The zaps run up and down deep in the vortex, and the cloud in front blocks them, so only short glimpses show through its gaps."],
       ["Crystals", "Crystals ring the mouth and climb the shaft, from small stubs to a few huge ones. They point every way: down, outward, sideways and only some inward. The colours are a cool mix of cyan, violet, sapphire and jade with a little rose. They brighten toward their tips and supply the light falling onto the hub."],
       ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island. Further out, irregular crags hang from the roof: clusters of broken blocks in very different sizes with blunt, slanted ends. Trailing vines hang from the rim, and soft, diffused light falls from the mouth, spreading as it goes and fading out with no hard edge, with faint shafts running through it."],
       ["Debris", "Five small wedge islands and eighty pieces of debris, from specks to chunks a few studs across, form a funnel being drawn up into the storm: tighter low down, wider near the top. Everything circles the well like a slow tornado while bobbing up and down, and closer pieces circle faster. Look only."],
       ["Motion", "Pick In motion to see it move. That preview is sped up about 9 times and steps in chunks; in the game one slow circle takes about 52 seconds and runs smoothly."],
       ["Scale", "The spawn rock is shown at true scale with a player on it."],
-      ["Status", "Concept v9, awaiting your review."]
+      ["Status", "Concept v10, awaiting your review."]
     ]
   }, {
     id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v1", concept: true, noLive: true, shader: 6,

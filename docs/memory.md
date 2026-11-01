@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v10
+
+- **Owner feedback on v9:** lightning better, but the storm looks out of place and no longer looks like it is coming out. It should be a greyish purple storm cloud.
+- **Tried and dropped:** solid inked billows read as popcorn, then as a cratered ball and a clay asteroid.
+- **Implemented/verified offline:** the soft vortex kept, recoloured to grey-purple close to the stone, with light and shadow on the billows and larger tongues bulging out of the mouth inside the rim. Renders inspected.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Sky Well v9
 
 - **Owner feedback on v8:** the lightning looks bad, fully horizontal, rather than hidden by the clouds.
