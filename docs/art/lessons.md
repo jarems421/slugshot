@@ -232,3 +232,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Camera-facing sprites and flat transparent layers don't mix:** where a sprite crosses a layer it is cut in a straight line. Switching effects off one at a time found this in one run after a round of guessing.
 - **Tiny detail needs its own fine sampling:** mini crystals melted into blobs at the dressing's grid, and read as real faceted clusters once they had their own piece at a third of that step.
 - **Regenerating a call whose signature changed:** clear the old generated lines first, because the generator compiles the page they sit in.
+- **A clean glowing circle reads as sci-fi, not a cavern:** the first ring around the Sky Well was a neon hoop. A thinner, wandering, broken seam in deeper colours separated the zones just as clearly, helped by the dark moat beside it.
+- **Even scatters read as polka dots:** glowing fungus looks natural in tight colonies of small, unevenly sized lights.

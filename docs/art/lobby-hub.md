@@ -34,4 +34,6 @@ The final hub designs built for the game, on top of the approved block-out, whos
 
 ## Costs
 
+Latest, after the ceiling: busiest view about 234k triangles, 131 draw calls and 107 MB of textures on an RTX 3070; about 330k across all pieces before automatic LOD. Still no phone evidence.
+
 Measured in Studio on an RTX 3070, before the last two rounds: about 145k to 195k triangles and 80 to 125 draw calls in most views, with the Low setting taking off about 10%. All pieces together are about 270k before Roblox's automatic LOD. Those numbers aren't phone evidence. The last two rounds weren't measured, because Play didn't start from the automated check.
