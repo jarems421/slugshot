@@ -179,7 +179,7 @@ Check low graphics settings, mobile, triangle/texture/light budgets and draw cal
 | Phase | Status |
 | --- | --- |
 | 0 Plan | Implemented; awaiting owner review |
-| 1 Style test | Treatment chosen (Slugshot mix); concept assets final in the library, 2026-11-01; Studio proof not started |
+| 1 Style test | Treatment chosen; concepts final; [look pack](look-pack.md) and Studio look-test place built 2026-11-01, awaiting owner verdict |
 | 2 Greybox | Not started |
 | 3 Assets | Not started |
 | 4 Assembly/lighting | Not started |

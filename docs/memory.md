@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 — Look pack first pass
+
+- **Confirmed:** Roblox has no custom shaders, so the owner asked for our own look pack built from Roblox features plus baked assets; approved private Open Cloud uploads; asked that Floppy and the blaster get the same ink/glow look.
+- **Implemented:** [look pack](art/look-pack.md) pipeline and runtime module; five final assets uploaded privately; look-test place built and opened. Problems solved on the way: marching-cubes winding (shells went inward), smudgy vertex-colour ink (switched to per-texel painting), invalid bake texels (Cycles fills the whole image; validity from zero positions), stale glow entries, ink shells greyed by lights (black Neon).
+- **Unresolved:** owner's Studio verdict; Floppy skinned ink shell and blaster outline.
+
 ## 2026-11-01 — Designs final, lessons recorded
 
 - **Confirmed:** owner approved every library design as final and asked for documentation of what was hard and how it was solved, including how to read vague phrasing next time.

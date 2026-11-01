@@ -1,0 +1,63 @@
+# Slugshot look pack
+
+How Slugshot gets its "Living Comic-Book Fantasy" look in Roblox, which has no custom shaders. Status: **Implemented, first pass, 2026-11-01**; awaiting the owner's Studio verdict. Rules: [style guide](style-guide.md). Final concepts: [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr).
+
+## The two halves
+
+**1. Baked into every asset (Blender pipeline)**
+
+- **Ink outlines:** each material group ships an inverted-hull `<Group>_Ink` mesh, an inflated copy with reversed faces, at the Slugshot mix widths:
+  - rock and floor: 0.077 studs;
+  - props, creatures and details: 0.119 studs;
+  - portal energy: no outline.
+
+  Roblox culls back faces, so only the outline rim shows. The shells use near-black Neon, so lamps never grey them and they never bloom.
+- **Interior ink and paint:** the colour maps are painted texel by texel from the concept shader. They include crease lines, material-boundary lines, moss, cracks, spots and the gate symbols.
+- **Glow:** a glow mask plus a per-group emissive strength, applied through `SurfaceAppearance` emission.
+- **Shape detail:** tangent normal maps baked from the dense concept mesh.
+
+**2. Runtime (`experiments/lobby/shared/LookPack.luau`)**
+
+- **Cavern lighting:** Future lighting, no sun, and colourful blue-violet ambient so shadows are never grey.
+- **Crisp comic shadows:** `ShadowSoftness = 0`.
+- **Atmosphere fog and tone mapping:** tone mapping uses `ColorGradingEffect` where Roblox provides it.
+- **Selective bloom:** the threshold sits above lit surfaces, so only glows bloom.
+- **Colour grade:** `ColorCorrectionEffect`.
+- **Zone moods:** Hub (calm), PvP (warm), Training (cool) and Veylume (mysterious). `LookZones.client` blends them by player position.
+- **`styleModel`:** the asset rules. It clones the private `SurfaceAppearance` templates (map setters are plugin-only), styles the ink shells and scales glows.
+- **Characters:** a `Highlight` outline as an interim measure. Floppy and future slugs carry real skinned ink shells.
+
+## Pipeline: final concept to Roblox
+
+Run from the lobby worktree. Python means the scratch venv with moderngl, numpy, Pillow and scikit-image. Blender is 5.2.3.
+
+1. `python tools/lobby/sdf_mesh.py <key>`: samples the concept SDF on the GPU with the library shader, runs marching cubes and splits the result into material groups.
+2. `blender --background --factory-startup --python tools/lobby/blender_lobby_asset.py -- <key> <tri budget>`: decimates, sets outward normals and sharp edges on faceted groups, unwraps, bakes normal and texel-position maps, builds the ink shells and exports a GLB.
+3. `python tools/lobby/paint_texels.py <key>`: writes colour and glow maps from the shader at each texel's surface point.
+4. Optionally, `blender --background --python tools/lobby/preview_lobby_asset.py -- <key>`: renders a check image.
+5. `python tools/lobby/upload_lobby_assets.py <keys…>`: private Open Cloud upload with a hash cache. Writes ignored `private-assets/lobby/LobbyAssets.luau` and `materials.rbxmx`.
+6. `rojo build lobby.private.project.json --output build/SlugshotLookTest.rbxlx`
+
+Built so far: `rock-wall-1`, `crystals-1`, `crystals-11`, `mushroom-1` and `gate-pvp-1`. Floppy and the blaster are next, at the owner's request: a skinned ink shell in Floppy's model and an outlined blaster.
+
+## Look-test place
+
+`build/SlugshotLookTest.rbxlx`:
+- a cavern ringed by eight copies of the rock wall module;
+- the PvP gate ahead of spawn;
+- two crystal designs (cyan cluster and gold spiral);
+- the mint giant mushroom;
+- a warm lamp pocket;
+- a cool overhead "Sky Well" spotlight;
+- three mood zones;
+- an ink outline on the player.
+
+`GLOW` in `LookTest.server.luau` tunes every glow at once.
+
+## Known limits and things to verify in Studio
+
+- Interior ink is fixed in the textures. It cannot adapt per frame as the concept page's shader does.
+- The comic shadow band from the concept comes from Roblox's real crisp shadows, not a toon ramp.
+- Check at low graphics quality: post effects and shadows reduce, but the baked ink and paint remain.
+- First-pass values (moods, bloom, glow strengths, light brightness) are for owner tuning.
+- The agent could not drive Studio this session (no Studio MCP connection). Runtime evidence comes from the owner's play and the Studio log.
