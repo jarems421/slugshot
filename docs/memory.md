@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 — Wall dressing anchored; designs ready for final review
+
+- **Owner request:** no wall mushrooms (especially tiny ones) or crystals hovering off the rock. Bark mushrooms on the giant mushroom were requested, then withdrawn ("too much mushroom"). After reviewing the wall change the owner considers all designs approved and ready to hand off.
+- **Implemented/verified:** the wall's rock body is now `wallMass`; `tools/lobby/wall_sites.py` ray-marches 23 dressing spots onto that surface on the GPU, searching a small neighbourhood for front-facing, non-overhang rock, and writes the anchors into the page (21 placed, 2 skipped with no suitable surface). Mushroom stems root 0.15 studs inside the rock and grow out along the normal and up; crystals sink 0.25 studs. A bounding early-out without margin first produced false sphere hits; fixed with a 0.5-stud margin. The agent inspected four turntable frames: dressing sits on the rock. Library v12.
+- **Unresolved:** owner's final review.
+
 ## 2026-10-31 — Smoother library viewing
 
 - **Owner report:** views now render but moving around feels laggy and glitchy compared with the first version.

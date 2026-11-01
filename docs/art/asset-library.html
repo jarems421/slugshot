@@ -232,15 +232,15 @@ float chunk(vec3 p, vec3 c, vec3 r, float seed) {
   return d;
 }
 
-// ---------- 0: rock wall module v5 (20 x 12 x 5 studs): v1's simple masses, dressed, no vines
+// ---------- 0: rock wall module v6 (20 x 12 x 5 studs): v1's simple masses, dressing anchored to the rock
 float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
   vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
   return length(pa - ba*h) - mix(ra, rb, h);
 }
 float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r);
-vec2 rockWall(vec3 p) {
-  float bound = sdBox(p - vec3(0.0, 6.2, -1.0), vec3(12.5, 7.2, 4.9));
-  if (bound > 1.0) return vec2(bound, 1.0);
+float crystalDir(vec3 p, vec3 base, vec3 dir, float h, float r);
+// The wall's rock body alone; dressing is anchored onto this surface by tools/lobby/wall_sites.py.
+float wallMass(vec3 p) {
   float d = 1e5;
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
@@ -266,48 +266,64 @@ vec2 rockWall(vec3 p) {
     vec3 r = vec3(1.1 + 0.3*hash1(fi + 43.0), 0.75, 0.95);
     d = smin(d, chunk(p, c, r, fi*23.0 + 120.0), 0.1);
   }
-  d += 0.07*(noise3(p*0.9) - 0.5);
+  return d + 0.07*(noise3(p*0.9) - 0.5);
+}
+// A crystal growing out of the rock at surface point s with surface normal n, base sunk into the rock.
+void wallCrystal(vec3 p, vec3 s, vec3 n, float seed, inout float cr) {
+  float h = 1.1 + 0.6*hash1(seed + 231.0);
+  float far = length(p - s) - (h + 0.8);
+  if (far > 0.5) { cr = min(cr, far); return; }
+  vec3 dir = normalize(n + vec3(0.0, 0.45, 0.0));
+  cr = min(cr, crystalDir(p, s - n*0.25, dir, h, 0.22 + 0.08*hash1(seed + 232.0)));
+}
+// A small mushroom sprouting from the rock at surface point s: stem rooted inside the rock, growing out
+// along the normal and up; cap colour picked at random from the bank.
+void wallShroom(vec3 p, vec3 s, vec3 n, float seed, float tiny, inout float stems, inout float caps, inout float capIdx) {
+  float h = tiny > 0.5 ? 0.3 + 0.3*hash1(seed + 223.0) : 0.55 + 0.55*hash1(seed + 213.0);
+  float far = length(p - s) - (h + 0.9);
+  if (far > 0.5) { stems = min(stems, far); caps = min(caps, far); return; }
+  vec3 dir = normalize(n*0.6 + vec3(0.0, 1.0, 0.0));
+  vec3 b = s - n*0.15;
+  vec3 tip = s + n*0.05 + dir*h;
+  stems = min(stems, capT(p, b, tip, tiny > 0.5 ? 0.06 : 0.11, tiny > 0.5 ? 0.045 : 0.075));
+  float cs = tiny > 0.5 ? 0.15 + 0.11*hash1(seed + 225.0) : 0.3 + 0.2*hash1(seed + 215.0);
+  float cd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*cs), -(p.y - tip.y + 0.18*cs), 0.03);
+  if (cd < caps) { caps = cd; capIdx = floor(hash1(seed + 216.0)*13.99); }
+}
+vec2 rockWall(vec3 p) {
+  float bound = sdBox(p - vec3(0.0, 6.2, -1.0), vec3(12.5, 7.2, 4.9));
+  if (bound > 1.0) return vec2(bound, 1.0);
+  float d = wallMass(p);
   vec2 r = vec2(d, 1.0);
   if (d > 2.2) return vec2(d - 1.7, 1.0);
-  // Tiny glowing mushrooms sprouting from cracks here and there (replaced the vines, owner 2026-10-31).
-  float tinyStem = 1e5, tinyCap = 1e5, tinyIdx = 0.0;
-  for (int i = 0; i < 9; i++) {
-    float fi = float(i);
-    float k = mod(fi, 6.0);
-    vec3 site = k < 0.5 ? vec3(-2.2, 4.6, -2.4) : k < 1.5 ? vec3(6.8, 1.6, -2.5) : k < 2.5 ? vec3(2.6, 7.6, -1.6)
-              : k < 3.5 ? vec3(-7.6, 8.0, -1.4) : k < 4.5 ? vec3(0.8, 3.2, -2.5) : vec3(-4.9, 10.2, -1.2);
-    vec3 b = site + vec3(0.45*(hash1(fi + 221.0) - 0.5) + step(5.5, fi)*0.4, 0.3*(hash1(fi + 222.0) - 0.5), 0.0);
-    float h = 0.3 + 0.3*hash1(fi + 223.0);
-    vec3 tip = b + vec3(0.1*(hash1(fi + 224.0) - 0.5), h, -0.35*h);
-    tinyStem = min(tinyStem, capT(p, b, tip, 0.06, 0.045));
-    float td = smax(sdEll(p - tip, vec3(1.0, 0.6, 1.0)*(0.16 + 0.12*hash1(fi + 225.0))), -(p.y - tip.y + 0.03), 0.02);
-    if (td < tinyCap) { tinyCap = td; tinyIdx = floor(hash1(fi + 226.0)*13.99); }
-  }
-  if (tinyStem < r.x) r = vec2(tinyStem, 4.0);
-  if (tinyCap < r.x) r = vec2(tinyCap, 15.0 + tinyIdx*0.05);
-  // Crystals poking out of the face in a few places.
-  float cr = crystal(p, vec3(1.4, 1.0, -2.0), 1.5708, 0.9, 1.6, 0.3);
-  cr = min(cr, crystal(p, vec3(1.9, 0.8, -2.1), 1.9, 0.6, 1.1, 0.24));
-  cr = min(cr, crystal(p, vec3(-4.2, 6.6, -1.2), 1.4, 1.05, 1.4, 0.28));
-  cr = min(cr, crystal(p, vec3(-3.8, 6.9, -1.1), 1.9, 0.8, 0.9, 0.2));
-  cr = min(cr, crystal(p, vec3(7.3, 3.8, -2.0), 1.7, 1.0, 1.2, 0.26));
-  if (cr*0.75 < r.x) r = vec2(cr*0.75, 3.0);
-  // Clusters of little mushrooms sprouting out of cracks, angled out and up.
-  float stems = 1e5, caps = 1e5, capIdx = 0.0;
-  for (int i = 0; i < 9; i++) {
-    float fi = float(i);
-    float cl = floor(fi/3.0);
-    vec3 site = cl < 0.5 ? vec3(-6.4, 2.2, -2.3) : cl < 1.5 ? vec3(4.6, 6.0, -1.7) : vec3(-1.2, 9.4, -1.3);
-    vec3 b = site + vec3(0.7*(hash1(fi + 211.0) - 0.5), 0.5*(hash1(fi + 212.0) - 0.5), 0.0);
-    float h = 0.6 + 0.6*hash1(fi + 213.0);
-    vec3 tip = b + vec3(0.25*(hash1(fi + 214.0) - 0.5), h, -0.45*h);
-    stems = min(stems, capT(p, b, tip, 0.12, 0.08));
-    float cs = 0.32 + 0.22*hash1(fi + 215.0);
-    float cd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*cs), -(p.y - tip.y + 0.06), 0.04);
-    if (cd < caps) { caps = cd; capIdx = floor(hash1(fi + 216.0)*13.99); }
-  }
+  float cr = 1e5, stems = 1e5, caps = 1e5, capIdx = 0.0;
+  // @wall-dressing-begin
+  // Generated by tools/lobby/wall_sites.py: each spot sits on the measured rock surface.
+  wallCrystal(p, vec3(0.950, 0.550, -3.415), vec3(0.787, 0.072, -0.613), 0.0, cr);
+  wallCrystal(p, vec3(-4.050, 6.450, 0.159), vec3(-0.182, 0.714, -0.676), 2.0, cr);
+  wallCrystal(p, vec3(-3.800, 6.500, 0.146), vec3(-0.177, 0.720, -0.671), 3.0, cr);
+  wallCrystal(p, vec3(7.300, 3.800, -1.837), vec3(-0.423, 0.179, -0.888), 4.0, cr);
+  wallShroom(p, vec3(-6.700, 2.000, -1.835), vec3(0.521, -0.189, -0.832), 5.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-6.300, 2.400, -1.617), vec3(0.655, -0.123, -0.745), 6.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-6.000, 2.000, -1.454), vec3(-0.675, 0.102, -0.730), 7.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(3.550, 5.150, -1.757), vec3(-0.064, 0.829, -0.556), 8.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(5.000, 5.050, -1.646), vec3(0.214, 0.775, -0.595), 10.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-1.500, 9.300, -1.061), vec3(0.141, 0.325, -0.935), 11.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-1.100, 9.600, -0.831), vec3(0.315, 0.429, -0.847), 12.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-0.800, 9.300, -0.836), vec3(0.434, 0.333, -0.837), 13.0, 0.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-2.200, 4.600, -1.227), vec3(-0.089, 0.406, -0.910), 14.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(6.350, 1.600, -0.979), vec3(0.182, -0.130, -0.975), 15.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(2.750, 7.450, -0.440), vec3(0.563, -0.199, -0.802), 16.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-7.600, 8.000, -1.027), vec3(-0.440, -0.009, -0.898), 17.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(0.800, 3.200, -2.304), vec3(0.227, 0.048, -0.973), 18.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-5.050, 9.750, -0.476), vec3(0.485, 0.547, -0.682), 19.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(-1.800, 4.800, -1.462), vec3(-0.575, 0.405, -0.711), 20.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(7.200, 2.150, -1.771), vec3(-0.440, -0.193, -0.877), 21.0, 1.0, stems, caps, capIdx);
+  wallShroom(p, vec3(3.000, 7.800, -0.359), vec3(0.546, -0.199, -0.814), 22.0, 1.0, stems, caps, capIdx);
+  // @wall-dressing-end
   if (stems < r.x) r = vec2(stems, 4.0);
   if (caps*0.85 < r.x) r = vec2(caps*0.85, 15.0 + capIdx*0.05);
+  if (cr*0.75 < r.x) r = vec2(cr*0.75, 3.0);
   return r;
 }
 
@@ -957,14 +973,14 @@ void main() {
   ];
   const ASSETS = [
     {
-      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs", version: "v5",
+      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs", version: "v6",
       target: [0, 6, 0], dist: 34, figure: [-3, 0, -5.5], glow: [1.6, 1.6, -3.6], glowCol: [0.45, 0.95, 1.0],
       notes: [
-        ["v5", "Vines removed (they looked wrong on the rock). In their place, tiny glowing mushrooms sprout from cracks here and there. Kept from v4: v1's simple rock masses, more moss, broken painted cracks, three small mushroom clusters and crystals poking out in a few places."],
+        ["v6", "Every mushroom and crystal is now anchored to the rock: each spot was measured on the actual rock surface, the base sinks slightly into the stone and it grows out and up from there, so nothing hovers. Kept: v1's simple rock masses, moss, broken painted cracks, three small mushroom clusters, tiny glowing mushrooms in random bank colours, and crystals poking out in a few places."],
         ["References", "Stylised fantasy cave walls generally keep the rock simple and let the dressing carry the interest: moss, vines, glowing fungi and crystals in a few accent spots."],
         ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss, mushrooms and crystals use Inked Cavern."],
         ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
-        ["Status", "Concept v5, awaiting your review."]
+        ["Status", "Concept v6, awaiting your final review."]
       ]
     },
     {
