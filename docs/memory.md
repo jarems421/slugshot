@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Maelstrom v2
+
+- **Confirmed (owner's choices):** glowing energy rather than water; broken cliff walls like the island; rising mist, waterfalls and added greenery; water 50 studs below the shore.
+- **Implemented/verified offline:** all of those, with an In motion view. Falls use the same glowing energy as the swirl, which was the agent's reading. Renders inspected.
+- **Unresolved:** owner review; block-out still has the water at 70.
+
 ## 2026-11-01 - Sky Well approved for now
 
 - **Confirmed:** owner: "I think it's good for now", moving on to the next design, and noted that 10 or 11 iterations per structure is a lot. Sky Well v10 stands, and can be revisited in-game. Maelstrom is next, starting with decisions before any build.
