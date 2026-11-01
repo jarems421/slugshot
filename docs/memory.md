@@ -650,3 +650,9 @@
 - **Implemented/verified offline:** tips lofted from the prongs' own cross-sections in four options; turntables inspected (a charge-node ray-cast fix after review). Page updated with Floppy's new bulbs and spots.
 - **Unresolved:** owner's pick.
 
+## 2026-11-01 - Blaster bladed ridge final, in Roblox
+
+- **Confirmed:** owner picked the bladed ridge; asked to remove the dip before the blade, shorten about 15%, then make it the Roblox model.
+- **Implemented/verified offline:** revised tip from a clean cut with slope lead and a ridge that only lowers; export with ink shells (orange part decimated to 7k), private upload Approved, mapping updated, Floppy test place rebuilt and opened.
+- **Unresolved:** Studio check and owner verdict.
+

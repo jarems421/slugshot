@@ -179,6 +179,10 @@ def main():
     (style_blaster if KIND == "blaster" else style_floppy)(objs)
     ink = ink_material()
     for o in objs:
+        if o.name.endswith("_Ink"):
+            o.data.materials.clear()  # an exported model's own ink shell: style it, don't shell it again
+            o.data.materials.append(ink)
+            continue
         if KIND == "floppy" and o.name.startswith("Eye"):
             continue  # the ring eyes already carry their own dark rims
         key = (o.material_slots[0].material.name.split(".")[0] if o.material_slots and o.material_slots[0].material else "")

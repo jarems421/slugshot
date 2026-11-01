@@ -10,7 +10,7 @@ from the cut loops. Each ring is the cut loop with its outer part eased toward t
 zero slope at the cut (so there is no corner), narrowed slightly and ending in a rounded point. Top prong eases
 down, bottom prong eases up; the firing gap stays open. Writes one .blend per option.
 
-    blender --background --factory-startup --python tools/lobby/blaster_tips.py -- <accepted.blend> <out dir>
+    blender --background --factory-startup --python tools/lobby/blaster_tips.py -- <accepted.blend> <out dir> [option ...]
 """
 
 import math
@@ -25,20 +25,30 @@ from mathutils.bvhtree import BVHTree
 ARGS = sys.argv[sys.argv.index("--") + 1:]
 SRC, OUT = Path(ARGS[0]).resolve(), Path(ARGS[1]).resolve()
 
-Y_CUT, Y_END, RINGS = 1.38, 1.83, 16
+RINGS = 18
 # Measured inner faces: top prong underside 0.436, bottom prong top face 0.164.
 PRONGS = {"top": (0.436, 1.0), "bottom": (0.164, -1.0)}
 
+# cut/end: where the new tip starts and ends (y); lead: share of the descent that is linear, so the curve leaves the
+# cut at the prong's own gentle slope instead of levelling off first.
+BASE = dict(cut=1.38, end=1.83, lead=0.0)
 OPTIONS = {
-    "curved": dict(tip=0.12, hook=0.0, taper=0.3, ridge=0.0, groove=True, nodes=False),
-    "hooked": dict(tip=0.1, hook=0.05, taper=0.38, ridge=0.0, groove=True, nodes=False),
-    "bladed": dict(tip=0.12, hook=0.015, taper=0.3, ridge=0.035, groove=False, nodes=False),
-    "charged": dict(tip=0.1, hook=0.05, taper=0.38, ridge=0.0, groove=True, nodes=True),
+    "curved": dict(BASE, tip=0.12, hook=0.0, taper=0.3, ridge=0.0, groove=True, nodes=False),
+    "hooked": dict(BASE, tip=0.1, hook=0.05, taper=0.38, ridge=0.0, groove=True, nodes=False),
+    "bladed": dict(BASE, tip=0.12, hook=0.015, taper=0.3, ridge=0.035, groove=False, nodes=False),
+    "charged": dict(BASE, tip=0.1, hook=0.05, taper=0.38, ridge=0.0, groove=True, nodes=True),
+    # Owner's pick, revised (2026-11-01): the bladed ridge without the dip before the blade (the old cut sat after a
+    # flat run, so the edge went down, levelled and dropped again; 1.22 is where the prong's own descent ends and the
+    # first clean two-loop cut), and about 15% shorter so it clears the floor on the hip: the tip now ends before
+    # the accepted blaster's.
+    "bladed-final": dict(cut=1.22, end=1.655, lead=0.4, tip=0.12, hook=0.015, taper=0.3, ridge=0.035, groove=False, nodes=False),
 }
 
 
-def ease(t):
-    return 1.0 - math.cos(t*math.pi/2)  # zero slope at the cut: the tip curves away with no corner
+def ease(t, lead=0.0):
+    """0 -> 1 along the tip. With lead 0 it leaves the cut level (no corner); a lead blends in a linear share so it
+    leaves at the prong's own gentle slope."""
+    return lead*t + (1.0 - lead)*(1.0 - math.cos(t*math.pi/2))
 
 
 def ordered_loops(bm, y):
@@ -61,12 +71,14 @@ def ordered_loops(bm, y):
 
 def place(x, z, t, z_in, sgn, opt, omax):
     """Where a cut-loop point (x, z) goes at fraction t along the tip."""
-    e = ease(t)
+    e = ease(t, opt["lead"])
     o = (z - z_in)*sgn                      # distance from the inner face toward the outside
     h = 1.0 - (1.0 - opt["tip"])*e
     o2 = o*h
     if opt["ridge"] and o > 0.0:
-        o2 += opt["ridge"]*e*(1.0 - min(abs(x)/0.11, 1.0))*(o/omax)
+        # The ridge comes from lowering the faces either side of the centre line, never raising it, so the
+        # silhouette only ever falls toward the tip.
+        o2 -= opt["ridge"]*e*min(abs(x)/0.11, 1.0)*(o/omax)
     x2 = x*(1.0 - opt["taper"]*e)
     z2 = z_in + sgn*o2 - sgn*opt["hook"]*t*t
     return x2, z2
@@ -78,7 +90,7 @@ def loft(bm, loop, z_in, sgn, opt, mat_index):
     new_faces = []
     for k in range(1, RINGS + 1):
         t = k/RINGS
-        y = Y_CUT + (Y_END - Y_CUT)*t
+        y = opt["cut"] + (opt["end"] - opt["cut"])*t
         ring = []
         for v in loop:
             x2, z2 = place(v.co.x, v.co.z, t, z_in, sgn, opt, omax)
@@ -91,7 +103,7 @@ def loft(bm, loop, z_in, sgn, opt, mat_index):
         prev = ring
     # Rounded point: the last ring closes onto a centre slightly ahead, so the tip is never a flat end.
     c = sum((v.co for v in prev), Vector())/len(prev)
-    apex = bm.verts.new((c.x, Y_END + 0.035, c.z))
+    apex = bm.verts.new((c.x, opt["end"] + 0.035, c.z))
     for i in range(len(prev)):
         f = bm.faces.new((prev[i], prev[(i + 1) % len(prev)], apex))
         f.material_index = mat_index
@@ -146,9 +158,10 @@ def build(opt):
     bm.from_mesh(o.data)
     bm.transform(o.matrix_world)
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=5e-4)
-    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, Y_CUT, 0),
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, opt["cut"], 0),
                            plane_no=(0, 1, 0), clear_outer=True)
-    loops = ordered_loops(bm, Y_CUT)
+    loops = ordered_loops(bm, opt["cut"])
+    print("cut loops", [len(lp) for lp in loops])
     for loop in loops:
         zmid = sum(v.co.z for v in loop)/len(loop)
         z_in, sgn = PRONGS["top" if zmid > 0.3 else "bottom"]
@@ -165,7 +178,7 @@ def build(opt):
         for name, (z_in, sgn) in PRONGS.items():
             pts, nrm = [], []
             for k in range(26):
-                y = 1.2 + (Y_END - 0.05 - 1.2)*k/25
+                y = 1.2 + (opt["end"] - 0.05 - 1.2)*k/25
                 start = inv @ Vector((0.0, y, z_in + sgn*0.5))
                 hit = tree.ray_cast(start, (inv.to_3x3() @ Vector((0, 0, -sgn))).normalized(), 1.0)
                 if hit[0] is not None:
@@ -175,7 +188,7 @@ def build(opt):
                 strip(f"Groove{name}", pts, nrm, 0.007, "Black")
     if opt["nodes"]:
         for name, (z_in, sgn) in PRONGS.items():
-            y = Y_END - 0.07
+            y = opt["end"] - 0.07
             start = inv @ Vector((0.0, y, 0.30))  # middle of the firing gap, casting toward each prong
             hit = tree.ray_cast(start, (inv.to_3x3() @ Vector((0, 0, sgn))).normalized(), 1.0)
             if hit[0] is not None:
@@ -184,7 +197,10 @@ def build(opt):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    only = ARGS[2:]
     for name, opt in OPTIONS.items():
+        if only and name not in only:
+            continue
         bpy.ops.wm.open_mainfile(filepath=str(SRC))
         build(opt)
         bpy.ops.wm.save_as_mainfile(filepath=str(OUT/f"blaster-tip-{name}.blend"), copy=True)

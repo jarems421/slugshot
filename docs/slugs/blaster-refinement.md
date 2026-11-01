@@ -72,3 +72,24 @@ This replaces the earlier "points slope down, never up" rule for the bottom pron
 
 The page is updated: https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD. **Unresolved:** owner's pick; mesh QA, upload and Studio.
 
+## Bladed ridge final, in Roblox (2026-11-01)
+
+**Confirmed:** the owner picked the bladed ridge, but:
+- it "curves down then curves up before getting to the bladed ridge part", which looks like a toy;
+- it was longer than the current gun and would drag on the floor from the hip, so it should be about 15% shorter;
+- then "make that the Roblox model".
+
+**Cause of the dip:** the prong's top already descends to y 1.2, then runs flat, and the first tips started level at 1.38. Also, the ridge was added on top of the centre line.
+
+**Implemented/verified offline:**
+- **Option `bladed-final`:** cuts at 1.22, the first clean two-loop cut, where the prong's own descent ends, with a 40% linear lead so the curve continues that slope. The ridge now comes from lowering the faces beside the centre line, so the silhouette only falls.
+- **Length:** the tip ends at y 1.69 (apex). That is 15% shorter than the first bladed option measured from the prong start, and about 0.08 short of the previous gun.
+- **Export:** `tools/lobby/export_blaster_look.py` decimates the dense orange part to 7,000 triangles and adds 11 `<Part>_Ink` shells (51k triangles total), checked in a render of the export itself.
+- **Upload:** privately uploaded; moderation Approved before use.
+- **Mapping:** `tools/lobby/blaster_mapping.py` wrote the private BlasterMesh mapping, keeping every part's previous Roblox finish and adding the shells as near-black Neon. Backups are saved as `BlasterMesh.before-slugshot-look.luau`.
+- **Test place:** `build/SlugshotFloppyTest-SlugshotBlaster.rbxlx` (slug pipeline worktree) is open in Studio.
+
+**Not changed:** Rocklock's own blaster mapping (concurrent work).
+
+**Unresolved:** Studio playback check (hand fit, outline thickness at runtime, hip clearance) and owner verdict.
+
