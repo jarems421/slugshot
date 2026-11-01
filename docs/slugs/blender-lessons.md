@@ -57,3 +57,16 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 - **Confirmed:** owner wants a longer/flatter downward slant and solid orange where the two oval vents were; preserve the main channel. Extending a cut across imported split seams left open contours. Welding only before cutting missed tiny gaps created at the new seam: weld the cut-plane vertices after bisecting too.
 - **Verified offline:** coplanar Boolean fills and independent caps were rejected for overlaps/invalid topology. A simple rectangular replacement looked appended in the side render. Replacing the front by extrusion of the exact existing housing cross-section preserves its bevel details and creates integrated solid panels; then cap, cut the longer downward slope and recalculate weighted normals. Final Orange mesh has no detected positive-area coplanar overlap or generic QA errors. Unchanged rear housing contacts remain a separate limitation. [Record/evidence](blaster-refinement.md#solid-muzzle-and-shallower-bevel-follow-up-2026-10-31).
 - **Unresolved:** owner art review and actual Studio import/playback. Keep rejected attempts and accepted source separate, and judge the silhouette alongside technical checks.
+
+## 2026-11-01 - Spore spots and bulb glow without a rebuild
+
+- **Confirmed:** owner wanted medium, diffuse spots on plain skin and softly glowing antenna bulbs.
+- **Approach:** rules live in the concept and `build_floppy.py`; the repaired source is painted in place by baking each texel's rest position back to concept space, then darkening the existing texel by the albedo ratio (through the build grade, and converted for 8-bit sRGB storage) so baked occlusion survives.
+- **Verified offline:** the concept compiles and renders (moderngl) from four angles with spots clear of belly and back marks. A first radius with a tight core read as dots; a solid half-core reads as medium spots. The export bakes the glow mask to the game UVs. A skin with two textures needs the colour texture found through the Base Color link, not the first image node.
+
+## 2026-11-01 - A packed image kept its old pixels
+
+- **Symptom:** spots painted into the Floppy source showed in the concept but not on the game model.
+- **Cause:** `image.save()` then `image.pack()` on an image that was already packed left the embedded copy unchanged, so the export baked the old colour. The PNG on disk was new.
+- **Fix:** load the saved PNG as a fresh image, pack that and swap it into the material; verify by diffing the exported game texture against the checkpoint (now 97k texels changed).
+- **Rule:** after editing a packed texture, check the packed pixels (or the downstream bake) rather than the file on disk.

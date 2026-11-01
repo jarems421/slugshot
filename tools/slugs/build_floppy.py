@@ -44,6 +44,67 @@ BELLY_EDGE = np.array([0.157, 0.147, 0.048])
 MOUTH = np.array([0.16, 0.06, 0.04])
 DROOL = np.array([0.80, 0.79, 0.70])
 BAG = np.array([0.10, 0.07, 0.05])
+SORE_PALLOR = np.array([0.520, 0.530, 0.220])  # sallow, yellowed skin around a sore
+SORE_BRUISE = np.array([0.220, 0.160, 0.120])  # faint olive-mauve bruised rim
+SORE_PUS = np.array([0.250, 0.280, 0.140])     # centre in the upper lids' sage (owner: match the top eyelids)
+BULB_GLOW = np.array([0.62, 0.80, 0.28])
+# The bulb itself is a luminous yellow-green core (owner, 2026-11-01: the bulbs must really glow). Roblox emission
+# is surface colour x mask x strength, so moss-brown bulbs stayed dull however strong the mask.
+BULB_LIT = np.array([0.52, 0.68, 0.22])
+# Spore sores (owner, 2026-11-01): they should look sick, not dirty. Dark brown blotches read as grime;
+# sickness reads as sallow yellow-green pallor, a faint bruised rim and a softly glowing centre, which takes the
+# upper lids' sage (owner). Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
+# Each sore is a primary spot plus one or two satellites centred on the surface: (x, y, z, radius).
+SPORES = np.array([
+    (-0.772, 1.515, 0.142, 0.138),
+    (-0.760, 1.507, 0.243, 0.069),
+    (-0.608, 0.950, -0.010, 0.164),
+    (-0.608, 0.870, -0.103, 0.091),
+    (-0.379, 0.453, -0.545, 0.154),
+    (-0.407, 0.343, -0.535, 0.081),
+    (-0.324, 0.554, -0.561, 0.071),
+    (0.655, 0.638, -0.104, 0.136),
+    (0.649, 0.713, -0.035, 0.083),
+    (0.680, 0.571, -0.031, 0.064),
+    (0.556, 1.633, -0.310, 0.173),
+    (0.550, 1.762, -0.317, 0.090),
+    (0.646, 1.623, -0.219, 0.089),
+    (0.529, 1.129, 0.388, 0.151),
+    (0.601, 1.192, 0.327, 0.072),
+    (0.533, 1.200, 0.472, 0.085),
+    (-0.724, 2.025, -0.006, 0.142),
+    (-0.712, 1.958, -0.086, 0.070),
+    (-0.705, 1.974, -0.096, 0.077),
+    (-0.451, 1.193, -0.323, 0.155),
+    (-0.392, 1.280, -0.372, 0.086),
+    (-0.522, 1.151, -0.243, 0.079),
+    (0.413, 2.087, -0.367, 0.143),
+    (0.321, 2.136, -0.391, 0.088),
+    (0.411, 1.986, -0.398, 0.078),
+    (0.750, 1.425, 0.085, 0.166),
+    (0.706, 1.353, -0.004, 0.080),
+    (0.575, 0.677, 0.384, 0.152),
+    (0.616, 0.639, 0.285, 0.083),
+    (0.454, 0.979, -0.363, 0.153),
+    (0.368, 0.995, -0.435, 0.076),
+    (0.413, 0.893, -0.428, 0.091),
+    (0.204, 2.109, 0.670, 0.172),
+    (0.093, 2.060, 0.710, 0.080),
+    (-0.364, 1.791, -0.433, 0.139),
+    (-0.392, 1.692, -0.417, 0.063),
+    (-0.685, 0.431, 0.067, 0.175),
+    (-0.673, 0.373, 0.182, 0.097),
+    (0.760, 0.170, 0.200, 0.154),
+    (-0.486, 1.169, 0.488, 0.160),
+    (-0.547, 1.159, 0.387, 0.077),
+    (0.561, 0.328, -0.449, 0.142),
+    (0.614, 0.248, -0.403, 0.078),
+    (-0.160, 2.286, 0.555, 0.144),
+    (-0.053, 2.294, 0.564, 0.087),
+    (-0.202, 2.208, 0.615, 0.091),
+    (0.725, 2.024, 0.233, 0.133),
+    (-0.333, 2.281, -0.268, 0.157),
+])
 
 
 # ---------------------------------------------------------------- SDF port
@@ -198,12 +259,43 @@ def mix(a, b, t):
     return a*(1.0 - t[:, None]) + b*t[:, None]
 
 
+def spores(dp):
+    """(pallor, bruised rim, bilious centre) of the spore sores."""
+    pallor, rim, centre = np.zeros(len(dp)), np.zeros(len(dp)), np.zeros(len(dp))
+    for x, y, z, r in SPORES:
+        u = np.linalg.norm(dp - [x, y, z], axis=1)/r
+        pallor = np.maximum(pallor, 1.0 - smoothstep(0.75, 1.45, u))
+        rim = np.maximum(rim, np.exp(-((u - 0.62)/0.16)**2))
+        centre = np.maximum(centre, 1.0 - smoothstep(0.25, 0.55, u))
+    return pallor, rim, centre
+
+
+def bulbs(dp):
+    """The antenna bulb spheres (radius 0.08), not the skin they hang beside."""
+    g = np.zeros(len(dp))
+    for s in (-1.0, 1.0):
+        g = np.maximum(g, 1.0 - smoothstep(0.082, 0.095, np.linalg.norm(dp - antenna(s)[2], axis=1)))
+    return g
+
+
+def bulb_glow(dp):
+    """Glow mask: the antenna bulbs in full, so a slug's position reads in a dark cavern, and the sores lightly."""
+    g = bulbs(dp)
+    # The sores' centres glow lightly in their own sage; at 0.45 the glow lifted them well above the eyelid
+    # colour they are meant to match (owner, 2026-11-01).
+    return np.maximum(g, 0.15*spores(dp)[2])
+
+
 def skin_albedo(dp, n):
     col = np.tile(BODY, (len(dp), 1))
     x, y, z = dp[:, 0], dp[:, 1], dp[:, 2]
     back = smoothstep(0.1, -0.6, z)*smoothstep(0.3, 1.2, y)
     crown = smoothstep(1.95, 2.35, y)*smoothstep(-0.1, 0.4, n[:, 1])
     col = mix(col, MOSS, 0.18*np.maximum(back, crown))
+    pallor, rim, centre = spores(dp)
+    col = mix(col, SORE_PALLOR, 0.6*pallor)
+    col = mix(col, SORE_BRUISE, 0.5*rim)
+    col = mix(col, SORE_PUS, 0.75*centre)
     belly = smoothstep(0.32, 0.66, z)*smoothstep(1.08, 0.55, y)
     col = mix(col, STONE, 0.9*smoothstep(0.4, 0.6, belly))
     col = mix(col, STONE*0.72, 0.4*belly_folds(dp)*(1.0 - fold_roll(dp))**3)
@@ -230,6 +322,7 @@ def skin_albedo(dp, n):
         col = mix(col, LOWER_LID, near*lower)
         A, B, C = antenna(s)
         col = mix(col, MOSS, 1.0 - smoothstep(0.075, 0.11, np.linalg.norm(dp - C, axis=1)))
+    col = mix(col, BULB_LIT, bulbs(dp))
     col = col*(1.0 - 0.5*smoothstep(0.22, 0.0, y)[:, None]) + col*np.array([0.90, 0.90, 0.80])*(0.5*smoothstep(0.22, 0.0, y)[:, None])
     mouth = 1.0 - smoothstep(0.0, 0.2, np.linalg.norm(mouth_local(dp)/np.array([0.15, 0.045, 0.11]), axis=1) - 1.1)
     col = mix(col, MOUTH, mouth)

@@ -661,3 +661,38 @@
 - **Confirmed:** owner asked to update all documentation from this chat (design, wording, lessons) and push as a checkpoint; Codex is doing the same for its own chat.
 - **Implemented:** style guide gains the Roblox lighting rules and the character look; lobby assets records what is built; owner design language gains this chat's phrases and dictation slips. Detailed rounds remain in `docs/art/lessons.md`, `docs/art/look-pack.md`, `docs/slugs/blaster-refinement.md` and the Floppy catalogue entry (slug pipeline branch).
 
+## 2026-11-01 - Floppy: glowing bulbs and spore spots
+
+- **Confirmed:** owner liked Floppy in the look and asked for slightly luminous antenna bulbs and a few medium, diffuse greenish-brown spots on the plain body only.
+- **Implemented/verified offline:** concept and build rules, in-place paint of the repaired source (checkpointed), export glow mask; concept and look renders inspected.
+- **Unresolved:** owner verdict; Roblox upload and Studio check.
+
+## 2026-11-01 - Floppy spots revised; blaster final in the Floppy test place
+
+- **Confirmed:** owner saw no spots and a glow on the skin by a bulb; wants noticeable, sickly, blended spots. Blaster: bladed ridge chosen; remove the dip before the blade, shorten about 15%, then make it the Roblox model.
+- **Implemented/verified offline:** two-tone blotches and bulb-only glow; packed-image bug fixed (game texture changes verified). Blaster export with ink shells privately uploaded (moderation Approved), private mapping updated with backup, `build/SlugshotFloppyTest-SlugshotBlaster.rbxlx` opened. Rocklock's blaster mapping left unchanged.
+- **Unresolved:** owner's Floppy verdict and Studio check of the blaster.
+
+## 2026-11-01 - Floppy sores: sick, not dirty
+
+- **Confirmed:** owner loves the blaster; Floppy spots looked dirty rather than sick, mainly the colour and the spot above the mouth.
+- **Implemented/verified offline:** brief research on sick versus dirty palettes; sores inverted to a lighter bilious centre with a bruised rim and sallow halo, face spot removed; concept and game-model renders inspected; page updated.
+- **Unresolved:** owner verdict; then Floppy's Roblox outline and glow.
+
+## 2026-11-01 - Floppy in the Slugshot look, in Roblox
+
+- **Confirmed:** owner asked for sore centres in the top-eyelid colour, keeping the glow, then said they like the design a lot and to put it in Roblox.
+- **Implemented/verified offline:** sage sore centres with own-colour glow; export adds a skinned ink shell (reimport checks pass); real emissive mask and strength scaling; appearance styles the shell; private uploads Approved; Floppy test place rebuilt and opened with the final blaster. luau-lsp clean.
+- **Unresolved:** Studio check by the owner.
+
+## 2026-11-01 - Floppy sore glow toned down
+
+- **Confirmed:** owner said the glow made the sores look much lighter than the eyelids; keep a light glow.
+- **Implemented/verified offline:** sore glow 0.45 to 0.15 (concept 0.9 to 0.3); repainted, re-exported, emissive mask re-uploaded (Approved), Floppy test place rebuilt and reopened; page updated.
+- **Unresolved:** owner Studio check.
+
+## 2026-11-01 - Floppy final design
+
+- **Confirmed:** owner liked the sores and asked for brighter, really glowing antenna bulbs, then made this the final Floppy design.
+- **Implemented/verified offline:** luminous bulb cores (Roblox emission follows surface colour), head-bone PointLight, repaint, export, private re-upload (Approved), test place rebuilt and reopened; page updated. luau-lsp and Selene clean.
+- **Unresolved:** owner Studio check.

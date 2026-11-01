@@ -78,3 +78,44 @@ Owner review of the reference-matched cream, drooping antennae, softness and int
 ## Floppy technical repair follow-up (2026-10-31)
 
 **Implemented/verified offline:** preserved the approved source and created `models/floppy/floppy-repaired.blend`; source/game topology defects are fixed without changing the face brief. Current game export remains 8.8k triangles, eight bones and a seamless 12-second idle. Loaded form is now belly-down, fitted with wall/idle clearance; gun grip is 18% shorter and the gun 12% smaller. Studio logs exposed unavailable importer texture packs after re-upload, so both copies use explicit private Image maps via cloned PBR templates. **Confirmed:** owner found the first geometry repair fine. **Unresolved:** final ColoursFixed-window material/pose/light/fit approval. [Repair report](../floppy-chamber-repair.md).
+
+## Glowing bulbs and spore spots (2026-11-01)
+
+**Confirmed:** owner asked for slightly luminous antenna bulbs "to light up the location of slugs" and a few medium, diffuse greenish-brown spots "here and there" on the plain body only, away from the back marks and belly.
+
+**Implemented (offline, awaiting owner review):**
+- **Concept:** `floppy.html` adds `spores()` and the bulb glow. Offline renders from four angles confirmed the spots stay off the belly, its outline and the back marks.
+- **Build port:** `build_floppy.py` carries the same rules.
+- **Approved source:** to avoid rebuilding over the topology repair, `paint_floppy_spores.py` painted the spots into the repaired source texture (checkpoint in `build/slugs/floppy/checkpoints/before-spores`) and added a bulb glow mask to the skin's emission.
+- **Export:** `export_floppy_roblox.py` now bakes that mask as `floppy-body-glow.png` for Roblox.
+
+Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page.
+
+**Unresolved:** owner verdict; upload and Studio check (the glow mask becomes the emissive mask, and a small light at the bulbs is still to come).
+
+**Revision (same day):**
+- **Feedback:** owner could not see the spots ("they should be noticeable… sickly… blend in a bit") and saw glow on the skin beside a bulb.
+- **Fix:** spots became irregular two-tone blotches (dark core, yellowed halo), 22 of them, also on the face-visible sides; the glow is limited to the bulb sphere.
+- **Earlier failure found:** the first round never reached the game texture, because re-packing an already packed image kept its old pixels. Fixed and verified: the game colour texture now differs in 97k texels.
+
+**Revision 2 (same day):** the owner found the blotches "more dirty than sick", mainly from the colour, plus the one above the mouth. Each sore now has a sallow halo, a faint bruised rim and a lighter bilious yellow-green centre that glows very faintly (also in the Roblox glow mask, at 0.18). The face spot and its satellites are removed, leaving 48 shapes. The greenish-brown theme is kept.
+
+**Revision 3 and Roblox (same day):** the owner found the bilious centres out of place and asked for the upper-lid colour, keeping the glow. Sore centres now use the upper-lid sage and glow softly. The owner liked the result and asked for it in Roblox.
+- **Outline:** `export_floppy_roblox.py` adds a skinned `FloppyBody_Ink` shell (0.011 studs, keeping the body's weights; verified on reimport: 8,000 triangles, at most 3 influences, 0.946 studs tall).
+- **Glow mask:** `upload_floppy_images.py` writes a real body emissive mask: the glow mask floored at 0.05, with a flat 0.05 mask for the eyes.
+- **Appearance:** `FloppyAppearance` divides the visibility floor by 0.05 so plain skin keeps its faint floor while bulbs and sores glow, tints emission yellow-green, and styles the shell near-black Neon.
+- **Upload:** model and maps uploaded privately; all 10 assets read Approved before Studio. `build/SlugshotFloppyTest-SlugshotLook.rbxlx` is open with the final blaster.
+
+**Unresolved:** Studio playback check (outline at runtime, glow strength on pedestal and in the canister).
+
+## Final design (2026-11-01)
+
+**Confirmed:** the owner made this the final Floppy design after one last change, which made the antenna bulbs really glow so slugs are more visible.
+
+**Implemented/verified offline:**
+- **Bulbs:** luminous yellow-green cores, in the concept, the build port and the painted source.
+- **Light:** `FloppyAppearance` adds a soft yellow-green PointLight on the head bone. The antenna bones sit at the roots, so they can't carry it.
+- **Final look:** sage sores matching the upper lids with a light glow, glowing bulbs, a skinned ink shell, and a real emissive mask.
+- **Upload:** all maps re-uploaded privately and Approved before opening `build/SlugshotFloppyTest-SlugshotLook.rbxlx`.
+
+**Unresolved:** owner Studio check (glow strength on the pedestal and in the canister); name and IP check before any publication.
