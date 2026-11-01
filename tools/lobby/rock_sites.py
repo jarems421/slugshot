@@ -11,6 +11,8 @@ Requires moderngl and numpy.
 import argparse
 import math
 import random
+
+from scipy import ndimage
 import re
 import sys
 from pathlib import Path
@@ -171,9 +173,25 @@ def sprouts(vs, fs, ctx):
     data, size = fissure_map(vs, fs, ctx)
     taken = []
     crystals = []
-    for x, z in crack_sites(data, size, 8, 0.8, 4.0, 7.1, rnd, taken):
-        direction = norm([x/20 + rnd.uniform(-0.22, 0.22), 1.0, z/20 + rnd.uniform(-0.22, 0.22)])
-        crystals.append(f"  smallCrystal(q, {vec([x, -0.05, z])}, {vec(direction)}, {rnd.uniform(0.45, 0.85):.2f}, {rnd.uniform(0.09, 0.14):.3f}, {float(rnd.randrange(14)):.1f}, res);")
+    # Several really small ones sprouting from each crack (owner, 2026-11-01). Their bases sit down inside it.
+    labels, count = ndimage.label(data < -0.03)
+    for crack in range(1, count + 1):
+        zs, xs = np.nonzero(labels == crack)
+        if len(xs) < 60:
+            continue
+        chosen = 0
+        for i in rnd.sample(range(len(xs)), len(xs)):
+            x, z = (xs[i] + 0.5)/size*16 - 8, (zs[i] + 0.5)/size*16 - 8
+            if min(abs(x), abs(z)) < 1.3 and math.hypot(x, z) > 4.0:
+                continue
+            if any(math.hypot(x - a, z - b) < 0.42 for a, b in taken):
+                continue
+            taken.append((x, z))
+            direction = norm([x/20 + rnd.uniform(-0.3, 0.3), 1.0, z/20 + rnd.uniform(-0.3, 0.3)])
+            crystals.append(f"  smallCrystal(q, {vec([x, -0.09, z])}, {vec(direction)}, {rnd.uniform(0.17, 0.34):.2f}, {rnd.uniform(0.024, 0.048):.3f}, {float(rnd.randrange(14)):.1f}, res);")
+            chosen += 1
+            if chosen == 6:
+                break
     lines = []
     seed = 300.0
     # Eight single mushrooms along crack edges, spread around the island and out of the middle so they never clump

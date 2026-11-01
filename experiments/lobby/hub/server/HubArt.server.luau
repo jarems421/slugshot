@@ -697,6 +697,11 @@ local function buildSkyWell()
 		for index = 0, 5 do
 			-- Each layer winds a little faster toward the eye, which gives the cloud its depth.
 			setMotion(storm, `Cloud{index}`, ORBIT * (1.7 + index * 0.16), 0, 0, 0)
+			local sheet = storm:FindFirstChild(`Cloud{index}`, true)
+			local surface = sheet and sheet:FindFirstChildWhichIsA("SurfaceAppearance")
+			if surface then
+				CollectionService:AddTag(surface, "HubStormCloud")
+			end
 		end
 	end
 	-- Light falling from the mouth, spreading and fading with no edge: a few soft camera-facing sheets.
@@ -711,25 +716,27 @@ local function buildSkyWell()
 			170,
 			fxTexture("softbeam"),
 			Color3.fromRGB(150, 190, 225),
-			fade({ { 0, 0.72 }, { 0.5, 0.87 }, { 1, 1 } }),
+			fade({ { 0, 1 }, { 0.22, 0.84 }, { 0.55, 0.9 }, { 1, 1 } }),
 			0,
 			1
 		)
 	end
+	-- A soft round glow well under the storm. A sprite that crosses a flat cloud sheet is cut in a straight line there, which
+	-- read as a box in the sky (owner), so none may reach the sheets (the lowest is at 200).
+	local mouth = holder("MouthGlow", Vector3.new(0, 118, 0), Vector3.one)
+	local haze = Instance.new("ParticleEmitter")
+	haze.Texture = fxTexture("flash")
+	haze.Color = ColorSequence.new(Color3.fromRGB(150, 180, 225))
+	haze.LightEmission = 1
+	haze.LightInfluence = 0
+	haze.Size = NumberSequence.new(150, 165)
+	haze.Transparency = fade({ { 0, 1 }, { 0.5, 0.78 }, { 1, 1 } })
+	haze.Lifetime = NumberRange.new(7, 9)
+	haze.Rate = 0.35
+	haze.Speed = NumberRange.new(0)
+	haze.Parent = mouth
 	-- Lightning: the client moves this holder inside the storm and fires its two emitters.
 	local flash = holder("StormFlash", Vector3.new(0, 300, 0), Vector3.one)
-	local glow = Instance.new("ParticleEmitter")
-	glow.Name = "Glow"
-	glow.Texture = fxTexture("flash")
-	glow.Color = ColorSequence.new(Color3.fromRGB(190, 180, 255))
-	glow.LightEmission = 1
-	glow.LightInfluence = 0
-	glow.Size = NumberSequence.new(70, 95)
-	glow.Transparency = fade({ { 0, 0.15 }, { 1, 1 } })
-	glow.Lifetime = NumberRange.new(0.35, 0.5)
-	glow.Rate = 0
-	glow.Speed = NumberRange.new(0)
-	glow.Parent = flash
 	local zap = Instance.new("ParticleEmitter")
 	zap.Name = "Zap"
 	zap.Texture = fxTexture("zap")

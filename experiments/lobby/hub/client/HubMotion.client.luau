@@ -224,13 +224,27 @@ local function inView(camera: Camera, centre: Vector3): boolean
 	return to.Magnitude < 60 or to.Unit:Dot(camera.CFrame.LookVector) > 0.25
 end
 
--- Lightning: mostly the cloud lighting from inside, with short zaps. Occasional and brief, so it costs almost nothing.
+-- Lightning: the clouds themselves light up from inside, with short zaps in the gaps between the sheets. Occasional and brief.
+local STORM_GLOW = 0.7
+local STORM_FLASH = 1.5
+local ZAP_LEVELS = { 245, 280, 325 } -- between the cloud sheets, so a zap never crosses one
 local nextFlash = 3
-local function flash(t: number)
+local flashLeft = 0
+local function flash(t: number, dt: number)
+	if flashLeft > 0 then
+		flashLeft = math.max(flashLeft - dt * 3.5, 0)
+		local strength = STORM_GLOW + STORM_FLASH * flashLeft
+		for _, item in CollectionService:GetTagged("HubStormCloud") do
+			if item:IsA("SurfaceAppearance") then
+				item.EmissiveStrength = strength
+			end
+		end
+	end
 	if t < nextFlash then
 		return
 	end
 	nextFlash = t + 1.2 + 3.2 * math.random()
+	flashLeft = 0.6 + 0.4 * math.random()
 	local art = workspace:FindFirstChild("HubArt")
 	local holder = art and art:FindFirstChild("StormFlash")
 	if not holder or not holder:IsA("BasePart") then
@@ -238,12 +252,11 @@ local function flash(t: number)
 	end
 	local angle = math.random() * 2 * math.pi
 	local radius = 26 + 50 * math.random()
-	holder.Position =
-		Vector3.new(radius * math.cos(angle), 255 + 75 * math.random(), radius * math.sin(angle))
-	local glow = holder:FindFirstChild("Glow")
-	if glow and glow:IsA("ParticleEmitter") then
-		glow:Emit(1)
-	end
+	holder.Position = Vector3.new(
+		radius * math.cos(angle),
+		ZAP_LEVELS[math.random(#ZAP_LEVELS)],
+		radius * math.sin(angle)
+	)
 	local zap = holder:FindFirstChild("Zap")
 	if zap and zap:IsA("ParticleEmitter") and math.random() < 0.7 then
 		zap:Emit(1)
@@ -336,7 +349,7 @@ RunService.RenderStepped:Connect(function(dt: number)
 	if t >= nextMove then
 		nextMove = t + (if low then MOVE_RATE else 0)
 		moveParts(t)
-		flash(t)
+		flash(t, dt)
 	end
 	local camera = workspace.CurrentCamera
 	if not camera then

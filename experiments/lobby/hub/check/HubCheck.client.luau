@@ -4,9 +4,8 @@ local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
-	{ name = "up", from = Vector3.new(18, 6, 8), at = Vector3.new(6, 250, 2) },
-	{ name = "well", from = Vector3.new(-60, 60, 90), at = Vector3.new(0, 240, 0) },
-	{ name = "wide", from = Vector3.new(0, 20, 170), at = Vector3.new(0, 130, 0) },
+	{ name = "player", from = Vector3.new(12, 11, -2), at = Vector3.new(14, 0, -18) },
+	{ name = "low", from = Vector3.new(4, 7, 20), at = Vector3.new(16, 0, 8) },
 }
 
 local function read(name: string): number
@@ -44,6 +43,18 @@ task.spawn(function()
 		print(`HUBCHECK shot {stop.name}`)
 		task.wait(1)
 	end
+	camera.CFrame = CFrame.lookAt(Vector3.new(0, 150, 60), Vector3.new(0, 260, 0))
+	task.wait(3)
+	print("HUBCHECK shot boxA")
+	task.wait(1.1)
+	print("HUBCHECK shot boxB")
+	task.wait(1.3)
+	print("HUBCHECK shot boxC")
+	task.wait(1)
+	camera.CFrame = CFrame.lookAt(Vector3.new(30, 8, 40), Vector3.new(0, 200, 0))
+	task.wait(2)
+	print("HUBCHECK shot fromIsland")
+	task.wait(1)
 	camera.CameraType = Enum.CameraType.Custom
 	print("HUBCHECK tour ends")
 end)
