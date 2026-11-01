@@ -1,6 +1,6 @@
 # Current status
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** lobby [scale map V1](art/lobby-roadmap.md#scale-map-v1-2026-11-01): owner-confirmed sizes and placements, one `layout.json` driving a [top-down plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) and a walkable colour-coded block-out with current movement, no barriers and fall-to-respawn. Final Floppy merged in. **Verified in Studio by a self-test place:** routes, timings, lip, spawn and fall. **Unresolved:** the owner's walk and verdict (gate for the next step), and the look-test verdict.
+**Implemented, 2026-11-01 (`experiment/lobby`):** lobby [scale map V1](art/lobby-roadmap.md#scale-map-v1-2026-11-01): owner-confirmed sizes and placements, one `layout.json` driving a [top-down plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) and a walkable colour-coded block-out with current movement, no barriers and fall-to-respawn. Final Floppy merged in. **Verified in Studio by a self-test place:** routes, timings, lip, spawn and fall. **Confirmed:** owner walked it and approved the organisation; spawn rock enlarged from 50 to 70 across, bridges 50 long. **Unresolved:** the look-test verdict.
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** blaster final: the bladed ridge without the dip and 15% shorter, exported with ink shells, privately uploaded and in the Floppy test place (`SlugshotFloppyTest-SlugshotBlaster`). [Record](slugs/blaster-refinement.md#bladed-ridge-final-in-roblox-2026-11-01). **Unresolved:** Studio check.
 

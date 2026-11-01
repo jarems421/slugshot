@@ -184,7 +184,7 @@ def rows():
     entries = [
         ("Spawn to PvP gate", f"{distance} studs: {seconds(distance, walk['default'])} walking, {seconds(distance, run)} running, {seconds(distance, walk['sprint'])} sprinting"),
         ("Spawn rock", f"{L['spawnRock']['radius'] * 2} across, for 20 to 25 players"),
-        ("Bridges", f"4 wooden, 60 long, {L['bridges']['width']} wide, {L['bridges']['sag']} droop"),
+        ("Bridges", f"4 wooden, {L['shore']['innerRadius'] - L['spawnRock']['radius']} long, {L['bridges']['width']} wide, {L['bridges']['sag']} droop"),
         ("Maelstrom", f"{L['shore']['innerRadius'] * 2} across. No barriers, a low hop-over lip, fall to {L['fall']['respawnY']} and respawn"),
         ("Cavern", f"{L['shore']['wallRadius'] * 2} across, ceiling {L['cavern']['ceilingY']} up"),
         ("Portals", "Curved arc about 50 apart, PvP raised 4 and largest"),

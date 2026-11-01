@@ -42,7 +42,7 @@ Source: owner's pasted art-direction chat and requests, 2026-10-31. **Status: Co
   - **left** to the gun exhibition side;
   - **right** to the slug exhibition side.
 - **Bridges land on solid mainland, not small platforms.** Each one opens out into broad land that wraps around the sinkhole, and the terrain and biomes grow out from there. The round/octagonal shape is the sinkhole and the mainland shoreline around it.
-- **Bridges:** Confirmed 2026-11-01: wooden suspension bridges, 60 long, 10 wide, with about 6 studs of droop. Decks stay fixed so they never move players.
+- **Bridges:** Confirmed 2026-11-01: wooden suspension bridges, 50 long (shortened from 60 on 2026-11-01 for the larger spawn rock), 10 wide, with about 5 studs of droop. Decks stay fixed so they never move players.
 - **No barriers (Confirmed 2026-11-01, replaces the earlier invisible barriers).** Falling is a feature: a long plunge through mist, then respawn at spawn. A low rock lip stops plain walking off the shore, and players can hop over it.
 - **PvP gate** straight ahead.
 - **Training gate** immediately left of PvP.
@@ -121,13 +121,15 @@ Lobby work goes in its **own branch and worktree** so it never interferes with C
 
 ## Scale map V1 (2026-11-01)
 
-**Confirmed by the owner:** spawn to portals about 10 seconds' walk; full game movement; a gentle main level plus optional overlooks; spiralling caverns, waterfall mountain, volcano and lava ravine all walkable; 50-stud spawn rock for 20 to 25 players; 170-stud Maelstrom with a sheer cliff and hop-over rock lip; full walkable ring out to a 300-stud radius; ceiling about 250 up; Sky Well rocks look-only for V1; portals in a curved arc about 50 apart with PvP central, raised and largest; volcano behind PvP, ravine behind and outside Training, waterfall mountain beside the slug side feeding the pond, overgrown purple around Veylume, caverns at the Entrance; peaks 120 to 150 high; one spiral route starting at the Entrance and linking the features; the Entrance is a scenic cave mouth nobody arrives through.
+**Confirmed by the owner:** spawn to portals about 10 seconds' walk; full game movement; a gentle main level plus optional overlooks; spiralling caverns, waterfall mountain, volcano and lava ravine all walkable; 70-stud spawn rock for 20 to 25 players (owner found 50 too small after walking it; 70 was the agent's recommendation); 170-stud Maelstrom with a sheer cliff and hop-over rock lip; full walkable ring out to a 300-stud radius; ceiling about 250 up; Sky Well opening 120 across, the midpoint between the island and the Maelstrom (owner found 90 underwhelming; exact size can still move); Sky Well rocks look-only for V1; portals in a curved arc about 50 apart with PvP central, raised and largest; volcano behind PvP, ravine behind and outside Training, waterfall mountain beside the slug side feeding the pond, overgrown purple around Veylume, caverns at the Entrance; peaks 120 to 150 high; one spiral route starting at the Entrance and linking the features; the Entrance is a scenic cave mouth nobody arrives through.
 
-**Considering (agent's starting values, to be judged by walking):** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 90-stud Sky Well opening, the 14-wide route, the 3-stud lip and the exact placements. The look-test verdict has not been recorded; the owner moved on without an explicit pass.
+**Considering (agent's starting values, to be judged by walking):** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 90-wide light column, the 14-wide route, the 3-stud lip and the exact placements. The look-test verdict has not been recorded; the owner moved on without an explicit pass.
 
 **Build:** `python tools/lobby/build_scale.py` makes `build/SlugshotLobbyScale.rbxlx`; `--check` adds a self-test place. `python tools/lobby/scale_plan.py` draws the [plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) from the same numbers.
 
 **Implemented/verified in Studio by the self-test place, 2026-11-01** (R6 test character at speed 16, real player for spawn and fall): spawn to the PvP gate 9.8 to 10.7 s across runs; bridges 4.8 to 4.9 s (the forward one as part of the PvP walk); gun shop, pond, ravine crossing and ledge walkable; spiral route Entrance to volcano 57.5 s, volcano to mountain 22.1 s, both climbs reach the top (rim and overlook about 133.7); 2,838 parts. A 2-stud lip did not stop a plain walk; a 3-stud lip does, and a jump clears it. Real player spawns on the rock facing PvP; fall to respawn 1.8 s from Y=-40, about 2 s in all; no script errors seen in the log.
+
+**Owner verdict, 2026-11-01:** after walking V1, the owner said the organisation is good and only the spawn rock needed to be bigger. The rock went from 50 to 70 across with the sinkhole and shore unchanged, so bridges went from 60 to 50 long with droop 6 to 5. Self-test rerun afterwards.
 
 **Not verified:** feel, sprint and wall-run use on these surfaces, two or more players, low graphics and mobile. **Known limits:** the pond floor is not recessed yet; falling through ravine lava passes through it into the same respawn; slugs and water are static markers. The fall is short for a "long plunge" and needs lengthening in the Maelstrom design. Studio's draw distance at its automatic quality clipped floor-level parts from about 500 studs, so check far views in Phase 6.
 
@@ -192,7 +194,7 @@ Check low graphics settings, mobile, triangle/texture/light budgets and draw cal
 | --- | --- |
 | 0 Plan | Implemented; awaiting owner review |
 | 1 Style test | Treatment chosen; concepts final; [look pack](look-pack.md) and Studio look-test place built 2026-11-01, awaiting owner verdict |
-| 2 Greybox | Scale map V1 built and self-tested 2026-11-01; awaiting the owner walk |
+| 2 Greybox | Scale map V1 layout approved by the owner 2026-11-01 with a larger spawn rock |
 | 3 Assets | Not started |
 | 4 Assembly/lighting | Not started |
 | 5 Life pass | Not started |

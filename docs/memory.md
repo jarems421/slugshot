@@ -4,7 +4,8 @@
 
 - **Confirmed:** owner agreed the order (scale map, then Sky Well, Maelstrom and spawn rock, then bridges, then terrain) and answered a full round of layout questions, recorded in the [roadmap](art/lobby-roadmap.md#scale-map-v1-2026-11-01). Changes from earlier decisions: no barriers, falling is a long plunge then respawn; the gun exhibition becomes a physical shop/armoury; slugs sit openly around the pond.
 - **Implemented/verified in Studio:** block-out and plan from one `layout.json`; movement copied unchanged from `experiment/rocklock-unified`, with spawn and fall height patched in a generated copy. Self-test passed after raising the lip from 2 to 3 studs. Studio MCP was unavailable, so the self-test ran through a posted F5 and the Studio log ([art lessons](art/lessons.md)).
-- **Unresolved:** owner's walk and verdict; longer plunge in the Maelstrom design; explicit look-test verdict.
+- **Confirmed after the owner's walk:** organisation approved, spawn rock too small for 20 players. Rock now 70 across (agent's recommendation), sinkhole and shore unchanged, bridges 50 long with 5 droop. Owner also found the Sky Well underwhelming and asked for a size between the island and the Maelstrom: opening now 120 across, light column 90, floating rocks spread and enlarged.
+- **Unresolved:** longer plunge in the Maelstrom design; explicit look-test verdict.
 
 ## 2026-11-01 — Look test round 3
 

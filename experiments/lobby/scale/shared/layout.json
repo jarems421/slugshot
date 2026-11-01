@@ -3,21 +3,21 @@
   "coordinates": "Studs. Origin is the Maelstrom centre, main level is Y=0. Angles run clockwise seen from above with PvP at 0, so 0 is -Z and 90 is +X.",
   "sectors": 72,
   "walkSpeeds": { "default": 16, "run": 18, "sprint": 24 },
-  "spawnRock": { "radius": 25, "undersideDepth": 34, "spawnRadius": 17, "spawnY": 4, "sides": 24 },
+  "spawnRock": { "radius": 35, "undersideDepth": 44, "spawnRadius": 25, "spawnY": 4, "sides": 32 },
   "shore": { "innerRadius": 85, "wallRadius": 300, "thickness": 8, "lipHeight": 3, "lipWidth": 2 },
-  "bridges": { "angles": [0, 90, 180, -90], "width": 10, "sag": 6, "planks": 12, "railHeight": 3.5 },
+  "bridges": { "angles": [0, 90, 180, -90], "width": 10, "sag": 5, "planks": 12, "railHeight": 3.5 },
   "maelstrom": { "waterY": -70, "shaftBottomY": -520, "shaftBands": 6 },
   "fall": { "fadeStartY": -280, "respawnY": -500 },
   "cavern": { "ceilingY": 250, "ceilingThickness": 10 },
   "skyWell": {
-    "openingRadius": 45,
-    "columnRadius": 25,
+    "openingRadius": 60,
+    "columnRadius": 45,
     "rocks": [
-      { "angle": 30, "radius": 34, "y": 118, "size": 12 },
-      { "angle": 140, "radius": 30, "y": 146, "size": 16 },
-      { "angle": 215, "radius": 36, "y": 172, "size": 10 },
-      { "angle": 300, "radius": 26, "y": 198, "size": 14 },
-      { "angle": 85, "radius": 22, "y": 224, "size": 9 }
+      { "angle": 30, "radius": 50, "y": 118, "size": 18 },
+      { "angle": 140, "radius": 44, "y": 146, "size": 24 },
+      { "angle": 215, "radius": 52, "y": 172, "size": 15 },
+      { "angle": 300, "radius": 38, "y": 198, "size": 21 },
+      { "angle": 85, "radius": 32, "y": 224, "size": 14 }
     ]
   },
   "zones": [

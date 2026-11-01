@@ -56,7 +56,7 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
 | Floating spawn rock | P2 | Rock island hovering above the Maelstrom in the Sky Well's light, flat walkable top facing the PvP gate, roots/moss/vines trailing beneath, chunky ink lines. |
-| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Confirmed 2026-11-01: **droopy wooden suspension bridges**, 60 long and 10 wide, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. No barriers (owner, 2026-11-01). |
+| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Confirmed 2026-11-01: **droopy wooden suspension bridges**, 50 long and 10 wide, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. No barriers (owner, 2026-11-01). |
 | Mainland shoreline | P2 | The solid land wrapping around the sinkhole where every bridge lands and the terrain and biomes begin. |
 | Maelstrom | P2 | Sinkhole of glowing water spiralling down: layered spiral meshes with animated textures, rim rocks, rising mist. |
 | Sky Well | P2 | Ceiling opening far above, with a fake volumetric light column (layered meshes/Beams) and slowly drifting floating rocks trailing moss and vines. |

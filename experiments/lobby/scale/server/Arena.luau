@@ -313,7 +313,7 @@ local function buildSpawnRock(root: Instance)
 		{ rock.radius * 0.3, -depth * 0.8 },
 		{ 0, -depth },
 	}, rock.sides, WALL, 2)
-	label(parent, "SPAWN ROCK  50 across", Vector3.new(0, 14, 0))
+	label(parent, `SPAWN ROCK  {rock.radius * 2} across`, Vector3.new(0, 14, 0))
 end
 
 local function buildShore(root: Instance)
@@ -419,7 +419,11 @@ local function buildBridges(root: Instance)
 			end
 		end
 	end
-	label(parent, "BRIDGE  60 long, 10 wide, 6 droop", polar(45, 55, 8))
+	label(
+		parent,
+		`BRIDGE  {outer - inner} long, {bridges.width} wide, {bridges.sag} droop`,
+		polar(45, 55, 8)
+	)
 end
 
 local function buildMaelstrom(root: Instance)
@@ -457,7 +461,7 @@ local function buildMaelstrom(root: Instance)
 		WATER,
 		{ ghost = true, neon = true, transparency = 0.35 }
 	)
-	label(parent, "MAELSTROM  170 across, no barriers", polar(-45, 55, 8))
+	label(parent, `MAELSTROM  {shore.innerRadius * 2} across, no barriers`, polar(-45, 55, 8))
 end
 
 local function buildCavern(root: Instance)
