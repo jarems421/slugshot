@@ -35,6 +35,8 @@ OUT = ROOT/"build/slugs/floppy/roblox"
 BODY_TRIANGLES = 8000
 EYE_TRIANGLES = 400
 TEXTURE = 1024
+BULB_GLOW = (0.62, 0.80, 0.28)  # antenna-bulb glow colour, as in build_floppy.BULB_GLOW
+BULB_GLOW_STRENGTH = 2.0
 # Slugs are about 1 stud tall in Roblox so they read clearly; the blaster is
 # resized to fit them (owner, 2026-10-31); then a third smaller, mostly by a narrower base. Source height 2.47 -> ~0.75 studs.
 GAME_SCALE = 0.34
@@ -162,15 +164,27 @@ def bake_to(low, high, kind, target, high_material=None):
     bpy.data.materials.remove(bake_mat)
 
 
-def emission_of(material):
-    """A copy of the skin material that emits its colour texture, for colour baking."""
-    tex = next(n for n in material.node_tree.nodes if n.type == "TEX_IMAGE")
+def colour_texture(material):
+    """The image feeding the skin's base colour (the skin also carries the bulb glow mask)."""
+    shader = next(n for n in material.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    link = next(ln for ln in material.node_tree.links if ln.to_socket == shader.inputs["Base Color"])
+    return link.from_node.image
+
+
+def glow_texture(material):
+    """The antenna-bulb glow mask added by paint_floppy_spores.py / build_floppy.py, if any."""
+    return next((n.image for n in material.node_tree.nodes
+                 if n.type == "TEX_IMAGE" and n.image and n.image.name.startswith("floppy-body-glow")), None)
+
+
+def emission_of(material, image=None):
+    """A material that emits an image (by default the skin's colour texture), for baking it onto the game body."""
     mat = bpy.data.materials.new("BakeColour")
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     nodes.clear()
     t = nodes.new("ShaderNodeTexImage")
-    t.image = tex.image
+    t.image = image or colour_texture(material)
     e = nodes.new("ShaderNodeEmission")
     o = nodes.new("ShaderNodeOutputMaterial")
     links.new(t.outputs["Color"], e.inputs["Color"])
@@ -245,7 +259,7 @@ def add_gloss(mat, img):
     links.new(split.outputs["Blue"], shader.inputs["Metallic"])
 
 
-def game_skin_material(colour, normal, rough):
+def game_skin_material(colour, normal, rough, glow=None):
     mat = bpy.data.materials.new("FloppySkin")
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -259,6 +273,16 @@ def game_skin_material(colour, normal, rough):
     links.new(n.outputs["Color"], nm.inputs["Color"])
     links.new(nm.outputs["Normal"], shader.inputs["Normal"])
     add_gloss(mat, rough)
+    if glow:
+        # Antenna bulbs glow softly (owner, 2026-11-01); Roblox gets the same mask as its emissive mask.
+        g = nodes.new("ShaderNodeTexImage")
+        g.image = glow
+        mul = nodes.new("ShaderNodeMath")
+        mul.operation = "MULTIPLY"
+        mul.inputs[1].default_value = BULB_GLOW_STRENGTH
+        links.new(g.outputs["Color"], mul.inputs[0])
+        links.new(mul.outputs["Value"], shader.inputs["Emission Strength"])
+        shader.inputs["Emission Color"].default_value = BULB_GLOW + (1.0,)
     return mat
 
 
@@ -407,7 +431,12 @@ def main():
     bake_to(body, high, "EMIT", colour, emission_of(skin))
     bake_to(body, high, "NORMAL", normal)
     paths = [save(colour, "floppy-body-color.png"), save(normal, "floppy-body-normal.png")]
-    body.data.materials.append(game_skin_material(colour, normal, body_roughness_map(body)))
+    glow = None
+    if glow_texture(skin):
+        glow = image("floppy-body-glow", "Non-Color")
+        bake_to(body, high, "EMIT", glow, emission_of(skin, glow_texture(skin)))
+        paths.append(save(glow, "floppy-body-glow.png"))
+    body.data.materials.append(game_skin_material(colour, normal, body_roughness_map(body), glow))
 
     eyes = []
     for tag in ("L", "R"):

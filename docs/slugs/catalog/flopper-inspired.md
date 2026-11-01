@@ -78,3 +78,17 @@ Owner review of the reference-matched cream, drooping antennae, softness and int
 ## Floppy technical repair follow-up (2026-10-31)
 
 **Implemented/verified offline:** preserved the approved source and created `models/floppy/floppy-repaired.blend`; source/game topology defects are fixed without changing the face brief. Current game export remains 8.8k triangles, eight bones and a seamless 12-second idle. Loaded form is now belly-down, fitted with wall/idle clearance; gun grip is 18% shorter and the gun 12% smaller. Studio logs exposed unavailable importer texture packs after re-upload, so both copies use explicit private Image maps via cloned PBR templates. **Confirmed:** owner found the first geometry repair fine. **Unresolved:** final ColoursFixed-window material/pose/light/fit approval. [Repair report](../floppy-chamber-repair.md).
+
+## Glowing bulbs and spore spots (2026-11-01)
+
+**Confirmed:** owner asked for slightly luminous antenna bulbs "to light up the location of slugs" and a few medium, diffuse greenish-brown spots "here and there" on the plain body only, away from the back marks and belly.
+
+**Implemented (offline, awaiting owner review):**
+- **Concept:** `floppy.html` adds `spores()` and the bulb glow. Offline renders from four angles confirmed the spots stay off the belly, its outline and the back marks.
+- **Build port:** `build_floppy.py` carries the same rules.
+- **Approved source:** to avoid rebuilding over the topology repair, `paint_floppy_spores.py` painted the spots into the repaired source texture (checkpoint in `build/slugs/floppy/checkpoints/before-spores`) and added a bulb glow mask to the skin's emission.
+- **Export:** `export_floppy_roblox.py` now bakes that mask as `floppy-body-glow.png` for Roblox.
+
+Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page.
+
+**Unresolved:** owner verdict; upload and Studio check (the glow mask becomes the emissive mask, and a small light at the bulbs is still to come).

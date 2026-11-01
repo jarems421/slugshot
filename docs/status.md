@@ -1,5 +1,8 @@
 # Current status
 
+**Implemented, 2026-11-01 (`feature/slug-asset-pipeline`):** Floppy gets softly glowing antenna bulbs and sixteen medium greenish-brown spore spots on the plain skin (concept, build port, repaired source texture and export glow mask). Rendered in the Slugshot look on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** owner verdict, upload and Studio.
+
+
 **Confirmed, 2026-10-31:** spawn is a floating rock between the Sky Well and Maelstrom, with four bridges to solid mainland (portals, entrance, gun side, slug side) and invisible bridge barriers ([layout](art/lobby-roadmap.md#layout)).
 
 **Confirmed, 2026-10-31:** hub centrepiece is the **Sky Well** above and the **Maelstrom** below, with spawn on a pillar between them ([roadmap](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom)). Nothing built yet.

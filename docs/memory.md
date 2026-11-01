@@ -515,3 +515,9 @@
 
 - **Confirmed:** owner asked that lessons from the Floppy design rounds be recorded so later slugs avoid the same errors, including what their phrases mean in practice (e.g. "dark spots").
 - **Implemented:** [owner design language](slugs/owner-design-language.md) collects phrase-to-outcome mappings drawn only from recorded rounds, the owner's working style, and the draw/holster runtime lessons from `experiment/rocklock-unified`. The creature-production procedure (both skill copies) now reads it first and records new meanings there.
+
+## 2026-11-01 - Floppy: glowing bulbs and spore spots
+
+- **Confirmed:** owner liked Floppy in the look and asked for slightly luminous antenna bulbs and a few medium, diffuse greenish-brown spots on the plain body only.
+- **Implemented/verified offline:** concept and build rules, in-place paint of the repaired source (checkpointed), export glow mask; concept and look renders inspected.
+- **Unresolved:** owner verdict; Roblox upload and Studio check.

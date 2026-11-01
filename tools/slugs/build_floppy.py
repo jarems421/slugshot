@@ -44,6 +44,28 @@ BELLY_EDGE = np.array([0.157, 0.147, 0.048])
 MOUTH = np.array([0.16, 0.06, 0.04])
 DROOL = np.array([0.80, 0.79, 0.70])
 BAG = np.array([0.10, 0.07, 0.05])
+SPORE = np.array([0.200, 0.205, 0.075])
+BULB_GLOW = np.array([0.62, 0.80, 0.28])
+# Spore spots (owner, 2026-11-01): medium, diffuse greenish-brown spots here and there on the plain skin only.
+# Centres sit on the surface away from the belly, back marks, eyes, mouth and antennae: (x, y, z, radius).
+SPORES = np.array([
+    (0.608, 0.739, -0.201, 0.141),
+    (-0.698, 1.306, 0.231, 0.123),
+    (-0.688, 0.335, -0.030, 0.115),
+    (-0.385, 1.049, 0.506, 0.148),
+    (-0.354, 1.112, -0.414, 0.139),
+    (0.638, 1.732, -0.230, 0.154),
+    (0.460, 0.916, 0.450, 0.155),
+    (0.734, 1.437, 0.289, 0.132),
+    (-0.400, 0.485, -0.519, 0.119),
+    (-0.400, 2.174, -0.328, 0.117),
+    (-0.505, 1.579, -0.347, 0.132),
+    (-0.040, 2.228, 0.623, 0.123),
+    (0.643, 2.194, 0.213, 0.145),
+    (0.341, 0.507, -0.564, 0.132),
+    (0.364, 2.145, -0.365, 0.138),
+    (0.586, 1.200, -0.147, 0.126),
+])
 
 
 # ---------------------------------------------------------------- SDF port
@@ -198,12 +220,28 @@ def mix(a, b, t):
     return a*(1.0 - t[:, None]) + b*t[:, None]
 
 
+def spores(dp):
+    m = np.zeros(len(dp))
+    for x, y, z, r in SPORES:
+        m = np.maximum(m, 1.0 - smoothstep(0.5*r, r, np.linalg.norm(dp - [x, y, z], axis=1)))
+    return m
+
+
+def bulb_glow(dp):
+    """The antenna bulbs, which glow softly so a slug's position reads in a dark cavern."""
+    g = np.zeros(len(dp))
+    for s in (-1.0, 1.0):
+        g = np.maximum(g, 1.0 - smoothstep(0.075, 0.11, np.linalg.norm(dp - antenna(s)[2], axis=1)))
+    return g
+
+
 def skin_albedo(dp, n):
     col = np.tile(BODY, (len(dp), 1))
     x, y, z = dp[:, 0], dp[:, 1], dp[:, 2]
     back = smoothstep(0.1, -0.6, z)*smoothstep(0.3, 1.2, y)
     crown = smoothstep(1.95, 2.35, y)*smoothstep(-0.1, 0.4, n[:, 1])
     col = mix(col, MOSS, 0.18*np.maximum(back, crown))
+    col = mix(col, SPORE, 0.7*spores(dp))
     belly = smoothstep(0.32, 0.66, z)*smoothstep(1.08, 0.55, y)
     col = mix(col, STONE, 0.9*smoothstep(0.4, 0.6, belly))
     col = mix(col, STONE*0.72, 0.4*belly_folds(dp)*(1.0 - fold_roll(dp))**3)
