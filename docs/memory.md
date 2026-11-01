@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Maelstrom v3
+
+- **Owner feedback on v2:** more vines down the sides, quite a few but not an insane amount; about five large tree mushrooms sprouting from the cliff edge and curving upward, attached and not weird; the "slug juice" should look thick and viscous.
+- **Implemented/verified offline:** those, with up to 24 vines kept clear of the falls, flared roots on the mushrooms, glossy folds and bubbles, gloopy falls with drips and heaps. Renders inspected.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Maelstrom v2
 
 - **Confirmed (owner's choices):** glowing energy rather than water; broken cliff walls like the island; rising mist, waterfalls and added greenery; water 50 studs below the shore.

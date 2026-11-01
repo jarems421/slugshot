@@ -977,6 +977,11 @@ float rootSeg(vec3 q, vec3 a, vec3 b, vec3 c, float r0, float r1, float seed) {
 // down, the odd blossom and a pod at the end.
 vec2 strandSway(float s, float ph) { return 0.24*vec2(sin(s*0.8 + ph), cos(s*0.65 + ph*1.7))*smoothstep(0.0, 1.4, s); }
 void rockStrand(vec3 q, vec3 top, vec3 grip, float L, float ph, inout vec2 res) {
+#if ASSET == 6
+  const float VS = 1.55;  // bolder on the big cliff than on the island
+#else
+  const float VS = 1.0;
+#endif
   vec3 p0 = q - top;
   float bs = length(vec3(p0.x, p0.y + L*0.5, p0.z)) - (L*0.5 + 1.1);
   if (bs > res.x) return;
@@ -984,7 +989,7 @@ void rockStrand(vec3 q, vec3 top, vec3 grip, float L, float ph, inout vec2 res) 
   vec2 sway = strandSway(s, ph);
   float tw = s*4.2 + ph;
   vec2 off = 0.075*vec2(cos(tw), sin(tw));
-  float rad = mix(0.06, 0.024, s/L);
+  float rad = mix(0.06, 0.024, s/L)*VS;
   float d = min(length(vec3(p0.x - sway.x - off.x, p0.y + s, p0.z - sway.y - off.y)),
                 length(vec3(p0.x - sway.x + off.x, p0.y + s, p0.z - sway.y + off.y))) - rad;
   d = min(d*0.75, capT(q, grip, top, 0.09, 0.06));
@@ -996,7 +1001,7 @@ void rockStrand(vec3 q, vec3 top, vec3 grip, float L, float ph, inout vec2 res) 
     if (n >= 0.0 && sn < L) {
       float hn = hash1(n*1.7 + ph*5.0);
       float ang = n*2.39996 + ph;
-      float size = mix(0.3, 0.15, sn/L)*(0.75 + 0.5*hn);
+      float size = mix(0.3, 0.15, sn/L)*(0.75 + 0.5*hn)*VS;
       vec2 sw = strandSway(sn, ph);
       vec3 c = vec3(sw.x + cos(ang)*(0.05 + size*0.8), -sn - size*0.4, sw.y + sin(ang)*(0.05 + size*0.8));
       vec3 l = p0 - c;
@@ -1721,6 +1726,47 @@ void pitColumn(float k, float tier, out vec2 c, out float hw, out float top, out
   bottom = tier < 0.5 ? b0 : tier < 1.5 ? b1 : -15.0;
 }
 float angleDiff(float a, float b) { return atan(sin(a - b), cos(a - b)); }
+// Thick, rope-like folds winding inward across the slug juice; 1 on a fold's crest, 0 in the crease between folds.
+float juiceFold(float rr, float a, float spin) {
+  float sw = a + 2.1*log(rr + 1.0) + spin*3.0;
+  float warp = 0.9*noise3(vec3(cos(sw)*rr*0.14, 1.0, sin(sw)*rr*0.14));
+  float s = abs(sin(sw*2.0 + warp));
+  return pow(s, 0.55);
+}
+// Five tree mushrooms: each stem leaves the cliff like a branch, runs outward over the pit and curves up to its cap.
+void treeShroom(int i, out vec3 a, out vec3 b, out vec3 c, out float capR, out float colour) {
+  float ang = i == 0 ? 0.38 : i == 1 ? 1.25 : i == 2 ? 2.72 : i == 3 ? 3.45 : 5.05;
+  float y0 = i == 0 ? -3.3 : i == 1 ? -5.2 : i == 2 ? -2.6 : i == 3 ? -4.4 : -3.6;
+  float rise = i == 0 ? 3.9 : i == 1 ? 4.8 : i == 2 ? 3.4 : i == 3 ? 4.5 : 4.0;
+  capR = i == 0 ? 2.0 : i == 1 ? 2.5 : i == 2 ? 1.7 : i == 3 ? 2.3 : 1.9;
+  colour = i == 0 ? 3.0 : i == 1 ? 0.0 : i == 2 ? 8.0 : i == 3 ? 5.0 : 2.0;
+  a = vec3(cos(ang)*18.4, y0, sin(ang)*18.4);
+  b = vec3(cos(ang + 0.03)*13.4, y0 - 0.25, sin(ang + 0.03)*13.4);
+  c = vec3(cos(ang + 0.09)*13.0, y0 + rise, sin(ang + 0.09)*13.0);
+}
+void treeShrooms(vec3 p, inout vec2 res) {
+  for (int i = 0; i < 5; i++) {
+    vec3 a, b, c; float capR, colour;
+    treeShroom(i, a, b, c, capR, colour);
+    if (length(p - (a + c)*0.5) - (length(a - c)*0.5 + capR + 1.0) > res.x) continue;
+    vec2 bz = sdBezier(p, a, b, c);
+    // Thick where it leaves the rock, with a flared root gripping the cliff, slimming toward the cap.
+    float stem = bz.x - (mix(0.62, 0.34, smoothstep(0.0, 0.7, bz.y)) + 0.02*sin(bz.y*40.0));
+    vec3 toPit = normalize(b - a);
+    stem = smin(stem, capT(p, a, a + toPit*3.4, 1.05, 0.42), 0.5);
+    stem += 0.05*(noise3(p*2.4) - 0.5);
+    if (stem*0.85 < res.x) res = vec2(stem*0.85, 13.0);
+    vec3 q = p - c - vec3(0.0, 0.1, 0.0);
+    q.xz = rot(float(i)*1.3)*q.xz;
+    q.xy = rot(0.12)*q.xy;
+    float ang = atan(q.z, q.x), rr = length(q.xz);
+    float wave = 1.0 + 0.08*sin(5.0*ang + float(i)) + 0.04*sin(9.0*ang);
+    q.y += 0.14*capR*pow(clamp(rr/capR, 0.0, 1.3), 3.0);
+    vec3 qs = vec3(q.x/wave, q.y, q.z/wave);
+    float cap = smax(sdEll(qs, vec3(1.0, 0.5, 1.0)*capR), -sdEll(qs + vec3(0.0, 0.22*capR, 0.0), vec3(0.9, 0.34, 0.9)*capR), 0.08);
+    if (cap*0.75 < res.x) res = vec2(cap*0.75, 15.7 + float(i)*0.03);
+  }
+}
 vec2 maelstrom(vec3 p) {
   float rr = length(p.xz), a = atan(p.z, p.x);
   float R = 17.6 + 0.45*sin(a*5.0 + 1.0) + 0.3*sin(a*11.0 + 2.0);
@@ -1745,7 +1791,17 @@ vec2 maelstrom(vec3 p) {
   float lip = max(abs(rr - R - 0.55) - 0.5 - 0.15*sin(a*23.0), p.y - lipH);
   lip = max(lip, -p.y - 0.4)*0.7;
   if (lip < res.x) res = vec2(lip, 1.0);
-  float water = max((p.y - waterY(rr))*0.5, rr - 18.5);
+  float spin = uT*ORBIT, wy = waterY(rr), water = (p.y - wy)*0.5;
+  if (water < 2.0) {
+    water = (p.y - wy - 0.95*juiceFold(rr, a, spin)*smoothstep(0.0, 4.0, rr))*0.3;
+    // Slow fat bubbles swelling out of the surface as it turns.
+    for (int i = 0; i < 8; i++) {
+      float fi = float(i), ba = fi*2.39996 + spin, br = 4.0 + 10.5*hash1(fi + 711.0);
+      float size = (0.32 + 0.42*hash1(fi + 712.0))*(0.7 + 0.3*sin(spin*(3.0 + mod(fi, 3.0)) + fi));
+      water = smin(water, length(p - vec3(cos(ba)*br, waterY(br) + 0.25, sin(ba)*br)) - size, 0.22);
+    }
+  }
+  water = max(water, rr - 18.5);
   if (water < res.x) res = vec2(water, 17.0);
   // Falls of glowing energy pouring over the rim between the bridges.
   for (int i = 0; i < 4; i++) {
@@ -1754,20 +1810,38 @@ vec2 maelstrom(vec3 p) {
     if (abs(da) < 0.34) {
       float x = da*rr, y = p.y;
       float arc = mix(17.4, 15.0, smoothstep(0.0, -3.0, y));
-      float wide = (0.55 + 0.45*smoothstep(0.0, -9.0, y))*(0.85 + 0.3*sin(y*1.3 + fi*2.0));
-      float f = (sdBox(vec3(x, y + 5.0, rr - arc), vec3(wide, 5.0, 0.16)) - 0.05)*0.75;
+      float wide = (0.5 + 0.4*smoothstep(0.0, -9.0, y))*(0.88 + 0.24*sin(y*1.15 + spin*6.0 + fi*2.0));
+      float f = (sdBox(vec3(x, y + 5.0, rr - arc), vec3(wide, 5.0, 0.1)) - 0.3)*0.75;
+      // Thick drips sliding down beside it, each with a heavy bead on the end.
+      for (int k = 0; k < 2; k++) {
+        float side = k == 0 ? -1.0 : 1.0, len = 2.2 + 3.4*hash1(fi*3.0 + float(k) + 173.0);
+        float dx = x - side*(1.15 + 0.3*hash1(fi + float(k) + 174.0)), bead = -0.7 - len - 0.4*sin(spin*5.0 + fi + float(k));
+        vec2 dz = vec2(dx, rr - mix(17.4, 15.6, smoothstep(0.0, -3.0, y)));
+        float drip = length(vec3(dz.x, max(abs(y - (bead - 0.7)*0.5) - (-bead - 0.7)*0.5, 0.0), dz.y)) - 0.1;
+        drip = smin(drip, length(vec3(dz.x, (y - bead)*0.72, dz.y)) - 0.2, 0.1);
+        f = smin(f, drip, 0.12);
+      }
       if (f < res.x) res = vec2(f, 17.3);
     }
+    // The heap where it lands.
+    float fa2 = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
+    float heap = sdEll(p - vec3(cos(fa2)*15.0, waterY(15.0) + 0.2, sin(fa2)*15.0), vec3(2.0, 0.7, 2.0));
+    if (heap < res.x) res = vec2(heap, 17.0);
   }
   // Greenery: vines hanging down the cliff, with bushes along the rim and on ledges.
-  for (int i = 0; i < 10; i++) {
-    float fi = float(i), k = floor(mod(fi*3.4 + 1.0 + 1.3*hash1(fi + 181.0), 34.0));
+  treeShrooms(p, res);
+  for (int i = 0; i < 24; i++) {
+    float fi = float(i), k = floor(mod(fi*1.417 + 1.0 + 0.9*hash1(fi + 181.0), 34.0));
     float tier = mod(fi, 3.0) < 1.5 ? 0.0 : 1.0, hw, top, bottom;
     vec2 c;
     pitColumn(k, tier, c, hw, top, bottom);
+    // Vines stay clear of the falls.
+    float va = atan(c.y, c.x), nearFall = 9.0;
+    for (int n = 0; n < 4; n++) nearFall = min(nearFall, abs(angleDiff(va, float(n)*1.5708 + 0.785 + 0.34*(hash1(float(n) + 171.0) - 0.5))));
+    if (nearFall < 0.2) continue;
     vec2 rad = normalize(c);
     vec2 face = c - rad*hw*0.75, back = c - rad*hw*0.1;
-    rockStrand(p, vec3(face.x, top - 0.3, face.y), vec3(back.x, top - 0.05, back.y), 2.4 + 3.2*hash1(fi + 182.0), fi*1.9, res);
+    rockStrand(p, vec3(face.x, top - 0.3, face.y), vec3(back.x, top - 0.05, back.y), 2.8 + 4.6*hash1(fi + 182.0), fi*1.9, res);
   }
   float bush = 1e3;
   for (int i = 0; i < 22; i++) {
@@ -1909,12 +1983,13 @@ float inkWidth(float id) {
   if (uAsset > 3.5) {
     if (abs(id - 10.0) < 0.5) w = 0.012;
     if (abs(id - 2.0) < 0.5) w = 0.02;
+    if (id > 15.69 && id < 15.89) w = 0.03;
     if (uAsset > 4.5 && uAsset < 5.5 && id < 1.5) w = 0.02;
     if (abs(id - 12.0) < 0.5) w = 0.012;
     if (abs(id - 14.0) < 0.5) w = 0.008;
     if (abs(id - 4.0) < 0.5) w = 0.02;
     if (id > 17.5) w = 0.035;
-    if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 16.5)) w = 0.01;
+    if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 15.69)) w = 0.01;
   }
   return w*TR(id).x;
 }
@@ -2212,31 +2287,58 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 #if ASSET == 6
     float spin = uT*ORBIT;
     if (id > 17.2) {
-      // A fall or stream: bright streaks flowing down it.
-      float fa = atan(p.z, p.x);
-      float sv = 0.5 + 0.5*sin(fa*190.0 + 2.2*noise3(vec3(fa*40.0, p.y*0.35, 2.0)) + 0.4*sin(p.y*0.8 + spin*14.0));
-      float pulse = 0.5 + 0.5*sin(p.y*0.9 + spin*14.0 + fa*24.0);
-      vec3 fc = mix(vec3(0.04, 0.5, 0.52), vec3(0.55, 1.0, 0.93), smoothstep(0.62, 0.98, sv)*(0.55 + 0.45*pulse));
-      emit = fc*0.95*TR(id).z;
+      // A fall: thick and smooth, brighter where it bulges toward the viewer, with a wet highlight.
+      vec3 fv = normalize(uRo - p);
+      float bulge = max(dot(n, fv), 0.0);
+      vec3 fc = mix(vec3(0.02, 0.36, 0.4), vec3(0.14, 0.86, 0.8), smoothstep(0.25, 0.85, bulge));
+      float fg = smoothstep(0.93, 0.985, max(dot(n, normalize(normalize(vec3(-0.3, 0.7, -0.4)) + fv)), 0.0));
+      emit = (fc + vec3(0.75, 1.0, 0.96)*fg*0.9)*TR(id).z;
       return fc*0.2;
     }
-    // Swirling energy: fine bright filaments winding inward over deep teal, sinking to deep blue at the centre.
+    // Thick slug juice: fat glossy folds winding inward, glowing teal, sinking to deep blue at the centre, with dark
+    // creases between the folds and crisp wet highlights on top.
     float wr = length(p.xz), wa = atan(p.z, p.x);
     float depth = clamp((-10.0 - p.y)/20.0, 0.0, 1.0);
-    float sw = wa + 2.1*log(wr + 1.0) + spin*3.0;
-    float warp = 1.5*noise3(vec3(cos(sw)*wr*0.18, depth*2.0, sin(sw)*wr*0.18));
-    float f1 = pow(1.0 - abs(sin(sw*2.0 + warp)), 9.0);
-    float f2 = pow(1.0 - abs(sin(sw*5.0 - warp*1.6 + 1.3)), 16.0);
-    float broad = 0.5 + 0.5*sin(sw*3.0 + warp*0.7);
-    vec3 c = mix(vec3(0.03, 0.62, 0.6), vec3(0.004, 0.022, 0.16), smoothstep(0.0, 0.72, depth));
-    emit = c*(0.34 + 0.5*broad);
-    emit += vec3(0.5, 1.0, 0.93)*(1.15*f1 + 0.55*f2)*(1.0 - 0.75*depth);
+    float fold = juiceFold(wr, wa, spin);
+    vec3 c = mix(vec3(0.02, 0.42, 0.42), vec3(0.004, 0.022, 0.16), smoothstep(0.0, 0.72, depth));
+    vec3 jv = normalize(uRo - p);
+    float gloss = smoothstep(0.86, 0.97, max(dot(n, normalize(normalize(vec3(-0.35, 1.0, -0.45)) + jv)), 0.0));
+    float rimLight = pow(1.0 - max(dot(n, jv), 0.0), 2.5);
+    // Shaded by the folds' own slope as well as their height, so each fat fold reads as a rounded form.
+    float round0 = smoothstep(-0.2, 0.75, dot(n, normalize(vec3(-0.35, 1.0, -0.45))));
+    emit = c*(0.1 + 0.55*smoothstep(0.35, 0.95, fold) + 0.75*round0*fold);
+    emit += mix(vec3(0.0, 0.3, 0.3), vec3(0.2, 0.3, 0.6), depth)*rimLight*0.5;
+    emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);
     emit *= TR(id).z;
-    spec = 0.3;
+    spec = 0.0;
     return c*0.15;
 #endif
     return vec3(0.0);
   }
+#if ASSET == 6
+  if (id > 15.69 && id < 15.89) {
+    // A tree mushroom's cap: dark on top with soft glowing spots, and glowing gills underneath.
+    vec3 sa, sb, sc; float sr, sk;
+    int si = int(floor((id - 15.7)/0.03 + 0.5));
+    treeShroom(si, sa, sb, sc, sr, sk);
+    vec3 bc = bankColor(sk), lq = p - sc;
+    float under = smoothstep(-0.05, -0.45, n.y);
+    vec3 cellP = lq*1.5 + sk;
+    vec3 gi = floor(cellP);
+    float nearest = 9.0;
+    for (int x = -1; x <= 1; x++) for (int y = -1; y <= 1; y++) for (int z = -1; z <= 1; z++) {
+      vec3 cell = gi + vec3(float(x), float(y), float(z));
+      float hh = cell.x*7.1 + cell.y*31.7 + cell.z*113.3;
+      nearest = min(nearest, length(cellP - cell - vec3(hash1(hh), hash1(hh + 1.3), hash1(hh + 2.7))));
+    }
+    float spots = (1.0 - smoothstep(0.17, 0.25, nearest))*(1.0 - under);
+    float gills = 0.6 + 0.4*sin(atan(lq.z, lq.x)*30.0);
+    vec3 top = mix(bc*0.12 + vec3(0.03, 0.035, 0.05), bc*0.3 + vec3(0.05), smoothstep(0.2, 0.7, noise3(lq*0.9)));
+    emit = bc*(0.1 + 1.0*spots + 1.25*under*gills)*TR(id).z;
+    spec = 0.2;
+    return mix(top, bc*0.3, under);
+  }
+#endif
   if (id > 14.5) {
     // Small mushroom cap: a random colour from the bank, glowing softly, brightest underneath.
     vec3 bc = bankColor(floor((id - 15.0)/0.05 + 0.5));
@@ -2253,6 +2355,14 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return vec3(0.55, 0.75, 0.35);
   }
 #if ASSET >= 4
+#if ASSET == 6
+  if (id > 12.5 && id < 13.5) {
+    // A tree mushroom's trunk: ridged, pale bark running along it.
+    vec3 st = mix(vec3(0.34, 0.3, 0.23), vec3(0.62, 0.57, 0.44), noise3(p*vec3(2.6, 0.7, 2.6)));
+    emit = st*0.32;
+    return st;
+  }
+#endif
   if (id > 12.5 && id < 13.5) { emit = vec3(0.62, 0.58, 0.46)*0.45; return vec3(0.62, 0.58, 0.46); }
 #endif
   if (id > 12.5) { spec = 0.55; return vec3(0.55, 0.56, 0.6); }
@@ -2260,7 +2370,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 #if ASSET >= 4
     {
       vec3 leaf = mix(vec3(0.04, 0.15, 0.07), vec3(0.2, 0.46, 0.14), noise3(p*3.0));
-      emit = leaf*0.14;
+      emit = leaf*(ASSET == 6 ? 0.42 : 0.14);
       spec = 0.2;
       return leaf;
     }
@@ -2642,7 +2752,7 @@ void main() {
       ["Status", "Approved for now by the owner on 1 Nov 2026. Can be revisited once it is in the game."]
     ]
   }, {
-    id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v2", concept: true, noLive: true, shader: 6,
+    id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, slug juice 50 below the shore", version: "v3", concept: true, noLive: true, shader: 6,
     variantLabel: "View",
     variants: [
       { name: "Overview", bright: [0.1, 0.82, 0.78], camera: { target: [0, -6, 0], dist: 58, pitch: 0.95 } },
@@ -2652,14 +2762,15 @@ void main() {
     core: CENTRE_CORE, crG: [2, -2, 8], target: [0, -6, 0], dist: 58, figure: [-14, 0.2, -14], glow: [0, -9, 0], glowCol: [0.2, 0.9, 0.85],
     notes: [
       ["Idea", "A sinkhole of swirling glowing energy spiralling down into the dark, with the spawn rock hanging over the centre."],
-      ["Energy", "Your choices: glowing energy rather than water, teal at the rim sinking to deep blue at the centre. Fine bright filaments wind inward over the glow, and motes of energy rise out of it."],
+      ["Slug juice", "Glowing and thick: fat glossy folds wind slowly inward, teal at the rim and sinking to deep blue at the centre, with dark creases, wet highlights and slow bubbles swelling out of the surface."],
       ["Walls", "Broken cliff in the same angular blocks as the spawn island, stepping inward as it goes down and lit teal from below, so it looks like the island was torn out of here. A low broken lip runs along the top, which you can hop over."],
-      ["Falls", "Four falls of the same glowing energy pour over the rim between the bridges, with a burst of light where they land."],
-      ["Greenery", "Moss on the ledges and round the rim, patches down the cliff faces, ten leafy vines hanging down it and bushes along the top."],
+      ["Falls", "Four gloopy falls of the same juice slide over the rim between the bridges, bulging as they go, with thick drips beside them and a heap where they land."],
+      ["Tree mushrooms", "Five, each in its own colour from the mushroom bank. Each stem leaves the cliff like a branch, flared and rooted into the rock, runs out over the pit, then curves up to a large glowing cap."],
+      ["Greenery", "Moss on the ledges and round the rim, patches down the cliff faces, plenty of leafy vines hanging down it and bushes along the top."],
       ["Mist", "Soft mist rises off the swirl and picks up its glow. This is also where the long plunge will fall through."],
       ["Water level", "50 studs below the shore, your choice."],
       ["Placeholders", "The bridges here are plain planks showing position only; the real bridges come next."],
-      ["Status", "Concept v2, awaiting your review."]
+      ["Status", "Concept v3, awaiting your review."]
     ]
   });
   const PLANNED = ["Droopy wooden bridge", "Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];

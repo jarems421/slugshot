@@ -1,6 +1,6 @@
 # Current status
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well v10 approved for now by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Maelstrom concept v2 in the same library. **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well v10 approved for now by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Maelstrom concept v3 in the same library. **Unresolved:** owner review.
 
 **Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Next: Sky Well, owner's choice. Not yet built for Roblox.
 
