@@ -79,10 +79,12 @@ def bake_rest(body, size):
 
 
 def main():
-    CHECKPOINT.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(SOURCE, CHECKPOINT/SOURCE.name)
-    shutil.copy2(TEXTURES/"floppy-body.png", CHECKPOINT/"floppy-body.png")
-    bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
+    # Always paint onto the source as it was before any spores, so re-running replaces rather than stacks them.
+    if not (CHECKPOINT/SOURCE.name).exists():
+        CHECKPOINT.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(SOURCE, CHECKPOINT/SOURCE.name)
+        shutil.copy2(TEXTURES/"floppy-body.png", CHECKPOINT/"floppy-body.png")
+    bpy.ops.wm.open_mainfile(filepath=str(CHECKPOINT/SOURCE.name))
     body = bpy.data.objects["FloppyBody"]
     skin = body.data.materials[0]
     tex = next(n for n in skin.node_tree.nodes if n.type == "TEX_IMAGE")
@@ -91,22 +93,34 @@ def main():
     covered = rest[..., 3] > 0.5
     pts = (rest[..., :3][covered].astype(float) - 0.5)/0.25
 
-    # Spots: the albedo goes BODY -> SPORE inside a spot; scale the baked texel by that ratio (through the
-    # build's 1.12 grade), so its baked occlusion and grade survive.
+    # Blotches: the albedo goes BODY -> yellowed halo -> dark core, as skin_albedo mixes them; scale each baked
+    # texel by that albedo ratio (through the build's 1.12 grade), so its baked occlusion and grade survive.
     px = np.empty(size*size*4, np.float32)
     tex.image.pixels.foreach_get(px)
     px = px.reshape(size, size, 4)
-    m = np.zeros((size, size))
-    m[covered] = 0.7*bf.spores(pts)
-    ratio = (bf.SPORE/bf.BODY)**1.12
+    halo, core = np.zeros((size, size)), np.zeros((size, size))
+    h, c = bf.spores(pts)
+    halo[covered], core[covered] = 0.55*h, 0.8*c
+    ratio = (((1.0 - halo)[..., None] + halo[..., None]*(bf.SPORE_HALO/bf.BODY))*(1.0 - core)[..., None]
+             + core[..., None]*(bf.SPORE_CORE/bf.BODY))**1.12
     if not tex.image.is_float and tex.image.colorspace_settings.name == "sRGB":
-        ratio = ratio**(1/2.2)  # 8-bit sRGB pixels: the same darkening, expressed in stored values
-    px[..., :3] *= (1.0 - m[..., None]) + m[..., None]*ratio
+        ratio = ratio**(1/2.2)  # 8-bit sRGB pixels: the same change, expressed in stored values
+    px[..., :3] = np.clip(px[..., :3]*ratio, 0.0, 1.0)
+    m = core
     tex.image.pixels.foreach_set(px.ravel())
     tex.image.filepath_raw = str(TEXTURES/"floppy-body.png")
     tex.image.file_format = "PNG"
     tex.image.save()
-    tex.image.pack()
+    # Re-packing an already packed image keeps its old embedded pixels (the export then baked unspotted colour),
+    # so pack a fresh image loaded from the file just written.
+    old = tex.image
+    old.name = "floppy-body-old"
+    fresh = bpy.data.images.load(str(TEXTURES/"floppy-body.png"), check_existing=False)
+    fresh.name = "floppy-body"
+    fresh.colorspace_settings.name = old.colorspace_settings.name
+    fresh.pack()
+    tex.image = fresh
+    bpy.data.images.remove(old)
 
     # Bulb glow mask, wired into the skin's emission.
     g = np.zeros((size, size))

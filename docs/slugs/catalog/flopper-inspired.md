@@ -92,3 +92,9 @@ Owner review of the reference-matched cream, drooping antennae, softness and int
 Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page.
 
 **Unresolved:** owner verdict; upload and Studio check (the glow mask becomes the emissive mask, and a small light at the bulbs is still to come).
+
+**Revision (same day):**
+- **Feedback:** owner could not see the spots ("they should be noticeable… sickly… blend in a bit") and saw glow on the skin beside a bulb.
+- **Fix:** spots became irregular two-tone blotches (dark core, yellowed halo), 22 of them, also on the face-visible sides; the glow is limited to the bulb sphere.
+- **Earlier failure found:** the first round never reached the game texture, because re-packing an already packed image kept its old pixels. Fixed and verified: the game colour texture now differs in 97k texels.
+

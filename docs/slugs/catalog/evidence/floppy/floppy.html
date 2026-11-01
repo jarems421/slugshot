@@ -352,29 +352,68 @@ const vec3 PETROL    = vec3(0.102, 0.096, 0.035);   // #5A5934 muddy brown-green
 const vec3 STONE     = vec3(0.694, 0.659, 0.524);   // #D8D3BE belly
 const vec3 EUCALYPT  = vec3(0.144, 0.148, 0.060);   // #6A6B45 moss-brown back marks, antenna tips
 const vec3 BELLY_EDGE = vec3(0.157, 0.147, 0.048);  // #6E6B3E muddy brown-green belly outline
-const vec3 SPORE     = vec3(0.200, 0.205, 0.075);   // #7C7D4C greenish-brown spore spots
+const vec3 SPORE_CORE = vec3(0.115, 0.105, 0.035);  // dark olive-brown blotch
+const vec3 SPORE_HALO = vec3(0.470, 0.460, 0.150);  // sickly yellowed skin around it
 const vec3 BULB_GLOW = vec3(0.62, 0.80, 0.28);      // soft yellow-green glow of the antenna bulbs
 
-// Spore spots (owner, 2026-11-01): medium, diffuse greenish-brown spots here and there on the plain skin only.
-// Centres sit on the surface away from the belly, back marks, eyes, mouth and antennae: (x, y, z, radius).
-float spores(vec3 dp) {
-  float m = 0.0;
-  m = max(m, 1.0 - smoothstep(0.0705, 0.141, length(dp - vec3(0.608, 0.739, -0.201))));
-  m = max(m, 1.0 - smoothstep(0.0615, 0.123, length(dp - vec3(-0.698, 1.306, 0.231))));
-  m = max(m, 1.0 - smoothstep(0.0575, 0.115, length(dp - vec3(-0.688, 0.335, -0.030))));
-  m = max(m, 1.0 - smoothstep(0.0740, 0.148, length(dp - vec3(-0.385, 1.049, 0.506))));
-  m = max(m, 1.0 - smoothstep(0.0695, 0.139, length(dp - vec3(-0.354, 1.112, -0.414))));
-  m = max(m, 1.0 - smoothstep(0.0770, 0.154, length(dp - vec3(0.638, 1.732, -0.230))));
-  m = max(m, 1.0 - smoothstep(0.0775, 0.155, length(dp - vec3(0.460, 0.916, 0.450))));
-  m = max(m, 1.0 - smoothstep(0.0660, 0.132, length(dp - vec3(0.734, 1.437, 0.289))));
-  m = max(m, 1.0 - smoothstep(0.0595, 0.119, length(dp - vec3(-0.400, 0.485, -0.519))));
-  m = max(m, 1.0 - smoothstep(0.0585, 0.117, length(dp - vec3(-0.400, 2.174, -0.328))));
-  m = max(m, 1.0 - smoothstep(0.0660, 0.132, length(dp - vec3(-0.505, 1.579, -0.347))));
-  m = max(m, 1.0 - smoothstep(0.0615, 0.123, length(dp - vec3(-0.040, 2.228, 0.623))));
-  m = max(m, 1.0 - smoothstep(0.0725, 0.145, length(dp - vec3(0.643, 2.194, 0.213))));
-  m = max(m, 1.0 - smoothstep(0.0660, 0.132, length(dp - vec3(0.341, 0.507, -0.564))));
-  m = max(m, 1.0 - smoothstep(0.0690, 0.138, length(dp - vec3(0.364, 2.145, -0.365))));
-  m = max(m, 1.0 - smoothstep(0.0630, 0.126, length(dp - vec3(0.586, 1.200, -0.147))));
+// Spore blotches (owner, 2026-11-01): noticeable, sickly, diffuse spots that blend into the skin, on the plain
+// skin only. Each blotch is a primary spot plus one or two satellites centred on the surface: (x, y, z, radius).
+// Returns (yellowed halo, dark core).
+vec2 blotch(vec3 dp, vec3 c, float r) {
+  float d = length(dp - c);
+  return vec2(1.0 - smoothstep(0.7*r, 1.35*r, d), 1.0 - smoothstep(0.3*r, 0.85*r, d));
+}
+vec2 spores(vec3 dp) {
+  vec2 m = vec2(0.0);
+  m = max(m, blotch(dp, vec3(-0.772, 1.515, 0.142), 0.138));
+  m = max(m, blotch(dp, vec3(-0.760, 1.507, 0.243), 0.069));
+  m = max(m, blotch(dp, vec3(-0.608, 0.950, -0.010), 0.164));
+  m = max(m, blotch(dp, vec3(-0.608, 0.870, -0.103), 0.091));
+  m = max(m, blotch(dp, vec3(-0.379, 0.453, -0.545), 0.154));
+  m = max(m, blotch(dp, vec3(-0.407, 0.343, -0.535), 0.081));
+  m = max(m, blotch(dp, vec3(-0.324, 0.554, -0.561), 0.071));
+  m = max(m, blotch(dp, vec3(0.655, 0.638, -0.104), 0.136));
+  m = max(m, blotch(dp, vec3(0.649, 0.713, -0.035), 0.083));
+  m = max(m, blotch(dp, vec3(0.680, 0.571, -0.031), 0.064));
+  m = max(m, blotch(dp, vec3(0.556, 1.633, -0.310), 0.173));
+  m = max(m, blotch(dp, vec3(0.550, 1.762, -0.317), 0.090));
+  m = max(m, blotch(dp, vec3(0.646, 1.623, -0.219), 0.089));
+  m = max(m, blotch(dp, vec3(0.529, 1.129, 0.388), 0.151));
+  m = max(m, blotch(dp, vec3(0.601, 1.192, 0.327), 0.072));
+  m = max(m, blotch(dp, vec3(0.533, 1.200, 0.472), 0.085));
+  m = max(m, blotch(dp, vec3(-0.724, 2.025, -0.006), 0.142));
+  m = max(m, blotch(dp, vec3(-0.712, 1.958, -0.086), 0.070));
+  m = max(m, blotch(dp, vec3(-0.705, 1.974, -0.096), 0.077));
+  m = max(m, blotch(dp, vec3(-0.451, 1.193, -0.323), 0.155));
+  m = max(m, blotch(dp, vec3(-0.392, 1.280, -0.372), 0.086));
+  m = max(m, blotch(dp, vec3(-0.522, 1.151, -0.243), 0.079));
+  m = max(m, blotch(dp, vec3(0.413, 2.087, -0.367), 0.143));
+  m = max(m, blotch(dp, vec3(0.321, 2.136, -0.391), 0.088));
+  m = max(m, blotch(dp, vec3(0.411, 1.986, -0.398), 0.078));
+  m = max(m, blotch(dp, vec3(0.750, 1.425, 0.085), 0.166));
+  m = max(m, blotch(dp, vec3(0.706, 1.353, -0.004), 0.080));
+  m = max(m, blotch(dp, vec3(0.575, 0.677, 0.384), 0.152));
+  m = max(m, blotch(dp, vec3(0.616, 0.639, 0.285), 0.083));
+  m = max(m, blotch(dp, vec3(0.454, 0.979, -0.363), 0.153));
+  m = max(m, blotch(dp, vec3(0.368, 0.995, -0.435), 0.076));
+  m = max(m, blotch(dp, vec3(0.413, 0.893, -0.428), 0.091));
+  m = max(m, blotch(dp, vec3(0.204, 2.109, 0.670), 0.172));
+  m = max(m, blotch(dp, vec3(0.093, 2.060, 0.710), 0.080));
+  m = max(m, blotch(dp, vec3(-0.364, 1.791, -0.433), 0.139));
+  m = max(m, blotch(dp, vec3(-0.392, 1.692, -0.417), 0.063));
+  m = max(m, blotch(dp, vec3(-0.685, 0.431, 0.067), 0.175));
+  m = max(m, blotch(dp, vec3(-0.673, 0.373, 0.182), 0.097));
+  m = max(m, blotch(dp, vec3(0.760, 0.170, 0.200), 0.154));
+  m = max(m, blotch(dp, vec3(-0.486, 1.169, 0.488), 0.160));
+  m = max(m, blotch(dp, vec3(-0.547, 1.159, 0.387), 0.077));
+  m = max(m, blotch(dp, vec3(0.561, 0.328, -0.449), 0.142));
+  m = max(m, blotch(dp, vec3(0.614, 0.248, -0.403), 0.078));
+  m = max(m, blotch(dp, vec3(-0.160, 2.286, 0.555), 0.144));
+  m = max(m, blotch(dp, vec3(-0.053, 2.294, 0.564), 0.087));
+  m = max(m, blotch(dp, vec3(-0.202, 2.208, 0.615), 0.091));
+  m = max(m, blotch(dp, vec3(-0.017, 1.302, 0.718), 0.150));
+  m = max(m, blotch(dp, vec3(0.725, 2.024, 0.233), 0.133));
+  m = max(m, blotch(dp, vec3(-0.333, 2.281, -0.268), 0.157));
   return m;
 }
 
@@ -388,7 +427,9 @@ vec3 skinAlbedo(vec3 dp, vec3 n) {
   float back = smoothstep(0.1, -0.6, dp.z)*smoothstep(0.3, 1.2, dp.y);
   float crown = smoothstep(1.95, 2.35, dp.y)*smoothstep(-0.1, 0.4, n.y);
   col = mix(col, EUCALYPT, 0.18*max(back, crown));
-  col = mix(col, SPORE, 0.7*spores(dp));
+  vec2 sp = spores(dp);
+  col = mix(col, SPORE_HALO, 0.55*sp.x);
+  col = mix(col, SPORE_CORE, 0.8*sp.y);
   float belly = smoothstep(0.32, 0.66, dp.z)*smoothstep(1.08, 0.55, dp.y);
   col = mix(col, STONE, 0.9*smoothstep(0.4, 0.6, belly));
   col = mix(col, STONE*0.72, 0.4*bellyFolds(dp)*pow(1.0 - foldRoll(dp), 3.0));
@@ -495,7 +536,8 @@ void main() {
       for (int i = 0; i < 2; i++) {
         vec3 A, B, C;
         antenna(i == 0 ? -1.0 : 1.0, A, B, C);
-        col += BULB_GLOW*0.9*(1.0 - smoothstep(0.075, 0.11, length(dp - C)));
+        // Only the bulb sphere (radius 0.08) glows, not the skin it hangs beside.
+        col += BULB_GLOW*0.9*(1.0 - smoothstep(0.082, 0.095, length(dp - C)));
       }
     } else if (hitId < 2.5) {
       float side = dp.x < 0.0 ? -1.0 : 1.0;

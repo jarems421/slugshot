@@ -63,3 +63,10 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 - **Confirmed:** owner wanted medium, diffuse spots on plain skin and softly glowing antenna bulbs.
 - **Approach:** rules live in the concept and `build_floppy.py`; the repaired source is painted in place by baking each texel's rest position back to concept space, then darkening the existing texel by the albedo ratio (through the build grade, and converted for 8-bit sRGB storage) so baked occlusion survives.
 - **Verified offline:** the concept compiles and renders (moderngl) from four angles with spots clear of belly and back marks. A first radius with a tight core read as dots; a solid half-core reads as medium spots. The export bakes the glow mask to the game UVs. A skin with two textures needs the colour texture found through the Base Color link, not the first image node.
+
+## 2026-11-01 - A packed image kept its old pixels
+
+- **Symptom:** spots painted into the Floppy source showed in the concept but not on the game model.
+- **Cause:** `image.save()` then `image.pack()` on an image that was already packed left the embedded copy unchanged, so the export baked the old colour. The PNG on disk was new.
+- **Fix:** load the saved PNG as a fresh image, pack that and swap it into the material; verify by diffing the exported game texture against the checkpoint (now 97k texels changed).
+- **Rule:** after editing a packed texture, check the packed pixels (or the downstream bake) rather than the file on disk.
