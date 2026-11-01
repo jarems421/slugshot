@@ -536,7 +536,7 @@ void main() {
       col += 0.5*wetness*pow(max(dot(n, hr), 0.0), 120.0);
       col += 0.18*fres*sky(reflect(rd, n));
       // The sores' wet centres glow very faintly.
-      col += SORE_PUS*0.9*spores(dp).z;
+      col += SORE_PUS*0.3*spores(dp).z;  // a light glow; stronger lifted them above the eyelid colour
       // Antenna bulbs glow softly (owner, 2026-11-01), so a slug's position reads in a dark cavern.
       for (int i = 0; i < 2; i++) {
         vec3 A, B, C;

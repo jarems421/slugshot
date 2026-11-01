@@ -539,3 +539,9 @@
 - **Confirmed:** owner asked for sore centres in the top-eyelid colour, keeping the glow, then said they like the design a lot and to put it in Roblox.
 - **Implemented/verified offline:** sage sore centres with own-colour glow; export adds a skinned ink shell (reimport checks pass); real emissive mask and strength scaling; appearance styles the shell; private uploads Approved; Floppy test place rebuilt and opened with the final blaster. luau-lsp clean.
 - **Unresolved:** Studio check by the owner.
+
+## 2026-11-01 - Floppy sore glow toned down
+
+- **Confirmed:** owner said the glow made the sores look much lighter than the eyelids; keep a light glow.
+- **Implemented/verified offline:** sore glow 0.45 to 0.15 (concept 0.9 to 0.3); repainted, re-exported, emissive mask re-uploaded (Approved), Floppy test place rebuilt and reopened; page updated.
+- **Unresolved:** owner Studio check.

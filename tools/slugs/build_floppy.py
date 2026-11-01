@@ -273,8 +273,9 @@ def bulb_glow(dp):
     for s in (-1.0, 1.0):
         # Only the bulb sphere (radius 0.08) glows, not the skin it hangs beside.
         g = np.maximum(g, 1.0 - smoothstep(0.082, 0.095, np.linalg.norm(dp - antenna(s)[2], axis=1)))
-    # The sores' centres glow softly too, in their own sage.
-    return np.maximum(g, 0.45*spores(dp)[2])
+    # The sores' centres glow lightly in their own sage; at 0.45 the glow lifted them well above the eyelid
+    # colour they are meant to match (owner, 2026-11-01).
+    return np.maximum(g, 0.15*spores(dp)[2])
 
 
 def skin_albedo(dp, n):
