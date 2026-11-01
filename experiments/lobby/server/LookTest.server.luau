@@ -171,6 +171,10 @@ for i = 0, 7 do
 			light("WallLight", "SpotLight", at, Color3.fromRGB(255, 232, 205), 2, 30) :: SpotLight
 		spot.Face = Enum.NormalId.Front
 		spot.Angle = 100
+		-- No shadows (owner round 7): at high graphics quality the rock masses shadowed each other and most of
+		-- the face went dark; at lower quality Roblox skips the shadows and the wall lit fully. Studio switches
+		-- quality automatically, so the wall flipped between the two. Without shadows both look like the bright one.
+		spot.Shadows = false
 		local holder = spot.Parent :: BasePart
 		holder.CFrame = CFrame.lookAt(at, Vector3.new(centre.X, hi.Y * 0.4, centre.Z))
 	end

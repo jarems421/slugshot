@@ -613,3 +613,9 @@
 - **Confirmed:** owner said small mushrooms have colour now but feel too dim; rocks look basic and need texture on a scattered portion (not moss everywhere).
 - **Implemented/verified offline:** small-cap glow peak 1.0 to 1.6 (strength about 3.3) and cap lights 1.6; repainted, privately re-uploaded, fresh look-test window. Rock wall texture options in the library v16: carved fractures, mineral veins, weathering and lichen, chipped facets, mixed. Option 1 is pixel-identical to v6 (max diff 0). Turntables inspected; pockmarks rejected internally as bullet-hole-like.
 - **Unresolved:** owner's pick; Roblox build of the chosen option.
+
+## 2026-11-01 - Look test round 7: graphics-quality lighting flip, rock wall study
+
+- **Confirmed:** owner showed identical shots with different lighting and wants the brighter one always; rejected round 6 rock options (squiggle cracks, deformed rocks) and asked for a separate rock artifact with Slugterra-style cracks on a third of the rocks per wall (different per wall, evenly spread), one unique texture and one general texture on all rocks.
+- **Implemented/verified offline:** wall lights no longer cast shadows (the diagnosis that automatic graphics quality caused the flip is inferred from the screenshots). Rock shader rebuilt: angular, forked V-groove cracks (one per column, never the top row), fossil ammonite shells on two rocks, and grain, edge wear and crevice hatching on all rocks. Rock shapes unchanged; option 1 pixel-identical to v6. Turntables inspected over three iterations. [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) published; library v17.
+- **Unresolved:** owner verdict; Roblox build of the chosen layers as four wall variants.

@@ -125,6 +125,23 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
   - Round pockmarks always collected crease ink at their centres and read as bullet holes, even as shallow saucers. They were dropped for chipped facets.
 - **Small caps:** capping their glow at 1 kept the colour but was "too dim". The deepened colours allow a 1.6 peak (about concept strength) without washing out.
 
+### Lighting that flips between two looks: automatic graphics quality
+
+- **Symptom (owner, round 7):** two screenshots from the same spot looked completely different. One had dark walls, crisp coloured light pools on the floor and a dark character; the other had evenly lit walls, no pools and a lit character.
+- **Cause:** Studio's automatic graphics quality changes level with frame rate. At high quality, the wall lights' shadows let the rock masses shade each other, so most of each face went dark; at lower quality those shadows are skipped and the face lights fully. Cutting the light count in round 5 did not address this.
+- **Fix:** wall lights cast no shadows, so both quality levels match the brighter look the owner wants. For judging looks, set Graphics Mode to Manual in the in-game Settings so the level stops changing.
+- **Rule:** never rely on a light's shadows to set an asset's overall brightness; Roblox drops them at lower quality.
+
+### Rock texture round 7: what finally read
+
+- **Owner on round 6:** the zigzag cracks read as "squiggles that you just wiggled around the rocks", and chipped facets made rocks look deformed.
+- **What works:**
+  - Cracks as a few straight segments with sharp alternating turns and one fork, wide at the rim and tapering. They are carved as a V-groove no deeper than 0.3 studs, so the rock's shape never changes.
+  - One cracked rock per column of the wall, so a third crack and they spread evenly; a seed per wall variant moves them.
+- **Cracks on the thin top row** read as black slots when seen from above, so the top row never cracks.
+- **Fossils** needed to be big (0.75 to 1 stud) with a pale disc and ribs; small thin spirals read as targets.
+- **Surface texture** at wall distance needs strong contrast: tonal mottling at 0.4, flecks at 0.45, and hatching whose crevice mask reaches gentle concavity.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

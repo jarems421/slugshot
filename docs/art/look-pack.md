@@ -61,6 +61,11 @@ How Slugshot gets its "Living Comic-Book Fantasy" look in Roblox, which has no c
 - **Small mushrooms too dim:** glow returns to about concept strength (3.2 to 3.4) with the deepened colours; their lights go from 1.0 to 1.6.
 - **Rocks look basic:** texture options for the rock wall are in the concept library (v16), awaiting the owner's pick: carved fractures, mineral veins, weathering and lichen, chipped facets, mixed. The look test still uses v6 (`rock-wall-1`); the chosen option builds as `rock-wall-<n>`.
 
+## Round 7 (owner 2026-11-01)
+
+- **Lighting flipped between two looks:** that was Studio's automatic graphics quality switching wall-light shadows on and off. Wall lights now cast no shadows, so every quality level gets the evenly lit look the owner prefers. To judge looks, set Graphics Mode to Manual.
+- **Rocks:** the round 6 options were rejected. A new [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) shows three layers: Slugterra-style cracks on a third of the rocks, fossil shells as the unique feature, and surface texture on every rock. Walls A to D place the cracks and fossils differently. The look test still uses v6 until the owner picks.
+
 ## Pipeline: final concept to Roblox
 
 Run from the lobby worktree. Python means the scratch venv with moderngl, numpy, Pillow and scikit-image. Blender is 5.2.3.

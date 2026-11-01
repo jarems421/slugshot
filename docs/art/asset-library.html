@@ -161,7 +161,10 @@ uniform vec2 uSh0, uSh1, uSh2;   // shadow floor, comic shadow-edge hardness (0 
 uniform vec3 uAm;
 uniform float uMode;             // 0-2 = one treatment everywhere, 3 = Slugshot mix (per material)
 uniform vec3 uGlowPos, uGlowCol;
-uniform float uRockTex;          // rock wall texture option: 0 v6, 1 fractures, 2 veins, 3 weathering, 4 chipped, 5 mixed
+uniform vec3 uRockLayers;        // rock wall texture study: x cracks, y fossils, z surface texture on every rock
+uniform float uWallSeed;         // which variant of the wall module, so tiled walls differ
+uniform vec4 uCrack;             // the four masses that crack (one per column), chosen in the lib script
+uniform vec2 uFossil;            // the two masses carrying a fossil
 
 // Units: 1 = 1 Roblox stud. Front of every asset faces -z.
 const float PI = 3.14159265;
@@ -267,50 +270,71 @@ void wallMassParams(int i, out vec3 c, out vec3 r, out float seed, out float k) 
     k = 0.1;
   }
 }
-// Which texture feature a mass carries (owner, 1 Nov 2026: texture on a scattered portion of the rocks, not all).
-// 1 = carved fracture, 2 = chipped facets; pebbles (i >= 12) stay plain.
-float massFeature(int i, float seed) {
-  if (i >= 12) return 0.0;
-  float pick = hash1(seed + 290.0);
-  if (uRockTex > 0.5 && uRockTex < 1.5) return pick < 0.5 ? 1.0 : 0.0;
-  if (uRockTex > 3.5 && uRockTex < 4.5) return pick < 0.5 ? 2.0 : 0.0;
-  if (uRockTex > 4.5) return pick < 0.3 ? 1.0 : pick < 0.55 ? 2.0 : 0.0;
-  return 0.0;
+// Rock wall texture study (owner round 7, 1 Nov 2026). The masses keep their shapes; features are shallow
+// V-grooves carved into the front faces. Round 6's zigzag fractures read as squiggles and its chips deformed
+// the rocks, so both were removed.
+bool isCrackMass(int i) {
+  float fi = float(i);
+  return abs(uCrack.x - fi) < 0.5 || abs(uCrack.y - fi) < 0.5 || abs(uCrack.z - fi) < 0.5 || abs(uCrack.w - fi) < 0.5;
 }
-// A forked, jagged crack carved across the front face of a mass: a main zigzag crack plus two branches,
-// tapering to hairlines at their ends. Distance to the crack's open space.
-float fracture(vec3 q, vec3 r, float seed) {
-  vec3 s = vec3((hash1(seed + 51.0) - 0.5)*r.x*0.6, (hash1(seed + 52.0) - 0.5)*r.y*0.5, 0.0);
-  float a0 = (hash1(seed + 53.0) - 0.5)*1.8;
-  vec2 t0 = vec2(cos(a0), sin(a0));
-  float g = 1e5;
-  for (int j = 0; j < 3; j++) {
-    float fj = float(j);
-    float side = j == 1 ? 1.0 : -1.0;
-    float ang = j == 0 ? a0 : a0 + side*(0.6 + 0.6*hash1(seed + 55.0 + fj));
-    vec2 t = vec2(cos(ang), sin(ang));
-    vec3 o = j == 0 ? s : s + vec3(t0*side*r.x*(0.25 + 0.2*hash1(seed + 57.0 + fj)), 0.0);
-    vec3 d = q - o;
-    float along = dot(d.xy, t)*(j == 0 ? 1.0 : side);
-    float len = (j == 0 ? 1.0 : 0.45 + 0.15*hash1(seed + 59.0 + fj))*r.x;
-    float h = hash1(seed + 61.0 + fj);
-    float wav = 0.32*(abs(fract(along*0.8 + h) - 0.5) - 0.25) + 0.09*(abs(fract(along*2.4 + h*3.0) - 0.5) - 0.25);
-    float w = (j == 0 ? 0.13 : 0.08)*(1.0 - smoothstep(0.1*len, len, abs(along))) + 0.006;
-    float sheet = (abs(dot(d.xy, vec2(-t.y, t.x)) + wav) - w)*0.7;
-    if (j > 0) sheet = max(sheet, -along);
-    g = min(g, max(sheet, abs(along) - len));
-  }
-  return max(g, q.z - 0.35*r.z);
+bool isFossilMass(int i) {
+  float fi = float(i);
+  return abs(uFossil.x - fi) < 0.5 || abs(uFossil.y - fi) < 0.5;
 }
-// Chipped facets: three extra flat cuts near the front edges with crisp corners, so the mass reads as broken
-// stone rather than a smooth pebble. (Round pockmarks were tried and read as bullet holes under the ink.)
-float chips(float d, vec3 q, vec3 r, float seed) {
-  for (int j = 0; j < 3; j++) {
-    float fj = float(j);
-    vec3 n = normalize(vec3(hash1(seed + 71.0 + fj)*2.0 - 1.0, hash1(seed + 73.0 + fj)*1.4 - 0.3, -0.6 - hash1(seed + 75.0 + fj)));
-    d = smax(d, dot(q, n) - length(r*n)*(0.72 + 0.08*hash1(seed + 77.0 + fj)), 0.03);
+float sdSeg2(vec2 p, vec2 a, vec2 b, out float h) {
+  vec2 pa = p - a, ba = b - a;
+  h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h);
+}
+// A Slugterra-style crack across a mass's front face, in its local xy: it starts near the rim, runs inward in
+// four straight segments that turn sharply one way then the other, and forks once. Wide at the rim, tapering
+// to a hairline. Returns (distance to the crack's edge, local half-width).
+vec2 crackLine(vec2 x, vec3 r, float cs) {
+  float th = hash1(cs + 1.0)*6.2832;
+  vec2 a = vec2(cos(th)*r.x, sin(th)*r.y)*0.8;
+  vec2 dir = normalize(-a + (vec2(hash1(cs + 2.0), hash1(cs + 3.0)) - 0.5)*r.xy*0.9);
+  float turn = hash1(cs + 4.0) > 0.5 ? 1.0 : -1.0;
+  float best = 1e5, bw = 0.0;
+  vec2 fork = a, forkDir = dir;
+  for (int k = 0; k < 4; k++) {
+    float fk = float(k);
+    dir = rot(turn*(0.2 + 0.4*hash1(cs + 20.0 + fk)))*dir;
+    turn = -turn;
+    vec2 b = a + dir*min(r.x, r.y)*(0.34 + 0.18*hash1(cs + 10.0 + fk));
+    float h;
+    float dd = sdSeg2(x, a, b, h);
+    float w = mix(0.21, 0.015, (fk + h)/4.0);
+    if (dd - w < best) { best = dd - w; bw = w; }
+    if (k == 1) { fork = b; forkDir = dir; }
+    a = b;
   }
-  return d;
+  dir = rot(turn*(0.65 + 0.4*hash1(cs + 30.0)))*forkDir;
+  a = fork;
+  for (int k = 0; k < 2; k++) {
+    float fk = float(k);
+    dir = rot(-turn*0.3*hash1(cs + 40.0 + fk))*dir;
+    vec2 b = a + dir*min(r.x, r.y)*(0.22 + 0.12*hash1(cs + 50.0 + fk));
+    float h;
+    float dd = sdSeg2(x, a, b, h);
+    float w = mix(0.11, 0.012, (fk + h)/2.0);
+    if (dd - w < best) { best = dd - w; bw = w; }
+    a = b;
+  }
+  return vec2(best, bw);
+}
+// A fossil spiral shell pressed into a mass's front face: a log spiral (each whorl twice the last) inside a rim.
+// Returns (distance to the groove's edge, distance inside the shell's outline, distance to a rib line).
+vec3 fossil(vec2 x, vec3 r, float fs) {
+  vec2 c = vec2((hash1(fs + 1.0) - 0.5)*r.x*0.5, (hash1(fs + 2.0) - 0.5)*r.y*0.4);
+  float R = 0.75 + 0.25*hash1(fs + 3.0);
+  vec2 d = rot(hash1(fs + 4.0)*6.2832)*(x - c);
+  float rr = max(length(d), 1e-3), ang = atan(d.y, d.x);
+  float b = 0.11;
+  float t = (log(rr/(R*0.06))/b - ang)/6.2832;
+  float arm = (0.5 - abs(fract(t) - 0.5))*rr*(exp(6.2832*b) - 1.0);
+  float groove = min(max(arm, rr - R), abs(rr - R)) - 0.045;
+  float rib = (0.5 - abs(fract(ang*16.0/6.2832) - 0.5))*rr*6.2832/16.0 + step(rr, R*0.4);
+  return vec3(groove, R - rr, rib);
 }
 float wallMass(vec3 p) {
   float d = 1e5;
@@ -318,10 +342,18 @@ float wallMass(vec3 p) {
     vec3 c, r; float seed, k;
     wallMassParams(i, c, r, seed, k);
     float di = chunk(p, c, r, seed);
-    if (uRockTex > 0.5 && di < 0.6) {
-      float f = massFeature(i, seed);
-      if (f > 0.5 && f < 1.5) di = smax(di, -fracture(p - c, r, seed), 0.025);
-      else if (f > 1.5) di = chips(di, p - c, r, seed);
+    if (di < 0.5 && i < 12) {
+      vec3 q = p - c;
+      float front = q.z + 0.3*r.z;  // front-most faces only, so cracks never slot across a top
+      if (uRockLayers.x > 0.5 && isCrackMass(i)) {
+        vec2 cl = crackLine(q.xy, r, uWallSeed*31.7 + seed*1.3);
+        float below = clamp(-di/0.3, 0.0, 1.0);
+        di = max(di, -max(max(cl.x + cl.y*below, -di - 0.3), front));
+      } else if (uRockLayers.y > 0.5 && isFossilMass(i)) {
+        vec3 fo = fossil(q.xy, r, uWallSeed*17.3 + seed);
+        float below = clamp(-di/0.09, 0.0, 1.0);
+        di = max(di, -max(max(fo.x + 0.045*below, -di - 0.09), front));
+      }
     }
     d = smin(d, di, k);
   }
@@ -803,38 +835,37 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
                 * smoothstep(0.45, 0.62, noise3(p*0.21 + vec3(7.0, 3.0, 1.0)));
     c *= 1.0 - 0.75*crack;
     float moss = smoothstep(0.35, 0.8, n.y)*smoothstep(0.3, 0.6, noise3(p*0.45));
-    if (uRockTex > 0.5 && uRockTex != 4.0) {
-      // Rock wall texture options: painted features on a scattered portion of the masses.
+    if (uRockLayers.x + uRockLayers.y + uRockLayers.z > 0.5) {
       vec3 q, rad; float seed;
-      float mi = wallMassAt(p, q, rad, seed);
-      bool mixed = uRockTex > 4.5;
-      if (massFeature(int(mi + 0.5), seed) > 0.5 && massFeature(int(mi + 0.5), seed) < 1.5) {
-        // Fracture: an inked line inside the crack with a light chipped edge beside it, comic style.
-        float g = fracture(q, rad, seed);
-        c *= 1.0 + 0.45*(smoothstep(0.02, 0.05, g) - smoothstep(0.06, 0.14, g));
-        c = mix(c, vec3(0.012, 0.012, 0.016), 1.0 - smoothstep(0.015, 0.035, g));
+      int mi = int(wallMassAt(p, q, rad, seed) + 0.5);
+      float front = 1.0 - step(-0.3*rad.z, q.z);
+      vec3 ink = vec3(0.012, 0.012, 0.016);
+      if (uRockLayers.z > 0.5) {
+        // Surface texture on every rock: mottling and grain flecks, worn pale edges, and comic hatching in
+        // the crevices (curvature from the wall's own shape).
+        c *= 0.8 + 0.4*noise3(p*1.8);
+        c *= 1.0 - 0.45*smoothstep(0.76, 0.82, noise3(p*9.0));
+        c *= 1.0 + 0.4*smoothstep(0.8, 0.86, noise3(p*9.0 + 31.0));
+        float e = 0.12;
+        float lap = (wallMass(p + vec3(e, -e, -e)) + wallMass(p + vec3(-e, -e, e)) + wallMass(p + vec3(-e, e, -e))
+                   + wallMass(p + vec3(e, e, e)) - 4.0*wallMass(p))/(e*e);
+        c *= 1.0 + 0.55*smoothstep(1.8, 5.0, lap);
+        float crev = 1.0 - smoothstep(-3.5, -0.5, lap);
+        float hatch = 1.0 - smoothstep(0.08, 0.13, abs(fract(dot(p, vec3(0.7, 0.7, 0.2))*5.0) - 0.5));
+        c *= 1.0 - 0.7*hatch*crev*step(0.38, noise3(p*2.5));
       }
-      if ((uRockTex > 1.5 && uRockTex < 2.5 || mixed) && mi < 11.5 && hash1(seed + 300.0) < (mixed ? 0.25 : 0.45)) {
-        // Mineral veins: thin meandering seams in the wall crystals' colour, faintly glowing.
-        vec3 w = q*0.6 + 0.8*vec3(noise3(q*1.2), noise3(q*1.2 + 5.0), noise3(q*1.2 + 9.0));
-        float vein = 1.0 - smoothstep(0.006, 0.02, abs(noise3(w) - 0.5));
-        vein *= smoothstep(0.3, 0.5, noise3(q*0.35 + 17.0));
-        c = mix(c, uGlowCol*0.55, vein);
-        emit = uGlowCol*0.8*vein*TR(id).z;
-      }
-      if (uRockTex > 2.5 && uRockTex != 4.0) {
-        // Weathering: each mass leans warm, cool or dark; crusty lichen patches on some; drip streaks under ledges.
-        float tone = hash1(seed + 310.0);
-        vec3 tint = tone < 0.33 ? vec3(1.3, 1.08, 0.82) : tone < 0.66 ? vec3(0.86, 0.96, 1.18) : vec3(0.72);
-        c *= mix(vec3(1.0), tint, 0.85);
-        if (hash1(seed + 320.0) < (mixed ? 0.35 : 0.5)) {
-          float crust = noise3(q*1.5 + seed) + 0.45*noise3(q*4.5 + seed) + 0.2*noise3(q*11.0);
-          float patch = smoothstep(1.02, 1.06, crust)*smoothstep(0.4, 0.55, noise3(q*0.45 + seed + 3.0));
-          vec3 lichen = hash1(seed + 330.0) < 0.5 ? vec3(0.55, 0.38, 0.1) : vec3(0.38, 0.47, 0.28);
-          c = mix(c, lichen*(0.8 + 0.4*noise3(q*9.0)), patch*(1.0 - moss));
-        }
-        float streak = smoothstep(0.58, 0.78, noise3(vec3(q.x*2.6, q.y*0.22, q.z*2.6) + seed));
-        c *= 1.0 - 0.4*streak*(1.0 - smoothstep(0.2, 0.6, abs(n.y)));
+      if (uRockLayers.x > 0.5 && mi < 12 && isCrackMass(mi)) {
+        // Crack: inked inside, with a pale chipped lip along its edge.
+        vec2 cl = crackLine(q.xy, rad, uWallSeed*31.7 + seed*1.3);
+        c *= 1.0 + 0.45*front*(smoothstep(0.0, 0.02, cl.x) - smoothstep(0.03, 0.09, cl.x));
+        c = mix(c, ink, front*(1.0 - smoothstep(-0.015, 0.01, cl.x)));
+      } else if (uRockLayers.y > 0.5 && mi < 12 && isFossilMass(mi)) {
+        // Fossil: a paler, warmer shell with an inked spiral groove.
+        vec3 fo = fossil(q.xy, rad, uWallSeed*17.3 + seed);
+        float shell = front*smoothstep(0.0, 0.05, fo.y);
+        c = mix(c, vec3(0.42, 0.38, 0.31), 0.85*shell);
+        c *= 1.0 - 0.45*shell*(1.0 - smoothstep(0.008, 0.02, fo.z));
+        c = mix(c, ink, 0.9*front*(1.0 - smoothstep(-0.01, 0.012, fo.x)));
       }
     }
     return mix(c, vec3(0.13, 0.22, 0.11), 0.85*moss);
@@ -1082,16 +1113,31 @@ void main() {
     { name: "Pearl hanging cluster", deep: [0.14, 0.09, 0.12], bright: [1.0, 0.82, 0.9], special: 6, g: [2, 7.6, 3.8], view: [[0, 5.6, 0], 19], glow: [0, 5.0, -1.8] },
     { name: "Aurora urchin", deep: [0.0, 0.22, 0.24], bright: [0.8, 0.5, 1.0], special: 7, g: [4, 2.4, 0.5], view: [[0, 1.6, 0], 15], glow: [0, 1.6, -2.0] }
   ];
-  // Rock wall texture options (owner, 1 Nov 2026: "the rocks just look so basic"; texture on a portion of the rocks,
-  // not all, and not moss everywhere). Option 1 is the approved v6.
+  // Rock wall texture study (owner round 7, 1 Nov 2026): Slugterra-style cracks on a third of the rocks in each
+  // wall, spread evenly and placed differently per wall; fossils as the unique feature; surface texture on all.
+  // layers = [cracks, fossils, surface]; seed = which variant of the module. Option 1 is the approved v6.
   const ROCKTEX = [
-    { name: "v6 as approved", tex: 0, bright: [0.2, 0.205, 0.26] },
-    { name: "Carved fractures", tex: 1, bright: [0.05, 0.05, 0.07] },
-    { name: "Mineral veins", tex: 2, bright: [0.45, 0.95, 1.0] },
-    { name: "Weathering & lichen", tex: 3, bright: [0.52, 0.36, 0.1] },
-    { name: "Chipped facets", tex: 4, bright: [0.42, 0.43, 0.47] },
-    { name: "Mixed", tex: 5, bright: [0.75, 0.6, 0.85] }
+    { name: "v6 as approved", seed: 1, layers: [0, 0, 0], bright: [0.2, 0.205, 0.26] },
+    { name: "Wall A · cracks", seed: 1, layers: [1, 0, 0], bright: [0.05, 0.05, 0.07] },
+    { name: "Wall A · fossils", seed: 1, layers: [0, 1, 0], bright: [0.55, 0.5, 0.42] },
+    { name: "Wall A · surface texture", seed: 1, layers: [0, 0, 1], bright: [0.42, 0.43, 0.47] },
+    { name: "Wall A · all three", seed: 1, layers: [1, 1, 1], bright: [0.75, 0.6, 0.85] },
+    { name: "Wall B · all three", seed: 2, layers: [1, 1, 1], bright: [0.75, 0.6, 0.85] },
+    { name: "Wall C · all three", seed: 3, layers: [1, 1, 1], bright: [0.75, 0.6, 0.85] },
+    { name: "Wall D · all three", seed: 4, layers: [1, 1, 1], bright: [0.75, 0.6, 0.85] }
   ];
+  // The wall's twelve big masses in four columns, left to right. One mass per column cracks, so a third of the
+  // rocks crack and they spread across the wall; two other masses, in different columns, carry fossils. The thin
+  // top row (9-11) never cracks: seen mostly from above, a crack there read as a black slot.
+  const ROCK_COLUMNS = [[0, 5], [1, 6, 9], [2, 7, 10], [3, 4, 8, 11]];
+  function rockPicks(seed) {
+    const rnd = k => { const x = Math.sin(seed*91.7 + k*12.9898)*43758.5453; return x - Math.floor(x); };
+    const crack = ROCK_COLUMNS.map((col, i) => { const ok = col.filter(m => m < 9); return ok[Math.floor(rnd(i)*ok.length)]; });
+    const free = ROCK_COLUMNS.map(col => col.filter(m => !crack.includes(m)));
+    const c1 = Math.floor(rnd(10)*4), c2 = (c1 + 1 + Math.floor(rnd(11)*3)) % 4;
+    const fossil = [c1, c2].map((c, i) => free[c][Math.floor(rnd(12 + i)*free[c].length)]);
+    return { crack, fossil };
+  }
   const ASSETS = [
     {
       id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs", version: "v6",
@@ -1102,7 +1148,8 @@ void main() {
         ["References", "Stylised fantasy cave walls generally keep the rock simple and let the dressing carry the interest: moss, vines, glowing fungi and crystals in a few accent spots."],
         ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss, mushrooms and crystals use Inked Cavern."],
         ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
-        ["Texture options", "Round 5 (owner: the rocks look basic): each option adds texture to a scattered portion of the masses, never all. 2 Carved fractures: forked, jagged cracks cut into about half the big masses. 3 Mineral veins: thin seams in the crystals' cyan, faintly glowing. 4 Weathering & lichen: each mass leans warm, cool or dark, with ochre or sage lichen speckles on some and dark drip streaks under ledges. 5 Chipped facets: flat broken-off faces with crisp edges on about half (round pockmarks were tried and looked like bullet holes). 6 Mixed: a few of each together."],
+        ["Texture study", "Round 7: Slugterra-style cracks on a third of the rocks (one per column, so they spread evenly, placed differently on walls A-D), fossil spiral shells pressed into two rocks as the unique feature, and surface texture on every rock: grain, worn pale edges and comic hatching in the crevices. The rocks keep their shapes; round 6's squiggle cracks and chipped facets are gone."],
+        ["Round 6 options (rejected)", "Round 5 (owner: the rocks look basic): each option adds texture to a scattered portion of the masses, never all. 2 Carved fractures: forked, jagged cracks cut into about half the big masses. 3 Mineral veins: thin seams in the crystals' cyan, faintly glowing. 4 Weathering & lichen: each mass leans warm, cool or dark, with ochre or sage lichen speckles on some and dark drip streaks under ledges. 5 Chipped facets: flat broken-off faces with crisp edges on about half (round pockmarks were tried and looked like bullet holes). 6 Mixed: a few of each together."],
         ["Status", "v6 approved 1 Nov 2026; texture options awaiting your pick."]
       ]
     },
@@ -1178,7 +1225,7 @@ void main() {
   function frameKey(i, v) { return ASSETS[i].id + "-" + (v + 1); }
   function variantView(a, variant) {
     const v = a.variants && a.variants[variant];
-    if (!v || v.authored || v.colour || v.tex !== undefined) return { target: a.target, dist: a.dist };
+    if (!v || v.authored || v.colour || v.layers !== undefined) return { target: a.target, dist: a.dist };
     if (v.special) return { target: v.view[0], dist: v.view[1] };
     const h = v.a[2] + v.c[1];
     return { target: [0, h*0.45, 0], dist: Math.max(15, v.a[1]*3 + h*2.2) };
@@ -1223,7 +1270,9 @@ void main() {
     const CV = V || CRYSTALS[0];
     U.uCrDeep = CV.deep; U.uCrBright = CV.bright;
     U.uGlowCol = V ? V.bright : a.id === "mushroom" ? M.glow : a.glowCol;
-    U.uRockTex = [a.id === "rock-wall" ? ROCKTEX[variant].tex : 0];
+    const RT = a.id === "rock-wall" ? ROCKTEX[variant] : null, picks = rockPicks(RT ? RT.seed : 1);
+    U.uRockLayers = RT ? RT.layers : [0, 0, 0]; U.uWallSeed = [RT ? RT.seed : 1];
+    U.uCrack = picks.crack; U.uFossil = picks.fossil;
     return U;
   }
   const BANK = MUSH.flatMap(m => m.glow);
