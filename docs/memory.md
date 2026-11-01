@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Bridge concept v1
+
+- **Confirmed (owner's choices):** rickety frontier rope bridge; thick wooden posts lashed with rope; hip-height rope rails; a few vines and moss; hanging lanterns.
+- **Implemented/verified offline:** concept v1 in the asset library. Renders inspected. Collision and any sway are planned as visual only.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Maelstrom approved
 
 - **Confirmed:** owner asked for a little more juice texture and the mushrooms lower and clear of the bridges, then said "this is good". Maelstrom v4 stands. Bridges are next.
