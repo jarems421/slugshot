@@ -1,5 +1,9 @@
 # Project memory
 
+## 2026-11-01 - Library link restored
+
+- **Observed:** publishing Sky Well v6 to the temporary library failed as not found, and the artifact list changed to one containing the original library. The likely cause is the session changing Claude account; not confirmed. The current library was published to the original link as version 21, after checking the live copy was older than this branch.
+
 ## 2026-11-01 - Sky Well v6
 
 - **Owner feedback on v5:** the inside looks like a hole going into a storm, but it should look like the storm is coming through the hole, for example with lightning coming through.
@@ -32,7 +36,7 @@
 
 ## 2026-11-01 - Spawn island design final
 
-- **Confirmed:** owner: "Yes, perfect, finalize that design. That's the spawn island design." Version 10 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc) is the final design. Sky Well is next.
+- **Confirmed:** owner: "Yes, perfect, finalize that design. That's the spawn island design." Version 10 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) is the final design. Sky Well is next.
 - **Unresolved for the Roblox build:** symbols and colours other than PvP's, the forward marker for three portals, low-angle glow, mesh budget, and whether the pillars block views or movement.
 
 ## 2026-11-01 - Spawn rock v10, final
@@ -92,7 +96,7 @@
 ## 2026-11-01 - Hub centrepiece concepts
 
 - **Confirmed:** the block-out is layout only; the owner wants the real designs in the Slugterra-style look, reviewed through the same asset library workflow as past designs. Sky Well: crystal-lined opening going off to a distant storm. Maelstrom: teal glow with a deep blue centre. Spawn rock: a chunk ripped out of the ground, sharp and cracked underneath, with roots, moss, vines, drips and some crystals, a bit ancient.
-- **Implemented/verified offline:** concept v1 of all three in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc), rendered and inspected over three rounds; page scripts syntax-checked and the page opened locally. Live 3D was not opened in a browser. The earlier library link could not be read from this account, so the whole library was republished at this new link.
+- **Implemented/verified offline:** concept v1 of all three in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), rendered and inspected over three rounds; page scripts syntax-checked and the page opened locally. Live 3D was not opened in a browser. The earlier library link could not be read from this account, so the whole library was republished at this new link.
 - **Considering:** Maelstrom water at 50 studs below the shore in the concept, against 70 in the block-out, so it can be seen from the edge.
 - **Unresolved:** owner review.
 

@@ -89,7 +89,7 @@ Colour balance: lava and volcano glow are hero accents. Keep the surrounding roc
 - **Maelstrom (below):** a sinkhole in the middle of the hub, with glowing water spiralling down into the depths. Mist rises off it, catching the light from above.
 - **Spawn:** a floating rock in the light column, between the Sky Well and the Maelstrom. Four bridges lead out to solid mainland: forward to the portals, back to the entrance, left and right to the exhibitions.
 
-**Design direction, Confirmed by the owner 2026-11-01:** the Sky Well is a crystal-lined opening that goes off to a distant storm; the Maelstrom's water is glowing teal with a deep blue centre; the spawn rock is a chunk of rock ripped out of the ground, with a sharp, cracked underside, roots, moss, vines, drips and some crystals, and it should look a bit ancient. The block-out is layout only: the real look is the Slugterra-style designs and Slugshot look, not the plain block-out. Concept v1 of all three is in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc), awaiting review.
+**Design direction, Confirmed by the owner 2026-11-01:** the Sky Well is a crystal-lined opening that goes off to a distant storm; the Maelstrom's water is glowing teal with a deep blue centre; the spawn rock is a chunk of rock ripped out of the ground, with a sharp, cracked underside, roots, moss, vines, drips and some crystals, and it should look a bit ancient. The block-out is layout only: the real look is the Slugterra-style designs and Slugshot look, not the plain block-out. Concept v1 of all three is in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), awaiting review.
 
 Design notes:
 

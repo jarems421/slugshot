@@ -1,24 +1,24 @@
 # Current status
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well concept v6 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well concept v6 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Unresolved:** owner review.
 
-**Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). Next: Sky Well, owner's choice. Not yet built for Roblox.
+**Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Next: Sky Well, owner's choice. Not yet built for Roblox.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v8 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): carved glowing cracks with depth, mushrooms along their edges. **Unresolved:** owner confirmation.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v8 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): carved glowing cracks with depth, mushrooms along their edges. **Unresolved:** owner confirmation.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v7 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): glowing fissures, crack mushrooms and four bridge markers on top. **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v7 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): glowing fissures, crack mushrooms and four bridge markers on top. **Unresolved:** owner review.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v6 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): about 40 studs deep, 15 vines. **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v6 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): about 40 studs deep, 15 vines. **Unresolved:** owner review.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v5 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): base rebuilt to the owner's reference, a wedge of cliff columns, with floating debris. **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v5 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): base rebuilt to the owner's reference, a wedge of cliff columns, with floating debris. **Unresolved:** owner review.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v4 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): random sharp rocks mixed with rounded masses, spores on the vines, small crystals instead of mushrooms, roots attached to the rock. **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v4 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): random sharp rocks mixed with rounded masses, spores on the vines, small crystals instead of mushrooms, roots attached to the rock. **Unresolved:** owner review.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v3 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): rock first, in the approved rock wall's language, with far less dressing. **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v3 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): rock first, in the approved rock wall's language, with far less dressing. **Unresolved:** owner review.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v2 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc) after owner feedback on spikes, crystals, roots, vines and moss. Offline renders inspected. **Unresolved:** owner review; Sky Well and Maelstrom reviews have not started, as the owner chose to do the island first.
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v2 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) after owner feedback on spikes, crystals, roots, vines and moss. Offline renders inspected. **Unresolved:** owner review; Sky Well and Maelstrom reviews have not started, as the owner chose to do the island first.
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** concept v1 of the floating spawn rock, Sky Well and Maelstrom in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc), following the owner's design choices ([roadmap](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom)). The agent inspected rendered frames over three rounds. The library was republished at this new link because the earlier one could not be read from this account. **Unresolved:** owner review of the three concepts; whether to raise the Maelstrom water to 50 studs below the shore in the block-out (still 70).
+**Implemented, 2026-11-01 (`experiment/lobby`):** concept v1 of the floating spawn rock, Sky Well and Maelstrom in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), following the owner's design choices ([roadmap](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom)). The agent inspected rendered frames over three rounds. The library was republished at this new link because the earlier one could not be read from this account. **Unresolved:** owner review of the three concepts; whether to raise the Maelstrom water to 50 studs below the shore in the block-out (still 70).
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** lobby [scale map V1](art/lobby-roadmap.md#scale-map-v1-2026-11-01): owner-confirmed sizes and placements, one `layout.json` driving a [top-down plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) and a walkable colour-coded block-out with current movement, no barriers and fall-to-respawn. Final Floppy merged in. **Verified in Studio by a self-test place:** routes, timings, lip, spawn and fall. **Confirmed:** owner walked it and approved the organisation; spawn rock enlarged from 50 to 70 across, bridges 50 long. Sky Well opening set to 200 across. **Confirmed:** owner approved the sketch as the baseline; a bigger oasis pond and bigger waterfall are recorded for the asset stage. **Unresolved:** the look-test verdict.
 
