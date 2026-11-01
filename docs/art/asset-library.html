@@ -1056,6 +1056,8 @@ vec2 strandSway(float s, float ph) { return 0.24*vec2(sin(s*0.8 + ph), cos(s*0.6
 void rockStrand(vec3 q, vec3 top, vec3 grip, float L, float ph, inout vec2 res) {
 #if ASSET == 6
   const float VS = 1.55;  // bolder on the big cliff than on the island
+#elif ASSET == 5
+  const float VS = 1.9;  // seen from far below on the Sky Well's ceiling
 #else
   const float VS = 1.0;
 #endif
@@ -2114,6 +2116,53 @@ void ceilingCrystals(vec3 p, inout vec2 res) {
     if (d < res.x) res = vec2(d, 18.20);
   }
 }
+void ceilingVines(vec3 p, inout vec2 res) {
+  rockStrand(p, vec3(9.410, 25.611, -20.950), vec3(9.410, 26.111, -20.950), 2.82, 0.14, res);
+  rockStrand(p, vec3(8.951, 26.266, -23.510), vec3(8.951, 26.766, -23.510), 5.87, 1.71, res);
+  rockStrand(p, vec3(6.559, 26.243, -21.526), vec3(6.559, 26.743, -21.526), 4.67, 0.71, res);
+  rockStrand(p, vec3(19.157, 25.988, -14.700), vec3(19.157, 26.488, -14.700), 3.43, 5.42, res);
+  rockStrand(p, vec3(19.099, 25.954, -14.275), vec3(19.099, 26.454, -14.275), 2.89, 4.70, res);
+  rockStrand(p, vec3(21.995, 25.687, 9.236), vec3(21.995, 26.187, 9.236), 5.87, 2.84, res);
+  rockStrand(p, vec3(22.221, 25.381, 8.016), vec3(22.221, 25.881, 8.016), 2.69, 3.66, res);
+  rockStrand(p, vec3(20.714, 25.990, 7.881), vec3(20.714, 26.490, 7.881), 2.95, 3.73, res);
+  rockStrand(p, vec3(16.671, 25.334, 17.389), vec3(16.671, 25.834, 17.389), 2.64, 4.63, res);
+  rockStrand(p, vec3(15.059, 25.613, 19.277), vec3(15.059, 26.113, 19.277), 2.81, 5.79, res);
+  rockStrand(p, vec3(-21.283, 26.018, -3.860), vec3(-21.283, 26.518, -3.860), 5.05, 1.50, res);
+  rockStrand(p, vec3(-21.628, 25.885, -4.668), vec3(-21.628, 26.385, -4.668), 3.38, 0.77, res);
+  rockStrand(p, vec3(-18.598, 25.447, 23.279), vec3(-18.598, 25.947, 23.279), 4.06, 0.52, res);
+  rockStrand(p, vec3(-17.530, 25.654, 22.480), vec3(-17.530, 26.154, 22.480), 5.46, 0.65, res);
+  rockStrand(p, vec3(5.460, 25.234, -29.827), vec3(5.460, 25.734, -29.827), 2.69, 1.84, res);
+  rockStrand(p, vec3(2.774, 25.381, -29.871), vec3(2.774, 25.881, -29.871), 6.65, 5.32, res);
+  rockStrand(p, vec3(14.011, 25.791, -17.253), vec3(14.011, 26.291, -17.253), 6.31, 0.54, res);
+  rockStrand(p, vec3(14.653, 25.867, -16.617), vec3(14.653, 26.367, -16.617), 2.64, 0.97, res);
+  rockStrand(p, vec3(13.370, 26.150, -15.768), vec3(13.370, 26.650, -15.768), 2.61, 0.83, res);
+  rockStrand(p, vec3(-6.650, 26.114, -29.080), vec3(-6.650, 26.614, -29.080), 3.73, 1.20, res);
+  rockStrand(p, vec3(-18.085, 24.804, -17.822), vec3(-18.085, 25.304, -17.822), 6.77, 3.55, res);
+  rockStrand(p, vec3(-16.879, 24.597, -17.786), vec3(-16.879, 25.097, -17.786), 5.99, 0.88, res);
+  rockStrand(p, vec3(-18.450, 25.117, -15.573), vec3(-18.450, 25.617, -15.573), 3.97, 3.77, res);
+  rockStrand(p, vec3(14.041, 26.945, 24.878), vec3(14.041, 27.445, 24.878), 4.39, 0.01, res);
+  rockStrand(p, vec3(14.779, 26.391, 25.960), vec3(14.779, 26.891, 25.960), 4.89, 6.00, res);
+  rockStrand(p, vec3(26.464, 25.757, -12.466), vec3(26.464, 26.257, -12.466), 6.21, 5.21, res);
+  rockStrand(p, vec3(25.157, 26.242, -11.958), vec3(25.157, 26.742, -11.958), 4.46, 2.36, res);
+  rockStrand(p, vec3(26.738, 26.259, -13.433), vec3(26.738, 26.759, -13.433), 3.57, 1.84, res);
+  rockStrand(p, vec3(-2.333, 26.199, -23.466), vec3(-2.333, 26.699, -23.466), 3.54, 1.31, res);
+  rockStrand(p, vec3(-0.954, 26.458, -24.259), vec3(-0.954, 26.958, -24.259), 3.53, 3.94, res);
+  rockStrand(p, vec3(-1.758, 26.116, -24.743), vec3(-1.758, 26.616, -24.743), 6.13, 2.45, res);
+  rockStrand(p, vec3(19.716, 25.191, -19.375), vec3(19.716, 25.691, -19.375), 6.86, 2.83, res);
+  rockStrand(p, vec3(20.652, 25.477, -21.635), vec3(20.652, 25.977, -21.635), 5.17, 3.19, res);
+  rockStrand(p, vec3(19.558, 25.180, -21.693), vec3(19.558, 25.680, -21.693), 2.94, 2.48, res);
+  rockStrand(p, vec3(7.646, 25.233, 28.309), vec3(7.646, 25.733, 28.309), 4.86, 1.34, res);
+  rockStrand(p, vec3(6.979, 25.205, 27.772), vec3(6.979, 25.705, 27.772), 4.90, 0.48, res);
+  rockStrand(p, vec3(-29.000, 23.711, -2.687), vec3(-29.000, 24.211, -2.687), 6.21, 5.79, res);
+  rockStrand(p, vec3(-27.623, 24.167, -4.283), vec3(-27.623, 24.667, -4.283), 5.41, 1.50, res);
+  rockStrand(p, vec3(27.595, 23.877, -1.126), vec3(27.595, 24.377, -1.126), 4.42, 0.69, res);
+  rockStrand(p, vec3(25.911, 24.447, -0.925), vec3(25.911, 24.947, -0.925), 3.61, 1.39, res);
+  rockStrand(p, vec3(13.628, 24.450, 1.655), vec3(13.628, 24.950, 1.655), 2.66, 0.36, res);
+  rockStrand(p, vec3(-12.311, 24.450, 8.497), vec3(-12.311, 24.950, 8.497), 2.77, 3.42, res);
+  rockStrand(p, vec3(-9.478, 24.450, -10.698), vec3(-9.478, 24.950, -10.698), 3.46, 4.96, res);
+  rockStrand(p, vec3(3.743, 24.450, -15.186), vec3(3.743, 24.950, -15.186), 3.84, 0.22, res);
+  rockStrand(p, vec3(10.591, 24.450, -11.955), vec3(10.591, 24.950, -11.955), 2.17, 0.08, res);
+}
 // @ceiling-end
 vec2 skyWell(vec3 p) {
   float rr = length(p.xz), a = atan(p.z, p.x);
@@ -2179,6 +2228,7 @@ vec2 skyWell(vec3 p) {
     if (v < res.x) res = vec2(v, 12.0);
   }
   ceilingCrystals(p, res);
+  ceilingVines(p, res);
   // Mini islands circling in the light, look only.
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
@@ -2987,7 +3037,7 @@ float ao(vec3 p, vec3 n) {
 }
 
 // The Sky Well's ceiling, in three clearly different zones: the eye's crown of pale carved stone with storm-coloured runes, a
-// nearly black moat, and past that the natural cave in dark rock with colours of its own (owner, 2026-11-01).
+// nearly black moat, and past that the natural cave in dark rock with moss, vines and colours of its own (owner, 2026-11-01).
 vec3 caveGlow(vec2 x) {
   float a = noise3(vec3(x*0.075, 1.0)), b = noise3(vec3(x*0.075 + 9.0, 4.0));
   vec3 c = mix(vec3(0.2, 0.95, 1.0), vec3(0.3, 1.0, 0.55), smoothstep(0.42, 0.58, a));
@@ -3009,7 +3059,7 @@ void ceilingPaint(vec3 p, vec3 n, float id, inout vec3 s, inout vec3 emit, inout
     s = mix(vec3(0.26, 0.25, 0.34), vec3(0.58, 0.56, 0.7), smoothstep(0.35, 1.0, grain));
     emit = s*0.2;
     m = 0.0;
-    float step0 = 6.28318/CROWN_N;
+    float step0 = 6.28318/CROWN_N, runeFill = 0.0;
     float k = floor(mod(ang, 6.28318)/step0);
     float ca = (k + 0.5)*step0;
     float tang = rr*atan(sin(ang - ca), cos(ang - ca));
@@ -3019,10 +3069,20 @@ void ceilingPaint(vec3 p, vec3 n, float id, inout vec3 s, inout vec3 emit, inout
       float fill = 1.0 - smoothstep(-0.004, 0.006, rune);
       s = mix(s, col*0.7, fill);
       emit += col*(1.7*fill + 0.3*exp(-max(rune, 0.0)*22.0));
+      runeFill = fill;
     }
+    // A little moss on the old stone, clear of the runes.
+    m = 0.6*smoothstep(0.6, 0.72, noise3(p*0.6 + 3.0))*(1.0 - runeFill);
+    emit += vec3(0.02, 0.05, 0.018)*m;
     return;
   }
   if (rr < 20.7) {
+    if (id < 1.02 && rr < 15.0) {
+      // The rocks round the eye.
+      float rim = smoothstep(0.58, 0.7, noise3(p*0.6 + 7.0));
+      m = max(m, 0.6*rim);
+      emit += vec3(0.02, 0.05, 0.018)*rim;
+    }
     if (id < 1.02 && rr > 15.0) {
       float dark = smoothstep(15.0, 16.5, rr);
       s = mix(s, vec3(0.04, 0.036, 0.065), dark);
@@ -3031,20 +3091,20 @@ void ceilingPaint(vec3 p, vec3 n, float id, inout vec3 s, inout vec3 emit, inout
     }
     return;
   }
-  // The cave: dark rock in cool and warm tones, with glowing veins and patches of luminous fungus.
+  // The cave: dark rock in cool and warm tones, with glowing veins.
   float tone = noise3(vec3(p.xz*0.09, 5.0));
   s = mix(s*vec3(0.85, 0.95, 1.3), s*vec3(1.25, 1.02, 0.95), smoothstep(0.35, 0.65, tone))*1.5;
   float fadeIn = smoothstep(20.7, 23.0, rr);
   vec3 col = caveGlow(p.xz);
   float vein = 1.0 - smoothstep(0.0, 0.03, abs(noise3(vec3(p.xz*0.21, 2.0)) - 0.5));
   float patch0 = smoothstep(0.47, 0.6, noise3(vec3(p.xz*0.06, 7.0)));
-  vec2 cell = floor(p.xz*1.7), f = fract(p.xz*1.7) - 0.5;
-  float seed = cell.x*13.1 + cell.y*71.7;
-  vec2 off = 0.5*(vec2(hash1(seed), hash1(seed + 3.0)) - 0.5);
-  float size = 0.08 + 0.16*hash1(seed + 5.0)*hash1(seed + 6.0);
-  float fungus = (1.0 - smoothstep(size - 0.03, size + 0.02, length(f - off)))*step(0.4, hash1(seed + 7.0));
   float faceDown = smoothstep(0.1, 0.5, -n.y);
-  float lit = fadeIn*faceDown*(0.9*vein*patch0 + 0.85*fungus*smoothstep(0.56, 0.64, noise3(vec3(p.xz*0.16 + 20.0, 3.0))));
+  float lit = fadeIn*faceDown*0.9*vein*patch0;
+  // Moss on some of the rocks, in soft patches.
+  float moss = smoothstep(0.57, 0.7, noise3(p*0.42 + 11.0) + 0.2*(noise3(p*1.7) - 0.5))*smoothstep(20.7, 21.4, rr);
+  m = 0.62*moss;
+  s *= 1.0 - 0.3*moss;
+  emit += vec3(0.02, 0.05, 0.018)*moss;
   s = mix(s, col*0.55, min(lit, 1.0));
   emit += col*lit + col*0.05*fadeIn*patch0;
 }
@@ -3193,7 +3253,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       }
 #endif
 #if ASSET == 5
-      if (p.y > WELL_LOW - 8.0 && length(p.xz) > 11.5) ceilingPaint(p, n, id, s, emit, m);
+      if (p.y > WELL_LOW - 8.0 && length(p.xz) > 9.5) ceilingPaint(p, n, id, s, emit, m);
 #endif
       vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));
       emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;

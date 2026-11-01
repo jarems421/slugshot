@@ -234,3 +234,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Regenerating a call whose signature changed:** clear the old generated lines first, because the generator compiles the page they sit in.
 - **A clean glowing circle reads as sci-fi, not a cavern:** the first ring around the Sky Well was a neon hoop. A thinner, wandering, broken seam in deeper colours separated the zones just as clearly, helped by the dark moat beside it.
 - **Even scatters read as polka dots:** glowing fungus looks natural in tight colonies of small, unevenly sized lights.
+- **Moss on a big surface goes camo fast:** noise patches covering half the Sky Well's ceiling read as flat green blobs. Keep it under about a fifth, small, soft and darker than the rock's lit tone.
+- **A part showing flat grey right after an upload is probably still processing:** look again a few minutes later before changing anything.

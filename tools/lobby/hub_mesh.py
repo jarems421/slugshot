@@ -202,6 +202,7 @@ def well_maps(fs):
     solid = slice_between(body, "  float holeR", "  // Crystals line the opening")
     solid = solid.replace("  float s = PI*2.0/20.0, k0 = floor(a/s);", "  s = PI*2.0/20.0; k0 = floor(a/s);")
     glow = slice_between(body, "  // Crystals line the opening", "  // Mini islands")
+    glow = glow.replace("  ceilingCrystals(p, res);\n  ceilingVines(p, res);\n", "")  # their own pieces
     isles = slice_between(body, "  // Mini islands", "  // Loose debris")
     bits = slice_between(body, "  // Loose debris", "  // The spawn rock at true scale")
     return {
@@ -245,6 +246,8 @@ GATE = """vec2 assetMap(vec3 p) {
 POOLS = """vec2 assetMap(vec3 p) { return vec2(fallPool(p), 17.0); }
 """
 BOWLS = """vec2 assetMap(vec3 p) { return vec2(fallBasin(p), 1.0); }
+"""
+CEILING_VINES = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 12.0); ceilingVines(p, res); return res; }
 """
 CEILING_GEMS = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 18.0); ceilingCrystals(p, res); return res; }
 """
@@ -527,6 +530,11 @@ PIECES = {
             part("Mouth", inner_ring, 4500, 1024, ROCK_INK*1.2, 1.0, cage=0.1),
             *[part(f"Cave{i}", in_section(i, 4), 2200, 1024, cage=0.25) for i in range(4)],
         ],
+    },
+    "hub-ceiling-vines": {
+        "item": "sky-well-1", "map": CEILING_VINES, "scale": 10.0, "origin": (0.0, 1.0, 0.0), "gain": 1.5,
+        "lo": (-32.0, 12.0, -32.0), "hi": (32.0, 29.5, 32.0), "step": 0.025, "normalH": 0.004,
+        "parts": [part("CeilVines", everything, 7000, 1024, FINE_INK*1.6, 1.0, cage=0.03)],
     },
     "hub-ceiling-gems": {
         "item": "sky-well-1", "map": CEILING_GEMS, "scale": 10.0, "origin": (0.0, 1.0, 0.0), "sparkle": "CeilGems",

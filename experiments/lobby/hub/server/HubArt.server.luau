@@ -55,6 +55,7 @@ local DISTANT = {
 	"hub-well-rock",
 	"hub-well-glow",
 	"hub-ceiling-gems",
+	"hub-ceiling-vines",
 	"hub-well-isles",
 	"hub-well-bits",
 	"hub-rock-debris",
@@ -683,6 +684,7 @@ local function buildSkyWell()
 	place("hub-well-rock")
 	place("hub-well-glow")
 	addTwinkles("hub-well-glow", 6)
+	place("hub-ceiling-vines")
 	place("hub-ceiling-gems")
 	addTwinkles("hub-ceiling-gems", 7)
 	local isles = place("hub-well-isles")
