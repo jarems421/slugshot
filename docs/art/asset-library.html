@@ -1881,6 +1881,8 @@ vec3 lightColumn(vec3 ro, vec3 rd, float tEnd) {
 
 float waterY(float rr) { return -10.0 - 20.0*pow(1.0 - clamp(rr/17.5, 0.0, 1.0), 1.8); }
 // One column of the broken cliff lining the pit: the same angular blocks as the spawn island, stepping inward as they go.
+// Where the four falls are, between the bridges and clear of the tree mushrooms. Also in tools/lobby/hub_mesh.py.
+float fallAngle(float fi) { return fi < 0.5 ? 0.73 : fi < 1.5 ? 2.1 : fi < 2.5 ? 4.0 : 5.6; }
 void pitColumn(float k, float tier, out vec2 c, out float hw, out float top, out float bottom) {
   float s = PI*2.0/34.0, kk = k*3.1 + tier*7.0;
   float ang = (k + 0.5)*s + 0.1*(hash1(k + 141.0) - 0.5);
@@ -1935,33 +1937,22 @@ void treeShrooms(vec3 p, inout vec2 res) {
     if (cap*0.75 < res.x) res = vec2(cap*0.75, 15.7 + float(i)*0.03);
   }
 }
-// Each fall's source (owner, 2026-11-01): a cave under the rim, holding a round stone basin full of juice that overflows
-// through a notch in its front lip. Below it a chute is cleared through the cliff, so no rock stands in the fall.
-const float BASIN_BACK = -0.7, BASIN_R = 1.75, BASIN_Y = -2.15;
+// Each fall's source (owner, 2026-11-01): one shallow hole in the cliff with a round stone basin inside it, full to the brim,
+// spilling over its whole front edge. The rock columns in the fall's path are left out, so nothing stands in the water.
+const float BASIN_CENTRE = -0.7, BASIN_R = 1.7, BASIN_Y = -2.25;
 void fallFrame(vec3 p, float fi, out float along, out float across) {
-  float af = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
+  float af = fallAngle(fi);
   float Rf = 17.6 + 0.45*sin(af*5.0 + 1.0) + 0.3*sin(af*11.0 + 2.0);
   vec2 out0 = vec2(cos(af), sin(af));
   along = dot(p.xz, out0) - Rf;
   across = dot(p.xz, vec2(-out0.y, out0.x));
 }
-float fallMouth(vec3 p) {
+float fallNiche(vec3 p) {
   float best = 1e3;
   for (int i = 0; i < 4; i++) {
     float along, across;
     fallFrame(p, float(i), along, across);
-    vec3 q = vec3(along - clamp(along, -2.6, 0.9), (p.y + 1.6)*1.25, across);
-    best = min(best, (length(q) - 1.6)*0.75);
-  }
-  return best;
-}
-float fallChute(vec3 p) {
-  float best = 1e3;
-  for (int i = 0; i < 4; i++) {
-    float along, across;
-    fallFrame(p, float(i), along, across);
-    vec3 d = abs(vec3(along + 3.2, p.y + 9.0, across)) - vec3(3.6, 6.1, 2.6);
-    best = min(best, length(max(d, 0.0)) + min(max(d.x, max(d.y, d.z)), 0.0));
+    best = min(best, sdEll(vec3(along, p.y - BASIN_Y - 0.35, across), vec3(1.0, 1.35, 2.3)));
   }
   return best;
 }
@@ -1970,16 +1961,22 @@ float fallBasin(vec3 p) {
   for (int i = 0; i < 4; i++) {
     float along, across;
     fallFrame(p, float(i), along, across);
-    vec3 q = vec3(along - BASIN_BACK, p.y - BASIN_Y, across);
-    float bowl = sdEll(q + vec3(0.0, 0.55, 0.0), vec3(BASIN_R, 0.72, BASIN_R));
-    bowl = max(bowl, q.y);
-    bowl = max(bowl, -sdEll(q + vec3(0.0, 0.02, 0.0), vec3(BASIN_R - 0.24, 0.42, BASIN_R - 0.24)));
-    // The spill notch in the front lip.
-    bowl = max(bowl, 0.55 - length(vec2(across, (q.y - 0.05)*0.7) + vec2(0.0, 0.0))*step(along, BASIN_BACK - 0.9) - 10.0*step(BASIN_BACK - 0.9, along));
-    bowl += 0.025*(noise3(p*4.0) - 0.5);
-    best = min(best, bowl);
+    vec3 q = vec3(along - BASIN_CENTRE, p.y - BASIN_Y, across);
+    float bowl = max(sdEll(q, vec3(BASIN_R, 0.95, BASIN_R)), q.y);
+    // A thick stone root holding it to the back of the hole.
+    bowl = smin(bowl, sdEll(q - vec3(1.0, -0.6, 0.0), vec3(0.95, 0.55, 1.1)), 0.15);
+    best = min(best, bowl + 0.02*(noise3(p*4.0) - 0.5));
   }
   return best*0.8;
+}
+float fallPool(vec3 p) {
+  float best = 1e3;
+  for (int i = 0; i < 4; i++) {
+    float along, across;
+    fallFrame(p, float(i), along, across);
+    best = min(best, max(length(vec2(along - BASIN_CENTRE, across)) - BASIN_R + 0.015, abs(p.y - BASIN_Y - 0.02) - 0.02));
+  }
+  return best;
 }
 vec2 hookedBridges(vec3 p);
 vec3 hookedLanternGlow(vec3 ro, vec3 rd, float tEnd);
@@ -1999,7 +1996,9 @@ vec2 maelstrom(vec3 p) {
   // The broken cliff.
   float s = PI*2.0/34.0, k0 = floor(a/s);
   for (int j = -1; j <= 1; j++) {
-    float k = mod(k0 + float(j) + 34.0, 34.0);
+    float k = mod(k0 + float(j) + 34.0, 34.0), clearOf = 9.0;
+    for (int n = 0; n < 4; n++) clearOf = min(clearOf, abs(angleDiff((k + 0.5)*s, fallAngle(float(n)))));
+    if (clearOf < 0.24) continue;
     for (int t = 0; t < 3; t++) {
       float ft = float(t), kk = k*3.1 + ft*7.0, hw, top, bottom;
       vec2 c;
@@ -2015,8 +2014,7 @@ vec2 maelstrom(vec3 p) {
   lip = max(lip, -p.y - 0.4);
   lip = max(lip, 1.75 - min(abs(p.x), abs(p.z)))*0.7;
   if (lip < res.x) res = vec2(lip, 1.0);
-  res.x = smax(res.x, -fallChute(p), 0.15);
-  res.x = smax(res.x, -fallMouth(p), 0.1);
+  res.x = smax(res.x, -fallNiche(p), 0.08);
   float basin = fallBasin(p);
   if (basin < res.x) res = vec2(basin, 1.0);
   float spin = uT*ORBIT, wy = waterY(rr), water = (p.y - wy)*0.5;
@@ -2034,9 +2032,11 @@ vec2 maelstrom(vec3 p) {
   }
   water = max(water, rr - 18.5);
   if (water < res.x) res = vec2(water, 17.0);
+  float pool = fallPool(p);
+  if (pool < res.x) res = vec2(pool, 17.0);
   // Falls of glowing energy pouring over the rim between the bridges.
   for (int i = 0; i < 4; i++) {
-    float fi = float(i), af = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
+    float fi = float(i), af = fallAngle(fi);
     float da = angleDiff(a, af);
     if (abs(da) < 0.34) {
       float x = da*rr, y = p.y;
@@ -2055,7 +2055,7 @@ vec2 maelstrom(vec3 p) {
       if (f < res.x) res = vec2(f, 17.3);
     }
     // The heap where it lands.
-    float fa2 = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
+    float fa2 = fallAngle(fi);
     float heap = sdEll(p - vec3(cos(fa2)*15.0, waterY(15.0) + 0.2, sin(fa2)*15.0), vec3(2.0, 0.7, 2.0));
     if (heap < res.x) res = vec2(heap, 17.0);
   }
@@ -2068,8 +2068,8 @@ vec2 maelstrom(vec3 p) {
     pitColumn(k, tier, c, hw, top, bottom);
     // Vines stay clear of the falls.
     float va = atan(c.y, c.x), nearFall = 9.0;
-    for (int n = 0; n < 4; n++) nearFall = min(nearFall, abs(angleDiff(va, float(n)*1.5708 + 0.785 + 0.34*(hash1(float(n) + 171.0) - 0.5))));
-    if (nearFall < 0.2) continue;
+    for (int n = 0; n < 4; n++) nearFall = min(nearFall, abs(angleDiff(va, fallAngle(float(n)))));
+    if (nearFall < 0.36) continue;
     vec2 rad = normalize(c);
     vec2 face = c - rad*hw*0.75, back = c - rad*hw*0.1;
     rockStrand(p, vec3(face.x, top - 0.3, face.y), vec3(back.x, top - 0.05, back.y), 2.8 + 4.6*hash1(fi + 182.0), fi*1.9, res);
@@ -2130,7 +2130,7 @@ vec3 pitMist(vec3 ro, vec3 rd, float tEnd) {
   result += gateGlow(ro, rd, tEnd, 0.0);
   // A burst of light and spray at the foot of each fall.
   for (int i = 0; i < 4; i++) {
-    float fi = float(i), af = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
+    float fi = float(i), af = fallAngle(fi);
     vec3 w = vec3(cos(af)*15.0, waterY(15.0) + 0.4, sin(af)*15.0) - ro;
     float along = dot(w, rd);
     if (along > 0.0 && along < tEnd + 2.0) {
@@ -2559,10 +2559,10 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
         float faces = max(dot(n, normalize(inward*0.75 + vec3(0.0, -0.65, 0.0))), 0.0);
         emit = s*0.5*(0.55 + 0.45*occ0);
         emit += vec3(0.1, 0.78, 0.72)*(0.03 + 0.42*smoothstep(-1.0, -9.5, l.y))*faces*(0.25 + 3.2*s);
-        // Dark inside the cave, lit from below by the pool it holds.
-        float cave = 1.0 - smoothstep(0.0, 0.1, fallMouth(l));
-        s *= 1.0 - 0.72*cave;
-        emit = emit*(1.0 - cave) + vec3(0.1, 0.72, 0.66)*cave*exp(-max(l.y - BASIN_Y, 0.0)*1.5)*(0.05 + 1.5*s);
+        // A little darker in the hole behind the basin, so it reads as a recess.
+        float hole = 1.0 - smoothstep(0.0, 0.12, fallNiche(l));
+        s *= 1.0 - 0.4*hole;
+        emit *= 1.0 - 0.4*hole;
       }
       emit += vec3(0.1, 0.22, 0.08)*0.12*m;
 #endif

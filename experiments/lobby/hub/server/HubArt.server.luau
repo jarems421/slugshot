@@ -34,6 +34,10 @@ local CLIFF_LIFT = 0.12 -- keeps the cliff's ground above the block-out floor it
 local DOWN = Vector3.new(0, -1, 0)
 local FALL_FOOT_Y = -51 -- the juice's surface where the falls land
 local BASIN_Y = -2.25 -- the pools' surface, in units
+local BASIN_R = 1.7 -- the basin's radius, in units
+local BASIN_CENTRE = -0.7 -- in units, from the cliff's edge
+local FALL_SPACING = 24 -- degrees between strips of the overflow
+local FALL_FAN = { -72, -48, -24, 0, 24, 48, 72 }
 
 -- Pieces that glow more than the painted brightness suits under Roblox's bloom.
 local GLOW: { [string]: number } = {
@@ -461,35 +465,31 @@ local function buildBridges()
 	source:Destroy()
 end
 
--- A sheet of liquid: its wavering edges and bands scroll down it. Beams stay smooth and cheap at any distance on a phone,
--- and from behind the rim's rock hides them.
-local function flowSheet(
+-- One strip of the overflow. Each stays flat against the basin it spills from, so it never turns to face the camera.
+local function ribbon(
 	from: Vector3,
 	to: Vector3,
-	inward: Vector3,
-	reach: number,
-	drop: number,
-	width0: number,
-	width1: number,
+	outward: Vector3,
+	tangent: Vector3,
+	width: number,
 	texture: string,
 	color: Color3,
 	transparency: NumberSequence,
 	length: number,
 	speed: number,
-	emission: number,
-	layer: number
+	emission: number
 )
 	local top, bottom = holder("FallFlow", from, Vector3.one), holder("FallFlow", to, Vector3.one)
 	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
-	-- The curve leaves the top along +X of the first attachment and arrives at the bottom along +X of the second.
-	a0.CFrame = CFrame.fromMatrix(Vector3.zero, inward, Vector3.yAxis, inward:Cross(Vector3.yAxis))
-	a1.CFrame = CFrame.fromMatrix(Vector3.zero, DOWN, inward, DOWN:Cross(inward))
+	-- The curve leaves the top along +X of the first attachment and arrives along +X of the second; width runs along Y.
+	a0.CFrame = CFrame.fromMatrix(Vector3.zero, outward, tangent, outward:Cross(tangent))
+	a1.CFrame = CFrame.fromMatrix(Vector3.zero, DOWN, tangent, DOWN:Cross(tangent))
 	a0.Parent, a1.Parent = top, bottom
 	local b = Instance.new("Beam")
 	b.Attachment0, b.Attachment1 = a0, a1
-	b.CurveSize0, b.CurveSize1 = reach, drop
-	b.Width0, b.Width1 = width0, width1
-	b.FaceCamera = true
+	b.CurveSize0, b.CurveSize1 = 4.5, 16
+	b.Width0, b.Width1 = width, width * 0.85
+	b.FaceCamera = false
 	b.Segments = 14
 	b.Texture = texture
 	b.TextureMode = Enum.TextureMode.Wrap
@@ -499,52 +499,56 @@ local function flowSheet(
 	b.LightInfluence = 0
 	b.Color = ColorSequence.new(color)
 	b.Transparency = transparency
-	b.ZOffset = layer
 	b.Parent = top
 end
 
+-- The basin overflows: water runs off the pool and over the whole front of the basin, then falls to the juice as one curtain.
 local function buildFall(angle: number)
 	local flat = Vector3.new(math.cos(angle), 0, math.sin(angle))
+	local across = Vector3.new(-flat.Z, 0, flat.X)
 	local rim = UNIT * (17.6 + 0.45 * math.sin(angle * 5 + 1) + 0.3 * math.sin(angle * 11 + 2))
 	local inward = -flat
-	-- It ends at the juice's real surface and melts into the foam there, rather than cutting through it.
-	local foot = flat * (rim - 14) + Vector3.new(0, FALL_FOOT_Y, 0)
-	-- It starts on the pool, runs out through the notch in the basin's lip, and drops.
-	local lip = flat * (rim - 7.5) + Vector3.new(0, BASIN_Y * UNIT + 0.1, 0)
-	local melt = fade({ { 0, 1 }, { 0.05, 0 }, { 0.85, 0 }, { 1, 1 } })
-	flowSheet(
-		lip,
-		foot,
-		inward,
-		7,
-		14,
-		5.5,
-		19,
-		fxTexture("flow"),
-		Color3.new(1, 1, 1),
-		melt,
-		46,
-		0.42,
-		0,
-		0
-	)
-	-- Faster, brighter bands over the top, so it never reads as one solid surface.
-	flowSheet(
-		lip,
-		foot,
-		inward,
-		7,
-		14,
-		4.5,
-		17,
-		fxTexture("streak"),
-		Color3.fromRGB(165, 255, 240),
-		fade({ { 0, 1 }, { 0.08, 0.55 }, { 0.8, 0.5 }, { 1, 1 } }),
-		30,
-		0.95,
-		0.5,
-		1
-	)
+	local radius = BASIN_R * UNIT
+	local centre = flat * (rim + BASIN_CENTRE * UNIT)
+	local melt = fade({ { 0, 0 }, { 0.82, 0 }, { 1, 1 } })
+	for index, side in FALL_FAN do
+		local turn = math.rad(side)
+		local outward = inward * math.cos(turn) + across * math.sin(turn)
+		local tangent = across * math.cos(turn) - inward * math.sin(turn)
+		local from = centre + outward * (radius - 1) + Vector3.new(0, BASIN_Y * UNIT + 0.75, 0)
+		local to = centre + outward * (radius - 1.2) + Vector3.new(0, FALL_FOOT_Y, 0)
+		local width = radius * math.rad(FALL_SPACING) * 1.9
+		ribbon(
+			from,
+			to,
+			outward,
+			tangent,
+			width,
+			fxTexture("flow"),
+			Color3.new(1, 1, 1),
+			melt,
+			46,
+			0.42 + index * 0.015,
+			0
+		)
+		-- Faster, brighter bands over the top, so it never reads as one solid surface.
+		if index % 3 == 1 then
+			ribbon(
+				from + Vector3.new(0, 0.05, 0),
+				to,
+				outward,
+				tangent,
+				width,
+				fxTexture("streak"),
+				Color3.fromRGB(165, 255, 240),
+				fade({ { 0, 1 }, { 0.05, 0.55 }, { 0.8, 0.5 }, { 1, 1 } }),
+				30,
+				0.95,
+				0.5
+			)
+		end
+	end
+	local foot = centre + inward * radius + Vector3.new(0, FALL_FOOT_Y, 0)
 	-- Where it lands: ripples spreading over the juice, foam churning, and foam carried off along the swirl's own direction.
 	local landing = holder("FallFoot", foot + Vector3.new(0, 1.4, 0), Vector3.new(11, 0.5, 11))
 	local ripples = Instance.new("ParticleEmitter")
@@ -609,6 +613,7 @@ local function buildMaelstrom()
 		setMotion(juice, "Juice", ORBIT * 2, 0, 0, 0)
 	end
 	-- The pools turn in place, with ripples spreading over them, so the source is as alive as the fall.
+	place("hub-bowl")
 	local pools = place("hub-basin")
 	if pools then
 		for index = 0, 3 do
@@ -633,7 +638,7 @@ local function buildMaelstrom()
 			end
 		end
 	end
-	-- Exactly where the art's mouths are, as measured from the GPU that carved them.
+	-- The same fixed angles as the art's basins.
 	for _, angle in rimShape.falls do
 		buildFall(angle)
 	end

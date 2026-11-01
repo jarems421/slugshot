@@ -225,3 +225,6 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Check motion triggers against what the owner said:** "when walking" means moving, not merely standing on the bridge.
 - **Shader hash values differ between Python and the GPU:** a recomputed value put two falls 19 studs from their mouths. Measure from the GPU that made the art.
 - **Generate collision from the art:** hand-made rim shapes were up to 8 studs off, so players sank into the lip and fell through the rock's edge.
+- **The shader's hash isn't a stable number:** the same call gives different values depending on how it's compiled, so anything two systems must agree on needs a plain constant.
+- **A non-camera-facing Beam's width runs along its attachments' Y axis.**
+- **Look before handing over:** a short camera check caught edge-on strips and water passing behind the rim, neither of which any offline check could show.

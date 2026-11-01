@@ -3,16 +3,40 @@
 local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
-local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
-	{ name = "spawn", from = Vector3.new(4, 7, 14), at = Vector3.new(0, 6, -40) },
-	{ name = "crack", from = Vector3.new(-4, 8, 22), at = Vector3.new(-14, 0, 8) },
-	{ name = "rope", from = Vector3.new(14, 6, -42), at = Vector3.new(9, 3, -33) },
-	{ name = "gun", from = Vector3.new(-22, 10, 0), at = Vector3.new(-32, 12.5, 0) },
-	{ name = "fall", from = Vector3.new(10, -18, 22), at = Vector3.new(54, -28, 62) },
-	{ name = "foot", from = Vector3.new(40, -24, 40), at = Vector3.new(47, -56, 54) },
-	{ name = "pit", from = Vector3.new(60, 18, -92), at = Vector3.new(0, -45, 0) },
-	{ name = "up", from = Vector3.new(18, 6, 8), at = Vector3.new(6, 250, 2) },
-}
+local rimShape = require(
+	game:GetService("ReplicatedStorage"):WaitForChild("LobbyScale"):WaitForChild("rim_shape")
+) :: any
+local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {}
+for index, angle in rimShape.falls do
+	local flat = Vector3.new(math.cos(angle), 0, math.sin(angle))
+	local side = Vector3.new(-flat.Z, 0, flat.X)
+	local basin = flat * 85 + Vector3.new(0, -11, 0)
+	local mid = flat * 78 + Vector3.new(0, -32, 0)
+	table.insert(STOPS, {
+		name = `front{index}`,
+		from = flat * 52 + side * 9 + Vector3.new(0, -9, 0),
+		at = flat * 80 + Vector3.new(0, -22, 0),
+	})
+	if index == 1 then
+		table.insert(
+			STOPS,
+			{ name = "side", from = flat * 58 + side * 42 + Vector3.new(0, -12, 0), at = mid }
+		)
+		table.insert(
+			STOPS,
+			{ name = "close", from = flat * 58 + side * 6 + Vector3.new(0, -2, 0), at = basin }
+		)
+		table.insert(
+			STOPS,
+			{ name = "rimview", from = flat * 104 + side * 14 + Vector3.new(0, 9, 0), at = basin }
+		)
+		table.insert(STOPS, {
+			name = "foot",
+			from = flat * 45 + side * 22 + Vector3.new(0, -32, 0),
+			at = flat * 72 + Vector3.new(0, -50, 0),
+		})
+	end
+end
 
 local function read(name: string): number
 	local ok, value = pcall(function()
@@ -48,21 +72,7 @@ task.spawn(function()
 		)
 		print(`HUBCHECK shot {stop.name}`)
 		task.wait(1)
-		if stop.name == "fall" or stop.name == "foot" then
-			task.wait(1)
-			print(`HUBCHECK shot {stop.name}B`)
-			task.wait(1)
-		end
 	end
-	camera.CFrame = CFrame.lookAt(Vector3.new(34, 8, -60), Vector3.new(0, -3, -60))
-	task.wait(1)
-	print("HUBCHECK shot rest")
-	task.wait(1)
-	workspace:SetAttribute("HubTestRider", Vector3.new(0, -3, -60))
-	task.wait(1.8)
-	print("HUBCHECK shot rider")
-	task.wait(1)
-	workspace:SetAttribute("HubTestRider", nil)
 	camera.CameraType = Enum.CameraType.Custom
 	print("HUBCHECK tour ends")
 end)

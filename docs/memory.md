@@ -9,6 +9,8 @@
 - **Later round, not yet seen running:** fall mouths, side streams removed, bridge landings, movement-driven bridge motion, real crack holes, rim bushes. Owner: "literally the last changes".
 - **Latest round, not yet seen running:** falls placed from GPU-measured mouth angles and melting into the juice, ground measured from the art, solid lanterns, debris cleared from bridges, juice highlight no longer washes out.
 - **Basin round, not yet seen running:** stone basins with turning pools and spill notches, chutes cleared below them, debris cleared from the falls, redrawn blaster and cave symbols.
+- **Overflow round, verified in Studio by camera captures of all four basins:** basins, pools and falls line up, and water covers the front of each basin. Stills only; flow not watched in motion.
+- **Owner feedback:** handing over unseen work oversold it. The check place works again when Studio is brought to the front to press Play.
 - **Unresolved:** owner verdict, walking checks of the new colliders, phone performance. The asset library page was not republished after the concept's mushroom and blaster changes.
 
 ## 2026-11-01 - Hub centrepieces and bridges final
