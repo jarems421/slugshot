@@ -70,12 +70,15 @@ def style_blaster(objs):
                 b.inputs["Roughness"].default_value = 0.15
 
 
-BULB_GLOW = (0.62, 0.80, 0.28)  # Floppy's antenna-bulb glow (tools/slugs/build_floppy.py)
+# FloppyAppearance's glow tint (sRGB 215, 240, 160, as linear) and emissive floor.
+GLOW_TINT = (0.68, 0.87, 0.35)
+EMISSIVE_FLOOR = 0.05
 
 
 def style_floppy(objs):
-    """Keep the baked textures; add the Roblox emissive floor (albedo x 0.15) so the slug glows softly, plus the
-    antenna-bulb glow from the exported glow mask when present."""
+    """Keep the baked textures and glow the way FloppyAppearance does in Roblox: emission = albedo x mask x strength x
+    tint, where the mask is the exported glow mask floored at 0.05 (plain skin keeps a faint visibility floor) and
+    the strength is that floor's 0.12 divided by 0.05."""
     for o in objs:
         for slot in o.material_slots:
             m = slot.material
@@ -86,24 +89,24 @@ def style_floppy(objs):
             link = next((ln for ln in nt.links if ln.to_socket == b.inputs["Base Color"]), None)
             if not link:
                 continue
-            floor = nt.nodes.new("ShaderNodeVectorMath")
-            floor.operation = "SCALE"
-            floor.inputs["Scale"].default_value = 0.15
-            nt.links.new(link.from_socket, floor.inputs[0])
-            out = floor.outputs["Vector"]
+            tint = nt.nodes.new("ShaderNodeVectorMath")
+            tint.operation = "MULTIPLY"
+            tint.inputs[1].default_value = GLOW_TINT
+            nt.links.new(link.from_socket, tint.inputs[0])
             glow = next((n for n in nt.nodes if n.type == "TEX_IMAGE" and n.image and n.image.name.startswith("floppy-body-glow")), None)
+            strength = nt.nodes.new("ShaderNodeMath")
+            strength.operation = "MULTIPLY"
+            strength.inputs[1].default_value = 0.12/EMISSIVE_FLOOR
             if glow:
-                tint = nt.nodes.new("ShaderNodeVectorMath")
-                tint.operation = "MULTIPLY"
-                tint.inputs[1].default_value = tuple(c*2.0 for c in BULB_GLOW)
-                nt.links.new(glow.outputs["Color"], tint.inputs[0])
-                add = nt.nodes.new("ShaderNodeVectorMath")
-                add.operation = "ADD"
-                nt.links.new(out, add.inputs[0])
-                nt.links.new(tint.outputs["Vector"], add.inputs[1])
-                out = add.outputs["Vector"]
-            nt.links.new(out, b.inputs["Emission Color"])
-            b.inputs["Emission Strength"].default_value = 1.0
+                floor = nt.nodes.new("ShaderNodeMath")
+                floor.operation = "MAXIMUM"
+                floor.inputs[1].default_value = EMISSIVE_FLOOR
+                nt.links.new(glow.outputs["Color"], floor.inputs[0])
+                nt.links.new(floor.outputs["Value"], strength.inputs[0])
+            else:
+                strength.inputs[0].default_value = EMISSIVE_FLOOR
+            nt.links.new(tint.outputs["Vector"], b.inputs["Emission Color"])
+            nt.links.new(strength.outputs["Value"], b.inputs["Emission Strength"])
 
 
 def ink_material():
@@ -183,6 +186,8 @@ def main():
             o.data.materials.clear()  # an exported model's own ink shell: style it, don't shell it again
             o.data.materials.append(ink)
             continue
+        if any(x.name == o.name + "_Ink" for x in objs):
+            continue  # the model ships its own shell for this part
         if KIND == "floppy" and o.name.startswith("Eye"):
             continue  # the ring eyes already carry their own dark rims
         key = (o.material_slots[0].material.name.split(".")[0] if o.material_slots and o.material_slots[0].material else "")
