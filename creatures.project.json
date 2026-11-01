@@ -1,0 +1,12 @@
+{
+  "name": "SlugshotCreaturePreview",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34875,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {"$className": "ReplicatedStorage", "SlugAssets": {"$path": "experiments/creatures/shared"}},
+    "ServerScriptService": {"$className": "ServerScriptService", "CreaturePreview": {"$path": "experiments/creatures/server"}},
+    "StarterPlayer": {"$className": "StarterPlayer", "StarterPlayerScripts": {"$className": "StarterPlayerScripts", "CreaturePreview": {"$path": "experiments/creatures/client"}}},
+    "Workspace": {"$className": "Workspace", "$properties": {"Gravity": 0}}
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "bones": [
+    "antenna_L",
+    "antenna_R",
+    "body_lower",
+    "body_upper",
+    "eye_L",
+    "eye_R",
+    "head",
+    "root"
+  ],
+  "meshes": {
+    "EyeR": {
+      "triangles": 400,
+      "maxInfluences": 1
+    },
+    "EyeL": {
+      "triangles": 400,
+      "maxInfluences": 1
+    },
+    "FloppyBody": {
+      "triangles": 8000,
+      "maxInfluences": 3
+    }
+  },
+  "boundsBlender": {
+    "min": [
+      -0.334,
+      -0.334,
+      0.0
+    ],
+    "max": [
+      0.334,
+      0.269,
+      0.924
+    ]
+  },
+  "facesPlusY": true,
+  "heightStuds": 0.924,
+  "sizeStuds": [
+    0.668,
+    0.603,
+    0.924
+  ],
+  "idle": {
+    "seconds": 12.0,
+    "loopSeam": 0.0,
+    "maxBoneScaleChange": 0.0,
+    "maxBoneTravel": 0.015
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "ok": true,
+  "pass": true,
+  "errors": [],
+  "warnings": [
+    "EyeL: ~100.0% UV overlap (ok only if mirrored/stacked on purpose; bakes break)",
+    "EyeR: ~100.0% UV overlap (ok only if mirrored/stacked on purpose; bakes break)",
+    "hidden back-to-back faces: FloppyBody<->EyeR (102 pairs) - delete to save tris",
+    "hidden back-to-back faces: FloppyBody<->EyeL (93 pairs) - delete to save tris"
+  ],
+  "ground_z": 0.0001,
+  "zfighting": [],
+  "floating": [],
+  "back_to_back": [
+    {
+      "where": "FloppyBody<->EyeR",
+      "tri_pairs": 102
+    },
+    {
+      "where": "FloppyBody<->EyeL",
+      "tri_pairs": 93
+    }
+  ],
+  "enclosed": [],
+  "objects": {
+    "FloppyBody": {
+      "verts": 4002,
+      "faces": 8000,
+      "tris": 8000,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1,
+      "unweighted_verts": 0,
+      "verts_over_4_influences": 0,
+      "uv_maps": 1,
+      "uv_oob_pct": 0.0,
+      "uv_zero_area_faces": 0,
+      "uv_overlap_pct": 0.38,
+      "uv_coverage_pct": 60.6
+    },
+    "EyeL": {
+      "verts": 202,
+      "faces": 400,
+      "tris": 400,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1,
+      "unweighted_verts": 0,
+      "verts_over_4_influences": 0,
+      "uv_maps": 1,
+      "uv_oob_pct": 0.0,
+      "uv_zero_area_faces": 0,
+      "uv_overlap_pct": 100.0,
+      "uv_coverage_pct": 77.0
+    },
+    "EyeR": {
+      "verts": 202,
+      "faces": 400,
+      "tris": 400,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1,
+      "unweighted_verts": 0,
+      "verts_over_4_influences": 0,
+      "uv_maps": 1,
+      "uv_oob_pct": 0.0,
+      "uv_zero_area_faces": 0,
+      "uv_overlap_pct": 100.0,
+      "uv_coverage_pct": 77.1
+    }
+  }
+}

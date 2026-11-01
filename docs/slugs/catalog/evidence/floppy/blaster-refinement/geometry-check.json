@@ -1,0 +1,21 @@
+{
+  "openFiringChannelRays": 9,
+  "allClear": true,
+  "barrelFrontGunZ": -1.701141119003296,
+  "angularPanels": true,
+  "barrelTips": "downward planar bevels; no bend or outward flare",
+  "meshTriangles": {
+    "BodyGrey": 3000,
+    "DarkGrey": 2198,
+    "Black": 2400,
+    "Steel": 1498,
+    "CanisterTeal": 1276,
+    "ChargerVane": 1500,
+    "ChargerBlack": 1498,
+    "White": 1500,
+    "GripBand": 1800,
+    "GripNavy": 1148,
+    "Orange": 4128,
+    "CyanGlow": 1500
+  }
+}

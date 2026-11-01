@@ -1,5 +1,139 @@
 # Project memory
 
+
+
+## 2026-10-31 - Blender skill routing guide
+
+- Rewrote `docs/slugs/skill-routing.md` from the actual installed `SKILL.md` files (28 EL4CTEO, 30 RobLe3, 1 project). Replaced the generated inventory and removed `build_skill_routing.py`; `check_skill_routing.py` now checks coverage.
+- Confirmed: the installed `blender` MCP lacks RobLe3's legacy tool names, local Python has no `cv2`, and RobLe3's world reset must not run on existing scenes.
+- A disposable 5.2 probe passed all five routing cases. FBX roundtrip renames clips and can copy actions to stray objects (see lessons).
+- Added `slugshot-creature-production`, an 11-step creature procedure using the routing guide as its manual. The orchestrator is kept as its short summary. A fresh Claude session auto-selected it and routed correctly. The Codex test was blocked by its usage limit.
+
+## 2026-10-31 - Floppy silhouette/face variant
+- The owner rejected the baseline look ("too solid and hard", eyes "glued on", lifeless mouth) and asked for a drowsy/drunk slug with spinning spiral eyes. Built `create_floppy_variant.py` as a separate variant; baseline untouched. Owner review pending.
+- Owner calls the species "Floppy". That name is very close to the franchise "Flopper", so a final name stays Unresolved.
+- Follow-up: added drool, jaw sag and faster spiral spin, an hourglass front, and eye rims; removed the lid crease. Opened the variant in the owner's live Blender.
+- Second follow-up: domed eyes with lid shells, mirrored sockets and bags, brows and crown markings, flared antenna roots, a short tail, and squishier shape, material and animation. Reloaded the variant in the owner's Blender.
+- The owner chose to agree the design on paper before more 3D work, and confirmed the tail stays short. Published a private concept sheet (four front/side body plans: Pear Puddle, Upright Trailer, Slumped Sleeper, Low Crawler, plus a face study): https://claude.ai/artifact/5FPBsEBNTuVZbbo34waKX8. Waiting for the owner's pick.
+- The owner preferred concept C (Slumped Sleeper) but said the 2D drawings looked like flat shapes on a silhouette with no visible belly and no jelly or slime. They asked for closed concentric rings instead of a spiral, arranged differently in each eye and spinning, and for a dark comic-style drool drip in the mouth colour instead of a blue blob. Published a rotatable real-time 3D concept (blended soft volumes, jelly shading, ring eyes): https://claude.ai/artifact/MwVjdTDUNVQPdccC37VJyo. Its blended-volume construction could map to Blender metaballs/voxel remeshing for the game model. Waiting for owner review.
+- Owner feedback on the 3D concept: drool should come out of the mouth like their anime reference (a pale strand whose dark outline continues the mouth line), not sit on top; eyes bulged like bug eyes; antennae looked angular. Concept v2 has a drool strand from inside the mouth with a toon outline, shallow lens-shaped eyes, and single smooth-curve antennae.
+- Owner: drool must be part of the mouth, dropping from the bottom lip with no separate piece; motion was too bouncy (especially the top half); cheeks too chubby. Concept v3: drool drawn on the skin from the lower lip with the mouth's outline, wobble cut to about a third and slowed, slimmer cheeks.
+- Owner: drool must continue from the bottom lip with no top bulb; the eyes poked out below the lids and looked crazy rather than drowsy; the dark eye patches were gone; the head was too wide and bulbous. Concept v4: drool starts inside the mouth so only the part below the lip shows; lower lids added and upper lids half-closed; slower spin and thinner rings; dark under-eye patches restored; narrower head with the face refitted.
+- Owner: top of the head looked flat from the front; asked for antennae higher, a taller rounder head, a more drowsy/stoned grin, drool a tad right of the mouth corner, and a base that sticks to the floor instead of looking like a chess piece. Concept v5: crown dome and taller head, antenna roots raised, lazy lopsided grin, drool moved toward the centre, body melting into a soft spread foot (a flat plate attempt looked like a candle holder and was replaced).
+- Owner: fill the sunken upper corners of the head so it reads round; smaller cheeks; shorten the mouth where it reached the eyelid; foot should stick to the floor like a snail's rather than round off; antennae further forward on the forehead at the same spacing. Concept v6: wider crown dome, smaller cheeks, shorter and lower mouth, a thin sole blended in with a concave fillet under a wider lower body, antenna roots moved forward.
+- Owner: dark under-eye patches more prominent; eyes still bulged. Concept v7: larger, darker under-eye patches; eye lenses flatter (depth 0.11 to 0.07) and the eye/lid set sunk further into the face.
+- Owner: remove the green dots for now (they clashed with the dark patches); make the under-eye darkness diffuse rather than a concentrated oval; remove the under-eye bulge and the eyebrow-like ridges. Concept v8: freckles, brow ridges and under-eye puff removed; wide, soft, uneven dark shading under the eyes.
+- Owner: the diffuse patches looked like bruising; wanted normal tired dark circles under the lower lid, following the eye's round outline. Concept v9: a soft brown-grey crescent just outside the lower lid edge.
+- Owner likes how the eye edges blend into the face (keep this). Asked for eyes slightly more raised and slightly further apart; the dark circles read as a vague shadow ring, not eye bags. Concept v10: eye depth 0.085 and eyes at x ±0.37; bags are now a mauve-brown crescent of darker skin under each lower lid, thickest in the middle.
+- Owner: the lower lid looked multi-layered after the bags were added, and the darkness should diffuse onto the lids; 'almost there, basically perfect'. Concept v11: removed the hard bag edge and the lid tint ring, blended the lids more softly, and faded the darkness up onto the lower lid. Lesson: hard colour edges near a geometric lid edge read as extra layers.
+- Owner: 'genuinely almost perfect'. Asked for a slightly smaller eye-bag area with a softer outer fade. Concept v12: smaller Gaussian-falloff bag that fades into the skin on every side.
+- Owner: eye-bag size 'perfect' after re-expanding. Final tweak: antennae further forward on the forehead and the head top raised a little more. Concept v14: head and crown dome taller, antenna roots further forward.
+- Owner called the concept 'perfect' after the head/antenna change. Final tweak: thicker rings that vary in thickness within each eye; the more open eye (character's right, viewer's left) has clearly bolder rings. Concept v15 published, and a copy of the concept source was saved as the build reference at docs/slugs/catalog/evidence/floppy-concept-3d.html.
+- Owner: the base looked too flat, uniform, cleanly flared, slightly cut off, like a smooth bell; wanted a soft, bodyweight, squishy pooled edge with a subtle slime base, natural and asymmetric. Concept v16: lobed, asymmetric sagging lower mass with a thin rounded pooled edge, a see-through glossy slime film around it, wetter skin near the floor. Reference copy updated.
+- Owner loves the new base. Asked to remove the slime film for now; a slime trail is a possible later addition (Considering, not approved). Concept v17: slime film and floor sheen removed, base unchanged, reference copy updated.
+- Owner approved Floppy V1 ('this is perfect'). Saved the source and five renders to docs/slugs/catalog/evidence/floppy/, recorded the design spec in the catalogue, and deleted the rejected Blender variant and earlier concept files at the owner's request. Next: touch-up details, then the Blender build.
+- Deleted the round-1 concept sheet page (its link no longer works).
+- Owner supplied the Floppy palette (#91B8AE body, #8996AC upper lids, #31585B lower lids, #D8D3BE belly, #527F79 back markings) and asked for improvised, original, restrained patterns plus darker antenna stripes. Applied in the V1 page with spine lozenges and petrol-teal antenna stripes; reference copy and renders refreshed.
+- Owner: the palette looked way too blue; wanted green/brown, belly stripes, no antenna stripes and coloured antenna-tip bulbs. Applied a warmer sage/taupe/moss/stone palette (hex values in the catalogue); reference copy and renders refreshed.
+- Owner: upper lids too light; they should be a darker green, a bit darker than the skin but lighter than the lower lids. Belly stripes should be more prominent but still blend. Applied #7A8C62 lids and #A8946E stripes at higher strength; reference refreshed.
+- Owner: body green should be paler and more yellow, closer to (but not matching) the belly; belly stripes should be the same colour strength. Applied #BAC1A2 body, #9CA77F lids, lighter back shading and an even stripe mask; reference refreshed.
+- Owner: lower lids should be a muddy brownish green; add a brown outline around the belly enclosing the stripes; denser stripe colour; body a tiny bit darker with more yellow-brown-green. Applied #5A5934 lids, a #6B4E2E belly outline, #8E7550 stripes and a #B0B48A body; reference refreshed.
+- Owner found the brown belly outline ugly; switched to a softer muddy brown-green outline (#6E6B3E). Reference refreshed.
+- Owner disliked the painted brown belly stripes and chose soft belly folds: real geometric rolls with creases, uneven spacing and depth, inside the green outline. Reference refreshed.
+- Owner: the folds looked like creases; wanted actual folds. Changed the profile to overhanging rolls (steep tucked underside, gentle top), made them fewer and fuller. Reference refreshed.
+- Owner: upper lids a little darker than the skin but less dark than the lower lids. Applied #888F68; reference refreshed.
+- Owner: 'this is perfect... this is the Floppy design. This is our Floppy.' Renamed the page and record to Floppy, replaced the V1 save with docs/slugs/catalog/evidence/floppy/ (floppy.html plus five renders). The committed baseline Blender model is still kept pending the owner's decision.
+- Built Floppy in Blender with tools/slugs/build_floppy.py (concept SDF ported to NumPy, surface nets, exact texture bake, ring-eye textures, 9-bone rig, 12 s looping idle). Concept motion rates aligned to the loop. Opened in the owner's Blender. Game-budget version and FBX/Studio are next.
+- Owner: the build is perfect but too pale; wanted more depth, then the Roblox version. Added baked AO, a deeper grade and less SSS. Made the Roblox export (8k body, 400 per eye, 1024 maps, 8 bones, scale-free 12 s idle, faces -Z in Roblox). Verified by FBX reimport. Studio import is the owner's step (no Studio connection; importing uploads assets).
+- Owner approved uploading Floppy to their account; uploaded the GLB via Open Cloud (ID kept in private-assets). Added a Floppy test place with a client-side idle and opened it in a new Studio window (Rocklock's Studio left open). Registered the Roblox Studio MCP at user scope so every worktree gets it after a restart.
+- Owner: Floppy looks the same in Studio, but needs a subtle slimy gloss and must fit in the blasters. Export now at 0.09 scale (0.22 studs, asserted against the blaster canister) with roughness maps; re-uploaded; test place shows Floppy on a pedestal next to the blaster.
+- Owner: the blaster-sized Floppy (0.22 studs) was invisible; set it to about 1 stud tall and said the gun will be resized to fit. More gloss on the bottom half. Export now 0.405 scale (1.0 stud) with base-to-head roughness 0.10 to 0.22; re-uploaded; test place reopened.
+- Owner: about 33% smaller, mostly thinner, mainly a narrower base. Narrowed base/pooled edge/tail in the concept and build; export now 0.304 scale (0.60 × 0.54 × 0.75 studs); re-uploaded; test place reopened.
+- Owner: 0.75 studs is the smallest a slug should be; make it a little taller, not thicker; resize the gun so the slug fits in the shell and let them equip it. Torso-only stretch (0.83 studs); display blaster Tool scaled 3.05x in the Floppy test place with Floppy in a glass canister; real Rocklock blaster untouched (out of scope here).
+- Owner: the 3x blaster was ridiculously big; slugs should be a bit bigger on the ground and shrink when loaded. Ground Floppy 0.34 scale (0.92 studs); test blaster back to Rocklock size; loaded Floppy scaled at runtime to the canister; idle scale derived per model from eye spacing.
+- Owner: loaded Floppy far too small for the canister. The fit used an inflated bounding box; now sized from eye spacing and source dimensions and centred on the root bone, so he fills the shell.
+- Owner: brighten the chamber so the loaded slug shows better. The canister glass is now clearer (0.78 transparency, pale tint) with a soft PointLight inside.
+- Owner: the clear glass read as dark, not lit. The chamber is now faint see-through neon (0.86 transparency) with a stronger inside light and a soft Highlight fill on the loaded slug.
+- Owner: the slug looked pale/white inside (the white Highlight fill); wanted deep blue glass that glows as the light source. Removed the fill; canister now deep blue see-through neon (0.72) with a blue PointLight.
+- Owner: glass good, but the slug looked dark blue. Inside light now neutral warm white (brightness 4); glass more see-through (0.82) but still glowing blue.
+- Owner: slug still deep blue; glass should glow without tinting the slug; dark sky to show the glow. A neon shell tints whatever is behind it, so the canister is now clear lightly-blue Glass (0.88) with neon blue rings and edge strips, a warm 3-stud light inside, and the test place is at night with bloom and a lamp on the pedestal.
+- Owner: glow underwhelming and not lighting the slug. Glass material blurred/darkened him; shell now clear SmoothPlastic (0.9), two warm white lamps beside the slug, a blue 6-stud area glow, thicker neon trim and stronger bloom. Lesson: Roblox Glass blurs what's behind it and Neon tints it; light the subject with nearby lights.
+- Owner: blue too strong/neon; wanted a clear, light-blue, subtler glow with the inside of the shell well lit. Trim now pale blue at 0.45 transparency and thinner, spill light pale and weak (1.2, 3.5 studs), bloom reduced, inside lamps slightly stronger.
+- Owner: lighting flickered between an orange-flare state and a dark state; the inside wasn't lit. Small PointLights inside the gun flicker with Roblox light culling and flared the orange prongs. Removed them; the loaded slug now has a constant sage-green Highlight fill (0.55); one faint pale-blue spill light remains. Lesson: don't rely on tiny interior lights for visibility.
+- Owner: light the inside calmly and lightly, not pale. Inner sage glow softened to 0.72 fill transparency. Session paused here at the owner's request; open items: owner verdict on the chamber glow, resizing the real Rocklock blaster (other branch), Studio MCP available after a session restart.
+
+## 2026-10-31 ? Review and backup of all local work
+
+- **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
+- **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
+- **Unresolved:** game-mesh winding/degenerate-face cleanup, genuine chamber illumination, Studio runtime/peers, slower-controller map integration and owner verdict. Art unchanged; private assets/IDs remain ignored.
+
+## 2026-10-31 - Floppy chamber and gun repairs
+
+- **Confirmed:** owner reported corruption, asked for a shorter handle, 12% smaller gun, topology and actual chamber illumination fixes. Follow-up: geometry looked fine; requested belly-down and reported both copies lost colour.
+- **Implemented/verified offline:** preserved source baseline, added repaired variant; source/game QA clear of prior errors; FBX and full creature checks pass. Grip shortened 18% and tools scaled 0.88. Uniform whole-model placement, duplicate bone-set motion, inward neutral SurfaceLight. Explicit Image maps plus private PBR templates replace unavailable importer textures confirmed in Studio logs. New ColoursFixed place opened.
+- **Unresolved:** final material/pose/light/fit approval and imported runtime evidence. [Detailed repair](slugs/floppy-chamber-repair.md).
+- **Verified, limited Studio sample:** owner-started ColoursFixed Play logged four loaded parts, eight bones, a material, completed belly-down placement, and pedestal/equipped idle initialization; no earlier texture-pack or Floppy errors in that sample. Colour/light/contact still need owner visual approval.
+
+## 2026-10-31 - Angular blaster and lighting visibility
+
+- **Confirmed:** owner approved the burnt-orange/graphite preview, rejected upward-flared tips, and specified downward angular cuts retaining the central firing gap and barrel reach. Slug animation is for the next pass.
+- **Implemented/verified offline:** compact proportions, solid capped downward muzzle bevels and nine clear channel rays; white spiral vanes, metal/grip separation. Broad shadowless fills and constant albedo-modulated material emission replace dependence on tiny light pools. Full creature/Blender checks and targeted Rocklock verifier pass. [Evidence, QA findings and limitations](slugs/blaster-refinement.md).
+- **Unresolved:** owner verdict on the final angular tips and lighting over time; generic gun QA retains rear mechanical-contact flags. Studio launch reported low resources with eight existing windows, which were preserved. No slug animation changes or experience publication.
+
+## 2026-10-31 — Original blaster draw/holster
+
+- **Confirmed:** owner wants quick, expressive wrist twists for drawing/putting away, fitted to the Roblox hand, with no throws or body spins.
+- **Implemented/verified offline:** original 0.42/0.34 s gestures, shared Floppy/Rocklock driver, native-grip additive poses and skinned/PBR-preserving cosmetic holster. Creature/movement/type/lint and numerical R6 sampling pass; [sources and evidence](slugs/blaster-motion.md).
+- **Unresolved:** actual Studio feel, rapid switching/death, peer rendering and owner art approval; official trailers were located but could not be downloaded, so no shot-specific motion claim.
+
+## 2026-10-31 ? Solid angular blaster muzzle
+
+- **Confirmed:** slightly extend barrel; lengthen/flatten downward slants; fill the two oval side vents with orange while keeping the central slug channel.
+- **Implemented/verified offline:** +0.080 stud muzzle reach, 0.24 versus 0.14 source-unit bevel run, solid front panels extruded from the existing cross-section. Orange mesh QA and exact-overlap checks pass; nine channel rays and six solid-panel samples pass; twelve GLB mesh bounds reimport exactly. Private mappings and test builds updated. [Evidence and inherited limits](slugs/blaster-refinement.md#solid-muzzle-and-shallower-bevel-follow-up-2026-10-31).
+- **Unresolved:** owner visual verdict and refreshed Studio playback. Existing rear contact flags remain; accepted files and eight prior Studio windows preserved.
+
+## 2026-10-31 - Owner design language record
+
+- **Confirmed:** owner asked that lessons from the Floppy design rounds be recorded so later slugs avoid the same errors, including what their phrases mean in practice (e.g. "dark spots").
+- **Implemented:** [owner design language](slugs/owner-design-language.md) collects phrase-to-outcome mappings drawn only from recorded rounds, the owner's working style, and the draw/holster runtime lessons from `experiment/rocklock-unified`. The creature-production procedure (both skill copies) now reads it first and records new meanings there.
+
+## 2026-11-01 - Floppy: glowing bulbs and spore spots
+
+- **Confirmed:** owner liked Floppy in the look and asked for slightly luminous antenna bulbs and a few medium, diffuse greenish-brown spots on the plain body only.
+- **Implemented/verified offline:** concept and build rules, in-place paint of the repaired source (checkpointed), export glow mask; concept and look renders inspected.
+- **Unresolved:** owner verdict; Roblox upload and Studio check.
+
+## 2026-11-01 - Floppy spots revised; blaster final in the Floppy test place
+
+- **Confirmed:** owner saw no spots and a glow on the skin by a bulb; wants noticeable, sickly, blended spots. Blaster: bladed ridge chosen; remove the dip before the blade, shorten about 15%, then make it the Roblox model.
+- **Implemented/verified offline:** two-tone blotches and bulb-only glow; packed-image bug fixed (game texture changes verified). Blaster export with ink shells privately uploaded (moderation Approved), private mapping updated with backup, `build/SlugshotFloppyTest-SlugshotBlaster.rbxlx` opened. Rocklock's blaster mapping left unchanged.
+- **Unresolved:** owner's Floppy verdict and Studio check of the blaster.
+
+## 2026-11-01 - Floppy sores: sick, not dirty
+
+- **Confirmed:** owner loves the blaster; Floppy spots looked dirty rather than sick, mainly the colour and the spot above the mouth.
+- **Implemented/verified offline:** brief research on sick versus dirty palettes; sores inverted to a lighter bilious centre with a bruised rim and sallow halo, face spot removed; concept and game-model renders inspected; page updated.
+- **Unresolved:** owner verdict; then Floppy's Roblox outline and glow.
+
+## 2026-11-01 - Floppy in the Slugshot look, in Roblox
+
+- **Confirmed:** owner asked for sore centres in the top-eyelid colour, keeping the glow, then said they like the design a lot and to put it in Roblox.
+- **Implemented/verified offline:** sage sore centres with own-colour glow; export adds a skinned ink shell (reimport checks pass); real emissive mask and strength scaling; appearance styles the shell; private uploads Approved; Floppy test place rebuilt and opened with the final blaster. luau-lsp clean.
+- **Unresolved:** Studio check by the owner.
+
+## 2026-11-01 - Floppy sore glow toned down
+
+- **Confirmed:** owner said the glow made the sores look much lighter than the eyelids; keep a light glow.
+- **Implemented/verified offline:** sore glow 0.45 to 0.15 (concept 0.9 to 0.3); repainted, re-exported, emissive mask re-uploaded (Approved), Floppy test place rebuilt and reopened; page updated.
+- **Unresolved:** owner Studio check.
+
+## 2026-11-01 - Floppy final design
+
+- **Confirmed:** owner liked the sores and asked for brighter, really glowing antenna bulbs, then made this the final Floppy design.
+- **Implemented/verified offline:** luminous bulb cores (Roblox emission follows surface colour), head-bone PointLight, repaint, export, private re-upload (Approved), test place rebuilt and reopened; page updated. luau-lsp and Selene clean.
+- **Unresolved:** owner Studio check.
+
 ## 2026-11-01 - Combat/first-person checkpoint for main
 
 - **Confirmed:** owner requests a checkpoint of this chat on main, including the latest wording lessons and recurring fixes. They moved on from running tweaks after the posture/grip correction and praised the crosshair work; this is the current playtest baseline, not proof of final subjective approval for every movement/charge detail.
@@ -111,6 +245,107 @@
 - **Confirmed:** owner requested Slugterra-inspired crystal formations as cavern light sources and asked that concurrent gun and animation work be preserved.
 - **Implemented:** five original Blender designs, 16 formations, visible crystal-hosted point lights and a cool native Roblox post-processing look, in separately named `-crystals` place builds.
 - **Verified, limited:** Blender FBX roundtrip and automated movement, foundation and map checks passed. **Unresolved:** subjective visual review and Studio/device performance. See [research](research/rocklock-crystals.md) and [Rocklock](rocklock.md).
+
+
+## 2026-10-31 — Bridge style leaning
+
+- **Considering:** owner is not fully decided but thinks droopy wooden suspension bridges would look best. Recorded in the [roadmap](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md).
+
+## 2026-10-31 — Floating spawn and bridges
+
+- **Confirmed:** spawn is a floating rock above the Maelstrom and below the Sky Well. Four bridges: forward to the portals, back to the entrance, left and right to the two exhibition sides. Each lands on solid mainland where the terrain and biomes are built. Invisible barriers stop players jumping off bridges.
+- **Implemented:** [roadmap layout](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md) updated.
+
+## 2026-10-31 — Hub centrepiece
+
+- **Confirmed:** after rejecting four slug-themed centrepieces, the owner asked for something dramatic and natural, then chose a **Sky Well** (ceiling opening with a light column and floating rocks) above a **Maelstrom** (glowing water spiralling down a central sinkhole), with spawn on a pillar between them and bridges out to the ring.
+- **Implemented:** [roadmap centrepiece](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom) and [asset plan](art/lobby-assets.md) updated.
+- **Unresolved:** fall behaviour into the Maelstrom; Roblox technique for the light column and swirl.
+
+## 2026-10-31 — Veylume, round hub, terrain features
+
+- **Confirmed:** the exploration world is named **Veylume** (owner-typed spelling). Hub is round/octagonal; exhibition positions basically right. Chosen extras: bounty and duel board, a slug workshop (Slugterra-esque, not a real forge), glowing pond, slug murals. The owner's main interest is terrain: spiralling caverns, a little volcano, a ravine with lava pouring down, a waterfall mountain with Slugterra-type greenery. Descent shaft, overlook, canteen and map table not chosen.
+- **Implemented:** [roadmap](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md) updated; dictation slips recorded in owner design language.
+
+## 2026-10-31 — Lobby layout and Slugterra research
+
+- **Confirmed:** owner layout: central spawn facing the PvP gate; Training gate left of PvP, exploration gate right of PvP (mode added later; needs a less generic name); entrance behind spawn; a slug exhibition and a gun exhibition; Slugterra-type terrain and structures all around. The wider map is planned as merging biomes.
+- **Implemented:** [Slugterra environment research](research/slugterra-environment.md) (search-confirmed vs from-memory items; the wiki and TV Tropes refused direct fetches); layout diagram, zone moods, name options and extra-area ideas in the [roadmap](art/lobby-roadmap.md); exhibition, frontier, slug-energy and biome-hint assets in the [asset plan](art/lobby-assets.md).
+- **Unresolved:** exploration name, exhibition positions, which extra areas to include, owner review before Phase 1.
+
+## 2026-10-31 — Art direction and lobby plan
+
+- **Confirmed:** the owner pasted an art-direction chat, agreed with its proposals, and added: Slugterra-type vibrant colours that are not neon, a mix of calm and vibrant, and Borderlands-style ink outlines so nothing goes unnoticed. They asked for general style rules (no strict colours or layout), a lobby roadmap and a plan of Blender assets, including distinct Slugterra-category props such as giant mushrooms, so the lobby doesn't look like AI slop. In the owner's dictation, "Badlands" means Borderlands.
+- **Implemented:** [style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md); links in the index, status and vision.
+- **Unresolved:** owner review; Phase 1 style test (three treatments A/B/C, outline methods, low-graphics check); a separate lobby branch/worktree before any build.
+
+## 2026-10-31 — Blender skill ecosystem for both agents
+
+- **Confirmed:** owner authorised installing 28 EL4CTEO skills, 30 RobLe3 skills, BlendRelay and MCP for Blender for both Codex and Claude, plus Slugshot routing and quality records. Preserve the current creature and unrelated Rocklock/movement work; no GPU image-to-3D services or publication.
+- **Implemented/verified:** pinned source libraries and all 58 namespaced skill copies per host; source validators and representative fresh Codex/Claude discovery/invocation; two local MCP registrations per host; both add-ons enabled and live-tested in Blender 4.5.14 and checksum-verified side-by-side 5.2.3. EL's 67 tests, RobLe3's 12 export tests and a disposable four-view modelling/rig/animation/export example passed. BlendRelay queried and edited a disposable cube, then restored a checkpoint exactly. See [installation audit](slugs/install-audit.md) and [routing](slugs/skill-routing.md).
+- **Unresolved:** automatic routing, all 58 individual invocations, RobLe3 recipes referencing older MCP tool names, Roblox import and owner artistic approval. The owner still reports weak silhouette/cohesion/expression in the first creature; its source remains intact.
+
+## 2026-10-31 — Symmetric antennae and modelling lessons
+
+- **Confirmed:** owner wants the outward antenna to match the more inward one, with both clear of the forehead; capture actionable visual/technical lessons without rebuilding the pipeline or treating automated checks as art approval.
+- **Implemented/verified:** mirrored rest curves, geometry-based tip symmetry and forehead-clearance checks across sampled idle poses; full offline generation/export/project checks pass. [Blender lessons](slugs/blender-lessons.md) links preserved historical renders and distinguishes confirmed fixes from unresolved Studio/visual review.
+- **Unresolved:** owner review of symmetry and clearance, and Roblox import/runtime.
+
+## 2026-10-31 — Image-right antenna clearance
+
+- **Confirmed:** owner reports the right antenna still touches the forehead.
+- **Implemented/verified:** moved the image-right tip (model `feelers_left`) outward/forward; checked the front/side projected gap with geometry assertions and reviewed the new renders. All offline project/source/FBX checks pass; evidence updated in the [design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner visual approval and Roblox import/runtime.
+
+## 2026-10-31 — Forehead, side depth and upper-body softness
+
+- **Confirmed:** owner likes the general direction but wants a forehead, head depth in side view, and a squishier-looking head and perimeter rather than softness only at the floor.
+- **Implemented/verified:** fuller forward crown/cheeks, gently settled flanks, softer Blender light scattering and subtle idle head-volume deformation. Antenna tips were advanced to stay free of the fuller forehead; a closed-volume topology check caught and prevented a tip/head loop. Full offline pipeline, side-depth/forehead and existing contact/colour/motion checks pass. [Art and evidence](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner softness verdict, real Roblox material/skin/scale playback and production optimisation. No soft-body simulation or gameplay introduced.
+
+## 2026-10-31 — Muddy markings and gentle head/waist contour
+
+- **Confirmed:** owner wants the markings slightly darker and muddy rather than vibrant, and the upper head a little wider to create a gentle, non-exaggerated hourglass shape.
+- **Implemented/verified:** muted olive vertex colours, a slightly broadened/rounded head and gentle middle narrowing; base remains widest. Source, full offline pipeline, FBX clips/colours, contact, connected skin and new silhouette checks pass. See [current design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner review and Roblox materials/skin/animation import. No gameplay or publication added.
+
+## 2026-10-31 — Softer forward antennae
+
+- **Confirmed:** owner wants antennae less stiff/attached and turned a little forward rather than to the sides.
+- **Implemented/verified:** deeper/smoothed roots, thinner drooping curves and a longer head-to-feeler weight gradient in the same connected skin. Both antenna tips now bend down/forward; all offline source, FBX and project checks pass. Sampled cream and existing body/face directions are retained. See [design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner visual verdict and actual Roblox skin/animation/material import.
+
+## 2026-10-31 — Reference cream and fused floppy antennae
+
+- **Confirmed:** owner requested downward-flopping antennae that extend from the slug; rejected the guessed yellow/brown and instructed the base colour to match their original Flopper image.
+- **Implemented/verified:** cream sampled from the supplied 3D reference, neutral lighting, two curved antennae voxel-fused into the head with blended head/feeler weights. All source/model/clip and strict Luau checks pass, including a single connected skin, downward tips, grounded squash and vertex colours. See [design/evidence](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** colour and antenna art review, higher-detail mesh optimisation, Roblox materials/skin/animation playback. No external model or reference texture imported and no asset uploaded.
+
+## 2026-10-31 — Grounded resting shape and integrated tail
+
+- **Confirmed:** owner wants slightly dirty/warm off-white rather than clean white or cream, a fully relaxed/slumped base on the floor, and a short squishy triangular tail made from the body's continuation.
+- **Implemented/verified:** spread/flattened underside and tail are one continuous original mesh; lower contour has mild asymmetry, material highlights are softened and the base colour is subtly warm. Idle and impact samples retain a broad flat contact patch; source and five FBX clips, vertex colours, strict Luau and all pipeline checks pass. See [design/evidence](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** subjective softness, colour and tail shape; Roblox import/rendering/scale animation remain unverified. The resting geometry is authored, not simulated soft-body physics.
+
+## 2026-10-31 — Sick/dizzy slug redesign
+
+- **Confirmed:** owner rejected the blocky/hard first design, oversized head, protruding eyes, green belly and feet; requests a squishy white body with hypnotic spiral eyes on the head, vivid diffused green bacteria-like spots all around and a very small tail.
+- **Implemented/verified:** an original seven-mesh Blender draft replaces the prior art; no feet, small tail, surface-fitted spiral eyes, full-circumference blended vertex colours, retained rig and idle/blink/hop/launch/impact. Full offline Blender/FBX and Luau checks pass, including body quadrant colours, tail length, eye offset and FBX vertex-colour preservation. See [design record](slugs/catalog/flopper-inspired.md).
+- **Unresolved:** owner review; Roblox rendering of vertex colours, animated bone scaling and skin deformation; no Studio runtime/import claim. No gameplay or asset publication.
+
+## 2026-10-31 — First slug and permanent design catalogue
+
+- **Confirmed:** owner supplied two Flopper images and a description, requesting a distinct original soft, expressive, non-transforming slug and reusable notes for every future species. Slippery patch, smoke and tripwire are gameplay ideas rather than approved implemented rules.
+- **Implemented/verified:** [first design record](slugs/catalog/flopper-inspired.md), [catalogue/template](slugs/catalog/index.md), original editable Blender draft, rig and five animation slots. Headless Blender renders and FBX reimports passed, as did project checks; see that record for exact hashes, measurements and limits. The named Sketchfab collection was inaccessible; only the supplied screenshots and a search-indexed community wiki entry were reviewed.
+- **Unresolved:** owner visual feedback, Studio native/import runtime and animation-scale behavior, 21-mesh device performance, final name and any gameplay design. No assets uploaded or published, and unrelated work was not touched.
+
+## 2026-10-31 — Isolated slug asset tooling
+
+- **Confirmed:** the owner's attached request authorizes universal creature tooling and original temporary placeholders, while Claude owns concurrent Rocklock/map/destruction work. No final creatures, full combat, merge into main or asset publication authorized.
+- **Implemented:** separate worktree `C:/Users/runni/slugshot-slug-pipeline`, branch `feature/slug-asset-pipeline` at baseline `913f9e6`; versioned JSON custom rigs/species and generated strict Luau; native Blender 4.5.14 LTS generation/actions/export/previews; independent-rig, flight-time-aware visual interfaces and isolated lab. See [ADR 0011](decisions/0011-slug-asset-pipeline.md).
+- **Implemented/verified:** configuration failure tests, Blender corruption cases and a one-eye/horn-free variant; source/export hash and animation-motion/loop/timing roundtrips; foundation/strict Luau/Rojo checks. [Evidence and exact limits](slugs/verification.md).
+- **Unresolved:** Studio MCP lists no connected instances; native fixture runtime, actual Roblox mesh/clip import, scale channels, permissions and visual quality need the [manual checklist](slugs/studio-import.md). Original movement and map files were not edited. No addons/accounts/assets installed or published.
+
 
 ## 2026-10-30 - Drag limb spacing
 

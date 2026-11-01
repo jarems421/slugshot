@@ -2,6 +2,8 @@
 This public directory contains no third-party movement clips. The experiment uses original code-generated poses/fixtures; downloaded candidates and their conversions/previews stay under ignored `private-assets/`. See [movement provenance](../docs/movement-assets.md).
 
 Future source files belong in `assets/source/`; reviewed export files in `assets/exports/`.
+
+Creature rig/species text sources now live under `assets/source/slugs/`. Their reproducible test `.blend`, FBX and preview outputs live only under ignored `build/slugs/`, separate from authored source and unrelated environment assets. See [the creature workflow](../docs/slugs/pipeline.md).
 Create these subdirectories only when needed. Nothing in this directory syncs to Studio by default.
 Record provenance in [the asset register](../docs/assets.md) before importing.
 Large binary assets need an explicit storage decision; Git LFS is not installed by this project.

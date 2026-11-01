@@ -1,0 +1,150 @@
+{
+  "species": "flopper-inspired",
+  "placeholder": false,
+  "tool": "4.5.14 LTS",
+  "inputs": {
+    "assets/source/slugs/species/flopper-inspired.json": "e1a842e831b0e4dabc2373c9d0c84e224c9a8d94f8f957ddd05176ff7a0d39b8",
+    "tools/slugs/blender_pipeline.py": "d0465dd638ed7db7f3ad43223bc5d40d6afc482a290d63a7a18cacb8c9778319",
+    "tools/slugs/common.py": "5bf6b6cf66322831ce5f7e8d0e69cd285c2ace44df3fff4206804e258bfc6c54",
+    "assets/source/slugs/rigs/flopper-inspired-v1.json": "2119716e676086fbce64747bf5d11c31dc321f795e2fecd63632597df53d16e8",
+    "assets/source/slugs/models/flopper-inspired/protoform.blend": "1634412f1304e9bbf60967500ee6b4823d1cf5baafa63fec8b152f5f3e54769e"
+  },
+  "units": "1 Blender unit = 1 intended Roblox stud; Studio roundtrip pending",
+  "axes": {
+    "source": "+Y forward, +Z up",
+    "fbx": "-Z forward, +Y up"
+  },
+  "settings": {
+    "use_selection": true,
+    "object_types": [
+      "ARMATURE",
+      "MESH"
+    ],
+    "global_scale": 1.0,
+    "apply_unit_scale": true,
+    "apply_scale_options": "FBX_SCALE_NONE",
+    "axis_forward": "-Z",
+    "axis_up": "Y",
+    "add_leaf_bones": false,
+    "use_armature_deform_only": true,
+    "bake_anim_use_all_actions": false,
+    "bake_anim_use_nla_strips": false,
+    "bake_anim_simplify_factor": 0.0,
+    "bake_anim_step": 1.0,
+    "use_mesh_modifiers": true,
+    "path_mode": "AUTO"
+  },
+  "provenance": "Original procedural Slugshot art by Codex, 2026-10-31, inspired by user-supplied Flopper references. No third-party model, texture, animation, or screenshot included. Design is a review draft.",
+  "forms": {
+    "protoform": {
+      "triangles": 22412,
+      "meshes": {
+        "SoftBody": 18000,
+        "eye-left": 1120,
+        "spiral-left": 964,
+        "eye-right": 1120,
+        "spiral-right": 964,
+        "mouth": 244
+      },
+      "bones": 10,
+      "actions": [
+        "Blink",
+        "Hop",
+        "Idle",
+        "Impact",
+        "Launch"
+      ],
+      "sockets": {
+        "face_left": {
+          "bone": "eye_left",
+          "positionBlender": [
+            -0.33,
+            0.36000000000000004,
+            1.7160000000000002
+          ]
+        },
+        "face_right": {
+          "bone": "eye_right",
+          "positionBlender": [
+            0.33,
+            0.36000000000000004,
+            1.7160000000000002
+          ]
+        },
+        "crown": {
+          "bone": "head",
+          "positionBlender": [
+            0.0,
+            0.0,
+            2.2880000000000003
+          ]
+        },
+        "energy": {
+          "bone": "body_upper",
+          "positionBlender": [
+            0.0,
+            0.0,
+            1.3
+          ]
+        }
+      },
+      "restBoundsBlender": [
+        1.9099180102348328,
+        1.8424113988876343,
+        2.454371213912964
+      ],
+      "offlineRoundtrip": {
+        "model": true,
+        "animations": {
+          "idle": {
+            "durationSeconds": 2.0,
+            "maxBoneMatrixDelta": 0.15814,
+            "loopSeamDelta": 0.0
+          },
+          "blink": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.94,
+            "loopSeamDelta": 0.0
+          },
+          "hop": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.69164,
+            "loopSeamDelta": 0.0
+          },
+          "launch": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.66111,
+            "loopSeamDelta": 0.0
+          },
+          "impact": {
+            "durationSeconds": 1.0,
+            "maxBoneMatrixDelta": 0.86575,
+            "loopSeamDelta": 0.0
+          }
+        }
+      }
+    }
+  },
+  "files": {
+    "before-cream-antennae.blend": "0d210abb01b1482a807824ceac41790f1b480e8d0ec13890ec8a4aee68dd75e0",
+    "before-forehead-and-soft-volume.blend": "bff790411bd4a908f5aafd85ca08f9207826693e78f75e47aa2e9305487d1d28",
+    "before-forward-antennae.blend": "cc637086e982137a84279394e0fa2ae326fd2fd1a3b5f0f993bbac2929863aca",
+    "before-grounded-redesign.blend": "7d4e8a454600ad10ad2973b1749293b01c0f2fc1b8aeb1a644a4827f9cc190a2",
+    "before-head-and-muted-spots.blend": "2cda6d2629e51a07f997c36cb7d45d09e37b282a3ea080a7a863717efe10cf3c",
+    "before-right-tip-clearance.blend": "bf9392851fa33b42a3b80546e5cc61d537d6f1e24e0269db8668356c83285bfb",
+    "before-sick-redesign.blend": "6b6ed8a7d6700bf6434b6d2d5cc299ee3fa1c78fb9e34abd689e3aca9bdc74a9",
+    "before-symmetric-antennae.blend": "2b8228ab8212fe735d735e8b1bd30c4e9316d5fa3c183f01c784200077f62518",
+    "exports/protoform/blink.fbx": "c1a8723b68757a4862cd6478b3d4a90226bcd1cacfcb3114cef46cac2ee975b5",
+    "exports/protoform/hop.fbx": "278ed04b9ab8976241aff90bd56c1d14affd0e0270432eed49c5910776cf3f12",
+    "exports/protoform/idle.fbx": "7355d1f4f607675502623a763b8316bceddb876105d25dbdd2f713401752f751",
+    "exports/protoform/impact.fbx": "45c8480d5a74f434c0c46a67fdca8577621829e273afb03b438e89a1152f0f09",
+    "exports/protoform/launch.fbx": "c8586cf2e1d1d19bb0c0d0caa3ffb29438ad02cc39cb9b5704bfd0de139412ec",
+    "exports/protoform/model.fbx": "0fd0843db3923eb48d88fe350030e7b4c42e9a10d9418d9635c39cd6dd659a2f",
+    "first-draft.blend": "d9b8db39013ed2769f0675a13693839327e0efce364e6d1fa9e7c08789183c59",
+    "fourth-draft.blend": "c80d18a1e769ada8cb6f3bf5f81fd69420f909c6015d6b13b19ded05db16ffce",
+    "second-draft.blend": "a1429757ca80c537cd8a639a69350e528cdad315e859a5fb680448aabcd4af97",
+    "source/protoform.blend": "9e1f6618057703eae19a3bd28cde08e5900af1982cb564be9c206efb1568803a",
+    "third-draft.blend": "4dda41939d500a5091fcfc9c6f7672d8e345dfbaf848c564e66bebd7d5ed8a24"
+  },
+  "studioImportVerified": false
+}

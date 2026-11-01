@@ -1,0 +1,326 @@
+{
+  "ok": true,
+  "pass": false,
+  "errors": [
+    "z-fighting: BodyGrey (66 overlapping coplanar tri pairs)",
+    "z-fighting: BodyGrey<->DarkGrey (4 overlapping coplanar tri pairs)"
+  ],
+  "warnings": [
+    "BodyGrey: duplicate verts=274 loose verts=0",
+    "DarkGrey: duplicate verts=323 loose verts=0",
+    "Black: duplicate verts=637 loose verts=0",
+    "Steel: duplicate verts=282 loose verts=0",
+    "ChargerVane: duplicate verts=869 loose verts=0",
+    "ChargerBlack: duplicate verts=131 loose verts=0",
+    "White: duplicate verts=504 loose verts=0",
+    "GripBand: duplicate verts=192 loose verts=0",
+    "GripNavy: duplicate verts=114 loose verts=0",
+    "hidden back-to-back faces: DarkGrey<->ChargerVane (192 pairs) - delete to save tris",
+    "hidden back-to-back faces: DarkGrey<->Steel (99 pairs) - delete to save tris",
+    "hidden back-to-back faces: DarkGrey<->ChargerBlack (51 pairs) - delete to save tris",
+    "hidden back-to-back faces: DarkGrey<->White (40 pairs) - delete to save tris",
+    "hidden back-to-back faces: DarkGrey (4 pairs) - delete to save tris",
+    "asset lowest point z=-0.3852 (not resting on ground plane z=0)"
+  ],
+  "ground_z": -0.3852,
+  "zfighting": [
+    {
+      "where": "BodyGrey",
+      "tri_pairs": 66
+    },
+    {
+      "where": "BodyGrey<->DarkGrey",
+      "tri_pairs": 4
+    }
+  ],
+  "floating": [],
+  "back_to_back": [
+    {
+      "where": "DarkGrey<->ChargerVane",
+      "tri_pairs": 192
+    },
+    {
+      "where": "DarkGrey<->Steel",
+      "tri_pairs": 99
+    },
+    {
+      "where": "DarkGrey<->ChargerBlack",
+      "tri_pairs": 51
+    },
+    {
+      "where": "DarkGrey<->White",
+      "tri_pairs": 40
+    },
+    {
+      "where": "DarkGrey",
+      "tri_pairs": 4
+    }
+  ],
+  "enclosed": [],
+  "objects": {
+    "BodyGrey": {
+      "verts": 1786,
+      "faces": 3000,
+      "tris": 3000,
+      "ngons": 0,
+      "boundary_edges": 582,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 274,
+      "islands": 12,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "DarkGrey": {
+      "verts": 1470,
+      "faces": 2198,
+      "tris": 2198,
+      "ngons": 0,
+      "boundary_edges": 774,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 323,
+      "islands": 23,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Black": {
+      "verts": 1913,
+      "faces": 2400,
+      "tris": 2400,
+      "ngons": 0,
+      "boundary_edges": 1544,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 637,
+      "islands": 54,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Steel": {
+      "verts": 1106,
+      "faces": 1498,
+      "tris": 1498,
+      "ngons": 0,
+      "boundary_edges": 662,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 282,
+      "islands": 67,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "CanisterTeal": {
+      "verts": 640,
+      "faces": 1276,
+      "tris": 1276,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 1,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "ChargerVane": {
+      "verts": 1748,
+      "faces": 1500,
+      "tris": 1500,
+      "ngons": 0,
+      "boundary_edges": 1748,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 869,
+      "islands": 148,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "ChargerBlack": {
+      "verts": 888,
+      "faces": 1498,
+      "tris": 1498,
+      "ngons": 0,
+      "boundary_edges": 402,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 131,
+      "islands": 4,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "White": {
+      "verts": 1302,
+      "faces": 1500,
+      "tris": 1500,
+      "ngons": 0,
+      "boundary_edges": 1008,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 504,
+      "islands": 64,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "GripBand": {
+      "verts": 1094,
+      "faces": 1800,
+      "tris": 1800,
+      "ngons": 0,
+      "boundary_edges": 384,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 192,
+      "islands": 3,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "GripNavy": {
+      "verts": 690,
+      "faces": 1148,
+      "tris": 1148,
+      "ngons": 0,
+      "boundary_edges": 234,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 114,
+      "islands": 3,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "Orange": {
+      "verts": 1786,
+      "faces": 3501,
+      "tris": 3501,
+      "ngons": 0,
+      "boundary_edges": 77,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 5,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    },
+    "CyanGlow": {
+      "verts": 758,
+      "faces": 1500,
+      "tris": 1500,
+      "ngons": 0,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "wire_edges": 0,
+      "loose_verts": 0,
+      "degenerate_faces": 0,
+      "zero_length_edges": 0,
+      "inconsistent_normals_edges": 0,
+      "duplicate_verts": 0,
+      "islands": 4,
+      "inside_out_islands": 0,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "materials": 1
+    }
+  }
+}

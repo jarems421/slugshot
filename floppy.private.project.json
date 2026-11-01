@@ -1,0 +1,116 @@
+{
+  "name": "SlugshotFloppyTest",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34876,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "FloppyAsset": {
+        "$path": "private-assets/floppy/FloppyAsset.luau"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "FloppyTest": {
+        "$path": "experiments/creatures/floppy/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "FloppyTest": {
+          "$path": "experiments/creatures/floppy/client"
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": {
+          "Enum": 4
+        },
+        "ClockTime": 0,
+        "Brightness": 1,
+        "Ambient": [
+          0.14,
+          0.15,
+          0.17
+        ],
+        "OutdoorAmbient": [
+          0.16,
+          0.17,
+          0.19
+        ],
+        "EnvironmentDiffuseScale": 0.5,
+        "EnvironmentSpecularScale": 0.75,
+        "ExposureCompensation": 0
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.24,
+          "Size": 16,
+          "Threshold": 1.25
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Floor": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            60,
+            1,
+            60
+          ],
+          "Position": [
+            0,
+            -0.5,
+            0
+          ],
+          "Color": [
+            0.62,
+            0.64,
+            0.6
+          ]
+        }
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            4,
+            1,
+            4
+          ],
+          "Position": [
+            0,
+            0.01,
+            -6
+          ],
+          "Orientation": [
+            0,
+            180,
+            0
+          ],
+          "Transparency": 1,
+          "CanCollide": false
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "BlasterMesh": {
+        "$path": "private-assets/floppy/BlasterMesh.luau"
+      },
+      "FloppyMaterials": {
+        "$path": "private-assets/floppy/materials.rbxmx"
+      }
+    }
+  }
+}

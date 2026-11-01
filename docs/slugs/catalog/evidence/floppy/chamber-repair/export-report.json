@@ -1,0 +1,82 @@
+{
+  "source": "assets\\source\\slugs\\models\\floppy\\floppy-repaired.blend",
+  "sourceSha256": "480018e7aad8276ecfa22d09e103d2bb499a75a8a5d620b75b03e15c20a503e7",
+  "tool": "4.5.14 LTS",
+  "units": "1 Blender unit = 1 stud",
+  "axes": {
+    "blender": "+Y forward, +Z up",
+    "fbx": "-Z forward, +Y up"
+  },
+  "budget": {
+    "bodyTriangles": 8000,
+    "eyeTriangles": 400,
+    "texture": 1024,
+    "maxInfluences": 4
+  },
+  "gameScale": 0.34,
+  "torsoStretch": 0.25,
+  "roughness": {
+    "skinBase": 0.1,
+    "skinHead": 0.22,
+    "eyes": 0.08
+  },
+  "files": {
+    "model.fbx": "9deb1593c99d2e5dc1ba2e05628d74b3bceabe8bfe9cc5c8a0a647f9a5da9ae2",
+    "idle.fbx": "ab406407bc8c6e08d1ecd45ced34e11d8cca40b1571c05d533487806c61fa070",
+    "model.glb": "1587dce5644324c464d2226db5a64852fb93b5be4804456a2b57e24439fc0976",
+    "textures/floppy-body-color.png": "5c33fc70ddf35d4167022e01c02c183d2f5dcc29618779c8ea8c9cfcf6c3ebfe",
+    "textures/floppy-body-normal.png": "e8ebd0596263646f9d45f140605de1df66270f9daba407ebda0e7586ddd64e58",
+    "textures/floppy-eye-left.png": "019e95094d5937140eee3a1137b03d015c97035f492953373ebce954ebdcf71a",
+    "textures/floppy-eye-right.png": "c5d19fc928882b96cd98c0c2350abf5c020723ff352d04e12f00152a6e9dd0b1"
+  },
+  "studioImportVerified": false,
+  "bones": [
+    "antenna_L",
+    "antenna_R",
+    "body_lower",
+    "body_upper",
+    "eye_L",
+    "eye_R",
+    "head",
+    "root"
+  ],
+  "meshes": {
+    "EyeL": {
+      "triangles": 400,
+      "maxInfluences": 1
+    },
+    "FloppyBody": {
+      "triangles": 8000,
+      "maxInfluences": 3
+    },
+    "EyeR": {
+      "triangles": 400,
+      "maxInfluences": 1
+    }
+  },
+  "boundsBlender": {
+    "min": [
+      -0.334,
+      -0.335,
+      0.0
+    ],
+    "max": [
+      0.334,
+      0.269,
+      0.924
+    ]
+  },
+  "facesPlusY": true,
+  "heightStuds": 0.924,
+  "sizeStuds": [
+    0.668,
+    0.604,
+    0.924
+  ],
+  "idle": {
+    "seconds": 12.0,
+    "loopSeam": 0.0,
+    "maxBoneScaleChange": 0.0,
+    "maxBoneTravel": 0.015
+  }
+}
