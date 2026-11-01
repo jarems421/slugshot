@@ -979,7 +979,7 @@ RunService:BindToRenderStep("SlugshotActionView", Enum.RenderPriority.Camera.Val
 		local view = camera.CFrame
 		AcrobaticCamera.setBase(view)
 		local experiment, lens = AcrobaticCamera.step(dt, character, FirstPerson.active())
-		local tilt = CFrame.Angles(viewPitch, 0, viewRoll) * experiment
+		local tilt = CFrame.Angles(viewPitch, 0, viewRoll) * experiment * Recoil.viewKick()
 		-- Apply the running eye position after native follow. Adding this through
 		-- CameraOffset loses much of the advance to native follow/physics timing.
 		lens += Recoil.viewPunch()

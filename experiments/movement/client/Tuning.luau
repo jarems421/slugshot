@@ -53,8 +53,12 @@ Tuning.values = {
 	-- The three-stage wind-up: smooth steps that hold on the gun and the view.
 	chargeTime = 0.665, -- three kicks, about 0.22 s apart
 	chargeClunk = 1,
-	chargeViewTighten = 3.5,
+	chargeViewTighten = 2,
 	chargeMoveShake = 2.7,
+	chargeStepRoll = 1.5, -- view roll per step (deg)
+	chargeStepShove = 0.15, -- eye shoved back per step (studs)
+	chargeMoveStep = 1.6, -- extra step kick on the gun at full movement
+	chargeStepPulse = 0.7, -- view hit per step, every state (deg)
 	adsShake = 0.25, -- share of the charge vibration kept through the sight
 	-- How much of the droop each shot level corrects. 1: lands on the crosshair. 0: flies
 	-- straight from the gun and droops.
@@ -119,12 +123,16 @@ Tuning.Entries = {
 	entry("adsOpenTime", "Scope open time (s)", "ADS", 0.1, 1.5, 0.01),
 	entry("adsCloseTime", "Scope close time (s)", "ADS", 0.1, 1.5, 0.01),
 	entry("chargeTime", "Charge time (s)", "Charge spiral", 0.3, 1.5, 0.01),
-	entry("chargeClunk", "Step swell on gun", "Charge spiral", 0, 3, 0.05),
+	entry("chargeClunk", "Step kick on gun", "Charge spiral", 0, 3, 0.05),
 	entry("chargeViewTighten", "View tighten (deg)", "Charge spiral", 0, 10, 0.25),
 	entry("shotArcOne", "One charge correction", "Accuracy", 0, 1, 0.05),
 	entry("shotArcTwo", "Two charge correction", "Accuracy", 0, 1, 0.05),
 	entry("aimArc", "Full charge correction", "Accuracy", 0, 1, 0.05),
 	entry("chargeMoveShake", "Vibration while moving", "Charge spiral", 1, 6, 0.05),
+	entry("chargeMoveStep", "Step kick while moving", "Charge spiral", 1, 6, 0.05),
+	entry("chargeStepRoll", "View roll per step (deg)", "Charge spiral", 0, 5, 0.05),
+	entry("chargeStepShove", "View shove per step (studs)", "Charge spiral", 0, 0.5, 0.01),
+	entry("chargeStepPulse", "View hit per step (deg)", "Charge spiral", 0, 5, 0.05),
 	entry("faceLid", "Lids lower at rest", "Floppy face", 0, 0.12, 0.005),
 	entry("faceTilt", "Outer lid droop (deg)", "Floppy face", 0, 20, 1),
 	entry("faceBlinkTime", "Blink time (s)", "Floppy face", 0.15, 8, 0.05),

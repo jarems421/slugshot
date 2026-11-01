@@ -7,7 +7,10 @@ local Ads = require(script.Parent.Ads)
 local Recoil = {}
 local STAGES = 3
 local STAGE_SHAKE = { 0, 0.4, 0.7, 1 }
-local CLUNK_SIZE = { 0.8, 1, 1.35 }
+local CLUNK_SIZE = { 0.8, 1, 1.4 }
+local KICK_ATTACK, KICK_LENGTH = 0.025, 0.17
+local VIEW_RATE = 8 -- the view's held tighten stays gradual; snapping it read as zooming
+local STEP_RATE = 60 -- held level snaps at each step; a slow ease reads as drawing a bow
 local stage, clunkStage, clunkAt = 0, 0, -math.huge
 local shakeLevel, heldLevel, viewLevel, moving, shakePhase = 0, 0, 0, 0, 0
 local clunkListeners: { (number) -> () } = {}
@@ -60,7 +63,7 @@ end
 
 -- Three-stage wind-up, this player only. Each third of the charge is a smooth step that holds, so
 -- power can be read at any moment: the gun eases back and up, the view tightens slightly and the
--- vibration grows. A soft swell marks each step. Aim and crosshair never move.
+-- vibration grows. A hard kick marks each step. Aim and crosshair never move.
 function Recoil.onClunk(listener: (number) -> ())
 	table.insert(clunkListeners, listener)
 end
@@ -78,25 +81,31 @@ function Recoil.setCharging(value: number, movement: number, dt: number)
 		end
 	end
 	stage = reached
-	local toward = 1 - math.exp(-20 * dt)
+	local toward = 1 - math.exp(-STEP_RATE * dt)
 	shakeLevel += (STAGE_SHAKE[stage + 1] - shakeLevel) * toward
 	heldLevel += (stage / STAGES - heldLevel) * toward
-	viewLevel += (stage / STAGES - viewLevel) * toward
+	viewLevel += (stage / STAGES - viewLevel) * (1 - math.exp(-VIEW_RATE * dt))
 	moving += (math.clamp(movement, 0, 1) - moving) * (1 - math.exp(-8 * dt))
 	-- Slower and larger on the move, where a fine fast shake is lost in the arm swing.
 	shakePhase += (42 + (24 - 42) * moving) * dt
 end
 
--- A soft swell with no sharp edge, larger for later stages.
+-- A hard hit: snaps to its peak almost at once, then is gone well before the next step.
 local function clunk(now: number): number
 	local age = now - clunkAt
-	if age < 0 or age > 0.3 then
+	if age < 0 or age > KICK_LENGTH then
 		return 0
 	end
-	local rise = math.min(age / 0.1, 1)
-	local fall = math.clamp((age - 0.1) / 0.2, 0, 1)
-	local eased = rise * rise * (3 - 2 * rise) * (1 - fall * fall * (3 - 2 * fall))
-	return eased * (CLUNK_SIZE[clunkStage] or 0)
+	if age < KICK_ATTACK then
+		return (age / KICK_ATTACK) * (CLUNK_SIZE[clunkStage] or 0)
+	end
+	local fall = 1 - (age - KICK_ATTACK) / (KICK_LENGTH - KICK_ATTACK)
+	return fall * fall * (CLUNK_SIZE[clunkStage] or 0)
+end
+
+-- Kicks alternate sides, so consecutive hits read as separate blows.
+local function kickSide(): number
+	return if clunkStage % 2 == 0 then 1 else -1
 end
 
 -- Through the sight only a very slight tremor is left, still growing with each step.
@@ -111,7 +120,10 @@ end
 function Recoil.vibration(now: number): CFrame
 	local amount = shakeAmount(1)
 	local free = 1 - Ads.weight() -- the sight holds its place: no steps or swells while aiming
-	local jolt = clunk(now) * Tuning.values.chargeClunk * free
+	local jolt = clunk(now)
+		* Tuning.values.chargeClunk
+		* free
+		* (1 + (Tuning.values.chargeMoveStep - 1) * moving)
 	local held = heldLevel * free
 	if jolt == 0 and amount < 1e-3 and held < 1e-3 then
 		return CFrame.identity
@@ -120,12 +132,12 @@ function Recoil.vibration(now: number): CFrame
 	local at = shakePhase
 	return CFrame.new(
 		math.noise(at, 1.3) * 0.032 * amount,
-		math.noise(at, 7.1) * 0.032 * amount + (0.06 * held + 0.015 * jolt) * far,
-		math.noise(at, 13.7) * 0.02 * amount + (0.2 * held + 0.04 * jolt) * far
+		math.noise(at, 7.1) * 0.032 * amount + (0.06 * held + 0.05 * jolt) * far,
+		math.noise(at, 13.7) * 0.02 * amount + (0.2 * held + 0.16 * jolt) * far
 	) * CFrame.Angles(
-		math.noise(at, 21.9) * math.rad(1.2) * amount + math.rad(2.5 * held + 1.5 * jolt),
-		math.noise(at, 29.3) * math.rad(1.2) * amount,
-		0
+		math.noise(at, 21.9) * math.rad(1.2) * amount + math.rad(2.5 * held + 7 * jolt),
+		math.noise(at, 29.3) * math.rad(1.2) * amount + math.rad(1.5 * jolt) * kickSide(),
+		math.rad(3 * jolt) * kickSide()
 	)
 end
 
@@ -140,10 +152,10 @@ function Recoil.armWindup(now: number): CFrame
 	local at = shakePhase + 40
 	return CFrame.new(
 		math.noise(at, 3.1) * 0.022 * amount,
-		math.noise(at, 5.7) * 0.022 * amount + 0.012 * jolt,
-		0.03 * jolt
+		math.noise(at, 5.7) * 0.022 * amount + 0.03 * jolt,
+		0.08 * jolt
 	) * CFrame.Angles(
-		math.noise(at, 9.3) * math.rad(1) * amount + math.rad(1 * jolt),
+		math.noise(at, 9.3) * math.rad(1) * amount + math.rad(3 * jolt),
 		0,
 		math.noise(at, 11.9) * math.rad(0.8) * amount
 	)
@@ -151,7 +163,19 @@ end
 
 -- The whole view's share: it tightens a little with each stage and holds, in every camera view.
 function Recoil.viewPunch(): number
-	return -Tuning.values.chargeViewTighten * viewLevel
+	-- Each step hits the view too, in every state, so it reads even when the gun is not watched.
+	local hit = clunk(os.clock()) * (1 - Ads.weight())
+	return -Tuning.values.chargeViewTighten * viewLevel - Tuning.values.chargeStepPulse * hit
+end
+
+-- Each step shoves the eye back and rolls the view. Both leave the crosshair's direction alone.
+function Recoil.viewKick(): CFrame
+	local hit = clunk(os.clock()) * (1 - Ads.weight())
+	if hit == 0 then
+		return CFrame.identity
+	end
+	return CFrame.new(0, 0, Tuning.values.chargeStepShove * hit)
+		* CFrame.Angles(0, 0, math.rad(Tuning.values.chargeStepRoll * hit) * kickSide())
 end
 
 function Recoil.sample(started: any, now: number, charge: any, style: any): CFrame

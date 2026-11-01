@@ -1,5 +1,9 @@
 # Project memory
 
+## 2026-11-01 — Three distinct kicks
+
+- **Confirmed:** owner wanted "bam, bam, bam" in every state, not "drawing back a bow", then "too much like your screen's just zooming in". Sharp gun kicks plus a view roll and eye shove, with little zoom, were accepted: "perfect, that's good now". Slide gun, ADS on the move, arc look and running vibration also approved. See [status](status.md).
+
 ## 2026-11-01 — Slide gun position
 
 - **Confirmed report:** owner: the slide "sometimes corrupts the gun shooting like position", "usually when you're sliding to the left and to the right, and like diagonally backwards... Not like just a standard forward slide."

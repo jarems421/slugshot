@@ -229,6 +229,8 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 
 **Shot levels (2026-11-01):** "first phase" and "a quick tap" are the same level; "two holds" means reaching the second kick. "100% accurate" was qualified by the owner: "won't obviously be fully bullet tracing, but it'll hit the area" the cursor is on. So the arc stays visible and the landing point is what must be right.
 
+**Kicks (2026-11-01):** "bap bap bap" was rejected earlier, then soft swells read as "drawing back a bow". The owner now wants "bam, bam, bam", distinct and vicious, in every state. Check the latest wording, not the earlier rejection.
+
 **Slide gun position (2026-11-01):** "corrupts the gun shooting position" when "sliding to the left and to the right, and like diagonally backwards" meant the gun following the body, which turns to face the slide. The owner's direction detail located it: forward slides looked fine, so forward-only tests could not show it.
 
 **Overshoot (2026-11-01):** "past a certain height the gun moves up a lot" and "overshoot" were a real jump: the arc followed the distance under the crosshair, which changes abruptly at a target's edge. Screenshots from the owner located it immediately. Anything driven by the crosshair's hit distance needs checking at target edges.
