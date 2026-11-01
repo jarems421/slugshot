@@ -4,7 +4,7 @@ The props and kits the lobby needs, to be authored in Blender so the space looks
 
 Research basis: [Slugterra environment research](../research/slugterra-environment.md).
 
-**Final, 2026-11-01:** the owner approved every library design (rock wall v6, 14 crystals, giant mushroom v2 with 14-colour bank, three gates v3) as final. Lessons: [art lessons](lessons.md).
+**Final, 2026-11-01:** the owner approved every library design (rock wall v6, 14 crystals, giant mushroom v2 with 14-colour bank, three gates v3) as final. Also final, 2026-11-01: spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, as concepts not yet built for Roblox. Lessons: [art lessons](lessons.md).
 
 Source: owner request, 2026-10-31 ("build some assets in Blender so that stuff just doesn't look like AI slop… plan out what different assets we're going to have around the lobby… stuff like the Slugterra mushrooms, which are very distinct"). **Status: the list is Considering.** The owner confirms, cuts or adds items before production. Each asset's own design is agreed at concept stage.
 
@@ -57,8 +57,8 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
-| Floating spawn rock (design final, v10, 2026-11-01) | P2 | Rock island hovering above the Maelstrom in the Sky Well's light, flat walkable top facing the PvP gate, roots/moss/vines trailing beneath, chunky ink lines. Concept v2 in the library. Reference categories, not designs: strangler fig roots flowing over stone at Ta Prohm for the roots; twisted stems, varied leaves, tendrils and flowers on vines for the vines. |
-| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Confirmed 2026-11-01: **droopy wooden suspension bridges**, 50 long and 10 wide, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. No barriers (owner, 2026-11-01). At the spawn rock each one starts at a runestone gateway, with its ropes wound round the stones; awaiting owner review. |
+| Floating spawn rock (design final, v11, 2026-11-01) | P2 | Rock island hovering above the Maelstrom in the Sky Well's light, flat walkable top facing the PvP gate, roots/moss/vines trailing beneath, chunky ink lines. Concept v2 in the library. Reference categories, not designs: strangler fig roots flowing over stone at Ta Prohm for the roots; twisted stems, varied leaves, tendrils and flowers on vines for the vines. |
+| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Confirmed 2026-11-01: **droopy wooden suspension bridges**, 50 long and 10 wide, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. No barriers (owner, 2026-11-01). At the spawn rock each one starts at a runestone gateway, with its ropes wound round the stones. Design final, v2, 2026-11-01. |
 | Mainland shoreline | P2 | The solid land wrapping around the sinkhole where every bridge lands and the terrain and biomes begin. |
 | Maelstrom | P2 | Sinkhole of glowing water spiralling down: layered spiral meshes with animated textures, rim rocks, rising mist. |
 | Sky Well | P2 | Ceiling opening far above, with a fake volumetric light column (layered meshes/Beams) and slowly drifting floating rocks trailing moss and vines. |

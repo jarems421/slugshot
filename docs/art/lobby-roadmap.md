@@ -42,7 +42,7 @@ Source: owner's pasted art-direction chat and requests, 2026-10-31. **Status: Co
   - **left** to the gun exhibition side;
   - **right** to the slug exhibition side.
 - **Bridges land on solid mainland, not small platforms.** Each one opens out into broad land that wraps around the sinkhole, and the terrain and biomes grow out from there. The round/octagonal shape is the sinkhole and the mainland shoreline around it.
-- **Runestone gateways (Proposed, built to the owner's direction 2026-11-01; awaiting review):** each bridge starts at a small Stonehenge-style gateway at the island's edge: two runestones and a lintel, about 12 studs of headroom and 14 wide, with a glowing keystone showing the destination from both sides. The bridge ropes wind round the stones and end in knots. Replaces the broken pillar and stump.
+- **Runestone gateways (Confirmed, owner approved as final 2026-11-01):** each bridge starts at a small Stonehenge-style gateway at the island's edge: two runestones and a lintel, about 12 studs of headroom and 14 wide, with a glowing keystone showing the destination from both sides. The bridge ropes wind round the stones and end in knots. Replaces the broken pillar and stump.
 - **Bridge motion (Confirmed, owner 2026-11-01):** very slight sway at all times, and a slight dip with planks moving under players crossing: noticeable, not too much. Visual only.
 - **Bridges:** Confirmed 2026-11-01: wooden suspension bridges, 50 long (shortened from 60 on 2026-11-01 for the larger spawn rock), 10 wide, with about 5 studs of droop. Decks stay fixed so they never move players.
 - **No barriers (Confirmed 2026-11-01, replaces the earlier invisible barriers).** Falling is a feature: a long plunge through mist, then respawn at spawn. A low rock lip stops plain walking off the shore, and players can hop over it.
@@ -203,7 +203,7 @@ Check low graphics settings, mobile, triangle/texture/light budgets and draw cal
 | 0 Plan | Implemented; awaiting owner review |
 | 1 Style test | Treatment chosen; concepts final; [look pack](look-pack.md) and Studio look-test place built 2026-11-01, awaiting owner verdict |
 | 2 Greybox | Sketch approved by the owner 2026-11-01 as the baseline; fine-tuning continues per asset |
-| 3 Assets | Not started |
+| 3 Assets | Concepts final for the wall, crystals, mushroom, gates, spawn rock, Sky Well, Maelstrom and rope bridges; terrain, entrance, gun shop and slug exhibition not designed. No hub centrepiece or bridge built for Roblox yet |
 | 4 Assembly/lighting | Not started |
 | 5 Life pass | Not started |
 | 6 Performance/polish | Not started |

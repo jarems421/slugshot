@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-01 - Hub centrepieces and bridges final
+
+- **Confirmed (owner):** spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2 are final designs ("It looks perfect... Finalize all of these"). The owner asked what is left and whether to bring these into Roblox now and build the rest around them.
+- **Evidence:** owner review of the published library; offline renders only. Nothing is built in Roblox yet.
+
 ## 2026-11-01 - Runestone gateways replace the bridge markers
 
 - **Owner feedback:** the hook-up looked wrong (two screenshots). Move the runes closer to the edge, make the rope really wrap around something instead of looking half inside it, and use two full runestones per bridge: a little Stonehenge entrance with a glowing stone showing the destination.

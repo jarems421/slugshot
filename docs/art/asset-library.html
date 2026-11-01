@@ -3037,7 +3037,7 @@ void main() {
   // Hub centrepiece, one vertical axis (owner, 2026-11-01). Variants here are camera views of one design.
   const CENTRE_CORE = [0.3, 0.95, 0.9];
   ASSETS.push({
-    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v11", concept: true, noLive: true, shader: 4,
+    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v11", noLive: true, shader: 4,
     variantLabel: "View",
     variants: [
       { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 7.5, 0], dist: 27, pitch: 0.34 } },
@@ -3063,7 +3063,7 @@ void main() {
       ["Status", "The rock itself was approved as final on 1 Nov 2026. The new runestone gateways, v11, await your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v10", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v10", noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
@@ -3084,7 +3084,7 @@ void main() {
       ["Status", "Approved for now by the owner on 1 Nov 2026. Can be revisited once it is in the game."]
     ]
   }, {
-    id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, slug juice 50 below the shore", version: "v5", concept: true, noLive: true, shader: 6,
+    id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, slug juice 50 below the shore", version: "v5", noLive: true, shader: 6,
     variantLabel: "View",
     variants: [
       { name: "Overview", bright: [0.1, 0.82, 0.78], camera: { target: [0, -6, 0], dist: 58, pitch: 0.95 } },
@@ -3107,7 +3107,7 @@ void main() {
       ["Status", "Approved by the owner on 1 Nov 2026. The bridges and gateways added since, v5, await your review."]
     ]
   }, {
-    id: "bridge", name: "Wooden rope bridge", kind: "Landmark · hub", size: "50 studs long, 10 wide, about 5 of droop", version: "v2", concept: true, noLive: true, shader: 7,
+    id: "bridge", name: "Wooden rope bridge", kind: "Landmark · hub", size: "50 studs long, 10 wide, about 5 of droop", version: "v2", noLive: true, shader: 7,
     variantLabel: "View",
     variants: [
       { name: "Whole bridge", bright: [0.41, 0.28, 0.155], camera: { target: [0, -0.6, 0], dist: 37, pitch: 0.34 } },
@@ -3137,7 +3137,7 @@ void main() {
     { name: "Slugshot mix", t: [1.7, 0.95, 1.1, 0.5], mix: true }
   ];
   const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
-  // Owner approved every design as final on 2026-11-01.
+  // Owner approved every design as final on 2026-11-01, including the hub centrepieces and bridges.
   ASSETS.filter(a => !a.concept).forEach(a => {
     a.final = true;
     a.notes = a.notes.filter(([k]) => k !== "Status").concat([["Status", "Final design, approved by the owner on 1 Nov 2026. Next: build in Blender from these exact shapes."]]);
