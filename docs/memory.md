@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-01 — Look test round 3
+
+- **Owner feedback:** add a mini stairway/slab under the portal energy; walls looked blue ("don't just make the rocks blue"), so light them from above instead; small wall mushrooms look like angular shards.
+- **Implemented:** gate v4 steps (concept and library updated); neutral ambient and fog plus a warm-white spotlight above each wall; small-detail triangle floor, 0.05-stud wall sampling and thinner small-cap ink. Rebuilt and re-uploaded the wall, mushroom and gate; library v14. Checks: lint, types and build pass; not yet seen in Studio by the agent.
+
 ## 2026-11-01 — Look test round 2
 
 - **Owner feedback (Studio screenshots):** likes every design; walls too dark and far to see; crystals and mushrooms glow but don't light the walls; giant mushroom slightly deformed. Wants subtle animation: graceful spore stream from giant mushrooms that lights the area and dissipates at the floor, star twinkles on every crystal (wall ones too) scaled by size, portal animation. Small mushrooms: glow only (spores would be too much).

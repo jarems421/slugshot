@@ -126,10 +126,25 @@ local function light(
 end
 
 -- Cavern enclosure: the rock wall module reused in a ring, all facing the centre (modular kit test).
+-- Each wall is lit from above its top edge by a soft warm-white spotlight angled down across its face
+-- (owner round 3: light the walls rather than tinting the whole cavern blue).
 for i = 0, 7 do
 	local angle = i * 45 + 22.5
 	local a = math.rad(angle)
-	place("rock-wall-1", math.sin(a) * 52, -math.cos(a) * 52, -angle)
+	local x, z = math.sin(a) * 52, -math.cos(a) * 52
+	local wall = place("rock-wall-1", x, z, -angle)
+	if wall then
+		local lo, hi = paintedBounds(wall)
+		local centre = (lo + hi) / 2
+		local inward = Vector3.new(-x, 0, -z).Unit
+		local at = Vector3.new(centre.X, hi.Y + 4, centre.Z) + inward * 7
+		local spot =
+			light("WallLight", "SpotLight", at, Color3.fromRGB(255, 232, 205), 2, 30) :: SpotLight
+		spot.Face = Enum.NormalId.Front
+		spot.Angle = 100
+		local holder = spot.Parent :: BasePart
+		holder.CFrame = CFrame.lookAt(at, Vector3.new(centre.X, hi.Y * 0.4, centre.Z))
+	end
 end
 
 -- Hub centre: PvP gate ahead of spawn, crystals either side, the mint mushroom on the left.

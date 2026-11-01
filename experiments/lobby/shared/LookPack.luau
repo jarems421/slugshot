@@ -27,13 +27,14 @@ LookPack.INK = Color3.fromRGB(14, 14, 18)
 
 -- Zone moods (lobby roadmap: hub calm and balanced, PvP warm and dramatic, Training cool and clear,
 -- Veylume mysterious green/teal/violet). Values are a first pass for owner tuning in the look test.
--- Round 2 (owner: walls too dark to see): ambient lifted about 40%, fog thinned by 0.12.
+-- Round 2: fog thinned by 0.12 so the walls show. Round 3 (owner: "don't just make the rocks blue"): ambient and
+-- fog are dark and nearly neutral; walls are lit from above by lights instead (LookTest wall lights).
 LookPack.Moods = {
 	Hub = {
-		ambient = Color3.fromRGB(64, 70, 109),
-		outdoorAmbient = Color3.fromRGB(56, 62, 98),
-		fog = Color3.fromRGB(34, 38, 62),
-		decay = Color3.fromRGB(22, 20, 44),
+		ambient = Color3.fromRGB(44, 44, 52),
+		outdoorAmbient = Color3.fromRGB(40, 40, 48),
+		fog = Color3.fromRGB(30, 30, 40),
+		decay = Color3.fromRGB(22, 20, 30),
 		density = 0.24,
 		haze = 1.6,
 		tint = Color3.fromRGB(236, 240, 255),
@@ -43,10 +44,10 @@ LookPack.Moods = {
 		exposure = 0.15,
 	},
 	PvP = {
-		ambient = Color3.fromRGB(98, 64, 62),
-		outdoorAmbient = Color3.fromRGB(87, 59, 56),
-		fog = Color3.fromRGB(62, 36, 30),
-		decay = Color3.fromRGB(46, 20, 16),
+		ambient = Color3.fromRGB(56, 44, 42),
+		outdoorAmbient = Color3.fromRGB(50, 40, 38),
+		fog = Color3.fromRGB(46, 32, 28),
+		decay = Color3.fromRGB(34, 20, 16),
 		density = 0.26,
 		haze = 1.8,
 		tint = Color3.fromRGB(255, 236, 220),
@@ -56,10 +57,10 @@ LookPack.Moods = {
 		exposure = 0.12,
 	},
 	Training = {
-		ambient = Color3.fromRGB(59, 87, 118),
-		outdoorAmbient = Color3.fromRGB(53, 78, 106),
-		fog = Color3.fromRGB(28, 50, 64),
-		decay = Color3.fromRGB(16, 32, 44),
+		ambient = Color3.fromRGB(42, 47, 54),
+		outdoorAmbient = Color3.fromRGB(38, 43, 50),
+		fog = Color3.fromRGB(28, 36, 42),
+		decay = Color3.fromRGB(18, 26, 30),
 		density = 0.18,
 		haze = 1.2,
 		tint = Color3.fromRGB(228, 246, 255),
@@ -69,10 +70,10 @@ LookPack.Moods = {
 		exposure = 0.25,
 	},
 	Veylume = {
-		ambient = Color3.fromRGB(78, 62, 118),
-		outdoorAmbient = Color3.fromRGB(67, 56, 104),
-		fog = Color3.fromRGB(40, 34, 70),
-		decay = Color3.fromRGB(26, 40, 46),
+		ambient = Color3.fromRGB(49, 44, 58),
+		outdoorAmbient = Color3.fromRGB(44, 40, 52),
+		fog = Color3.fromRGB(36, 32, 48),
+		decay = Color3.fromRGB(26, 30, 34),
 		density = 0.3,
 		haze = 2.2,
 		tint = Color3.fromRGB(240, 232, 255),

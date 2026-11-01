@@ -69,6 +69,16 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Early-out pitfall:** returning the distance to a bounding sphere with no margin creates a false surface on the sphere itself. That bug rendered giant glossy spheres. Only take the early-out when the distance is above a margin (0.3 to 0.5 studs).
 - **Publishing:** the Artifact tool takes supporting files only from the working directory or scratchpad. Copy the page and `build/lobby/renders/` into the scratchpad and publish with `files`. See [lobby assets](lobby-assets.md#asset-library-live-3d-concepts).
 
+### Small props crushed by a shared triangle budget
+
+- Decimation shared one budget per material group. Many tiny mushrooms in one group got about 14 triangles each and read as shards.
+- **Rule:** give small-detail groups a floor (a quarter of dense detail, up to 4,000) and scale outline width with feature size.
+
+### Ambient tint is not a lighting fix
+
+- Raising a blue-violet ambient to make walls visible tinted all the stone blue, and the owner rejected it.
+- **Rule:** keep ambient dark and near neutral, and light surfaces with placed lights so materials keep their own colour.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

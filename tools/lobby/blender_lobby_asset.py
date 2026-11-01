@@ -26,6 +26,7 @@ OUT = (Path("build/lobby/export")/KEY).resolve()
 TEX = 1024
 MIN_TRIS, MAX_TRIS = 300, 14000
 HARD = {"Crystal", "Iron", "Gem", "Stone"}  # faceted pieces keep sharp edges
+SMALL_DETAIL = {"GlowCap", "Stem", "Crystal", "Gem", "Bulb"}
 
 
 def reset():
@@ -191,6 +192,9 @@ def main():
         name = g["name"]
         dense = build_dense(name, np.load(SRC/f"{name}.npz"))
         target = int(min(MAX_TRIS, max(MIN_TRIS, BUDGET*g["faces"]/total)))
+        if name in SMALL_DETAIL:
+            # Many small pieces share one mesh: never crush them below a quarter of their dense detail.
+            target = max(target, int(min(g["faces"]*0.25, 4000)))
         low = make_low(dense, name, target)
         bake_normal(dense, low)
         bake_positions(low)

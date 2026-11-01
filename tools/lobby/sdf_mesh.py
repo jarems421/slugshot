@@ -196,6 +196,10 @@ def main() -> None:
         old.unlink()
     meta = {"key": args.key, "step": args.step, "bounds": [lo.tolist(), hi.tolist()], "groups": []}
     for gid, (name, ink) in GROUPS.items():
+        # Small mushrooms (glowing caps, and the wall's stems) get a thinner line in proportion to their size;
+        # the full prop width swamped them (owner: they read as angular shards).
+        if name in ("GlowCap", "Bulb") or (name == "Stem" and args.key.startswith("rock-wall")):
+            ink = 0.06
         sel = faces[major == gid]
         if len(sel) < 20:
             continue

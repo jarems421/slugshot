@@ -611,6 +611,10 @@ vec2 portal(vec3 p) {
     float sx = i == 0 ? -1.0 : 1.0;
     stone = min(stone, sdBox(p - vec3(sx*PR, 0.35, 0.0), vec3(1.5, 0.35, 1.35)) - 0.06);
   }
+  // Steps up to the energy (owner, 2026-11-01): a slab filling the gap under the opening, its top level with
+  // the bottom of the energy, and a lower step in front of and behind it.
+  stone = min(stone, sdBox(p - vec3(0.0, 0.33, 0.0), vec3(PR - 0.35, 0.33, PHD + 0.3)) - 0.04);
+  stone = min(stone, sdBox(p - vec3(0.0, 0.16, 0.0), vec3(PR - 1.4, 0.16, PHD + 1.2)) - 0.04);
   stone = max(stone, -p.y);
   vec2 r = vec2(stone, 6.0);
   float band = 1e5;
@@ -1024,10 +1028,11 @@ void main() {
     { id: "gate-veylume", name: "Veylume gate", gate: 2, symbol: "Folded map with a marked trail", edge: [0.30, 0.09, 0.58], core: [0.78, 0.5, 1.0], hot: [0.95, 0.86, 1.0] }
   ];
   GATES.forEach(g => ASSETS.push({
-    id: g.id, name: g.name, kind: "Landmark · gate", size: "about 21 studs tall, 19 wide", version: "v3", shader: 3, gate: g.gate,
+    id: g.id, name: g.name, kind: "Landmark · gate", size: "about 21 studs tall, 19 wide", version: "v4", shader: 3, gate: g.gate,
     edge: g.edge, core: g.core, hot: g.hot,
     target: [0, 10.2, 0], dist: 42, figure: [-12.8, 0, -3.8], glow: [0, 9, -3.8], glowCol: g.core,
     notes: [["Symbol", g.symbol + ", as a glowing inlay in the keystone gem."], ...GATE_SHARED,
+            ["v4 changes", "A stone slab now fills the gap under the energy, its top level with the bottom of the portal, with a lower step in front and behind: a mini stairway up to the portal (owner, 1 Nov 2026)."],
             ["v3 changes", "1.5x bigger. The raised bold symbol was hard to read, so the symbol is now a glowing inlay flush with the gem's face, edged by a fine painted line instead of heavy ink."],
             ["Status", "Concept v3, awaiting your review."]]
   }));
