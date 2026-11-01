@@ -27,13 +27,14 @@ LookPack.INK = Color3.fromRGB(14, 14, 18)
 
 -- Zone moods (lobby roadmap: hub calm and balanced, PvP warm and dramatic, Training cool and clear,
 -- Veylume mysterious green/teal/violet). Values are a first pass for owner tuning in the look test.
+-- Round 2 (owner: walls too dark to see): ambient lifted about 40%, fog thinned by 0.12.
 LookPack.Moods = {
 	Hub = {
-		ambient = Color3.fromRGB(46, 50, 78),
-		outdoorAmbient = Color3.fromRGB(40, 44, 70),
+		ambient = Color3.fromRGB(64, 70, 109),
+		outdoorAmbient = Color3.fromRGB(56, 62, 98),
 		fog = Color3.fromRGB(34, 38, 62),
 		decay = Color3.fromRGB(22, 20, 44),
-		density = 0.36,
+		density = 0.24,
 		haze = 1.6,
 		tint = Color3.fromRGB(236, 240, 255),
 		contrast = 0.14,
@@ -42,11 +43,11 @@ LookPack.Moods = {
 		exposure = 0.15,
 	},
 	PvP = {
-		ambient = Color3.fromRGB(70, 46, 44),
-		outdoorAmbient = Color3.fromRGB(62, 42, 40),
+		ambient = Color3.fromRGB(98, 64, 62),
+		outdoorAmbient = Color3.fromRGB(87, 59, 56),
 		fog = Color3.fromRGB(62, 36, 30),
 		decay = Color3.fromRGB(46, 20, 16),
-		density = 0.38,
+		density = 0.26,
 		haze = 1.8,
 		tint = Color3.fromRGB(255, 236, 220),
 		contrast = 0.2,
@@ -55,11 +56,11 @@ LookPack.Moods = {
 		exposure = 0.12,
 	},
 	Training = {
-		ambient = Color3.fromRGB(42, 62, 84),
-		outdoorAmbient = Color3.fromRGB(38, 56, 76),
+		ambient = Color3.fromRGB(59, 87, 118),
+		outdoorAmbient = Color3.fromRGB(53, 78, 106),
 		fog = Color3.fromRGB(28, 50, 64),
 		decay = Color3.fromRGB(16, 32, 44),
-		density = 0.3,
+		density = 0.18,
 		haze = 1.2,
 		tint = Color3.fromRGB(228, 246, 255),
 		contrast = 0.12,
@@ -68,11 +69,11 @@ LookPack.Moods = {
 		exposure = 0.25,
 	},
 	Veylume = {
-		ambient = Color3.fromRGB(56, 44, 84),
-		outdoorAmbient = Color3.fromRGB(48, 40, 74),
+		ambient = Color3.fromRGB(78, 62, 118),
+		outdoorAmbient = Color3.fromRGB(67, 56, 104),
 		fog = Color3.fromRGB(40, 34, 70),
 		decay = Color3.fromRGB(26, 40, 46),
-		density = 0.42,
+		density = 0.3,
 		haze = 2.2,
 		tint = Color3.fromRGB(240, 232, 255),
 		contrast = 0.16,
@@ -264,6 +265,121 @@ function LookPack.styleModel(
 		surface.EmissiveStrength = spec.emissive * glowScale
 		surface.EmissiveTint = Color3.new(1, 1, 1)
 		surface.Parent = part
+	end
+end
+
+export type EffectPoint = { kind: string, p: Vector3, s: number, c: Color3 }
+export type AssetInfo = {
+	model: number,
+	height: number,
+	center: Vector3,
+	groups: { [string]: GroupSpec },
+	points: { EffectPoint },
+	spores: { p: Vector3, r: number, c: Color3 }?,
+}
+
+local function fxPart(name: string, position: Vector3, size: Vector3, parent: Instance): Part
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.CastShadow = false
+	p.Transparency = 1
+	p.Size = size
+	p.Position = position
+	p.Parent = parent
+	return p
+end
+
+local function pointLight(parent: Instance, color: Color3, brightness: number, range: number)
+	local l = Instance.new("PointLight")
+	l.Color = color
+	l.Brightness = brightness
+	l.Range = range
+	l.Shadows = false
+	l.Parent = parent
+end
+
+-- Glow effects for an imported asset (round 2, owner 2026-11-01): every crystal gets a small light that
+-- lights the rock around it plus star twinkles scaled to its size; small glowing mushroom caps get a light
+-- only (no spores); the giant mushroom drops a continuous stream of glowing spores that fade at the floor.
+-- `conceptToWorld` maps concept coordinates (studs) to the model's world position.
+function LookPack.addEffects(
+	model: Model,
+	info: AssetInfo,
+	fx: { spore: number, twinkle: number },
+	conceptToWorld: Vector3
+)
+	for _, pt in info.points do
+		local world = pt.p + conceptToWorld
+		local size = math.max(pt.s, 0.3)
+		local part = fxPart("Glow_" .. pt.kind, world, Vector3.one * size * 1.6, model)
+		if pt.kind == "crystal" then
+			pointLight(part, pt.c, 1.2, 6 + size * 5)
+			local e = Instance.new("ParticleEmitter")
+			e.Name = "Twinkle"
+			e.Texture = "rbxassetid://" .. fx.twinkle
+			e.Color = ColorSequence.new(pt.c:Lerp(Color3.new(1, 1, 1), 0.45))
+			e.LightEmission = 1
+			e.LightInfluence = 0
+			e.Brightness = 2.5
+			local peak = math.clamp(0.18 + size * 0.22, 0.2, 1.1)
+			e.Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.4, peak),
+				NumberSequenceKeypoint.new(1, 0),
+			})
+			e.Lifetime = NumberRange.new(0.5, 1.1)
+			e.Rate = 1 + size * 2
+			e.Speed = NumberRange.new(0.05, 0.25)
+			e.SpreadAngle = Vector2.new(180, 180)
+			e.Rotation = NumberRange.new(0, 90)
+			e.RotSpeed = NumberRange.new(-40, 40)
+			e.Shape = Enum.ParticleEmitterShape.Sphere
+			e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+			e.Parent = part
+		elseif pt.kind == "cap" then
+			pointLight(part, pt.c, 1.0, 7)
+		else
+			pointLight(part, pt.c, 1.0, 10)
+		end
+	end
+	local spores = info.spores
+	if spores then
+		local glow = spores.c
+		local source = fxPart(
+			"SporeSource",
+			spores.p + conceptToWorld,
+			Vector3.new(spores.r * 2, 0.4, spores.r * 2),
+			model
+		)
+		source:SetAttribute("Radius", spores.r)
+		source:SetAttribute("Glow", glow)
+		local fall = 0.95
+		local e = Instance.new("ParticleEmitter")
+		e.Name = "Spores"
+		e.Texture = "rbxassetid://" .. fx.spore
+		e.Color = ColorSequence.new(glow:Lerp(Color3.new(1, 1, 1), 0.25))
+		e.LightEmission = 1
+		e.LightInfluence = 0
+		e.Brightness = 3
+		e.Size = NumberSequence.new(0.22, 0.1)
+		e.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.06, 0.1),
+			NumberSequenceKeypoint.new(0.85, 0.25),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		e.Lifetime = NumberRange.new((spores.p.Y + conceptToWorld.Y) / fall * 0.95)
+		e.Rate = 9
+		e.Speed = NumberRange.new(fall * 0.9, fall * 1.1)
+		e.SpreadAngle = Vector2.new(8, 8)
+		e.EmissionDirection = Enum.NormalId.Bottom
+		e.Shape = Enum.ParticleEmitterShape.Disc
+		e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+		e.Parent = source
 	end
 end
 

@@ -24,7 +24,7 @@ BUDGET = int(ARGS[1]) if len(ARGS) > 1 else 14000  # game triangles for the whol
 SRC = (Path("build/lobby/meshes")/KEY).resolve()
 OUT = (Path("build/lobby/export")/KEY).resolve()
 TEX = 1024
-MIN_TRIS, MAX_TRIS = 300, 9000
+MIN_TRIS, MAX_TRIS = 300, 14000
 HARD = {"Crystal", "Iron", "Gem", "Stone"}  # faceted pieces keep sharp edges
 
 

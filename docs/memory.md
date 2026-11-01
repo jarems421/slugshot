@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 — Look test round 2
+
+- **Owner feedback (Studio screenshots):** likes every design; walls too dark and far to see; crystals and mushrooms glow but don't light the walls; giant mushroom slightly deformed. Wants subtle animation: graceful spore stream from giant mushrooms that lights the area and dissipates at the floor, star twinkles on every crystal (wall ones too) scaled by size, portal animation. Small mushrooms: glow only (spores would be too much).
+- **Implemented:** per-crystal and per-cap lights, twinkles, spore stream with light-carrying lead spores, portal sparks, embers and pulse; brighter ambient, thinner fog; rebuilt mushroom cap. Checks: StyLua, Selene, luau-lsp, Rojo build. Not yet seen in Studio by the agent.
+- **Process note:** a PowerShell `-like "*`**"` unsaved check matched every title (the backtick is consumed inside double quotes), so stale Studio windows stayed open; fixed by closing them by start time. Studio window titles do not show unsaved state reliably.
+
 ## 2026-11-01 — Look pack first pass
 
 - **Confirmed:** Roblox has no custom shaders, so the owner asked for our own look pack built from Roblox features plus baked assets; approved private Open Cloud uploads; asked that Floppy and the blaster get the same ink/glow look.

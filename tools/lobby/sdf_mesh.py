@@ -23,9 +23,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from render_library import dump_renders, extract  # noqa: E402
 
 # Material groups by shader id. Ink widths follow the Slugshot mix rule (studs): rock/floor 0.045 and
-# other props 0.07, both times Comic/Inked Cavern's 1.7 width scale; portal energy has no ink.
+# other props 0.07, both times Comic/Inked Cavern's 1.7 width scale; portal energy has no ink. The mushroom
+# cap is thinner (0.09): a full-width shell poked through its thin curled lip.
 GROUPS = {
-    1: ("Rock", 0.045*1.7), 3: ("Crystal", 0.07*1.7), 4: ("Stem", 0.07*1.7), 5: ("Cap", 0.07*1.7),
+    1: ("Rock", 0.045*1.7), 3: ("Crystal", 0.07*1.7), 4: ("Stem", 0.07*1.7), 5: ("Cap", 0.09),
     6: ("Stone", 0.045*1.7), 7: ("Iron", 0.07*1.7), 8: ("Gem", 0.07*1.7), 9: ("Energy", 0.0),
     12: ("Moss", 0.07*1.7), 14: ("Bulb", 0.07*1.7), 15: ("GlowCap", 0.07*1.7),
 }

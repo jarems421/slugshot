@@ -1,15 +1,16 @@
 --!strict
 -- Look-test cavern: loads the privately uploaded final concept assets, styles them with the look pack,
--- lights them and lays out zone moods so the owner can judge the Slugshot look in Roblox
--- (docs/art/lobby-roadmap.md, Phase 1). Asset ids live only in ignored private-assets/lobby.
+-- adds their glow effects, lights them and lays out zone moods so the owner can judge the Slugshot look
+-- in Roblox (docs/art/look-pack.md). Asset ids live only in ignored private-assets/lobby.
 local InsertService = game:GetService("InsertService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
-local assets = require(ServerStorage:WaitForChild("LobbyAssets")) :: {
-	[string]: { model: number, height: number, groups: { [string]: LookPack.GroupSpec } },
+local private = require(ServerStorage:WaitForChild("LobbyAssets")) :: {
+	fx: { spore: number, twinkle: number },
+	assets: { [string]: LookPack.AssetInfo },
 }
 local templates = ServerStorage:WaitForChild("LobbyMaterials")
 
@@ -32,12 +33,28 @@ floor.Parent = scene
 
 local loaded: { [string]: Model } = {}
 
+local function isInk(part: Instance): boolean
+	return string.sub(part.Name, -4) == "_Ink"
+end
+
+-- Axis-aligned bounds of the painted (non-ink) parts.
+local function paintedBounds(model: Model): (Vector3, Vector3)
+	local lo, hi = Vector3.one * math.huge, -Vector3.one * math.huge
+	for _, part in model:GetChildren() do
+		if part:IsA("MeshPart") and not isInk(part) then
+			lo = lo:Min(part.Position - part.Size / 2)
+			hi = hi:Max(part.Position + part.Size / 2)
+		end
+	end
+	return lo, hi
+end
+
 local function load(key: string): Model?
 	local cached = loaded[key]
 	if cached then
 		return cached:Clone()
 	end
-	local info = assets[key]
+	local info = private.assets[key]
 	local ok, container = pcall(InsertService.LoadAsset, InsertService, info.model)
 	if not ok then
 		warn(`LookTest: {key} failed to load: {container}`)
@@ -53,16 +70,13 @@ local function load(key: string): Model?
 	(container :: Instance):Destroy()
 	LookPack.styleModel(model, key, info.groups, templates, GLOW)
 	-- Scale to the concept's true height, measured on the painted parts (ink shells add a sliver).
-	local top, bottom = -math.huge, math.huge
-	for _, part in model:GetChildren() do
-		if part:IsA("MeshPart") and string.sub(part.Name, -4) ~= "_Ink" then
-			top = math.max(top, part.Position.Y + part.Size.Y / 2)
-			bottom = math.min(bottom, part.Position.Y - part.Size.Y / 2)
-		end
+	local lo, hi = paintedBounds(model)
+	if hi.Y > lo.Y then
+		model:ScaleTo(model:GetScale() * info.height / (hi.Y - lo.Y))
 	end
-	if top > bottom then
-		model:ScaleTo(model:GetScale() * info.height / (top - bottom))
-	end
+	-- Concept coordinates map onto the model through the centre of the painted bounds.
+	lo, hi = paintedBounds(model)
+	LookPack.addEffects(model, info, private.fx, (lo + hi) / 2 - info.center)
 	loaded[key] = model
 	return model:Clone()
 end
@@ -74,15 +88,19 @@ local function place(key: string, x: number, z: number, yaw: number): Model?
 		return nil
 	end
 	model.Parent = scene
-	local box, size = model:GetBoundingBox()
-	local pivotOffset = model:GetPivot().Position - box.Position
+	local lo, hi = paintedBounds(model)
+	local centre = (lo + hi) / 2
+	local pivotOffset = model:GetPivot().Position - centre
 	model:PivotTo(
-		CFrame.new(x, size.Y / 2, z) * CFrame.Angles(0, math.rad(yaw), 0) * CFrame.new(pivotOffset)
+		CFrame.new(x, (hi.Y - lo.Y) / 2, z)
+			* CFrame.Angles(0, math.rad(yaw), 0)
+			* CFrame.new(pivotOffset)
 	)
 	return model
 end
 
 local function light(
+	name: string,
 	className: string,
 	position: Vector3,
 	color: Color3,
@@ -90,7 +108,7 @@ local function light(
 	range: number
 ): Light
 	local holder = Instance.new("Part")
-	holder.Name = "Light"
+	holder.Name = name
 	holder.Anchored = true
 	holder.CanCollide = false
 	holder.CanQuery = false
@@ -115,22 +133,70 @@ for i = 0, 7 do
 end
 
 -- Hub centre: PvP gate ahead of spawn, crystals either side, the mint mushroom on the left.
-place("gate-pvp-1", 0, -26, 0)
+local gate = place("gate-pvp-1", 0, -26, 0)
 place("crystals-1", -13, -9, 20)
 place("crystals-11", 15, -6, -25)
 place("crystals-1", 20, 14, 140)
 place("mushroom-1", -26, 6, 30)
 
-light("PointLight", Vector3.new(0, 8, -22), Color3.fromRGB(255, 150, 70), 1.4, 26) -- PvP energy spill
-light("PointLight", Vector3.new(-13, 4, -11), Color3.fromRGB(110, 235, 255), 1.3, 16)
-light("PointLight", Vector3.new(15, 4, -8), Color3.fromRGB(255, 225, 110), 1.3, 16)
-light("PointLight", Vector3.new(20, 4, 12), Color3.fromRGB(110, 235, 255), 1.0, 14)
-light("PointLight", Vector3.new(-25, 9, 6), Color3.fromRGB(80, 255, 190), 1.2, 22) -- under the cap
-light("PointLight", Vector3.new(8, 7, 24), Color3.fromRGB(255, 170, 90), 1.1, 26) -- warm inhabited pocket
-local skyWell =
-	light("SpotLight", Vector3.new(0, 70, 0), Color3.fromRGB(170, 195, 255), 1.6, 90) :: SpotLight
+light("PortalGlow", "PointLight", Vector3.new(0, 8, -22), Color3.fromRGB(255, 150, 70), 1.4, 26)
+light("CapGlow", "PointLight", Vector3.new(-25, 9, 6), Color3.fromRGB(80, 255, 190), 1.0, 20)
+light("WarmPocket", "PointLight", Vector3.new(8, 7, 24), Color3.fromRGB(255, 170, 90), 1.1, 26)
+local skyWell = light(
+	"SkyWell",
+	"SpotLight",
+	Vector3.new(0, 70, 0),
+	Color3.fromRGB(170, 195, 255),
+	1.6,
+	90
+) :: SpotLight
 skyWell.Face = Enum.NormalId.Bottom
 skyWell.Angle = 70
+
+-- Portal life: sparks swirling across the energy surface and embers drifting up from it. The pulse of
+-- its glow and light runs on the client (LookFx.client).
+local energy = gate and gate:FindFirstChild("Energy") :: MeshPart?
+if energy then
+	local core = Color3.fromRGB(255, 170, 80)
+	local sparks = Instance.new("ParticleEmitter")
+	sparks.Name = "Sparks"
+	sparks.Texture = "rbxassetid://" .. private.fx.twinkle
+	sparks.Color = ColorSequence.new(core, Color3.fromRGB(255, 235, 190))
+	sparks.LightEmission = 1
+	sparks.LightInfluence = 0
+	sparks.Brightness = 2.5
+	sparks.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(0.3, 0.45),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	sparks.Lifetime = NumberRange.new(1.2, 2.4)
+	sparks.Rate = 22
+	sparks.Speed = NumberRange.new(0.3, 1.2)
+	sparks.SpreadAngle = Vector2.new(180, 180)
+	sparks.RotSpeed = NumberRange.new(-120, 120)
+	sparks.Shape = Enum.ParticleEmitterShape.Box
+	sparks.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+	sparks.Parent = energy
+	local embers = Instance.new("ParticleEmitter")
+	embers.Name = "Embers"
+	embers.Texture = "rbxassetid://" .. private.fx.spore
+	embers.Color = ColorSequence.new(core)
+	embers.LightEmission = 1
+	embers.LightInfluence = 0
+	embers.Brightness = 3
+	embers.Size = NumberSequence.new(0.16, 0.04)
+	embers.Transparency = NumberSequence.new(0.1, 1)
+	embers.Lifetime = NumberRange.new(2, 4)
+	embers.Rate = 12
+	embers.Speed = NumberRange.new(1, 2.2)
+	embers.SpreadAngle = Vector2.new(25, 25)
+	embers.EmissionDirection = Enum.NormalId.Top
+	embers.Shape = Enum.ParticleEmitterShape.Box
+	embers.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+	embers.Parent = energy
+	energy:AddTag("SlugshotPortalEnergy")
+end
 
 -- Zone moods: full strength inside each radius, fading out beyond (see LookZones.client).
 local zones = Instance.new("Folder")
@@ -164,17 +230,15 @@ local function outline(character: Model)
 	h.DepthMode = Enum.HighlightDepthMode.Occluded
 	h.Parent = character
 end
-Players.PlayerAdded:Connect(function(player)
+local function watch(player: Player)
 	player.CharacterAdded:Connect(outline)
 	if player.Character then
 		outline(player.Character)
 	end
-end)
+end
+Players.PlayerAdded:Connect(watch)
 for _, player in Players:GetPlayers() do
-	if player.Character then
-		outline(player.Character)
-	end
-	player.CharacterAdded:Connect(outline)
+	watch(player)
 end
 
 print("LookTest: scene built", #scene:GetChildren(), "objects")
