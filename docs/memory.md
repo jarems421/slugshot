@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-01 - Spawn island design final
+
+- **Confirmed:** owner: "Yes, perfect, finalize that design. That's the spawn island design." Version 10 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc) is the final design. Sky Well is next.
+- **Unresolved for the Roblox build:** symbols and colours other than PvP's, the forward marker for three portals, low-angle glow, mesh budget, and whether the pillars block views or movement.
+
 ## 2026-11-01 - Spawn rock v10, final
 
 - **Confirmed:** owner noticed the mushrooms concentrated in one area and asked for a third fewer. Now eight singles, spread around the island along crack edges and kept out of the middle. Renders inspected.
