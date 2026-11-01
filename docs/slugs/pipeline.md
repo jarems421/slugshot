@@ -1,6 +1,6 @@
 # Slug asset pipeline
 
-**Confirmed — 2026-10-30:** the owner authorized reusable creature tooling and a deliberately temporary proof of concept. On 2026-10-31 they additionally requested the first original Flopper-inspired creature draft and a [catalogue for all slug descriptions](catalog/index.md). The model awaits review; no final species, combat system or artistic style is approved. [Architecture decision](../decisions/0011-slug-asset-pipeline.md).
+**Confirmed — 2026-10-30:** the owner authorized reusable creature tooling and a deliberately temporary proof of concept. On 2026-10-31 they additionally requested the first original Flopper-inspired creature draft and a [catalogue for all slug descriptions](catalog/index.md). The model awaits review; no final species, combat system or artistic style is approved. [Architecture decision](../decisions/0016-slug-asset-pipeline.md).
 
 **Implemented:** native Blender Python generation, authored-source loading, custom skeletal rigs, modular anatomy, baked actions, FBX model/clip exports, offline reimport checks, inspection renders, a browser sequence viewer, JSON validation and an isolated strict Luau preview lab. [Actual checks and remaining gates](verification.md).
 

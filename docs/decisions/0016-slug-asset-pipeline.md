@@ -1,4 +1,4 @@
-# ADR 0011: Isolated custom-rig creature pipeline
+# ADR 0016: Isolated custom-rig creature pipeline
 
 Date: 2026-10-30
 Status: Accepted technical scope by the owner's attached universal slug pipeline request. Artistic/gameplay decisions remain unresolved.

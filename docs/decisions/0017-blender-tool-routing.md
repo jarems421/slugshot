@@ -1,4 +1,4 @@
-# ADR 0012: Versioned Blender skill and backend routing
+# ADR 0017: Versioned Blender skill and backend routing
 
 Date: 2026-10-31
 Status: Accepted tooling scope by the owner's Blender ecosystem installation request. Creature art remains unapproved.

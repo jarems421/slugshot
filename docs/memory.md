@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 ? Main integration of committed branches
+
+- **Confirmed:** owner authorized review, merge and push of committed branches ahead of main, including concurrent lobby/design work. Live worktrees were left untouched.
+- **Implemented/verified offline:** merged creature, lobby and wall terrain histories into main integration. Preserved the later first-person combat camera, controls, reticle and single Athletic movement profile where older wall-run copies conflicted; terrain-following traversal was already present. Marked the 12-stud Eyrie to West Abutment route as a sprint jump after the pace retune. Renumbered creature ADRs to 0016 and 0017 to remove collisions. Creature Blender, combat and Rocklock V2 offline checks passed.
+- **Unresolved:** Studio runtime and visual comparison of the combined snapshot; no private asset IDs or experience publication in this integration.
+
 
 
 ## 2026-10-31 ? Review and backup of all local work
@@ -516,7 +522,7 @@
 ## 2026-10-31 — Isolated slug asset tooling
 
 - **Confirmed:** the owner's attached request authorizes universal creature tooling and original temporary placeholders, while Claude owns concurrent Rocklock/map/destruction work. No final creatures, full combat, merge into main or asset publication authorized.
-- **Implemented:** separate worktree `C:/Users/runni/slugshot-slug-pipeline`, branch `feature/slug-asset-pipeline` at baseline `913f9e6`; versioned JSON custom rigs/species and generated strict Luau; native Blender 4.5.14 LTS generation/actions/export/previews; independent-rig, flight-time-aware visual interfaces and isolated lab. See [ADR 0011](decisions/0011-slug-asset-pipeline.md).
+- **Implemented:** separate worktree `C:/Users/runni/slugshot-slug-pipeline`, branch `feature/slug-asset-pipeline` at baseline `913f9e6`; versioned JSON custom rigs/species and generated strict Luau; native Blender 4.5.14 LTS generation/actions/export/previews; independent-rig, flight-time-aware visual interfaces and isolated lab. See [ADR 0016](decisions/0016-slug-asset-pipeline.md).
 - **Implemented/verified:** configuration failure tests, Blender corruption cases and a one-eye/horn-free variant; source/export hash and animation-motion/loop/timing roundtrips; foundation/strict Luau/Rojo checks. [Evidence and exact limits](slugs/verification.md).
 - **Unresolved:** Studio MCP lists no connected instances; native fixture runtime, actual Roblox mesh/clip import, scale channels, permissions and visual quality need the [manual checklist](slugs/studio-import.md). Original movement and map files were not edited. No addons/accounts/assets installed or published.
 
