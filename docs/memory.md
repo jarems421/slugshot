@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v9, final
+
+- **Confirmed:** owner asked for far fewer mushrooms, only a few per crack, and cracks slightly thinner and longer, then said "once that's done, yes, we've got it sorted". The island is marked final on that basis.
+- **Implemented/verified offline:** cracks longer and slightly thinner; single mushrooms along their edges, at most two per crack sector. Renders inspected.
+- **Unresolved:** the symbols and colours other than PvP's, the forward marker for three portals, the low-angle glow, and proving it all in Roblox.
+
 ## 2026-11-01 - Spawn rock v8, cracks with depth
 
 - **Confirmed:** owner said the cracks had no depth, just coloured in, and wanted teal glow coming out of them, with mushrooms scattered on the crack edges. Owner said they are good once this is done.

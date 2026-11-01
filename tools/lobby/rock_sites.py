@@ -139,12 +139,13 @@ void main() {
     return data, size
 
 
-def crack_sites(data, size, count, spacing, inner, outer, rnd, taken, band=(-1.0, -0.02)):
+def crack_sites(data, size, count, spacing, inner, outer, rnd, taken, band=(-1.0, -0.02), per_sector=99):
     """Spots a chosen distance from the cracks, spaced apart, clear of the middle and the bridge mouths."""
     ys, xs = np.nonzero((data > band[0]) & (data < band[1]))
     order = list(range(len(xs)))
     rnd.shuffle(order)
     sites = []
+    used = {}
     for i in order:
         x = (xs[i] + 0.5)/size*16 - 8
         z = (ys[i] + 0.5)/size*16 - 8
@@ -153,6 +154,11 @@ def crack_sites(data, size, count, spacing, inner, outer, rnd, taken, band=(-1.0
             continue
         if any(math.hypot(x - a, z - b) < spacing for a, b in taken):
             continue
+        # One sector per crack, roughly, so no crack collects more than its share.
+        sector = int((math.atan2(z, x) + math.pi)/0.698)
+        if used.get(sector, 0) >= per_sector:
+            continue
+        used[sector] = used.get(sector, 0) + 1
         taken.append((x, z))
         sites.append((x, z))
         if len(sites) == count:
@@ -170,12 +176,10 @@ def sprouts(vs, fs, ctx):
         crystals.append(f"  smallCrystal(q, {vec([x, -0.05, z])}, {vec(direction)}, {rnd.uniform(0.45, 0.85):.2f}, {rnd.uniform(0.09, 0.14):.3f}, {float(rnd.randrange(14)):.1f}, res);")
     lines = []
     seed = 300.0
-    # Mushrooms stand on the stone along the crack edges, scattered here and there: mostly singles, the odd pair.
-    for x, z in crack_sites(data, size, 21, 0.75, 2.4, 7.0, rnd, taken, band=(0.08, 0.3)):
-        for j in range(rnd.choice((1, 1, 1, 2))):
-            ox, oz = rnd.uniform(-0.14, 0.14)*j, rnd.uniform(-0.14, 0.14)*j
-            lines.append(f"  wallShroom(q, {vec([x + ox, -0.06, z + oz])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 1.0, stems, caps, capIdx);")
-            seed += 1.0
+    # Just a few mushrooms per crack, single and spaced apart, on the stone along its edge (owner, 2026-11-01).
+    for x, z in crack_sites(data, size, 16, 1.2, 2.2, 7.0, rnd, taken, band=(0.07, 0.24), per_sector=2):
+        lines.append(f"  wallShroom(q, {vec([x, -0.06, z])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 1.0, stems, caps, capIdx);")
+        seed += 1.0
     print(f"{seed - 300:.0f} crack mushrooms, {len(crystals)} crack crystals anchored")
     return ("void rockSprouts(vec3 q, inout vec2 res) {\n  float stems = 1e5, caps = 1e5, capIdx = 0.0;\n"
             + "\n".join(lines)
