@@ -1333,6 +1333,7 @@ void crystalPalette(float k, out vec3 deep, out vec3 bright) {
 }
 
 const float WELL_LOW = 26.0;
+const float ORBIT = 0.12;  // radians per second; the library's looping preview depends on this
 const float WELL_HIGH = 36.0;
 // A drifting rock: a small version of the spawn island's wedge of cliff blocks, trailing vines and its own rubble.
 void miniIsland(vec3 p, vec3 c, float s, float seed, inout vec2 res) {
@@ -1362,6 +1363,12 @@ void miniIsland(vec3 p, vec3 c, float s, float seed, inout vec2 res) {
     float b = sdBox(l, vec3(1.0, 0.7, 0.82)*s*(0.05 + 0.12*hash1(k + 3.0)));
     if (b < res.x) res = vec2(b, 1.0);
   }
+}
+// A mix of cool crystal colours, with cyan no longer dominating: cyan, violet, sapphire, frost and a little rose.
+float wellCrystalId(float k) {
+  float h = hash1(k*1.7 + 3.0);
+  float design = h < 0.36 ? 0.0 : h < 0.62 ? 1.0 : h < 0.82 ? 7.0 : h < 0.93 ? 9.0 : 3.0;
+  return 18.0 + design*0.05;
 }
 vec2 skyWell(vec3 p) {
   float rr = length(p.xz), a = atan(p.z, p.x);
@@ -1402,20 +1409,25 @@ vec2 skyWell(vec3 p) {
   s = PI*2.0/18.0; k0 = floor(a/s);
   for (int j = -1; j <= 1; j++) {
     float k = mod(k0 + float(j) + 18.0, 18.0), ang = (k + 0.5)*s + 0.12*(hash1(k + 71.0) - 0.5);
-    vec3 dir = normalize(vec3(-cos(ang)*0.95, -0.5 + 0.35*hash1(k + 75.0), -sin(ang)*0.95));
-    vec3 base = vec3(cos(ang)*(10.4 + 0.5*hash1(k + 72.0)), WELL_LOW + 0.4, sin(ang)*(10.4 + 0.5*hash1(k + 72.0)));
-    float cr = crystalDir(p, base, dir, 3.0 + 3.8*hash1(k + 73.0), 0.7 + 0.65*hash1(k + 74.0));
-    if (cr < res.x) res = vec2(cr, mod(k, 5.0) < 0.5 ? 18.05 : 18.0);
+    // Some point in, many straight down, some out and sideways.
+    float lean = mix(-0.75, 0.9, hash1(k + 75.0)), side = 0.9*(hash1(k + 76.0) - 0.5);
+    vec3 dir = normalize(vec3(-cos(ang)*lean - sin(ang)*side, -0.65 - 0.5*hash1(k + 77.0), -sin(ang)*lean + cos(ang)*side));
+    vec3 base = vec3(cos(ang)*(9.6 + 1.3*hash1(k + 72.0)), WELL_LOW + 0.3, sin(ang)*(9.6 + 1.3*hash1(k + 72.0)));
+    float sized = pow(hash1(k + 73.0), 1.5);
+    float cr = crystalDir(p, base, dir, 2.0 + 6.4*sized, 0.42 + 1.0*sized + 0.2*hash1(k + 74.0));
+    if (cr < res.x) res = vec2(cr, wellCrystalId(k + 90.0));
   }
   s = PI*2.0/13.0; k0 = floor(a/s);
   for (int j = -1; j <= 1; j++) {
     float k = mod(k0 + float(j) + 13.0, 13.0), ang = (k + 0.5)*s;
     float y = WELL_LOW + 2.5 + 6.0*hash1(k + 81.0);
     float wall = mix(10.0, 8.2, (y - WELL_LOW)/(WELL_HIGH - WELL_LOW));
-    vec3 dir = normalize(vec3(-cos(ang), 0.1 - 0.5*hash1(k + 84.0), -sin(ang)));
+    float side = 1.1*(hash1(k + 85.0) - 0.5);
+    vec3 dir = normalize(vec3(-cos(ang) - sin(ang)*side, -0.6 + 0.9*hash1(k + 84.0), -sin(ang) + cos(ang)*side));
+    float sized = hash1(k + 82.0); sized *= sized;
     float cr = crystalDir(p, vec3(cos(ang)*(wall + 0.6), y, sin(ang)*(wall + 0.6)), dir,
-      1.9 + 2.0*hash1(k + 82.0), 0.42 + 0.34*hash1(k + 83.0));
-    if (cr < res.x) res = vec2(cr, mod(k, 4.0) < 0.5 ? 18.05 : 18.0);
+      1.3 + 3.6*sized, 0.28 + 0.6*sized + 0.1*hash1(k + 83.0));
+    if (cr < res.x) res = vec2(cr, wellCrystalId(k + 130.0));
   }
   // Vines trailing down from the rim.
   s = PI*2.0/11.0; k0 = floor(a/s);
@@ -1425,26 +1437,31 @@ vec2 skyWell(vec3 p) {
     float v = capT(p, top, top + vec3(0.2, -2.5 - 5.5*hash1(k + 91.0), 0.2), 0.09, 0.03);
     if (v < res.x) res = vec2(v, 12.0);
   }
-  // Mini islands drifting in the light, look only.
+  // Mini islands circling in the light, look only.
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
     float ang = fi == 0.0 ? 0.52 : fi == 1.0 ? 2.44 : fi == 2.0 ? 3.75 : fi == 3.0 ? 5.24 : 1.48;
     float rad = fi == 0.0 ? 8.5 : fi == 1.0 ? 7.5 : fi == 2.0 ? 8.8 : fi == 3.0 ? 6.5 : 5.5;
     float size = fi == 0.0 ? 0.75 : fi == 1.0 ? 1.0 : fi == 2.0 ? 0.6 : fi == 3.0 ? 0.85 : 0.55;
-    miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.25*sin(uT*0.3 + fi), sin(ang)*rad), size, fi + 1.0, res);
+    ang += uT*ORBIT;
+    miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.3*sin(uT*ORBIT*(2.0 + fi) + fi), sin(ang)*rad), size, fi + 1.0, res);
   }
-  // Loose debris all through the space, from specks to a few big chunks, including up the shaft around the storm.
+  // Loose debris being drawn up into the storm: a funnel, tighter low down and wider near the top, circling the well
+  // like a slow tornado while each piece bobs. All speeds are whole multiples of ORBIT, so the preview loops cleanly.
+  float spin = uT*ORBIT;
   for (int i = 0; i < 80; i++) {
     float fi = float(i);
     float ang = hash1(fi*3.1 + 401.0)*6.2832, y = 5.5 + 29.0*hash1(fi*4.3 + 402.0);
-    float rad = 1.5 + 21.0*pow(hash1(fi*5.9 + 403.0), 0.75);
+    float rad = 1.5 + 14.5*pow(hash1(fi*5.9 + 403.0), 0.75);
+    rad *= mix(0.5, 1.0, smoothstep(5.5, 24.0, y));
     if (y > 24.5) rad = min(rad, 1.5 + 6.0*hash1(fi*7.7 + 404.0));
+    ang += spin*(rad < 6.0 ? 2.0 : 1.0);
     float big = hash1(fi*11.3 + 405.0);
     float size = 0.05 + 0.13*hash1(fi + 406.0) + 0.95*big*big*big*big*big;
-    vec3 c = vec3(cos(ang)*rad, y + 0.15*sin(uT*0.25 + fi*1.9), sin(ang)*rad);
+    vec3 c = vec3(cos(ang)*rad, y + 0.22*sin(spin*(2.0 + mod(fi, 3.0)) + fi*1.9), sin(ang)*rad);
     if (length(p - c) - size*1.5 < res.x) {
       vec3 l = p - c;
-      l.xz = rot(fi*1.3 + 0.04*uT*(0.5 - big))*l.xz;
+      l.xz = rot(fi*1.3 + spin*(mod(fi, 2.0)*2.0 - 1.0))*l.xz;
       l.xy = rot(fi*2.1)*l.xy;
       l.yz = rot(fi*0.7)*l.yz;
       float b = sdBox(l, size*vec3(1.0, 0.68, 0.82));
@@ -1463,11 +1480,11 @@ vec2 skyWell(vec3 p) {
 vec3 stormSky(vec3 rd) {
   vec2 u = rd.xz/max(rd.y, 0.15)*3.6;
   float r = length(u), a = atan(u.y, u.x);
-  float sw = a + 1.6*log(r + 0.25) - uT*0.03;
-  vec3 q = vec3(vec2(cos(sw), sin(sw))*r*2.2, uT*0.03);
+  float sw = a + 1.6*log(r + 0.25) - uT*ORBIT;
+  vec3 q = vec3(vec2(cos(sw), sin(sw))*r*2.2, 0.7*sin(uT*ORBIT));
   float n = 0.0, amp = 0.55;
   for (int i = 0; i < 4; i++) { n += amp*noise3(q); q *= 2.03; amp *= 0.5; }
-  float arms = 0.5 + 0.5*sin(a*3.0 + 4.5*log(r + 0.2) - uT*0.1);
+  float arms = 0.5 + 0.5*sin(a*3.0 + 4.5*log(r + 0.2) - uT*ORBIT*3.0);
   vec3 c = mix(vec3(0.008, 0.008, 0.035), vec3(0.1, 0.085, 0.24), smoothstep(0.38, 0.62, n*0.8 + 0.34*arms));
   c = mix(c, vec3(0.42, 0.36, 0.72), smoothstep(0.7, 0.86, n*0.9 + 0.3*arms));
   c += vec3(0.5, 0.56, 0.85)*exp(-r*r*34.0)*0.7;
@@ -1869,11 +1886,11 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     bool small = id > 18.9;
     crystalPalette(floor((id - (small ? 19.0 : 18.0))/0.05 + 0.5), deep, bright);
     float h = clamp(rockBody(centreLocal(p))/(small ? 0.55 : 1.6), 0.0, 1.0);
-    if (ASSET == 5 && p.y > 15.0) h = clamp((WELL_LOW + 0.4 - p.y)/5.5 + 0.35, 0.2, 1.0);
+    if (ASSET == 5 && p.y > 15.0) h = clamp((WELL_LOW + 0.4 - p.y)/6.5 + 0.25, 0.15, 0.85);
     vec3 c = mix(deep, bright, 0.15 + 0.7*h*h);
     emit = c*(0.25 + 0.75*h)*TR(id).z*(0.88 + 0.12*sin(uT*0.9 + p.y*1.3));
     spec = 0.6;
-    return c*0.6;
+    return ASSET == 5 ? c*0.25 : c*0.6;
   }
 #endif
 #if ASSET >= 4
@@ -2288,21 +2305,23 @@ void main() {
       ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v3", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v4", concept: true, noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
-      { name: "From the shore", bright: [0.4, 0.38, 0.65], camera: { target: [0, 15, 0], dist: 54, pitch: -0.24 } }
+      { name: "From the shore", bright: [0.4, 0.38, 0.65], camera: { target: [0, 15, 0], dist: 54, pitch: -0.24 } },
+      { name: "In motion (sped up)", bright: [0.78, 0.55, 1.0], play: true, camera: { target: [0, 15, 0], dist: 54, pitch: -0.24 } }
     ],
     core: [0.42, 0.93, 1.0], crG: [2, 34, 15], target: [0, 15, 0], dist: 54, figure: [1.6, 1, -1.2], glow: [0, 23, 0], glowCol: [0.42, 0.93, 1.0],
     notes: [
       ["Idea", "A huge opening in the cavern roof, wider than the Maelstrom below it, so it reads as a main centrepiece. Your two ideas combined: giant crystals line the opening, and the shaft climbs away to a distant storm."],
       ["Storm", "Dramatic but distant: bands of indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom, with clear silent lightning now and then. It is noticeable when you look up, but it does not light the lobby."],
-      ["Crystals", "Big crystals ring the mouth with smaller ones further up the shaft, mostly cyan with a few violet that link to the storm. They brighten toward their tips and supply the light falling onto the hub."],
+      ["Crystals", "Crystals ring the mouth and climb the shaft, from small stubs to a few huge ones. They point every way: down, outward, sideways and only some inward. The colours are a cool mix of cyan, violet, sapphire and jade with a little rose. They brighten toward their tips and supply the light falling onto the hub."],
       ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island. Further out, irregular crags hang from the roof: clusters of broken blocks in very different sizes with blunt, slanted ends. Trailing vines and a soft 150-stud column of light complete it."],
-      ["Drifting rocks", "Five small islands, about 10 to 20 studs across, in the same wedge shape as the spawn island. Eighty pieces of loose debris fill the space around them and up the shaft around the storm, from specks to a few big chunks. Look only, and they drift slowly in the game."],
+      ["Debris", "Five small wedge islands and eighty pieces of debris, from specks to a few big chunks, form a funnel being drawn up into the storm: tighter low down, wider near the top. Everything circles the well like a slow tornado while bobbing gently, and closer pieces circle faster. Look only."],
+      ["Motion", "Pick In motion to see it move. That preview is sped up about 9 times and steps in chunks; in the game one slow circle takes about 52 seconds and runs smoothly."],
       ["Scale", "The spawn rock is shown at true scale with a player on it."],
-      ["Status", "Concept v3, awaiting your review."]
+      ["Status", "Concept v4, awaiting your review."]
     ]
   }, {
     id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v1", concept: true, noLive: true, shader: 6,
@@ -2398,12 +2417,16 @@ void main() {
   }
   const BANK = MUSH.flatMap(m => m.glow);
   // The turntable frames rendered offline: yaw steps of 360/FRAMES degrees from the three-quarter view.
+  // A "play" view keeps the camera still and runs the scene through one full loop instead of turning the camera.
+  const LOOP_SECONDS = 2*Math.PI/0.12;  // one orbit at the shader's ORBIT speed
+  function isPlay(i, v) { const a = ASSETS[i], x = a.variants && a.variants[v]; return !!(x && x.play); }
+  function renderTime(i, v, frame) { return isPlay(i, v) ? frame/FRAMES*LOOP_SECONDS : 3.0; }
   function renderCam(i, v, frame) {
     const vw = variantView(ASSETS[i], v);
-    return { yaw: BASE_YAW + frame*2*Math.PI/FRAMES, pitch: vw.pitch !== undefined ? vw.pitch : PITCH, dist: vw.dist*0.8, tx: vw.target[0], ty: vw.target[1], tz: vw.target[2] };
+    return { yaw: isPlay(i, v) ? BASE_YAW : BASE_YAW + frame*2*Math.PI/FRAMES, pitch: vw.pitch !== undefined ? vw.pitch : PITCH, dist: vw.dist*0.8, tx: vw.target[0], ty: vw.target[1], tz: vw.target[2] };
   }
   root.SlugLib = { MUSH, CRYSTALS, ASSETS, PLANNED, TREAT, VIEWS, FRAMES, SHEET, BASE_YAW, PITCH, BANK,
-    shaderIndex, variantCount, frameKey, variantView, cameraBasis, uniformsFor, renderCam };
+    shaderIndex, variantCount, frameKey, variantView, cameraBasis, uniformsFor, renderCam, renderTime, isPlay };
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
 <script>
@@ -2529,12 +2552,14 @@ void main() {
     img.src = url;
   }
   let sheet = null, drawn = -1;
+  const PLAY_FPS = 7;
   const sctx = sprite.getContext("2d");
   function drawSprite() {
     if (!sheet) return;
     const w = Math.round(box.clientWidth*Math.min(window.devicePixelRatio || 1, 2)), h = Math.round(w*0.75);
     if (sprite.width !== w || sprite.height !== h) { sprite.width = w; sprite.height = h; drawn = -1; }
-    const k = frameIndex(cam.yaw);
+    // Looping views play through their frames; every other view follows the drag.
+    const k = L.isPlay(current, variant) ? Math.floor(time*PLAY_FPS) % FRAMES : frameIndex(cam.yaw);
     if (k === drawn) return;
     drawn = k;
     const { cols, w: fw, h: fh } = L.SHEET;

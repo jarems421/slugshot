@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v4
+
+- **Owner feedback on v3:** debris slightly too scattered, so pull it in a little so it feels drawn into the storm, not floating randomly. Add slow bobbing on everything, and all the debris circling the well, a tornado effect. Crystals point too much inward, are too similar in size, and there is too much cyan.
+- **Implemented/verified offline:** debris and small islands form a tighter funnel, orbit and bob; storm turns with them; crystals vary widely in size and direction in a cool colour mix. New looping In motion view on the library page, sped up about 9 times. `render_library.py` now takes per-view render time. Renders inspected.
+- **Unresolved:** owner review; whether the spawn island itself should bob, which is not assumed because players stand on it.
+
 ## 2026-11-01 - Sky Well v3
 
 - **Owner feedback on v2:** the rock icicles are too uniform and basic, with annoying thin needle points, and need a complete redesign; floating islands far too big; a lot more loose debris in varied sizes, around the storm and not just around the islands.

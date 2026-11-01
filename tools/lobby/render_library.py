@@ -40,7 +40,7 @@ for (let i = 0; i < L.ASSETS.length; i++) {
   for (let v = 0; v < L.variantCount(i); v++) {
     const key = L.frameKey(i, v), frames = [];
     for (let f = 0; f < L.FRAMES; f++) {
-      frames.push(L.uniformsFor({ asset: i, variant: v, treat: 3, figOn: true, time: 3.0,
+      frames.push(L.uniformsFor({ asset: i, variant: v, treat: 3, figOn: true, time: L.renderTime(i, v, f),
         cam: L.renderCam(i, v, f), width: %d, height: %d }));
     }
     out.push({ key, shader: L.shaderIndex(i), frames });
