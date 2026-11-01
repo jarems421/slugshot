@@ -903,14 +903,45 @@ float rockBlocks(vec3 q, out vec3 bc, out vec3 bs, out float bseed) {
   return best;
 }
 // Glowing fissures across the top: Slugterra-style cracks running in from the rim, stopping short of the middle.
+void fissureSeg(vec2 x, vec2 a, vec2 b, float w0, float w1, inout vec2 best) {
+  float h, dd = sdSeg2(x, a, b, h), w = mix(w0, w1, h);
+  if (dd - w < best.x) best = vec2(dd - w, w);
+}
+// Plain coordinates, not random ones: the hash gives different numbers in differently compiled shaders, so the shape and the
+// paint came out in different places (owner, 2026-11-01: "drawings with no depth", and holes with no colour).
 vec2 topFissure(vec2 x) {
   vec2 best = vec2(1e5, 0.0);
-  for (int i = 0; i < 9; i++) {
-    float fi = float(i);
-    vec2 cl = crackLine(rot(fi*0.698 + 0.45*hash1(fi + 71.0))*x, vec3(6.9, 6.9, 1.0), fi*17.3 + 3.0, 0.33 + 0.13*hash1(fi + 72.0), 1.0);
-    if (cl.x < best.x) best = cl;
-  }
-  return vec2(best.x - best.y*0.6, best.y*1.6);
+  fissureSeg(x, vec2(2.400, -5.040), vec2(3.040, -3.840), 0.210, 0.165, best);
+  fissureSeg(x, vec2(3.040, -3.840), vec2(2.880, -2.640), 0.165, 0.120, best);
+  fissureSeg(x, vec2(2.880, -2.640), vec2(3.392, -1.920), 0.120, 0.075, best);
+  fissureSeg(x, vec2(3.392, -1.920), vec2(3.328, -0.800), 0.075, 0.030, best);
+  fissureSeg(x, vec2(3.392, -1.920), vec2(3.728, -1.312), 0.100, 0.030, best);
+  fissureSeg(x, vec2(-0.160, -5.568), vec2(0.720, -4.400), 0.210, 0.165, best);
+  fissureSeg(x, vec2(0.720, -4.400), vec2(0.800, -3.440), 0.165, 0.120, best);
+  fissureSeg(x, vec2(0.800, -3.440), vec2(1.600, -2.320), 0.120, 0.075, best);
+  fissureSeg(x, vec2(1.600, -2.320), vec2(2.000, -1.152), 0.075, 0.030, best);
+  fissureSeg(x, vec2(1.600, -2.320), vec2(1.856, -2.016), 0.100, 0.030, best);
+  fissureSeg(x, vec2(5.392, -1.280), vec2(4.880, -0.160), 0.210, 0.150, best);
+  fissureSeg(x, vec2(4.880, -0.160), vec2(4.240, 0.560), 0.150, 0.090, best);
+  fissureSeg(x, vec2(4.240, 0.560), vec2(3.760, 1.600), 0.090, 0.030, best);
+  fissureSeg(x, vec2(4.240, 0.560), vec2(4.240, 2.160), 0.100, 0.030, best);
+  fissureSeg(x, vec2(4.880, 2.640), vec2(3.520, 2.560), 0.210, 0.165, best);
+  fissureSeg(x, vec2(3.520, 2.560), vec2(2.240, 2.320), 0.165, 0.120, best);
+  fissureSeg(x, vec2(2.240, 2.320), vec2(1.040, 2.560), 0.120, 0.075, best);
+  fissureSeg(x, vec2(1.040, 2.560), vec2(0.000, 2.480), 0.075, 0.030, best);
+  fissureSeg(x, vec2(2.240, 2.320), vec2(1.120, 2.928), 0.100, 0.030, best);
+  fissureSeg(x, vec2(-2.720, 4.832), vec2(-2.720, 3.760), 0.210, 0.165, best);
+  fissureSeg(x, vec2(-2.720, 3.760), vec2(-2.048, 3.040), 0.165, 0.120, best);
+  fissureSeg(x, vec2(-2.048, 3.040), vec2(-2.320, 2.480), 0.120, 0.075, best);
+  fissureSeg(x, vec2(-2.320, 2.480), vec2(-1.520, 1.200), 0.075, 0.030, best);
+  fissureSeg(x, vec2(-2.320, 2.480), vec2(-2.368, 1.888), 0.100, 0.030, best);
+  fissureSeg(x, vec2(-5.360, -1.472), vec2(-4.240, -1.520), 0.210, 0.165, best);
+  fissureSeg(x, vec2(-4.240, -1.520), vec2(-3.200, -0.800), 0.165, 0.120, best);
+  fissureSeg(x, vec2(-3.200, -0.800), vec2(-1.600, 0.160), 0.120, 0.075, best);
+  fissureSeg(x, vec2(-1.600, 0.160), vec2(-0.960, 0.400), 0.075, 0.030, best);
+  fissureSeg(x, vec2(-3.200, -0.800), vec2(-1.792, -0.768), 0.100, 0.030, best);
+  // A little wider and never hair-thin, so every part of a crack is a real groove.
+  return vec2(best.x - best.y*0.6 - 0.02, max(best.y*1.6, 0.07));
 }
 float fissureDepth(float halfWidth) { return min(0.25 + halfWidth*3.0, 1.0); }
 float rockBody(vec3 q) {
@@ -1444,24 +1475,23 @@ void rockSmallCrystals(vec3 q, inout vec2 res) {
 }
 void rockSprouts(vec3 q, inout vec2 res) {
   float stems = 1e5, caps = 1e5, capIdx = 0.0;
-  wallShroom(q, vec3(1.220, -0.060, -3.380), vec3(0.0, 1.0, 0.0), 300.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.140, -0.060, 4.860), vec3(0.0, 1.0, 0.0), 301.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.780, -0.060, 1.940), vec3(0.0, 1.0, 0.0), 302.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.260, -0.060, 0.540), vec3(0.0, 1.0, 0.0), 303.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-4.980, -0.060, -2.420), vec3(0.0, 1.0, 0.0), 304.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.260, -0.060, -0.660), vec3(0.0, 1.0, 0.0), 305.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.940, -0.060, -4.860), vec3(0.0, 1.0, 0.0), 306.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.540, -0.060, 3.060), vec3(0.0, 1.0, 0.0), 307.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.860, -0.060, 3.300), vec3(0.0, 1.0, 0.0), 300.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(4.940, -0.060, 3.100), vec3(0.0, 1.0, 0.0), 301.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-4.460, -0.060, -1.900), vec3(0.0, 1.0, 0.0), 302.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.900, -0.060, -1.620), vec3(0.0, 1.0, 0.0), 303.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.060, -0.060, -4.660), vec3(0.0, 1.0, 0.0), 304.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.660, -0.060, 1.300), vec3(0.0, 1.0, 0.0), 305.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.100, -0.060, 3.140), vec3(0.0, 1.0, 0.0), 306.0, 2.0, stems, caps, capIdx);
   if (stems < res.x) res = vec2(stems, 13.0);
   if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);
-  smallCrystal(q, vec3(2.420, -0.050, -4.980), vec3(0.088, 0.990, -0.110), 0.49, 0.112, 11.0, res);
-  smallCrystal(q, vec3(-2.540, -0.050, 4.740), vec3(-0.114, 0.992, 0.053), 0.81, 0.126, 5.0, res);
-  smallCrystal(q, vec3(3.540, -0.050, 2.620), vec3(0.362, 0.920, 0.152), 0.57, 0.126, 13.0, res);
-  smallCrystal(q, vec3(-4.780, -0.050, -1.580), vec3(-0.274, 0.961, 0.027), 0.53, 0.110, 2.0, res);
-  smallCrystal(q, vec3(4.940, -0.050, 2.820), vec3(0.193, 0.939, 0.285), 0.55, 0.136, 12.0, res);
-  smallCrystal(q, vec3(4.180, -0.050, 1.620), vec3(0.049, 0.998, 0.025), 0.84, 0.106, 1.0, res);
-  smallCrystal(q, vec3(2.980, -0.050, -3.780), vec3(0.019, 0.971, -0.240), 0.84, 0.131, 2.0, res);
-  smallCrystal(q, vec3(-2.460, -0.050, 3.660), vec3(-0.220, 0.972, 0.088), 0.72, 0.133, 12.0, res);
+  smallCrystal(q, vec3(4.460, -0.050, 2.740), vec3(0.349, 0.934, 0.080), 0.71, 0.117, 3.0, res);
+  smallCrystal(q, vec3(2.380, -0.050, -5.220), vec3(0.014, 0.905, -0.425), 0.45, 0.112, 5.0, res);
+  smallCrystal(q, vec3(-5.220, -0.050, -1.660), vec3(-0.315, 0.948, -0.050), 0.46, 0.108, 5.0, res);
+  smallCrystal(q, vec3(2.820, -0.050, -3.660), vec3(0.128, 0.962, -0.243), 0.52, 0.130, 12.0, res);
+  smallCrystal(q, vec3(-2.940, -0.050, 3.860), vec3(-0.233, 0.931, 0.280), 0.80, 0.107, 6.0, res);
+  smallCrystal(q, vec3(3.580, -0.050, 2.500), vec3(-0.036, 0.988, 0.149), 0.60, 0.101, 3.0, res);
+  smallCrystal(q, vec3(3.820, -0.050, 1.500), vec3(-0.009, 0.972, 0.234), 0.62, 0.108, 11.0, res);
+  smallCrystal(q, vec3(5.500, -0.050, -1.500), vec3(0.336, 0.905, -0.260), 0.76, 0.135, 5.0, res);
 }
 // @rock-dressing-end
 vec2 spawnRock(vec3 p) {

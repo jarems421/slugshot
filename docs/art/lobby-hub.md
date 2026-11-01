@@ -14,7 +14,7 @@ The final hub designs built for the game, on top of the approved block-out, whos
 
 - Bridges rest still. Standing on one dips it under your weight with no wobble; only moving on it makes it sway and the boards rock. This replaces the earlier "slight sway at all times".
 - Crack mushrooms are really tiny, about 1 to 2 studs. The concept's `tiny = 2` setting holds this.
-- Every crack is a real hole through the top, blue-black inside with a thin teal core. No puffs of mist come out of them.
+- Every crack is a real hole through the top, painted by depth: lit stone at the lip, blue-black walls, glowing teal floor. Six spaced cracks at fixed coordinates, with no clumps. No puffs of mist come out of them.
 - Each fall starts from a round stone basin in one shallow hole in the cliff, full to the brim. Water spills over its whole front edge, covers the stone and falls as one curtain, built from strips that stay flat to the basin rather than turning to the camera. No side streams. The rock columns in its path are left out. Fall angles are fixed constants (`fallAngle` in the shader and `falls` in `hub_mesh.py`). The land reaches out to meet each bridge. Rim bushes have their own detail.
 - Waterfalls must read as flowing liquid in the whirlpool's colours, with a visible connection where they land. They are now scrolling sheets with ripples and foam, not a mesh.
 - The gun-side symbol is the game's blaster in its own colours, with sharp edges: orange prongs, cyan canister, dark body with the white swirl. The entrance symbol is a jagged stone arch with stalactites, a path and light inside.

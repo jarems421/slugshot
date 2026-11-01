@@ -11,7 +11,8 @@
 - **Basin round, not yet seen running:** stone basins with turning pools and spill notches, chutes cleared below them, debris cleared from the falls, redrawn blaster and cave symbols.
 - **Overflow round, verified in Studio by camera captures of all four basins:** basins, pools and falls line up, and water covers the front of each basin. Stills only; flow not watched in motion.
 - **Owner feedback:** handing over unseen work oversold it. The check place works again when Studio is brought to the front to press Play.
-- **Unresolved:** owner verdict, walking checks of the new colliders, phone performance. The asset library page was not republished after the concept's mushroom and blaster changes.
+- **Cracks, verified in Studio by camera captures:** the owner approved the waterfalls ("the waterfall's good"). The crack shape and paint came from a hash that compiled differently in each shader program, which caused the long-running "drawings with no depth". Now six spaced cracks at fixed coordinates: every deep point of the crack surface is teal (11,783 of 11,783, up from 2,593 of 5,991).
+- **Unresolved:** owner verdict on the cracks, walking checks of the new colliders, phone performance. The asset library page was not republished after the concept's mushroom and blaster changes.
 
 ## 2026-11-01 - Hub centrepieces and bridges final
 

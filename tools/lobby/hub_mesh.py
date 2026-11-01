@@ -536,11 +536,12 @@ PIECES = {
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
     ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
-    # Cracks: glowing across the floor. In the concept the bright strip was thin and moss grew over the floor, which read
-    # as green drawings in the game (owner).
-    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.62, 0.95, -fq.x/max(fq.y, 0.01));"),
+    # Cracks, painted by depth so they read as holes from any angle: lit stone at the lip, dark blue walls, teal floor.
+    # Flat fills read as drawings from above (owner).
+    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.5, 0.85, depthT);"),
+    ("fissure = inside*(0.02 + 0.24*depthT*depthT + 1.7*core);", "fissure = inside*(core + 0.001);"),
     ("s = mix(s, mix(vec3(0.012, 0.016, 0.022), vec3(0.22, 0.75, 0.7), core), inside);",
-     "s = mix(s, mix(vec3(0.008, 0.024, 0.05), vec3(0.14, 0.72, 0.7), core), inside);"),
+     "s = mix(s, mix(mix(vec3(0.3, 0.31, 0.38), vec3(0.008, 0.024, 0.06), smoothstep(0.03, 0.22, depthT)), vec3(0.04, 0.66, 0.62), core), inside);"),
     ("m *= 1.0 - fissureHalo*0.85;", "m *= 1.0 - fissureHalo*0.85; if (fissure > 0.0) m = 0.0;"),
     # Rope: fine dark strands (owner: low quality).
     ("float twist = 0.5 + 0.5*sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*17.0);",
@@ -865,7 +866,7 @@ def mesh(key):
 
 EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 1.8, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Cracks": 1.3, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def paint(key):
