@@ -38,3 +38,18 @@ Long cuts exposed small imported seam gaps. Independent loop caps and coplanar B
 **Evidence:** [geometry/channel checks](catalog/evidence/floppy/solid-muzzle/geometry.json), [six filled-panel ray samples](catalog/evidence/floppy/solid-muzzle/vent-fill.json), [GLB reimport](catalog/evidence/floppy/solid-muzzle/roundtrip.json), and [raw mesh audit](catalog/evidence/floppy/solid-muzzle/mesh-audit.json). Twelve meshes; the orange mesh has 3,501 triangles. Nine central channel samples are clear, both former vent regions are solid, and reimported bounds match exactly. Orange has no generic QA errors or detected positive-area coplanar overlaps. Generic QA still flags the unchanged BodyGrey and BodyGrey/DarkGrey contacts; the whole asset is **not** a clean production QA pass. Other warnings concern inherited hard-normal duplicates, hidden mechanical contacts and the hand-centred origin.
 
 The private model upload and both private mesh mappings are updated, with previous mappings backed up. Creature/foundation checks and Rocklock v2 checks pass; this is not Studio runtime or artistic approval. Current standalone test: `build/SlugshotFloppyTest-SolidMuzzle.rbxlx` (Play, hotbar 1); updated Rocklock private builds contain the same mesh. Earlier sessions remain open, and the preceding attempt to open a ninth Studio window was blocked by Studio's maximum-window limit. **Unresolved:** owner verdict on the solid panels and longer bevel, and actual imported appearance/playback in the refreshed place.
+
+## Slugshot look and barrel options (2026-11-01)
+
+**Confirmed:** the owner asked for Floppy and the blaster in the Slugshot look, shown in their own artifact, and for the blaster to "look more like a dangerous weapon… right now it just looks kinda like a toy". No full redesign or colour changes; probably the shape of the barrel, plus any other small proposals.
+
+**Implemented (offline renders, awaiting the owner's pick):** `tools/lobby/blaster_variants.py` builds four barrel options from a copy of the accepted blaster, in existing finishes only, placed on the measured prong surfaces. Tips still slope down and the firing gap stays open.
+- **Fanged jaws:** steel teeth on both inner faces beyond the canister. The first size was invisible from the side and was enlarged.
+- **Claw tips:** steel claws extending each prong's downward bevel to a hooked point.
+- **Armoured and vented:** graphite bolted plates and angled vent slots, which are exact boolean differences.
+- **Combined:** claws, armour and vents.
+
+`tools/lobby/render_character_look.py` renders 36-frame turntables in the look: the Roblox-style inverted-hull ink shells, the accepted palette, glowing vanes, strip and canister with bloom, and Floppy's emissive floor. The page is at https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD.
+
+**Unresolved:** owner's barrel choice, then the Roblox build: ink shells in the blaster mesh and a skinned shell for Floppy, with glows under the look pack. The variant meshes have not been through mesh QA or upload.
+

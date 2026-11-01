@@ -637,3 +637,9 @@
 - **Confirmed:** owner loves the base wall design; reported one wall rendering oddly, top-left cracks rare, and one gate band unlike the others; asked to start Floppy and the blaster next.
 - **Implemented/verified offline:** per-region crack picks (top-left cracks on three of four walls), top-row cracks from the lower rim, bands sized to each block. Rebuilt gate and walls A-D; islands outward; all uploaded assets Approved before reopening Studio. Odd wall attributed to pending moderation (inferred; textures were complete and Approved on read-back).
 - **Unresolved:** owner's Studio check.
+
+## 2026-11-01 - Floppy and the blaster in the Slugshot look; barrel options
+
+- **Confirmed:** owner asked for Floppy and the blaster in the new style in their own artifact, and a more dangerous-looking barrel without a redesign or colour change.
+- **Implemented/verified offline:** barrel variants from a copy of the accepted blaster (fangs, claws, armour and vents, combined) and turntable renders in the look; renders inspected (fangs enlarged after review). Page published.
+- **Unresolved:** owner's choice; Roblox ink shells and glow for both.
