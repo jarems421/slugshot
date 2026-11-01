@@ -122,28 +122,34 @@ def chain(points, radii, seed):
 def build(prober):
     rnd = random.Random(27)
     # Roots: thick where they grip the top of the rim, then flowing down the real rock surface, forking as they go.
-    root_angles = [0.5, 1.35, 2.3, 3.15, 4.15, 5.0, 5.85]
+    root_angles = [0.5, 2.1, 3.7, 5.2]
     root_probes = []
     for a0 in root_angles:
         heights = [-0.05, -1.6, -3.6, -5.8]
         drift = [0.0] + [rnd.uniform(-0.1, 0.1) + 0.1*i for i in range(1, 4)]
         root_probes.append((a0, [(a0 + d, y, radial(prober, a0 + d, y)) for d, y in zip(drift, heights)]))
     # Vines: hang from the rim in loose groups, clear of the roots.
-    vine_angles = [0.05, 0.22, 0.95, 1.1, 1.85, 2.02, 2.7, 3.6, 3.78, 4.6, 4.75, 5.4, 5.55, 6.1]
+    vine_angles = [1.05, 1.28, 3.0, 4.45, 4.68]
     vine_probes = [(a, radial(prober, a, -0.05)) for a in vine_angles]
     # Crystals: a golden-angle scatter over the underside, using every design and colour.
     crystal_probes = []
-    order = list(range(14))
+    order = [0, 1, 2, 3, 4, 7, 8, 10]  # eight designs in clearly different colours
     rnd.shuffle(order)
-    for i in range(20):
+    for i in range(8):
         a = i*2.39996 + 0.7
-        rad = 2.3 + 3.8*math.sqrt((i + 0.5)/20)
-        k = order[i % 14]
+        rad = 2.6 + 3.4*math.sqrt((i + 0.5)/8)
+        k = order[i]
         pull = CRYSTAL_STYLES[k][3]
         direction = norm([math.cos(a)*(0.8 - 0.6*pull), -0.62 - 0.4*pull, math.sin(a)*(0.8 - 0.6*pull)])
         target = polar(a, rad, (rad/7 - 1)*9.5)
         origin = [t + d*13 for t, d in zip(target, direction)]
         crystal_probes.append((k, direction, prober.add(origin, [-d for d in direction])))
+    # Small mushrooms on the rock's sides, as on the wall: a few little clusters, not a scatter everywhere.
+    shroom_probes = []
+    for c, a in enumerate((0.15, 1.75, 2.75, 4.05, 5.65)):
+        for j in range(3):
+            aj = a + (j - 1)*0.09
+            shroom_probes.append((aj, radial(prober, aj, -1.2 - 1.3*rnd.random() - 0.9*(c % 2)), c*7.0 + j*3.0, j > 0))
 
     hits = prober.run()
 
@@ -165,12 +171,11 @@ def build(prober):
         last_r = math.hypot(pts[-1][0], pts[-1][2])
         # A low, spreading ridge starts on the top of the rim, so the root grips the edge rather than poking out of it.
         path = [polar(a0 - 0.08, rim_r - 2.8, -0.1), polar(a0 - 0.03, rim_r - 1.3, -0.1)] + pts + [
-            polar(last_a + 0.14, last_r + 1.1, last_y - 1.5), polar(last_a + 0.42, last_r + 1.7, last_y - 2.5),
-            polar(last_a + 0.7, last_r + 1.3, last_y - 3.6)]
-        calls = chain(path, [0.1, 0.22] + widths + [0.3, 0.22, 0.14, 0.06], r*3.1)
+            polar(last_a + 0.14, last_r + 0.8, last_y - 1.0), polar(last_a + 0.34, last_r + 1.1, last_y - 1.7)]
+        calls = chain(path, [0.1, 0.22] + widths + [0.3, 0.16, 0.05], r*3.1)
         # Two forks leave the main root and wander across the rock, some nearly meeting the next root.
         forks = []
-        for f, (start, side) in enumerate(((2, 1.0), (3, -1.0))):
+        for f, (start, side) in enumerate(((3, 1.0 if r % 2 else -1.0),)):
             s = pts[start - 1]
             a1 = math.atan2(s[2], s[0])
             r1 = math.hypot(s[0], s[2])
@@ -194,7 +199,7 @@ def build(prober):
             print(f"vine {i}: probe missed the rock, skipped")
             continue
         rr = math.hypot(p[0], p[2])
-        length = rnd.uniform(3.0, 7.5)
+        length = rnd.uniform(2.4, 4.8)
         vines.append(f"  rockStrand(q, {vec(polar(a, rr + 0.22, -0.2))}, {vec(polar(a, rr - 0.5, 0.03))}, {length:.2f}, {rnd.uniform(0, 6.28):.2f}, res);")
 
     crystals = []
@@ -207,10 +212,20 @@ def build(prober):
         size = rnd.uniform(0.85, 1.2)
         crystals.append(f"  crystalCluster(q, {vec(p)}, {vec(direction)}, {k:.1f}, {length*size*1.3:.2f}, {radius*size*1.15:.2f}, {spread:.2f}, res);")
 
-    print(f"{len(roots)} roots, {len(vines)} vines, {len(crystals)} crystal clusters anchored")
+    shrooms = []
+    for a, probe, seed, tiny in shroom_probes:
+        p = surface(probe)
+        if p is None:
+            continue
+        normal = norm([math.cos(a), 0.15, math.sin(a)])
+        shrooms.append(f"  wallShroom(q, {vec(p)}, {vec(normal)}, {seed:.1f}, {1.0 if tiny else 0.0}, stems, caps, capIdx);")
+    print(f"{len(roots)} roots, {len(vines)} vines, {len(crystals)} crystal clusters, {len(shrooms)} mushrooms anchored")
     return ("float rootField(vec3 q) {\n  float d = 1e3, bs;\n" + "\n".join(roots) + "\n  return d;\n}\n"
             "void rockVines(vec3 q, inout vec2 res) {\n" + "\n".join(vines) + "\n}\n"
-            "void rockCrystals(vec3 q, inout vec2 res) {\n" + "\n".join(crystals) + "\n}\n")
+            "void rockCrystals(vec3 q, inout vec2 res) {\n" + "\n".join(crystals) + "\n}\n"
+            "void rockShrooms(vec3 q, inout vec2 res) {\n  float stems = 1e5, caps = 1e5, capIdx = 0.0;\n"
+            + "\n".join(shrooms)
+            + "\n  if (stems < res.x) res = vec2(stems, 6.0);\n  if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);\n}\n")
 
 
 def main():

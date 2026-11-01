@@ -187,3 +187,11 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Roots need to stand off the surface.** A root centred on the surface is half buried and shows only as lumps. Thick roots crossing an edge become knobs, so keep them slim there.
 - **"More moss" still means patches.** Covering everything hid the rock and fangs. Keep moss a muted colour, distinct from leaf green, with rock showing through.
 - **Heavy shaders:** the three big concepts have Live 3D switched off (`noLive`), since a heavy shader froze Chrome before.
+
+### Spawn rock v3: the approved language beats new detail (2026-11-01)
+
+- **What happened:** v2 did everything asked for, one request at a time, and the sum drifted off style. The owner still liked the individual designs but said it was no longer Slugterra, too cramped and too green.
+- **What fixed it:** comparing against a render of the approved rock wall, then building from that wall's masses, colours, cracks and moss, with far fewer accents.
+- **Rule:** after a round of "add more" feedback, compare the result side by side with an approved asset before publishing, and judge the base-to-accent balance from the [readability check](style-guide.md#readability-check-ask-of-every-scene).
+- **Ink:** large dressed assets need the surface-measured material boundaries the rock wall uses, or buried parts draw black splotches.
+

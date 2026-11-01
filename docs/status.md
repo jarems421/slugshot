@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v3 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): rock first, in the approved rock wall's language, with far less dressing. **Unresolved:** owner review.
+
 **Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v2 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc) after owner feedback on spikes, crystals, roots, vines and moss. Offline renders inspected. **Unresolved:** owner review; Sky Well and Maelstrom reviews have not started, as the owner chose to do the island first.
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** concept v1 of the floating spawn rock, Sky Well and Maelstrom in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc), following the owner's design choices ([roadmap](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom)). The agent inspected rendered frames over three rounds. The library was republished at this new link because the earlier one could not be read from this account. **Unresolved:** owner review of the three concepts; whether to raise the Maelstrom water to 50 studs below the shore in the block-out (still 70).

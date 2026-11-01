@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v3
+
+- **Owner feedback on v2:** too far from the Slugterra feel, too much going on underneath, cramped, leafy and green; it should still look rocky. They do like the individual designs.
+- **Implemented/verified offline:** underside rebuilt from rounded rock masses with the approved rock wall's stone colours, surface grain, worn edges, crevice hatching and Slugterra-style cracks. Dressing cut from 20 crystal clusters, 7 roots and 14 vines to 8 clusters, 4 roots and 5 sparse vines, with 15 small mushrooms in five little clusters. Moss is the wall's soft sage. Renders inspected; Sky Well and Maelstrom re-rendered with the new rock.
+- **Unresolved:** owner review. "Slugterra vibe" was read as the approved rock wall language; that reading is unconfirmed.
+
 ## 2026-11-01 - Spawn rock v2
 
 - **Owner feedback:** the stone spikes look like they hang by a thread at the tips, so keep only the spike; scatter more colours using the crystal designs across the bottom; roots look basic, just curved pokes, and can't be told from the vines, so make them look like real, mythical tree roots; vines look like dangling green ropes, so make them look like real vines; add a lot more moss, especially underneath.
