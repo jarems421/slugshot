@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Portal plaza options
+
+- **Owner request:** make the portal area very grand and volcanic, with a few options to pick from in an artifact.
+- **Implemented/verified offline:** four concepts in the library's shader (asset `portal-plaza`, shader 8) using the approved gates: A Caldera Steps, B Forge Avenue, C Molten Crown, D Titan's Arch. Rendered with `tools/lobby/render_plaza.py`; frames inspected.
+- **Proposed, not approved:** all four move the volcano about 60 studs back at about 160 tall, draw the cavern wall beyond 300, and enlarge the gates. The agent recommended D.
+- **Unresolved:** the owner's pick. Nothing is built in Roblox.
+
 ## 2026-11-01 - Hub designs in Roblox, owner review rounds
 
 - **Owner request:** put the final designs in the lobby now at high quality, playable on a phone, and build the rest around them.
