@@ -302,12 +302,41 @@ local function zoneColor(angle: number, radius: number): Color3?
 	return GROUND
 end
 
+-- The concept measures its angles from +X toward +Z, in units of 5 studs.
+local function conceptAngle(angle: number): number
+	local rad = math.rad(angle)
+	return math.atan2(-math.cos(rad), math.sin(rad))
+end
+
+local function rockRim(angle: number): number
+	local a = conceptAngle(angle)
+	return 5
+		* 7
+		* (1 + 0.05 * math.sin(a * 3 + 1) + 0.035 * math.sin(a * 7 + 2.1) + 0.02 * math.sin(a * 13))
+end
+
+local function pitEdge(angle: number): number
+	local a = conceptAngle(angle)
+	return 5 * (17.6 + 0.45 * math.sin(a * 5 + 1) + 0.3 * math.sin(a * 11 + 2))
+end
+
 local function buildSpawnRock(root: Instance)
 	local rock = layout.spawnRock
 	local parent = folder(root, "SpawnRock")
 	local depth = rock.undersideDepth
-	lathe(parent, Vector3.zero, { { 0, 0 }, { rock.radius, 0 } }, rock.sides, ROCK, 3)
-	lathe(parent, Vector3.zero, {
+	local step = 360 / rock.sides
+	for side = 0, rock.sides - 1 do
+		local a1, a2 = side * step, (side + 1) * step
+		triangle(
+			parent,
+			Vector3.zero,
+			polar(a1, rockRim(a1), 0),
+			polar(a2, rockRim(a2), 0),
+			ROCK,
+			3
+		)
+	end
+	lathe(folder(parent, "Underside"), Vector3.zero, {
 		{ rock.radius, 0 },
 		{ rock.radius * 0.72, -depth * 0.4 },
 		{ rock.radius * 0.3, -depth * 0.8 },
@@ -316,9 +345,12 @@ local function buildSpawnRock(root: Instance)
 	label(parent, `SPAWN ROCK  {rock.radius * 2} across`, Vector3.new(0, 14, 0))
 end
 
+local RIM_WIDTH = 104 -- where the hub's cliff art ends
+
 local function buildShore(root: Instance)
 	local parent = folder(root, "Shore")
 	local radii = layout.floorRadii
+	local rimStrip = folder(parent, "RimStrip")
 	for sector = 0, layout.sectors - 1 do
 		local a1 = sector * SECTOR - 180
 		local a2 = a1 + SECTOR
@@ -332,15 +364,29 @@ local function buildShore(root: Instance)
 				else nil
 			if color ~= nextColor then
 				if color then
+					local atPit = start == radii[1]
+					local from = if atPit then RIM_WIDTH else start
 					quad(
 						parent,
-						polar(a1, start, 0),
-						polar(a2, start, 0),
+						polar(a1, from, 0),
+						polar(a2, from, 0),
 						polar(a2, radii[band + 1], 0),
 						polar(a1, radii[band + 1], 0),
 						color,
 						shore.thickness
 					)
+					-- The strip around the pit is its own piece, because the hub's rim art replaces how it looks.
+					if atPit then
+						quad(
+							rimStrip,
+							polar(a1, pitEdge(a1), 0),
+							polar(a2, pitEdge(a2), 0),
+							polar(a2, from, 0),
+							polar(a1, from, 0),
+							color,
+							shore.thickness
+						)
+					end
 				end
 				start = radii[band + 1]
 			end
@@ -355,7 +401,7 @@ local function buildShore(root: Instance)
 				parent,
 				"Lip",
 				middle,
-				shore.innerRadius + shore.lipWidth / 2,
+				pitEdge(middle) + 2.75,
 				0,
 				shore.lipHeight,
 				shore.lipWidth,
@@ -380,15 +426,36 @@ end
 local function buildBridges(root: Instance)
 	local bridges = layout.bridges
 	local parent = folder(root, "Bridges")
-	local inner, outer = layout.spawnRock.radius, shore.innerRadius
-	for _, angle in bridges.angles do
+	for index, angle in bridges.angles do
 		local bridge = folder(parent, `Bridge{angle}`)
 		local side = polar(angle + 90, bridges.width / 2 + 0.4, 0)
+		-- Each bridge's span is set by how close its gateway stands to the island's edge.
+		local centre = 5 * (bridges.gates[tostring(index - 1)] + 5.55)
+		local inner, outer = centre - 25.5, centre + 25.5
 		local function deck(t: number): Vector3
 			-- A parabola: level at both ends, lowest by sag at the middle.
 			local sag = bridges.sag * (1 - (2 * t - 1) ^ 2)
-			return polar(angle, inner - 1 + (outer - inner + 2) * t, -sag)
+			return polar(angle, inner + (outer - inner) * t, -sag)
 		end
+		-- Short level pieces where it meets the rock and the shore, so nobody catches an edge.
+		beam(
+			bridge,
+			"Plank",
+			polar(angle, inner - 4, 0),
+			polar(angle, inner, 0),
+			bridges.width,
+			1,
+			PLANK
+		)
+		beam(
+			bridge,
+			"Plank",
+			polar(angle, outer, 0),
+			polar(angle, outer + 4, 0),
+			bridges.width,
+			1,
+			PLANK
+		)
 		for plank = 1, bridges.planks do
 			local a, b = deck((plank - 1) / bridges.planks), deck(plank / bridges.planks)
 			beam(bridge, "Plank", a, b, bridges.width, 1, PLANK)
@@ -419,11 +486,7 @@ local function buildBridges(root: Instance)
 			end
 		end
 	end
-	label(
-		parent,
-		`BRIDGE  {outer - inner} long, {bridges.width} wide, {bridges.sag} droop`,
-		polar(45, 55, 8)
-	)
+	label(parent, `BRIDGE  51 long, {bridges.width} wide, {bridges.sag} droop`, polar(45, 55, 8))
 end
 
 local function buildMaelstrom(root: Instance)

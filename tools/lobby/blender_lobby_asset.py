@@ -155,13 +155,13 @@ def bake_target(low, image):
     return mat
 
 
-def bake_normal(dense, low):
+def bake_normal(dense, low, cage=None):
     img = bpy.data.images.new(f"{low.name}_normal", TEX, TEX, alpha=False)
     img.colorspace_settings.name = "Non-Color"
     low.data.materials.clear()
     low.data.materials.append(bake_target(low, img))
     select_only(dense, low, active=low)
-    extent = max(dense.dimensions)*0.01 + 0.08
+    extent = cage if cage else max(dense.dimensions)*0.01 + 0.08
     bpy.ops.object.bake(type="NORMAL", use_selected_to_active=True, cage_extrusion=extent,
                         max_ray_distance=extent*2, normal_space="TANGENT", margin=8)
     img.filepath_raw = str(OUT/"textures"/f"{low.name}-normal.png")
@@ -251,4 +251,5 @@ def main():
     print("LOBBY_ASSET_DONE", OUT)
 
 
-main()
+if __name__ == "__main__":
+    main()

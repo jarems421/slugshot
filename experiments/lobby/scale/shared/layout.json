@@ -5,7 +5,7 @@
   "walkSpeeds": { "default": 16, "run": 18, "sprint": 24 },
   "spawnRock": { "radius": 35, "undersideDepth": 44, "spawnRadius": 25, "spawnY": 4, "sides": 32 },
   "shore": { "innerRadius": 85, "wallRadius": 300, "thickness": 8, "lipHeight": 3, "lipWidth": 2 },
-  "bridges": { "angles": [0, 90, 180, -90], "width": 10, "sag": 5, "planks": 12, "railHeight": 3.5 },
+  "bridges": { "angles": [0, 90, 180, -90], "width": 10, "sag": 5, "planks": 12, "railHeight": 3.5, "gates": { "0": 6.6, "1": 6.85, "2": 6.25, "3": 6.3 } },
   "maelstrom": { "waterY": -50, "shaftBottomY": -520, "shaftBands": 6 },
   "fall": { "fadeStartY": -280, "respawnY": -500 },
   "cavern": { "ceilingY": 250, "ceilingThickness": 10 },
