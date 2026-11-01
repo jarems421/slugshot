@@ -502,18 +502,19 @@ end
 
 local function buildFall(angle: number)
 	local flat = Vector3.new(math.cos(angle), 0, math.sin(angle))
-	local across = Vector3.new(-flat.Z, 0, flat.X)
+	local rim = UNIT * (17.6 + 0.45 * math.sin(angle * 5 + 1) + 0.3 * math.sin(angle * 11 + 2))
 	local inward = -flat
-	local foot = flat * 72 + Vector3.new(0, FALL_FOOT_Y, 0)
-	local lip = flat * 90 + Vector3.new(0, 0.8, 0)
+	local foot = flat * (rim - 14) + Vector3.new(0, FALL_FOOT_Y, 0)
+	-- Low in the back of the concept's mouth, so it runs out over the mouth's floor and drops.
+	local lip = flat * (rim + 2) + Vector3.new(0, -9.6, 0)
 	local solid = fade({ { 0, 0 }, { 1, 0 } })
 	flowSheet(
 		lip,
 		foot,
 		inward,
-		10,
-		26,
-		13,
+		11,
+		20,
+		12,
 		17,
 		fxTexture("flow"),
 		Color3.new(1, 1, 1),
@@ -528,9 +529,9 @@ local function buildFall(angle: number)
 		lip,
 		foot,
 		inward,
-		10,
-		26,
 		11,
+		20,
+		10,
 		15,
 		fxTexture("streak"),
 		Color3.fromRGB(165, 255, 240),
@@ -540,27 +541,6 @@ local function buildFall(angle: number)
 		0.5,
 		1
 	)
-	-- Thin runs either side.
-	for _, side in { -1, 1 } do
-		local run = lip + across * side * 10
-		flowSheet(
-			run,
-			flat * 76 + across * side * 11 + Vector3.new(0, -22 - 12 * (side + 1), 0),
-			inward,
-			8,
-			12,
-			2.2,
-			0.8,
-			fxTexture("flow"),
-			Color3.new(1, 1, 1),
-			fade({ { 0, 0 }, { 0.8, 0 }, { 1, 1 } }),
-			20,
-			0.6,
-			0,
-			0
-		)
-	end
-
 	-- Where it lands: ripples spreading over the juice, foam churning, and foam carried off along the swirl's own direction.
 	local landing = holder("FallFoot", foot + Vector3.new(0, 2.2, 0), Vector3.new(9, 0.5, 9))
 	local ripples = Instance.new("ParticleEmitter")

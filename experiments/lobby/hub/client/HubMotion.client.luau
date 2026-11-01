@@ -10,7 +10,8 @@ local UserInputService = game:GetService("UserInputService")
 local ORBIT = 0.12
 local BRIDGE_UNIT = 2.55 -- studs per bridge unit
 local MOVE_RATE = 1 / 30
-local BRIDGE_RATE = 1 / 30
+local BRIDGE_EASE = 9 -- how quickly bones follow their targets
+local WALK_SPEED = 16
 local BRIDGE_SETTLE = 1.2 -- seconds for a bridge to come to rest after the last person leaves
 local BONE_COUNT = 17
 local BONE_SPAN = 10.6 -- bridge units, centre to end bone
@@ -62,17 +63,17 @@ local function moveParts(t: number)
 	workspace:BulkMoveTo(moverParts, moverFrames, Enum.BulkMoveMode.FireCFrameChanged)
 end
 
--- Bridges rest perfectly still. Under anyone crossing, they sway, the deck dips and the nearby boards bounce and rock
--- (owner: it should only wobble when someone is walking on it).
+-- Bridges rest perfectly still. Someone's weight dips the deck under them; only moving makes it sway and the boards rock
+-- (owner: standing still on it should not wobble).
 type BoneRef = { bone: Bone, up: Vector3, side: Vector3, along: Vector3 }
 type Bridge = {
 	frame: CFrame,
 	seed: number,
 	bones: { { BoneRef } },
-	nextUpdate: number,
 	centre: Vector3,
 	energy: number,
 	resting: boolean,
+	values: { { side: number, up: number, roll: number } },
 }
 local bridges: { Bridge } = {}
 
@@ -124,14 +125,18 @@ local function addBridge(instance: Instance)
 			end
 		end
 	end
+	local values = {}
+	for index = 1, BONE_COUNT do
+		values[index] = { side = 0, up = 0, roll = 0 }
+	end
 	table.insert(bridges, {
 		frame = frame,
 		seed = #bridges * 41,
 		bones = sets,
-		nextUpdate = 0,
 		centre = frame.Position,
 		energy = 0,
 		resting = true,
+		values = values,
 	})
 end
 
@@ -142,32 +147,39 @@ for _, instance in CollectionService:GetTagged("HubBridge") do
 	task.spawn(addBridge, instance)
 end
 
--- Where anyone is along this bridge, in bridge units; up to three.
+-- Where anyone is along this bridge, in bridge units, up to three; and how fast the quickest of them is moving.
 local riders: { number } = {}
+local riderSpeed = 0
 local function findRiders(bridge: Bridge)
 	table.clear(riders)
-	local function consider(position: Vector3)
+	riderSpeed = 0
+	local function consider(position: Vector3, speed: number)
 		local p = bridge.frame:PointToObjectSpace(position)
 		if math.abs(p.X) < 26 and math.abs(p.Z) < 7 and p.Y > -9 and p.Y < 9 and #riders < 3 then
 			table.insert(riders, p.X / BRIDGE_UNIT)
+			riderSpeed = math.max(riderSpeed, speed)
 		end
 	end
 	for _, player in Players:GetPlayers() do
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
 		if root and root:IsA("BasePart") then
-			consider(root.Position)
+			local velocity = root.AssemblyLinearVelocity
+			consider(root.Position, Vector3.new(velocity.X, 0, velocity.Z).Magnitude)
 		end
 	end
 	-- The check build's test rider stands in for a player.
 	local rider = workspace:GetAttribute("HubTestRider") :: Vector3?
 	if rider then
-		consider(rider)
+		consider(rider, WALK_SPEED)
 	end
 end
 
-local function updateBridge(bridge: Bridge, t: number)
+-- Runs every frame while a bridge is active, and every bone eases toward its target, so it can't step or stutter.
+local function updateBridge(bridge: Bridge, t: number, dt: number)
 	local spin = t * ORBIT
+	local ease = 1 - math.exp(-dt * BRIDGE_EASE)
+	local settled = true
 	for index, set in bridge.bones do
 		local x = boneX(index - 1)
 		local su = math.clamp(x / BONE_SPAN, -1, 1)
@@ -178,18 +190,28 @@ local function updateBridge(bridge: Bridge, t: number)
 		local u = math.clamp(x / 10, -1, 1)
 		for _, rider in riders do
 			local dx = x - rider
-			up -= 0.55 * math.exp(-dx * dx / 9) * (1 - u * u)
+			-- Their weight, which stays while they stand still.
+			up -= 0.38 * math.exp(-dx * dx / 9) * (1 - u * u)
 			near = math.max(near, math.exp(-dx * dx / 3.6))
 		end
-		-- Each board has its own rhythm.
-		local rock = math.sin(t * (2.2 + (index % 5) * 0.24) + index * 2.3)
-		local bounce = 0.075 * near * rock
+		-- Each board has its own rhythm, but only while someone is moving on it.
+		local rock = 0.05
+			* near
+			* bridge.energy
+			* math.sin(t * (2.2 + (index % 5) * 0.24) + index * 2.3)
+		local value = bridge.values[index]
+		value.side += (side - value.side) * ease
+		value.up += (up + rock - value.up) * ease
+		value.roll += (rock - value.roll) * ease
+		if math.abs(value.side) + math.abs(value.up) + math.abs(value.roll) > 0.001 then
+			settled = false
+		end
 		for _, ref in set do
-			local offset = (ref.side * side + ref.up * (up + bounce)) * BRIDGE_UNIT
-			ref.bone.Transform = CFrame.new(offset)
-				* CFrame.fromAxisAngle(ref.along, 0.075 * near * rock)
+			local offset = (ref.side * value.side + ref.up * value.up) * BRIDGE_UNIT
+			ref.bone.Transform = CFrame.new(offset) * CFrame.fromAxisAngle(ref.along, value.roll)
 		end
 	end
+	return settled
 end
 
 local function inView(camera: Camera, centre: Vector3): boolean
@@ -317,19 +339,13 @@ RunService.RenderStepped:Connect(function(dt: number)
 	end
 	for _, bridge in bridges do
 		findRiders(bridge)
-		local target = if #riders > 0 then 1 else 0
-		bridge.energy += (target - bridge.energy) * math.min(dt / (BRIDGE_SETTLE * 0.4), 1)
-		if #riders == 0 and bridge.energy < 0.005 then
-			if not bridge.resting then
-				-- One last update puts every bone home; after that a resting bridge costs nothing.
-				bridge.energy = 0
-				bridge.resting = true
-				updateBridge(bridge, t)
+		local target = math.clamp(riderSpeed / WALK_SPEED, 0, 1)
+		bridge.energy += (target - bridge.energy) * (1 - math.exp(-dt / BRIDGE_SETTLE * 3))
+		if #riders > 0 or not bridge.resting then
+			if inView(camera, bridge.centre) then
+				local settled = updateBridge(bridge, t, dt)
+				bridge.resting = settled and #riders == 0
 			end
-		elseif t >= bridge.nextUpdate and inView(camera, bridge.centre) then
-			bridge.resting = false
-			bridge.nextUpdate = t + BRIDGE_RATE
-			updateBridge(bridge, t)
 		end
 	end
 end)

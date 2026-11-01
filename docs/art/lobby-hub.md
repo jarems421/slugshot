@@ -11,9 +11,10 @@ The final hub designs built for the game, on top of the approved block-out, whos
 
 ## Decisions from owner review (Confirmed, 2026-11-01)
 
-- Bridges rest still and only move when someone is on them. This replaces the earlier "slight sway at all times".
+- Bridges rest still. Standing on one dips it under your weight with no wobble; only moving on it makes it sway and the boards rock. This replaces the earlier "slight sway at all times".
 - Crack mushrooms are really tiny, about 1 to 2 studs. The concept's `tiny = 2` setting holds this.
-- Cracks have real depth and glow. No puffs of mist come out of them.
+- Every crack is a real hole through the top, blue-black inside with a thin teal core. No puffs of mist come out of them.
+- Each fall pours from a glowing cave mouth carved into the cliff, with no side streams. The land reaches out to meet each bridge. Rim bushes have their own detail.
 - Waterfalls must read as flowing liquid in the whirlpool's colours, with a visible connection where they land. They are now scrolling sheets with ripples and foam, not a mesh.
 - The gate symbol toward the gun side is the game's blaster: two prongs, a canister, a rear disc.
 - A Detail button in the place switches between High and Low. A game can't change Roblox's own graphics level.

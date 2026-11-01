@@ -15,6 +15,7 @@ from pathlib import Path
 import bmesh
 import bpy
 import numpy as np
+from mathutils import Vector, geometry
 
 sys.path.insert(0, str(Path(__file__).parent))
 import blender_lobby_asset as base  # noqa: E402
@@ -63,6 +64,31 @@ def to_studs(obj, scale, origin):
     co *= scale
     mesh.vertices.foreach_set("co", co.ravel())
     mesh.update()
+
+
+def build_plate(name, data):
+    """The flat walkable top: triangulated from the rim and crack outlines, keeping only what is solid."""
+    points = [Vector(p) for p in data["plateVerts"].tolist()]
+    edges = [tuple(e) for e in data["plateEdges"].tolist()]
+    coords, _, faces, _, _, _ = geometry.delaunay_2d_cdt(points, edges, [], 0, 1e-5)
+    field, lo, step = data["plateField"], data["plateLo"], float(data["plateStep"])
+    verts = np.array([(c.x, 13.0, c.y) for c in coords], "f4")
+    kept = []
+    for face in faces:
+        for i in range(1, len(face) - 1):
+            a, b, c = face[0], face[i], face[i + 1]
+            mid = (verts[a] + verts[b] + verts[c])/3
+            ix = int(round((mid[0] - lo[0])/step))
+            iz = int(round((mid[2] - lo[1])/step))
+            if not (0 <= ix < field.shape[0] and 0 <= iz < field.shape[1]) or field[ix, iz] >= 0:
+                continue
+            up = np.cross(verts[b] - verts[a], verts[c] - verts[a])[1]
+            kept.append((a, b, c) if up > 0 else (a, c, b))
+    used, remap = np.unique(np.array(kept, "i4"), return_inverse=True)
+    low = base.build_dense(name, {"verts": verts[used], "faces": remap.reshape(-1, 3)})
+    low.name = low.data.name = name
+    print(f"{name}: plate of {len(kept)} triangles", flush=True)
+    return low
 
 
 def planar_uv(obj, half):
@@ -125,6 +151,9 @@ def main():
             low = base.build_dense(name, {"verts": data["lowVerts"], "faces": data["lowFaces"]})
             low.name = low.data.name = name
             planar_uv(low, 19.0)
+        elif g.get("plate"):
+            low = build_plate(name, data)
+            planar_uv(low, 8.8)
         elif g.get("flat"):
             # Straight-down maps: island seams in an alpha texture drew hard square patches in the storm.
             low = base.build_dense(name, {"verts": data["verts"], "faces": data["faces"]})

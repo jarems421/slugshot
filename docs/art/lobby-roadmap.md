@@ -43,7 +43,7 @@ Source: owner's pasted art-direction chat and requests, 2026-10-31. **Status: Co
   - **right** to the slug exhibition side.
 - **Bridges land on solid mainland, not small platforms.** Each one opens out into broad land that wraps around the sinkhole, and the terrain and biomes grow out from there. The round/octagonal shape is the sinkhole and the mainland shoreline around it.
 - **Runestone gateways (Confirmed, owner approved as final 2026-11-01):** each bridge starts at a small Stonehenge-style gateway at the island's edge: two runestones and a lintel, about 12 studs of headroom and 14 wide, with a glowing keystone showing the destination from both sides. The bridge ropes wind round the stones and end in knots. Replaces the broken pillar and stump.
-- **Bridge motion (Confirmed, owner 2026-11-01, revised in Roblox review):** bridges rest still and only move when someone is on them: slight sway and a dip with planks moving, noticeable but not too much. Visual only.
+- **Bridge motion (Confirmed, owner 2026-11-01, revised in Roblox review):** bridges rest still; standing on one only dips it, and moving on it adds slight sway and planks moving, noticeable but not too much. Visual only.
 - **Bridges:** Confirmed 2026-11-01: wooden suspension bridges, 50 long (shortened from 60 on 2026-11-01 for the larger spawn rock), 10 wide, with about 5 studs of droop. Decks stay fixed so they never move players.
 - **No barriers (Confirmed 2026-11-01, replaces the earlier invisible barriers).** Falling is a feature: a long plunge through mist, then respawn at spawn. A low rock lip stops plain walking off the shore, and players can hop over it.
 - **PvP gate** straight ahead.

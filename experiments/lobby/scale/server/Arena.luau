@@ -451,7 +451,7 @@ local function buildBridges(root: Instance)
 			bridge,
 			"Plank",
 			polar(angle, outer, 0),
-			polar(angle, outer + 4, 0),
+			polar(angle, outer + 8, 0),
 			bridges.width,
 			1,
 			PLANK

@@ -1827,12 +1827,31 @@ void treeShrooms(vec3 p, inout vec2 res) {
     if (cap*0.75 < res.x) res = vec2(cap*0.75, 15.7 + float(i)*0.03);
   }
 }
+// A glowing cave mouth in the cliff, just under the rim, for each fall to pour out of (owner, 2026-11-01).
+float fallMouth(vec3 p) {
+  float best = 1e3;
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i), af = fi*1.5708 + 0.785 + 0.34*(hash1(fi + 171.0) - 0.5);
+    float Rf = 17.6 + 0.45*sin(af*5.0 + 1.0) + 0.3*sin(af*11.0 + 2.0);
+    vec2 out0 = vec2(cos(af), sin(af));
+    float along = dot(p.xz, out0) - Rf, across = dot(p.xz, vec2(-out0.y, out0.x));
+    vec3 q = vec3(along - clamp(along, -2.6, 0.9), (p.y + 1.25)*1.7, across);
+    best = min(best, (length(q) - 1.6)*0.58);
+  }
+  return best;
+}
 vec2 hookedBridges(vec3 p);
 vec3 hookedLanternGlow(vec3 ro, vec3 rd, float tEnd);
 vec3 gateGlow(vec3 ro, vec3 rd, float tEnd, float top);
 vec2 maelstrom(vec3 p) {
   float rr = length(p.xz), a = atan(p.z, p.x);
   float R = 17.6 + 0.45*sin(a*5.0 + 1.0) + 0.3*sin(a*11.0 + 2.0);
+  // The rim is wavy but the bridges are one length, so the land reaches out to meet each bridge's posts.
+  {
+    float mu, mw, mDir, mSide;
+    markerLocal(p.xz, mu, mw, mDir, mSide);
+    R = mix(min(R, markR(mDir) + 10.55), R, smoothstep(2.0, 3.2, abs(mu)));
+  }
   float d = smax(p.y, R - rr, 0.2);
   d = max(max(d, rr - 34.0), -40.0 - p.y);
   vec2 res = vec2(d*0.75, 1.0);
@@ -1855,6 +1874,7 @@ vec2 maelstrom(vec3 p) {
   lip = max(lip, -p.y - 0.4);
   lip = max(lip, 1.75 - min(abs(p.x), abs(p.z)))*0.7;
   if (lip < res.x) res = vec2(lip, 1.0);
+  res.x = smax(res.x, -fallMouth(p), 0.1);
   float spin = uT*ORBIT, wy = waterY(rr), water = (p.y - wy)*0.5;
   if (water < 2.0) {
     float jsw = a + 2.1*log(rr + 1.0) + spin*3.0;
@@ -2395,6 +2415,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
         float faces = max(dot(n, normalize(inward*0.75 + vec3(0.0, -0.65, 0.0))), 0.0);
         emit = s*0.5*(0.55 + 0.45*occ0);
         emit += vec3(0.1, 0.78, 0.72)*(0.03 + 0.42*smoothstep(-1.0, -9.5, l.y))*faces*(0.25 + 3.2*s);
+        emit += vec3(0.12, 0.82, 0.74)*(1.0 - smoothstep(0.0, 0.5, fallMouth(l)))*(0.25 + 3.0*s);
       }
       emit += vec3(0.1, 0.22, 0.08)*0.12*m;
 #endif

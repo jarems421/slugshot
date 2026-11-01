@@ -26,7 +26,7 @@ import numpy as np
 from PIL import Image
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
-from skimage.measure import marching_cubes
+from skimage.measure import approximate_polygon, find_contours, marching_cubes
 
 sys.path.insert(0, str(Path(__file__).parent))
 from paint_texels import dilate, to_srgb  # noqa: E402
@@ -90,6 +90,7 @@ void main() {
   }
   if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5 || abs(id - 13.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
   if (id > 2.3 && id < 2.5) { crease = smoothstep(0.2, 0.7, -lap)*0.85; idEdge *= 0.6; }
+  if (abs(id - 12.0) < 0.5) crease = 0.0;
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
   emit *= 1.0 - ink;
@@ -274,6 +275,11 @@ def in_sprouts(ids, c):
     return ((ids >= 14.5) & (ids < 15.69)) | ((np.abs(ids - 13.0) < 0.5) & (c[:, 1] > 12.9))
 
 
+def in_rim_bushes(ids, c):
+    # The bushes along the rim; crushed in with the vines they had a few triangles each (owner: horrible, low quality).
+    return (np.abs(ids - 12.0) < 0.5) & (np.hypot(c[:, 0], c[:, 2]) > 18.0) & (c[:, 1] > -0.4)
+
+
 def juice_funnel():
     """The juice's smooth funnel. Decimating its folds left hard facets (owner: "a spiral of choppiness"), so the
     shape stays smooth and the folds live in the normal and colour maps, which rotate with it."""
@@ -400,9 +406,9 @@ def portal_piece(item, scale):
 PIECES = {
     "hub-rock": {
         "item": "spawn-rock-1", "map": ROCK_BODY, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
-        "lo": (-9.8, 4.4, -9.8), "hi": (9.8, 13.3, 9.8), "step": 0.04, "normalH": 0.006, "overlap": 3,
+        "lo": (-9.8, 4.4, -9.8), "hi": (9.8, 13.3, 9.8), "step": 0.03, "normalH": 0.006, "overlap": 3,
         "parts": [
-            part("Cracks", in_cracks, 6500, 1024, cage=0.04),
+            part("Cracks", in_cracks, 9000, 1024, cage=0.04),
             part("Top", top_only, 4500, 1024, cage=0.05),
             part("Upper", upper_side, 7000, 1024, ROCK_INK, 0.5, cage=0.08),
             part("Lower", everything, 5000, 1024, ROCK_INK, 0.5, cage=0.08),
@@ -446,6 +452,7 @@ PIECES = {
         "lo": (-21.5, -13.0, -21.5), "hi": (21.5, 1.5, 21.5), "step": 0.028, "normalH": 0.004,
         "parts": [
             part("Caps", by_id((15.6, 16.0)), 3000, 1024, PROP_INK, 0.5, cage=0.03),
+            part("Bushes", in_rim_bushes, 5500, 1024, FINE_INK*1.2, 0.8, cage=0.02),
             part("Flora", everything, 4500, 1024, FINE_INK, 1.0, cage=0.02),
         ],
     },
@@ -494,7 +501,9 @@ PIECES = {
 GAME_PAINT = (
     # Cracks: glowing across the floor. In the concept the bright strip was thin and moss grew over the floor, which read
     # as green drawings in the game (owner).
-    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.05, 0.3, -fq.x/max(fq.y, 0.01));"),
+    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.62, 0.95, -fq.x/max(fq.y, 0.01));"),
+    ("s = mix(s, mix(vec3(0.012, 0.016, 0.022), vec3(0.22, 0.75, 0.7), core), inside);",
+     "s = mix(s, mix(vec3(0.008, 0.024, 0.05), vec3(0.14, 0.72, 0.7), core), inside);"),
     ("m *= 1.0 - fissureHalo*0.85;", "m *= 1.0 - fissureHalo*0.85; if (fissure > 0.0) m = 0.0;"),
     # Rope: fine dark strands (owner: low quality).
     ("float twist = 0.5 + 0.5*sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*17.0);",
@@ -665,6 +674,28 @@ def fx_textures():
     print("fx textures written")
 
 
+def top_plate(gpu):
+    """The outlines of the walkable top, rim and cracks together, measured just under its surface. Decimating the top
+    left it lying over some grooves with their paint on it (owner: drawings with no depth), so the plate is built from
+    these outlines with real holes (blender_hub_piece.py)."""
+    step, n = 0.025, 704
+    lo = np.array((-8.8, 12.98, -8.8))
+    field = gpu.grid(lo, step, (n, 1, n))[:, 0, :, 0]
+    verts, edges = [], []
+    for loop in find_contours(field, 0.0):
+        if len(loop) < 8 or not np.allclose(loop[0], loop[-1]):
+            continue
+        poly = approximate_polygon(loop, tolerance=0.45)[:-1]
+        if len(poly) < 3:
+            continue
+        base = len(verts)
+        verts += (poly*step + lo[[0, 2]]).tolist()
+        edges += [(base + i, base + (i + 1) % len(poly)) for i in range(len(poly))]
+    print(f"  top plate: {len(verts)} outline points", flush=True)
+    return {"plateVerts": np.array(verts, "f4"), "plateEdges": np.array(edges, "i4"), "plateField": field.astype("f4"),
+            "plateLo": lo[[0, 2]].astype("f4"), "plateStep": np.array(step, "f4")}
+
+
 def sparkle_points(gpu, key, out, limit=45):
     piece = PIECES[key]
     data = np.load(out/f"{piece['sparkle']}.npz")
@@ -730,10 +761,13 @@ def mesh(key):
         extra = {}
         if "smooth" in piece:
             extra = dict(zip(("lowVerts", "lowFaces"), piece["smooth"]()))
+        plate = key == "hub-rock" and spec["name"] == "Top"
+        if plate:
+            extra = top_plate(gpu)
         np.savez_compressed(out/f"{spec['name']}.npz", verts=verts[used], faces=remap.reshape(-1, 3).astype("i4"), **extra)
         groups.append({"name": spec["name"], "faces": int(len(sel)), "tris": spec["tris"], "tex": spec["tex"],
                        "ink": spec["ink"]/piece["scale"], "inkRatio": spec["inkRatio"], "hard": spec["hard"],
-                       "cage": spec["cage"], "authored": bool(extra)})
+                       "cage": spec["cage"], "authored": bool(extra) and not plate, "plate": plate})
         print(f"  {spec['name']:10s} {len(sel):9d} dense faces -> {spec['tris']} tris", flush=True)
     if "sparkle" in piece:
         sparkle_points(gpu, key, out)
@@ -743,7 +777,7 @@ def mesh(key):
 
 EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 3.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.1}
+EMIT_STRENGTH = {"Cracks": 1.8, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.1}
 
 
 def paint(key):
@@ -774,7 +808,8 @@ def paint(key):
         # runtime light has to reach it, which is what keeps this cheap on a phone.
         glowing_ids = (a0[:, 3] > 2.5) & ~((a0[:, 3] > 3.5) & (a0[:, 3] < 13.5))
         glowing = glowing_ids.mean() > 0.2
-        base = alb if glowing and not PIECES[key].get("bakeEmit") else np.clip(alb*0.85 + emit*0.9, 0, 1)
+        keep = (glowing and not PIECES[key].get("bakeEmit")) or g["name"] == "Cracks"
+        base = alb if keep else np.clip(alb*0.85 + emit*0.9, 0, 1)
         base = np.clip(base*PIECES[key].get("gain", 1.0), 0, 1)
         Image.fromarray((to_srgb(base)*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-color.png")
         g["color"] = f"textures/{g['name']}-color.png"

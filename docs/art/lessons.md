@@ -221,3 +221,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **A frozen mesh can't read as liquid, however it wobbles:** scrolling sheets with wavering edges do, and they stay cheap.
 - **Grey-map stand-ins can stand in front of the art:** look for them when you see "gaps".
 - **Replication order:** a tag can arrive before the descendants it refers to, so wait for them.
+- **Cut flat surfaces, don't decimate them:** a decimated top lay over its own grooves and showed their paint. Triangulating it from the groove outlines gave real holes in 324 triangles.
+- **Check motion triggers against what the owner said:** "when walking" means moving, not merely standing on the bridge.
