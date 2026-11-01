@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Bridges hooked to the markers
+
+- **Owner feedback:** loves the bridges, but they must hook up to the rune markers on the spawn rock or the markers are useless. Wants to see the hook-up before calling the designs done.
+- **Implemented/verified offline:** real bridges in the Maelstrom scene, decks running onto the island through each marker, rail ropes lashed to pillar and stump, shore lip opened at each landing; new Bridge hook-up view. Renders inspected.
+- **Unresolved:** owner review of the hook-up.
+
 ## 2026-11-01 - Bridge concept v1
 
 - **Confirmed (owner's choices):** rickety frontier rope bridge; thick wooden posts lashed with rope; hip-height rope rails; a few vines and moss; hanging lanterns.
