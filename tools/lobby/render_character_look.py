@@ -70,18 +70,40 @@ def style_blaster(objs):
                 b.inputs["Roughness"].default_value = 0.15
 
 
+BULB_GLOW = (0.62, 0.80, 0.28)  # Floppy's antenna-bulb glow (tools/slugs/build_floppy.py)
+
+
 def style_floppy(objs):
-    """Keep the baked textures; add the Roblox emissive floor (albedo x 0.15) so the slug glows softly."""
+    """Keep the baked textures; add the Roblox emissive floor (albedo x 0.15) so the slug glows softly, plus the
+    antenna-bulb glow from the exported glow mask when present."""
     for o in objs:
         for slot in o.material_slots:
             m = slot.material
             if m is None:
                 continue
+            nt = m.node_tree
             b = principled(m)
-            link = next((ln for ln in m.node_tree.links if ln.to_socket == b.inputs["Base Color"]), None)
-            if link:
-                m.node_tree.links.new(link.from_socket, b.inputs["Emission Color"])
-                b.inputs["Emission Strength"].default_value = 0.15
+            link = next((ln for ln in nt.links if ln.to_socket == b.inputs["Base Color"]), None)
+            if not link:
+                continue
+            floor = nt.nodes.new("ShaderNodeVectorMath")
+            floor.operation = "SCALE"
+            floor.inputs["Scale"].default_value = 0.15
+            nt.links.new(link.from_socket, floor.inputs[0])
+            out = floor.outputs["Vector"]
+            glow = next((n for n in nt.nodes if n.type == "TEX_IMAGE" and n.image and n.image.name.startswith("floppy-body-glow")), None)
+            if glow:
+                tint = nt.nodes.new("ShaderNodeVectorMath")
+                tint.operation = "MULTIPLY"
+                tint.inputs[1].default_value = tuple(c*2.0 for c in BULB_GLOW)
+                nt.links.new(glow.outputs["Color"], tint.inputs[0])
+                add = nt.nodes.new("ShaderNodeVectorMath")
+                add.operation = "ADD"
+                nt.links.new(out, add.inputs[0])
+                nt.links.new(tint.outputs["Vector"], add.inputs[1])
+                out = add.outputs["Vector"]
+            nt.links.new(out, b.inputs["Emission Color"])
+            b.inputs["Emission Strength"].default_value = 1.0
 
 
 def ink_material():

@@ -53,3 +53,22 @@ The private model upload and both private mesh mappings are updated, with previo
 
 **Unresolved:** owner's barrel choice, then the Roblox build: ink shells in the blaster mesh and a skinned shell for Floppy, with glows under the look pack. The variant meshes have not been through mesh QA or upload.
 
+## Curved pincer tips (2026-11-01)
+
+**Confirmed:** owner on all the first barrel options, including the claw tips:
+- the planar end slant "feels wrong… trying to be sharp but it's not… or it should be curved";
+- keep the top prong pointing down but make the bottom prong **slant up**;
+- no corner where the slope starts;
+- the facing tips need something so they are not flat;
+- from the front the slope is "a flat slab of orange" needing a small detail like the side line.
+
+This replaces the earlier "points slope down, never up" rule for the bottom prong.
+
+**Implemented (offline renders, awaiting the owner's pick):** `tools/lobby/blaster_tips.py` cuts both prongs at y 1.38 and lofts new tips from the exact cut cross-sections (side line included). The lofted curves have zero slope at the cut, so there is no corner: the top prong eases down, the bottom eases up, each narrowing to a rounded point. The firing gap stays open. Options:
+- **Curved pincers:** curved tips with a dark groove inlay on the sloped faces.
+- **Hooked mandibles:** stronger curve, tips hooking toward each other.
+- **Bladed ridge:** a raised centre ridge on the sloped faces.
+- **Hooked with charge nodes:** the hooked tips plus glowing cyan nodes on the facing tips.
+
+The page is updated: https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD. **Unresolved:** owner's pick; mesh QA, upload and Studio.
+

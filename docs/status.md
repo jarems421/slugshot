@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01 (`experiment/lobby`):** owner rejected the slanted tips on every barrel option; new curved pincer tips (top down, bottom up, no corner, rounded facing points, groove or ridge for the front view) in four options on the same page. Floppy's glowing bulbs and spots are rendered there too. [Record](slugs/blaster-refinement.md#curved-pincer-tips-2026-11-01). **Unresolved:** owner's pick.
+
 **Implemented, 2026-11-01 (`experiment/lobby`):** Floppy and the blaster rendered in the Slugshot look (ink shells, glows) in a new [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page, with four blaster barrel options (fanged jaws, claw tips, armoured and vented, combined). See [blaster refinement](slugs/blaster-refinement.md#slugshot-look-and-barrel-options-2026-11-01). **Unresolved:** owner's pick; then the Roblox build.
 
 **Implemented, 2026-11-01, round 10 (`experiment/lobby`):** owner loves the base wall design. Fixed uneven crack distribution (per-region picks, top-row cracks from below) and mismatched gate bands; the 'weird' wall was textures still in moderation (all Approved on read-back). Gate and walls A-D rebuilt, uploaded, moderation checked, Studio reopened. **Next (owner):** Floppy and the blaster in the Slugshot look, with blaster barrel options.

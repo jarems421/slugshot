@@ -643,3 +643,10 @@
 - **Confirmed:** owner asked for Floppy and the blaster in the new style in their own artifact, and a more dangerous-looking barrel without a redesign or colour change.
 - **Implemented/verified offline:** barrel variants from a copy of the accepted blaster (fangs, claws, armour and vents, combined) and turntable renders in the look; renders inspected (fangs enlarged after review). Page published.
 - **Unresolved:** owner's choice; Roblox ink shells and glow for both.
+
+## 2026-11-01 - Blaster: curved pincer tips
+
+- **Confirmed:** owner dislikes the planar slanted tips and their corner on every option; bottom prong should point up; facing tips need a feature; front view needs a detail.
+- **Implemented/verified offline:** tips lofted from the prongs' own cross-sections in four options; turntables inspected (a charge-node ray-cast fix after review). Page updated with Floppy's new bulbs and spots.
+- **Unresolved:** owner's pick.
+
