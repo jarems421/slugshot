@@ -4,10 +4,12 @@ local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
-	{ name = "top", from = Vector3.new(6, 42, 36), at = Vector3.new(0, 0, 4) },
+	{ name = "sky", from = Vector3.new(4, 4, 12), at = Vector3.new(0, 250, 0) },
+	{ name = "skyWide", from = Vector3.new(0, 20, 170), at = Vector3.new(0, 215, 0) },
+	{ name = "skySide", from = Vector3.new(180, 40, -60), at = Vector3.new(60, 245, -20) },
+	{ name = "cave", from = Vector3.new(-120, 70, 120), at = Vector3.new(-210, 250, 190) },
 	{ name = "player", from = Vector3.new(12, 11, -2), at = Vector3.new(14, 0, -18) },
 	{ name = "low", from = Vector3.new(4, 7, 20), at = Vector3.new(16, 0, 8) },
-	{ name = "close", from = Vector3.new(-14, 5, 8), at = Vector3.new(-18, 0, -1) },
 }
 
 local function read(name: string): number

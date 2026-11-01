@@ -54,6 +54,7 @@ local DISTANT = {
 	"hub-portal-veylume",
 	"hub-well-rock",
 	"hub-well-glow",
+	"hub-ceiling-gems",
 	"hub-well-isles",
 	"hub-well-bits",
 	"hub-rock-debris",
@@ -656,7 +657,8 @@ local function buildMaelstrom()
 	mist.Transparency = fade({ { 0, 1 }, { 0.3, 0.55 }, { 1, 1 } })
 	mist.Lifetime = NumberRange.new(9, 13)
 	mist.Rate = 3
-	mist.Speed = NumberRange.new(3, 6)
+	-- Stays in the pit: a big sprite that drifts up past the island draws a hard edge across the view.
+	mist.Speed = NumberRange.new(2, 3.5)
 	mist.EmissionDirection = Enum.NormalId.Top
 	mist.Shape = Enum.ParticleEmitterShape.Box
 	mist.Parent = pit
@@ -681,6 +683,8 @@ local function buildSkyWell()
 	place("hub-well-rock")
 	place("hub-well-glow")
 	addTwinkles("hub-well-glow", 6)
+	place("hub-ceiling-gems")
+	addTwinkles("hub-ceiling-gems", 7)
 	local isles = place("hub-well-isles")
 	if isles then
 		for index = 0, 4 do

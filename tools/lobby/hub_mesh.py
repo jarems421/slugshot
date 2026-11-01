@@ -92,6 +92,7 @@ void main() {
   if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5 || abs(id - 13.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
   if (id > 2.3 && id < 2.5) { crease = smoothstep(0.2, 0.7, -lap)*0.85; idEdge *= 0.6; }
   if (id > 18.9 && id < 20.0) { crease = 0.0; idEdge = 0.0; }  // far smaller than the ink's sampling reach
+  if (id > 1.15 && id < 1.2) { crease = 0.0; idEdge = 0.0; }
   if (abs(id - 12.0) < 0.5) crease = 0.0;
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
@@ -245,6 +246,8 @@ POOLS = """vec2 assetMap(vec3 p) { return vec2(fallPool(p), 17.0); }
 """
 BOWLS = """vec2 assetMap(vec3 p) { return vec2(fallBasin(p), 1.0); }
 """
+CEILING_GEMS = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 18.0); ceilingCrystals(p, res); return res; }
+"""
 BRIDGE = """vec2 assetMap(vec3 p) { return ropeBridge(p, 0.0, true); }
 """
 PORTAL = """vec2 assetMap(vec3 p) { vec2 r = portal(p/GS); r.x *= GS; return r; }
@@ -278,11 +281,6 @@ def in_cracks(_ids, c):
     ang = np.arctan2(c[:, 2], c[:, 0])
     rim = 7.0*(1 + 0.05*np.sin(ang*3 + 1) + 0.035*np.sin(ang*7 + 2.1) + 0.02*np.sin(ang*13))
     return (c[:, 1] < 12.985) & (c[:, 1] > 11.7) & (np.hypot(c[:, 0], c[:, 2]) < rim - 0.2)
-
-
-def in_crack_gems(ids, c):
-    # The tiny crystals growing out of the cracks, with their own budget so they stay crisp.
-    return (ids >= 18.9) & (ids < 20.0) & (c[:, 1] > 12.7) & (np.hypot(c[:, 0], c[:, 2]) < 7.2)
 
 
 def in_sprouts(ids, c):
@@ -328,7 +326,7 @@ def in_section(n, count):
 
 
 def inner_ring(_ids, c):
-    return np.hypot(c[:, 0], c[:, 2]) < 19.0
+    return np.hypot(c[:, 0], c[:, 2]) < 20.8
 
 
 def part(name, test, tris, tex, ink=0.0, ink_ratio=1.0, hard=False, cage=None):
@@ -447,8 +445,6 @@ PIECES = {
         "item": "spawn-rock-1", "map": ROCK_DRESS, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
         "lo": (-10.5, 3.0, -10.5), "hi": (10.5, 14.5, 10.5), "step": 0.022, "normalH": 0.004, "sparkle": "Glow",
         "parts": [
-            part("Gems", in_crack_gems, 4200, 512, FINE_INK*0.7, 1.0, hard=True, cage=0.01),
-            part("Sprouts", in_sprouts, 2400, 512, FINE_INK*0.8, 1.0, cage=0.012),
             part("Roots", by_id((3.5, 4.5)), 4500, 1024, PROP_INK*0.7, 0.7, cage=0.02),
             part("Glow", by_id((15.69, 16.0), (17.5, 20.0), (3.0, 3.5)), 4000, 1024, PROP_INK*1.1, 1.0, cage=0.02),
             part("Flora", everything, 4500, 1024, FINE_INK, 1.0, cage=0.015),
@@ -499,7 +495,10 @@ PIECES = {
     "hub-gems": {
         "item": "spawn-rock-1", "map": "minis", "scale": 5.0, "origin": (0.0, 13.0, 0.0), "sparkle": "Minis", "bakeEmit": True,
         "lo": (-8.0, 12.3, -8.0), "hi": (8.0, 13.6, 8.0), "step": 0.0075, "normalH": 0.0015,
-        "parts": [part("Minis", everything, 4600, 512, FINE_INK*0.7, 1.0, hard=True, cage=0.006)],
+        "parts": [
+            part("Sprouts", in_sprouts, 1500, 256, FINE_INK*0.6, 1.0, cage=0.006),
+            part("Minis", everything, 4600, 512, FINE_INK*0.7, 1.0, hard=True, cage=0.006),
+        ],
     },
     # The falls' stone basins, and the pools that fill them. A pool is round, so it can turn in place.
     "hub-basin": {
@@ -522,9 +521,17 @@ PIECES = {
         "item": "sky-well-1", "map": "rock", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
         "lo": (-31.5, 16.5, -31.5), "hi": (31.5, 37.0, 31.5), "step": 0.08, "normalH": 0.012, "overlap": 4,
         "parts": [
-            part("Mouth", inner_ring, 6000, 1024, ROCK_INK*1.2, 0.4, cage=0.1),
-            part("Ceiling", everything, 2500, 1024, cage=0.15),
+            part("Crown", by_id((1.02, 1.09)), 3000, 1024, ROCK_INK*1.4, 1.0, hard=True, cage=0.1),
+            part("Ring", by_id((1.15, 1.2)), 1400, 256, cage=0.06),
+            part("Spires", by_id((1.09, 1.15)), 5000, 1024, ROCK_INK*1.4, 1.0, hard=True, cage=0.12),
+            part("Mouth", inner_ring, 4500, 1024, ROCK_INK*1.2, 1.0, cage=0.1),
+            *[part(f"Cave{i}", in_section(i, 4), 2200, 1024, cage=0.25) for i in range(4)],
         ],
+    },
+    "hub-ceiling-gems": {
+        "item": "sky-well-1", "map": CEILING_GEMS, "scale": 10.0, "origin": (0.0, 1.0, 0.0), "sparkle": "CeilGems",
+        "lo": (-32.0, 17.5, -32.0), "hi": (32.0, 29.5, 32.0), "step": 0.03, "normalH": 0.004,
+        "parts": [part("CeilGems", everything, 3200, 1024, PROP_INK*1.3, 1.0, hard=True, cage=0.03)],
     },
     "hub-well-glow": {
         "item": "sky-well-1", "map": "glow", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
@@ -549,12 +556,12 @@ PIECES = {
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
     ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
-    # Cracks, painted by depth: a touch of lit stone at the lip, black walls, and glowing indigo welling up from the bottom.
+    # Cracks, painted by depth: a touch of lit stone at the lip, black walls, and glowing azure welling up from the bottom.
     ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.42, 0.93, depthT); core *= core;"),
     ("fissure = inside*(0.02 + 0.24*depthT*depthT + 1.7*core);", "fissure = inside*(core + 0.001);"),
     ("s = mix(s, mix(vec3(0.012, 0.016, 0.022), vec3(0.22, 0.75, 0.7), core), inside);",
-     "s = mix(s, mix(mix(vec3(0.14, 0.14, 0.18), vec3(0.003, 0.003, 0.006), smoothstep(0.0, 0.1, depthT)), vec3(0.06, 0.035, 0.42), core), inside);"),
-    ("vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));", "vec3 fissureLight = vec3(0.2, 0.12, 1.0);"),
+     "s = mix(s, mix(mix(vec3(0.14, 0.14, 0.18), vec3(0.003, 0.003, 0.006), smoothstep(0.0, 0.1, depthT)), vec3(0.015, 0.22, 0.72), core), inside);"),
+    ("vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));", "vec3 fissureLight = vec3(0.06, 0.5, 1.0);"),
     ("emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;", "emit += fissureLight*(1.1*fissure + 0.22*fissureHalo*fissureHalo)*TR(id).z;"),
     ("m *= 1.0 - fissureHalo*0.85;", "m *= 1.0 - fissureHalo*0.85; if (fissure > 0.0) m = 0.0;"),
     # Rope: fine dark strands (owner: low quality).
@@ -564,8 +571,12 @@ GAME_PAINT = (
 )
 
 
+CLUSTER = r"  crackCluster\(q, vec3.*?;\n"
+SPROUT = r"  wallShroom\(q, vec3\([^\n]*?, 2\.0, stems, caps, capIdx\);\n"
+
+
 def crack_clusters(page):
-    return "".join(re.findall(r"  crackCluster\(q, vec3.*?;\n", page))
+    return "".join(re.findall(CLUSTER, page))
 
 
 class PieceGpu(Gpu):
@@ -573,8 +584,9 @@ class PieceGpu(Gpu):
         self.piece = PIECES[key]
         page = PAGE.read_text(encoding="utf-8")
         clusters = crack_clusters(page)
+        sprouts = "".join(re.findall(SPROUT, page))
         if key == "hub-rock-dress":
-            page = page.replace(clusters, "")
+            page = re.sub(CLUSTER, "", re.sub(SPROUT, "", page))
         for old, new in GAME_PAINT:
             assert old in page, old
             page = page.replace(old, new)
@@ -583,6 +595,8 @@ class PieceGpu(Gpu):
         source = self.piece["map"]
         if source == "minis":
             source = ("vec2 assetMap(vec3 p) {\n  vec3 q = p - vec3(0.0, ROCK_TOP, 0.0);\n  vec2 res = vec2(1e3, 19.0);\n"
+                      "  float stems = 1e5, caps = 1e5, capIdx = 0.0;\n" + sprouts
+                      + "  if (stems < res.x) res = vec2(stems, 13.0);\n  if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);\n"
                       + clusters + "  return res;\n}\n")
         if source in ("cliff", "juice", "falls", "flora"):
             source = maelstrom_maps(fs)[source]
@@ -892,9 +906,9 @@ def mesh(key):
     (out/"meta.json").write_text(json.dumps(meta, indent=1))
 
 
-EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow"}
+EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow", "CeilGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 2.6, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def paint(key):
