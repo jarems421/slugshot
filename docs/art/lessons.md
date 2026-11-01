@@ -180,3 +180,10 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **What the first render showed:** rounded moss lumps read as green balls or lily pads, because ink outlines every raised shape; paint moss onto the rock instead. Long curved roots read as tentacles or tusks; keep them short, thin and close to the rock. Floating rocks with one thick trail read as mushrooms; give them a pointed underside and thin vines. Crystals seen end on read as flat white plates; angle them to show their sides and use a colour gradient so they don't blow out.
 - **Shore and backdrops:** the rock wall's moss noise turns into camouflage at this scale. Keep surrounding ground dark and fade it out so the eye stays on the asset.
 
+### Spawn rock v2 (2026-11-01)
+
+- **Threads on spike tips:** surface noise ate away the thin ends of tapered spikes. Fade the noise toward the tips instead of fattening the spikes; fat spikes lost the shape the owner liked.
+- **Telling roots and vines apart:** give them different forms, not just colours. Roots are thick, forked, barked and follow the rock; vines are thin, leafy and hang free.
+- **Roots need to stand off the surface.** A root centred on the surface is half buried and shows only as lumps. Thick roots crossing an edge become knobs, so keep them slim there.
+- **"More moss" still means patches.** Covering everything hid the rock and fangs. Keep moss a muted colour, distinct from leaf green, with rock showing through.
+- **Heavy shaders:** the three big concepts have Live 3D switched off (`noLive`), since a heavy shader froze Chrome before.

@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v2
+
+- **Owner feedback:** the stone spikes look like they hang by a thread at the tips, so keep only the spike; scatter more colours using the crystal designs across the bottom; roots look basic, just curved pokes, and can't be told from the vines, so make them look like real, mythical tree roots; vines look like dangling green ropes, so make them look like real vines; add a lot more moss, especially underneath.
+- **Implemented/verified offline:** spike tips no longer eroded by surface noise; 20 crystal clusters using all 14 designs' colours and shapes; 7 roots with forks following the real rock surface, with furrowed bark and faint glowing sap; 14 leafy twisted vines with blossoms, tendrils and pods; moss patches across the sides and underside. `tools/lobby/rock_sites.py` measures every placement on the rock surface. Inspected over three rounds. Live 3D is switched off for the three big concepts, because their shaders are heavy and a heavy shader froze Chrome before.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Hub centrepiece concepts
 
 - **Confirmed:** the block-out is layout only; the owner wants the real designs in the Slugterra-style look, reviewed through the same asset library workflow as past designs. Sky Well: crystal-lined opening going off to a distant storm. Maelstrom: teal glow with a deep blue centre. Spawn rock: a chunk ripped out of the ground, sharp and cracked underneath, with roots, moss, vines, drips and some crystals, a bit ancient.
