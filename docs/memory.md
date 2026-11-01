@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 — Slide gun position
+
+- **Confirmed report:** owner: the slide "sometimes corrupts the gun shooting like position", "usually when you're sliding to the left and to the right, and like diagonally backwards... Not like just a standard forward slide."
+- **Cause:** a slide turns the body to its travel direction. `FirstPersonAction == "Slide"` also switched off steadying and run framing in `Viewmodel.luau`, so arm and gun followed the turned body.
+- **Implemented/verified:** see [status](status.md) and [evidence](evidence/2026-11-01-slide-gun.json). **Unresolved:** owner verdict. Lesson: compare slide directions, and ignore frame 0 of a slide when measuring, because it is still the running arm pump (up to about 120 degrees off the view in every direction).
+
 ## 2026-11-01 — Face, clean charge crosshair and ADS
 
 - **Confirmed:** owner chose the clean crosshair from four charge-display options. Asked for three auto-cycling facial expressions with blinks, eye and mouth motion. Asked for quick, frictionless Valorant-style ADS with a clear pane and their own crosshair.
@@ -9,6 +15,7 @@
 - **Fourth follow-up:** owner: "finally, it is good" on the eyes. Full-charge glow must be diffused and "ping and go away"; the ring on slug return was disliked and is removed.
 - **Fifth follow-up:** owner wants the big Floppy by spawn kept. Asked for a brighter ping, then decided against the ping: "we need to figure out a different way to do this whole charge up mechanic", because vibration is too hard to feel while running and it is now the only gauge of shot power. Owner chose the three-stage wind-up (count clunks; "more skill based") and a 25% quicker charge, 0.6 s. Implemented; the ping is removed.
 - **Accuracy:** owner reported shots landing bottom-right. Cause was droop plus the gun's offset, not a bug in the aim ray. The owner then made this a mechanic: one and two charges keep droop and shorter reach, and only a full charge lands on the crosshair, which rewards counting kicks. Taps must stay useful.
+- **ADS stability:** owner: ADS must stay stable while charging; wind-up motion now fades out through the sight. Third-person muzzle down set to 22.
 - **Decided, for the owner to overrule:** one-handed ADS; no movement-speed penalty. Expressions are drowsy, smiling and surprised.
 - **Implemented/verified:** see [status](status.md), [ADR 0019](decisions/0019-one-handed-ads.md) and [evidence](evidence/2026-11-01-face-and-ads.json). Rollback IDs for the previous upload are in ignored `private-assets/floppy/before-face-rig`.
 - **Unresolved:** see status. Only Floppy has a face rig; other slugs do not exist yet.

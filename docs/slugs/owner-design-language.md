@@ -228,3 +228,13 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 **Accuracy and steps (2026-11-01):** "a little to the bottom right" had one physical cause, droop while still on the gun's side of the aim line, so measure landing offsets before tuning. "Bap bap bap" rejects sharp, quick repeated hits, even when they are readable: prefer eased steps that hold. "Make these the new base settings" with a panel screenshot means bake every changed value; the panel is working as intended.
 
 **Shot levels (2026-11-01):** "first phase" and "a quick tap" are the same level; "two holds" means reaching the second kick. "100% accurate" was qualified by the owner: "won't obviously be fully bullet tracing, but it'll hit the area" the cursor is on. So the arc stays visible and the landing point is what must be right.
+
+**Slide gun position (2026-11-01):** "corrupts the gun shooting position" when "sliding to the left and to the right, and like diagonally backwards" meant the gun following the body, which turns to face the slide. The owner's direction detail located it: forward slides looked fine, so forward-only tests could not show it.
+
+**Overshoot (2026-11-01):** "past a certain height the gun moves up a lot" and "overshoot" were a real jump: the arc followed the distance under the crosshair, which changes abruptly at a target's edge. Screenshots from the owner located it immediately. Anything driven by the crosshair's hit distance needs checking at target edges.
+
+**Strafing accuracy (2026-11-01):** "when strafing the shooting is inaccurate, slugs fall very short" did not reproduce with a target behind the crosshair at any movement state. Test with nothing behind the crosshair too, because moving makes the aim leave the target.
+
+**Running vibration (2026-11-01):** 2.2x was barely noticeable and 3.5x with the arm "kicks your arm up" and throws the aim. The gun can carry the vibration; keep the arm calm.
+
+**ADS shake (2026-11-01):** "stable" followed by "ever so slight, just so you can feel the charge" means the sight keeps its place and only a tiny tremor remains. Earlier, a first-person shake of 0.006 studs was too light to notice, so an "ever so slight" effect still has to be visible.

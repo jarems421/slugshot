@@ -29,7 +29,7 @@ Tuning.values = {
 	armLength = 1,
 	armWidth = 0.66,
 	-- Blaster in the hand.
-	gripDown = 30,
+	gripDown = 22,
 	gripUp = 0.15,
 	gripOut = 0.3,
 	gripRelease = 0.3,
@@ -54,7 +54,8 @@ Tuning.values = {
 	chargeTime = 0.665, -- three kicks, about 0.22 s apart
 	chargeClunk = 1,
 	chargeViewTighten = 3.5,
-	chargeMoveShake = 3.5,
+	chargeMoveShake = 2.7,
+	adsShake = 0.25, -- share of the charge vibration kept through the sight
 	-- How much of the droop each shot level corrects. 1: lands on the crosshair. 0: flies
 	-- straight from the gun and droops.
 	shotArcOne = 0.3,
@@ -111,6 +112,7 @@ Tuning.Entries = {
 	entry("chargeShake", "Gun vibration", "Charge spiral", 0, 3, 0.05),
 	entry("spiralLight", "Light strength", "Charge spiral", 0, 1, 0.05),
 	entry("adsZoom", "Zoom", "ADS", 1, 2, 0.05),
+	entry("adsShake", "Charge vibration", "ADS", 0, 1, 0.01),
 	entry("adsGunDown", "Gun below crosshair", "ADS", 0.2, 1.6, 0.01),
 	entry("adsGunForward", "Gun distance", "ADS", 1, 3, 0.01),
 	entry("adsPaneSize", "Pane size", "ADS", 0.5, 2.5, 0.05),

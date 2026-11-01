@@ -280,5 +280,10 @@
       "Stationary shooter against a flat wall at eye height 4.5 studs.",
       "Feel and balance are for the owner to judge."
     ]
+  },
+  "ads_stable": {
+    "request": "ADS shaky while charging or charged; must stay stable. Third-person muzzle down set to 22 by the owner.",
+    "implemented": "Wind-up vibration, gun steps and arm motion fade out with ADS weight. The smooth view tighten and the light remain.",
+    "follow_up": "Owner then asked for an ever so slight vibration to feel the charge: 25% of the charge vibration stays through the sight, without steps or running boost."
   }
 }

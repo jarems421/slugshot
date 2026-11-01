@@ -3,6 +3,7 @@
 local Motion = require(script.Parent.BlasterMotion)
 local Tuning = require(script.Parent.Tuning)
 local FirstPerson = require(script.Parent.FirstPerson)
+local Ads = require(script.Parent.Ads)
 local Recoil = {}
 local STAGES = 3
 local STAGE_SHAKE = { 0, 0.4, 0.7, 1 }
@@ -98,26 +99,31 @@ local function clunk(now: number): number
 	return eased * (CLUNK_SIZE[clunkStage] or 0)
 end
 
-local function shakeAmount(): number
-	local boost = 1 + (Tuning.values.chargeMoveShake - 1) * moving
-	return shakeLevel * Tuning.values.chargeShake * boost
+-- Through the sight only a very slight tremor is left, still growing with each step.
+local function shakeAmount(moveShare: number): number
+	local aimed = Ads.weight()
+	local boost = 1 + (Tuning.values.chargeMoveShake - 1) * moving * moveShare * (1 - aimed)
+	local sight = 1 + (Tuning.values.adsShake - 1) * aimed
+	return shakeLevel * Tuning.values.chargeShake * boost * sight
 end
 
--- The gun's own motion. In third person it is further away, so the notch and jolt are larger.
+-- The gun's own motion. In third person it is further away, so the notch and swell are larger.
 function Recoil.vibration(now: number): CFrame
-	local jolt = clunk(now) * Tuning.values.chargeClunk
-	local amount = shakeAmount()
-	if jolt == 0 and amount < 1e-3 and heldLevel < 1e-3 then
+	local amount = shakeAmount(1)
+	local free = 1 - Ads.weight() -- the sight holds its place: no steps or swells while aiming
+	local jolt = clunk(now) * Tuning.values.chargeClunk * free
+	local held = heldLevel * free
+	if jolt == 0 and amount < 1e-3 and held < 1e-3 then
 		return CFrame.identity
 	end
 	local far = if FirstPerson.active() then 1 else 2.2
 	local at = shakePhase
 	return CFrame.new(
 		math.noise(at, 1.3) * 0.032 * amount,
-		math.noise(at, 7.1) * 0.032 * amount + (0.06 * heldLevel + 0.015 * jolt) * far,
-		math.noise(at, 13.7) * 0.02 * amount + (0.2 * heldLevel + 0.04 * jolt) * far
+		math.noise(at, 7.1) * 0.032 * amount + (0.06 * held + 0.015 * jolt) * far,
+		math.noise(at, 13.7) * 0.02 * amount + (0.2 * held + 0.04 * jolt) * far
 	) * CFrame.Angles(
-		math.noise(at, 21.9) * math.rad(1.2) * amount + math.rad(5 * heldLevel + 3 * jolt) * far,
+		math.noise(at, 21.9) * math.rad(1.2) * amount + math.rad(2.5 * held + 1.5 * jolt),
 		math.noise(at, 29.3) * math.rad(1.2) * amount,
 		0
 	)
@@ -125,8 +131,9 @@ end
 
 -- The arm takes the same motion, so the shake is not only in the gun.
 function Recoil.armWindup(now: number): CFrame
-	local jolt = clunk(now) * Tuning.values.chargeClunk
-	local amount = shakeAmount()
+	-- The arm stays much calmer on the move: a shaking arm throws the whole gun off the aim.
+	local amount = shakeAmount(0.2)
+	local jolt = clunk(now) * Tuning.values.chargeClunk * (1 - Ads.weight())
 	if jolt == 0 and amount < 1e-3 then
 		return CFrame.identity
 	end
@@ -136,7 +143,7 @@ function Recoil.armWindup(now: number): CFrame
 		math.noise(at, 5.7) * 0.022 * amount + 0.012 * jolt,
 		0.03 * jolt
 	) * CFrame.Angles(
-		math.noise(at, 9.3) * math.rad(1) * amount + math.rad(2 * jolt),
+		math.noise(at, 9.3) * math.rad(1) * amount + math.rad(1 * jolt),
 		0,
 		math.noise(at, 11.9) * math.rad(0.8) * amount
 	)

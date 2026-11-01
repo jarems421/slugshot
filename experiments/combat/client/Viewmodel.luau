@@ -31,6 +31,7 @@ local RUN_CHEST_WEIGHT = 0.25
 local RUN_POSTURE_DEPTH = 0.25 -- let the eyes move over the shoulders, rather than carrying them ahead
 local RUN_POSTURE_LIFT = 0.15
 local RUN_FLARE_WEIGHT = 0.45
+local SLIDE_TURN_RELEASE = 8 -- how fast the slide's arm framing lets go once the slide ends
 type Arm = {
 	source: BasePart,
 	copy: BasePart,
@@ -44,6 +45,7 @@ local rig: Rig? = nil
 local straightWeight = 0
 local postureWeight = 0
 local steadyWeight = 0
+local slideTurnWeight = 0
 local visualHandle: CFrame? = nil
 local cachedTool: Tool? = nil
 local muzzleOffset = Vector3.zero
@@ -127,6 +129,7 @@ local function drop()
 	straightWeight = 0
 	postureWeight = 0
 	steadyWeight = 0
+	slideTurnWeight = 0
 end
 
 local function build(character: Model, tool: Tool?, camera: Camera): Rig
@@ -188,8 +191,10 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	local T = Tuning.values
 	local character = current.character
 	local point = character:GetAttribute("BlasterPoint")
+	local action = character:GetAttribute("FirstPersonAction")
+	local sliding = action == "Slide"
 	local steady = typeof(point) == "Vector3"
-		and character:GetAttribute("FirstPersonAction") == nil
+		and (action == nil or sliding)
 		and character:GetAttribute("BlasterFlourish") == nil
 	steadyWeight += ((if steady then 1 else 0) - steadyWeight) * (1 - math.exp(-14 * dt))
 	local handle = current.tool and current.tool:FindFirstChild("Handle")
@@ -214,7 +219,21 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	end
 	local runFacing =
 		CFrame.lookAt(Vector3.zero, if forward.Magnitude > 1e-3 then forward else -Vector3.zAxis)
-	local torsoFrame = torso.CFrame
+	-- A slide turns the body to its travel direction, which can be sideways or behind the view.
+	-- Frame the arms as if it went straight ahead, so every direction looks like a forward slide.
+	slideTurnWeight = if sliding then 1 else slideTurnWeight * math.exp(-SLIDE_TURN_RELEASE * dt)
+	local slideTurn = CFrame.identity
+	if slideTurnWeight > 0.001 and root and root:IsA("BasePart") then
+		local body = root.CFrame.LookVector
+		local yaw = math.atan2(
+			body.Z * forward.X - body.X * forward.Z,
+			body.X * forward.X + body.Z * forward.Z
+		)
+		slideTurn = CFrame.new(root.Position)
+			* CFrame.Angles(0, yaw * slideTurnWeight, 0)
+			* CFrame.new(-root.Position)
+	end
+	local torsoFrame = slideTurn * torso.CFrame
 	local chest = runFacing:ToObjectSpace(torsoFrame.Rotation)
 	local chestLean =
 		math.clamp(-math.atan2(chest.UpVector.Z, chest.UpVector.Y) / math.rad(40), 0, 1)
@@ -235,7 +254,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	local gunMap = CFrame.identity
 	for _, arm in current.arms do
 		local source = arm.source
-		local sourceFrame = source.CFrame
+		local sourceFrame = slideTurn * source.CFrame
 		local pose = torsoFrame:ToObjectSpace(sourceFrame)
 		local top = pose * CFrame.new(0, source.Size.Y / 2, 0)
 		local lane = arm.side * (torso.Size.X + source.Size.X) / 2
@@ -315,13 +334,13 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			-- Keep shoulder travel and positional bounce, but settle the gun angle
 			-- towards the aim while charging/firing. Rotate the arm and gun together
 			-- so the hand stays attached; leave a little angular motion for life.
-			local gunFromArm = sourceFrame.Rotation:ToObjectSpace(handle.CFrame.Rotation)
+			local gunFromArm = source.CFrame.Rotation:ToObjectSpace(handle.CFrame.Rotation)
 			local aimDirection = if typeof(point) == "Vector3"
 				then camera.CFrame:VectorToObjectSpace(point).Unit
 				else Vector3.new(0, 0, -1)
 			local settled = CFrame.lookAt(Vector3.zero, aimDirection) * gunFromArm:Inverse()
 			target = CFrame.new(target.Position)
-				* target.Rotation:Lerp(settled, 0.88 * steadyWeight)
+				* target.Rotation:Lerp(settled, (0.88 + 0.12 * slideTurnWeight) * steadyWeight)
 		end
 		local ads = Ads.weight()
 		if arm.side == 1 and ads > 0 and handle and handle:IsA("BasePart") then
@@ -329,7 +348,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			local right = (Vector3.xAxis - up * up.X).Unit
 			local reach = CFrame.fromMatrix(Vector3.zero, right, up, right:Cross(up))
 			local grip = CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + T.gripRelease), 0)
-				* sourceFrame:ToObjectSpace(handle.CFrame)
+				* source.CFrame:ToObjectSpace(handle.CFrame)
 			local gunAt = Vector3.new(0, -T.adsGunDown, -T.adsGunForward)
 			target = target:Lerp(CFrame.new(gunAt - reach * grip.Position) * reach, ads)
 		end
@@ -369,7 +388,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			-- Preserve aim/flourishes, with a small distal shift for a shallower grip.
 			gunMap = armFrame
 				* CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + T.gripRelease), 0)
-				* sourceFrame:Inverse()
+				* source.CFrame:Inverse()
 		end
 	end
 	-- Apply the shot directly to the visible gun about its hand grip. Reading the
