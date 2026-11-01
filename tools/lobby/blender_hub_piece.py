@@ -76,62 +76,6 @@ def planar_uv(obj, half):
         p.use_smooth = True
 
 
-FALL_LEVELS = 8
-FALL_DEPTH = 52.0  # studs, rim to juice
-FALL_HALF = 5.0
-
-
-def fall_angle(i):
-    h = (0.7234, 0.3382, 0.0544, 0.5693)[i]  # hash1(i + 171) in the shader
-    return i*1.5708 + 0.785 + 0.34*(h - 0.5)
-
-
-def add_falls_rig(objects):
-    """Bones down each side of each fall, for the concept's bulges travelling down the gloop (HubMotion.client)."""
-    arm_data = bpy.data.armatures.new("FallsRig")
-    arm = bpy.data.objects.new("FallsRig", arm_data)
-    bpy.context.scene.collection.objects.link(arm)
-    base.select_only(arm)
-    bpy.ops.object.mode_set(mode="EDIT")
-    for i in range(4):
-        a = fall_angle(i)
-        out, side = np.array((math.cos(a), math.sin(a))), np.array((-math.sin(a), math.cos(a)))
-        for j in range(FALL_LEVELS):
-            y = -FALL_DEPTH*j/(FALL_LEVELS - 1)
-            r = 87.0 - 12.0*min(-y/15.0, 1.0)
-            for label, sign in (("L", 1.0), ("R", -1.0)):
-                p = out*r + side*sign*FALL_HALF
-                bone = arm_data.edit_bones.new(f"F{i}_{j}_{label}")
-                bone.head = (float(p[0]), float(-p[1]), y)  # Blender: x, -z, y
-                bone.tail = (float(p[0]), float(-p[1]), y + 1.0)
-    bpy.ops.object.mode_set(mode="OBJECT")
-    for obj in objects:
-        groups = {}
-
-        def group(name):
-            if name not in groups:
-                groups[name] = obj.vertex_groups.new(name=name)
-            return groups[name]
-        for v in obj.data.vertices:
-            x, z, y = v.co.x, -v.co.y, v.co.z
-            ang = math.atan2(z, x)
-            i = min(range(4), key=lambda n: abs(math.atan2(math.sin(ang - fall_angle(n)), math.cos(ang - fall_angle(n)))))
-            a = fall_angle(i)
-            across = -x*math.sin(a) + z*math.cos(a)
-            left = float(np.clip(0.5 + across/(2*FALL_HALF), 0, 1))
-            t = float(np.clip(-y/FALL_DEPTH, 0, 1))*(FALL_LEVELS - 1)
-            j = min(int(t), FALL_LEVELS - 2)
-            f = t - j
-            for level, lw in ((j, 1 - f), (j + 1, f)):
-                for label, sw in (("L", left), ("R", 1 - left)):
-                    if lw*sw > 0.001:
-                        group(f"F{i}_{level}_{label}").add([v.index], lw*sw, "REPLACE")
-        modifier = obj.modifiers.new("Rig", "ARMATURE")
-        modifier.object = arm
-        obj.parent = arm
-    return arm
-
-
 def add_bridge_rig(objects, scale):
     """Flat chain of bones along the bridge. Planks are rigid on their nearest bone so each moves as a board; ropes
     blend between neighbours so they stay smooth. Bone names are read by HubMotion.client on the Roblox side."""
@@ -181,6 +125,11 @@ def main():
             low = base.build_dense(name, {"verts": data["lowVerts"], "faces": data["lowFaces"]})
             low.name = low.data.name = name
             planar_uv(low, 19.0)
+        elif g.get("flat"):
+            # Straight-down maps: island seams in an alpha texture drew hard square patches in the storm.
+            low = base.build_dense(name, {"verts": data["verts"], "faces": data["faces"]})
+            low.name = low.data.name = name
+            planar_uv(low, 9.5)
         else:
             low = decimated(dense, name, g["tris"], g["hard"])
         if not g.get("flat"):
@@ -210,8 +159,6 @@ def main():
     select = list(exports)
     if meta.get("rig") == "bridge":
         select.append(add_bridge_rig(exports, scale))
-    elif meta.get("rig") == "falls":
-        select.append(add_falls_rig(exports))
     base.select_only(*select)
     bpy.ops.export_scene.gltf(filepath=str(OUT/f"{KEY}.glb"), export_format="GLB", use_selection=True, export_yup=True,
                               export_apply=False, export_materials="PLACEHOLDER", export_skins=True,

@@ -42,6 +42,7 @@ def main():
         return asset_id
 
     manifest = json.loads(HUB.read_text()) if HUB.exists() else {}
+    manifest = {k: e for k, e in manifest.items() if (EXPORT/k/"build.json").exists()}
     for k in keys:
         report = json.loads((EXPORT/k/"build.json").read_text())
         entry = {"model": cached(f"{k} model", EXPORT/k/f"{k}.glb", "Model", "model/gltf-binary"), "groups": {}}
@@ -50,6 +51,8 @@ def main():
                     for kind in ("color", "normal", "emit") if kind in g}
             entry["groups"][g["name"]] = {"maps": maps, "ink": g.get("inkShell"), "emissive": g.get("emissiveStrength", 0),
                                           "min": g["boundsMin"], "max": g["boundsMax"], "alpha": g.get("alpha", False)}
+        points = ROOT/"build/lobby/meshes"/k/"points.json"
+        entry["points"] = json.loads(points.read_text()) if points.exists() else []
         manifest[k] = entry
     HUB.write_text(json.dumps(manifest, indent=1))
     fx = {p.stem: cached(f"fx {p.stem}", p, "Image", "image/png") for p in sorted(FX.glob("*.png"))}
@@ -58,7 +61,9 @@ def main():
     lines += [f"\t\t{name} = {asset},"for name, asset in fx.items()]
     lines += ["\t},", "\tassets = {"]
     for k, e in manifest.items():
-        lines.append(f'\t\t["{k}"] = {{ model = {e["model"]}, parts = {{')
+        points = ", ".join(f"{{ p = {v3(pt['p'])}, c = Color3.new({pt['c'][0]:.3f}, {pt['c'][1]:.3f}, {pt['c'][2]:.3f}) }}"
+                           for pt in e.get("points", []))
+        lines.append(f'\t\t["{k}"] = {{ model = {e["model"]}, points = {{ {points} }}, parts = {{')
         for name, g in e["groups"].items():
             ink = f'"{g["ink"]}"' if g["ink"] else "nil"
             lines.append(f'\t\t\t{name} = {{ ink = {ink}, emissive = {g["emissive"]}, min = {v3(g["min"])}, max = {v3(g["max"])} }},')

@@ -1,5 +1,13 @@
 # Project memory
 
+## 2026-11-01 - Hub designs in Roblox, owner review rounds
+
+- **Owner request:** put the final designs in the lobby now at high quality, playable on a phone, and build the rest around them.
+- **Implemented:** spawn rock, gateways, bridges, Maelstrom, Sky Well and portal gates on the block-out ([lobby hub](art/lobby-hub.md)), uploaded privately.
+- **Verified in Studio by camera check, earlier round only:** all pieces load; about 145k to 195k triangles and 80 to 125 draw calls on an RTX 3070. Nothing measured on a phone.
+- **Owner feedback fixed, not yet seen running:** bridges still at rest; tiny mushrooms; real glowing cracks; crystal tips and all mushroom colours glowing, with twinkles; game blaster on the gate; flowing falls with ripples and foam; visible mist; better rope; a Detail button; storm texture seams.
+- **Unresolved:** owner verdict, walking checks of the new colliders, phone performance. The asset library page was not republished after the concept's mushroom and blaster changes.
+
 ## 2026-11-01 - Hub centrepieces and bridges final
 
 - **Confirmed (owner):** spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2 are final designs ("It looks perfect... Finalize all of these"). The owner asked what is left and whether to bring these into Roblox now and build the rest around them.

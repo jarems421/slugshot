@@ -1,7 +1,7 @@
 --!strict
--- All the hub's motion, on each client and look-only: nothing here moves a collider or a player.
--- Costs are kept low for phones: whole parts move in one BulkMoveTo at a capped rate, the storm and debris skip work when
--- the frame rate drops, and a bridge's bones only update when that bridge is in view.
+-- All the hub's motion, on each client and look-only: nothing here moves a collider or a player. Also the Detail button.
+-- Costs are kept low for phones: whole parts move in one BulkMoveTo, and a bridge's bones only update while someone is on
+-- it and it is in view.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -10,14 +10,10 @@ local UserInputService = game:GetService("UserInputService")
 local ORBIT = 0.12
 local BRIDGE_UNIT = 2.55 -- studs per bridge unit
 local MOVE_RATE = 1 / 30
-local IDLE_BRIDGE_RATE = 1 / 15
-local ACTIVE_BRIDGE_RATE = 1 / 30
+local BRIDGE_RATE = 1 / 30
+local BRIDGE_SETTLE = 1.2 -- seconds for a bridge to come to rest after the last person leaves
 local BONE_COUNT = 17
 local BONE_SPAN = 10.6 -- bridge units, centre to end bone
-local FALL_RATE = 1.1
-local FALL_WIDE = 1.5 -- studs
-local FALL_BULGE = 1.1 -- studs
-local FALLS_RATE = 1 / 20
 
 type Mover = {
 	part: BasePart,
@@ -66,8 +62,8 @@ local function moveParts(t: number)
 	workspace:BulkMoveTo(moverParts, moverFrames, Enum.BulkMoveMode.FireCFrameChanged)
 end
 
--- Bridges: each bone carries a slice of the deck. Very slight sway always; under anyone crossing, the deck dips and the
--- nearby boards bounce and rock (owner: noticeable, not too much).
+-- Bridges rest perfectly still. Under anyone crossing, they sway, the deck dips and the nearby boards bounce and rock
+-- (owner: it should only wobble when someone is walking on it).
 type BoneRef = { bone: Bone, up: Vector3, side: Vector3, along: Vector3 }
 type Bridge = {
 	frame: CFrame,
@@ -75,6 +71,8 @@ type Bridge = {
 	bones: { { BoneRef } },
 	nextUpdate: number,
 	centre: Vector3,
+	energy: number,
+	resting: boolean,
 }
 local bridges: { Bridge } = {}
 
@@ -90,10 +88,7 @@ local function addBridge(instance: Instance)
 	if not frame then
 		return
 	end
-	local sets: { { BoneRef } } = {}
-	for index = 1, BONE_COUNT do
-		sets[index] = {}
-	end
+	-- Bones replicate after the tag: wait for all of them.
 	local function count(): number
 		local found = 0
 		for _, item in instance:GetDescendants() do
@@ -107,36 +102,36 @@ local function addBridge(instance: Instance)
 	while count() < BONE_COUNT and waited < 60 do
 		waited += task.wait(0.25)
 	end
-	local function collect()
-		local found = 0
-		for _, item in instance:GetDescendants() do
-			if item:IsA("Bone") then
-				local number = tonumber(string.match(item.Name, "^B(%d+)$"))
-				if number then
-					found += 1
-					local world = item.WorldCFrame
-					table.insert(sets[number + 1], {
-						bone = item,
-						up = world:VectorToObjectSpace(frame.UpVector),
-						side = world:VectorToObjectSpace(frame.LookVector * -1),
-						along = world:VectorToObjectSpace(frame.RightVector),
-					})
-				end
-			end
-		end
-		return found
-	end
-	if collect() == 0 then
+	if count() == 0 then
 		warn("HubMotion: bridge has no bones", instance.Name)
 		return
 	end
-	print(`HubMotion: {instance.Name} ready, {count()} bones`)
+	local sets: { { BoneRef } } = {}
+	for index = 1, BONE_COUNT do
+		sets[index] = {}
+	end
+	for _, item in instance:GetDescendants() do
+		if item:IsA("Bone") then
+			local number = tonumber(string.match(item.Name, "^B(%d+)$"))
+			if number then
+				local world = item.WorldCFrame
+				table.insert(sets[number + 1], {
+					bone = item,
+					up = world:VectorToObjectSpace(frame.UpVector),
+					side = world:VectorToObjectSpace(frame.LookVector * -1),
+					along = world:VectorToObjectSpace(frame.RightVector),
+				})
+			end
+		end
+	end
 	table.insert(bridges, {
 		frame = frame,
 		seed = #bridges * 41,
 		bones = sets,
 		nextUpdate = 0,
 		centre = frame.Position,
+		energy = 0,
+		resting = true,
 	})
 end
 
@@ -147,30 +142,27 @@ for _, instance in CollectionService:GetTagged("HubBridge") do
 	task.spawn(addBridge, instance)
 end
 
--- Where anyone is along this bridge, in bridge units; up to three, nearest the deck.
+-- Where anyone is along this bridge, in bridge units; up to three.
 local riders: { number } = {}
 local function findRiders(bridge: Bridge)
 	table.clear(riders)
+	local function consider(position: Vector3)
+		local p = bridge.frame:PointToObjectSpace(position)
+		if math.abs(p.X) < 26 and math.abs(p.Z) < 7 and p.Y > -9 and p.Y < 9 and #riders < 3 then
+			table.insert(riders, p.X / BRIDGE_UNIT)
+		end
+	end
 	for _, player in Players:GetPlayers() do
 		local character = player.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
 		if root and root:IsA("BasePart") then
-			local p = bridge.frame:PointToObjectSpace(root.Position)
-			if math.abs(p.X) < 27 and math.abs(p.Z) < 7 and p.Y > -9 and p.Y < 9 then
-				table.insert(riders, p.X / BRIDGE_UNIT)
-				if #riders == 3 then
-					return
-				end
-			end
+			consider(root.Position)
 		end
 	end
 	-- The check build's test rider stands in for a player.
 	local rider = workspace:GetAttribute("HubTestRider") :: Vector3?
 	if rider then
-		local p = bridge.frame:PointToObjectSpace(rider)
-		if math.abs(p.X) < 27 and math.abs(p.Z) < 7 then
-			table.insert(riders, p.X / BRIDGE_UNIT)
-		end
+		consider(rider)
 	end
 end
 
@@ -179,7 +171,7 @@ local function updateBridge(bridge: Bridge, t: number)
 	for index, set in bridge.bones do
 		local x = boneX(index - 1)
 		local su = math.clamp(x / BONE_SPAN, -1, 1)
-		local env = 1 - su * su
+		local env = (1 - su * su) * bridge.energy
 		local side = 0.09 * env * math.sin(spin * 3 + bridge.seed)
 		local up = -0.045 * env * math.sin(spin * 5 + bridge.seed * 1.7)
 		local near = 0
@@ -189,86 +181,14 @@ local function updateBridge(bridge: Bridge, t: number)
 			up -= 0.55 * math.exp(-dx * dx / 9) * (1 - u * u)
 			near = math.max(near, math.exp(-dx * dx / 3.6))
 		end
-		-- Each board has its own rhythm, with a tiny settle even at rest.
+		-- Each board has its own rhythm.
 		local rock = math.sin(t * (2.2 + (index % 5) * 0.24) + index * 2.3)
-		local settle = 0.012 * env * math.sin(t * (0.5 + (index % 3) * 0.12) + index * 1.7)
-		local bounce = settle + 0.075 * near * rock
+		local bounce = 0.075 * near * rock
 		for _, ref in set do
 			local offset = (ref.side * side + ref.up * (up + bounce)) * BRIDGE_UNIT
 			ref.bone.Transform = CFrame.new(offset)
 				* CFrame.fromAxisAngle(ref.along, 0.075 * near * rock)
 		end
-	end
-end
-
--- The gloop: bulges travel down each fall by moving the bones along its two edges, as in the concept. Slow and thick.
-type FallBone = {
-	bone: Bone,
-	level: number,
-	fall: number,
-	side: number,
-	across: Vector3,
-	inward: Vector3,
-	centre: Vector3,
-}
-local fallBones: { FallBone } = {}
-
-local function addFalls(instance: Instance)
-	local byKey: { [string]: Bone } = {}
-	local function scan(): number
-		local found = 0
-		for _, item in instance:GetDescendants() do
-			if item:IsA("Bone") and string.match(item.Name, "^F%d") then
-				byKey[item.Name] = item
-				found += 1
-			end
-		end
-		return found
-	end
-	local waited = 0
-	while scan() < 64 and waited < 60 do
-		waited += task.wait(0.25)
-	end
-	for name, bone in byKey do
-		local fall, level, label = string.match(name, "^F(%d)_(%d)_([LR])$")
-		local other = byKey[`F{fall}_{level}_{if label == "L" then "R" else "L"}`]
-		if fall and other then
-			local world = bone.WorldCFrame
-			local position = world.Position
-			local across = (position - other.WorldPosition).Unit
-			local inward = -Vector3.new(position.X, 0, position.Z).Unit
-			table.insert(fallBones, {
-				bone = bone,
-				level = tonumber(level) :: number,
-				fall = tonumber(fall) :: number,
-				side = if label == "L" then 1 else -1,
-				across = world:VectorToObjectSpace(across),
-				inward = world:VectorToObjectSpace(inward),
-				centre = (position + other.WorldPosition) / 2,
-			})
-		end
-	end
-	print(`HubMotion: falls ready, {#fallBones} bones`)
-end
-
-CollectionService:GetInstanceAddedSignal("HubFalls"):Connect(function(instance: Instance)
-	task.spawn(addFalls, instance)
-end)
-for _, instance in CollectionService:GetTagged("HubFalls") do
-	task.spawn(addFalls, instance)
-end
-
-local function updateFalls(t: number)
-	for _, item in fallBones do
-		-- Pinned at the lip and where it lands; the wave runs downward.
-		local along = item.level / 7
-		local env = math.sin(along * math.pi) ^ 0.6
-		local wave = math.sin(item.level * 1.5 + t * FALL_RATE + item.fall * 2)
-		local swell =
-			math.sin(item.level * 1.5 + t * FALL_RATE * 0.73 + item.fall * 3.1 + item.side)
-		item.bone.Transform = CFrame.new(
-			(item.across * item.side * wave * FALL_WIDE + item.inward * swell * FALL_BULGE) * env
-		)
 	end
 end
 
@@ -303,30 +223,70 @@ local function flash(t: number)
 	end
 end
 
--- Phone tier: touch devices skip the ink on distant pieces and every other storm sheet. Any device that stays under
--- 24 frames a second takes the same step, so the look only gives way when it has to.
-local reduced = false
-local function reduceDetail()
-	if reduced then
-		return
-	end
-	reduced = true
-	for _, part in CollectionService:GetTagged("HubDistantInk") do
-		if part:IsA("BasePart") then
-			part.Transparency = 1
+-- Detail: Low skips the ink on distant pieces, every other storm sheet and twinkle, and half the mist. It starts Low on
+-- touch devices and drops by itself on any device that stays under 24 frames a second. The button overrides both. Roblox's
+-- own graphics level isn't something a game can change: that stays in the player's Roblox settings.
+local low = false
+local chosen = false
+local button: TextButton? = nil
+
+local function setDetail(value: boolean)
+	low = value
+	for _, tag in { "HubDistantInk", "HubSpareCloud" } do
+		for _, part in CollectionService:GetTagged(tag) do
+			if part:IsA("BasePart") then
+				part.Transparency = if value then 1 else 0
+			end
 		end
 	end
-	for _, part in CollectionService:GetTagged("HubSpareCloud") do
-		if part:IsA("BasePart") then
-			part.Transparency = 1
+	for _, e in CollectionService:GetTagged("HubSpareTwinkle") do
+		if e:IsA("ParticleEmitter") then
+			e.Enabled = not value
 		end
 	end
-	print("HubMotion: reduced detail")
+	for _, e in CollectionService:GetTagged("HubMist") do
+		if e:IsA("ParticleEmitter") then
+			e.Rate = if value then 1.5 else 3
+		end
+	end
+	if button then
+		button.Text = `Detail: {if value then "Low" else "High"}`
+	end
 end
+
+do
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "HubDetail"
+	gui.ResetOnSpawn = false
+	gui.Parent = (Players.LocalPlayer :: Player):WaitForChild("PlayerGui")
+	local made = Instance.new("TextButton")
+	made.AnchorPoint = Vector2.new(0, 1)
+	made.Position = UDim2.new(0, 12, 1, -12)
+	made.Size = UDim2.fromOffset(120, 34)
+	made.BackgroundColor3 = Color3.fromRGB(24, 26, 38)
+	made.BackgroundTransparency = 0.2
+	made.TextColor3 = Color3.fromRGB(230, 235, 245)
+	made.Font = Enum.Font.GothamBold
+	made.TextSize = 15
+	made.Text = "Detail: High"
+	made.Parent = gui
+	made.Activated:Connect(function()
+		chosen = true
+		setDetail(not low)
+	end)
+	button = made
+end
+
 if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
-	task.delay(25, reduceDetail)
+	task.delay(25, function()
+		if not chosen then
+			setDetail(true)
+		end
+	end)
 end
-workspace:GetAttributeChangedSignal("HubReduceDetail"):Connect(reduceDetail)
+workspace:GetAttributeChangedSignal("HubReduceDetail"):Connect(function()
+	setDetail(workspace:GetAttribute("HubReduceDetail") == true)
+end)
 
 local slowFrames, frameTotal, frameWindow = 0, 0, 0
 RunService.Heartbeat:Connect(function(dt: number)
@@ -336,34 +296,39 @@ RunService.Heartbeat:Connect(function(dt: number)
 		slowFrames = if frameTotal / frameWindow < 24 then slowFrames + 1 else 0
 		frameTotal, frameWindow = 0, 0
 		-- Asset loading makes the first seconds slow, so only sustained trouble counts.
-		if slowFrames >= 3 and os.clock() > 45 then
-			reduceDetail()
+		if slowFrames >= 3 and os.clock() > 45 and not chosen and not low then
+			setDetail(true)
 		end
 	end
 end)
 
 local started = os.clock()
 local nextMove = 0
-local nextFalls = 0
-RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function(dt: number)
 	local t = os.clock() - started
 	if t >= nextMove then
-		nextMove = t + (if reduced then MOVE_RATE else 0)
+		nextMove = t + (if low then MOVE_RATE else 0)
 		moveParts(t)
 		flash(t)
-	end
-	if t >= nextFalls then
-		nextFalls = t + FALLS_RATE
-		updateFalls(t)
 	end
 	local camera = workspace.CurrentCamera
 	if not camera then
 		return
 	end
 	for _, bridge in bridges do
-		if t >= bridge.nextUpdate and inView(camera, bridge.centre) then
-			findRiders(bridge)
-			bridge.nextUpdate = t + (if #riders > 0 then ACTIVE_BRIDGE_RATE else IDLE_BRIDGE_RATE)
+		findRiders(bridge)
+		local target = if #riders > 0 then 1 else 0
+		bridge.energy += (target - bridge.energy) * math.min(dt / (BRIDGE_SETTLE * 0.4), 1)
+		if #riders == 0 and bridge.energy < 0.005 then
+			if not bridge.resting then
+				-- One last update puts every bone home; after that a resting bridge costs nothing.
+				bridge.energy = 0
+				bridge.resting = true
+				updateBridge(bridge, t)
+			end
+		elseif t >= bridge.nextUpdate and inView(camera, bridge.centre) then
+			bridge.resting = false
+			bridge.nextUpdate = t + BRIDGE_RATE
 			updateBridge(bridge, t)
 		end
 	end

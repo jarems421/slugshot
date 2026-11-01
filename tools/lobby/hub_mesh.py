@@ -88,7 +88,8 @@ void main() {
     for (int j = 0; j < 2; j++) q -= assetNormal(q)*assetMap(q).x;
     if (abs(assetMap(q - assetNormal(q)*0.01).y - id) > 0.5) idEdge = 1.0;
   }
-  if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5 || abs(id - 13.0) < 0.5 || (id > 2.3 && id < 2.5)) { crease = 0.0; idEdge *= 0.6; }
+  if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5 || abs(id - 13.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
+  if (id > 2.3 && id < 2.5) { crease = smoothstep(0.2, 0.7, -lap)*0.85; idEdge *= 0.6; }
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
   emit *= 1.0 - ink;
@@ -376,7 +377,7 @@ def gate_piece(direction, r):
         "normalH": 0.004, "gain": 1.45,
         "parts": [
             part("Stone", by_id((0.5, 1.9)), 2000, 512, PROP_INK, 0.6, cage=0.03),
-            part("Rope", by_id((1.9, 3.0)), 1500, 512, 0.0, cage=0.012),
+            part("Rope", by_id((1.9, 3.0)), 2600, 1024, 0.0, cage=0.012),
             part("Key", by_id((15.9, 16.5)), 160, 256, FINE_INK, 1.0, hard=True, cage=0.02),
         ],
     }
@@ -409,9 +410,9 @@ PIECES = {
     },
     "hub-rock-dress": {
         "item": "spawn-rock-1", "map": ROCK_DRESS, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
-        "lo": (-10.5, 3.0, -10.5), "hi": (10.5, 14.5, 10.5), "step": 0.022, "normalH": 0.004,
+        "lo": (-10.5, 3.0, -10.5), "hi": (10.5, 14.5, 10.5), "step": 0.022, "normalH": 0.004, "sparkle": "Glow",
         "parts": [
-            part("Sprouts", in_sprouts, 3600, 512, FINE_INK, 0.8, cage=0.012),
+            part("Sprouts", in_sprouts, 2400, 512, FINE_INK*0.8, 1.0, cage=0.012),
             part("Roots", by_id((3.5, 4.5)), 4500, 1024, PROP_INK*0.7, 0.7, cage=0.02),
             part("Glow", by_id((15.69, 16.0), (17.5, 20.0), (3.0, 3.5)), 4000, 1024, PROP_INK*1.1, 1.0, cage=0.02),
             part("Flora", everything, 4500, 1024, FINE_INK, 1.0, cage=0.015),
@@ -453,11 +454,6 @@ PIECES = {
         "lo": (-18.8, -31.0, -18.8), "hi": (18.8, -7.0, 18.8), "step": 0.06, "normalH": 0.01, "smooth": juice_funnel, "bakeEmit": True,
         "parts": [part("Juice", everything, 6500, 1024, cage=1.3)],
     },
-    "hub-falls": {
-        "item": "maelstrom-1", "map": "falls", "scale": 5.0, "origin": (0.0, 0.0, 0.0), "uRo": (0.0, -2.0, 0.0),
-        "lo": (-19.0, -12.5, -19.0), "hi": (19.0, 0.6, 19.0), "step": 0.04, "normalH": 0.006, "rig": "falls", "bakeEmit": True,
-        "parts": [part("Falls", everything, 3000, 1024, cage=0.04)],
-    },
     # The block-out's sizes: PvP the largest at about 28 tall, the other two about 23.
     "hub-portal-pvp": portal_piece("gate-pvp-1", 1.35),
     "hub-portal-training": portal_piece("gate-training-1", 1.1),
@@ -476,7 +472,7 @@ PIECES = {
     },
     "hub-well-glow": {
         "item": "sky-well-1", "map": "glow", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
-        "lo": (-16.0, 15.0, -16.0), "hi": (16.0, 37.0, 16.0), "step": 0.035, "normalH": 0.005,
+        "lo": (-16.0, 15.0, -16.0), "hi": (16.0, 37.0, 16.0), "step": 0.035, "normalH": 0.005, "sparkle": "WellGlow",
         "parts": [part("WellGlow", everything, 4000, 1024, PROP_INK*1.3, 0.8, cage=0.03)],
     },
     "hub-well-isles": {
@@ -494,10 +490,26 @@ PIECES = {
 }
 
 
+# The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
+GAME_PAINT = (
+    # Cracks: glowing across the floor. In the concept the bright strip was thin and moss grew over the floor, which read
+    # as green drawings in the game (owner).
+    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.05, 0.3, -fq.x/max(fq.y, 0.01));"),
+    ("m *= 1.0 - fissureHalo*0.85;", "m *= 1.0 - fissureHalo*0.85; if (fissure > 0.0) m = 0.0;"),
+    # Rope: fine dark strands (owner: low quality).
+    ("float twist = 0.5 + 0.5*sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*17.0);",
+     "float twist = smoothstep(-0.35, 0.55, sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*34.0));"),
+    ("vec3(0.38, 0.3, 0.19), vec3(0.62, 0.52, 0.34), twist", "vec3(0.2, 0.15, 0.09), vec3(0.66, 0.55, 0.37), twist"),
+)
+
+
 class PieceGpu(Gpu):
     def __init__(self, key):
         self.piece = PIECES[key]
         page = PAGE.read_text(encoding="utf-8")
+        for old, new in GAME_PAINT:
+            assert old in page, old
+            page = page.replace(old, new)
         bank, items = dump_renders(extract(page, r'<script id="lib">(.*?)</script>'), {self.piece["item"]})
         fs = extract(page, r'<script id="fs" type="x-shader/x-fragment">(.*?)</script>')
         source = self.piece["map"]
@@ -627,7 +639,52 @@ def fx_textures():
     save("zap", (np.exp(-(bolt/0.018)**2) + 0.5*np.exp(-(bolt/0.07)**2) + 0.0*zig)*np.exp(-(y/0.92)**8))
     for name, a in (("spore", np.clip(np.exp(-(r/0.32)**2) + 0.35*np.exp(-(r/0.75)**2), 0, 1)),):
         save(name, a)
+    h, w = 512, 256
+    def tile(sigma_y, sigma_x, seed):
+        noise = blur(blur(np.random.default_rng(seed).random((h, w)), 0, sigma_y), 1, sigma_x)
+        return (noise - noise.min())/(noise.max() - noise.min())
+    x = np.linspace(-1, 1, w)[None, :].repeat(h, axis=0)
+    left, right = tile(36, 200, 1)[:, :1], tile(36, 200, 2)[:, :1]
+    edge = np.where(x < 0, 0.78 + 0.2*left, 0.78 + 0.2*right)
+    across = np.clip(x/edge, -1, 1)
+    alpha = np.clip((edge - np.abs(x))/0.09, 0, 1)
+    bands = tile(30, 9, 3)
+    shape = np.sqrt(1 - across**2)
+    amount = np.clip(0.12 + 0.55*shape + 0.7*(bands - 0.5), 0, 1)[..., None]
+    deep, bright = np.array((26, 128, 138), "f4"), np.array((104, 238, 224), "f4")
+    colour = deep*(1 - amount) + bright*amount
+    # The wet highlight down one side, wandering as it flows.
+    wander = 0.25*(tile(44, 200, 4)[:, :1] - 0.5)
+    shine = np.exp(-((across + 0.38 + wander)/0.13)**2)*(0.35 + 0.65*tile(24, 12, 5))
+    colour = colour + (np.array((225, 255, 248), "f4") - colour)*(0.75*shine)[..., None]
+    rgba = np.dstack([colour, alpha*255]).clip(0, 255).astype("u1")
+    Image.fromarray(rgba, "RGBA").save(folder/"flow.png")
+    # A ripple spreading on the juice where a fall lands.
+    ring = np.exp(-((r - 0.72)/0.09)**2) + 0.35*np.exp(-((r - 0.45)/0.08)**2)
+    save("ripple", ring*(r < 1))
     print("fx textures written")
+
+
+def sparkle_points(gpu, key, out, limit=45):
+    piece = PIECES[key]
+    data = np.load(out/f"{piece['sparkle']}.npz")
+    verts, faces = data["verts"], data["faces"]
+    edges = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]]])
+    graph = coo_matrix((np.ones(len(edges), dtype="i1"), (edges[:, 0], edges[:, 1])), shape=(len(verts), len(verts)))
+    count, labels = connected_components(graph, directed=False)
+    sizes = np.bincount(labels, minlength=count)
+    tips = []
+    for label in np.argsort(sizes)[::-1][:limit]:
+        if sizes[label] < 80:
+            break
+        v = verts[labels == label]
+        tips.append(v[np.argmax(np.linalg.norm(v - v.mean(axis=0), axis=1))])
+    tips = np.array(tips, "f4")
+    _, emit = gpu.paint(tips)
+    colours = emit[:, :3]/np.maximum(emit[:, :3].max(axis=1, keepdims=True), 1e-3)
+    points = [{"p": ((t - np.array(piece["origin"]))*piece["scale"]).tolist(), "c": c.tolist()} for t, c in zip(tips, colours)]
+    (out/"points.json").write_text(json.dumps(points))
+    print(f"  {len(points)} twinkle points", flush=True)
 
 
 def mesh(key):
@@ -678,8 +735,15 @@ def mesh(key):
                        "ink": spec["ink"]/piece["scale"], "inkRatio": spec["inkRatio"], "hard": spec["hard"],
                        "cage": spec["cage"], "authored": bool(extra)})
         print(f"  {spec['name']:10s} {len(sel):9d} dense faces -> {spec['tris']} tris", flush=True)
+    if "sparkle" in piece:
+        sparkle_points(gpu, key, out)
     meta = {"key": key, "scale": piece["scale"], "origin": list(piece["origin"]), "groups": groups, "rig": piece.get("rig")}
     (out/"meta.json").write_text(json.dumps(meta, indent=1))
+
+
+EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow"}
+# Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
+EMIT_STRENGTH = {"Cracks": 3.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.1}
 
 
 def paint(key):
@@ -715,14 +779,26 @@ def paint(key):
         Image.fromarray((to_srgb(base)*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-color.png")
         g["color"] = f"textures/{g['name']}-color.png"
         lum = emit.max(axis=2)
-        lit = valid & (lum > 0.25)
+        even = g["name"] in EVEN_GLOW
+        lit = valid & (lum > (0.03 if even else 0.25))
         if lit.sum() > 0.003*valid.sum():
             peak = float(np.percentile(lum[lit], 98))
             mask = np.clip((lum - 0.15)/max(peak - 0.15, 1e-3), 0, 1)
+            if even:
+                ratio = lum/np.maximum(alb.max(axis=2), 0.03)
+                mask = np.clip(ratio/float(np.percentile(ratio[lit], 95)), 0, 1)**1.3
+                # Mushroom caps always glow a little, top included (owner).
+                ids = np.zeros((h, w), "f4")
+                ids[valid] = a0[:, 3]
+                caps = dilate(((ids >= 14.5) & (ids < 16.0))[..., None].astype("f4"), valid)[..., 0] > 0.5
+                mask = np.where(caps, np.maximum(mask, 0.55), mask)
+                # Stems stay plain, so the caps read as what glows.
+                stems = dilate((np.abs(ids - 13.0) < 0.5)[..., None].astype("f4"), valid)[..., 0] > 0.5
+                mask = np.where(stems, 0.0, mask)
             Image.fromarray((mask*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-emit.png")
             over = base.max(axis=2)[valid & (mask > 0.5)]
             g["emit"] = f"textures/{g['name']}-emit.png"
-            g["emissiveStrength"] = round(min(4.0, peak/max(float(np.median(over)), 0.05)), 2)
+            g["emissiveStrength"] = EMIT_STRENGTH.get(g["name"], round(min(4.0, peak/max(float(np.median(over)), 0.05)), 2))
         print(f"{g['name']}: {int(valid.sum())} texels" + (f", glow x{g['emissiveStrength']}" if "emit" in g else ""), flush=True)
     (out/"build.json").write_text(json.dumps(report, indent=1))
 

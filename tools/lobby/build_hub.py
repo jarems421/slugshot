@@ -39,8 +39,6 @@ def main():
         rebase(tree)
         check = "../../experiments/lobby/hub/check"
         tree["StarterPlayer"]["StarterPlayerScripts"]["HubCheck"] = {"$path": f"{check}/HubCheck.client.luau"}
-        # The same true-speed walker as the block-out, so the new outlines are walked rather than assumed.
-        tree["ServerScriptService"]["LobbyScaleCheck"] = {"$path": "../../experiments/lobby/scale/check/ScaleCheck.server.luau"}
         CHECK_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
         rojo_build(CHECK_PROJECT, CHECK_PLACE)
 

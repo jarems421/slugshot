@@ -180,7 +180,7 @@ def sprouts(vs, fs, ctx):
     # (owner, 2026-11-01).
     mushrooms = []  # spacing is measured between mushrooms only, not from the crack crystals
     for x, z in crack_sites(data, size, 8, 2.2, 3.3, 7.0, rnd, mushrooms, band=(0.07, 0.24), per_sector=1):
-        lines.append(f"  wallShroom(q, {vec([x, -0.06, z])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 1.0, stems, caps, capIdx);")
+        lines.append(f"  wallShroom(q, {vec([x, -0.06, z])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 2.0, stems, caps, capIdx);")
         seed += 1.0
     print(f"{seed - 300:.0f} crack mushrooms, {len(crystals)} crack crystals anchored")
     return ("void rockSprouts(vec3 q, inout vec2 res) {\n  float stems = 1e5, caps = 1e5, capIdx = 0.0;\n"

@@ -4,7 +4,7 @@ The props and kits the lobby needs, to be authored in Blender so the space looks
 
 Research basis: [Slugterra environment research](../research/slugterra-environment.md).
 
-**Final, 2026-11-01:** the owner approved every library design (rock wall v6, 14 crystals, giant mushroom v2 with 14-colour bank, three gates v3) as final. Also final, 2026-11-01: spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, as concepts not yet built for Roblox. Lessons: [art lessons](lessons.md).
+**Final, 2026-11-01:** the owner approved every library design (rock wall v6, 14 crystals, giant mushroom v2 with 14-colour bank, three gates v3) as final. Also final, 2026-11-01: spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, built for Roblox and in owner review ([lobby hub](lobby-hub.md)). Lessons: [art lessons](lessons.md).
 
 Source: owner request, 2026-10-31 ("build some assets in Blender so that stuff just doesn't look like AI slop… plan out what different assets we're going to have around the lobby… stuff like the Slugterra mushrooms, which are very distinct"). **Status: the list is Considering.** The owner confirms, cuts or adds items before production. Each asset's own design is agreed at concept stage.
 

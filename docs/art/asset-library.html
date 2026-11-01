@@ -368,14 +368,15 @@ void wallCrystal(vec3 p, vec3 s, vec3 n, float seed, inout float cr) {
 // A small mushroom sprouting from the rock at surface point s: stem rooted inside the rock, growing out
 // along the normal and up; cap colour picked at random from the bank.
 void wallShroom(vec3 p, vec3 s, vec3 n, float seed, float tiny, inout float stems, inout float caps, inout float capIdx) {
-  float h = tiny > 0.5 ? 0.3 + 0.3*hash1(seed + 223.0) : 0.55 + 0.55*hash1(seed + 213.0);
+  // tiny 2: the spawn rock's crack mushrooms, whose units are 5 studs (owner: "should be really tiny").
+  float h = tiny > 1.5 ? 0.09 + 0.08*hash1(seed + 223.0) : tiny > 0.5 ? 0.3 + 0.3*hash1(seed + 223.0) : 0.55 + 0.55*hash1(seed + 213.0);
   float far = length(p - s) - (h + 0.9);
   if (far > 0.5) { stems = min(stems, far); caps = min(caps, far); return; }
   vec3 dir = normalize(n*0.6 + vec3(0.0, 1.0, 0.0));
   vec3 b = s - n*0.15;
   vec3 tip = s + n*0.05 + dir*h;
-  stems = min(stems, capT(p, b, tip, tiny > 0.5 ? 0.06 : 0.11, tiny > 0.5 ? 0.045 : 0.075));
-  float cs = tiny > 0.5 ? 0.15 + 0.11*hash1(seed + 225.0) : 0.3 + 0.2*hash1(seed + 215.0);
+  stems = min(stems, capT(p, b, tip, tiny > 1.5 ? 0.05 : tiny > 0.5 ? 0.06 : 0.11, tiny > 1.5 ? 0.04 : tiny > 0.5 ? 0.045 : 0.075));
+  float cs = tiny > 1.5 ? 0.13 + 0.08*hash1(seed + 225.0) : tiny > 0.5 ? 0.15 + 0.11*hash1(seed + 225.0) : 0.3 + 0.2*hash1(seed + 215.0);
   float cd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*cs), -(p.y - tip.y + 0.18*cs), 0.03);
   if (cd < caps) { caps = cd; capIdx = floor(hash1(seed + 216.0)*13.99); }
 }
@@ -1175,11 +1176,14 @@ float markerSymbol(vec2 g, float dir) {
     float arch = a.y > 0.0 ? length(a) - 0.58 : max(abs(a.x) - 0.58, -a.y - 0.62);
     return min(abs(arch) - 0.085, box2(g + vec2(0.0, 0.76), vec2(0.8, 0.07)));
   }
-  // A chunky blaster, side on.
-  float d = box2(g - vec2(-0.08, 0.14), vec2(0.5, 0.2));
-  d = min(d, box2(g - vec2(0.6, 0.2), vec2(0.24, 0.09)));
-  d = min(d, box2(rot(-0.28)*(g - vec2(-0.3, -0.26)), vec2(0.13, 0.3)));
-  d = min(d, length(g - vec2(-0.12, 0.44)) - 0.15);
+  // The game's blaster, side on: two forward prongs with the canister between them, the rear disc, trigger guard and grip.
+  float d = seg2(g, vec2(-0.2, 0.5), vec2(0.8, 0.28)) - 0.1;
+  d = min(d, seg2(g, vec2(-0.2, -0.1), vec2(0.8, 0.0)) - 0.1);
+  d = min(d, box2(g - vec2(0.06, 0.2), vec2(0.2, 0.11)));
+  float disc = length(g - vec2(-0.42, 0.2)) - 0.34;
+  d = min(d, max(disc, 0.11 - length(g - vec2(-0.42, 0.2))));
+  d = min(d, seg2(g, vec2(-0.5, -0.12), vec2(-0.72, -0.72)) - 0.13);
+  d = min(d, abs(seg2(g, vec2(-0.3, -0.3), vec2(-0.3, -0.42)) - 0.12) - 0.035);
   return d;
 }
 void smallCrystal(vec3 q, vec3 site, vec3 dir, float L, float R, float k, inout vec2 res) {
@@ -1332,14 +1336,14 @@ void rockSmallCrystals(vec3 q, inout vec2 res) {
 }
 void rockSprouts(vec3 q, inout vec2 res) {
   float stems = 1e5, caps = 1e5, capIdx = 0.0;
-  wallShroom(q, vec3(1.220, -0.060, -3.380), vec3(0.0, 1.0, 0.0), 300.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.140, -0.060, 4.860), vec3(0.0, 1.0, 0.0), 301.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.780, -0.060, 1.940), vec3(0.0, 1.0, 0.0), 302.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.260, -0.060, 0.540), vec3(0.0, 1.0, 0.0), 303.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-4.980, -0.060, -2.420), vec3(0.0, 1.0, 0.0), 304.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.260, -0.060, -0.660), vec3(0.0, 1.0, 0.0), 305.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(2.940, -0.060, -4.860), vec3(0.0, 1.0, 0.0), 306.0, 1.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.540, -0.060, 3.060), vec3(0.0, 1.0, 0.0), 307.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.220, -0.060, -3.380), vec3(0.0, 1.0, 0.0), 300.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.140, -0.060, 4.860), vec3(0.0, 1.0, 0.0), 301.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.780, -0.060, 1.940), vec3(0.0, 1.0, 0.0), 302.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.260, -0.060, 0.540), vec3(0.0, 1.0, 0.0), 303.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-4.980, -0.060, -2.420), vec3(0.0, 1.0, 0.0), 304.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.260, -0.060, -0.660), vec3(0.0, 1.0, 0.0), 305.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.940, -0.060, -4.860), vec3(0.0, 1.0, 0.0), 306.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.540, -0.060, 3.060), vec3(0.0, 1.0, 0.0), 307.0, 2.0, stems, caps, capIdx);
   if (stems < res.x) res = vec2(stems, 13.0);
   if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);
   smallCrystal(q, vec3(2.420, -0.050, -4.980), vec3(0.088, 0.990, -0.110), 0.49, 0.112, 11.0, res);

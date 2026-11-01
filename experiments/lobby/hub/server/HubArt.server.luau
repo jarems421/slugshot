@@ -13,7 +13,11 @@ local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 
 type PartInfo = { ink: string?, emissive: number, min: Vector3, max: Vector3 }
-type PieceInfo = { model: number, parts: { [string]: PartInfo } }
+type PieceInfo = {
+	model: number,
+	points: { { p: Vector3, c: Color3 } },
+	parts: { [string]: PartInfo },
+}
 
 local private = require(ServerStorage:WaitForChild("HubAssets")) :: {
 	fx: { [string]: number },
@@ -25,6 +29,8 @@ local ORBIT = 0.12 -- the concepts' base rate, radians per second
 local BRIDGE_S = 0.51 -- bridge units per spawn-rock unit
 local UNIT = 5 -- studs per spawn-rock and Maelstrom unit
 local CLIFF_LIFT = 0.12 -- keeps the cliff's ground above the block-out floor it covers
+local DOWN = Vector3.new(0, -1, 0)
+local FALL_FOOT_Y = -56 -- just under the juice where the falls land
 
 -- Pieces that glow more than the painted brightness suits under Roblox's bloom.
 local GLOW: { [string]: number } = {
@@ -51,31 +57,6 @@ local DISTANT = {
 	"Bridge1",
 	"Bridge2",
 	"Bridge3",
-}
-
--- Along the spawn rock's cracks, from tools/lobby/hub_mesh.py's crack geometry.
-local CRACK_GLOW: { Vector3 } = {
-	Vector3.new(-26.1, 0.6, -9.7),
-	Vector3.new(-26.5, 0.6, -7.4),
-	Vector3.new(-24.7, 0.6, -9.5),
-	Vector3.new(-21.1, 0.6, -5.5),
-	Vector3.new(-14.9, 0.6, -2.3),
-	Vector3.new(-12.8, 0.6, 0.7),
-	Vector3.new(-11.0, 0.6, 14.1),
-	Vector3.new(-13.2, 0.6, 21.3),
-	Vector3.new(-0.7, 0.6, -27.2),
-	Vector3.new(0.7, 0.6, -26.7),
-	Vector3.new(2.5, 0.6, -22.0),
-	Vector3.new(5.9, 0.6, -14.6),
-	Vector3.new(6.8, 0.6, 12.0),
-	Vector3.new(13.3, 0.6, -21.8),
-	Vector3.new(15.1, 0.6, -13.4),
-	Vector3.new(13.4, 0.6, 11.0),
-	Vector3.new(24.6, 0.6, -1.9),
-	Vector3.new(22.0, 0.6, 5.4),
-	Vector3.new(20.6, 0.6, 12.4),
-	Vector3.new(26.5, 0.6, -5.0),
-	Vector3.new(26.9, 0.6, 4.2),
 }
 
 local art = Instance.new("Model")
@@ -400,30 +381,40 @@ local function lighting()
 	end
 end
 
+-- A star twinkle at each crystal's tip (look-pack.md), scaled to how far away they're seen.
+local function addTwinkles(key: string, size: number)
+	for index, point in private.assets[key].points do
+		local source = holder("Twinkle", point.p, Vector3.one * size * 0.4)
+		local e = Instance.new("ParticleEmitter")
+		e.Name = "Twinkle"
+		e.Texture = fxTexture("twinkle")
+		e.Color = ColorSequence.new(point.c:Lerp(Color3.new(1, 1, 1), 0.45))
+		e.LightEmission = 1
+		e.LightInfluence = 0
+		e.Brightness = 2.5
+		e.Size = fade({ { 0, 0 }, { 0.4, size }, { 1, 0 } })
+		e.Lifetime = NumberRange.new(0.5, 1.1)
+		e.Rate = 1.2
+		e.Speed = NumberRange.new(0.05, 0.25)
+		e.SpreadAngle = Vector2.new(180, 180)
+		e.Rotation = NumberRange.new(0, 90)
+		e.RotSpeed = NumberRange.new(-40, 40)
+		e.Parent = source
+		if index % 2 == 0 then
+			CollectionService:AddTag(e, "HubSpareTwinkle")
+		end
+	end
+end
+
 local function buildRock()
 	place("hub-rock")
 	place("hub-rock-dress")
+	addTwinkles("hub-rock-dress", 1.5)
 	local debris = place("hub-rock-debris")
 	if debris then
 		for index = 0, 2 do
 			setMotion(debris, `Debris{index}`, 0, 1.4, 0.3 + index * 0.09, index * 2.1)
 		end
-	end
-	for _, point in CRACK_GLOW do
-		local source = holder("CrackGlow", point, Vector3.new(5, 0.5, 5))
-		local rising = Instance.new("ParticleEmitter")
-		rising.Texture = fxTexture("mist")
-		rising.Color = ColorSequence.new(Color3.fromRGB(70, 240, 215))
-		rising.LightEmission = 1
-		rising.LightInfluence = 0
-		rising.Size = NumberSequence.new(3, 8)
-		rising.Transparency = fade({ { 0, 1 }, { 0.25, 0.7 }, { 1, 1 } })
-		rising.Lifetime = NumberRange.new(2, 3.2)
-		rising.Rate = 0.5
-		rising.Speed = NumberRange.new(1, 2)
-		rising.EmissionDirection = Enum.NormalId.Top
-		rising.Shape = Enum.ParticleEmitterShape.Box
-		rising.Parent = source
 	end
 	local colors = {
 		[0] = Color3.new(1, 0.62, 0.25),
@@ -467,6 +458,160 @@ local function buildBridges()
 	source:Destroy()
 end
 
+-- A sheet of liquid: its wavering edges and bands scroll down it. Beams stay smooth and cheap at any distance on a phone,
+-- and from behind the rim's rock hides them.
+local function flowSheet(
+	from: Vector3,
+	to: Vector3,
+	inward: Vector3,
+	reach: number,
+	drop: number,
+	width0: number,
+	width1: number,
+	texture: string,
+	color: Color3,
+	transparency: NumberSequence,
+	length: number,
+	speed: number,
+	emission: number,
+	layer: number
+)
+	local top, bottom = holder("FallFlow", from, Vector3.one), holder("FallFlow", to, Vector3.one)
+	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+	-- The curve leaves the top along +X of the first attachment and arrives at the bottom along +X of the second.
+	a0.CFrame = CFrame.fromMatrix(Vector3.zero, inward, Vector3.yAxis, inward:Cross(Vector3.yAxis))
+	a1.CFrame = CFrame.fromMatrix(Vector3.zero, DOWN, inward, DOWN:Cross(inward))
+	a0.Parent, a1.Parent = top, bottom
+	local b = Instance.new("Beam")
+	b.Attachment0, b.Attachment1 = a0, a1
+	b.CurveSize0, b.CurveSize1 = reach, drop
+	b.Width0, b.Width1 = width0, width1
+	b.FaceCamera = true
+	b.Segments = 14
+	b.Texture = texture
+	b.TextureMode = Enum.TextureMode.Wrap
+	b.TextureLength = length
+	b.TextureSpeed = speed
+	b.LightEmission = emission
+	b.LightInfluence = 0
+	b.Color = ColorSequence.new(color)
+	b.Transparency = transparency
+	b.ZOffset = layer
+	b.Parent = top
+end
+
+local function buildFall(angle: number)
+	local flat = Vector3.new(math.cos(angle), 0, math.sin(angle))
+	local across = Vector3.new(-flat.Z, 0, flat.X)
+	local inward = -flat
+	local foot = flat * 72 + Vector3.new(0, FALL_FOOT_Y, 0)
+	local lip = flat * 90 + Vector3.new(0, 0.8, 0)
+	local solid = fade({ { 0, 0 }, { 1, 0 } })
+	flowSheet(
+		lip,
+		foot,
+		inward,
+		10,
+		26,
+		13,
+		17,
+		fxTexture("flow"),
+		Color3.new(1, 1, 1),
+		solid,
+		46,
+		0.42,
+		0,
+		0
+	)
+	-- Faster, brighter bands over the top, so it never reads as one solid surface.
+	flowSheet(
+		lip,
+		foot,
+		inward,
+		10,
+		26,
+		11,
+		15,
+		fxTexture("streak"),
+		Color3.fromRGB(165, 255, 240),
+		fade({ { 0, 0.6 }, { 1, 0.45 } }),
+		30,
+		0.95,
+		0.5,
+		1
+	)
+	-- Thin runs either side.
+	for _, side in { -1, 1 } do
+		local run = lip + across * side * 10
+		flowSheet(
+			run,
+			flat * 76 + across * side * 11 + Vector3.new(0, -22 - 12 * (side + 1), 0),
+			inward,
+			8,
+			12,
+			2.2,
+			0.8,
+			fxTexture("flow"),
+			Color3.new(1, 1, 1),
+			fade({ { 0, 0 }, { 0.8, 0 }, { 1, 1 } }),
+			20,
+			0.6,
+			0,
+			0
+		)
+	end
+
+	-- Where it lands: ripples spreading over the juice, foam churning, and foam carried off along the swirl's own direction.
+	local landing = holder("FallFoot", foot + Vector3.new(0, 2.2, 0), Vector3.new(9, 0.5, 9))
+	local ripples = Instance.new("ParticleEmitter")
+	ripples.Name = "Ripples"
+	ripples.Texture = fxTexture("ripple")
+	ripples.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+	ripples.EmissionDirection = Enum.NormalId.Top
+	ripples.Speed = NumberRange.new(0.05)
+	ripples.Color = ColorSequence.new(Color3.fromRGB(190, 255, 245))
+	ripples.LightEmission = 0.5
+	ripples.LightInfluence = 0
+	ripples.Size = NumberSequence.new(7, 34)
+	ripples.Transparency = fade({ { 0, 0.5 }, { 0.15, 0.15 }, { 1, 1 } })
+	ripples.Lifetime = NumberRange.new(2.2, 3)
+	ripples.Rate = 1.3
+	ripples.Parent = landing
+	local foam = Instance.new("ParticleEmitter")
+	foam.Name = "Foam"
+	foam.Texture = fxTexture("mist")
+	foam.EmissionDirection = Enum.NormalId.Top
+	foam.Color = ColorSequence.new(Color3.fromRGB(170, 250, 238))
+	foam.LightEmission = 0.2
+	foam.LightInfluence = 0
+	foam.Size = NumberSequence.new(5, 13)
+	foam.Transparency = fade({ { 0, 1 }, { 0.2, 0.5 }, { 1, 1 } })
+	foam.Lifetime = NumberRange.new(1.2, 2)
+	foam.Rate = 4
+	foam.Speed = NumberRange.new(2, 5)
+	foam.SpreadAngle = Vector2.new(35, 35)
+	foam.Parent = landing
+	-- The juice turns from each point toward (z, -x) in world space, and winds inward.
+	local swirl = (Vector3.new(flat.Z, 0, -flat.X) * 0.85 + inward * 0.5).Unit
+	local trail = holder("FallTrail", foot + Vector3.new(0, 1.5, 0), Vector3.new(7, 0.5, 7))
+	trail.CFrame = CFrame.lookAt(trail.Position, trail.Position + swirl)
+	local carried = Instance.new("ParticleEmitter")
+	carried.Name = "Carried"
+	carried.Texture = fxTexture("mist")
+	carried.EmissionDirection = Enum.NormalId.Front
+	carried.Color = ColorSequence.new(Color3.fromRGB(150, 245, 230))
+	carried.LightEmission = 0.2
+	carried.LightInfluence = 0
+	carried.Size = NumberSequence.new(5, 10)
+	carried.Transparency = fade({ { 0, 1 }, { 0.15, 0.6 }, { 1, 1 } })
+	carried.Lifetime = NumberRange.new(2.5, 4)
+	carried.Rate = 2.5
+	carried.Speed = NumberRange.new(5, 8)
+	carried.SpreadAngle = Vector2.new(10, 10)
+	carried.Acceleration = Vector3.new(0, -1.2, 0)
+	carried.Parent = trail
+end
+
 local function buildMaelstrom()
 	local cliff = place("hub-cliff")
 	if cliff then
@@ -479,69 +624,28 @@ local function buildMaelstrom()
 		-- preview, because the owner wants it thick.
 		setMotion(juice, "Juice", ORBIT * 2, 0, 0, 0)
 	end
-	local falls = place("hub-falls")
-	if falls then
-		CollectionService:AddTag(falls, "HubFalls")
-	end
-	-- Flowing light down each fall, on the same angles as the concept's falls.
+	-- The same angles as the concept's falls.
 	local hashes = { 0.7234, 0.3382, 0.0544, 0.5693 } -- hash1(i + 171) from the shader
 	for index = 0, 3 do
-		local angle = index * 1.5708 + 0.785 + 0.34 * (hashes[index + 1] - 0.5)
-		local flat = Vector3.new(math.cos(angle), 0, math.sin(angle))
-		beam(
-			"FallFlow",
-			flat * 85 + Vector3.new(0, 1, 0),
-			flat * 73.6 + Vector3.new(0, -15, 0),
-			6,
-			8,
-			fxTexture("streak"),
-			Color3.fromRGB(70, 225, 205),
-			fade({ { 0, 0.8 }, { 0.2, 0.55 }, { 1, 0.55 } }),
-			0.45,
-			1
-		)
-		beam(
-			"FallFlow",
-			flat * 73.6 + Vector3.new(0, -15, 0),
-			flat * 73 + Vector3.new(0, -52, 0),
-			8,
-			10,
-			fxTexture("streak"),
-			Color3.fromRGB(70, 225, 205),
-			fade({ { 0, 0.55 }, { 0.85, 0.55 }, { 1, 1 } }),
-			0.45,
-			2
-		)
-		-- Spray and a soft burst where it lands.
-		local foot = holder("FallFoot", flat * 75 + Vector3.new(0, -53, 0), Vector3.new(12, 2, 12))
-		local spray = Instance.new("ParticleEmitter")
-		spray.Texture = fxTexture("mist")
-		spray.Color = ColorSequence.new(Color3.fromRGB(130, 245, 225))
-		spray.LightEmission = 1
-		spray.LightInfluence = 0
-		spray.Size = NumberSequence.new(5, 14)
-		spray.Transparency = fade({ { 0, 1 }, { 0.3, 0.72 }, { 1, 1 } })
-		spray.Lifetime = NumberRange.new(2.5, 4)
-		spray.Rate = 1.2
-		spray.Speed = NumberRange.new(2, 5)
-		spray.EmissionDirection = Enum.NormalId.Top
-		spray.Parent = foot
+		buildFall(index * 1.5708 + 0.785 + 0.34 * (hashes[index + 1] - 0.5))
 	end
-	-- Mist and rising motes across the pit: a few big soft particles, which is what phones draw cheaply.
-	local pit = holder("PitMist", Vector3.new(0, -46, 0), Vector3.new(130, 4, 130))
+	-- Mist rising off the juice: a few big soft particles, which is what phones draw cheaply.
+	local pit = holder("PitMist", Vector3.new(0, -58, 0), Vector3.new(120, 4, 120))
 	local mist = Instance.new("ParticleEmitter")
+	mist.Name = "Mist"
 	mist.Texture = fxTexture("mist")
-	mist.Color = ColorSequence.new(Color3.fromRGB(90, 225, 210))
-	mist.LightEmission = 1
+	mist.Color = ColorSequence.new(Color3.fromRGB(95, 230, 215))
+	mist.LightEmission = 0.6
 	mist.LightInfluence = 0
-	mist.Size = NumberSequence.new(18, 34)
-	mist.Transparency = fade({ { 0, 1 }, { 0.35, 0.8 }, { 1, 1 } })
-	mist.Lifetime = NumberRange.new(7, 11)
-	mist.Rate = 1.4
-	mist.Speed = NumberRange.new(1.5, 3)
+	mist.Size = NumberSequence.new(24, 52)
+	mist.Transparency = fade({ { 0, 1 }, { 0.3, 0.55 }, { 1, 1 } })
+	mist.Lifetime = NumberRange.new(9, 13)
+	mist.Rate = 3
+	mist.Speed = NumberRange.new(3, 6)
 	mist.EmissionDirection = Enum.NormalId.Top
 	mist.Shape = Enum.ParticleEmitterShape.Box
 	mist.Parent = pit
+	CollectionService:AddTag(mist, "HubMist")
 	local motes = Instance.new("ParticleEmitter")
 	motes.Texture = fxTexture("spore")
 	motes.Color = ColorSequence.new(Color3.fromRGB(150, 255, 235))
@@ -561,6 +665,7 @@ end
 local function buildSkyWell()
 	place("hub-well-rock")
 	place("hub-well-glow")
+	addTwinkles("hub-well-glow", 6)
 	local isles = place("hub-well-isles")
 	if isles then
 		for index = 0, 4 do

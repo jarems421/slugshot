@@ -212,3 +212,12 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **A wrap must share the shape it wraps:** a ring built from a plain box sank in and out of a turned, tapered, noisy stone and read as neither inside nor outside it. Build the ring from the stone's own frame and outline, smooth the stone under it, and cut a shallow groove.
 - **Show the load path:** a rope reads as tied when it ends in a visible knot sitting proud of the wraps, with a loose tail. Thicken it near the tie so it reads from a distance.
 - **Check a repeated stray shape by colour:** painting each part a flat colour showed that a line at all four gates was the first plank, tilted up by the deck's slope and poking through the slab.
+
+### Hub designs into Roblox (2026-11-01)
+
+- **Decimation erases what makes a shape:** cracks flattened into painted lines, thin stems became spikes, and a folded liquid became hard facets. Give important detail its own part and budget. Keep a surface smooth and put its folds in the maps.
+- **An outline must match its part exactly:** a lighter shell sinks inside in places and pokes out in others.
+- **Normalise glow per colour:** against the part's brightest colour, only cyan glowed.
+- **A frozen mesh can't read as liquid, however it wobbles:** scrolling sheets with wavering edges do, and they stay cheap.
+- **Grey-map stand-ins can stand in front of the art:** look for them when you see "gaps".
+- **Replication order:** a tag can arrive before the descendants it refers to, so wait for them.

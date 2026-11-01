@@ -1,6 +1,6 @@
 # Current status
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** **Confirmed:** the owner approved as final the spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). These are offline concepts; none is built in Roblox yet. **Unresolved:** the order of the Roblox build and the remaining designs.
+**Implemented, 2026-11-01 (`experiment/lobby`):** **Confirmed:** the owner approved as final the spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Implemented:** all are built for Roblox on the block-out ([lobby hub](art/lobby-hub.md)), in owner review. **Unresolved:** owner verdict and phone performance.
 
 **Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Next: Sky Well, owner's choice. Not yet built for Roblox.
 
