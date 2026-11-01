@@ -37,7 +37,17 @@ type Flight = {
 }
 local flights: { Flight } = {}
 local CANISTER_GLOW = Color3.fromRGB(215, 240, 160) -- Floppy's bulb glow
-type Pop = { locate: () -> Vector3?, part: Part, started: number }
+-- Stacked faint discs fake a soft radial falloff with no image asset and no hard edge.
+local GLOOM_LAYERS = 9
+local GLOOM_ALPHA = 0.045
+local GLOOM_TIME = 0.75
+type Pop = {
+	locate: () -> Vector3?,
+	part: Part,
+	light: PointLight,
+	discs: { Frame },
+	started: number,
+}
 local pops: { Pop } = {}
 
 local function standIn(): Model
@@ -88,20 +98,9 @@ local function bead(size: number, color: Color3, position: Vector3): Part
 	return part
 end
 
--- Muddy splat: a flat stain on the surface plus a spray of goo beads.
+-- A spray of goo beads on impact. The owner removed the flat stain circle (2026-11-01)
+-- and plans a different impact effect.
 local function splat(position: Vector3, normal: Vector3)
-	local stain = Instance.new("Part")
-	stain.Shape = Enum.PartType.Cylinder -- axis along X, laid along the normal
-	stain.Size = Vector3.new(0.04, 1.1, 1.1)
-	stain.Color = GOO
-	stain.Material = Enum.Material.SmoothPlastic
-	stain.Anchored, stain.CanCollide, stain.CanQuery, stain.CanTouch = true, false, false, false
-	stain.CastShadow = false
-	stain.Transparency = 0.15
-	local side = if math.abs(normal.Y) < 0.95 then Vector3.yAxis else Vector3.xAxis
-	stain.CFrame = CFrame.fromMatrix(position + normal * 0.03, normal, normal:Cross(side).Unit)
-	stain.Parent = folder
-	fade(stain, 0.9, {})
 	local random = Random.new()
 	for _ = 1, 7 do
 		local spray = (normal + random:NextUnitVector() * 0.8).Unit
@@ -110,15 +109,52 @@ local function splat(position: Vector3, normal: Vector3)
 	end
 end
 
--- The slug is back: a soft glow blooms in the canister and follows the moving gun.
+-- The slug is back: a soft gloom swells in the canister and fades, following the gun.
 function Visuals.canisterPop(locate: () -> Vector3?)
 	local position = locate()
 	if not position then
 		return
 	end
-	local part = bead(0.12, CANISTER_GLOW, position)
-	part.Material = Enum.Material.Neon
-	table.insert(pops, { locate = locate, part = part, started = os.clock() })
+	local part = Instance.new("Part")
+	part.Size = Vector3.one * 0.05
+	part.Transparency = 1
+	part.Anchored, part.CanCollide, part.CanQuery, part.CanTouch = true, false, false, false
+	part.CastShadow = false
+	part.Position = position
+	local light = Instance.new("PointLight")
+	light.Color = CANISTER_GLOW
+	light.Range = 3
+	light.Brightness = 0
+	light.Shadows = false
+	light.Parent = part
+	local board = Instance.new("BillboardGui")
+	board.Size = UDim2.fromScale(1.3, 1.3)
+	board.LightInfluence = 0
+	board.Parent = part
+	local discs: { Frame } = {}
+	for index = 1, GLOOM_LAYERS do
+		local disc = Instance.new("Frame")
+		local scale = index / GLOOM_LAYERS
+		disc.AnchorPoint = Vector2.new(0.5, 0.5)
+		disc.Position = UDim2.fromScale(0.5, 0.5)
+		disc.Size = UDim2.fromScale(scale, scale)
+		disc.BackgroundColor3 = CANISTER_GLOW
+		disc.BackgroundTransparency = 1
+		disc.BorderSizePixel = 0
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.5, 0)
+		corner.Parent = disc
+		disc.Parent = board
+		table.insert(discs, disc)
+	end
+	part.Parent = folder
+	table.insert(pops, {
+		locate = locate,
+		part = part,
+		light = light,
+		discs = discs,
+		started = os.clock(),
+	})
 end
 
 -- The burrow's materials load on first use, which froze the first dig of a session
@@ -228,15 +264,20 @@ RunService.RenderStepped:Connect(function()
 	local now = os.clock()
 	for index = #pops, 1, -1 do
 		local pop = pops[index]
-		local age = (now - pop.started) / 0.32
+		local age = (now - pop.started) / GLOOM_TIME
 		local position = pop.locate()
 		if age >= 1 or not position then
 			pop.part:Destroy()
 			table.remove(pops, index)
 		else
 			pop.part.Position = position
-			pop.part.Size = Vector3.one * (0.12 + 0.55 * (1 - (1 - age) ^ 3))
-			pop.part.Transparency = 0.15 + 0.85 * age * age
+			-- A gentle swell that lingers on the way out; it never changes shape or size.
+			local level = math.sin(math.pi * math.clamp(age / 0.3, 0, 1) / 2) ^ 2
+				* (1 - math.clamp((age - 0.3) / 0.7, 0, 1) ^ 2)
+			pop.light.Brightness = 0.8 * level
+			for _, disc in pop.discs do
+				disc.BackgroundTransparency = 1 - GLOOM_ALPHA * level
+			end
 		end
 	end
 	for index = #flights, 1, -1 do

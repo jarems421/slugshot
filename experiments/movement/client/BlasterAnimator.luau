@@ -420,6 +420,8 @@ function Animator.start()
 				)
 				if character == Players.LocalPlayer.Character and FirstPerson.active() then
 					kick = CFrame.identity -- first-person copies apply recoil directly after smoothing
+				elseif character == Players.LocalPlayer.Character then
+					kick *= Recoil.vibration(os.clock())
 				end
 				if tool and joint and joint.Part0 then
 					-- Clean held frame for a later holster: C0 without any flourish.

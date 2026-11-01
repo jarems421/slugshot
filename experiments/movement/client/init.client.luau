@@ -13,6 +13,8 @@ local Clips = require(shared.Clips)
 local Traversal = require(script.Traversal)
 local FirstPerson = require(script.FirstPerson)
 local Tuning = require(script.Tuning)
+local Ads = require(script.Ads)
+local Recoil = require(script.BlasterRecoil)
 local AimCursor = require(script.AimCursor)
 local Reticle = require(script.Reticle)
 local FirstPersonFlip = require(script.FirstPersonFlip)
@@ -980,6 +982,7 @@ RunService:BindToRenderStep("SlugshotActionView", Enum.RenderPriority.Camera.Val
 		local tilt = CFrame.Angles(viewPitch, 0, viewRoll) * experiment
 		-- Apply the running eye position after native follow. Adding this through
 		-- CameraOffset loses much of the advance to native follow/physics timing.
+		lens += Recoil.viewPunch()
 		local effect = CFrame.new(view:VectorToObjectSpace(runLeanOffset)) * tilt
 		camera.CFrame = view * effect
 		-- Native first-person character facing also uses the eye/focus relationship.
@@ -1501,7 +1504,14 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 				elseif sprinting then Config.Camera.SprintFov
 				else Config.Camera.Fov
 		)
-	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
+	-- ADS zoom narrows the view by a true magnification, and turning slows to match it.
+	local zoom = 1 + (Tuning.values.adsZoom - 1) * Ads.weight()
+	fov = 2 * math.deg(math.atan(math.tan(math.rad(fov / 2)) / zoom))
+	UserInputService.MouseDeltaSensitivity = 1 / zoom
+	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(
+		if Ads.weight() > 0 or Ads.wanted() then 30 else Config.Camera.BlendRate,
+		dt
+	)
 	label.Text = string.format(
 		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  double-tap W sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",

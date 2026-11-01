@@ -1,5 +1,6 @@
 --!strict
--- Inked white charge: quiet intake, then restrained held energy. Aim never moves.
+-- The crosshair stays clean while charging: the gun shows the build-up in three clunks
+-- (BlasterRecoil). The older charge ring is kept here, switched off. Aim never moves.
 local Players = game:GetService("Players")
 local FirstPerson = require(script.Parent.FirstPerson)
 local CrosshairStyles = require(script.Parent.CrosshairStyles)
@@ -17,7 +18,8 @@ local STYLE = {
 	ReadyFrequency = 6,
 	Vibration = Vector2.new(0.16, 0.12), -- subpixel ring motion, never the aim mark
 	SheenSpeed = 110,
-	PulseTime = 0.3,
+	-- Owner trial (2026-11-01): the older charge ring is off. Set true to bring it back.
+	ChargeRing = false,
 }
 local CUT = NumberSequence.new({
 	NumberSequenceKeypoint.new(0, 0),
@@ -47,11 +49,8 @@ type Ring = {
 	sheen: Frame,
 	sheenStroke: UIStroke,
 	sheenMask: UIGradient,
-	pulse: Frame,
-	pulseStroke: UIStroke,
 }
 local ring: Ring? = nil
-local pulseAge = math.huge
 local progress: number? = nil
 local chargeAge, fullTime = 0, 0
 local wasFull = false
@@ -209,10 +208,6 @@ function Reticle.create(parent: Instance): Frame
 		NumberSequenceKeypoint.new(1, 0.1),
 	})
 	sheenMask.Parent = sheenStroke
-	-- Parented outside the charge ring, which is hidden while the slug is away.
-	local pulse, pulseStroke = circle(root, "ReadyPulse", 1.4)
-	pulse.Visible = false
-	pulseStroke.Color = STYLE.Charge
 	local startCap, tip = cap(charge, "StartCap"), cap(charge, "ChargeTip")
 	startCap.Position = UDim2.fromScale(0.5, 0.5 - STYLE.Radius / STYLE.Diameter)
 	local motes: { Frame } = {}
@@ -237,8 +232,6 @@ function Reticle.create(parent: Instance): Frame
 		sheen = sheen,
 		sheenStroke = sheenStroke,
 		sheenMask = sheenMask,
-		pulse = pulse,
-		pulseStroke = pulseStroke,
 	}
 	return root
 end
@@ -247,24 +240,10 @@ function Reticle.setCharge(value: number?)
 	progress = if value then math.clamp(value, 0, 1) else nil
 end
 
--- One thin ring closes in on the crosshair when the slug is back. The aim mark is untouched.
-function Reticle.pulseReady()
-	pulseAge = 0
-end
-
 function Reticle.step(dt: number)
 	local current = ring
 	if not current then
 		return
-	end
-	pulseAge += dt
-	local pulsing = pulseAge < STYLE.PulseTime
-	current.pulse.Visible = pulsing
-	if pulsing then
-		local t = pulseAge / STYLE.PulseTime
-		local size = (STYLE.Radius * 2 / STYLE.Diameter) * (1.35 - 0.35 * (1 - (1 - t) ^ 2))
-		current.pulse.Size = UDim2.fromScale(size, size)
-		current.pulseStroke.Transparency = 0.2 + 0.8 * t * t
 	end
 	local selectedStyle = CrosshairStyles.find(player:GetAttribute("CrosshairStyle"))
 	local selectedColor = CrosshairStyles.color(player:GetAttribute("CrosshairColor"))
@@ -281,7 +260,10 @@ function Reticle.step(dt: number)
 		then STYLE.FirstPersonScale
 		else STYLE.ThirdPersonScale
 	local value = progress
-	current.root.Visible = value ~= nil
+	current.root.Visible = value ~= nil and STYLE.ChargeRing
+	if not STYLE.ChargeRing then
+		return
+	end
 	if value == nil then
 		chargeAge, fullTime, wasFull = 0, 0, false
 		current.scale.Scale = 1

@@ -1,5 +1,26 @@
 # Project memory
 
+## 2026-11-01 — Face, clean charge crosshair and ADS
+
+- **Confirmed:** owner chose the clean crosshair from four charge-display options. Asked for three auto-cycling facial expressions with blinks, eye and mouth motion. Asked for quick, frictionless Valorant-style ADS with a clear pane and their own crosshair.
+- **Owner follow-up:** expressions are good. Third-person ADS rejected as buggy and removed. Frame must use the exact shape of the owner's Valorant screenshot, in black, opened by a clean mechanism on the gun.
+- **Second follow-up:** hull outlines morphed with the viewing angle, so lid outlines are now painted into the skin. Scope frame only, 30% smaller, smoother open and close.
+- **Third follow-up:** owner: resting eyes and blink were "off-putting" rather than "tired and sick and lazy", and one lid looked malformed. Lids, rest pose, blink and gaze retuned; values are on the P panel under Floppy face.
+- **Fourth follow-up:** owner: "finally, it is good" on the eyes. Full-charge glow must be diffused and "ping and go away"; the ring on slug return was disliked and is removed.
+- **Fifth follow-up:** owner wants the big Floppy by spawn kept. Asked for a brighter ping, then decided against the ping: "we need to figure out a different way to do this whole charge up mechanic", because vibration is too hard to feel while running and it is now the only gauge of shot power. Owner chose the three-stage wind-up (count clunks; "more skill based") and a 25% quicker charge, 0.6 s. Implemented; the ping is removed.
+- **Accuracy:** owner reported shots landing bottom-right. Cause was droop plus the gun's offset, not a bug in the aim ray. The owner then made this a mechanic: one and two charges keep droop and shorter reach, and only a full charge lands on the crosshair, which rewards counting kicks. Taps must stay useful.
+- **Decided, for the owner to overrule:** one-handed ADS; no movement-speed penalty. Expressions are drowsy, smiling and surprised.
+- **Implemented/verified:** see [status](status.md), [ADR 0019](decisions/0019-one-handed-ads.md) and [evidence](evidence/2026-11-01-face-and-ads.json). Rollback IDs for the previous upload are in ignored `private-assets/floppy/before-face-rig`.
+- **Unresolved:** see status. Only Floppy has a face rig; other slugs do not exist yet.
+
+## 2026-11-01 — Second feedback round
+
+- **Confirmed:** owner likes the burrow animation; stain circle removed pending a different impact effect; underside must match the body and have slug folds; idle arms lower; idle gun 30° up; charge light spins inside a still spiral; return burst replaced by a soft gloom.
+- **Implemented/verified:** see [status](status.md) and [evidence](evidence/2026-11-01-second-feedback-round.json). Rollback IDs for the previous upload are in ignored `private-assets/floppy/before-folded-underside`.
+- **Confirmed permanent:** Floppy is 1 stud outside the gun and keeps the current design; the owner corrected "all slugs" to Floppy only. Charge also got a gun-only vibration and a 6 turns/s light.
+- **Confirmed:** Floppy buffed "so they're not completely useless": 7 damage (was 5), 65-115 studs/s (was 55-100), drag 1 (was 1.2). Gravity kept so it still droops.
+- **Unresolved:** owner verdicts; goo beads on impact were kept because only the circle was named; not committed until the owner asks.
+
 ## 2026-11-01 — Review response built
 
 - **Confirmed:** owner took most of the review: gun-tip shots, return cue, tuning panel, more flip tilt, landing reaction, rounded underside, belly skid, steep rock fix, left-aim fix, idle arms, and asked for a much livelier burrow. Sound later. Expects at most 12 players per map. Field-of-view framing already checked by the owner.

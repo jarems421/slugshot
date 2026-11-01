@@ -1296,6 +1296,9 @@ function Presentation.start(clips: Clips.Library)
 				character:GetAttribute("BlasterRecoilStyle")
 			)
 			pose.RightShoulder = follow.Rotation * (pose.RightShoulder or IDENTITY)
+			if character == Players.LocalPlayer.Character then
+				pose.RightShoulder = Recoil.armWindup(os.clock()).Rotation * pose.RightShoulder
+			end
 		end
 		for _, limb in A.FoldLimbs do
 			pose[limb[1]] = chord(pose[limb[1]], pose[limb[2]])

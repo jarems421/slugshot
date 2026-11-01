@@ -108,6 +108,8 @@ local function animate(state: State, clock: number, wiggle: number, squash: numb
 				joint.side,
 				math.rad(14) * squash + math.rad(22) * math.sin(at * 0.8 + sign) * w
 			)
+		else
+			continue -- the face belongs to FloppyFace
 		end
 		-- All duplicate skeletons, including eyes and ink, receive their own local axes.
 		bone.Transform = value

@@ -8,18 +8,24 @@ Newer entries below explain how each value was reached; earlier values are histo
 | --- | --- | --- |
 | First-person running | Real animated arms, forward lean, stride-synced bounce | Moved on 2026-11-01; treat as baseline |
 | Flip camera | Spot default; Anchor and Ride in Settings. Front/back tilt raised from 8° to 13° at the owner's OK | Spot accepted; new tilt verdict pending |
-| First-person idle | Arms low by the sides, hands and gun in the lower view, slight lean, gun tipped down | First pass; verdict pending |
+| First-person idle and arms | Owner's own panel values are the defaults: see `Tuning.luau` | **Owner-set** |
 | First-person landing | View dips with fall speed (0.21 studs on a plain jump) and hands trail it | Verdict pending |
 | Shot origin | Leaves the actual gun tip in every view | Verdict pending |
-| Slug return | Crosshair ring pulse, canister glow, slot flash when the cooldown ends | Verdict pending |
+| Slug return | Soft shapeless gloom at the canister and a slot flash. Burst and crosshair ring both rejected and removed | Gloom verdict pending |
+| Charge spiral | Spiral stays still; light inside speeds up evenly with charge to 6 turns/s, holds at full, coasts down after the shot. Gun alone vibrates, growing with charge; aim and crosshair untouched | Verdict pending |
+| Impact | Stain circle removed, goo beads kept; owner plans a different impact effect | Owner direction |
 | Crosshair | Seven styles, colour, 75-140% size, centred resize | Liked; centred resize not yet confirmed |
-| Charge ring | Soft white ring, fine vibration, moving highlight | Liked; rims and highlight not explicitly confirmed |
-| Third-person grip | 9° down, 0.18 studs up, 0.06 out | "Much better"; housing near trigger still slightly chunky, leave unless a clean fix appears |
+| ADS | First person only, hold right mouse: one-handed, 1.25x zoom; a pod on the gun opens and projects a black Valorant-shaped frame with no glass, 30% smaller after owner feedback, with an eased open and close. Third-person ADS removed. [ADR 0019](decisions/0019-one-handed-ads.md) | Reworked to owner's reference; verdict pending |
+| Charge display | **Owner chose a clean crosshair:** **three-stage wind-up:** smooth steps at 1/3, 2/3 and full on a 0.665 s charge, 0.22 s apart. Each step holds: the gun eases back and up and the view tightens, to 3.5 degrees at full. The vibration grows with each step and strengthens while moving, and controllers get a rumble. Sharp jolts were rejected as "bap bap bap". Shot power snaps to three levels: see Shot levels. The ping and all crosshair charge effects are removed. The old ring is off via `STYLE.ChargeRing` in `Reticle` | Owner's choice over other options; feel verdict pending |
+| Third-person grip | 30° down, 0.15 studs up, 0.30 out; first-person grip 0.30 toward fingers | **Owner-set** on the panel |
 | Third-person aiming arm | Upper body turns up to 45° toward left-side targets; front/rear sectors, 40° inward limit, 0.22-stud shoulder shift | Owner asked for this fix; verdict pending |
 | First-person shooting angle | 88% angle settling while charging/firing; arm keeps moving | Owner agreed the approach, moved on |
 | Recoil | Kick up (22-32° gun, default) or Flip & catch in Settings | Owner moved on without further complaint; not explicit approval |
-| Fired slug size | 0.85 studs outside the barrel; hit radius still 0.3 | Owner moved on |
-| Recovery | 1.5 s from impact: belly skid, wiggly roll to back, hop, screwing head-first dig with moving ground and debris. Rounded dark underside | Owner asked for all of this; verdict pending |
+| Floppy strength | 7 damage; 65-115 studs/s; drag 1, gravity unchanged. Flat shots reach about 17-20% further, angled shots about 30-35% | Owner direction; verdict pending |
+| Shot levels and accuracy | **Owner's mechanic, 2026-11-01.** Level 1: tap or up to the second kick, 65 studs/s, 30% droop correction. Level 2: second kick, 88 studs/s, 60%. Level 3: third kick, 115 studs/s, lands on the crosshair within reach (within about 0.12 studs measured). Rewards full charges without making taps useless. Damage stays 7 at every level | Owner direction; feel verdict pending |
+| Fired slug size | **1 stud outside the barrel, permanent for Floppy**; loaded size and 0.3 hit radius unchanged | Owner confirmed |
+| Recovery | 1.5 s from impact: belly skid, wiggly roll to back, hop, screwing head-first dig with moving ground and debris | **Owner likes the burrow animation** |
+| Floppy underside | Rounded, body colour, soft folds straight across | Dark version rejected; new one pending |
 
 **Review response implemented, 2026-11-01:** [what the owner took from the review](reviews/2026-11-01-combat-feel-review.md), [evidence and limits](evidence/2026-11-01-review-pass.json).
 
@@ -102,7 +108,7 @@ This avoids fast return traffic in a crowded match and works with slug switching
 ## Confirmed (owner, 2026-10-31)
 
 - Every slug shares one shot: tap fires at a decent speed; holding charges for more speed, an earlier transformation and less drop. Standard slugs always transform (later slugs); no failed transforms for now. Floppy is the weakest slug and never transforms.
-- Floppy: 5 damage against 100 base HP, a comedic splat, no knockback. It flies slowly, droops and does not travel far.
+- Floppy: **7 damage against 100 base HP (owner raised it from 5, 2026-11-01, "so they're not completely useless")**, no knockback. It is still the weakest slug and still droops, but flies faster and further than the first proposal.
 - Ammo: a cooldown from the moment of firing is the reload rule (currently 1.5 s). **Recovery design revised by the owner, 2026-11-01:** recover and burrow locally, independently of cooldown readiness. This supersedes hopping back and puffing away when the timer expires; the [new recovery design](slugs/recovery.md) is implemented for Floppy.
 - The current map is a placeholder, not a source of truth. The target range is explicitly temporary.
 
@@ -114,7 +120,7 @@ This avoids fast return traffic in a crowded match and works with slug switching
 
 ## Proposed (tuning, owner playtest)
 
-Floppy launch 55 (tap) to 100 (full) studs/s, gravity 70, drag 1.2, hit radius 0.3, 2 tumbles/s, 0.85-stud flight size; full charge 0.8 s. Recovery uses the local fall/skid/wriggle/crouch/hop/burrow sequence, with phase shares in `Combat.Recovery` and its total in `Tuning`. All values are in `experiments/combat/shared/init.luau`.
+Floppy launch 65, 88 and 115 studs/s by level, gravity 70, drag 1, hit radius 0.3, 2 tumbles/s, 1-stud size outside the gun (owner-confirmed); full charge 0.665 s. Recovery uses the local fall/skid/wriggle/crouch/hop/burrow sequence, with phase shares in `Combat.Recovery` and its total in `Tuning`. All values are in `experiments/combat/shared/init.luau`.
 
 ## Unresolved
 
@@ -209,6 +215,7 @@ The interpretations below are **Considering**, supported by the iterations in th
 - **Numeric checks pass but the effect looks wrong:** counts and motion passed while burrow debris looked black, round and plank-like. Inspect a close-up at real scale before calling an effect done, on more than one floor type. `Part.Shape = Ball` forces a uniform size; use a `SpecialMesh` sphere for lumps.
 - **Literal `?` in notes:** piping non-ASCII text through a PowerShell here-string to Python corrupts it. Write notes with an editor or a UTF-8 script file, then search for stray `?`.
 - **Wrong Studio log:** with several Studio windows open, "newest log" can belong to another window. Search by a unique probe tag.
+- **Hole on a domed cap:** mesh rows meeting at one point, and any radial or dark marking, read as a hole. Thin the rows toward the centre, keep the body colour and run details straight across.
 - **First burrow froze for 0.7 s (seen once; cause inferred):** debris materials load on first use. `SlugVisuals` shows each once, nearly invisible, at startup; 10 shots across two fresh sessions then stayed under 20 ms.
 - **Stale probe results:** one capture read the previous run's log and reported old numbers. Filter logs by creation time and distrust identical results.
 - **Stale playtest:** close the exact generated range window, rebuild after closure, reopen. Saving stale Studio state can overwrite a new build. Preserve unrelated windows and keep this temporary target area.

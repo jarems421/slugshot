@@ -8,6 +8,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
+local HapticService = game:GetService("HapticService")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local Visuals = require(script.Parent:WaitForChild("SlugVisuals"))
 local Viewmodel = require(script.Parent:WaitForChild("Viewmodel"))
@@ -16,6 +18,10 @@ Viewmodel.start()
 local player = Players.LocalPlayer
 local movement = player.PlayerScripts:WaitForChild("MovementSandbox")
 local AimCursor = (require :: any)(movement:WaitForChild("AimCursor"))
+local Tuning = (require :: any)(movement:WaitForChild("Tuning"))
+local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
+local Ads = (require :: any)(movement:WaitForChild("Ads"))
+local FirstPerson = (require :: any)(movement:WaitForChild("FirstPerson"))
 local Reticle = (require :: any)(movement:WaitForChild("Reticle"))
 local remote = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
 local SLOT = 1
@@ -149,7 +155,10 @@ end
 
 -- The shoulder, the aim point under the cursor (the crosshair when shift-locked) and
 -- the muzzle a gun's reach along the line to it.
-local function aim(): (Vector3?, Vector3?)
+-- Lift when the aim point is out of reach: it lands short, but on the line of the crosshair.
+local OUT_OF_REACH_LIFT = math.tan(math.rad(25))
+
+local function aim(charge: number): (Vector3?, Vector3?)
 	-- Shots leave the actual gun's muzzle, in every view.
 	local character = player.Character
 	local camera = workspace.CurrentCamera
@@ -176,10 +185,24 @@ local function aim(): (Vector3?, Vector3?)
 	if muzzle then
 		-- A point behind the muzzle (a wall between camera and gun) keeps the camera's line.
 		local toward = point - muzzle
-		return muzzle,
-			if toward.Magnitude > 0.5 and toward.Unit:Dot(ray.Direction) > 0
-				then toward.Unit
-				else ray.Direction
+		if toward.Magnitude <= 0.5 or toward.Unit:Dot(ray.Direction) <= 0 then
+			return muzzle, ray.Direction
+		end
+		local straight = toward.Unit
+		if not hit then
+			return muzzle, straight -- aiming at open sky: there is nothing to land on
+		end
+		-- Slugs droop and leave from the gun, off to one side, so a straight shot lands low and
+		-- on the gun's side. A full charge launches along the arc that ends on the crosshair's
+		-- point; lower levels only part-correct it, so they land low and fall short.
+		local arc = Combat.aimedDirection(muzzle, point, slug, charge)
+			or (straight + Vector3.yAxis * OUT_OF_REACH_LIFT).Unit
+		local level = Combat.level(charge)
+		local correction = if level == 1
+			then Tuning.values.shotArcOne
+			elseif level == 2 then Tuning.values.shotArcTwo
+			else Tuning.values.aimArc
+		return muzzle, straight:Lerp(arc, correction).Unit
 	end
 	local from = torso.CFrame * shoulder.C0.Position
 	local toward = point - from
@@ -196,12 +219,12 @@ end
 local function fire()
 	charging = false
 	local tool = blaster()
-	local origin, direction = aim()
+	local now = os.clock()
+	local charge = math.clamp((now - chargeStart) / Tuning.values.chargeTime, 0, 1)
+	local origin, direction = aim(charge)
 	if not tool or not origin or not direction then
 		return
 	end
-	local now = os.clock()
-	local charge = math.clamp((now - chargeStart) / Combat.ChargeTime, 0, 1)
 	nextId += 1
 	readyAt = now + Combat.Cooldown
 	aimDirection, pointUntil = direction, now + POINT_HOLD
@@ -230,6 +253,67 @@ local function fire()
 	})
 end
 
+-- The light inside the charger spiral sweeps round faster as the charge builds, holds top
+-- speed at full charge and coasts down after the shot. The spiral mechanism never moves.
+-- Only welds move, so the first-person gun copies follow.
+type SpinPart = { weld: Weld, base: CFrame, part: BasePart }
+type Spiral = { lights: { SpinPart }, angle: number, speed: number, lit: boolean }
+local spirals: { [Tool]: Spiral } = setmetatable({}, { __mode = "k" }) :: any
+local SPIRAL_LIGHT = { 0.05, 0.45, 0.68, 0.84 } -- transparency: the leading bar, then its trail
+local SPIRAL_TRAIL = 0.016 -- seconds behind the leader per trailing bar
+local SPIRAL_COAST = 2.2 -- 1/s; how quickly it winds down after the shot
+
+local function spiralOf(tool: Tool): Spiral?
+	local spiral = spirals[tool]
+	if not spiral then
+		local lights: { SpinPart } = {}
+		for index = 1, #SPIRAL_LIGHT do
+			local part = tool:FindFirstChild(`ChargerLight{index}`)
+			local weld = part and part:FindFirstChildOfClass("Weld")
+			if part and part:IsA("BasePart") and weld then
+				table.insert(lights, { weld = weld, base = weld.C0, part = part })
+			end
+		end
+		if #lights == 0 then
+			return nil
+		end
+		spiral = { lights = lights, angle = 0, speed = 0, lit = false }
+		spirals[tool] = spiral
+	end
+	return spiral
+end
+
+local function stepSpiral(tool: Tool, charge: number?, dt: number)
+	local spiral = spiralOf(tool)
+	if not spiral then
+		return
+	end
+	local top = Tuning.values.spiralSpeed * 2 * math.pi
+	if charge then
+		-- The light steps up with each clunk, starting slow so tap fire stays calm.
+		local wanted = top * (0.2 + 0.8 * Recoil.stage() / 3)
+		spiral.speed += (wanted - spiral.speed) * (1 - math.exp(-14 * dt))
+	else
+		spiral.speed *= math.exp(-SPIRAL_COAST * dt)
+		if spiral.speed < 0.3 then
+			spiral.speed = 0
+		end
+	end
+	if spiral.speed == 0 and not spiral.lit then
+		return
+	end
+	spiral.lit = spiral.speed > 0
+	spiral.angle = (spiral.angle + spiral.speed * dt) % (2 * math.pi)
+	-- Brightens quickly, so a tap still flickers and a charge clearly glows.
+	local shown = math.clamp(spiral.speed / math.max(top, 1e-3) * 2.5, 0, 1)
+	for index, light in spiral.lights do
+		local angle = spiral.angle - spiral.speed * SPIRAL_TRAIL * (index - 1)
+		light.weld.C0 = light.base * CFrame.Angles(angle, 0, 0)
+		local solid = 1 - (1 - SPIRAL_LIGHT[index]) * math.clamp(Tuning.values.spiralLight, 0, 1)
+		light.part.Transparency = 1 - (1 - solid) * shown
+	end
+end
+
 local function pressed(input: InputObject): boolean
 	return input.UserInputType == Enum.UserInputType.MouseButton1
 		or input.KeyCode == Enum.KeyCode.ButtonR2
@@ -248,6 +332,26 @@ local function releaseCharge()
 		fire()
 	end
 end
+
+-- Hold to aim down sights, first person only. Otherwise the button keeps its camera use.
+ContextActionService:BindActionAtPriority(
+	"SlugshotADS",
+	function(_, state)
+		if state == Enum.UserInputState.Begin then
+			if blaster() and FirstPerson.active() and not AimCursor.menuOpen() then
+				Ads.set(true)
+				return Enum.ContextActionResult.Sink
+			end
+		elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+			Ads.set(false)
+		end
+		return Enum.ContextActionResult.Pass
+	end,
+	false,
+	Enum.ContextActionPriority.High.Value,
+	Enum.UserInputType.MouseButton2,
+	Enum.KeyCode.ButtonL2
+)
 
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed or not pressed(input) then
@@ -355,8 +459,24 @@ local function setCanister(tool: Tool, visible: boolean)
 	end
 end
 
+-- On a controller each clunk is also a rumble, strongest at full charge.
+local RUMBLE = { 0.35, 0.55, 1 }
+Recoil.onClunk(function(stage: number)
+	local pad = Enum.UserInputType.Gamepad1
+	local motor = Enum.VibrationMotor.Large
+	if HapticService:IsVibrationSupported(pad) and HapticService:IsMotorSupported(pad, motor) then
+		HapticService:SetMotor(pad, motor, RUMBLE[stage])
+		task.delay(0.1, function()
+			HapticService:SetMotor(pad, motor, 0)
+		end)
+	end
+end)
+
+local lastSpiralStep = os.clock()
 RunService.RenderStepped:Connect(function()
 	local now = os.clock()
+	local spiralDt = now - lastSpiralStep
+	lastSpiralStep = now
 	local camera = workspace.CurrentCamera
 	if camera then
 		local cursor = AimCursor.point(camera)
@@ -367,18 +487,44 @@ RunService.RenderStepped:Connect(function()
 	if charging and (not tool or AimCursor.menuOpen()) then
 		charging = false
 	end
+	if Ads.wanted() and (not tool or not FirstPerson.active() or AimCursor.menuOpen()) then
+		Ads.set(false)
+	end
+	local action = character and character:GetAttribute("FirstPersonAction")
+	Ads.step(spiralDt, action == nil or action == "Slide")
+	if Ads.wanted() and not charging then
+		local _, direction = aim(0)
+		if direction then
+			aimDirection = direction
+		end
+	end
+	if tool then
+		stepSpiral(
+			tool,
+			if charging
+				then math.clamp((now - chargeStart) / Tuning.values.chargeTime, 0, 1)
+				else nil,
+			spiralDt
+		)
+	end
+	local body = character and character:FindFirstChild("HumanoidRootPart")
+	local moveWeight = if body and body:IsA("BasePart")
+		then Vector3.new(body.AssemblyLinearVelocity.X, 0, body.AssemblyLinearVelocity.Z).Magnitude / 16
+		else 0
 	if charging then
-		local charge = math.clamp((now - chargeStart) / Combat.ChargeTime, 0, 1)
+		local charge = math.clamp((now - chargeStart) / Tuning.values.chargeTime, 0, 1)
 		Reticle.setCharge(charge)
-		local _, direction = aim()
+		Recoil.setCharging(charge, moveWeight, spiralDt)
+		local _, direction = aim(charge)
 		if direction then
 			aimDirection = direction
 		end
 	else
 		Reticle.setCharge(nil)
+		Recoil.setCharging(0, moveWeight, spiralDt)
 	end
 	if character then
-		local point = if charging or now < pointUntil then aimDirection else nil
+		local point = if charging or Ads.wanted() or now < pointUntil then aimDirection else nil
 		if character:GetAttribute("BlasterPoint") ~= point then
 			character:SetAttribute("BlasterPoint", point)
 		end
@@ -405,8 +551,7 @@ RunService.RenderStepped:Connect(function()
 	end
 	local remaining = math.max(readyAt - now, 0)
 	if remaining <= 0 and wasCooling then
-		-- The slug is back in the gun: mark it on the slot and at the crosshair.
-		Reticle.pulseReady()
+		-- The slug is back in the gun: mark it on the slot. The canister glows from setCanister.
 		slotScale.Scale = 1.14
 		slotFlash.BackgroundTransparency = 0.45
 		TweenService:Create(slotScale, RETURN_TWEEN, { Scale = 1 }):Play()

@@ -1,0 +1,284 @@
+{
+  "date": "2026-11-01",
+  "requests": [
+    "Crosshair option 1: clean while charging, soft pulse then faint glow at full charge",
+    "Floppy mouth movement, blinking, eye movement and three smoothly cycling expressions",
+    "One-handed Valorant-style ADS with a clear pane and the player's own crosshair; third-person handling"
+  ],
+  "offline": "python tools/verify_combat.py passed; Floppy export reimport passed with 15 bones, standing height 0.935 studs",
+  "face_native_studio": {
+    "lid_slide_range_studs_on_3x_stand": [
+      0.0,
+      0.189
+    ],
+    "lower_lip_range_studs_on_3x_stand": [
+      0.016,
+      0.109
+    ],
+    "gaze_max_studs_on_3x_stand": 0.04
+  },
+  "ads_native_studio": {
+    "raise_to_90_percent_seconds": {
+      "first_person": 0.101,
+      "third_person": 0.103
+    },
+    "fov_degrees": [
+      72.0,
+      60.3
+    ],
+    "mouse_sensitivity_while_aiming": 0.8,
+    "shots_accepted": {
+      "first_person_tap_and_charged": true,
+      "third_person": true
+    },
+    "released": "FOV 72, sensitivity 1, free cursor restored in third person",
+    "holster_clears": true
+  },
+  "not_verified": [
+    "ADS while running, sliding, flipping and wall running.",
+    "Blink and expression motion quality in play; stretched lid texture is visible up close mid-blink.",
+    "Other players do not see the pane."
+  ],
+  "sources": [
+    "https://invenglobal.com/articles/11131/valorant-weapon-guide-the-phantom",
+    "https://www.gamepressure.com/valorant/rifles/zfd33e",
+    "https://1v9.gg/definitions/valorant/ads",
+    "https://primagames.com/gaming/how-to-aim-down-sights-use-ads-in-helldivers-2",
+    "https://twinfinite.net/guides/division-2-aim-down-sights-how/",
+    "https://giantbomb.com/wiki/Concepts/Over_the_Shoulder",
+    "https://www.nexusmods.com/starfield/mods/16852"
+  ],
+  "owner_follow_up": {
+    "request": "Remove third-person ADS; exact Valorant frame shape in black only; a mechanism on the gun that opens into the sight; clean up the eye outlines. Facial expressions approved.",
+    "frame": "Four corner brackets, measured from the owner's screenshot as shares of half-size: (0.24,1), (0.52,1), (1,0.66), (1,0.31), mirrored.",
+    "mechanism": "Doors, emitter, lens and prongs on welds; 0.26 s to open, 0.14 s to close; aiming itself is not delayed.",
+    "native_studio": {
+      "ads_blocked_in_third_person": true,
+      "first_person_shot_accepted": true,
+      "released": "FOV 72, sensitivity 1, lens hidden",
+      "stages": "viewed frozen at six stages with the open time slowed"
+    },
+    "not_verified": [
+      "The mechanism's motion at full speed; only slowed stages were viewed.",
+      "ADS while running, sliding and flipping."
+    ]
+  },
+  "owner_confirmed": [
+    "Owner screenshot shows a dummy reading 'Last hit 7' and 4.7 DPS."
+  ],
+  "second_follow_up": {
+    "request": "Eye outlines must stick to the lids from every angle; no cloudy glass; scope 30% smaller; much smoother open and close",
+    "eyes": "Hull removed around the eyes; outlines painted into the skin texture. Viewed from front, left, right, below and above in Studio.",
+    "scope": "Frame only; half-size 0.252 x 0.196 studs (was 0.36 x 0.28); frame blooms from 45% size out of the pod while drawing and fading in",
+    "timing_seconds": {
+      "scope_open": 0.42,
+      "scope_close": 0.3,
+      "gun_raise": 0.17,
+      "gun_lower": 0.15
+    },
+    "native_studio": {
+      "shot_accepted": true,
+      "gun_lowered_seconds": 0.15,
+      "pod_shut_seconds": 0.27,
+      "largest_gun_step_per_frame_at_60fps": 0.19
+    },
+    "limits": [
+      "Scope motion viewed as slowed stages; feel at full speed is for the owner to judge."
+    ]
+  },
+  "tired_eyes_follow_up": {
+    "request": "One lid looked malformed; blinking and resting eyes were off-putting rather than tired, sick and lazy",
+    "implemented": {
+      "mesh": "Reduction weighted to keep more detail round the eyes and mouth; body stays 8,000 triangles",
+      "lids": "One clean painted colour per lid, flat normal, darkening toward the rim; dark rim line on the front face only; soft olive contour on the rest",
+      "rest": "Lids 0.04 lower; outer corners droop 11 degrees",
+      "blink": "0.55 s with a brief hold (was 0.22 s), every 3-7 s (was 1.8-4.5 s)",
+      "eyes": "Slow drift mostly low, every 2.5-6 s, replacing quick darts"
+    },
+    "native_studio": "Resting face, several blink frames and expression cycling viewed on the display Floppy from the front. Earlier passes covered side views.",
+    "limits": [
+      "A darker band with a slight sky reflection can still show on the lid mid-blink.",
+      "A fully closed blink frame was not captured, and the motion was not judged at full speed."
+    ]
+  },
+  "ping_follow_up": {
+    "request": "Full-charge glow more diffused and not lasting; remove the ring when the slug returns; owner confirmed the eyes are good",
+    "implemented": "18 faint discs with sizes bunched toward the centre; 0.09 s rise and 0.55 s fade, held or not; ReadyPulse ring removed",
+    "native_studio": {
+      "peak_seconds_after_press": 0.91,
+      "gone_seconds_after_press": 1.4,
+      "still_charging_when_gone": true,
+      "ring_present": false
+    },
+    "note": "A shot checked only 0.2 s after release had not been acknowledged yet; the log shows no rejection and firing code was not changed."
+  },
+  "windup": {
+    "request": "Three-stage wind-up chosen by the owner over a ping: count the clunks to gauge power; must be felt while running and in third person; charge 25% quicker",
+    "implemented": {
+      "charge_seconds": [
+        0.8,
+        0.6
+      ],
+      "clunks": "Gun jolt and held notch, arm jolt, field-of-view tick and small push back; larger on the gun in third person",
+      "vibration": "Steps with each clunk; about 2.2x larger and slower while moving; also on the forearm",
+      "light": "Spin speed steps with each clunk",
+      "controller": "Rumble pulse per clunk through HapticService",
+      "removed": "Crosshair ping"
+    },
+    "native_studio": {
+      "clunk_seconds_after_press": {
+        "first_person": [
+          0.21,
+          0.43,
+          0.62
+        ],
+        "third_person": [
+          0.22,
+          0.4,
+          0.62
+        ]
+      },
+      "fov_dip_degrees": {
+        "first_person": 1.35,
+        "third_person": 1.17
+      },
+      "camera_turn_degrees_no_mouse": {
+        "first_person": 0.02,
+        "third_person": 0.0
+      },
+      "shots_accepted": true,
+      "tap_clunks": 0
+    },
+    "not_verified": [
+      "How the clunks feel, including while actually running; the test character stood still.",
+      "Controller rumble on real hardware.",
+      "Mobile: the range has no touch firing input yet, so touch has no wind-up."
+    ]
+  },
+  "accuracy": {
+    "owner_report": "Slugs always land a little bottom-right of the aim",
+    "cause": "Gravity. Slugs fall short while still on the gun's side of the crosshair line. Calculated flat-aim drop at 20 studs: 4.3 tap, 1.2 full.",
+    "fix": "Launch along the arc that passes through the crosshair's point (Combat.aimedDirection), using the same flight model the server judges. Tuning aimArc: 1 on, 0 off.",
+    "measured_landing_offset_studs_first_person": {
+      "before_tap": {
+        "8": [
+          0.09,
+          -0.17
+        ],
+        "20": [
+          0.03,
+          -1.9
+        ],
+        "35": "fell to the floor, 4.5 low"
+      },
+      "before_full": {
+        "8": [
+          0.07,
+          -0.07
+        ],
+        "20": [
+          0.03,
+          -0.76
+        ],
+        "35": [
+          0.01,
+          -3.14
+        ]
+      },
+      "after_tap": {
+        "8": [
+          0.1,
+          -0.09
+        ],
+        "20": [
+          0.03,
+          0.03
+        ],
+        "35": [
+          0.01,
+          0.16
+        ],
+        "55": "out of reach, falls short on the line"
+      },
+      "after_full": {
+        "8": [
+          0.07,
+          -0.01
+        ],
+        "20": [
+          0.03,
+          0.01
+        ],
+        "35": [
+          0.02,
+          0.04
+        ],
+        "55": [
+          0.01,
+          0.09
+        ]
+      },
+      "format": "[right, up]; hit radius is 0.3 studs"
+    },
+    "third_person_after": "Same, within 0.10 studs right and 0.17 up wherever in reach",
+    "limits": [
+      "Stationary shooter and wall. Moving targets still need leading.",
+      "Open sky has nothing to land on, so those shots fly straight."
+    ]
+  },
+  "smooth_windup": {
+    "owner_report": "Clunks barely noticeable running; standing they felt like 'bap bap bap'",
+    "implemented": "Sharp jolts replaced by eased steps that hold: gun moves back and up, view tightens to 3.5 degrees, soft swell on each step; vibration 3.5x while moving",
+    "not_verified": "Feel; not re-measured in play after the rework beyond the accuracy run"
+  },
+  "baked_panel_values": "Owner's panel screenshot: idle and running arms, arm size and grip. Sliders below the visible part were not seen and keep their defaults.",
+  "shot_levels": {
+    "owner_request": "Level by kicks: one charge travels less with more drop; two is better but not fully accurate; full charge lands on the crosshair. Taps must stay useful. Kick gaps 10-12% longer.",
+    "values": {
+      "speed_studs_per_s": [
+        65,
+        88,
+        115
+      ],
+      "arc_correction": [
+        0.3,
+        0.6,
+        1.0
+      ],
+      "charge_seconds": 0.665,
+      "kick_gap_seconds": 0.22
+    },
+    "measured_up_offset_studs_first_person": {
+      "12": {
+        "one": -0.35,
+        "two": -0.13,
+        "full": -0.01
+      },
+      "25": {
+        "one": -2.9,
+        "two": -0.92,
+        "full": 0.02
+      },
+      "40": {
+        "one": "floor",
+        "two": -3.11,
+        "full": 0.05
+      },
+      "60": {
+        "one": "floor",
+        "two": "floor",
+        "full": 0.12
+      }
+    },
+    "third_person_25_studs": {
+      "one": -3.15,
+      "two": -0.93,
+      "full": 0.03
+    },
+    "server": "Last shot accepted, no rejections",
+    "limits": [
+      "Stationary shooter against a flat wall at eye height 4.5 studs.",
+      "Feel and balance are for the owner to judge."
+    ]
+  }
+}

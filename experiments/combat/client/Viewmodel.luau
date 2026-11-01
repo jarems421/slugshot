@@ -15,12 +15,18 @@ local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
 local FirstPersonFlip = (require :: any)(movement:WaitForChild("FirstPersonFlip"))
 local AcrobaticCamera = (require :: any)(movement:WaitForChild("AcrobaticCamera"))
 local Tuning = (require :: any)(movement:WaitForChild("Tuning"))
+local Ads = (require :: any)(movement:WaitForChild("Ads"))
+local AdsSight = require(script.Parent:WaitForChild("AdsSight"))
 local Viewmodel = {}
 local LIMBS = { "Left Leg", "Right Leg" }
 local CROP_PER_LENGTH = 0.5915 / 1.0738 -- preserves crop/hand proportions at any arm length
 local POSE_RATE = 22 -- short render-space follow-through; camera/mouse look stays immediate
 local RUN_POSE_RATE = 90 -- restore the earlier short run follow, including at full pace
 local RUN_HAND_FRAME = Vector3.new(0, 0.12, 0.25)
+-- One-handed ADS: the arm reaches in from the lower right to the centred gun.
+local ADS_ARM = Vector3.new(-0.56, 0.42, -0.72).Unit
+local ADS_KICK_KEPT = 0.3 -- recoil is calmer through the sight; the camera never moves
+local ADS_ARM_WIDTH = 0.8 -- the arm is nearer the eye here, so it slims to keep the view open
 local RUN_CHEST_WEIGHT = 0.25
 local RUN_POSTURE_DEPTH = 0.25 -- let the eyes move over the shoulders, rather than carrying them ahead
 local RUN_POSTURE_LIFT = 0.15
@@ -43,7 +49,6 @@ local cachedTool: Tool? = nil
 local muzzleOffset = Vector3.zero
 local canisterOffset = Vector3.zero
 local visibleParts: { [BasePart]: boolean } = {}
-
 local function equipped(): Tool?
 	local character = player.Character
 	if character then
@@ -318,6 +323,16 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			target = CFrame.new(target.Position)
 				* target.Rotation:Lerp(settled, 0.88 * steadyWeight)
 		end
+		local ads = Ads.weight()
+		if arm.side == 1 and ads > 0 and handle and handle:IsA("BasePart") then
+			local up = -ADS_ARM
+			local right = (Vector3.xAxis - up * up.X).Unit
+			local reach = CFrame.fromMatrix(Vector3.zero, right, up, right:Cross(up))
+			local grip = CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + T.gripRelease), 0)
+				* sourceFrame:ToObjectSpace(handle.CFrame)
+			local gunAt = Vector3.new(0, -T.adsGunDown, -T.adsGunForward)
+			target = target:Lerp(CFrame.new(gunAt - reach * grip.Position) * reach, ads)
+		end
 		local rate = if character:GetAttribute("BlasterPoint") ~= nil
 			then POSE_RATE * 2
 			elseif flipping and AcrobaticCamera.enabled() and AcrobaticCamera.status() < 3 then 72
@@ -334,13 +349,16 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 				os.clock(),
 				character:GetAttribute("BlasterRecoilCharge"),
 				character:GetAttribute("BlasterRecoilStyle")
+			):Lerp(CFrame.identity, (1 - ADS_KICK_KEPT) * Ads.weight()) * Recoil.armWindup(
+				os.clock()
 			)
 			rendered = CFrame.new(blended.Position + follow.Position)
 				* follow.Rotation
 				* blended.Rotation
 		end
 		local armFrame = camera.CFrame * rendered
-		arm.copy.Size = Vector3.new(fullSize.X, fullSize.Y - crop, fullSize.Z)
+		local slim = 1 + (ADS_ARM_WIDTH - 1) * Ads.weight()
+		arm.copy.Size = Vector3.new(fullSize.X * slim, fullSize.Y - crop, fullSize.Z * slim)
 		arm.copy.Color = source.Color
 		arm.copy.CFrame = armFrame * CFrame.new(0, -(crop + arm.copy.Size.Y / 2), 0)
 		local fadeAlpha = 1 - math.exp(-16 * dt)
@@ -358,6 +376,12 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	-- hidden tool's joint here depended on the next physics update and weakened
 	-- the fast kick. Keeping this after smoothing also preserves the toss/catch.
 	if handle and handle:IsA("BasePart") then
+		-- Through the sight the gun sits dead centre in view, level with the aim.
+		local ads = Ads.weight()
+		if ads > 0 then
+			local sighted = camera.CFrame * CFrame.new(0, -T.adsGunDown, -T.adsGunForward)
+			gunMap = gunMap:Lerp(sighted * handle.CFrame:Inverse(), ads)
+		end
 		local held = gunMap * handle.CFrame
 		-- The idle hands lift forward into view; level the gun so it still hangs relaxed.
 		local relaxed = (1 - straightWeight) * postureWeight
@@ -368,8 +392,8 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			os.clock(),
 			character:GetAttribute("BlasterRecoilCharge"),
 			character:GetAttribute("BlasterRecoilStyle")
-		)
-		gunMap = held * kick * held:Inverse() * gunMap
+		):Lerp(CFrame.identity, (1 - ADS_KICK_KEPT) * ads)
+		gunMap = held * kick * Recoil.vibration(os.clock()) * held:Inverse() * gunMap
 	end
 	visualHandle = nil
 	local gunFade = 1 - BlasterAnimator.handVisibility(character)
@@ -413,6 +437,9 @@ function Viewmodel.start()
 				end
 				table.clear(visibleParts)
 				drop()
+				if camera then
+					AdsSight.update(camera, equipped(), nil, dt)
+				end
 				return
 			end
 			local tool = equipped()
@@ -469,6 +496,7 @@ function Viewmodel.start()
 				end
 			end
 			visibleParts = nextParts
+			AdsSight.update(camera, tool, visualHandle, dt)
 		end
 	)
 end

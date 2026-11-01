@@ -61,9 +61,10 @@ Dive-and-resurface was offered as a species-specific idea and is unused. Burrowi
 Shares of 1.5 s: impact 0.06, skid 0.24, wriggle and roll 0.5, crouch 0.07, hop 0.2, burrow 0.43. Earlier passes ran about 2.7-3 s; the 1.0-second dig the owner called almost perfect is now 0.43 s, so check that it still reads.
 
 - **Livelier:** a wave runs up the body with each part late behind the last, on all bones. The roll flops with a slight overshoot and small bounces. The dig bites down on three strokes, screwing about 38° side to side, in time with the ground's heave.
-- **Rounded underside:** a dark dome replaces the flat base. It sits below the ground plane, so the standing look is unchanged.
+- **Rounded underside:** a dome in the body colour with soft folds straight across replaces the flat base. It sits below the ground plane, so the standing look is unchanged. The first dark version was rejected.
+- **Owner verdict:** "I like the burrow animation. You've done good with that." The stain circle on first impact is removed; the owner plans a different effect.
 - **Steep rock:** the slug glances off faces too steep to stand on and keeps sliding to a floor. If wedged with no floor in reach after 1.2 s it digs into the rock it is stuck on; that fallback has not been exercised in a test.
 - **Ledges:** debris pieces sit on the real ground under them and skip thin air.
 - **Tuning:** total time, skid length and wiggle are on the P panel.
 
-[Evidence and limits](../evidence/2026-11-01-review-pass.json), [poses](../evidence/2026-11-01-floppy-lively-poses.png), [underside](../evidence/2026-11-01-floppy-underside.png). Owner verdict pending.
+[Evidence and limits](../evidence/2026-11-01-review-pass.json), [poses](../evidence/2026-11-01-floppy-lively-poses.png), [underside](../evidence/2026-11-01-floppy-underside.png), [in game](../evidence/2026-11-01-floppy-underside-in-game.png). New underside verdict pending.

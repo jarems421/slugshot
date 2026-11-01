@@ -163,6 +163,9 @@
         },
         "Combat": {
           "$path": "experiments/combat/client"
+        },
+        "FloppyFace": {
+          "$path": "experiments/creatures/floppy/client/FloppyFace.client.luau"
         }
       }
     },

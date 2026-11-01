@@ -29,6 +29,7 @@ from mathutils.geometry import barycentric_transform
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import ROOT
 from blender_pipeline import EXPORT_SETTINGS
+from build_floppy import EYE_DIM, belly_folds, eye_basis, eye_local, mouth_local, smoothstep
 
 SOURCE = ROOT/"assets/source/slugs/models/floppy/floppy-repaired.blend"
 OUT = ROOT/"build/slugs/floppy/roblox"
@@ -51,12 +52,24 @@ TORSO_STRETCH = 0.25
 STRETCH_TOP = 1.25
 SKIN_ROUGHNESS = 0.22
 # Rolled or diving, the flat base read as a "sawn off disc" (owner, 2026-11-01). Dome it below the
-# ground plane, where it stays hidden while standing, and darken it. Source units.
+# ground plane, where it stays hidden while standing. Body colour with folds running straight across
+# it like a slug's foot: anything radial or dark converges on the middle and reads as a hole. Source units.
 UNDERSIDE_DEPTH = 0.3
+FACE_DETAIL_GROUP = "face_detail"
+FACE_DETAIL_WEIGHT = 0.85
+EYE_INK_CLEAR = 1.3  # in eye radii: no hull at all this close to an eye
+EYE_INK_FRONT = 1.6  # and none on front-facing skin out to here; the head's outer outline stays
+LID_LINE = 0.014  # painted eyelid rim, source units
+LID_LINE_COLOUR = (0.045, 0.045, 0.05)
+LID_LINE_FACING = 0.55
+LID_CONTOUR_COLOUR = (0.27, 0.29, 0.14)  # the rest of each lid: a soft contour, not an ink ring
+LID_CONTOUR_STRENGTH = 0.7
 UNDERSIDE_FLAT_Z = 0.012
-UNDERSIDE_RINGS = 10
-UNDERSIDE_DARK = (0.31, 0.30, 0.20)
-UNDERSIDE_DARK_TOP = 0.03
+UNDERSIDE_RINGS = 28
+UNDERSIDE_ROW_SPACING = 0.04
+UNDERSIDE_BLEND_TOP = 0.03
+UNDERSIDE_FOLD_SPACING = 0.2
+UNDERSIDE_FOLD_DEPTH = 0.03
 EYE_ROUGHNESS = 0.08
 FPS = 24
 LOOP_SECONDS = 12.0
@@ -74,20 +87,42 @@ def select_only(objs, active=None):
     bpy.context.view_layer.objects.active = active or objs[0]
 
 
-def reduce(obj, target):
+def reduce(obj, target, keep=None):
     select_only([obj])
     mod = obj.modifiers.new("Reduce", "DECIMATE")
     mod.ratio = min(1.0, target/triangles(obj))
+    if keep:
+        # Decimate reads a higher weight as easier to collapse, and zero as never collapse.
+        mod.vertex_group = keep
     bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
-def low_copy(high, name, target):
+def face_detail_group(high):
+    """Weights the reduction away from the lids and mouth, whose rims must stay clean to deform well."""
+    co = np.empty(len(high.data.vertices)*3)
+    high.data.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    p = np.stack([co[:, 0], co[:, 2], -co[:, 1]], -1)
+    near = np.zeros(len(p), dtype=bool)
+    for side in (-1.0, 1.0):
+        near |= np.linalg.norm(eye_local(p, side)/EYE_DIM, axis=1) < 1.45
+    q = mouth_local(p)
+    near |= (np.abs(q[:, 0]) < 0.3) & (np.abs(q[:, 1]) < 0.16) & (p[:, 2] > 0.3)
+    group = high.vertex_groups.new(name=FACE_DETAIL_GROUP)
+    group.add(np.where(~near)[0].tolist(), 1.0, "REPLACE")
+    group.add(np.where(near)[0].tolist(), FACE_DETAIL_WEIGHT, "REPLACE")
+    return FACE_DETAIL_GROUP
+
+
+def low_copy(high, name, target, keep=None):
     low = high.copy()
     low.data = high.data.copy()
     low.name = name
     bpy.context.collection.objects.link(low)
-    reduce(low, target)
+    reduce(low, target, keep)
+    if keep:
+        low.vertex_groups.remove(low.vertex_groups[keep])
     repair_surface(low)
     select_only([low])
     bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
@@ -225,11 +260,12 @@ def body_heights(body):
     return co.reshape(-1, 3)[:, 2]
 
 
-def bake_vertex_values(body, name, rgb):
+def bake_vertex_values(body, name, rgb, precise=False):
     """Bake one colour per vertex onto the body's own UVs; returns the Non-Color image."""
     attr = body.data.color_attributes.new("gloss", "FLOAT_COLOR", "POINT")
     attr.data.foreach_set("color", np.column_stack([rgb, np.ones(len(rgb))]).astype(np.float32).ravel())
-    target = image(name, "Non-Color")
+    target = bpy.data.images.new(name, TEXTURE, TEXTURE, float_buffer=True) if precise else image(name, "Non-Color")
+    target.colorspace_settings.name = "Non-Color"
     mat = bpy.data.materials.new("BakeGloss")
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -265,6 +301,12 @@ def body_roughness_map(body):
     return target
 
 
+def underside_fold(x, y):
+    """Soft rolls with narrow creases, wandering slightly so they do not look ruled: 0 in a crease, 1 on a roll."""
+    wander = 0.05*np.sin(x*5.1 + 0.6) + 0.025*np.sin(x*11.3 + y*2.0)
+    return np.abs(np.sin((y + wander)*np.pi/UNDERSIDE_FOLD_SPACING))**0.6
+
+
 def round_underside(high):
     """Replace the flat base with a soft domed belly. The flat faces have almost no interior vertices, so the
     cap is rebuilt as rings from the rim; the rim keeps its place, so the standing silhouette is unchanged."""
@@ -295,33 +337,46 @@ def round_underside(high):
         bmesh.ops.holes_fill(bm, edges=[e for v in extra for e in v.link_edges if e.is_boundary], sides=0)
     centre = sum((v.co for v in rim), Vector())/len(rim)
     rim_uv = {v: next(l[uv_layer].uv.copy() for l in v.link_loops) for v in rim} if uv_layer else {}
+    radius = sum((v.co.xy - centre.xy).length for v in rim)/len(rim)
+    source = {v: v for v in rim}
     previous = rim
     faces = []
+
+    def stitch(outer, inner):
+        # Walk both rings together. Their counts differ, so rows thin out without gathering at one point.
+        i, j = 0, 0
+        while i < len(outer) or j < len(inner):
+            if j >= len(inner) or (i < len(outer) and (i + 0.5)/len(outer) <= (j + 0.5)/len(inner)):
+                faces.append(bm.faces.new((outer[i % len(outer)], outer[(i + 1) % len(outer)], inner[j % len(inner)])))
+                i += 1
+            else:
+                faces.append(bm.faces.new((outer[i % len(outer)], inner[(j + 1) % len(inner)], inner[j % len(inner)])))
+                j += 1
+
     for ring in range(1, UNDERSIDE_RINGS + 1):
         angle = ring/(UNDERSIDE_RINGS + 1)*math.pi/2
+        count = min(len(rim), max(8, round(math.tau*radius*math.cos(angle)/UNDERSIDE_ROW_SPACING)))
         current = []
-        for vert in rim:
-            new = bm.verts.new(Vector((centre.x + (vert.co.x - centre.x)*math.cos(angle),
-                                       centre.y + (vert.co.y - centre.y)*math.cos(angle),
-                                       vert.co.z - UNDERSIDE_DEPTH*math.sin(angle))), vert)
+        for k in range(count):
+            vert = rim[int(k*len(rim)/count)]
+            x = centre.x + (vert.co.x - centre.x)*math.cos(angle)
+            y = centre.y + (vert.co.y - centre.y)*math.cos(angle)
+            fold = float(underside_fold(x, y))*UNDERSIDE_FOLD_DEPTH*math.sin(angle)**2
+            new = bm.verts.new(Vector((x, y, vert.co.z - UNDERSIDE_DEPTH*math.sin(angle) - fold)), vert)
+            source[new] = vert
             current.append(new)
-        faces += [bm.faces.new((previous[i], previous[(i + 1) % len(rim)], current[(i + 1) % len(rim)], current[i]))
-                  for i in range(len(rim))]
+        stitch(previous, current)
         previous = current
-    apex = bm.verts.new(Vector((centre.x, centre.y, centre.z - UNDERSIDE_DEPTH)), rim[0])
-    faces += [bm.faces.new((previous[i], previous[(i + 1) % len(rim)], apex)) for i in range(len(rim))]
-    # Each ring inherits its rim vertex's colour, weights and material, so the dome joins without a seam.
-    stride = len(rim)
-    for index, face in enumerate(faces):
+    fold = float(underside_fold(centre.x, centre.y))*UNDERSIDE_FOLD_DEPTH
+    apex = bm.verts.new(Vector((centre.x, centre.y, centre.z - UNDERSIDE_DEPTH - fold)), rim[0])
+    source[apex] = rim[0]
+    faces += [bm.faces.new((previous[i], previous[(i + 1) % len(previous)], apex)) for i in range(len(previous))]
+    # Each new vertex inherits its rim vertex's colour coordinates, weights and material, so the dome joins cleanly.
+    for face in faces:
         face.smooth = True
         if uv_layer:
-            column = index % stride
             for loop in face.loops:
-                source = rim[column]
-                for k, candidate in enumerate((rim[column], rim[(column + 1) % stride])):
-                    if (loop.vert.co.xy - centre.xy).length_squared > 0 and                             abs((loop.vert.co.xy - centre.xy).normalized().dot((candidate.co.xy - centre.xy).normalized()) - 1) < 1e-6:
-                        source = candidate
-                loop[uv_layer].uv = rim_uv[source]
+                loop[uv_layer].uv = rim_uv[source[loop.vert]]
     bm.normal_update()
     if faces[-1].normal.z > 0:
         bmesh.ops.reverse_faces(bm, faces=faces)
@@ -332,26 +387,111 @@ def round_underside(high):
                         "depth": UNDERSIDE_DEPTH}, flush=True)
 
 
-def darken_underside(body, colour, normal):
-    """Fade the dome to one soft dark colour with a flat normal: its rings only stretch rim texture, which would
-    streak, and a plain shaded belly recedes instead of reading as a bright disc."""
-    t = np.clip((UNDERSIDE_DARK_TOP - body_heights(body))/(UNDERSIDE_DARK_TOP + UNDERSIDE_DEPTH*0.3), 0.0, 1.0)
-    mask = bake_vertex_values(body, "floppy-underside-mask", np.repeat((t*t*(3 - 2*t))[:, None], 3, axis=1))
-    amount = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
-    mask.pixels.foreach_get(amount)
-    amount = amount.reshape(TEXTURE, TEXTURE, 4)[:, :, 0]
-    # Grow the mask a few texels so UV-island seams on the dome cannot show the bright skin behind them.
+def paint_underside(body, colour, normal):
+    """Fade the dome to the body's own colour with painted folds. Its rings only stretch rim texture, which
+    would streak, so the colour is drawn per texel from baked positions rather than kept."""
+    co = np.empty(len(body.data.vertices)*3)
+    body.data.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    z = co[:, 2]
+    t = np.clip((UNDERSIDE_BLEND_TOP - z)/(UNDERSIDE_BLEND_TOP + UNDERSIDE_DEPTH*0.3), 0.0, 1.0)
+    baked = bake_vertex_values(body, "floppy-underside-coords",
+                               np.column_stack([(co[:, 0] + 1.2)/2.4, (co[:, 1] + 1.2)/2.4, t*t*(3 - 2*t)]), precise=True)
+    wall = ((z > 0.06) & (z < 0.4)).astype(float)
+    band = bake_vertex_values(body, "floppy-underside-band", np.repeat(wall[:, None], 3, axis=1))
+    data = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    baked.pixels.foreach_get(data)
+    data = data.reshape(TEXTURE, TEXTURE, 4)
+    x, y, amount = data[:, :, 0]*2.4 - 1.2, data[:, :, 1]*2.4 - 1.2, data[:, :, 2]
+    # Grow the mask a few texels so UV-island seams on the dome cannot show the skin behind them.
     for _ in range(4):
         amount = np.maximum.reduce([amount, np.roll(amount, 1, 0), np.roll(amount, -1, 0), np.roll(amount, 1, 1), np.roll(amount, -1, 1)])
-    amount = amount.reshape(-1, 1)
-    for img, flat in ((colour, UNDERSIDE_DARK), (normal, (0.5, 0.5, 1.0))):
-        pixels = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
-        img.pixels.foreach_get(pixels)
-        pixels = pixels.reshape(-1, 4)
-        pixels[:, :3] += amount*(np.array(flat, dtype=np.float32) - pixels[:, :3])
-        img.pixels.foreach_set(pixels.ravel())
-        img.update()
-    bpy.data.images.remove(mask)
+    side = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    band.pixels.foreach_get(side)
+    side = side.reshape(TEXTURE, TEXTURE, 4)[:, :, 0] > 0.9
+    pixels = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    colour.pixels.foreach_get(pixels)
+    pixels = pixels.reshape(TEXTURE, TEXTURE, 4)
+    # The median of the lower walls is the plain skin: spots and the cream belly panel are the minority.
+    skin = np.median(pixels[side][:, :3], axis=0)
+    painted = skin[None, None, :]*(0.8 + 0.25*underside_fold(x, y))[:, :, None]
+    pixels[:, :, :3] += amount[:, :, None]*(painted - pixels[:, :, :3])
+    colour.pixels.foreach_set(pixels.ravel())
+    colour.update()
+    # The folds are gentle, so any steep normal here is a bake miss at a UV seam, which would sparkle.
+    bent = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    normal.pixels.foreach_get(bent)
+    bent = bent.reshape(TEXTURE, TEXTURE, 4)
+    bad = (amount > 0.01) & ((np.abs(bent[:, :, 0] - 0.5) > 0.3) | (np.abs(bent[:, :, 1] - 0.5) > 0.3) | (bent[:, :, 2] < 0.75))
+    bent[bad, :3] = (0.5, 0.5, 1.0)
+    normal.pixels.foreach_set(bent.ravel())
+    normal.update()
+    print("underside seam texels fixed", int(bad.sum()), flush=True)
+    bpy.data.images.remove(baked)
+    bpy.data.images.remove(band)
+    print("underside skin", [round(float(v), 3) for v in skin], flush=True)
+
+
+def paint_lid_lines(body, colour, normal):
+    """Paint the lids. A hull outline shifts with the viewing angle in these hollows; a painted rim stays exactly on
+    them and moves with them when they blink. Each lid gets one clean colour and a flat normal, because the bake
+    leaves pits along these thin rims. The lid darkens toward its rim so it reads heavy."""
+    co = np.empty(len(body.data.vertices)*3)
+    body.data.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    baked = bake_vertex_values(body, "floppy-lid-coords", np.column_stack(
+        [(co[:, 0] + 1.2)/2.4, (co[:, 1] + 1.2)/2.4, co[:, 2]/2.6]), precise=True)
+    data = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    baked.pixels.foreach_get(data)
+    data = data.reshape(-1, 4)
+    x, y, z = data[:, 0]*2.4 - 1.2, data[:, 1]*2.4 - 1.2, data[:, 2]*2.6
+    # How far each texel faces out of its eye, so rim lines stay off the lids' steep undersides.
+    vertex_normals = np.empty(len(body.data.vertices)*3)
+    body.data.vertices.foreach_get("normal", vertex_normals)
+    vertex_normals = vertex_normals.reshape(-1, 3)
+    n = np.stack([vertex_normals[:, 0], vertex_normals[:, 2], -vertex_normals[:, 1]], -1)
+    faces = bake_vertex_values(body, "floppy-lid-facing", np.column_stack(
+        [(n @ eye_basis(-1.0)[2] + 1)/2, (n @ eye_basis(1.0)[2] + 1)/2, np.zeros(len(n))]), precise=True)
+    facing = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    faces.pixels.foreach_get(facing)
+    facing = facing.reshape(-1, 4)*2 - 1
+    bpy.data.images.remove(faces)
+    p = np.stack([x, z, -y], -1)
+    # Includes the lids' hidden undersides, baked near-black, which stretch into view as they close.
+    pixels = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    colour.pixels.foreach_get(pixels)
+    pixels = pixels.reshape(-1, 4)
+    bent = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    normal.pixels.foreach_get(bent)
+    bent = bent.reshape(-1, 4)
+    for index, (side, height) in enumerate(((-1.0, 0.03), (1.0, -0.03))):
+        l = eye_local(p, side)
+        front = l[:, 2] > -0.03
+        visible = facing[:, index] > LID_LINE_FACING
+        radius = np.linalg.norm(l[:, :2]/(EYE_DIM[:2] + 0.03), axis=1)
+        upper = height + 0.24*side*l[:, 0]
+        lower = -0.15 - 0.05*side*l[:, 0]
+        inside = (1.0 - smoothstep(0.97, 1.03, radius))*(l[:, 2] > -0.2)
+        # The upper zone reaches under the rim: that dark inner face stretches into view mid-blink, so it must be lid.
+        for zone, away in ((l[:, 1] > upper - 0.07, l[:, 1] - upper), (l[:, 1] < lower, lower - l[:, 1])):
+            fill = inside*zone
+            solid = (fill > 0.9) & front & (away > 0.03)
+            if solid.any():
+                base = np.median(pixels[solid][:, :3], axis=0)
+                heavy = base[None, :]*(0.8 + 0.2*smoothstep(0.0, 0.13, np.maximum(away, 0.0)))[:, None]
+                pixels[:, :3] += fill[:, None]*(heavy - pixels[:, :3])
+                bent[:, :3] += fill[:, None]*(np.array((0.5, 0.5, 1.0), dtype=np.float32) - bent[:, :3])
+        contour = (1.0 - smoothstep(0.012, 0.045, np.abs(radius - 1.01)))*front*((l[:, 1] > upper) | (l[:, 1] < lower))
+        pixels[:, :3] += (contour*LID_CONTOUR_STRENGTH)[:, None]*(np.array(LID_CONTOUR_COLOUR, dtype=np.float32) - pixels[:, :3])
+        # Each rim line lies on the lid's visible face, where it does not stretch.
+        for centre in (upper + LID_LINE*0.6, lower - LID_LINE*0.6):
+            rim = (1.0 - smoothstep(LID_LINE*0.4, LID_LINE*0.8, np.abs(l[:, 1] - centre)))*front*visible*(radius < 1.04)
+            pixels[:, :3] += rim[:, None]*(np.array(LID_LINE_COLOUR, dtype=np.float32) - pixels[:, :3])
+    colour.pixels.foreach_set(pixels.ravel())
+    colour.update()
+    normal.pixels.foreach_set(bent.ravel())
+    normal.update()
+    bpy.data.images.remove(baked)
 
 
 def add_gloss(mat, img):
@@ -393,9 +533,10 @@ def game_skin_material(colour, normal, rough, glow=None):
     return mat
 
 
-def ink_shell(body):
+def ink_shell(body, open_verts):
     """A skinned copy of the game body pushed out along its normals with reversed faces: Roblox culls back faces,
-    so only a dark rim shows around Floppy, and it bends with him because it keeps his skin weights."""
+    so only a dark rim shows around Floppy, and it bends with him because it keeps his skin weights. A hull also
+    shows inside carved hollows, which drew thick broken lines round the eyes, so those faces are removed."""
     shell = body.copy()
     shell.data = body.data.copy()
     shell.name = shell.data.name = "FloppyBody_Ink"
@@ -406,6 +547,8 @@ def ink_shell(body):
     bm.normal_update()
     for v in bm.verts:
         v.co += v.normal*INK_WIDTH
+    bm.verts.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if any(open_verts[v.index] for v in f.verts)], context="FACES")
     bmesh.ops.reverse_faces(bm, faces=bm.faces)
     bm.to_mesh(shell.data)
     bm.free()
@@ -439,6 +582,81 @@ def roblox_idle(rig):
         fc.update()
     rig.animation_data.action = action
     return action
+
+
+def add_face_rig(rig, body):
+    """Face bones under the head (owner, 2026-11-01): gaze parents each eye, lids close over it, and the sculpted
+    mouth is skinned to its corners and lower lip. Roblox bones only move, so all expressions are bone motion."""
+    select_only([rig])
+    bpy.ops.object.mode_set(mode="EDIT")
+    edit = rig.data.edit_bones
+    head = edit["head"]
+
+    def new_bone(name, position, parent):
+        bone = edit.new(name)
+        bone.head = position
+        bone.tail = position + Vector((0.0, 0.0, 0.08))
+        bone.parent = parent
+        bone.use_connect = False
+        return bone
+
+    for tag in ("L", "R"):
+        eye = edit["eye_" + tag]
+        centre = eye.head.copy()
+        eye.parent = new_bone("gaze_" + tag, centre, head)
+        new_bone("lid_" + tag, centre, head)
+    # Concept space is x, up, toward the face; Blender source is x, -toward the face, up.
+    mouth_at = {"mouth_L": (-0.14, 0.0), "mouth_R": (0.14, 0.0), "mouth_low": (0.0, -0.03)}
+    for name, (x, down) in mouth_at.items():
+        y = 1.15 + down + 1.2*x*x + 0.2*x + 0.4*max(x, 0.0)**2
+        new_bone(name, Vector((0.03 + x, -0.73, y)), head)
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    co = np.empty(len(body.data.vertices)*3)
+    body.data.vertices.foreach_get("co", co)
+    co = co.reshape(-1, 3)
+    p = np.stack([co[:, 0], co[:, 2], -co[:, 1]], -1)
+    weights = {}
+    for tag, side, height in (("L", -1.0, 0.03), ("R", 1.0, -0.03)):
+        l = eye_local(p, side)
+        norm = np.linalg.norm(l/EYE_DIM, axis=1)
+        edge = height + 0.24*side*l[:, 0]
+        # Like a real lid: the rim moves fully and the sheet stretches from an anchored top, so the eye stays covered.
+        stretch = 1.0 - np.clip((l[:, 1] - edge)/np.maximum(EYE_DIM[1] + 0.03 - edge, 0.05), 0.0, 1.0)
+        weights["lid_" + tag] = smoothstep(-0.055, -0.02, l[:, 1] - edge)*stretch*(1.0 - smoothstep(1.0, 1.25, norm))*(l[:, 2] > -0.02)
+    q = mouth_local(p)
+    front = p[:, 2] > 0.3
+    near = lambda x, y, rx, ry: np.exp(-((q[:, 0] - x)/rx)**2 - ((q[:, 1] - y)/ry)**2)*front
+    weights["mouth_L"] = near(-0.14, 0.0, 0.11, 0.1)
+    weights["mouth_R"] = near(0.14, 0.0, 0.11, 0.1)
+    weights["mouth_low"] = near(0.0, -0.05, 0.13, 0.07)*smoothstep(0.012, -0.012, q[:, 1])
+    total = np.clip(sum(weights.values()), 0.0, 0.98)
+    groups = {name: body.vertex_groups.new(name=name) for name in weights}
+    for index, vertex in enumerate(body.data.vertices):
+        if total[index] <= 0.01:
+            continue
+        for existing in vertex.groups:
+            existing.weight *= 1.0 - total[index]
+        share = total[index]/max(sum(float(w[index]) for w in weights.values()), 1e-6)
+        for name, values in weights.items():
+            if values[index] > 0.005:
+                groups[name].add([index], float(values[index])*share, "REPLACE")
+    select_only([body])
+    bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
+    bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+    # The eye area keeps no hull (its outlines are painted); side-facing skin further out is still the head's outline.
+    normals = np.empty(len(body.data.vertices)*3)
+    body.data.vertices.foreach_get("normal", normals)
+    facing = -normals.reshape(-1, 3)[:, 1]
+    # Measured across the face: the eyes are so flat that a 3D distance misses the lids in front of them.
+    radii = [np.linalg.norm(eye_local(p, side)[:, :2]/EYE_DIM[:2], axis=1) for side in (-1.0, 1.0)]
+    # The belly folds are hollows too: a hull drew black dashes along them.
+    near = (radii[0] < EYE_INK_CLEAR) | (radii[1] < EYE_INK_CLEAR)
+    wide = (radii[0] < EYE_INK_FRONT) | (radii[1] < EYE_INK_FRONT)
+    ink_open = near | (wide & (facing > 0.05)) | ((belly_folds(p) > 0.15) & (facing > 0.2))
+    print("face ink cleared verts", int(ink_open.sum()), flush=True)
+    print("face rig", {name: int((values > 0.05).sum()) for name, values in weights.items()}, flush=True)
+    return ink_open
 
 
 def taller(z):
@@ -554,7 +772,7 @@ def main():
     skin = high.data.materials[0]
     round_underside(high)
 
-    body = low_copy(high, "FloppyBody", BODY_TRIANGLES)
+    body = low_copy(high, "FloppyBody", BODY_TRIANGLES, face_detail_group(high))
     select_only([body])
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
@@ -564,7 +782,8 @@ def main():
     normal = image("floppy-body-normal", "Non-Color")
     bake_to(body, high, "EMIT", colour, emission_of(skin))
     bake_to(body, high, "NORMAL", normal)
-    darken_underside(body, colour, normal)
+    paint_underside(body, colour, normal)
+    paint_lid_lines(body, colour, normal)
     paths = [save(colour, "floppy-body-color.png"), save(normal, "floppy-body-normal.png")]
     glow = None
     if glow_texture(skin):
@@ -587,13 +806,14 @@ def main():
         bpy.data.objects.remove(bpy.data.objects[name])
 
     meshes = [body] + eyes
+    ink_open = add_face_rig(rig, body)
     stretch_torso(rig, meshes)
     face_plus_y(rig, meshes)
     scale_to_blaster(rig, meshes)
     idle = roblox_idle(rig)
     for b in rig.pose.bones:
         b.matrix_basis.identity()
-    meshes.append(ink_shell(body))
+    meshes.append(ink_shell(body, ink_open))
     OUT.mkdir(parents=True, exist_ok=True)
     settings = dict(EXPORT_SETTINGS, path_mode="COPY", embed_textures=True)
     select_only([rig] + meshes, active=rig)

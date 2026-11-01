@@ -1,6 +1,10 @@
 # First slug: Flopper-inspired creature
 
-**Current model and burrow, implemented/verified:** the flat base is now a rounded dark underside below the ground plane, with the standing look unchanged. Recovery lasts 1.5 s from impact with a belly skid, a much wigglier roll and a screwing dig, with ground swells and lumpy debris. Native shots and offline checks passed; owner approval pending. [Evidence](../../evidence/2026-11-01-review-pass.json), [underside](../../evidence/2026-11-01-floppy-underside.png).
+**Confirmed permanent for Floppy (owner, 2026-11-01):** 1 stud tall outside the gun, about 18% up from 0.85, and the current design including its folded underside. This is Floppy's own value, not a rule for other slugs. Loaded size and hit radius are separate.
+
+**Face, expressions approved by the owner (2026-11-01):** 15 bones. Lid, gaze and mouth bones drive blinks, wandering eyes, small mouth movements and three expressions cycling every 3.5 s with smooth blends: drowsy, smiling, surprised. Owner approved the eyes. Character target at rest is tired, sick and lazy: low lids with drooping outer corners, slow heavy blinks and a low drifting gaze. The sculpted mouth and lids are skinned rather than replaced. Runtime is `experiments/creatures/floppy/client/FloppyFace.client.luau`. [Poses](../../evidence/2026-11-01-floppy-expressions.png).
+
+**Current model and burrow, implemented/verified:** the flat base is now a rounded underside in the body colour with soft folds across it, below the ground plane, with the standing look unchanged. Recovery lasts 1.5 s from impact with a belly skid, a much wigglier roll and a screwing dig, with ground swells and lumpy debris. Native shots and offline checks passed; owner approval pending. [Evidence](../../evidence/2026-11-01-review-pass.json), [underside](../../evidence/2026-11-01-floppy-underside.png).
 
 ## Confirmed post-shot recovery (2026-11-01; implemented for owner testing)
 

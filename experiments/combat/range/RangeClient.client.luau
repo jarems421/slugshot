@@ -2,7 +2,7 @@
 -- Target range readouts over each dummy: health, the last hit (damage and shot
 -- distance), the session's damage and DPS, and this player's live distance to it.
 -- DPS = session damage / (time from first to last hit + one cooldown), so steady
--- firing reads the true rate (5 damage per 1.5 s = 3.3 for Floppy).
+-- firing reads the true rate (7 damage per 1.5 s = 4.7 for Floppy).
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

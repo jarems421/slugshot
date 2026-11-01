@@ -150,6 +150,9 @@
         },
         "TargetRange": {
           "$path": "experiments/combat/range/RangeClient.client.luau"
+        },
+        "FloppyFace": {
+          "$path": "experiments/creatures/floppy/client/FloppyFace.client.luau"
         }
       }
     },

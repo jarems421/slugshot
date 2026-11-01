@@ -119,7 +119,7 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | "frictionless", "fast-paced", "easy to keep track of" (ammo) | Cooldown from firing (currently 1.5 s), shown on the ammo slot. **2026-11-01 confirmed design, Floppy implemented for review:** local recovery animation can finish independently; the slug burrows at its landing site. | A visible travel return that decides reload timing or races to meet the cooldown. |
 | "hop back" (historical request, superseded 2026-11-01) | Earlier versions used quick returning hops, later retuned to 0.94 s. The owner has now approved **local burrow recovery** instead. [Current decision](recovery.md). | The owner rejected the timer-driven puff. Map-spanning recalls would be too hectic with many shooters. |
 | Floppy "lands on its belly", "wriggles", "jumps up and burrows" | **Confirmed design; implemented for owner testing:** belly-first landing, brief wriggle, little upward hop and head-first dive/burrow at the landing site. Its exit should read as a creature action representing return to inventory. A native target-hit sequence passed; subjective timing and animation approval remain pending. | Renaming the puff, shrinking out of sight, or sprinting/recalling across the map to satisfy a timer. |
-| "tiny bit of damage" | 5 of 100 HP, splat, no knockback. | Knockback. |
+| "tiny bit of damage" | Weak, no knockback: 5 of 100 HP at first, raised to 7 on 2026-11-01 ("not completely useless"). | Knockback. |
 | Tap vs hold | A tap still fires decently and (for later slugs) transforms; holding = faster, earlier transform, less drop. No failed transforms. | Requiring a charge to transform. |
 | "temporary" (test spaces) | Label it everywhere: file name, banner, in-world sign. The map is a placeholder, never a source of truth. | Unlabelled test areas. |
 | "Rivals-style first person", "not a setting" | Scroll in snaps to first person, scroll out snaps back. Settings (M) hold FOV and the holster choice. | A first-person toggle; extra option keys. |
@@ -200,3 +200,31 @@ These are readings of this chat's context, not universal definitions. Prefer the
 More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = the training range, "Slug Terra" = Slugterra.
 
 **Added after the review (2026-11-01):** "more animated/wiggly" for a creature means large overlapping motion through every bone, not a slightly bigger version of the same wobble; verdict pending. "Arms by your side but you can still see them" is a real geometry conflict at a level look: truly hanging hands sit below the frame, so the arms are framed low in the corners with the gun tipped down, and the owner can settle it on the P panel. "It stiffens the bottom" tied the model's flat base to how the animation reads, so check the model before only tuning motion. "We'll add sound later" and "I won't do 16 players" close those items rather than defer them to the next pass.
+
+**Second round (2026-11-01):**
+
+| The owner says | What it turned out to mean | What failed |
+| --- | --- | --- |
+| "looks like it has a butthole" | Anything converging on the centre of the underside: mesh rows, radial creases, a dark surround. | Rings to one point; dark dome. |
+| "sluggish foldy texture" | Soft rolls straight across, in the body's own colour. | Radial or darker treatment. |
+| "the spiral should spin" then "just the light inside" | The mechanism stays still and a light moves inside it, so it reads as charging. Confirm which part moves before building. | Spinning the vanes: "like a fidget spinner". |
+| "less loud, less shapy, more of a gloom" | No visible edge or growing object: a faint haze and soft light that swell and fade. | A neon sphere that grows and fades. |
+| "arms a little too forward", "put the arms down" | Lower in the frame, not a new pose. | — |
+| "permanent ... for all slugs. I mean, not for all slugs, but for the floppy" | Dictated self-correction: the later clause wins. Record it as Floppy's own design, not a species rule. | — |
+| "shake or vibration" (charging gun) | Fine fast movement of the gun alone that grows with charge, never the aim. | — |
+
+**Third round (2026-11-01):** "I don't know how we could even make it look good as a concept" is a request for clearly different directions and a recommendation, not for another polish pass. "A free cursor that's just a cursor for optimum accuracy" means nothing around the aim point while aiming. "Lightweight, quick, frictionless" (ADS) means a raise of about 0.1 s and no movement penalty.
+
+**ADS (2026-11-01):** "the ADS is flipping horrible... just a square" was about shape and origin. A reference screenshot means use that exact shape, so measure it. "Pulled out of nowhere" means a visible object needs a physical source on the gun. "Very modern techie animation" landed as clean mechanical stages followed by a frame that draws itself. When something is "very buggy" in a mode, the owner may simply remove that mode rather than iterate.
+
+**ADS follow-up (2026-11-01):** "a clear outline that sticks to the eyelids" means painted on the skin, not an effect that depends on the camera. "Fully transparent" means no pane at all, even at 8% opacity. "Animative, transitional" means overlapping eased stages and fades rather than parts snapping into place.
+
+**Floppy's eyes (2026-11-01):** "offsetting", "off-putting" (resting eyes and blink) means the mood is wrong for the character: alert or angry rather than "tired and sick and lazy". It landed on slower motion, drooping outer corners and softer lines, rather than more geometry. "Malformed" pointed to a real mesh flaw, so look for one before retuning.
+
+**Crosshair feedback (2026-11-01):** "a sphere around it" means the glow has a visible edge, so bunch the falloff toward the centre. "Ping and go away" means a brief event, never a state that lasts while holding. The owner keeps the crosshair area clean: every ring proposed around it has eventually been rejected, so try cues elsewhere first.
+
+**Charge feedback (2026-11-01):** after a bar, many rings, a glow and a ping, the owner's real need was stated plainly: vibration is "how you kind of gauge how much power is behind your shot", and it must survive running. "I don't know what I'm compromising" signals to stop tuning and offer clearly different directions. Discrete counted steps were chosen because they read better than a continuous level and are "more skill based". "Feel" on keyboard and mouse can only be visual, so it means whole-view and arm motion as well as the gun.
+
+**Accuracy and steps (2026-11-01):** "a little to the bottom right" had one physical cause, droop while still on the gun's side of the aim line, so measure landing offsets before tuning. "Bap bap bap" rejects sharp, quick repeated hits, even when they are readable: prefer eased steps that hold. "Make these the new base settings" with a panel screenshot means bake every changed value; the panel is working as intended.
+
+**Shot levels (2026-11-01):** "first phase" and "a quick tap" are the same level; "two holds" means reaching the second kick. "100% accurate" was qualified by the owner: "won't obviously be fully bullet tracing, but it'll hit the area" the cursor is on. So the arc stays visible and the landing point is what must be right.

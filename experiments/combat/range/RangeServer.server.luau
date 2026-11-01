@@ -204,3 +204,39 @@ RunService.Heartbeat:Connect(function(dt)
 end)
 
 print(`[Range] {#CollectionService:GetTagged("RangeDummy")} dummies ready`)
+
+-- A large Floppy on a plinth beside spawn. The owner wants it kept (2026-11-01: "my little friend").
+task.spawn(function()
+	local assets = ReplicatedStorage:WaitForChild("CombatAssets", 20)
+	local source = assets and assets:FindFirstChild("FloppyFlight")
+	if not source or not source:IsA("Model") then
+		return
+	end
+	local plinth = Instance.new("Part")
+	plinth.Name = "FaceTestPlinth"
+	plinth.Anchored = true
+	plinth.Size = Vector3.new(4, 2, 4)
+	plinth.Position = Vector3.new(10, 1, 27)
+	plinth.Color = Color3.fromRGB(70, 74, 82)
+	plinth.Parent = folder
+	local model = source:Clone()
+	model.Name = "Floppy"
+	model:ScaleTo(model:GetScale() * 3)
+	local centre = Vector3.new(10, 2 + 1.5 * Combat.Slugs.Floppy.Size, 27)
+	-- The slug's -Z is its face: turn it toward the spawn line.
+	model:PivotTo(CFrame.lookAt(centre, centre + Vector3.new(-10, 0, 3)))
+	model.Parent = folder
+	local sign = Instance.new("BillboardGui")
+	sign.Size = UDim2.fromOffset(220, 24)
+	sign.StudsOffsetWorldSpace = Vector3.new(0, 5.5, 0)
+	sign.Parent = plinth
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.fromScale(1, 1)
+	text.BackgroundTransparency = 1
+	text.Font = Enum.Font.GothamBold
+	text.TextSize = 14
+	text.TextColor3 = Color3.new(1, 1, 1)
+	text.TextStrokeTransparency = 0.3
+	text.Text = "TEMPORARY - FLOPPY FACE TEST"
+	text.Parent = sign
+end)

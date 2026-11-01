@@ -118,7 +118,83 @@ for mesh, part in parts do
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
 end
+-- The light inside the charger spiral. The spiral itself never moves: these thin bars sit
+-- just proud of the backplate and under the vane tops, so they show only through the gaps.
+-- The combat client sweeps them round while charging; the later bars form the trail.
+for mesh in parts do
+	if mesh.name == "ChargerBlack" then
+		local diameter = math.min(mesh.size.Y, mesh.size.Z) * SCALE.Y * 0.84
+		local depth = mesh.size.X * SCALE.X + 0.008
+		for index = 1, 4 do
+			local light = Instance.new("Part")
+			light.Name = `ChargerLight{index}`
+			light.Material = Enum.Material.Neon
+			light.Color = Color3.fromRGB(205, 232, 255)
+			light.Size = Vector3.new(depth, diameter, 0.035)
+			light.Transparency = 1
+			attach(light, CFrame.new(mesh.centre * SCALE), tool)
+		end
+		break
+	end
+end
 model:Destroy()
+
+-- The sight pod on top of the housing. Closed, it reads as part of the gun; the combat client
+-- opens it when aiming (AdsSight). Gun-space: X right, Y up, -Z toward the muzzle.
+local POD = Vector3.new(0, 0.712, -0.15)
+local function sightPart(
+	name: string,
+	size: Vector3,
+	offset: Vector3,
+	color: Color3,
+	material: Enum.Material,
+	transparency: number?
+)
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = size
+	part.Color = color
+	part.Material = material
+	part.Transparency = transparency or 0
+	attach(part, CFrame.new(POD + offset), tool)
+end
+local GRAPHITE = Color3.fromRGB(37, 45, 52)
+local STEEL = Color3.fromRGB(162, 171, 177)
+local BURNT = Color3.fromRGB(150, 66, 32)
+sightPart("AdsBase", Vector3.new(0.19, 0.03, 0.3), Vector3.zero, GRAPHITE, Enum.Material.Metal)
+sightPart(
+	"AdsEmitter",
+	Vector3.new(0.09, 0.03, 0.12),
+	Vector3.new(0, 0.012, 0),
+	STEEL,
+	Enum.Material.Metal
+)
+sightPart(
+	"AdsLens",
+	Vector3.new(0.06, 0.008, 0.08),
+	Vector3.new(0, 0.03, 0),
+	Color3.fromRGB(235, 240, 237),
+	Enum.Material.Neon,
+	1
+)
+local SIDES: { [string]: number } = { L = -1, R = 1 }
+for tag, sign in SIDES do
+	sightPart(
+		"AdsDoor" .. tag,
+		Vector3.new(0.085, 0.016, 0.28),
+		Vector3.new(sign * 0.0425, 0.036, 0),
+		BURNT,
+		Enum.Material.Metal
+	)
+	sightPart(
+		"AdsProng" .. tag,
+		Vector3.new(0.012, 0.07, 0.03),
+		Vector3.new(sign * 0.028, 0.02, 0),
+		GRAPHITE,
+		Enum.Material.Metal,
+		1
+	)
+end
 
 -- Soft light-blue trim on the chamber: a ring at each end and a thin strip along
 -- the top and bottom edges, so the tube glows without covering the slug.

@@ -8,7 +8,7 @@ local Combat = {}
 export type Slug = {
 	Label: string,
 	Damage: number,
-	-- Launch speed (studs/s) for a tap and for a full charge.
+	-- Launch speed (studs/s) at each of the three shot levels.
 	Speed: { number },
 	Gravity: number, -- studs/s^2; slugs droop on their own curve, not world gravity
 	Drag: number, -- 1/s; linear drag makes weak slugs fall short
@@ -19,7 +19,6 @@ export type Slug = {
 }
 
 Combat.MaxHealth = 100
-Combat.ChargeTime = 0.8 -- seconds of holding for a full charge
 Combat.Cooldown = 1.5 -- from the moment of firing, hit or miss
 -- Local creature recovery finishes naturally, independently of ammo readiness.
 Combat.Recovery = {
@@ -53,24 +52,29 @@ Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 Combat.Loadout = { "Floppy" }
 
 Combat.Slugs = {
-	-- Weakest slug: a slow, droopy, tumbling flop that lands short. 5 damage, no
+	-- Weakest slug: a droopy, tumbling flop that lands short of other slugs. 7 damage, no
 	-- knockback (owner).
 	Floppy = {
 		Label = "Floppy",
-		Damage = 5,
-		Speed = { 55, 100 },
+		Damage = 7,
+		Speed = { 65, 88, 115 },
 		Gravity = 70,
-		Drag = 1.2,
+		Drag = 1,
 		Radius = 0.3,
 		Tumble = 2,
-		Size = 0.85,
+		Size = 1, -- owner, 2026-11-01: permanent Floppy size outside the gun
 		Transforms = false,
 	},
 } :: { [string]: Slug }
 
+-- Shots have three levels (owner, 2026-11-01). A tap, and anything short of the second kick, is
+-- level 1; the second kick reaches level 2 and only a full charge reaches level 3.
+function Combat.level(charge: number): number
+	return math.clamp(math.floor(math.clamp(charge, 0, 1) * 3), 1, 3)
+end
+
 function Combat.speed(slug: Slug, charge: number): number
-	local t = math.clamp(charge, 0, 1)
-	return slug.Speed[1] + (slug.Speed[2] - slug.Speed[1]) * t
+	return slug.Speed[Combat.level(charge)]
 end
 
 -- Position and velocity t seconds after launch, under gravity with linear drag:
@@ -85,6 +89,43 @@ function Combat.at(origin: Vector3, velocity: Vector3, slug: Slug, t: number): (
 end
 
 -- First thing the slug's sphere touches between two flight times, if any.
+-- The launch direction whose arc passes through `target`, so a shot lands where it is aimed
+-- even though it droops. Returns nil when the target is beyond this speed's reach.
+function Combat.aimedDirection(
+	origin: Vector3,
+	target: Vector3,
+	slug: Slug,
+	charge: number
+): Vector3?
+	local speed = Combat.speed(slug, charge)
+	local k = slug.Drag
+	local terminal = Vector3.new(0, -slug.Gravity / k, 0)
+	local offset = target - origin
+	-- The launch velocity that arrives at the target after t seconds.
+	local function needed(t: number): Vector3
+		return (offset - terminal * t) * k / (1 - math.exp(-k * t)) + terminal
+	end
+	-- Earliest arrival at this speed gives the flat arc rather than a high lob.
+	local before = 0.005
+	local t = before
+	while t < Combat.MaxFlight do
+		t += 0.01
+		if needed(t).Magnitude <= speed then
+			for _ = 1, 12 do
+				local middle = (before + t) / 2
+				if needed(middle).Magnitude <= speed then
+					t = middle
+				else
+					before = middle
+				end
+			end
+			return needed(t).Unit
+		end
+		before = t
+	end
+	return nil
+end
+
 function Combat.sweep(
 	origin: Vector3,
 	velocity: Vector3,
