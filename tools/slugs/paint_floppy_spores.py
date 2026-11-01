@@ -93,20 +93,21 @@ def main():
     covered = rest[..., 3] > 0.5
     pts = (rest[..., :3][covered].astype(float) - 0.5)/0.25
 
-    # Blotches: the albedo goes BODY -> yellowed halo -> dark core, as skin_albedo mixes them; scale each baked
-    # texel by that albedo ratio (through the build's 1.12 grade), so its baked occlusion and grade survive.
+    # Sores: the albedo goes BODY -> pallor -> bruised rim -> bilious centre, as skin_albedo mixes them; scale
+    # each baked texel by that albedo ratio (through the build's 1.12 grade), so its baked occlusion and grade survive.
     px = np.empty(size*size*4, np.float32)
     tex.image.pixels.foreach_get(px)
     px = px.reshape(size, size, 4)
-    halo, core = np.zeros((size, size)), np.zeros((size, size))
-    h, c = bf.spores(pts)
-    halo[covered], core[covered] = 0.55*h, 0.8*c
-    ratio = (((1.0 - halo)[..., None] + halo[..., None]*(bf.SPORE_HALO/bf.BODY))*(1.0 - core)[..., None]
-             + core[..., None]*(bf.SPORE_CORE/bf.BODY))**1.12
+    a_p, a_r, a_c = (np.zeros((size, size)) for _ in range(3))
+    pallor, rim, centre = bf.spores(pts)
+    a_p[covered], a_r[covered], a_c[covered] = 0.6*pallor, 0.5*rim, 0.75*centre
+    k = lambda a: a[..., None]
+    ratio = ((((1.0 - k(a_p)) + k(a_p)*(bf.SORE_PALLOR/bf.BODY))*(1.0 - k(a_r)) + k(a_r)*(bf.SORE_BRUISE/bf.BODY))
+             *(1.0 - k(a_c)) + k(a_c)*(bf.SORE_PUS/bf.BODY))**1.12
     if not tex.image.is_float and tex.image.colorspace_settings.name == "sRGB":
         ratio = ratio**(1/2.2)  # 8-bit sRGB pixels: the same change, expressed in stored values
     px[..., :3] = np.clip(px[..., :3]*ratio, 0.0, 1.0)
-    m = core
+    m = a_c
     tex.image.pixels.foreach_set(px.ravel())
     tex.image.filepath_raw = str(TEXTURES/"floppy-body.png")
     tex.image.file_format = "PNG"

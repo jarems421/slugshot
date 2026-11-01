@@ -44,11 +44,14 @@ BELLY_EDGE = np.array([0.157, 0.147, 0.048])
 MOUTH = np.array([0.16, 0.06, 0.04])
 DROOL = np.array([0.80, 0.79, 0.70])
 BAG = np.array([0.10, 0.07, 0.05])
-SPORE_CORE = np.array([0.115, 0.105, 0.035])
-SPORE_HALO = np.array([0.470, 0.460, 0.150])
+SORE_PALLOR = np.array([0.520, 0.530, 0.220])  # sallow, yellowed skin around a sore
+SORE_BRUISE = np.array([0.220, 0.160, 0.120])  # faint olive-mauve bruised rim
+SORE_PUS = np.array([0.620, 0.660, 0.160])     # lighter bilious yellow-green centre
 BULB_GLOW = np.array([0.62, 0.80, 0.28])
-# Spore blotches (owner, 2026-11-01): noticeable, sickly, diffuse spots that blend into the skin, on the plain
-# skin only. Each blotch is a primary spot plus one or two satellites centred on the surface: (x, y, z, radius).
+# Spore sores (owner, 2026-11-01): they should look sick, not dirty. Dark brown blotches read as grime;
+# sickness reads as sallow yellow-green pallor, a faint bruised rim and a lighter, wet, bilious centre that
+# glows faintly. Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
+# Each sore is a primary spot plus one or two satellites centred on the surface: (x, y, z, radius).
 SPORES = np.array([
     (-0.772, 1.515, 0.142, 0.138),
     (-0.760, 1.507, 0.243, 0.069),
@@ -96,7 +99,6 @@ SPORES = np.array([
     (-0.160, 2.286, 0.555, 0.144),
     (-0.053, 2.294, 0.564, 0.087),
     (-0.202, 2.208, 0.615, 0.091),
-    (-0.017, 1.302, 0.718, 0.150),
     (0.725, 2.024, 0.233, 0.133),
     (-0.333, 2.281, -0.268, 0.157),
 ])
@@ -255,13 +257,14 @@ def mix(a, b, t):
 
 
 def spores(dp):
-    """(yellowed halo, dark core) of the spore blotches."""
-    halo, core = np.zeros(len(dp)), np.zeros(len(dp))
+    """(pallor, bruised rim, bilious centre) of the spore sores."""
+    pallor, rim, centre = np.zeros(len(dp)), np.zeros(len(dp)), np.zeros(len(dp))
     for x, y, z, r in SPORES:
-        d = np.linalg.norm(dp - [x, y, z], axis=1)
-        halo = np.maximum(halo, 1.0 - smoothstep(0.7*r, 1.35*r, d))
-        core = np.maximum(core, 1.0 - smoothstep(0.3*r, 0.85*r, d))
-    return halo, core
+        u = np.linalg.norm(dp - [x, y, z], axis=1)/r
+        pallor = np.maximum(pallor, 1.0 - smoothstep(0.75, 1.45, u))
+        rim = np.maximum(rim, np.exp(-((u - 0.62)/0.16)**2))
+        centre = np.maximum(centre, 1.0 - smoothstep(0.25, 0.55, u))
+    return pallor, rim, centre
 
 
 def bulb_glow(dp):
@@ -270,7 +273,8 @@ def bulb_glow(dp):
     for s in (-1.0, 1.0):
         # Only the bulb sphere (radius 0.08) glows, not the skin it hangs beside.
         g = np.maximum(g, 1.0 - smoothstep(0.082, 0.095, np.linalg.norm(dp - antenna(s)[2], axis=1)))
-    return g
+    # The sores' wet centres glow very faintly too.
+    return np.maximum(g, 0.18*spores(dp)[2])
 
 
 def skin_albedo(dp, n):
@@ -279,9 +283,10 @@ def skin_albedo(dp, n):
     back = smoothstep(0.1, -0.6, z)*smoothstep(0.3, 1.2, y)
     crown = smoothstep(1.95, 2.35, y)*smoothstep(-0.1, 0.4, n[:, 1])
     col = mix(col, MOSS, 0.18*np.maximum(back, crown))
-    halo, core = spores(dp)
-    col = mix(col, SPORE_HALO, 0.55*halo)
-    col = mix(col, SPORE_CORE, 0.8*core)
+    pallor, rim, centre = spores(dp)
+    col = mix(col, SORE_PALLOR, 0.6*pallor)
+    col = mix(col, SORE_BRUISE, 0.5*rim)
+    col = mix(col, SORE_PUS, 0.75*centre)
     belly = smoothstep(0.32, 0.66, z)*smoothstep(1.08, 0.55, y)
     col = mix(col, STONE, 0.9*smoothstep(0.4, 0.6, belly))
     col = mix(col, STONE*0.72, 0.4*belly_folds(dp)*(1.0 - fold_roll(dp))**3)

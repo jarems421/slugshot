@@ -98,3 +98,4 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 - **Fix:** spots became irregular two-tone blotches (dark core, yellowed halo), 22 of them, also on the face-visible sides; the glow is limited to the bulb sphere.
 - **Earlier failure found:** the first round never reached the game texture, because re-packing an already packed image kept its old pixels. Fixed and verified: the game colour texture now differs in 97k texels.
 
+**Revision 2 (same day):** the owner found the blotches "more dirty than sick", mainly from the colour, plus the one above the mouth. Each sore now has a sallow halo, a faint bruised rim and a lighter bilious yellow-green centre that glows very faintly (also in the Roblox glow mask, at 0.18). The face spot and its satellites are removed, leaving 48 shapes. The greenish-brown theme is kept.
