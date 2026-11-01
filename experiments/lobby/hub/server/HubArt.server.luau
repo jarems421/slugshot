@@ -33,6 +33,7 @@ local UNIT = 5 -- studs per spawn-rock and Maelstrom unit
 local CLIFF_LIFT = 0.12 -- keeps the cliff's ground above the block-out floor it covers
 local DOWN = Vector3.new(0, -1, 0)
 local FALL_FOOT_Y = -51 -- the juice's surface where the falls land
+local BASIN_Y = -2.25 -- the pools' surface, in units
 
 -- Pieces that glow more than the painted brightness suits under Roblox's bloom.
 local GLOW: { [string]: number } = {
@@ -508,16 +509,16 @@ local function buildFall(angle: number)
 	local inward = -flat
 	-- It ends at the juice's real surface and melts into the foam there, rather than cutting through it.
 	local foot = flat * (rim - 14) + Vector3.new(0, FALL_FOOT_Y, 0)
-	-- From deep in the concept's mouth: it runs out along the mouth's floor, so the sheet's start is never seen.
-	local lip = flat * (rim + 5) + Vector3.new(0, -9.8, 0)
-	local melt = fade({ { 0, 1 }, { 0.1, 0 }, { 0.85, 0 }, { 1, 1 } })
+	-- It starts on the pool, runs out through the notch in the basin's lip, and drops.
+	local lip = flat * (rim - 7.5) + Vector3.new(0, BASIN_Y * UNIT + 0.1, 0)
+	local melt = fade({ { 0, 1 }, { 0.05, 0 }, { 0.85, 0 }, { 1, 1 } })
 	flowSheet(
 		lip,
 		foot,
 		inward,
-		18,
-		22,
-		10,
+		7,
+		14,
+		5.5,
 		19,
 		fxTexture("flow"),
 		Color3.new(1, 1, 1),
@@ -532,13 +533,13 @@ local function buildFall(angle: number)
 		lip,
 		foot,
 		inward,
-		18,
-		22,
-		8.5,
+		7,
+		14,
+		4.5,
 		17,
 		fxTexture("streak"),
 		Color3.fromRGB(165, 255, 240),
-		fade({ { 0, 1 }, { 0.12, 0.55 }, { 0.8, 0.5 }, { 1, 1 } }),
+		fade({ { 0, 1 }, { 0.08, 0.55 }, { 0.8, 0.5 }, { 1, 1 } }),
 		30,
 		0.95,
 		0.5,
@@ -606,6 +607,31 @@ local function buildMaelstrom()
 		-- Rotating the whole surface is the concept's motion, since its folds all wind one way. Slower than the sped-up
 		-- preview, because the owner wants it thick.
 		setMotion(juice, "Juice", ORBIT * 2, 0, 0, 0)
+	end
+	-- The pools turn in place, with ripples spreading over them, so the source is as alive as the fall.
+	local pools = place("hub-basin")
+	if pools then
+		for index = 0, 3 do
+			local pool = pools:FindFirstChild(`Pool{index}`, true)
+			if pool then
+				pool:SetAttribute("LocalSpin", ORBIT * 2.5)
+				CollectionService:AddTag(pool, "HubMover")
+				local rings = Instance.new("ParticleEmitter")
+				rings.Texture = fxTexture("ripple")
+				rings.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+				rings.EmissionDirection = Enum.NormalId.Top
+				rings.Speed = NumberRange.new(0.05)
+				rings.Color = ColorSequence.new(Color3.fromRGB(190, 255, 245))
+				rings.LightEmission = 0.4
+				rings.LightInfluence = 0
+				rings.Size = NumberSequence.new(1.5, 8)
+				rings.Transparency = fade({ { 0, 0.6 }, { 0.2, 0.3 }, { 1, 1 } })
+				rings.Lifetime = NumberRange.new(1.6, 2.4)
+				rings.Rate = 1
+				rings.Shape = Enum.ParticleEmitterShape.Disc
+				rings.Parent = pool
+			end
+		end
 	end
 	-- Exactly where the art's mouths are, as measured from the GPU that carved them.
 	for _, angle in rimShape.falls do

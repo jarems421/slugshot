@@ -8,6 +8,7 @@
 - **Owner feedback fixed, not yet seen running:** bridges still at rest; tiny mushrooms; real glowing cracks; crystal tips and all mushroom colours glowing, with twinkles; game blaster on the gate; flowing falls with ripples and foam; visible mist; better rope; a Detail button; storm texture seams.
 - **Later round, not yet seen running:** fall mouths, side streams removed, bridge landings, movement-driven bridge motion, real crack holes, rim bushes. Owner: "literally the last changes".
 - **Latest round, not yet seen running:** falls placed from GPU-measured mouth angles and melting into the juice, ground measured from the art, solid lanterns, debris cleared from bridges, juice highlight no longer washes out.
+- **Basin round, not yet seen running:** stone basins with turning pools and spill notches, chutes cleared below them, debris cleared from the falls, redrawn blaster and cave symbols.
 - **Unresolved:** owner verdict, walking checks of the new colliders, phone performance. The asset library page was not republished after the concept's mushroom and blaster changes.
 
 ## 2026-11-01 - Hub centrepieces and bridges final

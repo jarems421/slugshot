@@ -15,9 +15,9 @@ The final hub designs built for the game, on top of the approved block-out, whos
 - Bridges rest still. Standing on one dips it under your weight with no wobble; only moving on it makes it sway and the boards rock. This replaces the earlier "slight sway at all times".
 - Crack mushrooms are really tiny, about 1 to 2 studs. The concept's `tiny = 2` setting holds this.
 - Every crack is a real hole through the top, blue-black inside with a thin teal core. No puffs of mist come out of them.
-- Each fall pours from a glowing cave mouth carved into the cliff, with no side streams. The land reaches out to meet each bridge. Rim bushes have their own detail.
+- Each fall starts in a cave under the rim, in a round stone basin of juice that overflows through a notch in its lip, with no side streams. A chute is cleared through the cliff below, so no rock stands in the fall. The land reaches out to meet each bridge. Rim bushes have their own detail.
 - Waterfalls must read as flowing liquid in the whirlpool's colours, with a visible connection where they land. They are now scrolling sheets with ripples and foam, not a mesh.
-- The gate symbol toward the gun side is the game's blaster: two prongs, a canister, a rear disc.
+- The gun-side symbol is the game's blaster in its own colours, with sharp edges: orange prongs, cyan canister, dark body with the white swirl. The entrance symbol is a jagged stone arch with stalactites, a path and light inside.
 - Falls only come from their mouths and melt into the juice at its surface. Lanterns are solid and only move with the bridge. The ground matches the rock and rim you can see. No floating rocks in a bridge's path.
 - A Detail button in the place switches between High and Low. A game can't change Roblox's own graphics level.
 

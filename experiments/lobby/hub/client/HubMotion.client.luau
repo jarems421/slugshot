@@ -20,6 +20,7 @@ type Mover = {
 	part: BasePart,
 	base: CFrame,
 	spin: number,
+	localSpin: number,
 	height: number,
 	rate: number,
 	phase: number,
@@ -36,6 +37,7 @@ local function addMover(instance: Instance)
 		part = instance,
 		base = instance.CFrame,
 		spin = (instance:GetAttribute("Spin") or 0) :: number,
+		localSpin = (instance:GetAttribute("LocalSpin") or 0) :: number,
 		height = (instance:GetAttribute("BobHeight") or 0) :: number,
 		rate = (instance:GetAttribute("BobRate") or 0) :: number,
 		phase = (instance:GetAttribute("Phase") or 0) :: number,
@@ -54,6 +56,9 @@ local function moveParts(t: number)
 		local frame = mover.base
 		if mover.spin ~= 0 then
 			frame = CFrame.Angles(0, mover.spin * t, 0) * frame
+		end
+		if mover.localSpin ~= 0 then
+			frame *= CFrame.Angles(0, mover.localSpin * t, 0)
 		end
 		if mover.height ~= 0 then
 			frame += Vector3.new(0, mover.height * math.sin(t * mover.rate + mover.phase), 0)

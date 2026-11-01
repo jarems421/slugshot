@@ -247,6 +247,16 @@ GATE = """vec2 assetMap(vec3 p) {
   return res;
 }
 """
+BASIN = """vec2 assetMap(vec3 p) {
+  float best = 1e3;
+  for (int i = 0; i < 4; i++) {
+    float along, across;
+    fallFrame(p, float(i), along, across);
+    best = min(best, max(length(vec2(along - BASIN_BACK, across)) - (BASIN_R - 0.2), abs(p.y - BASIN_Y + 0.1) - 0.02));
+  }
+  return vec2(best, 17.0);
+}
+"""
 BRIDGE = """vec2 assetMap(vec3 p) { return ropeBridge(p, 0.0, true); }
 """
 PORTAL = """vec2 assetMap(vec3 p) { vec2 r = portal(p/GS); r.x *= GS; return r; }
@@ -344,12 +354,23 @@ def split_components(verts, faces, assign):
     return np.array([assign(centres[i], i) for i in range(count)])[labels[faces[:, 0]]]
 
 
+def pool_group(centre, _i):
+    # One pool sits in each quarter of the pit.
+    return int((np.arctan2(centre[2], centre[0]) % (2*np.pi))/(np.pi/2))
+
+
 def debris_group(count):
+    falls = json.loads(Path("experiments/lobby/scale/shared/rim_shape.json").read_text())["falls"]
     # Well mixed around the rock, so a group's pieces are never neighbours and they read as moving separately.
     def assign(centre, i):
         beside = min(abs(centre[0]), abs(centre[2]))
         if beside < 2.8 and centre[1] - 13.0 > -3.4 and np.hypot(centre[0], centre[2]) > 6.0:
             return -1
+        # Nor in front of a waterfall (owner: rocks poking through it).
+        ang, r = np.arctan2(centre[2], centre[0]), np.hypot(centre[0], centre[2])
+        for fall in falls:
+            if r > 8.5 and abs(np.arctan2(np.sin(ang - fall), np.cos(ang - fall)))*r < 4.5:
+                return -1
         return i % count
     return assign
 
@@ -399,7 +420,7 @@ def gate_piece(direction, r):
         "parts": [
             part("Stone", by_id((0.5, 1.9)), 2000, 512, PROP_INK, 0.6, cage=0.03),
             part("Rope", by_id((1.9, 3.0)), 2600, 1024, 0.0, cage=0.012),
-            part("Key", by_id((15.9, 16.5)), 160, 256, FINE_INK, 1.0, hard=True, cage=0.02),
+            part("Key", by_id((15.9, 16.5)), 300, 1024, FINE_INK, 1.0, hard=True, cage=0.02),
         ],
     }
 
@@ -481,6 +502,13 @@ PIECES = {
     "hub-portal-pvp": portal_piece("gate-pvp-1", 1.35),
     "hub-portal-training": portal_piece("gate-training-1", 1.1),
     "hub-portal-veylume": portal_piece("gate-veylume-1", 1.1),
+    # The pools in the falls' stone basins. Round, so each can turn in place.
+    "hub-basin": {
+        "item": "maelstrom-1", "map": BASIN, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "uRo": (0.0, 30.0, 0.0),
+        "lo": (-21.0, -2.5, -21.0), "hi": (21.0, -2.0, 21.0), "step": 0.03, "normalH": 0.006, "bakeEmit": True,
+        "components": pool_group,
+        "parts": [part(f"Pool{i}", None, 240, 256, cage=0.03) for i in range(4)],
+    },
     "hub-storm": {
         "item": "sky-well-1", "map": "bits", "scale": 10.0, "origin": (0.0, 1.0, 0.0), "normalH": 0.01, "storm": True,
         "parts": [part(f"Cloud{i}", None, 500, 512) for i in range(len(STORM_LEVELS))] + [part("Eye", None, 500, 256)],
@@ -848,7 +876,7 @@ def mesh(key):
 
 EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 1.8, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.1}
+EMIT_STRENGTH = {"Cracks": 1.8, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def paint(key):
