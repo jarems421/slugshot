@@ -120,3 +120,31 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | "almost perfect" (wall run), "fine" (slide) | 10 degree roll away from the wall, gun hand never grabs the wall on its side; slide lean and canted gun. | — |
 
 Working style seen this session: the owner judges by playtest and reports in short rounds; research what successful games do before building ("do research", "what makes it feel good"), cite it, then implement; keep one option per thing ("concrete foundation"); confirm fixes from the Studio log (`%LOCALAPPDATA%\Roblox\logs`) when MCP is unavailable.
+
+## Environment and art direction (2026-10-31 to 11-01)
+
+From the lobby art-direction and asset-library rounds. Process lessons are in [art lessons](../art/lessons.md).
+
+| The owner says | What satisfied it | What failed or was rejected |
+| --- | --- | --- |
+| "Badlands-esque finish", "outline everything so nothing goes unnoticed" | Borderlands-style dark ink outlines over real 3D lighting. | — |
+| "vibrant like Slugterra, not neon", "calm and vibrant mix" | Calm dark stone base with selective glowing accents (about 70/20/10). | Saturated colour everywhere. |
+| "something between Comic Cavern and Living Comic, closer to Comic Cavern" | Living Comic's *clean* surfaces with Comic Cavern's *thick near-black ink and deep shadows*, plus a crisp comic light-to-shadow edge ("you nailed it"). | A straight numeric blend of the two presets ("not there enough"). |
+| "it looks better with Comic Cavern" (rocks) vs "glowy clear stuff needs Inked Cavern" | A per-material treatment rule; characters always Inked Cavern. | One treatment for everything. |
+| "engulfs the design" | Heavy ink hiding small details; fix with light interior lines on details or flush painted/emissive detail. | Bold raised symbols. |
+| "too basic", "plain" (rock wall) | Simple masses **plus** dressing: moss, broken cracks, small mushrooms, crystals poking out. | Bigger geometric changes (spires, ledges, alcoves, strata): "the worst one". |
+| "the lines going through look weird" | Remove long carved lines across forms; keep cracks short and painted. | Horizontal strata grooves. |
+| "V1 might have been the best because it was the most simple" | Roll back to the liked version and add only the listed items. | Iterating forward from a disliked version. |
+| "hovering on the wall" | Dressing projected onto the real surface, roots sunk into the rock. | Hand-placed coordinates. |
+| "more variations… we need a lot of variety" | A selectable bank (14 crystal designs, 14 mushroom colours); small props pick random colours from the bank. | — |
+| "more unique and cool" (crystals) | Hand-built distinct silhouettes: geode, floating heart, crystal tree, spiral, split boulder, hanging cluster, urchin. | Parameter variations of one cluster. |
+| "too much mushroom" | Stop adding a motif once it appears in several places. | Bark mushrooms on the giant mushroom (withdrawn). |
+| "more attached to the ground" (big plant/fungus) | Roots spreading and diving into the floor, a mossy mound, small growth around the base. | A stem simply standing on the floor. |
+| "something cool in the centre… dramatic and natural" | An opening above (Sky Well) and a swirling pit below (Maelstrom), with spawn on a floating rock. | Slug-themed centrepieces (canister tree, colossus, orrery, energy well) and biome features (crystal, mushroom). |
+| "droopy" bridges | Sagging wooden suspension bridges. | — |
+| "make it render upon being opened" | Load one asset at a time; offline-rendered turntables by default, live 3D opt-in. | One shader with every asset (froze Chrome). |
+| "buggy, laggy" after a performance fix | Restore smoothness: more turntable frames on a canvas; live 3D back to its original settings. | Over-throttled live view and 16-frame CSS sprites. |
+
+More dictation slips: "Veilume"/"volume" = Veylume, "jewel board" = duel board, "Cosmic Cavern"/"Living Cosmic" = Comic Cavern/Living Comic, "slug terror" = Slugterra, "dimish map" = a map of merging biomes (exact word unclear).
+
+**Working pattern in these rounds:** the owner critiques one asset at a time, praises with "perfect"/"beautiful" while adding one more tweak, interjects mid-task (the colour bank, then withdrawing bark mushrooms), and only offers options when stuck ("not sure what we could do"). When stuck, offer four or five clearly different directions with a recommendation. If all are rejected, ask what *kind* of thing (built, alive, natural, open) before offering more.

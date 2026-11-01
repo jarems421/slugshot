@@ -15,7 +15,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Asset register and conventions](assets.md)
 - [Slug asset pipeline](slugs/pipeline.md), [rig contract](slugs/rig-specification.md), [species guide](slugs/species-guide.md), [transformation API](slugs/transformation-system.md), [Studio import](slugs/studio-import.md) and [evidence](slugs/verification.md)
 - [Slug design catalogue and records](slugs/catalog/index.md)
-- [Visual style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md) and [Slugterra environment research](research/slugterra-environment.md)
+- [Visual style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md) [Slugterra environment research](research/slugterra-environment.md), [art lessons](art/lessons.md) and the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr)
 - [Owner design language](slugs/owner-design-language.md): what feedback phrases have meant, working style, animation/runtime lessons
 - [Blender modelling lessons](slugs/blender-lessons.md)
 - [Blender skill routing](slugs/skill-routing.md) and [installation audit](slugs/install-audit.md)

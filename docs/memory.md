@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-01 — Designs final, lessons recorded
+
+- **Confirmed:** owner approved every library design as final and asked for documentation of what was hard and how it was solved, including how to read vague phrasing next time.
+- **Implemented:** library v13 marks all designs Final; new [art lessons](art/lessons.md); environment phrase table and working pattern added to [owner design language](slugs/owner-design-language.md); roadmap, asset plan, index and status updated.
+
 ## 2026-11-01 — Wall dressing anchored; designs ready for final review
 
 - **Owner request:** no wall mushrooms (especially tiny ones) or crystals hovering off the rock. Bark mushrooms on the giant mushroom were requested, then withdrawn ("too much mushroom"). After reviewing the wall change the owner considers all designs approved and ready to hand off.

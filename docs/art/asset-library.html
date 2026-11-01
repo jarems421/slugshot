@@ -73,7 +73,7 @@ dd { margin: 2px 0 0; }
 
 <div class="wrap">
   <div>
-    <div class="eyebrow">Slugshot · lobby · concept round 1 · 31 Oct 2026</div>
+    <div class="eyebrow">Slugshot · lobby · final designs · 1 Nov 2026</div>
     <h1>Asset Library</h1>
   </div>
 
@@ -1042,6 +1042,11 @@ void main() {
     { name: "Slugshot mix", t: [1.7, 0.95, 1.1, 0.5], mix: true }
   ];
   const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
+  // Owner approved every design as final on 2026-11-01.
+  ASSETS.forEach(a => {
+    a.final = true;
+    a.notes = a.notes.filter(([k]) => k !== "Status").concat([["Status", "Final design, approved by the owner on 1 Nov 2026. Next: build in Blender from these exact shapes."]]);
+  });
   const FRAMES = 36, SHEET = { cols: 6, w: 512, h: 384 }, BASE_YAW = -0.65, PITCH = 0.22;
 
   function shaderIndex(i) { const a = ASSETS[i]; return a.shader !== undefined ? a.shader : i; }
@@ -1116,7 +1121,7 @@ void main() {
     const b = document.createElement("button");
     b.className = "asset"; b.id = "asset-" + a.id; b.dataset.index = i;
     b.innerHTML = `<span class="name"></span><span class="meta"></span><span class="chip"></span>`;
-    b.querySelector(".chip").textContent = "Concept " + (a.version || "v1");
+    b.querySelector(".chip").textContent = (a.final ? "Final " : "Concept ") + (a.version || "v1");
     b.querySelector(".name").textContent = a.name;
     b.querySelector(".meta").textContent = a.kind;
     shelf.appendChild(b);

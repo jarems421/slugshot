@@ -1,5 +1,7 @@
 # Current status
 
+**Confirmed, 2026-11-01 (`experiment/lobby`):** the owner approved all library designs as final: rock wall v6, 14 crystal designs, giant mushroom v2 with a 14-colour bank, PvP/Training/Veylume gates v3, rendered with the Slugshot mix treatment ([asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr)). Lessons and owner-language decoding recorded in [art lessons](art/lessons.md) and [owner design language](slugs/owner-design-language.md#environment-and-art-direction-2026-10-31-to-11-01). **Next:** agree the next step (likely Blender builds of the final concepts, then the Studio proof and greybox).
+
 **Implemented, 2026-10-31 (`experiment/lobby`):** [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) with four rotatable concept assets and treatments A/B/C. **Unresolved:** owner review; Blender build waits for concept approval.
 
 **Confirmed, 2026-10-31:** spawn is a floating rock between the Sky Well and Maelstrom, with four bridges to solid mainland (portals, entrance, gun side, slug side) and invisible bridge barriers ([layout](art/lobby-roadmap.md#layout)).
