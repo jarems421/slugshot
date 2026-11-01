@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v2
+
+- **Confirmed (owner's choices):** keep the idea and improve it; mostly cyan crystals with a few accents; storm dramatic but distant; drifting rocks are mini islands with debris.
+- **Implemented/verified offline:** those choices, a mouth built from the island's angular blocks, and speckled stone cleaned from the far surfaces, including the Maelstrom's shore. Renders inspected.
+- **Unresolved:** owner review. No reference images were supplied this round.
+
 ## 2026-11-01 - Spawn island design final
 
 - **Confirmed:** owner: "Yes, perfect, finalize that design. That's the spawn island design." Version 10 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc) is the final design. Sky Well is next.

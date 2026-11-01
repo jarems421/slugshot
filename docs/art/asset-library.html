@@ -1334,6 +1334,35 @@ void crystalPalette(float k, out vec3 deep, out vec3 bright) {
 
 const float WELL_LOW = 26.0;
 const float WELL_HIGH = 36.0;
+// A drifting rock: a small version of the spawn island's wedge of cliff blocks, trailing vines and its own rubble.
+void miniIsland(vec3 p, vec3 c, float s, float seed, inout vec2 res) {
+  vec3 q = (p - c)/s;
+  float bs = (length(q - vec3(0.0, -0.8, 0.0)) - 3.0)*s;
+  if (bs > res.x) return;
+  float d = smax(length(q.xz) - 1.05*(1.0 + 0.1*sin(atan(q.z, q.x)*5.0 + seed)), max(q.y, -q.y - 0.3), 0.05);
+  for (int i = 0; i < 9; i++) {
+    float fi = float(i), k = seed*9.0 + fi*7.3, a = fi*2.39996 + seed, r = 0.2 + 0.85*sqrt((fi + 0.5)/9.0);
+    float deep = 1.7*(1.0 - r/1.2)*(0.75 + 0.6*hash1(k)) + 0.25, w = 0.24 + 0.12*hash1(k + 1.0);
+    d = min(d, rockBlock(q, vec2(cos(a), sin(a))*r, hash1(k + 2.0)*3.0, w, w*0.9, 0.02, -deep,
+      0.6*(hash1(k + 3.0) - 0.5), hash1(k + 4.0) > 0.5 ? 1.0 : -1.0));
+  }
+  d = smax(d, q.y, 0.03)*s;
+  if (d < res.x) res = vec2(d, 1.0);
+  for (int i = 0; i < 2; i++) {
+    float a = float(i)*2.6 + seed, h = hash1(seed + float(i)*3.0);
+    vec3 top = c + vec3(cos(a), 0.0, sin(a))*s*0.95;
+    float v = capT(p, top, top + vec3(0.1, -s*(0.9 + 1.2*h), 0.1), 0.05, 0.02);
+    if (v < res.x) res = vec2(v, 12.0);
+  }
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i), k = seed*5.0 + fi*3.1, a = hash1(k)*6.2832, rad = (0.8 + 1.5*hash1(k + 1.0))*s;
+    vec3 l = p - (c + vec3(cos(a)*rad, -s*(0.5 + 1.5*hash1(k + 2.0)), sin(a)*rad));
+    l.xz = rot(fi*1.3)*l.xz;
+    l.xy = rot(fi*2.1)*l.xy;
+    float b = sdBox(l, vec3(1.0, 0.7, 0.82)*s*(0.05 + 0.12*hash1(k + 3.0)));
+    if (b < res.x) res = vec2(b, 1.0);
+  }
+}
 vec2 skyWell(vec3 p) {
   float rr = length(p.xz), a = atan(p.z, p.x);
   float holeR = mix(10.0, 8.2, clamp((p.y - WELL_LOW)/(WELL_HIGH - WELL_LOW), 0.0, 1.0));
@@ -1341,25 +1370,27 @@ vec2 skyWell(vec3 p) {
   d = max(d, rr - 62.0);
   d += 1.1*(noise3(p*vec3(0.22, 0.35, 0.22)) - 0.5);
   vec2 res = vec2(d*0.7, 1.0);
-  // Broken stone around the mouth, stalactites further out and crystals lining the opening.
-  float s = PI*2.0/14.0, k0 = floor(a/s);
+  // The mouth is broken cliff in the same angular blocks as the island, with sharp stalactites further out.
+  float s = PI*2.0/20.0, k0 = floor(a/s);
   for (int j = -1; j <= 1; j++) {
-    float k = mod(k0 + float(j) + 14.0, 14.0), ang = (k + 0.5)*s;
-    vec3 c = vec3(cos(ang)*11.2, WELL_LOW - 0.4 + 0.8*hash1(k + 61.0), sin(ang)*11.2);
-    float st = chunk(p, c, vec3(1.6 + 0.8*hash1(k + 62.0), 1.0 + 0.6*hash1(k + 63.0), 1.5), k*7.1 + 3.0);
-    if (st*0.9 < res.x) res = vec2(st*0.9, 1.0);
-    float dr = 13.5 + 3.0*hash1(k + 64.0);
-    float sp = sharpShard(p, vec3(cos(ang + 0.2)*dr, WELL_LOW + 0.6, sin(ang + 0.2)*dr), vec3(0.0, -1.0, 0.0),
-      2.5 + 3.5*hash1(k + 65.0), 1.0 + 0.8*hash1(k + 66.0), k*1.3);
+    float k = mod(k0 + float(j) + 20.0, 20.0), ang = (k + 0.5)*s + 0.1*(hash1(k + 60.0) - 0.5);
+    float rad = 10.9 + 1.1*hash1(k + 61.0), w = 1.25 + 0.65*hash1(k + 62.0);
+    float b = rockBlock(p, vec2(cos(ang), sin(ang))*rad, ang + 1.5*(hash1(k + 63.0) - 0.5), w, w*0.85,
+      WELL_LOW + 1.5, WELL_LOW - 0.6 - 3.2*hash1(k + 64.0), 0.8*(hash1(k + 65.0) - 0.5), hash1(k + 66.0) > 0.5 ? 1.0 : -1.0);
+    if (b < res.x) res = vec2(b, 1.0);
+    float dr = 14.0 + 5.0*hash1(k + 67.0), turn = ang + 0.2;
+    float sp = sharpShard(p, vec3(cos(turn)*dr, WELL_LOW + 0.6, sin(turn)*dr), vec3(0.0, -1.0, 0.0),
+      2.2 + 3.6*hash1(k + 68.0), 0.8 + 0.7*hash1(k + 69.0), k*1.3);
     if (sp < res.x) res = vec2(sp, 1.0);
   }
+  // Crystals line the opening, mostly cyan with a few violet linking to the storm.
   s = PI*2.0/18.0; k0 = floor(a/s);
   for (int j = -1; j <= 1; j++) {
     float k = mod(k0 + float(j) + 18.0, 18.0), ang = (k + 0.5)*s + 0.12*(hash1(k + 71.0) - 0.5);
     vec3 dir = normalize(vec3(-cos(ang)*0.95, -0.5 + 0.35*hash1(k + 75.0), -sin(ang)*0.95));
     vec3 base = vec3(cos(ang)*(10.4 + 0.5*hash1(k + 72.0)), WELL_LOW + 0.4, sin(ang)*(10.4 + 0.5*hash1(k + 72.0)));
     float cr = crystalDir(p, base, dir, 3.0 + 3.8*hash1(k + 73.0), 0.7 + 0.65*hash1(k + 74.0));
-    if (cr < res.x) res = vec2(cr, 3.0);
+    if (cr < res.x) res = vec2(cr, mod(k, 5.0) < 0.5 ? 18.05 : 18.0);
   }
   s = PI*2.0/13.0; k0 = floor(a/s);
   for (int j = -1; j <= 1; j++) {
@@ -1369,30 +1400,23 @@ vec2 skyWell(vec3 p) {
     vec3 dir = normalize(vec3(-cos(ang), 0.1 - 0.5*hash1(k + 84.0), -sin(ang)));
     float cr = crystalDir(p, vec3(cos(ang)*(wall + 0.6), y, sin(ang)*(wall + 0.6)), dir,
       1.9 + 2.0*hash1(k + 82.0), 0.42 + 0.34*hash1(k + 83.0));
-    if (cr < res.x) res = vec2(cr, 3.0);
+    if (cr < res.x) res = vec2(cr, mod(k, 4.0) < 0.5 ? 18.05 : 18.0);
   }
   // Vines trailing down from the rim.
   s = PI*2.0/11.0; k0 = floor(a/s);
   for (int j = 0; j <= 1; j++) {
     float k = mod(k0 + float(j) + 11.0, 11.0), ang = (k + 0.35)*s;
-    vec3 top = vec3(cos(ang)*11.0, WELL_LOW, sin(ang)*11.0);
-    float v = capT(p, top, top + vec3(0.2, -3.0 - 7.0*hash1(k + 91.0), 0.2), 0.11, 0.04);
+    vec3 top = vec3(cos(ang)*11.2, WELL_LOW - 0.5, sin(ang)*11.2);
+    float v = capT(p, top, top + vec3(0.2, -2.5 - 5.5*hash1(k + 91.0), 0.2), 0.09, 0.03);
     if (v < res.x) res = vec2(v, 12.0);
   }
-  // Rocks drifting in the light, each trailing moss.
+  // Mini islands drifting in the light, look only.
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
     float ang = fi == 0.0 ? 0.52 : fi == 1.0 ? 2.44 : fi == 2.0 ? 3.75 : fi == 3.0 ? 5.24 : 1.48;
     float rad = fi == 0.0 ? 8.5 : fi == 1.0 ? 7.5 : fi == 2.0 ? 8.8 : fi == 3.0 ? 6.5 : 5.5;
-    float size = fi == 0.0 ? 1.3 : fi == 1.0 ? 1.7 : fi == 2.0 ? 1.1 : fi == 3.0 ? 1.5 : 1.0;
-    vec3 c = vec3(cos(ang)*rad, 12.8 + fi*2.6 + 0.25*sin(uT*0.3 + fi), sin(ang)*rad);
-    float fr = chunk(p, c, vec3(size, size*0.62, size*0.8), fi*11.0 + 7.0);
-    if (fr*0.9 < res.x) res = vec2(fr*0.9, 1.0);
-    float un = sharpShard(p, c + vec3(0.0, size*0.2, 0.0), vec3(0.12, -1.0, 0.05), size*2.0, size*0.85, fi*2.0);
-    if (un < res.x) res = vec2(un, 1.0);
-    float tr = capT(p, c + vec3(size*0.65, 0.2*size, 0.0), c + vec3(size*0.7, -size*1.3, 0.1), 0.06, 0.02);
-    tr = min(tr, capT(p, c + vec3(-size*0.5, 0.1*size, size*0.3), c + vec3(-size*0.55, -size*1.0, size*0.3), 0.05, 0.02));
-    if (tr < res.x) res = vec2(tr, 12.0);
+    float size = fi == 0.0 ? 1.9 : fi == 1.0 ? 2.5 : fi == 2.0 ? 1.6 : fi == 3.0 ? 2.2 : 1.5;
+    miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.25*sin(uT*0.3 + fi), sin(ang)*rad), size, fi + 1.0, res);
   }
   // The spawn rock at true scale, for size.
   vec2 rk = spawnRock((p - vec3(0.0, 1.0, 0.0))*2.0 + vec3(0.0, ROCK_TOP, 0.0));
@@ -1409,18 +1433,18 @@ vec3 stormSky(vec3 rd) {
   float n = 0.0, amp = 0.55;
   for (int i = 0; i < 4; i++) { n += amp*noise3(q); q *= 2.03; amp *= 0.5; }
   float arms = 0.5 + 0.5*sin(a*3.0 + 4.5*log(r + 0.2) - uT*0.1);
-  vec3 c = mix(vec3(0.012, 0.012, 0.05), vec3(0.09, 0.08, 0.2), smoothstep(0.35, 0.8, n*0.85 + 0.25*arms));
-  c = mix(c, vec3(0.36, 0.31, 0.62), smoothstep(0.66, 0.92, n + 0.22*arms));
+  vec3 c = mix(vec3(0.008, 0.008, 0.035), vec3(0.1, 0.085, 0.24), smoothstep(0.38, 0.62, n*0.8 + 0.34*arms));
+  c = mix(c, vec3(0.42, 0.36, 0.72), smoothstep(0.7, 0.86, n*0.9 + 0.3*arms));
   c += vec3(0.5, 0.56, 0.85)*exp(-r*r*34.0)*0.7;
   // Lightning: a soft sheet in the cloud behind a thin forked bolt, changing every few seconds.
   for (int i = 0; i < 3; i++) {
     float fi = float(i), seed = fi + floor(uT*0.3 + fi*0.37)*3.1;
-    if (hash1(seed + 1.0) < 0.75) {
+    if (hash1(seed + 1.0) < 0.85) {
       vec2 lp = vec2(hash1(seed + 2.0) - 0.5, hash1(seed + 3.0) - 0.5)*0.9;
       vec2 dl = u - lp;
-      c += vec3(0.5, 0.48, 0.95)*exp(-dot(dl, dl)*38.0)*0.8;
-      float wob = dl.x + 0.05*sin(dl.y*30.0 + seed) + 0.025*sin(dl.y*71.0 + seed*2.0);
-      c += vec3(0.9, 0.9, 1.0)*(1.0 - smoothstep(0.002, 0.008, abs(wob)))*step(abs(dl.y), 0.14);
+      c += vec3(0.55, 0.5, 1.0)*exp(-dot(dl, dl)*16.0)*0.9;
+      float wob = dl.x + 0.12*sin(dl.y*11.0 + seed) + 0.05*sin(dl.y*29.0 + seed*2.0);
+      c += vec3(0.95, 0.92, 1.0)*(1.0 - smoothstep(0.006, 0.02, abs(wob)))*step(abs(dl.y), 0.42);
     }
   }
   return c;
@@ -1439,7 +1463,7 @@ vec3 lightColumn(vec3 ro, vec3 rd, float tEnd) {
   if (t1 <= t0) return vec3(0.0);
   vec3 mid = ro + rd*(t0 + t1)*0.5;
   float near = sqrt(max(c + R*R - b*b/a, 0.0))/R;
-  float edge = (1.0 - near)*smoothstep(-1.0, 4.0, mid.y)*mix(0.12, 1.0, 1.0 - abs(rd.y)*abs(rd.y));
+  float edge = (1.0 - near)*smoothstep(-3.0, 2.5, mid.y)*mix(0.12, 1.0, 1.0 - abs(rd.y)*abs(rd.y));
   float shafts = 0.7 + 0.5*noise3(vec3(atan(mid.z, mid.x)*2.6, mid.y*0.04, uT*0.05));
   return vec3(0.55, 0.72, 0.85)*(t1 - t0)*0.02*edge*shafts;
 }
@@ -1561,6 +1585,7 @@ float inkWidth(float id) {
   if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5) w = 0.0;
   if (uAsset > 3.5) {
     if (abs(id - 10.0) < 0.5) w = 0.012;
+    if (uAsset > 4.5 && uAsset < 5.5 && id < 1.5) w = 0.02;
     if (abs(id - 12.0) < 0.5) w = 0.012;
     if (abs(id - 14.0) < 0.5) w = 0.008;
     if (abs(id - 4.0) < 0.5) w = 0.02;
@@ -1609,11 +1634,13 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       vec3 l = centreLocal(p);
       float rr = length(l.xz);
       float scale = ASSET == 5 ? 0.5 : 1.0;
-      s *= 0.8 + 0.4*noise3(p*1.8/scale);
+      bool mini = ASSET == 5 && l.y < 48.0 && rr >= 9.5;
+      float calm = rr < 9.5 || mini ? 1.0 : 0.2;
+      s *= 1.0 + calm*0.4*(noise3(p*1.8/scale) - 0.5);
       float flat0 = smoothstep(0.75, 0.95, n.y);
-      s *= 1.0 - (0.45 - 0.27*flat0)*smoothstep(0.72, 0.82, noise3(p*9.0/scale));
-      s *= 0.92 + 0.16*noise3(p*3.1/scale);
-      s *= 1.0 + (0.4 - 0.24*flat0)*smoothstep(0.76, 0.86, noise3(p*9.0/scale + 31.0));
+      s *= 1.0 - calm*(0.45 - 0.27*flat0)*smoothstep(0.72, 0.82, noise3(p*9.0/scale));
+      s *= 1.0 + calm*0.16*(noise3(p*3.1/scale) - 0.5);
+      s *= 1.0 + calm*(0.4 - 0.24*flat0)*smoothstep(0.76, 0.86, noise3(p*9.0/scale + 31.0));
       float m = 0.0, fissure = 0.0, fissureHalo = 0.0;
       // Joints between blocks stay dark, so the columns read as separate forms.
       float occ0 = clamp(0.5 + 3.0*rockBody(l + n*0.45), 0.0, 1.0);
@@ -1646,11 +1673,13 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
         m = smoothstep(0.35, 0.8, n.y)*soft;
         if (l.y > -0.15) m *= smoothstep(4.8, 6.3, rr + 2.5*(noise3(l*0.7) - 0.5));
         m = max(m, smoothstep(0.6, 0.68, noise3(l*0.75 + 3.0))*(1.0 - smoothstep(0.45, 0.75, abs(n.y))));
+      } else if (mini) {
+        m = smoothstep(0.6, 0.9, n.y)*smoothstep(0.3, 0.55, noise3(p*1.3))*0.9;
       } else {
-        s *= 0.72;
+        s *= 0.6;
         if (ASSET == 6 && n.y > 0.7) s *= 0.55*smoothstep(36.0, 19.0, length(p.xz)) + 0.02;
       }
-      emit = s*(0.34 + 0.3*smoothstep(0.1, 0.7, -n.y))*(rr < 9.5 && l.y < 3.0 ? 1.0 : 0.3);
+      emit = s*(0.34 + 0.3*smoothstep(0.1, 0.7, -n.y))*(rr < 9.5 && l.y < 3.0 ? 1.0 : mini ? 0.8 : 0.3);
       emit *= 0.55 + 0.45*occ0;
       vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));
       emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;
@@ -1805,6 +1834,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     bool small = id > 18.9;
     crystalPalette(floor((id - (small ? 19.0 : 18.0))/0.05 + 0.5), deep, bright);
     float h = clamp(rockBody(centreLocal(p))/(small ? 0.55 : 1.6), 0.0, 1.0);
+    if (ASSET == 5 && p.y > 15.0) h = clamp((WELL_LOW + 0.4 - p.y)/5.5 + 0.35, 0.2, 1.0);
     vec3 c = mix(deep, bright, 0.15 + 0.7*h*h);
     emit = c*(0.25 + 0.75*h)*TR(id).z*(0.88 + 0.12*sin(uT*0.9 + p.y*1.3));
     spec = 0.6;
@@ -2220,7 +2250,7 @@ void main() {
       ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v1", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v2", concept: true, noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
@@ -2229,11 +2259,12 @@ void main() {
     core: [0.42, 0.93, 1.0], crG: [2, 34, 15], target: [0, 15, 0], dist: 54, figure: [1.6, 1, -1.2], glow: [0, 23, 0], glowCol: [0.42, 0.93, 1.0],
     notes: [
       ["Idea", "A huge opening in the cavern roof, wider than the Maelstrom below it, so it reads as a main centrepiece. Your two ideas combined: giant crystals line the opening, and the shaft climbs away to a distant storm."],
-      ["Storm", "Indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom's spiral, with occasional silent lightning. It is far away and stays dim, so the lobby stays calm."],
-      ["Crystals", "A ring of big cyan crystals around the mouth and smaller ones further up the shaft, supplying the light that falls onto the hub."],
-      ["Below the mouth", "Broken stone, stalactites and trailing vines around the rim, a soft 150-stud column of light, and five slow rocks drifting in it, each trailing moss. Look only for now."],
+      ["Storm", "Dramatic but distant: bands of indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom, with clear silent lightning now and then. It is noticeable when you look up, but it does not light the lobby."],
+      ["Crystals", "Big crystals ring the mouth with smaller ones further up the shaft, mostly cyan with a few violet that link to the storm. They brighten toward their tips and supply the light falling onto the hub."],
+      ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island, with sharp stalactites further out, trailing vines, and a soft 150-stud column of light."],
+      ["Drifting rocks", "Five mini islands in the same wedge shape as the spawn island, with mossy tops, trailing vines and their own rubble. Look only, and they drift slowly in the game."],
       ["Scale", "The spawn rock is shown at true scale with a player on it."],
-      ["Status", "Concept v1, awaiting your review."]
+      ["Status", "Concept v2, awaiting your review."]
     ]
   }, {
     id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v1", concept: true, noLive: true, shader: 6,
