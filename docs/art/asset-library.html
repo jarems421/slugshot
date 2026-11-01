@@ -3037,7 +3037,7 @@ void main() {
   // Hub centrepiece, one vertical axis (owner, 2026-11-01). Variants here are camera views of one design.
   const CENTRE_CORE = [0.3, 0.95, 0.9];
   ASSETS.push({
-    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v11", noLive: true, shader: 4,
+    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v11", concept: true, noLive: true, shader: 4,
     variantLabel: "View",
     variants: [
       { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 7.5, 0], dist: 27, pitch: 0.34 } },
@@ -3060,7 +3060,7 @@ void main() {
       ["Top", "Deep cracks carved into the stone run in from the rim, stopping short of the middle so the spawn area stays clear. Their walls are dark and teal light wells up from the bottom, spills onto the stone around them and rises softly into the air. Just a few tiny mushrooms from the 14-colour bank stand along the edge of each crack, with a few small crystals growing out of the cracks near the rim. Mushrooms appear only on top, not on the underside."],
       ["Runestone gateways", "One small Stonehenge-style gateway at the island's edge for each bridge: two standing runestones with a lintel across them, on footings set into the cliff, with a threshold slab between. Carved runes glow on the stones' faces. A glowing keystone in the lintel shows where the bridge leads, from both sides: crossed swords in orange toward the portals, a blaster in gold toward the gun side, a slug in mint toward the slug side, and a cave mouth in pale blue toward the entrance. About 12 studs of headroom and 14 wide, for the 10-stud bridges. See the Runestone gateway view."],
       ["In the game", "The floating rocks and debris get a slow floating animation when this goes into the map. It stays visual only, so it never moves players."],
-      ["Status", "Concept v11, with the gateways awaiting your review. The rest of the rock is approved."]
+      ["Status", "The rock itself was approved as final on 1 Nov 2026. The new runestone gateways, v11, await your review."]
     ]
   }, {
     id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v10", concept: true, noLive: true, shader: 5,
@@ -3104,7 +3104,7 @@ void main() {
       ["Mist", "Soft mist rises off the swirl and picks up its glow. This is also where the long plunge will fall through."],
       ["Water level", "50 studs below the shore, your choice."],
       ["Bridges", "The real rope bridges, tied to the runestone gateways on the spawn rock. See the Bridge hook-up and Rope tie views."],
-      ["Status", "Approved by the owner on 1 Nov 2026."]
+      ["Status", "Approved by the owner on 1 Nov 2026. The bridges and gateways added since, v5, await your review."]
     ]
   }, {
     id: "bridge", name: "Wooden rope bridge", kind: "Landmark · hub", size: "50 studs long, 10 wide, about 5 of droop", version: "v2", concept: true, noLive: true, shader: 7,
@@ -3123,7 +3123,7 @@ void main() {
       ["Details", "Three hanging lanterns with warm cores in small iron cages, lighting the wood around them, plus a few leafy vines on the rails."],
       ["Alive", "It sways very slightly at all times. Under anyone crossing, the deck dips and the nearby planks bounce and rock a little. Pick In motion to see a figure cross. That preview is sped up and choppy."],
       ["In the game", "The sway and dip are visual, driven by where players are on the bridge, while players walk on a smooth invisible slope, so nobody jitters or gets thrown off. The gaps are visual too."],
-      ["Status", "Concept v1, awaiting your review."]
+      ["Status", "Concept v2, awaiting your review."]
     ]
   });
   const PLANNED = ["Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
