@@ -142,6 +142,15 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Fossils** needed to be big (0.75 to 1 stud) with a pale disc and ribs; small thin spirals read as targets.
 - **Surface texture** at wall distance needs strong contrast: tonal mottling at 0.4, flecks at 0.45, and hatching whose crevice mask reaches gentle concavity.
 
+### Round 8: real cracks kept, everything faint removed
+
+- **Owner:** loves the carved cracks and wants a few more; disliked "the faint line that just squiggles around everywhere" and the fossil shells ("mid").
+- **Two sources of faint squiggles,** both removed in the texture study:
+  - v6's painted noise-isoline cracks in the rock albedo.
+  - The concept page's material-boundary ink. Its diagonal samples dipped under the rock surface and outlined the buried roots of wall crystals and stems as arcs. The fix is the surface ring test the Roblox painter has used since round 4. It also removed the dark blobs around sprout bases in the concept renders.
+- **Ruled out first:** convex crease lines, and the ambient-occlusion reach past the dressing's bounding spheres. Each was tested on renders and left the arcs in place.
+- **Cracks:** now on five of the twelve big rocks (one per column plus one), with a second shorter crack on about half.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

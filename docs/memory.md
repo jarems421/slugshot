@@ -619,3 +619,9 @@
 - **Confirmed:** owner showed identical shots with different lighting and wants the brighter one always; rejected round 6 rock options (squiggle cracks, deformed rocks) and asked for a separate rock artifact with Slugterra-style cracks on a third of the rocks per wall (different per wall, evenly spread), one unique texture and one general texture on all rocks.
 - **Implemented/verified offline:** wall lights no longer cast shadows (the diagnosis that automatic graphics quality caused the flip is inferred from the screenshots). Rock shader rebuilt: angular, forked V-groove cracks (one per column, never the top row), fossil ammonite shells on two rocks, and grain, edge wear and crevice hatching on all rocks. Rock shapes unchanged; option 1 pixel-identical to v6. Turntables inspected over three iterations. [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) published; library v17.
 - **Unresolved:** owner verdict; Roblox build of the chosen layers as four wall variants.
+
+## 2026-11-01 - Rock wall study round 8: real cracks only
+
+- **Confirmed:** owner loves the carved cracks and wants a few more; remove the faint squiggly lines; fossil shells not wanted.
+- **Implemented/verified offline:** cracks on five of the twelve big rocks with second cracks on about half; v6 painted cracks and buried-root boundary arcs removed from the study (surface ring test in the concept, convex lines off for study rock in the concept and painter); fossil code removed. Option 1 within 2 of 255 levels of v6. Turntables inspected; study page v2 and library v18 published.
+- **Unresolved:** owner's final look; Roblox build of walls A to D.

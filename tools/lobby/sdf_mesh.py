@@ -78,7 +78,9 @@ void main() {
   vec2 s1 = assetMap(p + vec3(e, -e, -e)), s2 = assetMap(p + vec3(-e, -e, e));
   vec2 s3 = assetMap(p + vec3(-e, e, -e)), s4 = assetMap(p + vec3(e, e, e));
   float lap = (s1.x + s2.x + s3.x + s4.x - 4.0*assetMap(p).x)/e;
-  float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + 0.5*smoothstep(1.4/cs, 2.4/cs, lap);
+  // No convex edge lines on the rock wall texture study, matching the library (stray arcs on its masses).
+  float convex = id < 1.5 && uRockLayers.x + uRockLayers.y > 0.5 ? 0.0 : 0.5;
+  float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
   // Material boundaries are found along the surface: a ring of points in the tangent plane, each snapped
   // back onto the surface, so the line has a fixed width. The library's four diagonal samples reach past
   // thin stems and caps into air, where the nearest material is the rock, and inked most of each sprout.

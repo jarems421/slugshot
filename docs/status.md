@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01, round 8 (`experiment/lobby`):** owner kept the real cracks and wanted more; squiggles and shells removed. [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) v2 and library v18: cracks on five of the twelve big rocks (second crack on about half), surface texture, no painted squiggles or buried-root arcs, no fossils. **Unresolved:** owner's final look; then build walls A to D for Roblox.
+
 **Implemented, 2026-11-01, round 7 (`experiment/lobby`):** wall lights no longer cast shadows: the owner's 'switching' lighting was Studio's automatic graphics quality toggling those shadows. The owner rejected round 6's rock options, so a new [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) (also in the library, v17) shows Slugterra-style cracks on a third of the rocks, fossil shells and surface texture on every rock, with walls A to D varying placements. **Unresolved:** owner verdict on the lighting and the study; then build the chosen walls (four variants) for Roblox.
 
 **Implemented, 2026-11-01, round 6 (`experiment/lobby`):** small caps brightened (glow back to about concept strength with deeper colours, lights 1.6). The owner said the rocks look basic, so five rock wall texture options were rendered in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) v16, with v6 kept as option 1. **Unresolved:** owner's pick of texture option, then the Roblox build of it.
