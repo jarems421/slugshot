@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Bridge planks fixed; sway and weight
+
+- **Owner feedback:** planks poke out like stairs (screenshot), asked whether the character caused it; add very slight sway and weight logic, with the bridge drooping and moving when someone runs on it.
+- **Cause:** agent's bug. Planks were tilted against the deck's slope; not caused by the character. Fixed.
+- **Implemented/verified offline:** sway on all bridges, a dip and bouncing, rocking planks under a runner on the concept (owner: noticeable but not too much), and an In motion view. Renders inspected.
+- **Confirmed for the Roblox build, not implemented:** slight sway and weight dip driven by player positions, visual only. Hook-up awaiting owner review.
+
 ## 2026-11-01 - Bridges hooked to the markers
 
 - **Owner feedback:** loves the bridges, but they must hook up to the rune markers on the spawn rock or the markers are useless. Wants to see the hook-up before calling the designs done.

@@ -1927,7 +1927,18 @@ void lanternAt(int i, out vec3 top, out vec3 core) {
 }
 // The rail: on a hooked bridge it dips at the island end to tie onto the pillar and stump.
 float railAt(float x, bool hooked) { return hooked ? mix(railY(x), 1.02, smoothstep(-7.0, -10.7, x)) : railY(x); }
+float runnerX(float spin) { return -11.0 + 22.0*fract(spin*2.0/6.2832); }
+float bridgeDip(float x, float spin) {
+  float dx = x - runnerX(spin), u = clamp(x/10.0, -1.0, 1.0);
+  return 0.55*exp(-dx*dx/9.0)*(1.0 - u*u);
+}
 vec2 ropeBridge(vec3 p, float seedO, bool hooked) {
+  {
+    float su = clamp(p.x/10.6, -1.0, 1.0), env = 1.0 - su*su, sp = uT*ORBIT;
+    p.z -= 0.09*env*sin(sp*3.0 + seedO);
+    p.y -= 0.045*env*sin(sp*5.0 + seedO*1.7);
+    if (!hooked) p.y += bridgeDip(p.x, sp);
+  }
   float x = p.x, az = abs(p.z);
   if (max(abs(x) - 17.5, max(az - 6.0, max(p.y - 4.0, -6.0 - p.y))) > 1.2) return vec2(max(abs(x) - 17.0, max(az - 5.5, max(p.y - 3.5, -5.5 - p.y))), 2.0);
   // Planks: uneven lengths, each slightly out of line, with two missing and one snapped off.
@@ -1936,10 +1947,13 @@ vec2 ropeBridge(vec3 p, float seedO, bool hooked) {
     float i = cell + float(j);
     if (i < 0.0 || i > 33.0 || abs(i - 9.0) < 0.5 || abs(i - 23.0) < 0.5) continue;
     float xc = -10.2 + (i + 0.5)*PLANK_PITCH + 0.07*(hash1(i + seedO + 801.0) - 0.5);
-    vec3 q = p - vec3(xc, deckY(xc) - 0.05, 0.18*(hash1(i + seedO + 802.0) - 0.5));
+    float wsp = uT*ORBIT, near = hooked ? 0.0 : exp(-(xc - runnerX(wsp))*(xc - runnerX(wsp))/3.6);
+    float rock = sin(wsp*(18.0 + mod(i, 5.0)*2.0) + i*2.3);
+    float settle = 0.012*sin(wsp*(4.0 + mod(i, 3.0)) + i*1.7);
+    vec3 q = p - vec3(xc, deckY(xc) - 0.05 + settle + 0.075*near*rock, 0.18*(hash1(i + seedO + 802.0) - 0.5));
     q.xz = rot(0.11*(hash1(i + seedO + 803.0) - 0.5))*q.xz;
-    q.xy = rot(-xc*0.04 + 0.07*(hash1(i + seedO + 804.0) - 0.5))*q.xy;
-    q.yz = rot(0.05*(hash1(i + seedO + 805.0) - 0.5))*q.yz;
+    q.xy = rot(atan(0.04*xc) + 0.03*(hash1(i + seedO + 804.0) - 0.5))*q.xy;
+    q.yz = rot(0.03*(hash1(i + seedO + 805.0) - 0.5) + 0.075*near*rock)*q.yz;
     float half0 = 1.85 + 0.42*hash1(i + seedO + 806.0);
     if (abs(i - 16.0) < 0.5) { q.z += 0.72; half0 = 1.18; }
     planks = min(planks, sdBox(q, vec3(0.255 + 0.03*hash1(i + seedO + 807.0), 0.055, half0)) - 0.02);
@@ -2096,7 +2110,13 @@ vec2 map(vec3 p) {
   // The huge concepts hang in space with no floor; the figure is shown at true scale.
   if (uFig.w > 0.5) {
     float ws = ASSET == 5 ? 10.0 : ASSET == 7 ? 2.5 : 5.0;
+#if ASSET == 7
+    float runX = runnerX(uT*ORBIT);
+    vec3 at = vec3(runX, deckY(runX) - bridgeDip(runX, uT*ORBIT) + 0.03, 0.0);
+    float f = figure(uFig.xyz + (p - at)*ws)/ws;
+#else
     float f = figure(uFig.xyz + (p - uFig.xyz)*ws)/ws;
+#endif
     if (f < r.x) r = vec2(f, 10.0);
   }
 #else
@@ -2987,16 +3007,18 @@ void main() {
     variantLabel: "View",
     variants: [
       { name: "Whole bridge", bright: [0.41, 0.28, 0.155], camera: { target: [0, -0.6, 0], dist: 37, pitch: 0.34 } },
-      { name: "Close up", bright: [1.0, 0.62, 0.24], camera: { target: [-5, -0.5, 0], dist: 17, pitch: 0.2 } }
+      { name: "Close up", bright: [1.0, 0.62, 0.24], camera: { target: [-5, -0.5, 0], dist: 17, pitch: 0.2 } },
+      { name: "In motion (sped up)", bright: [0.62, 0.52, 0.34], play: true, camera: { target: [0, -0.6, 0], dist: 30, pitch: 0.3 } }
     ],
     core: [1.0, 0.62, 0.24], edge: [0.7, 0.35, 0.1], hot: [1.0, 0.8, 0.55], target: [0, -0.6, 0], dist: 37, figure: [-6, -1.28, 0], glow: [0, 8, -4], glowCol: [0.1, 0.09, 0.09],
     notes: [
       ["Idea", "A rickety frontier rope bridge, one for each of the four crossings from the spawn island to the shore."],
-      ["Deck", "Uneven weathered planks, each its own length and tone and slightly out of line, with two missing and one snapped off. Moss grows on a few of them."],
+      ["Deck", "Uneven weathered planks lying flat along the curve, each its own length and tone and slightly out of line, with two missing and one snapped off. Moss grows on a few of them."],
       ["Ropes", "Two thick ropes carry the deck, with hip-height rope rails on both sides and hangers between them, knotted where they meet. You can still jump over."],
       ["Ends", "On the shore, thick crooked timber posts lashed with rope. On the spawn rock the deck runs onto the island through its marker, and the rail ropes lash around the pillar and the stump, so the marker holds the bridge up. See it in the Maelstrom's Bridge hook-up view."],
       ["Details", "Three hanging lanterns with warm cores in small iron cages, lighting the wood around them, plus a few leafy vines on the rails."],
-      ["In the game", "The deck sags and looks rickety, but players walk on a smooth invisible slope, and any sway is visual only, so nobody jitters or gets thrown off. The gaps are visual too."],
+      ["Alive", "It sways very slightly at all times. Under anyone crossing, the deck dips and the nearby planks bounce and rock a little. Pick In motion to see a figure cross. That preview is sped up and choppy."],
+      ["In the game", "The sway and dip are visual, driven by where players are on the bridge, while players walk on a smooth invisible slope, so nobody jitters or gets thrown off. The gaps are visual too."],
       ["Status", "Concept v1, awaiting your review."]
     ]
   });

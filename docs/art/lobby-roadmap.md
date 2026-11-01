@@ -42,6 +42,7 @@ Source: owner's pasted art-direction chat and requests, 2026-10-31. **Status: Co
   - **left** to the gun exhibition side;
   - **right** to the slug exhibition side.
 - **Bridges land on solid mainland, not small platforms.** Each one opens out into broad land that wraps around the sinkhole, and the terrain and biomes grow out from there. The round/octagonal shape is the sinkhole and the mainland shoreline around it.
+- **Bridge motion (Confirmed, owner 2026-11-01):** very slight sway at all times, and a slight dip with planks moving under players crossing: noticeable, not too much. Visual only.
 - **Bridges:** Confirmed 2026-11-01: wooden suspension bridges, 50 long (shortened from 60 on 2026-11-01 for the larger spawn rock), 10 wide, with about 5 studs of droop. Decks stay fixed so they never move players.
 - **No barriers (Confirmed 2026-11-01, replaces the earlier invisible barriers).** Falling is a feature: a long plunge through mist, then respawn at spawn. A low rock lip stops plain walking off the shore, and players can hop over it.
 - **PvP gate** straight ahead.
