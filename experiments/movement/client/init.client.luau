@@ -11,12 +11,20 @@ local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
 local Traversal = require(script.Traversal)
+local FirstPerson = require(script.FirstPerson)
+local AimCursor = require(script.AimCursor)
+local Reticle = require(script.Reticle)
+local FirstPersonFlip = require(script.FirstPersonFlip)
+local AcrobaticCamera = require(script.AcrobaticCamera)
+FirstPerson.start()
 local request = shared:WaitForChild("MovementRequest") :: RemoteEvent
 -- Roblox's own PlayerModule only exists at run time, so it is required untyped.
 local playerModule = player.PlayerScripts:WaitForChild("PlayerModule") :: ModuleScript
 local controls = (require :: any)(playerModule):GetControls()
 local library, privateClips = Clips.load()
-require(script.Presentation).start(library)
+AcrobaticCamera.start(library)
+local Presentation = require(script.Presentation)
+Presentation.start(library)
 local Acro = Config.Acrobatics
 local Trav = Config.Traversal
 
@@ -40,7 +48,24 @@ local bouncing = false -- a ground jump in the air (Profiles.JumpGravity applies
 -- Ctrl shift lock (owner, 2026-10-30; Roblox's own is off so Shift can slide): mouse
 -- locked to the centre, body facing the camera, camera over the right shoulder.
 local shiftLocked, lockBlend, cameraBase = false, 0, Vector3.zero
-local sprintShake = 0 -- 0..1, how much of the sprint camera shake is applied
+local movementShake, shakePhase = 0, 0 -- ground bounce blend and continuous footfall phase
+local headBase: Vector3? = nil -- first person: slow baseline of the head's offset from the root
+-- Keep the player's look independent of the animated somersault/twist. The body and
+-- gun carry sell flips; head translation fades out smoothly while aiming through one.
+local flipWeight, viewRoll, viewPitch = 0, 0, 0
+local headFollow = Vector3.zero
+local runLeanOffset = Vector3.zero
+local flipCueOffset = Vector3.zero
+local shownAction: string? = nil
+-- What the action view added to the camera last frame. Roblox's camera scripts read the
+-- camera's orientation back each frame, and movement reads it at input, so the addition
+-- is removed first thing every frame; otherwise it compounds (owner: one flip spun the
+-- screen many times and landed looking at the ground; the slide's lean rose to the sky).
+local appliedView: CFrame? = nil
+local appliedFocusOffset = Vector3.zero
+local appliedCamera: Camera? = nil
+local appliedFov = 0
+local FirstView = Config.Camera.FirstPerson
 local testMove: Vector3? = nil
 local testUntil = 0
 local testJumpUntil = 0
@@ -68,14 +93,12 @@ local padding = Instance.new("UIPadding")
 padding.PaddingLeft, padding.PaddingTop = UDim.new(0, 12), UDim.new(0, 10)
 padding.Parent = label
 gui.Parent = player:WaitForChild("PlayerGui")
-local crosshair = Instance.new("TextLabel")
-crosshair.Size = UDim2.fromOffset(24, 24)
-crosshair.AnchorPoint = Vector2.new(0.5, 0.5)
-crosshair.Position = UDim2.fromScale(0.5, 0.5)
-crosshair.BackgroundTransparency = 1
-crosshair.Text, crosshair.TextSize = "+", 24
-crosshair.TextColor3 = Color3.new(1, 1, 1)
-crosshair.Parent = gui
+local aimGui = Instance.new("ScreenGui")
+aimGui.Name = "AimHUD"
+aimGui.ResetOnSpawn = false
+aimGui.IgnoreGuiInset = true
+aimGui.Parent = gui.Parent
+local crosshair = Reticle.create(aimGui)
 
 local function send(kind: string, value: any?, direction: Vector3?, extra: any?): number
 	sequence += 1
@@ -112,6 +135,11 @@ local function attach(newCharacter: Model)
 		end
 	end
 	speed, move, acro, airUsed, slideBuffer = 0, Vector3.zero, nil, false, 0
+	headBase = nil
+	headFollow = Vector3.zero
+	runLeanOffset = Vector3.zero
+	flipCueOffset = Vector3.zero
+	flipWeight, viewRoll, viewPitch = 0, 0, 0
 	bouncing = false
 	sprinting, aiming, testMove = false, false, nil
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
@@ -260,9 +288,19 @@ local function startFlip(input: Vector3?, now: number): boolean
 	lastFlip = variant
 	local events = library[variant].events
 	local airDuration = (events.land or 0.6) - (events.takeoff or 0)
-	local rate = math.clamp(airDuration / landIn, settings.MinRate, settings.MaxRate)
+	local rate = math.clamp(
+		airDuration / landIn * settings.PlaybackScale,
+		settings.MinRate,
+		settings.MaxRate
+	)
 	airUsed = true
 	acro = { kind = "Flip", start = now, duration = airDuration / rate }
+	character:SetAttribute("FirstPersonFlipDuration", acro.duration)
+	character:SetAttribute("FirstPersonFlipForward", if input then input:Dot(facing) else 1)
+	character:SetAttribute(
+		"FirstPersonFlipSide",
+		if input then input:Dot(facing:Cross(Vector3.yAxis)) else 0
+	)
 	announce("Flip", variant, facing, rate, now)
 	return true
 end
@@ -585,7 +623,9 @@ local function kickLaunch(
 	local out = math.max(wanted:Dot(away), settings.MinOut)
 	local side = flat(wanted - away * wanted:Dot(away))
 	local direction = if side then side * math.sqrt(1 - out * out) + away * out else away
-	return direction * math.max(kickSpeed, along:Dot(direction)), up, nil
+	return direction * math.min(math.max(kickSpeed, along:Dot(direction)), settings.MaxCarry),
+		up,
+		nil
 end
 -- The wall last kicked off or run, which is not run again straight away.
 local lastWallPart: Instance? = nil
@@ -714,7 +754,7 @@ local function tryWallRun(now: number, input: Vector3): boolean
 		side = side,
 		part = hit.Instance,
 		contact = hit.Position,
-		speed = if running then math.max(along.Magnitude, run.Speed) else 0,
+		speed = if running then run.Speed else 0,
 		-- Keep part of the jump's rise; Jump held then climbs, released slides down.
 		vy = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
 	}
@@ -875,12 +915,6 @@ local function markAim(): Vector3?
 	return position
 end
 
-local profiles = { "Baseline", "Athletic", "Precise" }
-local function cycleProfile()
-	local index = table.find(profiles, player:GetAttribute("MovementProfile")) or 2
-	send("Profile", profiles[index % #profiles + 1])
-end
-
 local function bind(name: string, callback: any, title: string, ...: EnumItem)
 	ContextActionService:BindAction(name, callback, true, ...)
 	ContextActionService:SetTitle(name, title)
@@ -906,19 +940,86 @@ bind("ExperimentSlide", function(_, state)
 	end
 	return Enum.ContextActionResult.Sink
 end, "Slide", Enum.KeyCode.LeftShift, Enum.KeyCode.ButtonB)
+local function setShiftLock(locked: boolean)
+	shiftLocked = locked
+	AimCursor.setShiftLocked(locked)
+	if not locked then
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	end
+end
 bind("ExperimentShiftLock", function(_, state)
 	if state == Enum.UserInputState.Begin then
-		shiftLocked = not shiftLocked
-		if not shiftLocked then
-			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-		end
+		setShiftLock(not shiftLocked)
 	end
 	return Enum.ContextActionResult.Sink
 end, "Shift lock", Enum.KeyCode.LeftControl, Enum.KeyCode.RightControl)
+RunService:BindToRenderStep("SlugshotActionViewUndo", Enum.RenderPriority.First.Value, function()
+	local camera = appliedCamera
+	if camera and appliedView then
+		local view = camera.CFrame
+		camera.CFrame = view * appliedView:Inverse()
+	end
+	if camera then
+		camera.Focus -= appliedFocusOffset
+		camera.FieldOfView -= appliedFov
+	end
+	appliedView = nil
+	appliedFocusOffset = Vector3.zero
+	appliedCamera, appliedFov = nil, 0
+end)
+RunService:BindToRenderStep("SlugshotActionView", Enum.RenderPriority.Camera.Value + 5, function(dt)
+	local camera = workspace.CurrentCamera
+	if camera then
+		local view = camera.CFrame
+		AcrobaticCamera.setBase(view)
+		local experiment, lens = AcrobaticCamera.step(dt, character, FirstPerson.active())
+		local tilt = CFrame.Angles(viewPitch, 0, viewRoll) * experiment
+		-- Apply the running eye position after native follow. Adding this through
+		-- CameraOffset loses much of the advance to native follow/physics timing.
+		local effect = CFrame.new(view:VectorToObjectSpace(runLeanOffset)) * tilt
+		camera.CFrame = view * effect
+		-- Native first-person character facing also uses the eye/focus relationship.
+		-- Advance both together so passing the old focus cannot reverse AutoRotate.
+		camera.Focus += runLeanOffset
+		appliedFocusOffset = runLeanOffset
+		camera.FieldOfView += lens
+		appliedView, appliedCamera, appliedFov = effect, camera, lens
+	end
+end)
 -- The camera scripts reset the mouse every frame, so the lock is reapplied after them.
 RunService:BindToRenderStep("SlugshotShiftLock", Enum.RenderPriority.Camera.Value + 1, function()
 	if shiftLocked then
 		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+	end
+end)
+-- Run after Settings/native camera cursor handling. Only one gameplay indicator:
+-- centered while locked, mouse-following otherwise; menus retain the real pointer.
+local hideGameplayPointer = false
+-- Camera/tool/CoreGui updates can restore the icon after an earlier HUD pass.
+-- Keep one owner, including out-of-render writes, while yielding immediately to menus.
+UserInputService:GetPropertyChangedSignal("MouseIconEnabled"):Connect(function()
+	if hideGameplayPointer and not AimCursor.menuOpen() and UserInputService.MouseIconEnabled then
+		UserInputService.MouseIconEnabled = false
+	end
+end)
+RunService:BindToRenderStep("SlugshotAimCursor", Enum.RenderPriority.Last.Value + 1000, function(dt)
+	Reticle.step(dt)
+	local camera = workspace.CurrentCamera
+	local menu = AimCursor.menuOpen()
+	if camera then
+		local point = AimCursor.point(camera)
+		local inside = point.X >= 0
+			and point.Y >= 0
+			and point.X <= camera.ViewportSize.X
+			and point.Y <= camera.ViewportSize.Y
+		crosshair.Position = UDim2.fromOffset(point.X, point.Y)
+		crosshair.Visible = not menu and inside
+		hideGameplayPointer = not menu and inside
+		UserInputService.MouseIconEnabled = not hideGameplayPointer
+	else
+		hideGameplayPointer = false
+		crosshair.Visible = false
+		UserInputService.MouseIconEnabled = true
 	end
 end)
 bind("ExperimentSprint", function(_, state)
@@ -963,11 +1064,6 @@ ContextActionService:BindAction("ExperimentHurt", function(_, state)
 		send("Hurt")
 	end
 end, false, Enum.KeyCode.H)
-ContextActionService:BindAction("ExperimentProfile", function(_, state)
-	if state == Enum.UserInputState.Begin then
-		cycleProfile()
-	end
-end, false, Enum.KeyCode.P)
 ContextActionService:BindAction("ExperimentRespawn", function(_, state)
 	if state == Enum.UserInputState.Begin then
 		send("Respawn")
@@ -1025,6 +1121,7 @@ end)
 
 RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, function(dt)
 	if not humanoid or not root or not character or humanoid.Health <= 0 then
+		runLeanOffset = Vector3.zero
 		return
 	end
 	local camera = workspace.CurrentCamera
@@ -1067,12 +1164,58 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		-- Locked on: follow the wall surface until it ends or the feet reach the
 		-- ground (a Jump tap kicks off; see InputEnded).
 		local run = Trav.WallRun
-		local hit = workspace:Raycast(root.Position, -acro.away * (run.Reach + 0.6), rays)
-		local away = hit and math.abs(hit.Normal.Y) < 0.35 and flat(hit.Normal)
-		if away then
-			local along = acro.direction - away * acro.direction:Dot(away)
-			acro.away, acro.contact = away, hit.Position
-			acro.direction = flat(along) or acro.direction
+		local hit, surfaceKind =
+			Traversal.followWall(root.Position, acro.away, acro.direction, acro.speed, run, rays)
+		local away = hit and flat(hit.Normal)
+		if hit and away and surfaceKind == "outside" and not acro.corner then
+			local old = acro.away
+			local determinant = old.X * away.Z - old.Z * away.X
+			if math.abs(determinant) > 0.1 then
+				local d0, d1 = old:Dot(acro.contact), away:Dot(hit.Position)
+				local pivot = Vector3.new(
+					(d0 * away.Z - d1 * old.Z) / determinant,
+					root.Position.Y,
+					(old.X * d1 - away.X * d0) / determinant
+				)
+				if (pivot - root.Position).Magnitude <= run.Surface.CornerReach + run.Hug then
+					acro.part = hit.Instance
+					acro.corner = {
+						pivot = pivot,
+						normal = old,
+						direction = acro.direction,
+						progress = 0,
+						angle = math.atan2(old:Cross(away).Y, old:Dot(away)),
+					}
+				end
+			end
+		end
+		if acro.corner then
+			local corner = acro.corner
+			local cornerRate = math.min(run.Surface.CornerRate, acro.speed / run.Hug)
+			local advance = cornerRate * dt * (if corner.reverse then -1 else 1)
+			corner.progress = math.clamp(corner.progress + advance, 0, math.abs(corner.angle))
+			local rotation = CFrame.Angles(0, math.sign(corner.angle) * corner.progress, 0)
+			acro.away = rotation:VectorToWorldSpace(corner.normal)
+			acro.direction = rotation:VectorToWorldSpace(corner.direction)
+				* (if corner.reverse then -1 else 1)
+			acro.contact = corner.pivot
+			away = acro.away
+			acro.surfaceAt = now
+			if
+				corner.progress >= math.abs(corner.angle)
+				or (corner.reverse and corner.progress <= 0)
+			then
+				acro.corner = nil
+			end
+		elseif hit and away then
+			-- A cross product retains travel around a 90 degree corner; projecting the
+			-- old tangent onto the new face would collapse it to zero.
+			local side = math.sign(acro.direction:Dot(acro.away:Cross(Vector3.yAxis)))
+			acro.direction = away:Cross(Vector3.yAxis) * side
+			acro.away, acro.contact, acro.part = away, hit.Position, hit.Instance
+			acro.surfaceAt = now
+		elseif now - (acro.surfaceAt or acro.start) <= run.Surface.Grace then
+			away = acro.away
 		end
 		-- Near the top (nothing beside the head): the climb holds the height and runs
 		-- along the top edge. Owner (2026-10-30): it used to mantle over by itself; a
@@ -1090,6 +1233,13 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		-- input back along the wall brakes, turns round and runs the other way.
 		local wanted =
 			math.clamp(desired:Dot(acro.direction) + math.max(desired:Dot(-acro.away), 0), -1, 1)
+		if
+			acro.corner
+			and not acro.corner.reverse
+			and desired:Dot(acro.corner.direction) > run.MinInput
+		then
+			wanted = math.max(wanted, 0.6)
+		end
 		local steerTarget = run.Speed * wanted
 		-- Letting go stops at once (owner: straight into the slide, no slowing down);
 		-- a faster attach bleeds down to the run speed while the run is held.
@@ -1100,6 +1250,9 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 			else run.Steer
 		local signed = Math.approach(acro.speed, steerTarget, steerRate, dt)
 		if signed < 0 then
+			if acro.corner then
+				acro.corner.reverse = not acro.corner.reverse
+			end
 			acro.direction = -acro.direction
 			signed = -signed
 		end
@@ -1210,27 +1363,122 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		Config.Camera.BlendRate,
 		dt
 	)
-	local shoulder = Config.Camera.ShiftLock * lockBlend
-	-- Sprint shake (owner: make sprinting obvious, very subtle, no tilting): a small
-	-- bounce on each footfall while sprinting on the ground, eased in and out.
-	local shake = Config.Camera.SprintShake
-	local shaking = sprinting and onGround and not acro and speed > settings.RunSpeed + 1
-	sprintShake += ((if shaking then 1 else 0) - sprintShake) * Math.alpha(shake.Rate, dt)
-	local bounce = math.abs(math.sin(os.clock() * math.pi * shake.Steps)) * shake.Bounce
+	-- First person (scrolled in; owner: feel the legs, not a floating camera): no shoulder
+	-- offset and only a tiny gait pulse. The camera follows the animated head's motion
+	-- relative to the body - footfalls, weight shift, landing compression - damped and
+	-- without its rotation (eyes stay steady). A slow baseline removes steady lean.
+	local first = FirstPerson.active()
+	local follow = Vector3.zero
+	local stabilizing = first and kind ~= nil and kind ~= "Slide"
+	flipWeight += ((if stabilizing then 1 else 0) - flipWeight) * Math.alpha(
+		FirstView.FlipBlend,
+		dt
+	)
+	local head = character:FindFirstChild("Head")
+	if head and head:IsA("BasePart") then
+		local offset = root.CFrame:PointToObjectSpace(head.Position)
+		local base = if headBase and not stabilizing
+			then headBase:Lerp(offset, Math.alpha(FirstView.Baseline, dt))
+			else offset
+		headBase = base
+		if first then
+			local moved = (offset - base) * FirstView.Follow * (1 - flipWeight)
+			follow = Vector3.new(
+				math.clamp(moved.X, -FirstView.Max, FirstView.Max),
+				math.clamp(moved.Y, -FirstView.Max, FirstView.Max),
+				math.clamp(moved.Z, -FirstView.Max, FirstView.Max)
+			)
+		end
+	end
+	headFollow = headFollow:Lerp(follow, Math.alpha(FirstView.FollowRate, dt))
+	local cueOffset = Vector3.zero
+	if first and acro and acro.kind == "Flip" and not AcrobaticCamera.enabled() then
+		cueOffset = FirstPersonFlip.sample(
+			workspace:GetServerTimeNow(),
+			acro.start,
+			acro.duration,
+			(character:GetAttribute("FirstPersonFlipSide") or 0) :: number
+		).offset
+	end
+	flipCueOffset = flipCueOffset:Lerp(cueOffset, Math.alpha(18, dt))
+	-- Wall run: roll away from the wall; slide: a small lean back and roll.
+	local rollTarget, pitchTarget = 0, 0
+	if first and kind == "WallRun" then
+		rollTarget = math.rad(FirstView.WallRoll) * (if acro.side == "Left" then -1 else 1)
+	elseif first and kind == "Slide" then
+		rollTarget, pitchTarget = math.rad(FirstView.SlideRoll), math.rad(FirstView.SlidePitch)
+	end
+	viewRoll += (rollTarget - viewRoll) * Math.alpha(FirstView.TiltRate, dt)
+	viewPitch += (pitchTarget - viewPitch) * Math.alpha(FirstView.TiltRate, dt)
+	-- The first-person viewmodel and leg visibility read the current action (local only).
+	local action = if first and kind
+		then `{kind}{if kind == "WallRun" then acro.side else ""}`
+		else nil
+	if action ~= shownAction then
+		shownAction = action
+		character:SetAttribute("FirstPersonAction", action)
+	end
+	local shoulder = Config.Camera.ShiftLock * lockBlend * (if first then 0 else 1)
+	-- A subtle ground bounce follows the slower gait; sprint is only a little
+	-- quicker. Integrate phase so changing pace never jumps the camera's phase.
+	local shake = if sprinting then Config.Camera.SprintShake else Config.Camera.RunShake
+	local shaking = onGround and not acro and speed > 2
+	movementShake += ((if shaking then 1 else 0) - movementShake) * Math.alpha(shake.Rate, dt)
+	local paceSpeed = if sprinting then settings.SprintSpeed else settings.RunSpeed
+	shakePhase = (shakePhase + dt * shake.Steps * math.clamp(speed / paceSpeed, 0, 1)) % 1
+	local bounce = (math.abs(math.sin(shakePhase * math.pi)) - 0.5) * shake.Bounce
+	local stridePhase, strideWeight = Presentation.gait(character)
+	local viewBounce = if first
+		then -math.cos(stridePhase * 4 * math.pi) * FirstView.RunBounce * math.clamp(
+			strideWeight,
+			0,
+			1
+		)
+		else bounce
+	-- Retain some of the real forward chest posture instead of letting the head
+	-- baseline erase it. Translation only: the player's look/aim stays level.
+	local leanTarget = Vector3.zero
+	local torso = character:FindFirstChild("Torso")
+	if first and onGround and not acro and speed > 2 and torso and torso:IsA("BasePart") then
+		local chest = root.CFrame:ToObjectSpace(torso.CFrame)
+		local lean =
+			math.clamp(-math.atan2(chest.UpVector.Z, chest.UpVector.Y) / math.rad(40), 0, 1)
+		local velocity = root.AssemblyLinearVelocity
+		local pace =
+			math.clamp(Vector3.new(velocity.X, 0, velocity.Z).Magnitude / settings.RunSpeed, 0, 1)
+		local weight = lean
+			* pace
+			* (if character:GetAttribute("BlasterPoint") ~= nil then 0.35 else 1)
+		-- Keep this in world space: the source body can turn between input and
+		-- rendering, which must not turn a forward eye advance into sideways sway.
+		leanTarget = forward * FirstView.RunLean.Forward * weight
+			+ Vector3.new(0, -FirstView.RunLean.Drop * weight, 0)
+	end
+	runLeanOffset = if first
+		then runLeanOffset:Lerp(leanTarget, Math.alpha(FirstView.RunLean.Rate, dt))
+		else Vector3.zero
 	humanoid.CameraOffset = cameraBase
 		+ root.CFrame:VectorToObjectSpace(right * shoulder.X)
-		+ Vector3.new(0, shoulder.Y + (bounce - shake.Bounce * 0.5) * sprintShake, 0)
-	local fov = if aiming
-		then Config.Camera.AimFov
-		elseif sliding then Config.Camera.SlideFov
-		elseif sprinting then Config.Camera.SprintFov
-		else Config.Camera.Fov
+		+ Vector3.new(0, shoulder.Y + viewBounce * movementShake, 0)
+		+ headFollow
+		+ flipCueOffset
+	-- The player's FOV setting moves the whole range (sprint/slide kicks stay relative).
+	local fieldOfView = (player:GetAttribute("FieldOfView") or Config.Camera.Fov) :: number
+	local fov = fieldOfView
+		- Config.Camera.Fov
+		+ (
+			if aiming
+				then Config.Camera.AimFov
+				elseif sliding then Config.Camera.SlideFov
+				elseif sprinting then Config.Camera.SprintFov
+				else Config.Camera.Fov
+		)
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(Config.Camera.BlendRate, dt)
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v7.37   •   %s   •   %s\nWASD move · Ctrl shift lock · double-tap W sprint · Shift slide (works in the air: slides on landing; jump out of it to keep the speed) · Space jump · Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault) · jump onto a wall running along it: wall run (hold Space: up, tap: kick off) · by a wall in the air: wall jump\n%sH test hit reaction · P profiles · R reset\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
+		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  double-tap W sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
-		if Config.Lab.Aim then "RMB aim · Click marker · " else "",
+		if Config.Lab.Aim then "RMB aim Â· Click marker Â· " else "",
 		Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude,
 		if humanoid.FloorMaterial == Enum.Material.Air then "Airborne" else "Grounded",
 		if Config.Lab.Aim then `Markers {markers}   |   ` else "",
@@ -1294,7 +1542,10 @@ RunService.PreSimulation:Connect(function(dt)
 		local hug = run.Hug + (run.Cling.Hug - run.Hug) * cling
 		local gap = (root.Position - acro.contact):Dot(acro.away)
 		local pull = math.clamp((gap - hug) * run.Pull.Rate, -run.Pull.Away, run.Pull.Max)
-		root.AssemblyLinearVelocity = acro.direction * acro.speed
+		local travelSpeed = if acro.corner
+			then math.min(acro.speed, run.Surface.CornerRate * hug)
+			else acro.speed
+		root.AssemblyLinearVelocity = acro.direction * travelSpeed
 			- acro.away * pull
 			+ Vector3.new(0, acro.vy, 0)
 		return
@@ -1385,6 +1636,8 @@ if RunService:IsStudio() then
 			return startSlide(workspace:GetServerTimeNow())
 		elseif command == "Aim" then
 			setAim(value)
+		elseif command == "ShiftLock" then
+			setShiftLock(value)
 		elseif command == "Mark" then
 			return markAim()
 		elseif command == "Profile" then
@@ -1401,6 +1654,7 @@ if RunService:IsStudio() then
 		end
 		return {
 			ready = true,
+			shiftLocked = shiftLocked,
 			position = root.Position,
 			velocity = root.AssemblyLinearVelocity,
 			cameraUp = if workspace.CurrentCamera

@@ -12,6 +12,14 @@ local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
 local Presentation = {}
+local readGait: (Model) -> (number, number) = function(_)
+	return 0, 0
+end
+
+-- Read-only stride phase and locomotion weight for the local first-person camera.
+function Presentation.gait(character: Model): (number, number)
+	return readGait(character)
+end
 
 type Pose = { [string]: CFrame }
 type AnimationJoint = Motor6D | AnimationConstraint
@@ -105,11 +113,21 @@ end
 
 -- R6 joints carry a 90-degree turn in both C0 and C1 (R15's are pure offsets), so a
 -- pose rotation is wrapped into each joint's own frame: Transform = C0r^-1 * pose * C1r.
+-- Each joint's frames are read once, the first time it is seen. A rescan (any part
+-- added, e.g. equipping a tool) used to re-read the live C0, and the blaster's draw
+-- layer tilts the shoulder C0 mid-flourish: a rescan landing then baked that tilt in,
+-- leaving the gun arm stuck at a timing-dependent angle (owner, 2026-10-31).
+local knownFrames: { [AnimationJoint]: { CFrame } } = setmetatable({}, { __mode = "k" }) :: any
 local function jointFrames(joint: AnimationJoint): { CFrame }
-	return {
-		Clips.attachmentFrame(joint, "0").Rotation:Inverse(),
-		Clips.attachmentFrame(joint, "1").Rotation,
-	}
+	local frames = knownFrames[joint]
+	if not frames then
+		frames = {
+			Clips.attachmentFrame(joint, "0").Rotation:Inverse(),
+			Clips.attachmentFrame(joint, "1").Rotation,
+		}
+		knownFrames[joint] = frames
+	end
+	return frames
 end
 
 -- A two-segment limb as one block: aim it from its root to its end (segments of
@@ -163,6 +181,10 @@ end
 
 function Presentation.start(clips: Clips.Library)
 	local rigs: { [Model]: any } = {}
+	readGait = function(character: Model): (number, number)
+		local rig = rigs[character]
+		return if rig then rig.phase else 0, if rig then rig.moveMix else 0
+	end
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -259,6 +281,26 @@ function Presentation.start(clips: Clips.Library)
 			lastLook = root.CFrame.LookVector,
 			lastVelocity = Vector3.zero,
 			aimWeight = 0,
+			holdWeight = 0,
+			holdStill = 0,
+			holdOn = 0,
+			holdVy = 0,
+			holdSpring = { x = Vector2.zero, v = Vector2.zero },
+			holding = false,
+			pointWeight = 0,
+			pointDir = Vector3.new(0, 0, -1),
+			drawStart = -math.huge,
+			wrist = 0,
+			holdStyle = {
+				arm = CFrame.identity,
+				waist = CFrame.identity,
+				neck = CFrame.identity,
+				wrist = 0,
+				follow = 0.3,
+				sway = 0,
+			},
+			gripWeld = nil,
+			gripBase = CFrame.identity,
 			footOffset = 0,
 			scratch = {},
 		}
@@ -707,6 +749,19 @@ function Presentation.start(clips: Clips.Library)
 		local forward = rig.root.CFrame.LookVector * speed
 		local stride = dt * math.clamp(speed / WallRun.Cling.Below, 0, 1)
 		local pose = locomotion(rig, stride, now, Vector3.new(forward.X, 0, forward.Z))
+		-- A short brace follows the actual turn, including on replicated peers.
+		local facing = rig.root.CFrame.LookVector
+		local previous = rig.wallFacing or facing
+		local yawRate = math.atan2(previous:Cross(facing).Y, previous:Dot(facing))
+			/ math.max(dt, 0.001)
+		rig.wallFacing = facing
+		local turn = math.clamp(yawRate / WallRun.Surface.CornerRate, -1, 1)
+		rig.wallBrace = (rig.wallBrace or 0) + (turn - (rig.wallBrace or 0)) * Math.alpha(16, dt)
+		local brace = math.abs(rig.wallBrace)
+		pose.Root = CFrame.new(0, -0.18 * brace, 0)
+			* CFrame.Angles(-0.12 * brace, 0, -0.14 * rig.wallBrace)
+			* (pose.Root or IDENTITY)
+		pose.Neck = CFrame.Angles(0, 0.22 * rig.wallBrace, 0) * (pose.Neck or IDENTITY)
 		local tilt = WallRun.Tilt
 		pose.Root = CFrame.Angles(0, 0, side * tilt) * (pose.Root or IDENTITY)
 		-- Spread the wall arm just enough for the hand to meet the wall (gap: root to
@@ -717,9 +772,15 @@ function Presentation.start(clips: Clips.Library)
 		local reach = (gap - lateral - WallRun.HandGap) / ((rig.armLength or 2.3) * math.cos(swing))
 		local spread = math.max(math.asin(math.clamp(reach, 0, 1)) - tilt, 0)
 		local prefix = if side < 0 then "Left" else "Right"
-		pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * swing, side * spread)
-		pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
-		pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
+		-- The gun hand never reaches for the wall (see the cling below).
+		local held = rig.character:FindFirstChildOfClass("Tool")
+		if prefix == "Right" and held and held:GetAttribute("HoldStyle") == "Pistol" then
+			pose.RightShoulder = CFrame.Angles(math.rad(72), 0, math.rad(6))
+		else
+			pose[prefix .. "Shoulder"] = CFrame.Angles(0, side * swing, side * spread)
+			pose[prefix .. "Elbow"] = CFrame.Angles(0.35, 0, 0)
+			pose[prefix .. "Wrist"] = CFrame.Angles(0, 0, -side * 0.6)
+		end
 		-- Drag: lean away from the wall, brace with one raised arm and the wall-side
 		-- leg. Both legs angle toward the wall instead of kicking forward; R6 limbs
 		-- are straight blocks and cannot bend at the knee.
@@ -737,6 +798,14 @@ function Presentation.start(clips: Clips.Library)
 			clingPose[wall .. "Shoulder"] = CFrame.Angles(math.rad(-30), 0, side * math.rad(110))
 			clingPose[free .. "Shoulder"] =
 				CFrame.Angles(math.rad(65 + 2 * sway), 0, -side * math.rad(30))
+			-- With the blaster out and the wall on the gun side, the gun hand never grabs
+			-- the wall (owner question, 2026-10-31): it holds the gun forward, ready to
+			-- fire, and the free arm swings out for balance instead.
+			local tool = rig.character:FindFirstChildOfClass("Tool")
+			if wall == "Right" and tool and tool:GetAttribute("HoldStyle") == "Pistol" then
+				clingPose.RightShoulder = CFrame.Angles(math.rad(72 + 2 * sway), 0, math.rad(6))
+				clingPose.LeftShoulder = CFrame.Angles(math.rad(25), 0, -math.rad(55 + 3 * sway))
+			end
 			clingPose[wall .. "Hip"] = CFrame.Angles(math.rad(10), 0, side * math.rad(15))
 			-- Keep the legs side-on without driving the free leg through the wall-side leg.
 			clingPose[free .. "Hip"] = CFrame.Angles(0, 0, side * math.rad(10 + 2 * sway))
@@ -749,6 +818,32 @@ function Presentation.start(clips: Clips.Library)
 	end
 
 	local aimPose: Pose = {}
+	local Hold = A.Hold
+	local holdPose: Pose = { RightElbow = IDENTITY, RightWrist = IDENTITY }
+	local function euler(v: { number }): CFrame
+		return CFrame.fromEulerAnglesYXZ(v[1], v[2], v[3])
+	end
+	type HoldStyle = {
+		arm: CFrame,
+		waist: CFrame,
+		neck: CFrame,
+		wrist: number,
+		weight: number,
+		follow: number,
+		sway: number,
+	}
+	local holdStyles: { [string]: HoldStyle } = {}
+	for name, style in Hold.Styles :: { [string]: any } do
+		holdStyles[name] = {
+			arm = euler(style.Arm),
+			waist = euler(style.Waist),
+			neck = euler(style.Neck),
+			wrist = style.Wrist,
+			weight = style.Weight,
+			follow = style.TorsoFollow,
+			sway = style.Sway,
+		}
+	end
 	local function evaluate(rig: any, dt: number, now: number)
 		local character, root, humanoid = rig.character, rig.root, rig.humanoid
 		local velocity = root.AssemblyLinearVelocity
@@ -862,6 +957,9 @@ function Presentation.start(clips: Clips.Library)
 
 		-- Action layer (flip, mantle, kick, slide) replaces the base pose; fades cover entry/exit.
 		local action = rig.action
+		if not action or action.kind ~= "WallRun" then
+			rig.wallFacing, rig.wallBrace = nil, 0
+		end
 		local actionWeight = 0
 		if action and action.kind == "WallRun" then
 			-- Ends on the ground or once the wall is no longer beside the body.
@@ -878,7 +976,12 @@ function Presentation.start(clips: Clips.Library)
 			elseif onRight then
 				action.side = 1
 			end
-			if elapsed > WallRun.SettleTime and (grounded or not wall) then
+			if wall then
+				action.lastWall = now
+			end
+			local lostWall = not wall
+				and now - (action.lastWall or action.start) > WallRun.Surface.Grace + 0.2
+			if elapsed > WallRun.SettleTime and (grounded or lostWall) then
 				rig.action = nil
 				startFade(rig, A.Fade.ActionOut, now)
 			else
@@ -942,6 +1045,17 @@ function Presentation.start(clips: Clips.Library)
 			rig.fade = nil
 		end
 
+		-- The layers below edit the pose in place. Work on a per-frame copy: the base can
+		-- be a clip's reused sample table, refreshed only for the joints that clip has, so
+		-- in-place edits (the hold spring multiplies the shoulder each frame) piled up and
+		-- left the gun arm stuck back after equip spam (owner, 2026-10-31).
+		local working = scratch(rig, 28)
+		table.clear(working)
+		for name, value in pose do
+			working[name] = value
+		end
+		pose = working
+
 		-- Aim layer: arms only, reduced while acrobatics play.
 		local aimTarget = if character:GetAttribute("Aiming") then 1 else 0
 		if actionWeight > 0 then
@@ -978,6 +1092,136 @@ function Presentation.start(clips: Clips.Library)
 		local leanAlpha = Math.alpha(A.Lean.Rate, dt)
 		rig.bank += (bankTarget - rig.bank) * leanAlpha
 		rig.pitch += (pitchTarget - rig.pitch) * leanAlpha
+
+		-- Held pistol in the selected style (HoldVariant, cycled on G), layered over the
+		-- body's own motion (Hold.Carry): full when standing, looser when running, sprinting
+		-- or airborne, and light in actions, so runs, slides and flips keep their swing. A
+		-- standing arm is partly steadied against the torso; a moving one rides it. A spring
+		-- adds follow-through from turns, take-offs and landings. Style changes ease in.
+		local tool = character:FindFirstChildOfClass("Tool")
+		local holding = tool ~= nil and tool:GetAttribute("HoldStyle") == "Pistol"
+		if holding and not rig.holding then
+			rig.drawStart = now
+		end
+		rig.holding = holding
+		local style = holdStyles[character:GetAttribute("HoldVariant") or ""]
+			or holdStyles[Hold.Default]
+		local carry = Hold.Carry
+		local running = math.clamp(flat.Magnitude / carry.RunSpeed, 0, 1)
+		local sprinting = math.clamp(
+			(flat.Magnitude - carry.RunSpeed) / (carry.SprintSpeed - carry.RunSpeed),
+			0,
+			1
+		)
+		-- A draw/holster flourish (BlasterAnimator, client-local attribute) lifts the gun
+		-- arm fully out of the run swing, and holds it through the holster after the tool
+		-- has gone, so the flip reads while running (owner); actions keep their own arms.
+		-- While the gun is stowed ("stow") the arm is released back to its own pose.
+		local stage = character:GetAttribute("BlasterFlourish")
+		local flourish = stage == "draw" or stage == "holster"
+		local carried = holding or flourish
+		local presence, still = 0, 0
+		if carried then
+			if actionWeight > 0 and action then
+				presence = (carry.Actions :: { [string]: number })[action.kind] or carry.Air
+			elseif not grounded then
+				presence = if flourish then carry.Flourish else carry.Air
+			else
+				presence = carry.Idle
+					+ (carry.Run - carry.Idle) * running
+					+ (carry.Sprint - carry.Run) * sprinting
+				if flourish then
+					presence = math.max(presence, carry.Flourish)
+				end
+				still = 1 - running
+			end
+			presence *= style.weight
+		end
+		local holdAlpha = Math.alpha(if stage ~= nil then carry.FlourishRate else Hold.Rate, dt)
+		rig.holdWeight += (presence - rig.holdWeight) * holdAlpha
+		rig.holdStill += (still - rig.holdStill) * holdAlpha
+		rig.holdOn += ((if carried then 1 else 0) - rig.holdOn) * holdAlpha
+		local current = rig.holdStyle
+		current.arm = current.arm:Lerp(style.arm, holdAlpha)
+		current.waist = current.waist:Lerp(style.waist, holdAlpha)
+		current.neck = current.neck:Lerp(style.neck, holdAlpha)
+		current.wrist += (style.wrist - current.wrist) * holdAlpha
+		current.follow += (style.follow - current.follow) * holdAlpha
+		current.sway += (style.sway - current.sway) * holdAlpha
+		-- Follow-through spring (pitch, yaw): turns push the gun behind, take-offs kick it
+		-- up and landings dip it; it settles back with a little bounce.
+		local spring = rig.holdSpring
+		local dVy = if holding then velocity.Y - rig.holdVy else 0
+		rig.holdVy = velocity.Y
+		spring.v += Vector2.new(-dVy * carry.Dip, -yawRate * carry.Lag * dt)
+		local k = carry.Spring
+		spring.v += (-k * spring.x - 2 * math.sqrt(k) * carry.Damping * spring.v) * dt
+		spring.x += spring.v * dt
+		spring.x = Vector2.new(
+			math.clamp(spring.x.X, -carry.MaxSway, carry.MaxSway),
+			math.clamp(spring.x.Y, -carry.MaxSway, carry.MaxSway)
+		)
+		-- Draw: the blaster spins about the trigger finger (ease-out, ending a whole turn
+		-- round so it settles without a jump) while the arm flourishes up.
+		local externalDraw = tool ~= nil and tool:GetAttribute("BlasterMotionDriver") == true
+		local draw = if externalDraw
+			then 1
+			else math.clamp((now - rig.drawStart) / Hold.DrawTime, 0, 1)
+		local spin = if holding then -2 * math.pi * Hold.DrawSpins * (1 - (1 - draw) ^ 3) else 0
+		local lift = if holding then Hold.DrawLift * math.sin(math.pi * draw) else 0
+		-- Pointing to shoot (combat client, local attribute BlasterPoint = aim direction):
+		-- the gun arm points along the aim and the wrist straightens so the barrel lines up.
+		local point = character:GetAttribute("BlasterPoint")
+		local aiming = typeof(point) == "Vector3"
+		if aiming then
+			rig.pointDir = point
+		end
+		rig.pointWeight += ((if aiming then 1 else 0) - rig.pointWeight) * Math.alpha(
+			if aiming then Hold.PointRate else Hold.Rate,
+			dt
+		)
+		rig.wrist = current.wrist * math.min(rig.holdWeight, 1) * (1 - rig.pointWeight) + spin
+		if rig.holdWeight > 0.001 then
+			local styled = rig.holdWeight * rig.holdStill
+			local waist = pose.Waist or IDENTITY
+			pose.Waist = waist:Lerp(current.waist * waist, styled)
+			local neck = pose.Neck or IDENTITY
+			pose.Neck = neck:Lerp(current.neck * neck, styled)
+			local torso = CFrame.Angles(rig.pitch, 0, rig.bank)
+				* (pose.Root or IDENTITY).Rotation
+				* (pose.Waist or IDENTITY).Rotation
+			local level = IDENTITY:Lerp(torso:Inverse(), rig.holdStill * (1 - current.follow))
+			local drift = CFrame.Angles(
+				math.sin(now * 2.1) * current.sway * rig.holdStill + lift,
+				math.sin(now * 1.3 + 1) * current.sway * rig.holdStill,
+				0
+			)
+			holdPose.RightShoulder = level * drift * current.arm
+			for name, value in holdPose do
+				pose[name] = (pose[name] or IDENTITY):Lerp(value, rig.holdWeight)
+			end
+		end
+		if rig.holdOn > 0.001 then
+			-- Follow-through only as strong as the hold, so a free-swinging arm stays free.
+			local x = spring.x * rig.holdOn * math.min(rig.holdWeight, 1)
+			pose.RightShoulder = CFrame.Angles(x.X, x.Y, 0) * (pose.RightShoulder or IDENTITY)
+		end
+
+		if rig.pointWeight > 0.001 then
+			local torsoPart = character:FindFirstChild("Torso")
+				or character:FindFirstChild("UpperTorso")
+			if torsoPart and torsoPart:IsA("BasePart") then
+				-- The rotation taking the hanging arm (down) onto the aim, in torso axes.
+				local target = torsoPart.CFrame:VectorToObjectSpace(rig.pointDir).Unit
+				local axis = DOWN:Cross(target)
+				local turn = math.acos(math.clamp(DOWN:Dot(target), -1, 1))
+				local arm = if axis.Magnitude > 1e-4
+					then CFrame.fromAxisAngle(axis.Unit, turn)
+					else IDENTITY
+				pose.RightShoulder = (pose.RightShoulder or IDENTITY):Lerp(arm, rig.pointWeight)
+				pose.RightElbow = (pose.RightElbow or IDENTITY):Lerp(IDENTITY, rig.pointWeight)
+			end
+		end
 
 		for _, limb in A.FoldLimbs do
 			pose[limb[1]] = chord(pose[limb[1]], pose[limb[2]])
@@ -1033,6 +1277,15 @@ function Presentation.start(clips: Clips.Library)
 			rig.output[name] = value
 			local frames = rig.frames[name]
 			joint.Transform = frames[1] * value * frames[2]
+		end
+		-- Wrist: R6 has none, so the tool's grip weld turns the held blaster about the hand.
+		local arm = character:FindFirstChild("Right Arm")
+		local grip = arm and arm:FindFirstChild("RightGrip")
+		if grip and grip:IsA("Weld") then
+			if rig.gripWeld ~= grip then
+				rig.gripWeld, rig.gripBase = grip, grip.C0
+			end
+			grip.C0 = rig.gripBase * CFrame.Angles(if holding then rig.wrist else 0, 0, 0)
 		end
 		-- What was rendered, for the Studio probe only: attribute writes every frame for
 		-- every character are wasted work in a live game.

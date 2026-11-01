@@ -56,7 +56,7 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
 | Floating spawn rock | P2 | Rock island hovering above the Maelstrom in the Sky Well's light, flat walkable top facing the PvP gate, roots/moss/vines trailing beneath, chunky ink lines. |
-| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Owner's current preference (2026-10-31, not final): **droopy wooden suspension bridges**, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. Invisible barriers along both sides. |
+| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Confirmed 2026-11-01: **droopy wooden suspension bridges**, 60 long and 10 wide, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. No barriers (owner, 2026-11-01). |
 | Mainland shoreline | P2 | The solid land wrapping around the sinkhole where every bridge lands and the terrain and biomes begin. |
 | Maelstrom | P2 | Sinkhole of glowing water spiralling down: layered spiral meshes with animated textures, rim rocks, rising mist. |
 | Sky Well | P2 | Ceiling opening far above, with a fake volumetric light column (layered meshes/Beams) and slowly drifting floating rocks trailing moss and vines. |
@@ -120,7 +120,9 @@ Ties into the blaster's chunky orange/graphite/steel language.
 | Slug canister wall | P3 | Rows of glowing canisters, as if slugs are stored ready for slinging. |
 | Specimen jars and field-notes desk | P3 | A naturalist's corner: sketches, magnifier, jars. Original look. |
 
-### Gun exhibition (owner-requested)
+### Gun shop (owner-requested)
+
+Confirmed 2026-11-01: a physical walk-in shop/armoury that will be added to later, replacing the open exhibition. The items below move inside it.
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
@@ -173,4 +175,3 @@ Ties into the blaster's chunky orange/graphite/steel language.
 
 - Which items to cut, add or promote, in particular further Slugterra-category props you have in mind.
 - Should the giant mushrooms be climbable or walkable, or purely visual? (Movement interaction would touch the separate movement work.)
-- Bridge style: leaning toward droopy wooden suspension bridges; confirm at the greybox/style test.

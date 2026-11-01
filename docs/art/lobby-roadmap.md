@@ -42,13 +42,13 @@ Source: owner's pasted art-direction chat and requests, 2026-10-31. **Status: Co
   - **left** to the gun exhibition side;
   - **right** to the slug exhibition side.
 - **Bridges land on solid mainland, not small platforms.** Each one opens out into broad land that wraps around the sinkhole, and the terrain and biomes grow out from there. The round/octagonal shape is the sinkhole and the mainland shoreline around it.
-- **Bridge style:** the owner is leaning toward **droopy wooden suspension bridges** (sagging plank decks on rope). Not final; confirm in the greybox.
-- **Invisible barriers** along the bridges (and the sinkhole edge) so players cannot jump or fall off. Owner-confirmed 2026-10-31.
+- **Bridges:** Confirmed 2026-11-01: wooden suspension bridges, 60 long, 10 wide, with about 6 studs of droop. Decks stay fixed so they never move players.
+- **No barriers (Confirmed 2026-11-01, replaces the earlier invisible barriers).** Falling is a feature: a long plunge through mist, then respawn at spawn. A low rock lip stops plain walking off the shore, and players can hop over it.
 - **PvP gate** straight ahead.
 - **Training gate** immediately left of PvP.
 - **Veylume gate** (the exploration world) immediately right of PvP. The mode comes later, so the gate stays visually mysterious, sealed or dormant for now.
 - **Entrance** behind spawn, on the opposite side from PvP: the way into the whole lobby.
-- **Slug exhibition area** and **gun exhibition area** on the ring's flanks: guns on the Training side, slugs on the Veylume side. The owner confirmed this as "basically right".
+- **Slug side (Confirmed 2026-11-01):** open, with slugs floating about and hopping all around a 70-stud wadeable glowing pond, on the Veylume side. **Gun side (Confirmed 2026-11-01):** a physical walk-in shop/armoury on the Training side, replacing the open gun exhibition, to be added to later.
 - **Surroundings:** Slugterra-type natural terrain and structures all around, with dramatic terrain features (below). See the [research](../research/slugterra-environment.md) and [asset plan](lobby-assets.md). The owner wants it to look really cool.
 
 The wider game map is planned as different biomes merging together. The lobby can hint at those biomes, especially around the Veylume gate.
@@ -96,7 +96,7 @@ Design notes:
 - Colour: keep both halves in calm, cool tones so the gates, lava and exhibitions stay the accents ([readability check](style-guide.md#readability-check-ask-of-every-scene)).
 - Motion: slow swirl, slow drifting rocks, gentle mist; calm, never busy.
 - Roblox technique to prove in Phase 1 or 2: a fake volumetric light column (layered transparent meshes or Beams, plus Atmosphere and bloom), swirling water (animated textures on layered spiral meshes) and floating rocks (slow client-side motion).
-- **Falling:** prevented by invisible barriers on the bridges and sinkhole edge (owner-confirmed). Visible low railings or rock lips can make the edges read naturally. Floating-rock and bridge motion must not move players: the spawn rock stays still or bobs only in visual effects.
+- **Falling:** no barriers (owner, 2026-11-01). Players fall past the Maelstrom through mist and respawn on the spawn rock. Floating-rock and bridge motion must not move players: the spawn rock stays still or bobs only in visual effects.
 - Earlier ideas rejected 2026-10-31: slug-tube canister tree, ancient stone slug colossus, hanging slug orrery, slug-energy well with launching slugs.
 
 **Not chosen for now:** descent-shaft entrance, overlook balcony, canteen, map table. They can be revisited later.
@@ -118,6 +118,18 @@ Each destination has its own mood without clashing with the others. These are mo
 ## Where the work lives
 
 Lobby work goes in its **own branch and worktree** so it never interferes with Codex's movement, Rocklock map or gun development. Proposed: branch `experiment/lobby`, worktree `C:/Users/runni/slugshot-lobby`, based on `feature/slug-asset-pipeline` so Floppy and the blaster are available. Its own Rojo project and test place, and Blender sources under its own asset folders. The Floppy/blaster private asset files are ignored by Git and must be copied privately into the new worktree, never committed. Nothing merges into `main` and nothing is published without owner approval.
+
+## Scale map V1 (2026-11-01)
+
+**Confirmed by the owner:** spawn to portals about 10 seconds' walk; full game movement; a gentle main level plus optional overlooks; spiralling caverns, waterfall mountain, volcano and lava ravine all walkable; 50-stud spawn rock for 20 to 25 players; 170-stud Maelstrom with a sheer cliff and hop-over rock lip; full walkable ring out to a 300-stud radius; ceiling about 250 up; Sky Well rocks look-only for V1; portals in a curved arc about 50 apart with PvP central, raised and largest; volcano behind PvP, ravine behind and outside Training, waterfall mountain beside the slug side feeding the pond, overgrown purple around Veylume, caverns at the Entrance; peaks 120 to 150 high; one spiral route starting at the Entrance and linking the features; the Entrance is a scenic cave mouth nobody arrives through.
+
+**Considering (agent's starting values, to be judged by walking):** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 90-stud Sky Well opening, the 14-wide route, the 3-stud lip and the exact placements. The look-test verdict has not been recorded; the owner moved on without an explicit pass.
+
+**Build:** `python tools/lobby/build_scale.py` makes `build/SlugshotLobbyScale.rbxlx`; `--check` adds a self-test place. `python tools/lobby/scale_plan.py` draws the [plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) from the same numbers.
+
+**Implemented/verified in Studio by the self-test place, 2026-11-01** (R6 test character at speed 16, real player for spawn and fall): spawn to the PvP gate 9.8 to 10.7 s across runs; bridges 4.8 to 4.9 s (the forward one as part of the PvP walk); gun shop, pond, ravine crossing and ledge walkable; spiral route Entrance to volcano 57.5 s, volcano to mountain 22.1 s, both climbs reach the top (rim and overlook about 133.7); 2,838 parts. A 2-stud lip did not stop a plain walk; a 3-stud lip does, and a jump clears it. Real player spawns on the rock facing PvP; fall to respawn 1.8 s from Y=-40, about 2 s in all; no script errors seen in the log.
+
+**Not verified:** feel, sprint and wall-run use on these surfaces, two or more players, low graphics and mobile. **Known limits:** the pond floor is not recessed yet; falling through ravine lava passes through it into the same respawn; slugs and water are static markers. The fall is short for a "long plunge" and needs lengthening in the Maelstrom design. Studio's draw distance at its automatic quality clipped floor-level parts from about 500 studs, so check far views in Phase 6.
 
 ## Phases
 
@@ -180,7 +192,7 @@ Check low graphics settings, mobile, triangle/texture/light budgets and draw cal
 | --- | --- |
 | 0 Plan | Implemented; awaiting owner review |
 | 1 Style test | Treatment chosen; concepts final; [look pack](look-pack.md) and Studio look-test place built 2026-11-01, awaiting owner verdict |
-| 2 Greybox | Not started |
+| 2 Greybox | Scale map V1 built and self-tested 2026-11-01; awaiting the owner walk |
 | 3 Assets | Not started |
 | 4 Assembly/lighting | Not started |
 | 5 Life pass | Not started |

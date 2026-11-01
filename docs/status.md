@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01 (`experiment/lobby`):** lobby [scale map V1](art/lobby-roadmap.md#scale-map-v1-2026-11-01): owner-confirmed sizes and placements, one `layout.json` driving a [top-down plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) and a walkable colour-coded block-out with current movement, no barriers and fall-to-respawn. Final Floppy merged in. **Verified in Studio by a self-test place:** routes, timings, lip, spawn and fall. **Unresolved:** the owner's walk and verdict (gate for the next step), and the look-test verdict.
+
 **Implemented, 2026-11-01 (`experiment/lobby`):** blaster final: the bladed ridge without the dip and 15% shorter, exported with ink shells, privately uploaded and in the Floppy test place (`SlugshotFloppyTest-SlugshotBlaster`). [Record](slugs/blaster-refinement.md#bladed-ridge-final-in-roblox-2026-11-01). **Unresolved:** Studio check.
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** owner rejected the slanted tips on every barrel option; new curved pincer tips (top down, bottom up, no corner, rounded facing points, groove or ridge for the front view) in four options on the same page. Floppy's glowing bulbs and spots are rendered there too. [Record](slugs/blaster-refinement.md#curved-pincer-tips-2026-11-01). **Unresolved:** owner's pick.

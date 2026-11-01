@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Lobby scale map V1
+
+- **Confirmed:** owner agreed the order (scale map, then Sky Well, Maelstrom and spawn rock, then bridges, then terrain) and answered a full round of layout questions, recorded in the [roadmap](art/lobby-roadmap.md#scale-map-v1-2026-11-01). Changes from earlier decisions: no barriers, falling is a long plunge then respawn; the gun exhibition becomes a physical shop/armoury; slugs sit openly around the pond.
+- **Implemented/verified in Studio:** block-out and plan from one `layout.json`; movement copied unchanged from `experiment/rocklock-unified`, with spawn and fall height patched in a generated copy. Self-test passed after raising the lip from 2 to 3 studs. Studio MCP was unavailable, so the self-test ran through a posted F5 and the Studio log ([art lessons](art/lessons.md)).
+- **Unresolved:** owner's walk and verdict; longer plunge in the Maelstrom design; explicit look-test verdict.
+
 ## 2026-11-01 — Look test round 3
 
 - **Owner feedback:** add a mini stairway/slab under the portal energy; walls looked blue ("don't just make the rocks blue"), so light them from above instead; small wall mushrooms look like angular shards.

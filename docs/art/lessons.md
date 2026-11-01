@@ -167,3 +167,9 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.
 - GLSL ES 1.0 has no shader compiler on this machine. Check brace and parenthesis balance and JS syntax with Node, and avoid names like `cross` that shadow built-ins.
+
+### Studio MCP listed no Studio windows
+
+- **What happened (2026-11-01):** `list_roblox_studios` stayed empty with several Studios open, and Windows refused to bring Studio to the foreground for keystrokes.
+- **What worked:** a check build (`tools/lobby/build_scale.py --check`) whose scripts measure themselves and print to the output, started by posting F5 directly to that window's handle. Results come from the newest `%LOCALAPPDATA%/Roblox/logs/*Studio*_last.log`, and `PrintWindow` captures the window without focus. A true-speed test character found a lip height bug that reading the numbers would not have.
+- **Testing falls:** teleporting the player trips the movement anti-cheat, which snaps them back. Move them at a legal speed instead.
