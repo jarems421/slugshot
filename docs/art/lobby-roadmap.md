@@ -97,7 +97,8 @@ Design notes:
 - Lighting: the light column is the hub's calm key light. The water's glow lights the floating rock's underside and the bridges from below.
 - Colour: keep both halves in calm, cool tones so the gates, lava and exhibitions stay the accents ([readability check](style-guide.md#readability-check-ask-of-every-scene)).
 - Motion: slow swirl, slow drifting rocks, gentle mist; calm, never busy.
-- Roblox technique to prove in Phase 1 or 2: a fake volumetric light column (layered transparent meshes or Beams, plus Atmosphere and bloom), swirling water (animated textures on layered spiral meshes) and floating rocks (slow client-side motion).
+- **The light must not read as a cylinder (owner, 2026-11-01):** it spreads as it falls and fades with no hard edge.
+- Roblox technique to prove in Phase 1 or 2: fake volumetric light (layered soft-gradient cones or Beams, plus Atmosphere and bloom), swirling water (animated textures on layered spiral meshes) and floating rocks (slow client-side motion).
 - **Floating animation (Confirmed, owner 2026-11-01):** when the centrepiece goes into the map, the floating rocks and debris bob slowly, visual only. The Sky Well's debris also circles the well like a slow tornado, about one turn in 52 seconds, emphasising the storm.
 - **Falling:** no barriers (owner, 2026-11-01). Players fall past the Maelstrom through mist and respawn on the spawn rock. Floating-rock and bridge motion must not move players: the spawn rock stays still or bobs only in visual effects.
 - Earlier ideas rejected 2026-10-31: slug-tube canister tree, ancient stone slug colossus, hanging slug orrery, slug-energy well with launching slugs.

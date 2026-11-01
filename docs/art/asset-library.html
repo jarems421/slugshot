@@ -1444,7 +1444,7 @@ vec2 skyWell(vec3 p) {
     float rad = fi == 0.0 ? 8.5 : fi == 1.0 ? 7.5 : fi == 2.0 ? 8.8 : fi == 3.0 ? 6.5 : 5.5;
     float size = fi == 0.0 ? 0.75 : fi == 1.0 ? 1.0 : fi == 2.0 ? 0.6 : fi == 3.0 ? 0.85 : 0.55;
     ang += uT*ORBIT;
-    miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.3*sin(uT*ORBIT*(2.0 + fi) + fi), sin(ang)*rad), size, fi + 1.0, res);
+    miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.6*sin(uT*ORBIT*(4.0 + fi) + fi), sin(ang)*rad), size, fi + 1.0, res);
   }
   // Loose debris being drawn up into the storm: a funnel, tighter low down and wider near the top, circling the well
   // like a slow tornado while each piece bobs. All speeds are whole multiples of ORBIT, so the preview loops cleanly.
@@ -1457,8 +1457,8 @@ vec2 skyWell(vec3 p) {
     if (y > 24.5) rad = min(rad, 1.5 + 6.0*hash1(fi*7.7 + 404.0));
     ang += spin*(rad < 6.0 ? 2.0 : 1.0);
     float big = hash1(fi*11.3 + 405.0);
-    float size = 0.05 + 0.13*hash1(fi + 406.0) + 0.95*big*big*big*big*big;
-    vec3 c = vec3(cos(ang)*rad, y + 0.22*sin(spin*(2.0 + mod(fi, 3.0)) + fi*1.9), sin(ang)*rad);
+    float size = 0.04 + 0.1*hash1(fi + 406.0) + 0.46*big*big*big*big*big;
+    vec3 c = vec3(cos(ang)*rad, y + 0.6*sin(spin*(4.0 + mod(fi, 5.0)) + fi*1.9), sin(ang)*rad);
     if (length(p - c) - size*1.5 < res.x) {
       vec3 l = p - c;
       l.xz = rot(fi*1.3 + spin*(mod(fi, 2.0)*2.0 - 1.0))*l.xz;
@@ -1501,23 +1501,31 @@ vec3 stormSky(vec3 rd) {
   }
   return c;
 }
-// The fake light column: soft, dusty light along the part of the ray inside the column.
+// Light falling from the mouth: no column and no edge. It spreads as it falls, fades away with distance, and carries faint
+// shafts. Sampled through the volume so the falloff stays soft from every angle.
 vec3 lightColumn(vec3 ro, vec3 rd, float tEnd) {
-  const float R = 7.5;
-  float a = dot(rd.xz, rd.xz), b = dot(ro.xz, rd.xz), c = dot(ro.xz, ro.xz) - R*R;
+  const float REACH = 21.0;
+  float a = dot(rd.xz, rd.xz), b = dot(ro.xz, rd.xz), c = dot(ro.xz, ro.xz) - REACH*REACH;
   float disc = b*b - a*c;
   if (disc <= 0.0 || a < 1e-5) return vec3(0.0);
   float root = sqrt(disc), t0 = max((-b - root)/a, 0.0), t1 = min((-b + root)/a, tEnd);
   if (abs(rd.y) > 1e-4) {
-    float ta = (1.0 - ro.y)/rd.y, tb = (WELL_LOW - ro.y)/rd.y;
+    float ta = (-1.0 - ro.y)/rd.y, tb = (WELL_LOW + 1.0 - ro.y)/rd.y;
     t0 = max(t0, min(ta, tb)); t1 = min(t1, max(ta, tb));
   }
   if (t1 <= t0) return vec3(0.0);
-  vec3 mid = ro + rd*(t0 + t1)*0.5;
-  float near = sqrt(max(c + R*R - b*b/a, 0.0))/R;
-  float edge = (1.0 - near)*smoothstep(-3.0, 2.5, mid.y)*mix(0.12, 1.0, 1.0 - abs(rd.y)*abs(rd.y));
-  float shafts = 0.7 + 0.5*noise3(vec3(atan(mid.z, mid.x)*2.6, mid.y*0.04, uT*0.05));
-  return vec3(0.55, 0.72, 0.85)*(t1 - t0)*0.02*edge*shafts;
+  float sum = 0.0, dt = (t1 - t0)/22.0;
+  for (int i = 0; i < 22; i++) {
+    vec3 q = ro + rd*(t0 + dt*(float(i) + 0.5));
+    float fall = clamp((WELL_LOW - q.y)/WELL_LOW, 0.0, 1.0);
+    float spread = mix(7.5, 15.0, fall), r = length(q.xz);
+    float beam = exp(-r*r/(spread*spread)*2.8);
+    float ang = atan(q.z, q.x);
+    float shafts = 0.58 + 0.72*noise3(vec3(cos(ang)*2.6, sin(ang)*2.6, fall*0.7 + 0.25*sin(uT*ORBIT)));
+    float fade = (1.0 - fall)*(1.0 - fall)*0.85 + 0.12;
+    sum += beam*shafts*fade*smoothstep(-1.0, 3.0, q.y);
+  }
+  return vec3(0.55, 0.72, 0.85)*sum*dt*0.05*mix(0.22, 1.0, 1.0 - rd.y*rd.y);
 }
 
 float waterY(float rr) { return -10.0 - 20.0*pow(1.0 - clamp(rr/17.5, 0.0, 1.0), 1.8); }
@@ -2305,7 +2313,7 @@ void main() {
       ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v4", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v5", concept: true, noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
@@ -2317,11 +2325,11 @@ void main() {
       ["Idea", "A huge opening in the cavern roof, wider than the Maelstrom below it, so it reads as a main centrepiece. Your two ideas combined: giant crystals line the opening, and the shaft climbs away to a distant storm."],
       ["Storm", "Dramatic but distant: bands of indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom, with clear silent lightning now and then. It is noticeable when you look up, but it does not light the lobby."],
       ["Crystals", "Crystals ring the mouth and climb the shaft, from small stubs to a few huge ones. They point every way: down, outward, sideways and only some inward. The colours are a cool mix of cyan, violet, sapphire and jade with a little rose. They brighten toward their tips and supply the light falling onto the hub."],
-      ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island. Further out, irregular crags hang from the roof: clusters of broken blocks in very different sizes with blunt, slanted ends. Trailing vines and a soft 150-stud column of light complete it."],
-      ["Debris", "Five small wedge islands and eighty pieces of debris, from specks to a few big chunks, form a funnel being drawn up into the storm: tighter low down, wider near the top. Everything circles the well like a slow tornado while bobbing gently, and closer pieces circle faster. Look only."],
+      ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island. Further out, irregular crags hang from the roof: clusters of broken blocks in very different sizes with blunt, slanted ends. Trailing vines hang from the rim, and soft, diffused light falls from the mouth, spreading as it goes and fading out with no hard edge, with faint shafts running through it."],
+      ["Debris", "Five small wedge islands and eighty pieces of debris, from specks to chunks a few studs across, form a funnel being drawn up into the storm: tighter low down, wider near the top. Everything circles the well like a slow tornado while bobbing up and down, and closer pieces circle faster. Look only."],
       ["Motion", "Pick In motion to see it move. That preview is sped up about 9 times and steps in chunks; in the game one slow circle takes about 52 seconds and runs smoothly."],
       ["Scale", "The spawn rock is shown at true scale with a player on it."],
-      ["Status", "Concept v4, awaiting your review."]
+      ["Status", "Concept v5, awaiting your review."]
     ]
   }, {
     id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v1", concept: true, noLive: true, shader: 6,

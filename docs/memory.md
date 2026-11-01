@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v5
+
+- **Owner feedback on v4:** debris should bob more; some chunks are still too big; the light is too cylindrical and not diffused, which would look horrible on the map.
+- **Implemented/verified offline:** soft light that spreads as it falls with no hard edge and faint shafts; largest debris about half the size; bob more than doubled. Renders inspected.
+- **Unresolved:** owner review. The diffused light must be proven in Roblox, which has no real volumetric light.
+
 ## 2026-11-01 - Sky Well v4
 
 - **Owner feedback on v3:** debris slightly too scattered, so pull it in a little so it feels drawn into the storm, not floating randomly. Add slow bobbing on everything, and all the debris circling the well, a tornado effect. Crystals point too much inward, are too similar in size, and there is too much cyan.
