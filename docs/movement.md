@@ -4,6 +4,8 @@ Developed on `experiment/movement-sandbox` and merged into `main` at the owner's
 
 **New map playtest:** [Rocklock cavern v3](rocklock.md) reuses this exact controller in a separate spacious place. The original lab is preserved.
 
+**Current first-person decision (owner, 2026-10-31):** Spot is the requested default flip camera; Anchor/Ride remain in Settings in combat-enabled places. The owner accepts the first-person work except running's look. Read the [feedback/regression guide](combat.md#current-owner-decision-and-acceptance) before tuning; earlier pending verdicts are historical. Preserve the existing physics/third-person clips and temporary target range.
+
 ## Play and compare
 
 ```powershell

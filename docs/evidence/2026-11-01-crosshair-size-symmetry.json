@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-01",
+  "offline": "python tools/verify_combat.py passed",
+  "runtime": [
+    "Triad geometry north and mirrored lower lines; Micro dimensions equal",
+    "Native Settings slider click set 140% and preview displayed it",
+    "75%, 100%, 140% retained aim center and hid native cursor during gameplay",
+    "White full charge ring diameter unchanged and server accepted shot",
+    "140% survived respawn",
+    "Native Settings opened with pointer and hidden reticle, then closed with pointer hidden and reticle visible"
+  ],
+  "limits": [
+    "Single Studio client; touch/gamepad not tested",
+    "Owner visual assessment pending",
+    "Size preference is session only"
+  ]
+}

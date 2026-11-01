@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-31",
+  "ownerDecision": "Accept first-person result except running; make Spot default and retain Anchor/Ride in Settings.",
+  "offline": "verify_combat.py PASS (foundation/movement/combat formatting, lint, strict types and builds).",
+  "runtime": {
+    "place": "build/SlugshotTempRange.rbxlx",
+    "context": "One native Studio Play client. Startup/default inspection; actual native Windows mouse clicks on Settings buttons; real movement/firing entry points for a Spot flip and queued selection.",
+    "nativeClickOrder": [
+      "Ride",
+      "Anchor",
+      "Spot",
+      "Ride"
+    ],
+    "states": [
+      {
+        "selected": 2,
+        "first": false,
+        "requested": 2
+      },
+      {
+        "selected": 3,
+        "first": false,
+        "requested": 3
+      },
+      {
+        "selected": 1,
+        "first": false,
+        "requested": 1
+      },
+      {
+        "selected": 2,
+        "first": false,
+        "requested": 2
+      },
+      {
+        "selected": 3,
+        "first": false,
+        "requested": 3
+      },
+      {
+        "selected": 2,
+        "first": true,
+        "requested": 2
+      },
+      {
+        "selected": 2,
+        "first": true,
+        "requested": 1
+      },
+      {
+        "selected": 1,
+        "first": true,
+        "requested": 1
+      },
+      {
+        "selected": 2,
+        "first": true,
+        "requested": 2
+      },
+      {
+        "selected": 2,
+        "first": false,
+        "requested": 2
+      }
+    ],
+    "results": [
+      {
+        "noForcedFirstPerson": true,
+        "respawnPreference": 3,
+        "settingsCount": 1
+      },
+      {
+        "restored": 2,
+        "enabledWithoutRangeFlag": true,
+        "settingsHighlight": true,
+        "spotFlipShotAccepted": true,
+        "pass": true,
+        "queue": true
+      }
+    ],
+    "default": 2,
+    "enabledWithoutOldRangeFlag": true,
+    "observedUI": "Settings displays three choices with Spot highlighted initially and user-facing descriptions; old comparison overlay absent."
+  },
+  "persistence": "Local session only; survives character respawn. Fresh session initializes Spot from Config.",
+  "limits": [
+    "Not a new exhaustive gameplay, device, networking, or latency regression suite. Prior flip/arm evidence remains in the camera-comparison record.",
+    "Initial synthetic clicks missed; current viewport/GUI coordinates and a 140 ms mouse hold produced verified changes. No gameplay UI code changes were needed for that fixture.",
+    "First-person running appearance remains unresolved; no running animation or framing changes in this follow-up."
+  ],
+  "sourceHashes": {
+    "experiments/movement/shared/Config.luau": "8d55b00f6ec7cb70a26479d9f91aee6cfc525d399028426543fe448260135dfc",
+    "experiments/movement/client/AcrobaticCamera.luau": "ad6136777b7c30d0389ba682079251900b6139e4d8d3c7d4c6a229ef72cb211f",
+    "experiments/combat/client/Settings.client.luau": "f41454815b556a1e451e6de6a80bf0a3ddfe1b4eaac9b3badb3657ec41c34c61"
+  }
+}

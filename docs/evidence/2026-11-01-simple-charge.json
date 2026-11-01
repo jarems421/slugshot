@@ -1,0 +1,127 @@
+{
+  "date": "2026-11-01",
+  "ownerRequest": "Remove four slanted ready corners; gently pulse while full charge is held; simpler loading, better-blended outer halo, no tap/crosshair shake.",
+  "implementation": {
+    "removed": [
+      "ready corners and glints",
+      "orbiting wisps",
+      "comet head/trail"
+    ],
+    "intake": "One inward feathered halo built from three low-opacity widths plus two faint inward motes.",
+    "decorativeIntakeDelay": 0.14,
+    "loadingScale": 1,
+    "heldPulse": {
+      "period": 1.1,
+      "minScale": 1,
+      "maxScale": 1.022,
+      "widthVariation": 0.35
+    },
+    "fixed": [
+      "aim point",
+      "crosshair mark scale",
+      "accepted mode size/ink",
+      "source charge and shot timing",
+      "cursor policy",
+      "camera and movement"
+    ]
+  },
+  "offline": "verify_combat.py PASS (foundation/movement/combat formatting, lint, strict types, builds)",
+  "runtime": {
+    "context": "One native Studio Play client in the target range. Real press/release/server replies, quick tap and held full charge. Render audit sampled the precise aiming dot.",
+    "stages": {
+      "tapReleased": {
+        "visible": false,
+        "angle": 180,
+        "haloWidth": 70.76000213623047,
+        "intake": false,
+        "scale": 1,
+        "haloAlpha": 0,
+        "stage": "tapReleased",
+        "markScale": 1
+      },
+      "loading": {
+        "visible": true,
+        "angle": 180,
+        "haloWidth": 69.15505981445312,
+        "intake": true,
+        "scale": 1,
+        "haloAlpha": 0.0008530020713806152,
+        "stage": "loading",
+        "markScale": 1
+      },
+      "full": {
+        "visible": true,
+        "angle": 360,
+        "haloWidth": 53.68000030517578,
+        "intake": true,
+        "scale": 1,
+        "haloAlpha": 0.01759999990463257,
+        "stage": "full",
+        "markScale": 1
+      },
+      "held": {
+        "visible": true,
+        "angle": 360,
+        "haloWidth": 54.02016830444336,
+        "intake": true,
+        "scale": 1.0063369274139404,
+        "haloAlpha": 0.02140212059020996,
+        "stage": "held",
+        "markScale": 1
+      },
+      "released": {
+        "visible": false,
+        "angle": 360,
+        "haloWidth": 53.68000030517578,
+        "intake": false,
+        "scale": 1,
+        "haloAlpha": 0.023851215839385986,
+        "stage": "released",
+        "markScale": 1
+      },
+      "unequipped": {
+        "visible": false,
+        "angle": 180,
+        "haloWidth": 69.17931365966797,
+        "intake": false,
+        "scale": 1,
+        "haloAlpha": 0.0008156299591064453,
+        "stage": "unequipped",
+        "markScale": 1
+      }
+    },
+    "summary": {
+      "maxHold": 1.0219577550888062,
+      "peaks": 2,
+      "maxDt": 0.06906180083751678,
+      "tapAccepted": true,
+      "minHold": 1.0000001192092896,
+      "tapScale": 1,
+      "cornersAbsent": true,
+      "maxCenter": 0.5,
+      "fullAccepted": true,
+      "loadScaleDelta": 0,
+      "tapIntake": false
+    },
+    "visual": {
+      "captures": [
+        "build/simple-window-loaded.png",
+        "build/simple-window-held.png"
+      ],
+      "method": "PrintWindow on the exact target-range window, reviewed for valid range content.",
+      "fixture": "Separate native fixed charge poses; setter restored afterward. Behavior established by the non-overridden real-input probe."
+    }
+  },
+  "fixtureCorrections": [
+    "First cleanup probe overlapped a fixed art preview that forced the renderer visible. Repeated in isolation to explicit PASS; no gameplay patch for that artifact.",
+    "Initial CopyFromScreen art frames caught the concurrently active lobby window. Excluded; reviewed captures use the target window handle."
+  ],
+  "limits": [
+    "Owner simplicity/pulse/blend verdict remains open.",
+    "No new device, multi-client, latency or stable-FPS claims.",
+    "Static native captures do not establish subjective animation quality."
+  ],
+  "sourceHashes": {
+    "experiments/movement/client/Reticle.luau": "d4789efd838878e53825d10a9f119f5e66fc298dbd02eb90bedc585e11f51b9b"
+  }
+}

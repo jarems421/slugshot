@@ -12,6 +12,14 @@ local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
 local Presentation = {}
+local readGait: (Model) -> (number, number) = function(_)
+	return 0, 0
+end
+
+-- Read-only stride phase and locomotion weight for the local first-person camera.
+function Presentation.gait(character: Model): (number, number)
+	return readGait(character)
+end
 
 type Pose = { [string]: CFrame }
 type AnimationJoint = Motor6D | AnimationConstraint
@@ -173,6 +181,10 @@ end
 
 function Presentation.start(clips: Clips.Library)
 	local rigs: { [Model]: any } = {}
+	readGait = function(character: Model): (number, number)
+		local rig = rigs[character]
+		return if rig then rig.phase else 0, if rig then rig.moveMix else 0
+	end
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 

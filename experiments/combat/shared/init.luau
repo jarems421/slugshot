@@ -25,9 +25,10 @@ Combat.SplatTime = 0.25 -- the slug recovers from its splat
 Combat.ReturnTime = 0.5 -- then hops back in this long, whatever the distance
 Combat.MaxFlight = 3 -- seconds before an unlanded shot is dropped
 Combat.MuzzleReach = 2.4 -- studs from the shoulder to the muzzle along the aim
--- Server checks: how far a claimed muzzle may sit from the shooter's torso, and how
+-- Server checks: how far a claimed muzzle may sit from the shooter's movement root, and how
 -- early a shot may arrive relative to the server's cooldown (network jitter).
 Combat.MaxOriginOffset = 6
+Combat.OriginGrace = 0.25 -- bounded wait for character physics to catch up with a firing message
 Combat.CooldownTolerance = 0.15
 Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 

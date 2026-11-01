@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "context": "One live Studio client, temporary LocalScript using the existing movement probe",
+  "result": {
+    "armLength": 1.5561,
+    "minLookDot": 0.9999999403953552,
+    "maxGunHandGap": 0.1400085687637329,
+    "maxCue": 0.0739932432770729,
+    "variants": {
+      "FlipRight": true,
+      "FlipFrontRight": true,
+      "FlipBackLeft": true,
+      "FlipFrontLeft": true,
+      "FlipBack": true,
+      "FlipBackRight": true,
+      "FlipFront": true,
+      "FlipLeft": true
+    },
+    "frames": 337
+  },
+  "procedure": "Respawn, enter first person, ground jump and double jump toward each of eight 45-degree directions; sample camera look, arm length, cue offset and handle-to-hand distance during flips. Check cue is zero before start and at/after completion.",
+  "limits": [
+    "Scripted inputs, no physical-key certification",
+    "No multiplayer or latency test",
+    "No shot/aim accuracy test while charging",
+    "Owner flip feel and arm length approval remain open"
+  ]
+}

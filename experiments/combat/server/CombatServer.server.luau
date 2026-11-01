@@ -77,6 +77,7 @@ type Shot = {
 	origin: Vector3,
 	velocity: Vector3,
 	t: number,
+	started: number,
 	params: RaycastParams,
 }
 type Shooter = { ready: { [number]: number }, window: number, count: number }
@@ -113,6 +114,8 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		or typeof(direction) ~= "Vector3"
 		or typeof(charge) ~= "number"
 		or charge ~= charge
+		or origin.Magnitude ~= origin.Magnitude
+		or direction.Magnitude ~= direction.Magnitude
 		or direction.Magnitude < 0.5
 		or direction.Magnitude > 1.5
 	then
@@ -122,24 +125,22 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 	local slug = if slugId then Combat.Slugs[slugId] else nil
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	local torso = character
-		and (character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso"))
+	-- Validate weapon reach against the locomotion root, independent of visual pose.
+	-- Firing events can arrive before this root's next physics replication update.
+	local root = character and character:FindFirstChild("HumanoidRootPart")
 	if
 		not slug
 		or not character
 		or not humanoid
 		or humanoid.Health <= 0
-		or not torso
-		or not torso:IsA("BasePart")
+		or not root
+		or not root:IsA("BasePart")
 	then
 		return reject(player, id, "state")
 	end
 	local tool = blasterOf(character)
 	if not tool then
 		return reject(player, id, "unarmed")
-	end
-	if (origin - torso.Position).Magnitude > Combat.MaxOriginOffset then
-		return reject(player, id, "origin")
 	end
 	local now = os.clock()
 	local state = shooters[player]
@@ -158,10 +159,34 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		return reject(player, id, "cooldown")
 	end
 	local readyAt = now + Combat.Cooldown
+	local previousReady = state.ready[slot]
+	-- Reserve before yielding: repeated requests cannot queue extra shots while the
+	-- reliable firing event is waiting for the character's physics replication.
 	state.ready[slot] = readyAt
+	local function fail(reason: string)
+		if state.ready[slot] == readyAt then
+			state.ready[slot] = previousReady
+		end
+		reject(player, id, reason)
+	end
+	local deadline = now + Combat.OriginGrace
+	while (origin - root.Position).Magnitude > Combat.MaxOriginOffset and os.clock() < deadline do
+		RunService.Heartbeat:Wait()
+		if shooters[player] ~= state or player.Parent ~= Players then
+			return
+		end
+		if player.Character ~= character or humanoid.Health <= 0 or not root.Parent then
+			return fail("state")
+		end
+		-- Equipped state was checked on receipt. Holstering after a committed
+		-- release must not cancel a shot just because replication needed to catch up.
+	end
+	if (origin - root.Position).Magnitude > Combat.MaxOriginOffset then
+		return fail("origin")
+	end
 	-- The canister shows empty until the slug is back (every client reads this).
 	tool:SetAttribute("SlugReady", false)
-	task.delay(Combat.Cooldown, function()
+	task.delay(math.max(readyAt - os.clock(), 0), function()
 		if tool.Parent and (state.ready[slot] or 0) <= os.clock() + 0.01 then
 			tool:SetAttribute("SlugReady", true)
 		end
@@ -178,6 +203,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		origin = origin,
 		velocity = velocity,
 		t = 0,
+		started = now,
 		params = params,
 	})
 	remote:FireAllClients("Shot", {
@@ -209,12 +235,21 @@ local function impact(shot: Shot, hit: RaycastResult)
 	})
 end
 
-RunService.Heartbeat:Connect(function(dt)
+RunService.Heartbeat:Connect(function()
 	for index = #shots, 1, -1 do
 		local shot = shots[index]
-		local from = shot.t
-		shot.t = math.min(shot.t + dt, Combat.MaxFlight)
-		local hit = Combat.sweep(shot.origin, shot.velocity, shot.slug, from, shot.t, shot.params)
+		-- Retain launch time across origin grace. Sweep the elapsed arc in small
+		-- segments so a delayed approval cannot skip an early hit or cut a curved path.
+		local untilTime = math.min(os.clock() - shot.started, Combat.MaxFlight)
+		local hit: RaycastResult? = nil
+		while shot.t < untilTime do
+			local from = shot.t
+			shot.t = math.min(shot.t + 1 / 60, untilTime)
+			hit = Combat.sweep(shot.origin, shot.velocity, shot.slug, from, shot.t, shot.params)
+			if hit then
+				break
+			end
+		end
 		if hit then
 			impact(shot, hit)
 			table.remove(shots, index)

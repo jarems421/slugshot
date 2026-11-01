@@ -1,0 +1,246 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "ownerRequest": "First-person run looks like uniform baby arm pumping; retain third-person angled, robust momentum and bring shoulders forward slightly. Accepted idle/proportions/flips preserved.",
+  "diagnosis": "Previous first-person running kept pitch only and removed source flare/chest contribution, flattening the movement.",
+  "change": {
+    "baseRunDepth": [
+      -0.5,
+      -0.62
+    ],
+    "sourceFlareWeight": 0.45,
+    "targetOutwardDegrees": [
+      1,
+      14
+    ],
+    "sourceChestWeight": 0.25,
+    "maxAxialTwistDegrees": 6,
+    "maxShoulderDepthModulationStuds": 0.11,
+    "maxShoulderLiftStuds": 0.05,
+    "sourcePitchTiming": "unchanged",
+    "armGeometryIdleCameraAndFlips": "unchanged"
+  },
+  "offline": "verify_combat.py PASS (foundation/movement/combat format/lint/strict types/builds)",
+  "before": [
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": 0.5157466516587512,
+          "zMin": -0.050006866455078125,
+          "zMax": -0.049999237060546875,
+          "seen": 0,
+          "outMax": 8.143496673699678
+        },
+        "Left Arm": {
+          "outMin": 9.826665792949091,
+          "zMin": -0.050037384033203125,
+          "zMax": -0.049999237060546875,
+          "seen": 0,
+          "outMax": 11.73687985802616
+        }
+      },
+      "pitchError": 18.157149749710722,
+      "frames": 48,
+      "missing": 0,
+      "p95Dt": 0.01734820008277893,
+      "stage": "idle",
+      "maxMuzzle": 3.316791296005249
+    },
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": -0.13023951995393318,
+          "zMin": -0.4990348815917969,
+          "zMax": -0.053928375244140625,
+          "seen": 0,
+          "outMax": 4.990067565986592
+        },
+        "Left Arm": {
+          "outMin": -4.072106949281911,
+          "zMin": -0.4990348815917969,
+          "zMax": -0.053928375244140625,
+          "seen": 25,
+          "outMax": 10.249697033325782
+        }
+      },
+      "pitchError": 11.72930311490226,
+      "frames": 67,
+      "missing": 0,
+      "p95Dt": 0.017650999128818512,
+      "stage": "run",
+      "maxMuzzle": 3.4734835624694824
+    },
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": -0.0484476814794622,
+          "zMin": -0.5,
+          "zMax": -0.4972114562988281,
+          "seen": 17,
+          "outMax": 0.02041120034319682
+        },
+        "Left Arm": {
+          "outMin": -0.03422549966707323,
+          "zMin": -0.5,
+          "zMax": -0.4972114562988281,
+          "seen": 27,
+          "outMax": 0.10076995490240673
+        }
+      },
+      "pitchError": 3.6386840830434095,
+      "frames": 66,
+      "missing": 0,
+      "p95Dt": 0.01779959909617901,
+      "stage": "sprint",
+      "maxMuzzle": 4.583578586578369
+    },
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": 2.7492175104126853,
+          "zMin": -0.05036163330078125,
+          "zMax": -0.05000114440917969,
+          "seen": 0,
+          "outMax": 3.222697538232884
+        },
+        "Left Arm": {
+          "outMin": 8.247378384885799,
+          "zMin": -0.05036163330078125,
+          "zMax": -0.05000114440917969,
+          "seen": 0,
+          "outMax": 12.579528518771037
+        }
+      },
+      "pitchError": 18.217074002917936,
+      "frames": 36,
+      "missing": 0,
+      "p95Dt": 0.01749340072274208,
+      "stage": "settled",
+      "maxMuzzle": 3.1371684074401855
+    }
+  ],
+  "after": [
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": -6.898027349000419,
+          "zMin": -0.050074607133865356,
+          "zMax": -0.050000011920928955,
+          "seen": 0,
+          "outMax": 3.2663896452481285
+        },
+        "Left Arm": {
+          "outMin": 12.529982657766753,
+          "zMin": -0.05002138018608093,
+          "zMax": -0.050000011920928955,
+          "seen": 0,
+          "outMax": 13.618985611475955
+        }
+      },
+      "pitchError": 17.93341430136058,
+      "frames": 48,
+      "missing": 0,
+      "p95Dt": 0.017853200435638428,
+      "stage": "idle",
+      "maxMuzzle": 3.092489242553711
+    },
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": 0.9995655380339381,
+          "zMin": -0.7250804901123047,
+          "zMax": -0.5143699645996094,
+          "seen": 19,
+          "outMax": 14.001531410212284
+        },
+        "Left Arm": {
+          "outMin": 0.9836876659689193,
+          "zMin": -0.7256298065185547,
+          "zMax": -0.5149078369140625,
+          "seen": 28,
+          "outMax": 14.001946731232444
+        }
+      },
+      "pitchError": 3.7683056259860686,
+      "frames": 67,
+      "missing": 0,
+      "p95Dt": 0.01766120083630085,
+      "stage": "run",
+      "maxMuzzle": 4.758395671844482
+    },
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": 0.999757025918889,
+          "zMin": -0.7250823974609375,
+          "zMax": -0.5148162841796875,
+          "seen": 27,
+          "outMax": 14.002170230566698
+        },
+        "Left Arm": {
+          "outMin": 0.9998339839850506,
+          "zMin": -0.7251853942871094,
+          "zMax": -0.5149192810058594,
+          "seen": 25,
+          "outMax": 14.001585965049221
+        }
+      },
+      "pitchError": 3.451073604265597,
+      "frames": 67,
+      "missing": 0,
+      "p95Dt": 0.017791500315070152,
+      "stage": "sprint",
+      "maxMuzzle": 4.746811866760254
+    },
+    {
+      "arms": {
+        "Right Arm": {
+          "outMin": 2.097099139424875,
+          "zMin": -0.0504608154296875,
+          "zMax": -0.049999237060546875,
+          "seen": 0,
+          "outMax": 3.60029390625003
+        },
+        "Left Arm": {
+          "outMin": 8.555009171235623,
+          "zMin": -0.0504608154296875,
+          "zMax": -0.049999237060546875,
+          "seen": 0,
+          "outMax": 11.476907559603891
+        }
+      },
+      "pitchError": 17.952097964547665,
+      "frames": 37,
+      "missing": 0,
+      "p95Dt": 0.018124699592590332,
+      "stage": "settled",
+      "maxMuzzle": 3.110626697540283
+    }
+  ],
+  "shooting": {
+    "runCharge": {
+      "muzzleDistance": 4.59489107131958,
+      "accepted": true
+    },
+    "flipTap": {
+      "muzzleDistance": 3.8179376125335693,
+      "accepted": true
+    },
+    "runTap": {
+      "muzzleDistance": 3.748650074005127,
+      "accepted": true
+    },
+    "idleTap": {
+      "muzzleDistance": 3.3512678146362305,
+      "accepted": true
+    }
+  },
+  "limits": [
+    "One native Studio Play client at approximately 60 FPS. Before/after paths and phase were not identical; baseline run segment includes a transition, so do not claim a matched RMS or visibility improvement.",
+    "Steady baseline sprint is effectively planar; after run/sprint show approximately 1-14 degrees outward articulation and changing shoulder depth, with source pitch error around 3.5-3.8 degrees. These establish mechanical retarget behavior, not subjective naturalness.",
+    "Idle source animation is time-varying; preserved idle code/geometry and settled -0.05 depth do not imply identical frozen before/after screenshots.",
+    "Owner running approval remains open; no new multiplayer/device/latency or performance study.",
+    "Sprint was a requested probe stage label; actual native sprint/clip activation was not logged. The controller can cancel scripted sprint when native move input is zero, so do not infer confirmed sprint-only coverage from that label."
+  ],
+  "sourceSha256": "c94901489d97ec7f7ed72cb1e4c2ff878f1a9904ce99a7313d955ce29306cb2b"
+}

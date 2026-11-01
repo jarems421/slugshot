@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-01",
+  "status": "Implemented/verified; owner aesthetic approval open",
+  "scope": "Temporary target range only",
+  "offline": "python tools/verify_combat.py PASS (formatting, lint, strict types, foundation/movement checks and place builds)",
+  "native_input": [
+    "Settings M and Crosshair tab",
+    "Dropdown selected Pinpoint and renderer reported Dot",
+    "Mint swatch reported 86f0c1",
+    "Hex Apply reported aa44ff"
+  ],
+  "runtime": [
+    "All seven live styles and seven palette colors matched renderer",
+    "Aim center remained within one pixel of shared aim point",
+    "Seven tap shots accepted by server",
+    "Custom aa44ff crosshair with white HeldCore and HeldSheen",
+    "Full-charge shot accepted",
+    "Respawn retained Ring and aa44ff preferences",
+    "Exactly one Settings and AimHUD after respawn"
+  ],
+  "probe_output": "[CrosshairRegression] PASS seven live shapes/colors, seven accepted taps, white full charge/custom color, accepted full shot, respawn retained preferences, one HUD",
+  "limits": [
+    "Session-only; no between-session persistence",
+    "No touch/gamepad or multiplayer validation",
+    "Owner visual preference remains open"
+  ],
+  "artifacts": "Ignored build/crosshair-*.png native Studio captures; build/probe-crosshair-regression.luau"
+}

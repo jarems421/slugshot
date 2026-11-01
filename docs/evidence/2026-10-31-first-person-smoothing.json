@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "context": "One native Studio client; temporary LocalScripts through Windows UI Automation command bar",
+  "baseline": {
+    "wallKick": {
+      "offsetMax": 0.5121764540672302,
+      "p95Dt": 0.06760349869728088,
+      "rigReplacements": 0,
+      "frames": 31,
+      "rawVsRenderMax": 0,
+      "offsetYRms": 0.27720295084768426,
+      "inactiveFrames": 0,
+      "missingRigFrames": 0,
+      "actions": {
+        "WallRun": true,
+        "WallHop": true,
+        "": true
+      },
+      "offsetYRange": 0.7910639345645905
+    },
+    "run": {
+      "offsetMax": 0.35814884305000305,
+      "p95Dt": 0.06761550158262253,
+      "rigReplacements": 0,
+      "frames": 30,
+      "rawVsRenderMax": 0,
+      "offsetYRms": 0.1142017425427237,
+      "inactiveFrames": 0,
+      "missingRigFrames": 0,
+      "actions": {
+        "": true
+      },
+      "offsetYRange": 0.29963722825050354
+    },
+    "flip": {
+      "offsetMax": 0.4790213704109192,
+      "p95Dt": 0.06817489862442017,
+      "rigReplacements": 0,
+      "frames": 24,
+      "rawVsRenderMax": 0,
+      "offsetYRms": 0.14062193672931977,
+      "inactiveFrames": 0,
+      "missingRigFrames": 0,
+      "actions": {
+        "": true,
+        "Flip": true
+      },
+      "offsetYRange": 0.6385634541511536
+    }
+  },
+  "updated": {
+    "wallKick": {
+      "offsetMax": 0.09895933419466019,
+      "p95Dt": 0.06772690266370773,
+      "rigReplacements": 0,
+      "frames": 30,
+      "rawVsRenderMax": 0,
+      "offsetYRms": 0.042555929618060755,
+      "inactiveFrames": 0,
+      "missingRigFrames": 0,
+      "actions": {
+        "WallRun": true,
+        "WallHop": true,
+        "": true
+      },
+      "offsetYRange": 0.09910833463072777
+    },
+    "run": {
+      "offsetMax": 0.07639102637767792,
+      "p95Dt": 0.06818030029535294,
+      "rigReplacements": 0,
+      "frames": 30,
+      "rawVsRenderMax": 0,
+      "offsetYRms": 0.026544398963591412,
+      "inactiveFrames": 0,
+      "missingRigFrames": 0,
+      "actions": {
+        "": true
+      },
+      "offsetYRange": 0.0644820723682642
+    },
+    "flip": {
+      "offsetMax": 0.09491004049777985,
+      "p95Dt": 0.06777559965848923,
+      "rigReplacements": 0,
+      "frames": 24,
+      "rawVsRenderMax": 0,
+      "offsetYRms": 0.026733033720839024,
+      "inactiveFrames": 0,
+      "missingRigFrames": 0,
+      "actions": {
+        "": true,
+        "Flip": true
+      },
+      "offsetYRange": 0.1172577366232872
+    }
+  },
+  "regression": {
+    "serializedRunPassed": true,
+    "forcedThreeStudCameraExcursions": 10,
+    "firstPersonRigSurvivedExcursions": true,
+    "reequipCyclesWithVisibleGun": 3,
+    "nativeCameraModeAndExitCleanupPassed": true
+  },
+  "procedure": [
+    "Respawn, enter first person, move through open left range lane for 2 seconds.",
+    "Ground jump followed 0.24 seconds later by double-jump flip.",
+    "Run along existing Backstop, jump to attach, hold away for 0.12 seconds then jump off; observed WallRun and WallHop.",
+    "Force camera-focus separation to 3 studs for ten pre-camera frames; check mode stays active and rig identity remains.",
+    "Holster/re-equip three times; verify 19 visible gun parts, then exit first person and verify Classic mode and cleanup."
+  ],
+  "limits": [
+    "Both comparison captures ran near 15 FPS (p95 about 68 ms); no rendered 30/60/144 FPS or subjective smoothness certification.",
+    "Metrics measure the additional Humanoid CameraOffset contribution, not total physical camera travel.",
+    "Baseline did not reproduce an actual mode drop; mode excursion regression deliberately exercises the previous distance gate.",
+    "Raw versus GetRenderCFrame positional difference was zero in these samples; no engine-interpolation fault was established.",
+    "An initial overlapping-probe run failed a rig identity check; the later serialized rerun passed.",
+    "No multiplayer, latency, firing/aim or physical hotkey validation in this pass.",
+    "Owner shoulder shape and movement feel approval remain open."
+  ]
+}

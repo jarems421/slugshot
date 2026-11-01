@@ -23,19 +23,31 @@ end
 
 local function enter()
 	wanted = true
+	player.CameraMode = Enum.CameraMode.LockFirstPerson
 	player.CameraMinZoomDistance = FIRST
 	player.CameraMaxZoomDistance = FIRST
 end
 
 local function exit()
 	wanted = false
+	player.CameraMode = Enum.CameraMode.Classic
 	player.CameraMaxZoomDistance = THIRD_MAX
 	player.CameraMinZoomDistance = THIRD_MIN
 end
 
--- True once the camera has actually arrived in the head, not merely been asked to.
+-- Share the same mode switch between scroll input and programmatic callers.
+function FirstPerson.setActive(enabled: boolean)
+	if enabled then
+		enter()
+	else
+		exit()
+	end
+end
+
+-- Mode is a deliberate input choice. A temporary zoom/collision excursion during
+-- a wall kick must not destroy the first-person visual rig for a few frames.
 function FirstPerson.active(): boolean
-	return wanted and zoom() < 1.5
+	return wanted
 end
 
 function FirstPerson.start()
@@ -48,14 +60,15 @@ function FirstPerson.start()
 			return
 		end
 		if not wanted and input.Position.Z > 0 and zoom() <= THIRD_MIN + 1 then
-			enter()
+			FirstPerson.setActive(true)
 		elseif wanted and input.Position.Z < 0 then
-			exit()
+			FirstPerson.setActive(false)
 		end
 	end)
 	-- A new character starts in third person (the movement client sets its limits).
 	player.CharacterAdded:Connect(function()
 		wanted = false
+		player.CameraMode = Enum.CameraMode.Classic
 	end)
 end
 

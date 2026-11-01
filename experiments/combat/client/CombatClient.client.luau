@@ -14,6 +14,9 @@ local Viewmodel = require(script.Parent:WaitForChild("Viewmodel"))
 Viewmodel.start()
 
 local player = Players.LocalPlayer
+local movement = player.PlayerScripts:WaitForChild("MovementSandbox")
+local AimCursor = (require :: any)(movement:WaitForChild("AimCursor"))
+local Reticle = (require :: any)(movement:WaitForChild("Reticle"))
 local remote = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
 local SLOT = 1
 local slugId = Combat.Loadout[SLOT]
@@ -26,6 +29,8 @@ local nextId = 0
 local aimDirection = Vector3.new(0, 0, -1)
 local pointUntil = 0
 local pointing: { [Model]: number } = {} -- other shooters' arms, raised briefly
+local lastAccepted, lastRejected = 0, ""
+local lastRejectedId = 0
 
 -- HUD -------------------------------------------------------------------------------
 local gui = Instance.new("ScreenGui")
@@ -79,21 +84,6 @@ countdown.TextColor3 = Color3.new(1, 1, 1)
 countdown.TextStrokeTransparency = 0.4
 countdown.ZIndex = 4
 countdown.Parent = slotFrame
-
-local chargeBar = Instance.new("Frame")
-chargeBar.AnchorPoint = Vector2.new(0.5, 0)
-chargeBar.Position = UDim2.new(0.5, 0, 0.5, 22)
-chargeBar.Size = UDim2.fromOffset(96, 6)
-chargeBar.BackgroundColor3 = Color3.fromRGB(20, 26, 34)
-chargeBar.BackgroundTransparency = 0.3
-chargeBar.Visible = false
-chargeBar.Parent = gui
-corner(chargeBar, 3)
-local chargeFill = Instance.new("Frame")
-chargeFill.Size = UDim2.fromScale(0, 1)
-chargeFill.BackgroundColor3 = Color3.fromRGB(216, 211, 190)
-chargeFill.Parent = chargeBar
-corner(chargeFill, 3)
 
 local marker = Instance.new("TextLabel") -- hit marker over the crosshair
 marker.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -166,11 +156,11 @@ local function aim(): (Vector3?, Vector3?)
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { character, camera }
-	local mouse = UserInputService:GetMouseLocation()
-	local ray = camera:ViewportPointToRay(mouse.X, mouse.Y)
+	local cursor = AimCursor.point(camera)
+	local ray = camera:ViewportPointToRay(cursor.X, cursor.Y)
 	local hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
 	local point = if hit then hit.Position else ray.Origin + ray.Direction * 300
-	-- First person: shots leave the first-person gun's muzzle.
+	-- First person: shots leave the actual held gun's muzzle.
 	local muzzle = Viewmodel.muzzle()
 	if muzzle then
 		local toward = point - muzzle
@@ -200,7 +190,6 @@ local function fire()
 	nextId += 1
 	readyAt = now + Combat.Cooldown
 	aimDirection, pointUntil = direction, now + POINT_HOLD
-	Viewmodel.kick(charge)
 	Visuals.launch({
 		id = nextId,
 		shooter = player,
@@ -223,23 +212,37 @@ local function pressed(input: InputObject): boolean
 		or input.KeyCode == Enum.KeyCode.ButtonR2
 end
 
+local function beginCharge(): boolean
+	if not AimCursor.menuOpen() and blaster() and os.clock() >= readyAt then
+		charging, chargeStart = true, os.clock()
+		return true
+	end
+	return false
+end
+
+local function releaseCharge()
+	if charging then
+		fire()
+	end
+end
+
 UserInputService.InputBegan:Connect(function(input, processed)
 	if processed or not pressed(input) then
 		return
 	end
-	if blaster() and os.clock() >= readyAt then
-		charging, chargeStart = true, os.clock()
-	end
+	beginCharge()
 end)
 UserInputService.InputEnded:Connect(function(input)
-	if charging and pressed(input) then
-		fire()
+	if pressed(input) then
+		releaseCharge()
 	end
 end)
 
 -- Server replies ---------------------------------------------------------------------
 remote.OnClientEvent:Connect(function(kind: string, data: any)
-	if kind == "Shot" and data.shooter ~= player then
+	if kind == "Shot" and data.shooter == player then
+		lastAccepted = data.id
+	elseif kind == "Shot" and data.shooter ~= player then
 		Visuals.launch({
 			id = data.id,
 			shooter = data.shooter,
@@ -258,11 +261,36 @@ remote.OnClientEvent:Connect(function(kind: string, data: any)
 		marker.TextTransparency = 0
 		TweenService:Create(marker, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
 	elseif kind == "Rejected" then
+		lastRejected = data.reason
+		lastRejectedId = data.id
 		Visuals.cancel(player, data.id)
 		readyAt = 0
 		warn(`[Combat] shot {data.id} rejected: {data.reason}`)
 	end
 end)
+
+-- Studio inspection uses the same press/release path as input, including local
+-- prediction and actual server acknowledgement. No firing bypass in published play.
+if RunService:IsStudio() then
+	local probe = Instance.new("BindableFunction")
+	probe.Name = "CombatExperimentProbe"
+	probe.OnInvoke = function(command: string)
+		if command == "Press" then
+			beginCharge()
+		elseif command == "Release" then
+			releaseCharge()
+		end
+		return {
+			charging = charging,
+			remaining = math.max(readyAt - os.clock(), 0),
+			lastSent = nextId,
+			lastAccepted = lastAccepted,
+			lastRejected = lastRejected,
+			lastRejectedId = lastRejectedId,
+		}
+	end
+	probe.Parent = player.PlayerScripts
+end
 
 -- Per frame: charge meter, pointing arm, canister contents, ammo slot --------------
 -- A blaster's canister shows the slug only while it is loaded: the server marks
@@ -291,24 +319,25 @@ end
 
 RunService.RenderStepped:Connect(function()
 	local now = os.clock()
+	local camera = workspace.CurrentCamera
+	if camera then
+		local cursor = AimCursor.point(camera)
+		marker.Position = UDim2.fromOffset(cursor.X, cursor.Y)
+	end
 	local character = player.Character
 	local tool = blaster()
-	if charging and not tool then
+	if charging and (not tool or AimCursor.menuOpen()) then
 		charging = false
 	end
-	chargeBar.Visible = charging
-	Viewmodel.setCharge(
-		if charging then math.clamp((now - chargeStart) / Combat.ChargeTime, 0, 1) else 0
-	)
 	if charging then
 		local charge = math.clamp((now - chargeStart) / Combat.ChargeTime, 0, 1)
-		chargeFill.Size = UDim2.fromScale(charge, 1)
-		chargeFill.BackgroundColor3 = Color3.fromRGB(216, 211, 190)
-			:Lerp(Color3.fromRGB(255, 150, 60), charge)
+		Reticle.setCharge(charge)
 		local _, direction = aim()
 		if direction then
 			aimDirection = direction
 		end
+	else
+		Reticle.setCharge(nil)
 	end
 	if character then
 		local point = if charging or now < pointUntil then aimDirection else nil

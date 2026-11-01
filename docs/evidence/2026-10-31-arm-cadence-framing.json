@@ -1,0 +1,164 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "baseline": {
+    "idle": {
+      "maxMuzzleRootDistance": 3.022275924682617,
+      "fov": 72,
+      "p95Dt": 0.017559099942445755,
+      "pitchRmsErrorDegrees": 0.15432962961081034,
+      "frames": 73,
+      "handVisibility": {
+        "Right Arm": 0,
+        "Left Arm": 0
+      }
+    },
+    "run": {
+      "maxMuzzleRootDistance": 4.444786071777344,
+      "fov": 72,
+      "p95Dt": 0.017573600634932518,
+      "pitchRmsErrorDegrees": 26.123075919627695,
+      "frames": 103,
+      "handVisibility": {
+        "Right Arm": 0.30097087378640774,
+        "Left Arm": 0.4077669902912621
+      }
+    }
+  },
+  "firstPass": {
+    "framing": {
+      "idle": {
+        "maxMuzzleRootDistance": 4.916962623596191,
+        "fov": 71.99999237060547,
+        "p95Dt": 0.017619499936699867,
+        "pitchRmsErrorDegrees": 43.30525332864313,
+        "frames": 73,
+        "handVisibility": {
+          "Right Arm": 1,
+          "Left Arm": 1
+        }
+      },
+      "run": {
+        "maxMuzzleRootDistance": 5.06550931930542,
+        "fov": 71.99999237060547,
+        "p95Dt": 0.01757490076124668,
+        "pitchRmsErrorDegrees": 3.7488620071190035,
+        "frames": 103,
+        "handVisibility": {
+          "Right Arm": 0.3786407766990291,
+          "Left Arm": 0.5048543689320388
+        }
+      }
+    },
+    "shots": {
+      "runCharge": {
+        "muzzleDistance": 2.520819664001465,
+        "accepted": true
+      },
+      "flipTap": {
+        "muzzleDistance": 4.364758014678955,
+        "accepted": true
+      },
+      "runTap": {
+        "muzzleDistance": 2.96913743019104,
+        "accepted": true
+      },
+      "idleTap": {
+        "muzzleDistance": 4.767966270446777,
+        "accepted": true
+      }
+    }
+  },
+  "intermediate": {
+    "idle": {
+      "stridePhaseSpan": 0.9785713752997776,
+      "maxMuzzleRootDistance": 4.246786594390869,
+      "pitchRmsErrorDegrees": 34.31467269869015,
+      "fov": 72,
+      "p95Dt": 0.01800280064344406,
+      "stridePhaseMismatches": 0,
+      "frames": 73,
+      "handVisibility": {
+        "Right Arm": 1,
+        "Left Arm": 1
+      }
+    },
+    "run": {
+      "stridePhaseSpan": 0.9844914048538728,
+      "maxMuzzleRootDistance": 5.042514324188232,
+      "pitchRmsErrorDegrees": 3.750111608985372,
+      "fov": 72,
+      "p95Dt": 0.017640799283981323,
+      "stridePhaseMismatches": 0,
+      "frames": 103,
+      "handVisibility": {
+        "Right Arm": 0.3786407766990291,
+        "Left Arm": 0.49514563106796117
+      }
+    }
+  },
+  "relaxedPass": {
+    "idle": {
+      "stridePhaseSpan": 0.9785713752997776,
+      "minShoulderZ": 0.1799945831298828,
+      "p95Dt": 0.06778190284967422,
+      "maxMuzzleRootDistance": 2.8694872856140137,
+      "frames": 18,
+      "handVisibility": {
+        "Right Arm": 0,
+        "Left Arm": 0
+      },
+      "fov": 72,
+      "pitchRmsErrorDegrees": 12.130987722263095,
+      "maxHandGap": 0.14000125229358673,
+      "stridePhaseMismatches": 0,
+      "visibleLength": 1.742832
+    },
+    "run": {
+      "stridePhaseSpan": 0.9326760523069124,
+      "minShoulderZ": 0.17999935150146484,
+      "p95Dt": 0.06784410029649734,
+      "maxMuzzleRootDistance": 4.968559265136719,
+      "frames": 25,
+      "handVisibility": {
+        "Right Arm": 0.28,
+        "Left Arm": 0.4
+      },
+      "fov": 72,
+      "pitchRmsErrorDegrees": 0.12733508441033292,
+      "maxHandGap": 0.1400052011013031,
+      "stridePhaseMismatches": 0,
+      "visibleLength": 1.742832
+    }
+  },
+  "currentTuning": {
+    "runPoseRate": 90,
+    "actionPoseRate": 22,
+    "widthDepthScale": 0.64,
+    "lengthIncreaseFromShortenedVersion": 0.12,
+    "virtualLengthStuds": 2.405312,
+    "proximalCropStuds": 0.66248,
+    "visibleLengthStuds": 1.742832,
+    "idleShoulderViewZ": -0.05,
+    "runningShoulderViewZ": -0.5,
+    "idleExtraPitchDegrees": 18,
+    "extraLateralOffsetRest": -0.08,
+    "extraLateralOffsetRun": 0.19,
+    "runBounceAmplitudeStuds": 0.03,
+    "bounceSource": "actual Presentation gait phase and locomotion weight, two footfalls per cycle"
+  },
+  "ownerFeedback": [
+    "Running arms too filtered; requested clearer hands and forward body awareness.",
+    "Owner approved the sharper running arm movement; requested slightly narrower shoulders and stronger leg/footfall feel.",
+    "Both earlier idle framing passes were too far forward.",
+    "Retreated +0.18-stud shoulder pivot was too far back; owner requested a running midpoint biased toward the earlier placement, and a smaller idle forward nudge."
+  ],
+  "limits": [
+    "Only the first before/after pitch comparison was captured at matching roughly 60 FPS: 26.12 to 3.75 degree RMS source-pitch difference.",
+    "The relaxed-pivot capture ran around 15 FPS; its error figures are not a comparable improvement claim.",
+    "Hand visibility counts mean at least one hand-end corner intersects the viewport, not full-hand visibility.",
+    "The latest -0.50/-0.05 depth and 18-degree idle tuning pass has offline verification only and awaits owner visual approval.",
+    "Initial framing pass accepted idle tap, run tap, charged run and mid-flip shots; latest small geometric tuning was not separately re-run through those shots.",
+    "No imposed latency, multi-client or physical input coverage in this pass."
+  ]
+}

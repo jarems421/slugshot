@@ -46,3 +46,17 @@ Open `build/Slugshot.rbxlx` separately. Start `rojo serve default.project.json` 
 `claude mcp get Roblox_Studio` must report Connected, not Pending approval. Codex `mcp get` confirms configuration only: the live test also used its native app-server to discover tools and call list/read tools. No model turn was requested. See [integration setup](integrations.md) for scopes and reconnection behavior.
 
 [CI](../.github/workflows/ci.yml) runs automated Linux checks and packages artifacts; it uses no Roblox credentials and never publishes. Studio runtime tests are local. Record built-in warnings honestly even when project assertions pass; do not relabel an entire session as error-free.
+
+
+## First-person acceptance and settings regression (2026-10-31)
+
+Owner-approved look/feel excludes first-person running. Keep it unresolved until explicitly approved; do not reopen accepted shoulders/idle/flips while tuning it. Read [contextual wording and known fixes](combat.md#owner-language-contextual-interpretations-to-carry-forward).
+
+- Fresh session: Spot is active without enabling a range lab; no comparison overlay or J/K bindings. M opens Settings with Anchor/Spot/Ride and the current choice highlighted; existing FOV/holster controls remain usable.
+- Select each option: its camera and source-specific arms remain intact; selecting from third person does not force first person. A mid-flip selection queues without snapping the current turn. Preference survives respawn; a new session starts on Spot.
+- Preserve native first-person latch, camera/FOV undo, idle/shoulder geometry, hand/gun contact and holster/re-equip recovery. Tap and charged shots must still release during flips.
+- Use actual render waits (15 FPS background frames can exceed fixed 35 ms checks), honor three-second respawn cooldown, and approach traversal surfaces by walking. Record server rejection/correction deltas; local pose state alone is insufficient. Do not disable validation to satisfy a fixture.
+- Run `python tools/verify_combat.py`; record actual Studio checks separately from offline analysis and owner acceptance. Probes live under `tools/studio`, outside normal builds. Close/rebuild/reopen the target range after playtestable changes; preserve unrelated Studio work.
+- Native UI automation: recalculate GUI coordinates after the command bar changes viewport height, account for GUI inset and hold mouse down long enough to cross a rendered frame. Early synthetic clicks were missed; current coordinates plus a 140 ms press activated all three buttons. Treat a missed synthetic event as a fixture question before modifying working UI code.
+
+- Sprint fixtures: a scripted Sprint flag can be cleared by zero native control input even while testMove drives locomotion. Record actual sprint/clip state or use held native movement input before claiming sprint-specific coverage; a stage label alone does not establish it.

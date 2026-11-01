@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "context": "One live Studio client/server via native command-bar UI Automation; temporary LocalScripts and server fixtures",
+  "cause": "Reliable firing requests arrived before character physics replication. Before-fix server root/torso distance could exceed 6 studs even when the client muzzle was within about 4.4 studs of its own root. Root/torso measured equal on the server in the traced failures; animated torso alone was not the established cause.",
+  "before": {
+    "shots": 8,
+    "originRejections": 5,
+    "accepted": 3,
+    "serverDistanceTraces": [
+      {
+        "originY": 17.01770782470703,
+        "rootDistance": 7.334005355834961,
+        "torsoDistance": 7.334005355834961,
+        "id": 17,
+        "rootY": 12.680014610290527,
+        "vy": 22.906007766723633
+      },
+      {
+        "originY": 19.718639373779297,
+        "rootDistance": 9.373459815979004,
+        "torsoDistance": 9.373459815979004,
+        "id": 18,
+        "rootY": 12.946972846984863,
+        "vy": 36.374107360839844
+      },
+      {
+        "originY": 21.746307373046875,
+        "rootDistance": 4.650651931762695,
+        "torsoDistance": 4.650651931762695,
+        "id": 19,
+        "rootY": 21.862112045288086,
+        "vy": 25.62774658203125
+      },
+      {
+        "originY": 23.01761245727539,
+        "rootDistance": 3.8017375469207764,
+        "torsoDistance": 3.8017375469207764,
+        "id": 20,
+        "rootY": 23.394371032714844,
+        "vy": 9.907959938049316
+      },
+      {
+        "originY": 20.342397689819336,
+        "rootDistance": 10.279350280761719,
+        "torsoDistance": 10.279350280761719,
+        "id": 21,
+        "rootY": 10.162314414978027,
+        "vy": 36.642364501953125
+      },
+      {
+        "originY": 21.857072830200195,
+        "rootDistance": 9.502677917480469,
+        "torsoDistance": 9.502677917480469,
+        "id": 22,
+        "rootY": 12.724621772766113,
+        "vy": 43.99900436401367
+      },
+      {
+        "originY": 22.068391799926758,
+        "rootDistance": 2.03342604637146,
+        "torsoDistance": 2.03342604637146,
+        "id": 23,
+        "rootY": 21.95145606994629,
+        "vy": 26.37227439880371
+      },
+      {
+        "originY": 21.520334243774414,
+        "rootDistance": 4.674221992492676,
+        "torsoDistance": 4.674221992492676,
+        "id": 24,
+        "rootY": 23.319211959838867,
+        "vy": -9.604490280151367
+      }
+    ]
+  },
+  "after": {
+    "summary": {
+      "maxRoot": 4.132424831390381,
+      "shots": 8,
+      "maxTorso": 4.2123494148254395,
+      "accepted": 8
+    },
+    "cases": [
+      {
+        "held": false,
+        "variant": "FlipFront",
+        "torsoDistance": 3.8851358890533447,
+        "id": 1,
+        "rootDistance": 4.132424831390381,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": true,
+        "variant": "FlipFrontRight",
+        "torsoDistance": 2.494586706161499,
+        "id": 2,
+        "rootDistance": 2.5333409309387207,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": false,
+        "variant": "FlipRight",
+        "torsoDistance": 3.2482078075408936,
+        "id": 3,
+        "rootDistance": 3.3580353260040283,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": true,
+        "variant": "FlipBackRight",
+        "torsoDistance": 3.9337620735168457,
+        "id": 4,
+        "rootDistance": 3.961395502090454,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": false,
+        "variant": "FlipBack",
+        "torsoDistance": 4.2123494148254395,
+        "id": 5,
+        "rootDistance": 3.967841625213623,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": true,
+        "variant": "FlipBackLeft",
+        "torsoDistance": 3.20544695854187,
+        "id": 6,
+        "rootDistance": 3.0035324096679688,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": false,
+        "variant": "FlipLeft",
+        "torsoDistance": 3.7216928005218506,
+        "id": 7,
+        "rootDistance": 3.845423698425293,
+        "reason": "",
+        "accepted": true
+      },
+      {
+        "held": true,
+        "variant": "FlipFrontLeft",
+        "torsoDistance": 2.8675079345703125,
+        "id": 8,
+        "rootDistance": 2.8478989601135254,
+        "reason": "",
+        "accepted": true
+      }
+    ]
+  },
+  "additionalChecks": {
+    "farOriginRejected": true,
+    "pendingShotReservesCooldown": true,
+    "NaNOriginRejected": true,
+    "validShotAfterRejectedOriginAccepted": true,
+    "delayedApprovalEarlyHit": {
+      "controlledServerRootCatchupSeconds": 0.1,
+      "flightTargetTimeSeconds": 0.05,
+      "targetHealthAfterShot": 95,
+      "damage": 5
+    }
+  },
+  "implementation": {
+    "originRadiusStuds": 6,
+    "maxReplicationWaitSeconds": 0.25,
+    "flightSweepMaxStepSeconds": 0.016666666666666666,
+    "launchAndCooldownTiming": "server receipt time retained; caught-up path swept from original origin"
+  },
+  "limits": [
+    "Scripted press/release functions share the real input path; physical mouse/gamepad input not independently automated.",
+    "No imposed latency, packet-loss or multiplayer-load trial.",
+    "Origin grace over 250 ms still rejects; no competitive anti-cheat claim.",
+    "Post-release holster during grace is preserved by code but was not separately exercised."
+  ]
+}

@@ -48,6 +48,7 @@ type State = {
 	parts: { BasePart },
 	connections: { RBXScriptConnection },
 }
+local states: { [Model]: State } = {}
 
 local function blaster(item: Instance): boolean
 	return item:IsA("Tool") and item:GetAttribute("BlasterMotionDriver") == true
@@ -306,12 +307,29 @@ local function holster(state: State, tool: Tool)
 	begin(state, "holster", interrupted)
 end
 
+-- First-person copies must read authored draw visibility, never the real gun's
+-- LocalTransparencyModifier (the first-person renderer hides that gun itself).
+function Animator.handVisibility(character: Model): number
+	local state = states[character]
+	if not state or state.phase ~= "draw" then
+		return 1
+	end
+	local elapsed = (os.clock() - state.start) * Motion.Speed
+	if state.ghost and state.unstow and elapsed < Motion.Unstow then
+		return 0
+	end
+	if state.values then
+		local _, _, _, visibility = Motion.frames(state.values)
+		return visibility
+	end
+	return 0
+end
+
 function Animator.start()
 	if started then
 		return
 	end
 	started = true
-	local states: { [Model]: State } = {}
 	local function watch(character: Model)
 		if states[character] then
 			return

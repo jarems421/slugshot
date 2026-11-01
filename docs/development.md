@@ -30,6 +30,8 @@ VS Code recommendations and tasks are checked in. The Luau extension can provide
 
 ## Memory updates
 
+For first-person work read the [current owner decision, wording and regression guide](combat.md#current-owner-decision-and-acceptance). Treat inferred meanings as contextual, not universal numerical rules. Latest acceptance supersedes pending verdicts in earlier logs. As of the 2026-11-01 checkpoint, Spot is the chosen default, current running is the playtest baseline, and older run/charge trials are historical; preserve accepted work before diagnosing new feedback.
+
 Each knowledge statement belongs to one state: Confirmed, Considering, Unresolved, or Implemented/verified. Approval can move an idea to Confirmed; test evidence can move an implementation to verified. Neither happens automatically. Record who approved a change and link the user request/issue when available. Use [an ADR](templates/adr.md) for architecture changes; do not write a gameplay ADR as accepted without approval. Append concise outcomes and pending checks to [memory](memory.md); keep [status](status.md) current rather than appending stale claims forever.
 
 Codex reads `.agents/skills/`; Claude reads `.claude/skills/`. Update canonical skill files first, copy to Claude, then run verification to check parity. See [official Codex skills](https://developers.openai.com/codex/skills/) and [Claude skills](https://code.claude.com/docs/en/skills).

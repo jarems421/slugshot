@@ -1,0 +1,238 @@
+{
+  "date": "2026-11-01",
+  "ownerFeedback": "Reticle improved but native cursor overlaps it; charge is plain/blocky and lacks gravitas. Read Claude lobby philosophy/docs/code/Studio and align combat visuals. Stronger reticle outline may help.",
+  "research": {
+    "worktree": "the separate local lobby worktree",
+    "initialRevision": "5a540fb",
+    "latestReadRevision": "fed077915890f74f5f7ebdb0f73cb57d47a308e5",
+    "notes": "docs/research/charge-art-direction.md",
+    "studio": "Existing open look-test visually inspected; no source/scene/camera/play-state edit.",
+    "principles": [
+      "Living Comic-Book Fantasy",
+      "charcoal silhouette, clean interiors",
+      "selective glow",
+      "purposeful restrained life",
+      "no rubber bounce or random detail"
+    ]
+  },
+  "implementation": {
+    "ink": [
+      14,
+      14,
+      18
+    ],
+    "reticleOutline": 1.5,
+    "modeScalesPreserved": [
+      1.15,
+      1.22
+    ],
+    "charge": "White energy with charcoal-backed tapered lead, counter-flow wisps, three inward motes. Flow slows with tension. Full charge closes in 0.12 seconds with brief drawn glints/outlined rim; stable notched seal while held. No spring overshoot.",
+    "cursor": "End-of-render Last+1000 policy plus re-enable property guard, fresh menu exceptions.",
+    "preserved": [
+      "aim point",
+      "source charge fraction/time",
+      "firing rules",
+      "movement/camera",
+      "accepted crosshair shape and size"
+    ],
+    "assets": "Native curves/drawn UI only, no private lobby asset IDs/imports or new uploads."
+  },
+  "offline": "verify_combat.py PASS (foundation, movement, combat formatting/lint/strict types/builds)",
+  "runtime": {
+    "context": "One native Studio Play client in the target range; real input helpers/charge/server replies. Native M/Esc menu input.",
+    "chargeStages": {
+      "idle": {
+        "visible": false,
+        "head": false,
+        "scale": 1,
+        "icon": false,
+        "mode": 1.2200000286102295,
+        "outline": 1.5,
+        "glint": false,
+        "wisp": true,
+        "lock": true,
+        "whiteAngle": 0,
+        "stage": "idle",
+        "motes": 3
+      },
+      "gather": {
+        "visible": true,
+        "head": true,
+        "scale": 0.9881520867347717,
+        "icon": false,
+        "mode": 1.2200000286102295,
+        "outline": 1.5,
+        "glint": false,
+        "wisp": true,
+        "lock": false,
+        "whiteAngle": 180,
+        "stage": "gather",
+        "motes": 3
+      },
+      "loaded": {
+        "visible": true,
+        "head": true,
+        "scale": 0.9582858681678772,
+        "icon": false,
+        "mode": 1.2200000286102295,
+        "outline": 1.5,
+        "glint": false,
+        "wisp": true,
+        "lock": false,
+        "whiteAngle": 277.6767272949219,
+        "stage": "loaded",
+        "motes": 3
+      },
+      "ready": {
+        "visible": true,
+        "head": false,
+        "scale": 1,
+        "icon": false,
+        "mode": 1.2200000286102295,
+        "outline": 1.5,
+        "glint": true,
+        "wisp": false,
+        "lock": true,
+        "whiteAngle": 360,
+        "stage": "ready",
+        "motes": 0
+      },
+      "held": {
+        "visible": true,
+        "head": false,
+        "scale": 1,
+        "icon": false,
+        "mode": 1.2200000286102295,
+        "outline": 1.5,
+        "glint": false,
+        "wisp": false,
+        "lock": true,
+        "whiteAngle": 360,
+        "stage": "held",
+        "motes": 0
+      },
+      "released": {
+        "visible": false,
+        "head": false,
+        "scale": 1,
+        "icon": false,
+        "mode": 1.2200000286102295,
+        "outline": 1.5,
+        "glint": false,
+        "wisp": false,
+        "lock": true,
+        "whiteAngle": 360,
+        "stage": "released",
+        "motes": 0
+      }
+    },
+    "summary": {
+      "lateCursorVisibleFrames": 0,
+      "glintsSeen": true,
+      "chargedShotAccepted": true,
+      "maxScale": 1,
+      "lateCursorResetsInjected": 145,
+      "frames": 145,
+      "maxCenter": 0.5
+    },
+    "modeAlignment": {
+      "thirdFree": {
+        "point": [
+          788,
+          538
+        ],
+        "serverLaunchMiss": 1.9073486328125e-06,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0,
+        "centered": false,
+        "shotAccepted": true
+      },
+      "thirdLocked": {
+        "point": [
+          547,
+          489.5
+        ],
+        "serverLaunchMiss": 2.384185791015625e-07,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0.5,
+        "centered": true,
+        "shotAccepted": true
+      },
+      "firstPerson": {
+        "point": [
+          547,
+          489.5
+        ],
+        "serverLaunchMiss": 4.915124804938387e-07,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0.5,
+        "centered": true,
+        "shotAccepted": true
+      }
+    },
+    "menus": {
+      "settingsOpen": {
+        "mouseBehavior": "Default",
+        "menu": true,
+        "reticle": false,
+        "stage": "settingsOpen",
+        "icon": true
+      },
+      "settingsClosed": {
+        "mouseBehavior": "LockCenter",
+        "menu": false,
+        "reticle": true,
+        "stage": "settingsClosed",
+        "icon": false
+      },
+      "robloxOpen": {
+        "mouseBehavior": "LockCenter",
+        "menu": true,
+        "reticle": false,
+        "stage": "robloxOpen",
+        "icon": true
+      },
+      "robloxClosed": {
+        "mouseBehavior": "LockCenter",
+        "menu": false,
+        "reticle": true,
+        "stage": "robloxClosed",
+        "icon": false
+      }
+    },
+    "unequipRestartCleanup": true,
+    "visual": {
+      "frames": [
+        "build/ink-final-gather.png",
+        "build/ink-final-loaded.png",
+        "build/ink-final-ready.png"
+      ],
+      "fixture": "Native rendered art poses via temporary charge-setter override, restored afterward. Separate non-overridden real charge/shot tests verify behavior.",
+      "reviewed": true
+    },
+    "nativeCursorImageDiagnostic": {
+      "result": "Native cursor DrawIconEx raster blank in gameplay and menu samples. Windows CURSOR_SHOWING flag alone remained 1.",
+      "limit": "Not used alone as pointer success evidence; cannot distinguish Roblox software-cursor rendering from a transparent OS handle."
+    }
+  },
+  "diagnosisLimit": "Owner overlap report not reproduced in the initial free-view idle audit (181 frames, no visible-policy violation); exact offending writer/path remains unidentified. New policy tested with 145 deliberately injected competing late resets: zero icon-visible final frames. Normal menu and mode transitions also checked.",
+  "limits": [
+    "Owner art/gravitas/comfort judgment remains open.",
+    "No touch/gamepad, multi-client, latency or stable-FPS/performance validation.",
+    "Native static art fixtures verify appearance only, not subjective animation feel.",
+    "Read-only lobby review does not approve or modify concurrent lobby work."
+  ],
+  "sourceHashes": {
+    "experiments/movement/client/Reticle.luau": "61af8a4a807bff4edc1ce991cffd90f7740a5b3f640f729b7952cfc356ee20e1",
+    "experiments/movement/client/init.client.luau": "7e805e08fea1dbea5d43e4ef2d459c76b3d4013127af18612da44299772bd07a"
+  }
+}

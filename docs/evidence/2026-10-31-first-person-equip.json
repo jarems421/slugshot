@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "context": "One live Studio client; temporary LocalScript inserted through the native Studio command bar using Windows UI Automation; no Studio MCP connection",
+  "checks": {
+    "firstPersonEntered": true,
+    "holsterReequipCycles": 3,
+    "visibleCopiedGunPartsAfterEachDraw": [19, 19, 19],
+    "authoredHandVisibilityRecovered": true,
+    "croppedArmLengthStuds": 1.709999918937683,
+    "keyOneBindingRegisteredAtHighPriority": true,
+    "firstPersonExitRemovedVisualRig": true
+  },
+  "limits": [
+    "Equip cycles called Humanoid UnequipTools/EquipTool, not physical hotkey input",
+    "Shoulder appearance at rest and during jumps needs owner approval",
+    "No multiplayer, latency or firing accuracy test in this probe",
+    "Initial command-bar-only probe failed to observe the visual rig; reran as a real LocalScript to share gameplay module state"
+  ],
+  "result": "PASS: three real-client first-person equip cycles, copied visibility, cropped arm dimensions and exit cleanup"
+}

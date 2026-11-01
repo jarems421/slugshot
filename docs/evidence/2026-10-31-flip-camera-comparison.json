@@ -1,0 +1,1258 @@
+{
+  "date": "2026-10-31",
+  "place": "build/SlugshotTempRange.rbxlx",
+  "context": "One native Studio Play client; temporary LocalScript probes using real movement/firing functions. Camera sampled at rendered frames, approximately 60 FPS.",
+  "initialPass": {
+    "summary": {
+      "1": {
+        "cases": 8,
+        "acceptedShots": 8,
+        "maxAngularSeparation": 0,
+        "maxGunGap": 0.14001183211803436,
+        "maxMuzzleDistance": 4.8823628425598145,
+        "maxFrameDt": 0.018756499513983727
+      },
+      "2": {
+        "cases": 8,
+        "acceptedShots": 8,
+        "maxAngularSeparation": 19.000013619919077,
+        "maxGunGap": 0.14001068472862244,
+        "maxMuzzleDistance": 4.820362567901611,
+        "maxFrameDt": 0.018887300044298172
+      },
+      "3": {
+        "cases": 8,
+        "acceptedShots": 8,
+        "maxAngularSeparation": 179.1891522714491,
+        "maxGunGap": 0.14001359045505524,
+        "maxMuzzleDistance": 5.4975810050964355,
+        "maxFrameDt": 0.01864040084183216
+      }
+    },
+    "Case": [
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000850915908813,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFront",
+        "mode": 1,
+        "maxMuzzleDistance": 4.646334171295166,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018401600420475006,
+        "sector": 0,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000672101974487,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFrontRight",
+        "mode": 1,
+        "maxMuzzleDistance": 4.8149871826171875,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018756499513983727,
+        "sector": 1,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400071382522583,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipRight",
+        "mode": 1,
+        "maxMuzzleDistance": 4.703927516937256,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01800440065562725,
+        "sector": 2,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000728726387024,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipBackRight",
+        "mode": 1,
+        "maxMuzzleDistance": 4.8823628425598145,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01809529960155487,
+        "sector": 3,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001135528087616,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipBack",
+        "mode": 1,
+        "maxMuzzleDistance": 4.628579139709473,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01813739910721779,
+        "sector": 4,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400081068277359,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipBackLeft",
+        "mode": 1,
+        "maxMuzzleDistance": 4.806077480316162,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018693700432777405,
+        "sector": 5,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001183211803436,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipLeft",
+        "mode": 1,
+        "maxMuzzleDistance": 4.639824390411377,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018107600510120392,
+        "sector": 6,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001034200191498,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFrontLeft",
+        "mode": 1,
+        "maxMuzzleDistance": 4.820377826690674,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01812490075826645,
+        "sector": 7,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400071382522583,
+        "frames": 42,
+        "maxRotation": 8.000031527653977,
+        "variant": "FlipFront",
+        "mode": 2,
+        "maxMuzzleDistance": 4.664662837982178,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01802010089159012,
+        "sector": 0,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.140008807182312,
+        "frames": 42,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipFrontRight",
+        "mode": 2,
+        "maxMuzzleDistance": 4.817497730255127,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018466999754309654,
+        "sector": 1,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000967144966125,
+        "frames": 42,
+        "maxRotation": 18.999993129351566,
+        "variant": "FlipRight",
+        "mode": 2,
+        "maxMuzzleDistance": 4.710301876068115,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018693100661039352,
+        "sector": 2,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400061845779419,
+        "frames": 42,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipBackRight",
+        "mode": 2,
+        "maxMuzzleDistance": 4.799863338470459,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01845950074493885,
+        "sector": 3,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000888168811798,
+        "frames": 42,
+        "maxRotation": 8.000031527653977,
+        "variant": "FlipBack",
+        "mode": 2,
+        "maxMuzzleDistance": 4.627541542053223,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018426699563860893,
+        "sector": 4,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001011848449707,
+        "frames": 42,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipBackLeft",
+        "mode": 2,
+        "maxMuzzleDistance": 4.806469440460205,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.017816299572587013,
+        "sector": 5,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001068472862244,
+        "frames": 42,
+        "maxRotation": 19.000013619919077,
+        "variant": "FlipLeft",
+        "mode": 2,
+        "maxMuzzleDistance": 4.641631126403809,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018163399770855904,
+        "sector": 6,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.140007883310318,
+        "frames": 42,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipFrontLeft",
+        "mode": 2,
+        "maxMuzzleDistance": 4.820362567901611,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018887300044298172,
+        "sector": 7,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000637829303741,
+        "frames": 42,
+        "maxRotation": 179.1891522714491,
+        "variant": "FlipFront",
+        "mode": 3,
+        "maxMuzzleDistance": 5.160367012023926,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.017778299748897552,
+        "sector": 0,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001119136810303,
+        "frames": 42,
+        "maxRotation": 165.35750010779637,
+        "variant": "FlipFrontRight",
+        "mode": 3,
+        "maxMuzzleDistance": 4.961558818817139,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.017974400892853737,
+        "sector": 1,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000928401947021,
+        "frames": 42,
+        "maxRotation": 175.54983623636954,
+        "variant": "FlipRight",
+        "mode": 3,
+        "maxMuzzleDistance": 5.4975810050964355,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018622199073433876,
+        "sector": 2,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001359045505524,
+        "frames": 42,
+        "maxRotation": 177.357951234212,
+        "variant": "FlipBackRight",
+        "mode": 3,
+        "maxMuzzleDistance": 5.0233540534973145,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018166499212384224,
+        "sector": 3,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001208543777466,
+        "frames": 42,
+        "maxRotation": 178.96353746278524,
+        "variant": "FlipBack",
+        "mode": 3,
+        "maxMuzzleDistance": 4.956539630889893,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018197599798440933,
+        "sector": 4,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001335203647614,
+        "frames": 42,
+        "maxRotation": 177.49993720667823,
+        "variant": "FlipBackLeft",
+        "mode": 3,
+        "maxMuzzleDistance": 4.920839309692383,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.017775900661945343,
+        "sector": 5,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001306891441345,
+        "frames": 42,
+        "maxRotation": 173.52775873258727,
+        "variant": "FlipLeft",
+        "mode": 3,
+        "maxMuzzleDistance": 5.326362609863281,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018118400126695633,
+        "sector": 6,
+        "held": false,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400093138217926,
+        "frames": 42,
+        "maxRotation": 165.2617135348761,
+        "variant": "FlipFrontLeft",
+        "mode": 3,
+        "maxMuzzleDistance": 5.233217716217041,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01864040084183216,
+        "sector": 7,
+        "held": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "accepted": true,
+        "firedDuringFlip": true
+      }
+    ],
+    "Lifecycle": [
+      {
+        "queue": true
+      },
+      {
+        "steadyReturn": true
+      },
+      {
+        "thirdPersonExit": true
+      },
+      {
+        "respawn": true,
+        "panelCount": 1
+      }
+    ],
+    "Result": [
+      {
+        "pass": true,
+        "cases": 24
+      }
+    ],
+    "Transitions": [
+      {
+        "fovError": 2.288818359375e-05,
+        "lateAngle": 0,
+        "errorDegrees": 0,
+        "test": "injectedLook",
+        "mode": 1,
+        "degrees": 6.875493541569878
+      },
+      {
+        "fovError": 2.288818359375e-05,
+        "lateAngle": 0,
+        "errorDegrees": 0,
+        "test": "injectedLook",
+        "mode": 2,
+        "degrees": 6.875493541569878
+      },
+      {
+        "fovError": 2.288818359375e-05,
+        "lateAngle": 0,
+        "errorDegrees": 0,
+        "test": "injectedLook",
+        "mode": 1,
+        "degrees": 6.875493541569878
+      },
+      {
+        "fovError": 2.288818359375e-05,
+        "lateAngle": 0,
+        "errorDegrees": 0,
+        "test": "injectedLook",
+        "mode": 2,
+        "degrees": 6.875493541569878
+      },
+      {
+        "fovError": 2.288818359375e-05,
+        "lateAngle": 9.998158973111602,
+        "errorDegrees": 0,
+        "test": "injectedLook",
+        "mode": 3,
+        "degrees": 6.875493541569878
+      },
+      {
+        "maxAngle": 0,
+        "actions": {
+          "": true,
+          "Flip": true
+        },
+        "test": "wallRunKick",
+        "mode": 1,
+        "frames": 124,
+        "missingRigFrames": 0
+      },
+      {
+        "maxAngle": 9.845584499884565,
+        "actions": {
+          "WallRun": true,
+          "WallHop": true,
+          "": true
+        },
+        "test": "wallRunKick",
+        "mode": 1,
+        "frames": 135,
+        "missingRigFrames": 0
+      },
+      {
+        "maxAngle": 9.943049591793354,
+        "actions": {
+          "WallRun": true,
+          "WallHop": true,
+          "": true
+        },
+        "test": "wallRunKick",
+        "mode": 2,
+        "frames": 134,
+        "missingRigFrames": 0
+      },
+      {
+        "maxAngle": 12.891754100835518,
+        "actions": {
+          "WallRun": true,
+          "WallHop": true,
+          "": true
+        },
+        "test": "wallRunKick",
+        "mode": 3,
+        "frames": 135,
+        "missingRigFrames": 0
+      },
+      {
+        "test": "disabledFallback",
+        "pass": true
+      },
+      {
+        "pass": true
+      }
+    ]
+  },
+  "fixtureLimits": [
+    "One follow-on look case failed to start its flip; repeated after adding a grounded setup wait and all three injected-look cases passed.",
+    "Initial wall fixture did not attach; revised approach detected WallRun/WallHop and no missing viewmodel frames. However, later visual inspection found movement corrections and geometry-WallHop rejections in this teleport-based fixture; these records establish local camera continuity, not accepted server traversal.",
+    "No multiplayer/latency/loss validation, physical mouse/gamepad input validation or subjective comfort approval.",
+    "maxAngularSeparation is orientation difference from base, not accumulated degrees travelled. Ride samples the actual complete clip path, including compound twists.",
+    "Follow-up probes initially checked the rendered flip attribute after a fixed 35 ms, shorter than a background Studio frame (~67 ms); the development probe now waits for actual render frames with a bounded timeout.",
+    "Fresh-character setup and final lifecycle checks initially hit the existing three-second server respawn cooldown. Probe timing was corrected; all 16 source-arm directional cases passed, then a lifecycle-only pass verified queue, steady return, first-person exit and respawn/panel cleanup. No gameplay cooldowns or physics settings were changed to satisfy the fixtures."
+  ],
+  "armFollowup": {
+    "status": "Implemented and verified in limited Studio checks; owner appearance/feel approval remains open.",
+    "source": "Actual rendered torso-relative shoulder articulation plus a small contribution from actual camera-relative body turn, projected into forward view. No replacement flip key poses.",
+    "cameraBehavior": "Unchanged from initial comparison. Ride unchanged by arm follow-up.",
+    "runtimeContext": "16 directional tap/held cases, eight per Anchor/Spot, at approximately 15 FPS while Studio was in the background. Initial camera comparison was approximately 60 FPS; these are not matched performance/quality comparisons.",
+    "summary": {
+      "1": {
+        "cases": 8,
+        "acceptedShots": 8,
+        "maxGunGap": 0.1400214582681656,
+        "maxMuzzleDistance": 4.764833927154541,
+        "maxLookDrift": 0,
+        "maxFinalLookDrift": 0,
+        "maxFrameDt": 0.06844740360975266,
+        "minimumFreeHandVisibleFrames": 7
+      },
+      "2": {
+        "cases": 8,
+        "acceptedShots": 8,
+        "maxGunGap": 0.1400095522403717,
+        "maxMuzzleDistance": 4.816222190856934,
+        "maxLookDrift": 0,
+        "maxFinalLookDrift": 0,
+        "maxFrameDt": 0.06873690336942673,
+        "minimumFreeHandVisibleFrames": 7
+      }
+    },
+    "cases": [
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000947773456573,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFront",
+        "hands": {
+          "Right Arm": {
+            "seen": 21,
+            "travel": 13.508100643754005
+          },
+          "Left Arm": {
+            "seen": 35,
+            "travel": 8.931220212951303
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.6774210929870605,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018572699278593063,
+        "sector": 0,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000672101974487,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFrontRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 25,
+            "travel": 16.118533309549093
+          },
+          "Left Arm": {
+            "seen": 35,
+            "travel": 10.047626031097025
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.447836875915527,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.019375400617718697,
+        "sector": 1,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000509679317474,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 38,
+            "travel": 14.310803148895502
+          },
+          "Left Arm": {
+            "seen": 33,
+            "travel": 12.385083300992846
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.764833927154541,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018535399809479713,
+        "sector": 2,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001597464084625,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipBackRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 25,
+            "travel": 13.89926952496171
+          },
+          "Left Arm": {
+            "seen": 37,
+            "travel": 9.51039099227637
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.118259429931641,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.019137000665068626,
+        "sector": 3,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000914990901947,
+        "frames": 11,
+        "maxRotation": 0,
+        "variant": "FlipBack",
+        "hands": {
+          "Right Arm": {
+            "seen": 10,
+            "travel": 10.272973582148552
+          },
+          "Left Arm": {
+            "seen": 9,
+            "travel": 6.363028841093183
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.701090335845947,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06754480302333832,
+        "sector": 4,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000332355499268,
+        "frames": 11,
+        "maxRotation": 0,
+        "variant": "FlipBackLeft",
+        "hands": {
+          "Right Arm": {
+            "seen": 10,
+            "travel": 13.037631593644619
+          },
+          "Left Arm": {
+            "seen": 8,
+            "travel": 7.175082350149751
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.2643513679504395,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06844740360975266,
+        "sector": 5,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400214582681656,
+        "frames": 11,
+        "maxRotation": 0,
+        "variant": "FlipLeft",
+        "hands": {
+          "Right Arm": {
+            "seen": 8,
+            "travel": 13.511617198586464
+          },
+          "Left Arm": {
+            "seen": 7,
+            "travel": 10.977298825979233
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.671442031860352,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06765469908714294,
+        "sector": 6,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001333713531494,
+        "frames": 11,
+        "maxRotation": 0,
+        "variant": "FlipFrontLeft",
+        "hands": {
+          "Right Arm": {
+            "seen": 6,
+            "travel": 10.58939453959465
+          },
+          "Left Arm": {
+            "seen": 9,
+            "travel": 5.442174796015024
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.377997875213623,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06825090199708939,
+        "sector": 7,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400095522403717,
+        "frames": 11,
+        "maxRotation": 8.000031527653977,
+        "variant": "FlipFront",
+        "hands": {
+          "Right Arm": {
+            "seen": 8,
+            "travel": 9.650085493922234
+          },
+          "Left Arm": {
+            "seen": 8,
+            "travel": 5.707738906145096
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.490286827087402,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06774210184812546,
+        "sector": 0,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000403881072998,
+        "frames": 11,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipFrontRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 8,
+            "travel": 13.388821005821228
+          },
+          "Left Arm": {
+            "seen": 9,
+            "travel": 8.156770564615726
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.452820777893066,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06873690336942673,
+        "sector": 1,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000840485095978,
+        "frames": 11,
+        "maxRotation": 19.000013619919077,
+        "variant": "FlipRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 11,
+            "travel": 9.047536045312881
+          },
+          "Left Arm": {
+            "seen": 8,
+            "travel": 10.420110389590263
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.669719696044922,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06821320205926895,
+        "sector": 2,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000730216503143,
+        "frames": 11,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipBackRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 5,
+            "travel": 9.065847270190716
+          },
+          "Left Arm": {
+            "seen": 11,
+            "travel": 5.399834364652634
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.069131374359131,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06779149919748306,
+        "sector": 3,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400061696767807,
+        "frames": 11,
+        "maxRotation": 8.000031527653977,
+        "variant": "FlipBack",
+        "hands": {
+          "Right Arm": {
+            "seen": 11,
+            "travel": 10.690779983997345
+          },
+          "Left Arm": {
+            "seen": 9,
+            "travel": 6.848965618759394
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.816222190856934,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06785169988870621,
+        "sector": 4,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000923931598663,
+        "frames": 11,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipBackLeft",
+        "hands": {
+          "Right Arm": {
+            "seen": 8,
+            "travel": 14.679127797484398
+          },
+          "Left Arm": {
+            "seen": 8,
+            "travel": 8.386006489396095
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.291029930114746,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.0677253007888794,
+        "sector": 5,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000943303108215,
+        "frames": 11,
+        "maxRotation": 19.000013619919077,
+        "variant": "FlipLeft",
+        "hands": {
+          "Right Arm": {
+            "seen": 7,
+            "travel": 12.201107040047646
+          },
+          "Left Arm": {
+            "seen": 7,
+            "travel": 10.632241368293762
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.672159194946289,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06768970191478729,
+        "sector": 6,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.1400032788515091,
+        "frames": 11,
+        "maxRotation": 14.572360565931236,
+        "variant": "FlipFrontLeft",
+        "hands": {
+          "Right Arm": {
+            "seen": 6,
+            "travel": 12.40588167309761
+          },
+          "Left Arm": {
+            "seen": 9,
+            "travel": 8.586488209664822
+          }
+        },
+        "mode": 2,
+        "maxMuzzleDistance": 4.358683109283447,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.06759300082921982,
+        "sector": 7,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      }
+    ],
+    "lifecycle": [
+      {
+        "queue": true
+      },
+      {
+        "steadyReturn": true
+      },
+      {
+        "thirdPersonExit": true
+      },
+      {
+        "respawn": true,
+        "panelCount": 1
+      }
+    ],
+    "lifecycleResult": {
+      "coverage": "lifecycleOnly",
+      "pass": true,
+      "cases": 0
+    }
+  },
+  "wallLiveFollowup": {
+    "setup": "Walked from spawn to the backstop; no root teleport. Each mode performed actual WallRun and WallHop.",
+    "results": [
+      {
+        "rejections": 0,
+        "correctionDelta": 0,
+        "missingRigFrames": 0,
+        "mode": 1,
+        "actions": {
+          "WallRun": true,
+          "WallHop": true,
+          "": true
+        },
+        "frames": 62
+      },
+      {
+        "rejections": 0,
+        "correctionDelta": 0,
+        "missingRigFrames": 0,
+        "mode": 2,
+        "actions": {
+          "WallRun": true,
+          "WallHop": true,
+          "": true
+        },
+        "frames": 38
+      },
+      {
+        "rejections": 0,
+        "correctionDelta": 0,
+        "missingRigFrames": 0,
+        "mode": 3,
+        "actions": {
+          "WallRun": true,
+          "WallHop": true,
+          "": true
+        },
+        "frames": 37
+      },
+      {
+        "pass": true
+      }
+    ]
+  },
+  "rejectedGenericArmPass": {
+    "ownerFeedback": "Still generic/mid; each flip should use the arms from its own actual animation.",
+    "cases": [
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14001774787902832,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFront",
+        "hands": {
+          "Right Arm": {
+            "seen": 14,
+            "travel": 12.623071569949389
+          },
+          "Left Arm": {
+            "seen": 21,
+            "travel": 13.350036900490522
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 5.089180946350098,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.018230300396680832,
+        "sector": 0,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000482857227325,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipFrontRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 14,
+            "travel": 13.644795080646873
+          },
+          "Left Arm": {
+            "seen": 21,
+            "travel": 10.251606728881598
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 4.3952507972717285,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01807219907641411,
+        "sector": 1,
+        "held": true,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      },
+      {
+        "minRootUp": 1,
+        "maxGunGap": 0.14000341296195984,
+        "frames": 42,
+        "maxRotation": 0,
+        "variant": "FlipRight",
+        "hands": {
+          "Right Arm": {
+            "seen": 23,
+            "travel": 13.685815270990133
+          },
+          "Left Arm": {
+            "seen": 18,
+            "travel": 11.390961804427207
+          }
+        },
+        "mode": 1,
+        "maxMuzzleDistance": 5.169769287109375,
+        "finalRotation": 0,
+        "maxLookDrift": 0,
+        "maxDt": 0.01802700012922287,
+        "sector": 2,
+        "held": false,
+        "accepted": true,
+        "reject": "",
+        "finalLookDrift": 0,
+        "firedDuringFlip": true,
+        "missingRigFrames": 0
+      }
+    ],
+    "limit": "Probe failed to start the fourth flip after a teleport reset; final source-following pass uses a fresh character and grounded setup per case."
+  },
+  "sourceHashes": {
+    "experiments/movement/client/AcrobaticCamera.luau": "166b57546e22ada526fb803038b2d0fe1ec5f43e143e6382a72363ab82332208",
+    "experiments/movement/client/FirstPersonFlip.luau": "d96b6ce537bd97648df5170f934483f8f6602d9e0741758b0f0b3d95e441e9e7",
+    "experiments/movement/client/init.client.luau": "bbcfeb38a2752290987ccfc13408118a5498d8b5ebcda07b0ccbc5643bbb67e8",
+    "experiments/combat/client/Viewmodel.luau": "d2cbcdbfb609ca53c5c42573c7f4c50e1e9f88489b96dc57b13de64f5f9823bc",
+    "experiments/combat/client/FlipCameraPanel.luau": "11bb0248fe51c6e6632635911ff48b885ea062a6df2fa82f7f756e0bb6f3a908",
+    "experiments/combat/range/RangeClient.client.luau": "d81611334e9d30302ff6d180efee13a9245d09b4db01eb23feb469d654748015"
+  },
+  "offlineChecks": [
+    "python tools/verify_combat.py: PASS (foundation, movement, combat format/lint/strict types/builds)",
+    "selene tools/studio: PASS, zero errors/warnings",
+    "luau-lsp analyze tools/studio with combat sourcemap/Roblox definitions: PASS",
+    "git diff --check: PASS; existing CRLF normalization notices only"
+  ],
+  "finalRangeRefresh": "Closed the test window, rebuilt and reopened build/SlugshotTempRange.rbxlx. Development probes are outside every playable mapping; no temporary probes saved in the range."
+}
