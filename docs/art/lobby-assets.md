@@ -115,7 +115,7 @@ Ties into the blaster's chunky orange/graphite/steel language.
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
 | Display habitats (terrariums) | P2 | Glass and chunky-metal enclosures, each a miniature biome (moss, crystal, water) with a slug inside. Floppy first; more as slugs are made. |
-| Glowing pond | P2 | Owner-confirmed. A shallow luminous pool where wild Floppies rest among giant mushrooms and glowing plants. |
+| Glowing pond | P2 | Owner-confirmed. A shallow luminous pool where wild Floppies rest among giant mushrooms and glowing plants. Owner, 2026-11-01, for the asset stage: make it bigger and more of a little oasis. The block-out still shows 70 across; about 86 across is the most that fits at its current spot before touching the mountain's foot, so going larger means moving it or letting the two meet. |
 | Plinths and info plaques | P2 | Name and short description per slug; painted wood/metal frontier style. |
 | Slug canister wall | P3 | Rows of glowing canisters, as if slugs are stored ready for slinging. |
 | Specimen jars and field-notes desk | P3 | A naturalist's corner: sketches, magnifier, jars. Original look. |
@@ -145,7 +145,7 @@ Confirmed 2026-11-01: a physical walk-in shop/armoury that will be added to late
 | Spiralling cavern kit | P2 | Passages, arches and ledges that spiral around and above the hub. Built from the rock kit plus large sweeping hero pieces. |
 | Little volcano | P2 | Stylised, chunky cone with ink fractures and a glowing crater. Faint smoke or embers (calm, slow). |
 | Lava ravine | P2 | Deep ravine with lava pouring down its walls into a glowing channel. Needs stylised flowing lava (animated texture or emissive mesh), cooled-crust edges and warm rim lighting. Cost check in Studio. |
-| Waterfall mountain | P2 | Small mountain with a stylised waterfall (animated texture), mist, and Slugterra-type greenery: giant mushrooms, vines, moss, glowing plants. |
+| Waterfall mountain | P2 | Owner, 2026-11-01, for the asset stage: the waterfall and its stream should look bigger than in the block-out. Small mountain with a stylised waterfall (animated texture), mist, and Slugterra-type greenery: giant mushrooms, vines, moss, glowing plants. |
 | Slug murals | P3 | Owner-confirmed. Original slug carvings or paintings on cavern walls, done as texture or relief. |
 
 ### Slug-energy technology

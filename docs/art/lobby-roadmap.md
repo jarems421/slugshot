@@ -123,7 +123,9 @@ Lobby work goes in its **own branch and worktree** so it never interferes with C
 
 **Confirmed by the owner:** spawn to portals about 10 seconds' walk; full game movement; a gentle main level plus optional overlooks; spiralling caverns, waterfall mountain, volcano and lava ravine all walkable; 70-stud spawn rock for 20 to 25 players (owner found 50 too small after walking it; 70 was the agent's recommendation); 170-stud Maelstrom with a sheer cliff and hop-over rock lip; full walkable ring out to a 300-stud radius; ceiling about 250 up; Sky Well opening 200 across, wider than the Maelstrom, so it reads as one of the main centrepieces (owner set this after 90 and 120 felt underwhelming); Sky Well rocks look-only for V1; portals in a curved arc about 50 apart with PvP central, raised and largest; volcano behind PvP, ravine behind and outside Training, waterfall mountain beside the slug side feeding the pond, overgrown purple around Veylume, caverns at the Entrance; peaks 120 to 150 high; one spiral route starting at the Entrance and linking the features; the Entrance is a scenic cave mouth nobody arrives through.
 
-**Considering (agent's starting values, to be judged by walking):** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 150-wide light column, the 14-wide route, the 3-stud lip and the exact placements. The look-test verdict has not been recorded; the owner moved on without an explicit pass.
+**Confirmed, 2026-11-01:** the owner approved the sketch as the general layout to build from, including the 200-across Sky Well. Treat the block-out as the baseline; fine-tuning happens as each asset is made. Pending for the asset stage: a bigger pond that reads as a little oasis, and a bigger waterfall and stream.
+
+**Agent's starting values, accepted as part of the sketch and open to fine-tuning:** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 150-wide light column, the 14-wide route, the 3-stud lip and the exact placements. The look-test verdict has not been recorded; the owner moved on without an explicit pass.
 
 **Build:** `python tools/lobby/build_scale.py` makes `build/SlugshotLobbyScale.rbxlx`; `--check` adds a self-test place. `python tools/lobby/scale_plan.py` draws the [plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) from the same numbers.
 
@@ -194,7 +196,7 @@ Check low graphics settings, mobile, triangle/texture/light budgets and draw cal
 | --- | --- |
 | 0 Plan | Implemented; awaiting owner review |
 | 1 Style test | Treatment chosen; concepts final; [look pack](look-pack.md) and Studio look-test place built 2026-11-01, awaiting owner verdict |
-| 2 Greybox | Scale map V1 layout approved by the owner 2026-11-01 with a larger spawn rock |
+| 2 Greybox | Sketch approved by the owner 2026-11-01 as the baseline; fine-tuning continues per asset |
 | 3 Assets | Not started |
 | 4 Assembly/lighting | Not started |
 | 5 Life pass | Not started |
