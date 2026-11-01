@@ -10,6 +10,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
 local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
+local rimShape =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 
 type PartInfo = { ink: string?, emissive: number, min: Vector3, max: Vector3 }
@@ -30,7 +32,7 @@ local BRIDGE_S = 0.51 -- bridge units per spawn-rock unit
 local UNIT = 5 -- studs per spawn-rock and Maelstrom unit
 local CLIFF_LIFT = 0.12 -- keeps the cliff's ground above the block-out floor it covers
 local DOWN = Vector3.new(0, -1, 0)
-local FALL_FOOT_Y = -56 -- just under the juice where the falls land
+local FALL_FOOT_Y = -51 -- the juice's surface where the falls land
 
 -- Pieces that glow more than the painted brightness suits under Roblox's bloom.
 local GLOW: { [string]: number } = {
@@ -504,21 +506,22 @@ local function buildFall(angle: number)
 	local flat = Vector3.new(math.cos(angle), 0, math.sin(angle))
 	local rim = UNIT * (17.6 + 0.45 * math.sin(angle * 5 + 1) + 0.3 * math.sin(angle * 11 + 2))
 	local inward = -flat
+	-- It ends at the juice's real surface and melts into the foam there, rather than cutting through it.
 	local foot = flat * (rim - 14) + Vector3.new(0, FALL_FOOT_Y, 0)
-	-- Low in the back of the concept's mouth, so it runs out over the mouth's floor and drops.
-	local lip = flat * (rim + 2) + Vector3.new(0, -9.6, 0)
-	local solid = fade({ { 0, 0 }, { 1, 0 } })
+	-- From deep in the concept's mouth: it runs out along the mouth's floor, so the sheet's start is never seen.
+	local lip = flat * (rim + 5) + Vector3.new(0, -9.8, 0)
+	local melt = fade({ { 0, 1 }, { 0.1, 0 }, { 0.85, 0 }, { 1, 1 } })
 	flowSheet(
 		lip,
 		foot,
 		inward,
-		11,
-		20,
-		12,
-		17,
+		18,
+		22,
+		10,
+		19,
 		fxTexture("flow"),
 		Color3.new(1, 1, 1),
-		solid,
+		melt,
 		46,
 		0.42,
 		0,
@@ -529,20 +532,20 @@ local function buildFall(angle: number)
 		lip,
 		foot,
 		inward,
-		11,
-		20,
-		10,
-		15,
+		18,
+		22,
+		8.5,
+		17,
 		fxTexture("streak"),
 		Color3.fromRGB(165, 255, 240),
-		fade({ { 0, 0.6 }, { 1, 0.45 } }),
+		fade({ { 0, 1 }, { 0.12, 0.55 }, { 0.8, 0.5 }, { 1, 1 } }),
 		30,
 		0.95,
 		0.5,
 		1
 	)
 	-- Where it lands: ripples spreading over the juice, foam churning, and foam carried off along the swirl's own direction.
-	local landing = holder("FallFoot", foot + Vector3.new(0, 2.2, 0), Vector3.new(9, 0.5, 9))
+	local landing = holder("FallFoot", foot + Vector3.new(0, 1.4, 0), Vector3.new(11, 0.5, 11))
 	local ripples = Instance.new("ParticleEmitter")
 	ripples.Name = "Ripples"
 	ripples.Texture = fxTexture("ripple")
@@ -564,10 +567,10 @@ local function buildFall(angle: number)
 	foam.Color = ColorSequence.new(Color3.fromRGB(170, 250, 238))
 	foam.LightEmission = 0.2
 	foam.LightInfluence = 0
-	foam.Size = NumberSequence.new(5, 13)
+	foam.Size = NumberSequence.new(7, 16)
 	foam.Transparency = fade({ { 0, 1 }, { 0.2, 0.5 }, { 1, 1 } })
 	foam.Lifetime = NumberRange.new(1.2, 2)
-	foam.Rate = 4
+	foam.Rate = 6
 	foam.Speed = NumberRange.new(2, 5)
 	foam.SpreadAngle = Vector2.new(35, 35)
 	foam.Parent = landing
@@ -604,10 +607,9 @@ local function buildMaelstrom()
 		-- preview, because the owner wants it thick.
 		setMotion(juice, "Juice", ORBIT * 2, 0, 0, 0)
 	end
-	-- The same angles as the concept's falls.
-	local hashes = { 0.7234, 0.3382, 0.0544, 0.5693 } -- hash1(i + 171) from the shader
-	for index = 0, 3 do
-		buildFall(index * 1.5708 + 0.785 + 0.34 * (hashes[index + 1] - 0.5))
+	-- Exactly where the art's mouths are, as measured from the GPU that carved them.
+	for _, angle in rimShape.falls do
+		buildFall(angle)
 	end
 	-- Mist rising off the juice: a few big soft particles, which is what phones draw cheaply.
 	local pit = holder("PitMist", Vector3.new(0, -58, 0), Vector3.new(120, 4, 120))

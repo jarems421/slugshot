@@ -117,8 +117,23 @@ def add_bridge_rig(objects, scale):
         bone.tail = (float(x), 0.0, 1.0)
     bpy.ops.object.mode_set(mode="OBJECT")
     gap = xs[1] - xs[0]
+    lantern_groups = {}
     for obj in objects:
         rigid = obj.name.startswith("Deck")
+        if obj.name.startswith("Lantern"):
+            # Each lantern is one solid thing, on the bone nearest its own middle.
+            centres = np.array((-5.4, 0.7, 5.6))*scale
+            for v in obj.data.vertices:
+                centre = centres[np.argmin(np.abs(centres - v.co.x))]
+                pick = int(np.clip(round((centre - xs[0])/gap), 0, BONES - 1))
+                if pick not in lantern_groups:
+                    lantern_groups[pick] = obj.vertex_groups.new(name=f"B{pick}")
+                lantern_groups[pick].add([v.index], 1.0, "REPLACE")
+            modifier = obj.modifiers.new("Rig", "ARMATURE")
+            modifier.object = arm
+            obj.parent = arm
+            lantern_groups = {}
+            continue
         groups = [obj.vertex_groups.new(name=f"B{i}") for i in range(BONES)]
         for v in obj.data.vertices:
             t = (v.co.x - xs[0])/gap

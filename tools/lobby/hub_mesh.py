@@ -109,6 +109,18 @@ void main() {
 }
 """
 
+PROBE = """
+uniform sampler2D uPos;
+layout(location = 0) out vec4 o0;
+layout(location = 1) out vec4 o1;
+void main() {
+  vec3 p = texelFetch(uPos, ivec2(gl_FragCoord.xy), 0).xyz;
+  o0 = vec4(hash1(171.0), hash1(172.0), hash1(173.0), hash1(174.0));
+  if (p.x > 1e6) o0 = vec4(0.0);
+  o1 = vec4(0.0);
+}
+"""
+
 IDS = """
 uniform sampler2D uPos;
 layout(location = 0) out vec4 o0;
@@ -334,7 +346,10 @@ def split_components(verts, faces, assign):
 
 def debris_group(count):
     # Well mixed around the rock, so a group's pieces are never neighbours and they read as moving separately.
-    def assign(_centre, i):
+    def assign(centre, i):
+        beside = min(abs(centre[0]), abs(centre[2]))
+        if beside < 2.8 and centre[1] - 13.0 > -3.4 and np.hypot(centre[0], centre[2]) > 6.0:
+            return -1
         return i % count
     return assign
 
@@ -438,7 +453,8 @@ PIECES = {
         "item": "bridge-1", "map": BRIDGE, "scale": 2.55, "origin": (0.0, 0.0, 0.0),
         "lo": (-11.2, -3.0, -4.2), "hi": (11.8, 3.6, 4.2), "step": 0.022, "normalH": 0.004, "rig": "bridge",
         "parts": [
-            part("Deck", by_id((1.9, 2.3), (2.5, 3.0), (13.0, 14.0)), 2600, 1024, FINE_INK*1.2, 1.0, cage=0.03),
+            part("Lantern", by_id((2.5, 2.7), (13.7, 13.9)), 1500, 512, FINE_INK, 1.0, hard=True, cage=0.015),
+            part("Deck", by_id((1.9, 2.3), (2.7, 3.0)), 2600, 1024, FINE_INK*1.2, 1.0, cage=0.03),
             part("Rope", everything, 3000, 1024, cage=0.015),
         ],
     },
@@ -499,6 +515,7 @@ PIECES = {
 
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
+    ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
     # Cracks: glowing across the floor. In the concept the bright strip was thin and moss grew over the floor, which read
     # as green drawings in the game (owner).
     ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.62, 0.95, -fq.x/max(fq.y, 0.01));"),
@@ -533,7 +550,7 @@ class PieceGpu(Gpu):
             frame["uRo"] = list(self.piece["uRo"])
         item = {**item, "frames": [frame]}
         normal = NORMAL.replace("NORMAL_H", f"{self.piece['normalH']:.4f}")
-        super().__init__(page, item, bank, asset_map=source + normal, mains={"grid": GRID, "paint": PAINT, "ids": IDS, "storm": STORM})
+        super().__init__(page, item, bank, asset_map=source + normal, mains={"grid": GRID, "paint": PAINT, "ids": IDS, "storm": STORM, "probe": PROBE})
 
     def ids(self, verts):
         return self.paint(verts, program="ids")[0][:, 0]
@@ -604,6 +621,60 @@ def storm_paint(key):
         g["emissiveStrength"] = 1.0
         print(f"{g['name']}: mean cover {float(alpha[valid].mean()):.2f}", flush=True)
     (out/"build.json").write_text(json.dumps(report, indent=1))
+
+
+def rim_shape():
+    """Measures what the art actually is, so the invisible ground matches it: the spawn rock's outline, the pit's edge and
+    the raised lip, plus where the GPU really put the falls (its float maths differs from Python's)."""
+    gpu = PieceGpu("hub-cliff")
+    probe, _ = gpu.paint(np.zeros((1, 3), "f4"), program="probe")
+    hashes = probe[0][:4].tolist()
+    falls = [i*1.5708 + 0.785 + 0.34*(hashes[i] - 0.5) for i in range(4)]
+    step, n = 0.05, 860
+    lo = np.array((-21.5, -0.06, -21.5))
+    levels = 16
+    grid = gpu.grid(lo, step, (n, levels, n))[..., 0]
+    land = grid[:, 0, :] < 0
+
+    def at(field, r, theta):
+        x, z = r*np.sin(theta), -r*np.cos(theta)
+        return field[int(round((x - lo[0])/step)), int(round((z - lo[2])/step))]
+
+    tops = lo[1] + step*np.argmax(grid[:, ::-1, :] < 0, axis=1)*-1 + step*(levels - 1)
+    tops = np.where((grid < 0).any(axis=1), tops, -1.0)
+    rs = np.arange(14.0, 21.0, 0.02)
+    pit, lip = [], []
+    for k in range(72):
+        theta = np.radians(k*5.0)
+        inner = 21.0
+        for r in rs[rs < 19.5][::-1]:  # from solid ground inward; the art's outer clip reads as a false edge
+            if not at(land, r, theta):
+                inner = r
+                break
+        pit.append(round(float(inner + 0.02)*5, 2))
+        mid = np.radians(k*5.0 + 2.5)
+        hits = [(r, at(tops, r, mid)) for r in rs if at(tops, r, mid) > 0.08]
+        if hits:
+            lip.append({"from": round(hits[0][0]*5, 2), "to": round(hits[-1][0]*5, 2), "top": round(max(h for _, h in hits)*5, 2)})
+        else:
+            lip.append({"from": 0, "to": 0, "top": 0})
+    data = np.load("build/lobby/meshes/hub-rock/Top.npz")
+    field, plate_lo, plate_step = data["plateField"], data["plateLo"], float(data["plateStep"])
+    rock = []
+    for k in range(120):
+        best = 0.0
+        for offset in (-0.8, 0.0, 0.8):
+            theta = np.radians(k*3.0 + offset)
+            for r in np.arange(8.7, 3.0, -0.02):
+                x, z = r*np.sin(theta), -r*np.cos(theta)
+                if field[int(round((x - plate_lo[0])/plate_step)), int(round((z - plate_lo[1])/plate_step))] < 0:
+                    best = max(best, r)
+                    break
+        rock.append(round(best*5, 2))
+    out = {"note": "Generated by tools/lobby/hub_mesh.py shape from the concept's own shapes.", "falls": falls, "rock": rock, "pit": pit, "lip": lip}
+    Path("experiments/lobby/scale/shared/rim_shape.json").write_text(json.dumps(out))
+    print("falls", [round(a, 3) for a in falls], "python had", [0.861, 1.516, 2.994, 4.112])
+    print("rock", min(rock), max(rock), "pit", min(pit), max(pit), "lips", sum(1 for x in lip if x["top"]), "tallest", max(x["top"] for x in lip))
 
 
 def fx_textures():
@@ -845,6 +916,9 @@ def build_in_blender(key):
 
 def main():
     action, *keys = sys.argv[1:]
+    if action == "shape":
+        rim_shape()
+        return
     if action == "fx":
         fx_textures()
         return

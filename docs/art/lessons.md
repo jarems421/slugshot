@@ -223,3 +223,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Replication order:** a tag can arrive before the descendants it refers to, so wait for them.
 - **Cut flat surfaces, don't decimate them:** a decimated top lay over its own grooves and showed their paint. Triangulating it from the groove outlines gave real holes in 324 triangles.
 - **Check motion triggers against what the owner said:** "when walking" means moving, not merely standing on the bridge.
+- **Shader hash values differ between Python and the GPU:** a recomputed value put two falls 19 studs from their mouths. Measure from the GPU that made the art.
+- **Generate collision from the art:** hand-made rim shapes were up to 8 studs off, so players sank into the lip and fell through the rock's edge.

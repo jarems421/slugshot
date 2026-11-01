@@ -4,6 +4,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
+-- Measured from the final art, so the ground underfoot matches what you see (tools/lobby/hub_mesh.py shape).
+local rimShape =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
 
 type Options = {
 	ghost: boolean?, -- no collision, queries or touches: scenery the player and movement ignore
@@ -40,10 +43,6 @@ end
 local function polar(angle: number, radius: number, y: number): Vector3
 	local rad = math.rad(angle)
 	return Vector3.new(radius * math.sin(rad), y, -radius * math.cos(rad))
-end
-
-local function wrap(angle: number): number
-	return (angle + 180) % 360 - 180
 end
 
 local function within(angle: number, from: number, to: number): boolean
@@ -302,36 +301,23 @@ local function zoneColor(angle: number, radius: number): Color3?
 	return GROUND
 end
 
--- The concept measures its angles from +X toward +Z, in units of 5 studs.
-local function conceptAngle(angle: number): number
-	local rad = math.rad(angle)
-	return math.atan2(-math.cos(rad), math.sin(rad))
-end
-
-local function rockRim(angle: number): number
-	local a = conceptAngle(angle)
-	return 5
-		* 7
-		* (1 + 0.05 * math.sin(a * 3 + 1) + 0.035 * math.sin(a * 7 + 2.1) + 0.02 * math.sin(a * 13))
-end
-
 local function pitEdge(angle: number): number
-	local a = conceptAngle(angle)
-	return 5 * (17.6 + 0.45 * math.sin(a * 5 + 1) + 0.3 * math.sin(a * 11 + 2))
+	return rimShape.pit[math.floor((angle % 360) / SECTOR + 0.5) % #rimShape.pit + 1]
 end
 
 local function buildSpawnRock(root: Instance)
 	local rock = layout.spawnRock
 	local parent = folder(root, "SpawnRock")
 	local depth = rock.undersideDepth
-	local step = 360 / rock.sides
-	for side = 0, rock.sides - 1 do
+	local count = #rimShape.rock
+	local step = 360 / count
+	for side = 0, count - 1 do
 		local a1, a2 = side * step, (side + 1) * step
 		triangle(
 			parent,
 			Vector3.zero,
-			polar(a1, rockRim(a1), 0),
-			polar(a2, rockRim(a2), 0),
+			polar(a1, rimShape.rock[side + 1], 0),
+			polar(a2, rimShape.rock[(side + 1) % count + 1], 0),
 			ROCK,
 			3
 		)
@@ -391,20 +377,17 @@ local function buildShore(root: Instance)
 				start = radii[band + 1]
 			end
 		end
-		-- A hop-over rock lip on the cliff edge, open where a bridge lands.
-		local onBridge = false
-		for _, angle in layout.bridges.angles do
-			onBridge = onBridge or math.abs(wrap(middle - angle)) < SECTOR
-		end
-		if not onBridge then
+		-- The rock lip on the cliff edge, solid exactly where the art is raised.
+		local lip = rimShape.lip[math.floor((middle % 360) / SECTOR) + 1]
+		if lip.top > 0 then
 			panel(
 				parent,
 				"Lip",
 				middle,
-				pitEdge(middle) + 2.75,
+				(lip.from + lip.to) / 2,
 				0,
-				shore.lipHeight,
-				shore.lipWidth,
+				lip.top,
+				math.max(lip.to - lip.from, 1),
 				LIP
 			)
 		end
