@@ -145,6 +145,16 @@ From the lobby art-direction and asset-library rounds. Process lessons are in [a
 | "make it render upon being opened" | Load one asset at a time; offline-rendered turntables by default, live 3D opt-in. | One shader with every asset (froze Chrome). |
 | "buggy, laggy" after a performance fix | Restore smoothness: more turntable frames on a canvas; live 3D back to its original settings. | Over-throttled live view and 16-frame CSS sprites. |
 
-More dictation slips: "Veilume"/"volume" = Veylume, "jewel board" = duel board, "Cosmic Cavern"/"Living Cosmic" = Comic Cavern/Living Comic, "slug terror" = Slugterra, "dimish map" = a map of merging biomes (exact word unclear).
+| "walls too dark and far", "glows don't light the wall" | Placed lights at the glows and over the walls. | Brighter blue ambient ("don't just make the rocks blue"). |
+| "black voids" (mushrooms), "sparkles from nowhere" | Technical faults, not taste: inside-out mesh pieces and mirrored effect positions. | — |
+| "the lighting keeps changing" | Studio's automatic graphics quality toggling shadows, plus too many lights and zone exposure changes. Fix the cause; also suggest Graphics Mode: Manual for judging. | — |
+| "the rocks just look so basic" | Real carved cracks on a share of rocks, spread evenly; surface grain, worn edges, crevice hatching on all. | Squiggly painted cracks ("you just wiggled around"), deformed rocks, fossils ("mid"). |
+| "Slugterra style cracks" | Straight segments with sharp alternating turns and one fork, wide at the rim tapering to a hairline, inked inside with a pale lip. | Smooth zigzag waves. |
+| "every corner has something" | Six face regions, each with a crystal or mushroom cluster, plus tiny mushrooms; different per wall. | One hand layout repeated. |
+| "it should be evenly random" | Pick per region, not per column with exclusions. | Rules that silently starve one area (top row never cracking). |
+| "looks like a toy" (blaster) | Sharper, curved, purposeful shapes; detail on plain faces. | Planar bevels "trying to be sharp but it's not"; hard corners where a slope starts; a dip before the blade. |
+| "more dirty than sick" | Lighter lit centres, bruised rim, sallow halo. | Dark brown blotches. |
+
+More dictation slips: "roadblocks"/"roadblock studio" = Roblox/Roblox Studio, "flop heap" = Floppy, "glue" = glow, "dispose" = the spots, "Veilume"/"volume" = Veylume, "jewel board" = duel board, "Cosmic Cavern"/"Living Cosmic" = Comic Cavern/Living Comic, "slug terror" = Slugterra, "dimish map" = a map of merging biomes (exact word unclear).
 
 **Working pattern in these rounds:** the owner critiques one asset at a time, praises with "perfect"/"beautiful" while adding one more tweak, interjects mid-task (the colour bank, then withdrawing bark mushrooms), and only offers options when stuck ("not sure what we could do"). When stuck, offer four or five clearly different directions with a recommendation. If all are rejected, ask what *kind* of thing (built, alive, natural, open) before offering more.

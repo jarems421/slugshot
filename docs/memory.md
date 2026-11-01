@@ -656,3 +656,8 @@
 - **Implemented/verified offline:** revised tip from a clean cut with slope lead and a ridge that only lowers; export with ink shells (orange part decimated to 7k), private upload Approved, mapping updated, Floppy test place rebuilt and opened.
 - **Unresolved:** Studio check and owner verdict.
 
+## 2026-11-01 - Documentation checkpoint for this chat
+
+- **Confirmed:** owner asked to update all documentation from this chat (design, wording, lessons) and push as a checkpoint; Codex is doing the same for its own chat.
+- **Implemented:** style guide gains the Roblox lighting rules and the character look; lobby assets records what is built; owner design language gains this chat's phrases and dictation slips. Detailed rounds remain in `docs/art/lessons.md`, `docs/art/look-pack.md`, `docs/slugs/blaster-refinement.md` and the Floppy catalogue entry (slug pipeline branch).
+

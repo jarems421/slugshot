@@ -84,6 +84,15 @@ If too many things are bright, the scene stops feeling magical and starts feelin
 - **Bloom used selectively.** It should look magical without washing out the scene. (Floppy's lab already showed heavy bloom flattening the look.)
 - **Lighting gives each area an identity.** Neighbouring areas can differ in temperature and mood without clashing. See the zone moods in the [lobby roadmap](lobby-roadmap.md#zone-identities).
 
+### Lighting rules learned in Roblox (Confirmed by owner feedback, 2026-11-01)
+
+- **Ambient stays dark and near neutral.** Tinting the ambient to brighten walls turned the stone blue ("don't just make the rocks blue"). Light surfaces with placed lights instead.
+- **Overall brightness never depends on shadows.** Studio switches graphics quality automatically and drops light shadows at lower levels, so shadow-casting fill lights made walls flip between dark and bright. Wall and fill lights cast no shadows.
+- **Few, merged local lights.** Roblox renders a limited number of lights near the camera. Glows within about 4 studs share one light.
+- **Zone moods shift colour only.** Exposure, fog density, haze, contrast and brightness stay the same everywhere, so walking between zones never re-lights the cavern.
+- **Glow takes the surface's own colour.** Roblox emission is colour map x mask x strength, so a dark surface cannot glow brightly. Give glowing parts a luminous colour (Floppy's bulbs), and cap glow below white so colours survive.
+- **Ink shells are near-black Neon** (`14, 14, 18`): lamps never grey them and they never bloom.
+
 ## 5. Materials and texture
 
 - **Stylised, hand-painted look with depth.** Painted colour variation, painted highlights and ink detail on top of real lighting and normal detail.
@@ -126,6 +135,12 @@ Rules:
 - **Check low graphics settings before adopting anything expensive.** The style must still read at low quality and on mobile.
 - **Verify every claim in Studio.** Record which methods worked, their cost and screenshots. Offline Blender renders are not evidence of the Roblox look.
 - **Prefer methods baked into assets** (hulls, painted lines) over runtime effects that vary by device.
+
+### Characters and props in the look (Confirmed, 2026-11-01)
+
+- **Floppy (final design):** an inked skinned shell that bends with him, sage sores matching the upper lids with a light glow, and luminous yellow-green antenna bulbs plus a soft head light, so slugs stand out in dark caverns.
+- **Blaster (final):** curved bladed-ridge pincer tips (top down, bottom up, no corner), 15% shorter for hip carry, ink shells on every part, colours unchanged.
+- **Sick reads lighter, dirty reads darker.** Dark brown blotches look like grime; sickness reads as sallow pallor, a faint bruised rim and a lit centre.
 
 ## 8. Asset quality bar ("not AI slop")
 
