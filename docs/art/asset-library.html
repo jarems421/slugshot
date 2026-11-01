@@ -901,6 +901,16 @@ float rockBlocks(vec3 q, out vec3 bc, out vec3 bs, out float bseed) {
   }
   return best;
 }
+// Glowing fissures across the top: Slugterra-style cracks running in from the rim, stopping short of the middle.
+vec2 topFissure(vec2 x) {
+  vec2 best = vec2(1e5, 0.0);
+  for (int i = 0; i < 9; i++) {
+    float fi = float(i);
+    vec2 cl = crackLine(rot(fi*0.698 + 0.45*hash1(fi + 71.0))*x, vec3(6.9, 6.9, 1.0), fi*17.3 + 3.0, 0.2 + 0.09*hash1(fi + 72.0), 1.0);
+    if (cl.x < best.x) best = cl;
+  }
+  return best;
+}
 float rockBody(vec3 q) {
   vec3 bc, bs; float bseed;
   float d = rockBlocks(q, bc, bs, bseed);
@@ -1026,6 +1036,83 @@ void crystalCluster(vec3 q, vec3 site, vec3 dir, float k, float L, float R, floa
     d = min(d, crystalDir(q, site - dir*0.15 + j*S*0.5, normalize(dir + j*S*1.6), L*sc, R*(0.7 + 0.3*sc)));
   }
   if (d < res.x) res = vec2(d, 18.0 + k*0.05);
+}
+// Four bridge markers: a broken stone pillar and half-arch on one side of each bridge mouth and a stump on the other.
+// Each pillar has a glowing symbol set flush into it, facing both ways. dir: 0 PvP, 1 slug side, 2 entrance, 3 gun side.
+const float MARK_R = 6.0, MARK_U = 1.75, MARK_PLATE_Y = 1.36;
+void markerLocal(vec2 xz, out float u, out float w, out float dir, out float side) {
+  vec2 f = abs(xz);
+  if (f.y > f.x) { w = f.y; u = xz.x; dir = xz.y < 0.0 ? 0.0 : 2.0; }
+  else { w = f.x; u = xz.y; dir = xz.x > 0.0 ? 1.0 : 3.0; }
+  side = mod(dir, 2.0) < 0.5 ? 1.0 : -1.0;
+}
+float tiltedBox(vec3 l, vec3 size, float yaw, float tilt) {
+  l.xz = rot(yaw)*l.xz;
+  l.xy = rot(tilt)*l.xy;
+  return sdBox(l, size) - 0.05;
+}
+void bridgeMarkers(vec3 q, inout vec2 res) {
+  float u, w, dir, side;
+  markerLocal(q.xz, u, w, dir, side);
+  float far = length(vec3(abs(u) - MARK_U, q.y - 1.3, w - MARK_R)) - 3.0;
+  if (far > res.x) return;
+  float h = hash1(dir*7.3 + 1.0), h2 = hash1(dir*5.1 + 2.0);
+  vec3 tall = vec3(u - side*MARK_U, q.y, w - MARK_R);
+  float taper = 1.0 + 0.1*clamp(1.2 - q.y, 0.0, 1.2);
+  vec3 tt = vec3(tall.x/taper, tall.y, tall.z/taper);
+  float d = tiltedBox(tt - vec3(0.0, 0.42, 0.0), vec3(0.46, 0.46, 0.42), 0.14 + 0.1*h, 0.0);
+  d = smin(d, tiltedBox(tt - vec3(0.03, 1.35, 0.0), vec3(0.38, 0.52, 0.34), -0.1, 0.03), 0.04);
+  // The top leans out over the bridge and breaks off: half an arch.
+  float top = tiltedBox(tall - vec3(-side*0.3, 2.14, 0.0), vec3(0.66, 0.27, 0.32), 0.05, side*0.5);
+  top = smax(top, dot(tall - vec3(-side*0.72, 2.4, 0.0), normalize(vec3(-side, 0.55 + 0.4*h2, 0.25))), 0.04);
+  d = smin(d, top, 0.04);
+  vec3 stump = vec3(u + side*MARK_U, q.y, w - MARK_R);
+  float st = tiltedBox(stump - vec3(0.0, 0.34, 0.0), vec3(0.44, 0.42, 0.38), -0.2 - 0.1*h2, 0.0);
+  st = smax(st, dot(stump - vec3(0.0, 0.52 + 0.14*h, 0.0), normalize(vec3(side*0.55, 1.0, -0.25))), 0.04);
+  d = min(d, st);
+  d = min(d, tiltedBox(stump - vec3(side*0.72, 0.1, -0.4), vec3(0.16, 0.1, 0.14), 0.9, 0.2));
+  d += 0.09*(noise3(q*1.5 + dir*9.0) - 0.5) + 0.03*(noise3(q*4.0) - 0.5);
+  if (d < res.x) res = vec2(d, 1.0);
+  // The symbol stone sits flush in the pillar's face, on both sides.
+  float plate = sdBox(tall - vec3(0.03, MARK_PLATE_Y, 0.0), vec3(0.33, 0.33, 0.43));
+  if (plate < res.x) res = vec2(plate, 16.0 + dir*0.1);
+}
+float box2(vec2 p, vec2 b) { vec2 e = abs(p) - b; return length(max(e, 0.0)) + min(max(e.x, e.y), 0.0); }
+float seg2(vec2 p, vec2 a, vec2 b) { float h; return sdSeg2(p, a, b, h); }
+// Original symbols, in a roughly -1 to 1 square.
+float markerSymbol(vec2 g, float dir) {
+  if (dir < 0.5) {
+    // Crossed swords, as on the PvP gate.
+    float d = 1e3;
+    for (int i = 0; i < 2; i++) {
+      vec2 r = rot(i == 0 ? 0.785 : -0.785)*g;
+      d = min(d, box2(r - vec2(0.0, 0.14), vec2(0.075, 0.62)));
+      d = min(d, box2(r + vec2(0.0, 0.42), vec2(0.24, 0.06)));
+      d = min(d, box2(r + vec2(0.0, 0.62), vec2(0.06, 0.16)));
+    }
+    return d;
+  }
+  if (dir < 1.5) {
+    // A resting slug: low body, raised head and two antennae with bulbs.
+    float d = (length((g - vec2(-0.1, -0.32))/vec2(0.72, 0.27)) - 1.0)*0.27;
+    d = smin(d, length(g - vec2(0.42, -0.1)) - 0.24, 0.1);
+    d = min(d, seg2(g, vec2(0.38, 0.05), vec2(0.28, 0.52)) - 0.045);
+    d = min(d, seg2(g, vec2(0.5, 0.05), vec2(0.68, 0.46)) - 0.045);
+    d = min(d, length(g - vec2(0.28, 0.56)) - 0.095);
+    return min(d, length(g - vec2(0.7, 0.5)) - 0.095);
+  }
+  if (dir < 2.5) {
+    // A cave mouth: an arch with a threshold.
+    vec2 a = g - vec2(0.0, -0.1);
+    float arch = a.y > 0.0 ? length(a) - 0.58 : max(abs(a.x) - 0.58, -a.y - 0.62);
+    return min(abs(arch) - 0.085, box2(g + vec2(0.0, 0.76), vec2(0.8, 0.07)));
+  }
+  // A chunky blaster, side on.
+  float d = box2(g - vec2(-0.08, 0.14), vec2(0.5, 0.2));
+  d = min(d, box2(g - vec2(0.6, 0.2), vec2(0.24, 0.09)));
+  d = min(d, box2(rot(-0.28)*(g - vec2(-0.3, -0.26)), vec2(0.13, 0.3)));
+  d = min(d, length(g - vec2(-0.12, 0.44)) - 0.15);
+  return d;
 }
 void smallCrystal(vec3 q, vec3 site, vec3 dir, float L, float R, float k, inout vec2 res) {
   float d = crystalDir(q, site - dir*0.08, dir, L, R);
@@ -1175,6 +1262,45 @@ void rockSmallCrystals(vec3 q, inout vec2 res) {
   smallCrystal(q, vec3(-3.085, -3.704, 0.640), vec3(-0.908, -0.408, -0.094), 0.96, 0.177, 3.0, res);
   smallCrystal(q, vec3(-6.552, -1.458, 2.730), vec3(-0.644, 0.191, 0.741), 0.92, 0.149, 7.0, res);
 }
+void rockSprouts(vec3 q, inout vec2 res) {
+  float stems = 1e5, caps = 1e5, capIdx = 0.0;
+  wallShroom(q, vec3(-3.646, -0.060, -0.657), vec3(0.0, 1.0, 0.0), 300.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.546, -0.060, -0.774), vec3(0.0, 1.0, 0.0), 301.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-3.362, -0.060, -0.748), vec3(0.0, 1.0, 0.0), 302.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.151, -0.060, 2.486), vec3(0.0, 1.0, 0.0), 303.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-1.937, -0.060, 2.741), vec3(0.0, 1.0, 0.0), 304.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.095, -0.060, 2.578), vec3(0.0, 1.0, 0.0), 305.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.155, -0.060, 2.476), vec3(0.0, 1.0, 0.0), 306.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.236, -0.060, 2.552), vec3(0.0, 1.0, 0.0), 307.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.371, -0.060, 2.727), vec3(0.0, 1.0, 0.0), 308.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(0.838, -0.060, -3.563), vec3(0.0, 1.0, 0.0), 309.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(0.666, -0.060, -3.554), vec3(0.0, 1.0, 0.0), 310.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.075, -0.060, -2.420), vec3(0.0, 1.0, 0.0), 311.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.904, -0.060, -2.731), vec3(0.0, 1.0, 0.0), 312.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.969, -0.060, -2.612), vec3(0.0, 1.0, 0.0), 313.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.454, -0.060, -1.468), vec3(0.0, 1.0, 0.0), 314.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.430, -0.060, -1.302), vec3(0.0, 1.0, 0.0), 315.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.532, -0.060, -1.275), vec3(0.0, 1.0, 0.0), 316.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(4.857, -0.060, 1.447), vec3(0.0, 1.0, 0.0), 317.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(4.834, -0.060, 1.235), vec3(0.0, 1.0, 0.0), 318.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(4.791, -0.060, 1.163), vec3(0.0, 1.0, 0.0), 319.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.617, -0.060, -0.338), vec3(0.0, 1.0, 0.0), 320.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.807, -0.060, -0.177), vec3(0.0, 1.0, 0.0), 321.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.739, -0.060, -0.428), vec3(0.0, 1.0, 0.0), 322.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.140, -0.060, -3.024), vec3(0.0, 1.0, 0.0), 323.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.249, -0.060, -2.977), vec3(0.0, 1.0, 0.0), 324.0, 1.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.156, -0.060, -2.856), vec3(0.0, 1.0, 0.0), 325.0, 1.0, stems, caps, capIdx);
+  if (stems < res.x) res = vec2(stems, 13.0);
+  if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);
+  smallCrystal(q, vec3(3.540, -0.050, 2.180), vec3(0.345, 0.938, 0.019), 0.64, 0.091, 2.0, res);
+  smallCrystal(q, vec3(2.540, -0.050, -4.500), vec3(-0.062, 0.948, -0.313), 0.63, 0.125, 10.0, res);
+  smallCrystal(q, vec3(-4.980, -0.050, -1.620), vec3(-0.104, 0.994, -0.045), 0.59, 0.104, 1.0, res);
+  smallCrystal(q, vec3(-2.660, -0.050, 4.220), vec3(-0.111, 0.990, 0.092), 0.60, 0.105, 3.0, res);
+  smallCrystal(q, vec3(2.660, -0.050, -3.620), vec3(0.251, 0.907, -0.337), 0.50, 0.092, 4.0, res);
+  smallCrystal(q, vec3(4.660, -0.050, 2.580), vec3(0.247, 0.941, 0.231), 0.53, 0.134, 10.0, res);
+  smallCrystal(q, vec3(-2.340, -0.050, 3.460), vec3(-0.134, 0.984, 0.118), 0.74, 0.102, 13.0, res);
+  smallCrystal(q, vec3(3.980, -0.050, 1.340), vec3(0.366, 0.920, 0.138), 0.76, 0.129, 10.0, res);
+}
 // @rock-dressing-end
 vec2 spawnRock(vec3 p) {
   vec3 q = p - vec3(0.0, ROCK_TOP, 0.0);
@@ -1189,6 +1315,8 @@ vec2 spawnRock(vec3 p) {
   rockCrystals(q, res);
   rockSmallCrystals(q, res);
   rockDebris(q, res);
+  rockSprouts(q, res);
+  bridgeMarkers(q, res);
   return res;
 }
 // Position on the spawn rock in its own units, whichever concept is showing it.
@@ -1448,7 +1576,7 @@ float inkWidth(float id) {
     if (abs(id - 14.0) < 0.5) w = 0.008;
     if (abs(id - 4.0) < 0.5) w = 0.02;
     if (id > 17.5) w = 0.035;
-    if (abs(id - 6.0) < 0.5 || (id > 14.5 && id < 16.5)) w = 0.012;
+    if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 16.5)) w = 0.01;
   }
   return w*TR(id).x;
 }
@@ -1493,9 +1621,11 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       float rr = length(l.xz);
       float scale = ASSET == 5 ? 0.5 : 1.0;
       s *= 0.8 + 0.4*noise3(p*1.8/scale);
-      s *= 1.0 - 0.45*smoothstep(0.76, 0.82, noise3(p*9.0/scale));
-      s *= 1.0 + 0.4*smoothstep(0.8, 0.86, noise3(p*9.0/scale + 31.0));
-      float m = 0.0;
+      float flat0 = smoothstep(0.75, 0.95, n.y);
+      s *= 1.0 - (0.45 - 0.27*flat0)*smoothstep(0.72, 0.82, noise3(p*9.0/scale));
+      s *= 0.92 + 0.16*noise3(p*3.1/scale);
+      s *= 1.0 + (0.4 - 0.24*flat0)*smoothstep(0.76, 0.86, noise3(p*9.0/scale + 31.0));
+      float m = 0.0, fissure = 0.0, fissureHalo = 0.0;
       // Joints between blocks stay dark, so the columns read as separate forms.
       float occ0 = clamp(0.5 + 3.0*rockBody(l + n*0.45), 0.0, 1.0);
       if (rr < 9.5 && l.y < 3.0) {
@@ -1504,7 +1634,18 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
                    + rockBody(l + vec3(e, e, e)) - 4.0*rockBody(l))/(e*e);
         s *= 1.0 + 0.55*smoothstep(1.8, 5.0, lap);
         float hatch = 1.0 - smoothstep(0.08, 0.13, abs(fract(dot(l, vec3(0.7, 0.7, 0.2))*5.0) - 0.5));
-        s *= 1.0 - 0.7*hatch*(1.0 - smoothstep(-3.5, -0.5, lap))*step(0.38, noise3(l*2.5));
+        s *= 1.0 - 0.7*(1.0 - flat0)*hatch*(1.0 - smoothstep(-3.5, -0.5, lap))*step(0.38, noise3(l*2.5));
+        if (l.y > -0.3 && n.y > 0.6 && rr < 8.2) {
+          // Fissures: teal light welling up through a dark-edged crack and spilling softly onto the stone.
+          float fc = topFissure(l.xz).x;
+          // A calmer, darker top, so the glow carries it.
+          s *= 0.68;
+          fissure = 1.0 - smoothstep(-0.012, 0.012, fc);
+          fissureHalo = exp(-max(fc, 0.0)*3.6);
+          float rim = smoothstep(-0.015, 0.0, fc) - smoothstep(0.018, 0.05, fc);
+          s = mix(s, vec3(0.012, 0.022, 0.03), rim*0.9);
+          s = mix(s, vec3(0.15, 0.6, 0.56), fissure);
+        }
         if (l.y < -0.15) {
           float crack = rockCrackAt(l);
           s *= 1.0 + 0.45*(smoothstep(0.0, 0.02, crack) - smoothstep(0.03, 0.09, crack));
@@ -1521,6 +1662,9 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       }
       emit = s*(0.34 + 0.3*smoothstep(0.1, 0.7, -n.y))*(rr < 9.5 && l.y < 3.0 ? 1.0 : 0.3);
       emit *= 0.55 + 0.45*occ0;
+      vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));
+      emit += fissureLight*(1.1*fissure + 0.3*fissureHalo*fissureHalo)*TR(id).z;
+      m *= 1.0 - fissureHalo*0.8;
       return mix(s, vec3(0.13, 0.22, 0.11), 0.85*m);
     }
 #endif
@@ -1677,6 +1821,22 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return c*0.6;
   }
 #endif
+#if ASSET >= 4
+  if (id > 15.9 && id < 16.5) {
+    float dir = floor((id - 16.0)/0.1 + 0.5);
+    vec3 l = centreLocal(p);
+    float u, w, d0, side;
+    markerLocal(l.xz, u, w, d0, side);
+    vec2 g = vec2(u - side*MARK_U - 0.03, l.y - MARK_PLATE_Y)/0.3;
+    float sym = markerSymbol(g, dir);
+    vec3 col = dir < 0.5 ? vec3(1.0, 0.62, 0.25) : dir < 1.5 ? vec3(0.3, 1.0, 0.76) : dir < 2.5 ? vec3(0.72, 0.87, 1.0) : vec3(1.0, 0.82, 0.35);
+    float fill = 1.0 - smoothstep(-0.015, 0.015, sym);
+    float halo = exp(-max(sym, 0.0)*7.0);
+    vec3 stone = vec3(0.07, 0.072, 0.095);
+    emit = col*(1.25*fill + 0.2*halo)*TR(id).z*(0.9 + 0.1*sin(uT*0.9 + dir));
+    return mix(stone, col, fill);
+  }
+#endif
   if (id > 16.5) {
     // Maelstrom water: bold spiral bands in glowing teal, sinking to deep blue at the centre.
     float wr = length(p.xz), wa = atan(p.z, p.x);
@@ -1705,6 +1865,9 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     spec = 0.5;
     return vec3(0.55, 0.75, 0.35);
   }
+#if ASSET >= 4
+  if (id > 12.5 && id < 13.5) return vec3(0.62, 0.58, 0.46);
+#endif
   if (id > 12.5) { spec = 0.55; return vec3(0.55, 0.56, 0.6); }
   if (id > 11.5 && id < 12.5) {
 #if ASSET >= 4
@@ -2008,11 +2171,13 @@ void main() {
   // Hub centrepiece, one vertical axis (owner, 2026-11-01). Variants here are camera views of one design.
   const CENTRE_CORE = [0.3, 0.95, 0.9];
   ASSETS.push({
-    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v6", concept: true, noLive: true, shader: 4,
+    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 40 deep, plus debris", version: "v7", concept: true, noLive: true, shader: 4,
     variantLabel: "View",
     variants: [
       { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 7.5, 0], dist: 27, pitch: 0.34 } },
-      { name: "From below", bright: [0.3, 0.95, 0.9], camera: { target: [0, 7, 0], dist: 27, pitch: -0.16 } }
+      { name: "From below", bright: [0.3, 0.95, 0.9], camera: { target: [0, 7, 0], dist: 27, pitch: -0.16 } },
+      { name: "On top", bright: [1.0, 0.62, 0.25], camera: { target: [0, 13, 0], dist: 25, pitch: 0.62 } },
+      { name: "From spawn", bright: [0.72, 0.87, 1.0], camera: { target: [0, 14.1, 0], dist: 5.6, pitch: 0.08 } }
     ],
     core: CENTRE_CORE, crG: [2, 11, 8], target: [0, 7.5, 0], dist: 27, figure: [3.2, 13, -2.6], glow: [0, -1.5, 0], glowCol: [0.3, 0.95, 0.9],
     notes: [
@@ -2025,8 +2190,10 @@ void main() {
       ["Vines", "Fifteen vines with sparse leaves: nine hanging from the rim and six growing out of the rock lower down. Small glowing spores sit in the stems all the way down, each partly set into the stem so it reads as attached."],
       ["Moss", "The wall's soft sage moss on upward-facing rock, with a few patches down the sides. The middle of the top stays clear to walk on."],
       ["Treatment", "Slugshot mix, with thinner ink on the leaves and spores so it doesn't swallow them."],
+      ["Top", "Glowing fissures run in from the rim, with teal light welling up from inside as if the Maelstrom shows through, stopping short of the middle so the spawn area stays clear. Tiny mushrooms from the 14-colour bank sprout from the cracks, with a few small crystals near the edges. Mushrooms appear only here, not on the underside."],
+      ["Bridge markers", "A broken stone pillar with half an arch on one side of each bridge mouth, a stump and rubble on the other. Glowing symbols are set flush into the pillars: crossed swords in orange toward the portals, a blaster in gold toward the gun side, a slug in mint toward the slug side, and a cave mouth in pale blue toward the entrance. The gaps are about 17 studs wide, for the 10-stud bridges."],
       ["In the game", "The floating rocks and debris get a slow floating animation when this goes into the map. It stays visual only, so it never moves players."],
-      ["Status", "Concept v6, awaiting your review."]
+      ["Status", "Concept v7, awaiting your review."]
     ]
   }, {
     id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v1", concept: true, noLive: true, shader: 5,

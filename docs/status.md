@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v7 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): glowing fissures, crack mushrooms and four bridge markers on top. **Unresolved:** owner review.
+
 **Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v6 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): about 40 studs deep, 15 vines. **Unresolved:** owner review.
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v5 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): base rebuilt to the owner's reference, a wedge of cliff columns, with floating debris. **Unresolved:** owner review.

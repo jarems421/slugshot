@@ -119,6 +119,69 @@ def chain(points, radii, seed):
     return calls
 
 
+def fissure_map(vs, fs, ctx):
+    """The top's fissures as a grid of signed distances, read from the page's own topFissure."""
+    size = 400
+    fs = fs.replace("void main() {", "void unusedMain() {", 1) + """
+void main() {
+  vec2 x = (gl_FragCoord.xy/400.0*2.0 - 1.0)*8.0;
+  fragColor = vec4(topFissure(x).x, 0.0, 0.0, 1.0);
+}
+"""
+    vs, fs = desktop_glsl(vs, fs, 4)
+    prog = ctx.program(vs, fs)
+    vao = ctx.vertex_array(prog, [(ctx.buffer(np.array([-1, -1, 3, -1, -1, 3], dtype="f4").tobytes()), "2f", "aPos")])
+    tex = ctx.texture((size, size), 4, dtype="f4")
+    fbo = ctx.framebuffer(color_attachments=[tex])
+    fbo.use()
+    vao.render()
+    data = np.frombuffer(fbo.read(components=4, dtype="f4"), dtype="f4").reshape(size, size, 4)[:, :, 0]
+    return data, size
+
+
+def crack_sites(data, size, count, spacing, inner, outer, rnd, taken):
+    """Spots inside the cracks, spaced apart, clear of the middle and the bridge mouths."""
+    ys, xs = np.nonzero(data < 0.012)
+    order = list(range(len(xs)))
+    rnd.shuffle(order)
+    sites = []
+    for i in order:
+        x = (xs[i] + 0.5)/size*16 - 8
+        z = (ys[i] + 0.5)/size*16 - 8
+        r = math.hypot(x, z)
+        if not inner < r < outer or (min(abs(x), abs(z)) < 1.3 and r > 4.0):
+            continue
+        if any(math.hypot(x - a, z - b) < spacing for a, b in taken):
+            continue
+        taken.append((x, z))
+        sites.append((x, z))
+        if len(sites) == count:
+            break
+    return sites
+
+
+def sprouts(vs, fs, ctx):
+    rnd = random.Random(53)
+    data, size = fissure_map(vs, fs, ctx)
+    taken = []
+    crystals = []
+    for x, z in crack_sites(data, size, 8, 0.8, 4.0, 7.1, rnd, taken):
+        direction = norm([x/20 + rnd.uniform(-0.22, 0.22), 1.0, z/20 + rnd.uniform(-0.22, 0.22)])
+        crystals.append(f"  smallCrystal(q, {vec([x, -0.05, z])}, {vec(direction)}, {rnd.uniform(0.45, 0.85):.2f}, {rnd.uniform(0.09, 0.14):.3f}, {float(rnd.randrange(14)):.1f}, res);")
+    lines = []
+    seed = 300.0
+    for x, z in crack_sites(data, size, 13, 0.8, 2.6, 7.0, rnd, taken):
+        for j in range(rnd.choice((2, 3, 3))):
+            ox, oz = rnd.uniform(-0.17, 0.17), rnd.uniform(-0.17, 0.17)
+            lines.append(f"  wallShroom(q, {vec([x + ox, -0.06, z + oz])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 1.0, stems, caps, capIdx);")
+            seed += 1.0
+    print(f"{seed - 300:.0f} crack mushrooms, {len(crystals)} crack crystals anchored")
+    return ("void rockSprouts(vec3 q, inout vec2 res) {\n  float stems = 1e5, caps = 1e5, capIdx = 0.0;\n"
+            + "\n".join(lines)
+            + "\n  if (stems < res.x) res = vec2(stems, 13.0);\n  if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);\n"
+            + "\n".join(crystals) + "\n}\n")
+
+
 def standoff(p, amount):
     """Move a surface point straight out from the rock's axis."""
     a = math.atan2(p[2], p[0])
@@ -265,7 +328,8 @@ def main():
     page = path.read_text(encoding="utf-8")
     vs = extract(page, r'<script id="vs" type="x-shader/x-vertex">(.*?)</script>')
     fs = extract(page, r'<script id="fs" type="x-shader/x-fragment">(.*?)</script>')
-    code = build(Prober(vs, fs))
+    prober = Prober(vs, fs)
+    code = build(prober) + sprouts(vs, fs, prober.ctx)
     updated, count = re.subn(r"(// @rock-dressing-begin\n).*?(// @rock-dressing-end)",
                              lambda m: m.group(1) + code + m.group(2), page, flags=re.S)
     assert count == 1

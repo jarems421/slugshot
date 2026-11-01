@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v7, the top
+
+- **Confirmed:** owner called v6 "perfect" apart from the plain top, which players see 90% of the time. From five ideas, they chose glowing fissures, small mushrooms sprouting through the cracks, and the four bridge markers.
+- **Implemented/verified offline:** teal-lit carved fissures that stop short of the middle; tiny mushrooms and small crystals placed in the cracks by `tools/lobby/rock_sites.py`; broken pillar, half-arch and stump at each bridge mouth with flush glowing symbols. New On top and From spawn views. Renders inspected.
+- **Considering (agent's choices):** symbol subjects and colours other than PvP's orange swords: gold blaster, mint slug, pale blue cave mouth.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Spawn rock v6
 
 - **Owner feedback on v5:** too tall; stop about three levels of rock higher; add more vines, including lower down. In the map, the rocks should float with a floating animation.
