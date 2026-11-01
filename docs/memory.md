@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v7
+
+- **Owner feedback on v6:** the storm reads as coming through from the side but not looking straight up, and the lightning "does not look like lightning". Asked for Slugterra and fantasy game lightning references.
+- **Research:** only wiki text was found for Slugterra (Tazerling's arcs and strikes, no usable visual). Lightning follows general stylised technique: fine jagged detail, tapering trunk to branches to twigs, layered core, colour band and glow.
+- **Implemented/verified offline:** spiral vortex with a hollow lit eye, cloud spilling past the rim, tornado tail; rebuilt lightning. Renders inspected; motion loop frames checked, not watched playing.
+- **Unresolved:** owner review. Roblox: bolts from Beam or Neon segments (a community Lightning Beams module exists and would need source and licence review before use); the vortex needs layered rotating textures.
+
 ## 2026-11-01 - Library link restored
 
 - **Observed:** publishing Sky Well v6 to the temporary library failed as not found, and the artifact list changed to one containing the original library. The likely cause is the session changing Claude account; not confirmed. The current library was published to the original link as version 21, after checking the live copy was older than this branch.

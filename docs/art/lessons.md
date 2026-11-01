@@ -200,3 +200,9 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **What happened:** four rounds of words about the rock's shape didn't land; two reference images settled it at once. When shape feedback keeps circling, ask the owner for an image early.
 - **Blocks on a grid read as brick walls:** vary lengths widely, slant the ends, turn and lean each block, and thin the ink on joints, so no two line up into courses.
 
+### Sky Well lightning and vortex (2026-11-01)
+
+- **Lightning that reads as cracks:** a thin white line with a few long straight segments. It needs fine jagged detail, tapering, a trunk-branch-twig hierarchy, and layers from white core to colour band to wide glow.
+- **Looking up a shaft:** a volume that stops at the rim reads as a flat disc. A spiral converging on a hollow, bright eye gives depth, and cloud crossing the rim breaks the circle.
+- **Tone mapping lifts dark values a lot:** cloud colours that look dark in code came out pale lavender. Test dark storm values low.
+

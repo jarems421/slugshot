@@ -1502,48 +1502,53 @@ vec3 stormSky(vec3 rd) {
   vec3 c = mix(vec3(0.008, 0.008, 0.035), vec3(0.1, 0.085, 0.24), smoothstep(0.38, 0.62, n*0.8 + 0.34*arms));
   c = mix(c, vec3(0.42, 0.36, 0.72), smoothstep(0.7, 0.86, n*0.9 + 0.3*arms));
   c += vec3(0.5, 0.56, 0.85)*exp(-r*r*34.0)*0.7;
-  // Lightning: a soft sheet in the cloud behind a thin forked bolt, changing every few seconds.
+  // Sheet lightning glowing inside the far cloud, changing every few seconds.
   for (int i = 0; i < 3; i++) {
     float fi = float(i), seed = fi + floor(uT*0.3 + fi*0.37)*3.1;
     if (hash1(seed + 1.0) < 0.85) {
       vec2 lp = vec2(hash1(seed + 2.0) - 0.5, hash1(seed + 3.0) - 0.5)*0.9;
       vec2 dl = u - lp;
       c += vec3(0.55, 0.5, 1.0)*exp(-dot(dl, dl)*16.0)*0.9;
-      float wob = dl.x + 0.12*sin(dl.y*11.0 + seed) + 0.05*sin(dl.y*29.0 + seed*2.0);
-      c += vec3(0.95, 0.92, 1.0)*(1.0 - smoothstep(0.006, 0.02, abs(wob)))*step(abs(dl.y), 0.42);
     }
   }
   return c;
 }
-// The storm forcing its way through the opening: swirling cloud pouring down the shaft and hanging below the mouth like
-// the start of a tornado, wispier the lower it reaches. All motion is a whole multiple of ORBIT, so the preview loops.
+// The storm forcing its way through the opening: a spiral vortex filling the shaft around a hollow, lit eye, spilling out
+// past the rim under the roof in curling arms and hanging below the mouth as a tornado tail. The hollow eye and spiral
+// converging on it give depth when looking straight up. All motion is a whole multiple of ORBIT, so the preview loops.
 const float CLOUD_LOW = WELL_LOW - 8.0;
 const float CLOUD_HIGH = WELL_HIGH + 9.0;
+const float CLOUD_REACH = 16.5;
 float stormCloud(vec3 q, float spin, out float shade) {
   shade = 0.0;
-  float rr = length(q.xz), h = (q.y - CLOUD_LOW)/(CLOUD_HIGH - CLOUD_LOW);
-  float radius = mix(2.0, 9.8, smoothstep(0.0, 0.5, h));
-  float edge = 1.0 - smoothstep(radius*0.42, radius, rr);
-  if (edge <= 0.0 || h <= 0.0) return 0.0;
-  float sw = atan(q.z, q.x) + 0.38*q.y + spin*2.0;
-  vec3 n0 = vec3(cos(sw)*rr, q.y*0.4, sin(sw)*rr)*0.42;
-  float n = 0.55*noise3(n0) + 0.3*noise3(n0*2.1 + 7.0) + 0.15*noise3(n0*4.3 + 3.0);
-  n += 0.15*sin(sw*3.0 + rr*0.45);
-  shade = n;
-  float gate = mix(0.62, 0.47, smoothstep(0.05, 0.55, h));
-  return smoothstep(gate, gate + 0.14, n)*edge*edge*smoothstep(0.0, 0.18, h);
+  float rr = length(q.xz), y = q.y - WELL_LOW, h = (q.y - CLOUD_LOW)/(CLOUD_HIGH - CLOUD_LOW);
+  if (h <= 0.0 || h >= 1.0) return 0.0;
+  // Envelope: the tail narrows below, the skirt flares under the roof, and the shaft fills above.
+  float radius = y > 0.0 ? 9.6 : mix(2.6, 15.5, smoothstep(-8.0, -0.4, y));
+  float edge = 1.0 - smoothstep(radius*0.62, radius, rr);
+  if (edge <= 0.0) return 0.0;
+  float ang = atan(q.z, q.x);
+  float sw = ang + 1.5*log(rr + 0.6) + 0.22*q.y + spin*2.0;
+  vec3 n0 = vec3(cos(sw)*rr, q.y*0.32, sin(sw)*rr)*0.46;
+  float n = 0.55*noise3(n0) + 0.3*noise3(n0*2.2 + 7.0) + 0.15*noise3(n0*4.6 + 3.0);
+  float arm = 0.5 + 0.5*sin(sw*3.0);
+  float v = 0.62*n + 0.48*arm;
+  shade = v;
+  // Thin wisps in the tail and skirt, thick in the shaft; a hollow eye runs up the middle.
+  float gate = y > 1.0 ? 0.5 : mix(0.74, 0.62, smoothstep(-8.0, 1.0, y));
+  float eye = smoothstep(0.7 + 0.12*max(y, 0.0), 1.8 + 0.2*max(y, 0.0), rr);
+  return smoothstep(gate, gate + 0.08, v)*edge*eye*smoothstep(0.0, 0.1, h);
 }
 float stormCycle(float spin) { return floor(mod(spin/6.2832*18.0, 18.0)); }
-bool boltOn(float b, float cycle) { return hash1(b*3.1 + cycle*7.7 + 2.0) < 0.55; }
-// How strongly lightning is lighting things right now.
+// One bolt is always striking; the others come and go.
+bool boltOn(float b, float cycle) { return b < 0.5 || hash1(b*3.1 + cycle*7.7 + 2.0) < 0.62; }
 float stormFlash(float spin) {
   float cycle = stormCycle(spin), f = 0.0;
   for (int b = 0; b < 3; b++) if (boltOn(float(b), cycle)) f += 0.5;
   return f;
 }
 vec3 stormVolume(vec3 ro, vec3 rd, float tEnd, vec3 col) {
-  const float REACH = 10.0;
-  float a = dot(rd.xz, rd.xz), b = dot(ro.xz, rd.xz), c = dot(ro.xz, ro.xz) - REACH*REACH;
+  float a = dot(rd.xz, rd.xz), b = dot(ro.xz, rd.xz), c = dot(ro.xz, ro.xz) - CLOUD_REACH*CLOUD_REACH;
   float disc = b*b - a*c;
   if (disc <= 0.0 || a < 1e-5) return col;
   float root = sqrt(disc), t0 = max((-b - root)/a, 0.0), t1 = min((-b + root)/a, tEnd);
@@ -1553,63 +1558,117 @@ vec3 stormVolume(vec3 ro, vec3 rd, float tEnd, vec3 col) {
   }
   if (t1 <= t0) return col;
   float spin = uT*ORBIT, flash = stormFlash(spin), alpha = 0.0;
-  float offset = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)))*43758.5453);
-  float dt = (t1 - t0)/30.0;
+  float offset = 0.5 + 0.5*(fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)))*43758.5453) - 0.5);
+  float dt = (t1 - t0)/46.0;
   vec3 sum = vec3(0.0);
-  for (int i = 0; i < 30; i++) {
+  for (int i = 0; i < 46; i++) {
     vec3 q = ro + rd*(t0 + dt*(float(i) + offset));
     float shade, den = stormCloud(q, spin, shade);
     if (den > 0.0) {
-      float take = 1.0 - exp(-den*dt*0.62);
-      float high = smoothstep(CLOUD_LOW, CLOUD_HIGH, q.y);
-      vec3 cl = mix(vec3(0.006, 0.006, 0.024), vec3(0.17, 0.14, 0.38), smoothstep(0.56, 0.8, shade));
-      cl *= 0.6 + 0.25*high + flash*0.4;
+      float take = 1.0 - exp(-den*dt*1.5);
+      // Comic tones: dark body, mid indigo, crisp lit crests, with light from the eye reaching out along the arms.
+      vec3 cl = mix(vec3(0.003, 0.003, 0.014), vec3(0.016, 0.014, 0.055), smoothstep(0.56, 0.62, shade));
+      cl = mix(cl, vec3(0.1, 0.085, 0.27), smoothstep(0.77, 0.82, shade));
+      float toEye = exp(-length(q.xz)*0.8)*smoothstep(0.0, 8.0, q.y - WELL_LOW);
+      cl += vec3(0.4, 0.38, 0.85)*toEye;
+      cl *= 0.9 + flash*0.18;
       sum += (1.0 - alpha)*take*cl;
       alpha += (1.0 - alpha)*take;
+      if (alpha > 0.985) break;
     }
   }
   return col*(1.0 - alpha) + sum;
 }
-// One jagged lightning path from above the shaft down through the mouth, ending on the rim or the crystals.
-vec3 boltPoint(float i, float seed) {
-  float t = i/6.0;
-  float y = mix(WELL_HIGH + 7.0, WELL_LOW - 4.0 - 4.0*hash1(seed + 9.0), t);
-  float ang = hash1(seed)*6.2832 + (t - 0.5)*1.5*(hash1(seed + 1.0) - 0.5) + 0.3*(hash1(seed + 20.0 + i) - 0.5)*step(0.01, t);
-  float r = mix(1.2 + 3.0*hash1(seed + 2.0), 8.0 + 2.0*hash1(seed + 3.0), t*t) + 1.0*(hash1(seed + 10.0 + i) - 0.5)*step(0.01, t);
-  return vec3(cos(ang)*r, y, sin(ang)*r);
+// ---- Lightning, after stylised game lightning: finely jagged and tapering, trunk to branches to twigs, built from a
+// white-hot core, a hard electric-blue band and a wide violet glow.
+vec3 hash3(float i, float s) { return vec3(hash1(i*1.37 + s), hash1(i*2.11 + s + 11.3), hash1(i*3.07 + s + 23.9)) - 0.5; }
+vec3 jag(float t, float seed) {
+  vec3 o = vec3(0.0);
+  float amp = 1.0, n = 3.0;
+  for (int k = 0; k < 3; k++) {
+    float s = seed + float(k)*7.1, f = t*n, i = floor(f);
+    o += amp*mix(hash3(i, s), hash3(i + 1.0, s), f - i);
+    amp *= 0.52;
+    n = n*2.0 + 1.0;
+  }
+  return o*pow(sin(PI*clamp(t, 0.0, 1.0)), 0.5);
 }
-// Bolts are drawn along the ray's closest approach to each segment, so they stay crisp at any distance.
-float rayToSegment(vec3 ro, vec3 rd, vec3 a, vec3 b, float tEnd) {
-  vec3 v = b - a, w = ro - a;
-  float B = dot(rd, v), C = dot(v, v), D = dot(rd, w), E = dot(v, w);
+// The trunk winds down out of the eye and spirals outward through the mouth, ending on the rim among the crystals.
+vec3 trunkPoint(float t, float seed) {
+  float ang = hash1(seed)*6.2832 + t*(0.8 + 0.9*hash1(seed + 1.0))*(hash1(seed + 6.0) > 0.5 ? 1.0 : -1.0);
+  float r = mix(0.8, 9.8 + 1.8*hash1(seed + 2.0), pow(t, 1.5));
+  float y = mix(WELL_HIGH + 3.0, WELL_LOW - 1.0 - 3.5*hash1(seed + 9.0), t);
+  return vec3(cos(ang)*r, y, sin(ang)*r) + jag(t, seed + 13.0)*vec3(2.2, 1.0, 2.2);
+}
+float trunkWidth(float t) { return mix(0.2, 0.05, t); }
+// Keeps the lowest distance-to-width along the bolt so far, and how deep inside the shaft that point is.
+void boltSegment(vec3 ro, vec3 rd, float tEnd, vec3 a, vec3 b, float wa, float wb, inout float best, inout float bestY) {
+  vec3 v = b - a, w0 = ro - a;
+  float B = dot(rd, v), C = dot(v, v), D = dot(rd, w0), E = dot(v, w0);
   float denom = C - B*B;
   float along = denom > 1e-5 ? clamp((E - B*D)/denom, 0.0, 1.0) : 0.0;
   vec3 onSeg = a + v*along;
   float s = dot(onSeg - ro, rd);
-  if (s < 0.0 || s > tEnd) return 1e3;
-  return length(ro + rd*s - onSeg);
+  if (s < 0.0 || s > tEnd) return;
+  float dn = length(ro + rd*s - onSeg)/max(mix(wa, wb, along), 0.0026*s);
+  if (dn < best) { best = dn; bestY = onSeg.y; }
 }
 vec3 stormBolts(vec3 ro, vec3 rd, float tEnd) {
-  float cycle = stormCycle(uT*ORBIT), core = 1e3;
-  vec3 result = vec3(0.0);
-  for (int b = 0; b < 3; b++) {
-    float fb = float(b);
+  float a = dot(rd.xz, rd.xz), b0 = dot(ro.xz, rd.xz);
+  if (dot(ro.xz, ro.xz) - b0*b0/max(a, 1e-5) > 400.0) return vec3(0.0);
+  float cycle = stormCycle(uT*ORBIT);
+  vec3 glow = vec3(0.0);
+  float core = 0.0, band = 0.0;
+  for (int bolt = 0; bolt < 3; bolt++) {
+    float fb = float(bolt);
     if (!boltOn(fb, cycle)) continue;
-    float seed = fb*17.0 + cycle*31.0 + 5.0, best = 1e3;
-    vec3 p0 = boltPoint(0.0, seed), fork = p0;
-    for (int i = 1; i <= 6; i++) {
-      vec3 p1 = boltPoint(float(i), seed);
-      best = min(best, rayToSegment(ro, rd, p0, p1, tEnd));
-      if (i == 3) fork = p1;
+    float seed = fb*17.0 + cycle*31.0 + 5.0, best = 1e3, bestY = WELL_LOW;
+    vec3 p0 = trunkPoint(0.0, seed);
+    for (int i = 1; i <= 20; i++) {
+      float t1 = float(i)/20.0;
+      vec3 p1 = trunkPoint(t1, seed);
+      boltSegment(ro, rd, tEnd, p0, p1, trunkWidth(t1 - 0.05), trunkWidth(t1), best, bestY);
       p0 = p1;
     }
-    // A short fork off the main bolt.
-    vec3 tip = fork + vec3(1.8*(hash1(seed + 41.0) - 0.5), -3.0, 1.8*(hash1(seed + 42.0) - 0.5));
-    float side = rayToSegment(ro, rd, fork, tip, tEnd);
-    result += vec3(0.5, 0.46, 1.0)*(exp(-best*best*9.0)*0.3 + exp(-side*side*14.0)*0.14);
-    core = min(min(core, best), side + 0.02);
+    for (int k = 0; k < 4; k++) {
+      float fk = float(k), s2 = seed + fk*5.3 + 41.0;
+      float tb = 0.26 + 0.17*fk + 0.08*hash1(s2);
+      vec3 start = trunkPoint(tb, seed);
+      vec3 dir = normalize(vec3(start.x, 0.0, start.z)/max(length(start.xz), 0.5) + vec3(1.2*(hash1(s2 + 1.0) - 0.5), -0.55, 1.2*(hash1(s2 + 2.0) - 0.5)));
+      float len = (2.2 + 3.4*hash1(s2 + 3.0))*(1.25 - tb), w0 = trunkWidth(tb)*0.62;
+      vec3 q0 = start, mid = start;
+      for (int i = 1; i <= 7; i++) {
+        float u = float(i)/7.0;
+        vec3 q1 = start + dir*len*u + jag(u, s2 + 5.0)*len*0.42;
+        boltSegment(ro, rd, tEnd, q0, q1, mix(w0, 0.012, u - 1.0/7.0), mix(w0, 0.012, u), best, bestY);
+        if (i == 3) mid = q1;
+        q0 = q1;
+      }
+      // A twig off each branch.
+      vec3 tdir = normalize(dir + vec3(hash1(s2 + 7.0) - 0.5, -0.3, hash1(s2 + 8.0) - 0.5)*1.6);
+      q0 = mid;
+      for (int i = 1; i <= 3; i++) {
+        float u = float(i)/3.0;
+        vec3 q1 = mid + tdir*len*0.38*u + jag(u, s2 + 9.0)*len*0.14;
+        boltSegment(ro, rd, tEnd, q0, q1, mix(w0*0.5, 0.01, u - 1.0/3.0), mix(w0*0.5, 0.01, u), best, bestY);
+        q0 = q1;
+      }
+    }
+    // Deep in the shaft the cloud veils the bolt, so it emerges from the storm instead of sitting on top of it.
+    float veil = mix(1.0, 0.28, smoothstep(WELL_LOW + 1.0, WELL_HIGH, bestY));
+    float flick = 0.85 + 0.3*hash1(seed + 77.0);
+    core = max(core, (1.0 - smoothstep(0.5, 0.75, best))*veil*flick);
+    band = max(band, (1.0 - smoothstep(1.9, 2.3, best))*veil*flick);
+    glow += vec3(0.42, 0.36, 1.0)*0.32*veil*flick/(1.0 + 0.035*best*best);
+    // The strike: a burst of light where the trunk lands.
+    vec3 hit = trunkPoint(1.0, seed), w = hit - ro;
+    float along = dot(w, rd);
+    if (along > 0.0 && along < tEnd + 2.0) {
+      float dd = length(w - rd*along);
+      glow += vec3(0.5, 0.62, 1.0)*(0.9*exp(-dd*dd*5.0) + 0.22*exp(-dd*dd*0.45))*flick;
+    }
   }
-  return result + vec3(0.93, 0.92, 1.0)*(1.0 - smoothstep(0.03, 0.075, core))*1.6;
+  return glow + vec3(0.12, 0.3, 1.0)*band*1.0 + vec3(1.0, 0.98, 1.0)*core*2.4;
 }
 // Light falling from the mouth: no column and no edge. It spreads as it falls, fades away with distance, and carries faint
 // shafts. Sampled through the volume so the falloff stays soft from every angle.
@@ -1635,7 +1694,7 @@ vec3 lightColumn(vec3 ro, vec3 rd, float tEnd) {
     float fade = (1.0 - fall)*(1.0 - fall)*0.85 + 0.12;
     sum += beam*shafts*fade*smoothstep(-1.0, 3.0, q.y);
   }
-  return vec3(0.55, 0.72, 0.85)*sum*dt*0.05*mix(0.06, 1.0, pow(1.0 - rd.y*rd.y, 1.5));
+  return vec3(0.55, 0.72, 0.85)*sum*dt*0.05*mix(0.03, 1.0, pow(1.0 - rd.y*rd.y, 2.0));
 }
 
 float waterY(float rr) { return -10.0 - 20.0*pow(1.0 - clamp(rr/17.5, 0.0, 1.0), 1.8); }
@@ -2432,7 +2491,7 @@ void main() {
       ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v6", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v7", concept: true, noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
@@ -2443,13 +2502,14 @@ void main() {
     notes: [
       ["Idea", "A huge opening in the cavern roof, wider than the Maelstrom below it, so it reads as a main centrepiece. Your two ideas combined: giant crystals line the opening, and the shaft climbs away to a distant storm."],
       ["Storm", "Dramatic but distant: bands of indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom, with clear silent lightning now and then. It is noticeable when you look up, but it does not light the lobby."],
-      ["Storm coming through", "The storm now forces its way through the opening: swirling cloud pours down the shaft and hangs below the mouth like the start of a tornado, jagged lightning travels down through the hole and strikes the rim, and each flash lights up the broken rock lining the shaft."],
+      ["Storm coming through", "A spiral vortex fills the shaft around a hollow, lit eye, so looking straight up you see it funnelling down toward you. Curling arms of cloud spill out past the rim under the roof and over the crystals, and a tornado tail hangs below the mouth."],
+      ["Lightning", "Stylised game lightning: finely jagged and tapering, from thick trunks to branches to thin twigs, with a white-hot core, a crisp electric-blue band and a wide violet glow. Bolts wind out of the eye and strike the rim with a burst of light, and the cloud veils them deep in the shaft."],
       ["Crystals", "Crystals ring the mouth and climb the shaft, from small stubs to a few huge ones. They point every way: down, outward, sideways and only some inward. The colours are a cool mix of cyan, violet, sapphire and jade with a little rose. They brighten toward their tips and supply the light falling onto the hub."],
       ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island. Further out, irregular crags hang from the roof: clusters of broken blocks in very different sizes with blunt, slanted ends. Trailing vines hang from the rim, and soft, diffused light falls from the mouth, spreading as it goes and fading out with no hard edge, with faint shafts running through it."],
       ["Debris", "Five small wedge islands and eighty pieces of debris, from specks to chunks a few studs across, form a funnel being drawn up into the storm: tighter low down, wider near the top. Everything circles the well like a slow tornado while bobbing up and down, and closer pieces circle faster. Look only."],
       ["Motion", "Pick In motion to see it move. That preview is sped up about 9 times and steps in chunks; in the game one slow circle takes about 52 seconds and runs smoothly."],
       ["Scale", "The spawn rock is shown at true scale with a player on it."],
-      ["Status", "Concept v6, awaiting your review."]
+      ["Status", "Concept v7, awaiting your review."]
     ]
   }, {
     id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v1", concept: true, noLive: true, shader: 6,
