@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v9
+
+- **Owner feedback on v8:** the lightning looks bad, fully horizontal, rather than hidden by the clouds.
+- **Implemented/verified offline:** zaps run mostly vertically and are blocked by the cloud in front of them, with only glimpses through gaps; the cloud lighting up from inside is now the main effect. Renders inspected.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Sky Well v8
 
 - **Owner feedback on v7:** better, but the storm overlaps the rocks and crystals and must be a lot more contained, as if trying to escape while being sucked back into the sky. Lightning goes outward; it should be short zaps of light in the clouds, not long bolts striking down.
