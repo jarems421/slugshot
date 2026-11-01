@@ -2,6 +2,74 @@
 
 
 
+## 2026-11-01 - Look test round 4: inside-out pieces, boundary ink, import axes
+
+- **Confirmed:** owner said the look was better but some wall mushrooms rendered as black voids with no glow, sprout bases looked odd, few crystals showed and sparkles came from rock gaps.
+- **Implemented/verified offline:** island check showed Blender's normal recalculation had flipped 13/52 wall caps, 15/34 stems, 7/32 crystals (half the crystal faces) and part of the gate. Builds keep the marching-cubes winding with a per-island guard; recheck reads zero flipped islands in every group. Boundary ink coverage fell from 63/42/23% (stems/caps/crystals) to 4/7/2%. Effect points now use a measured axis flip. StyLua, Selene, luau-lsp clean; Rojo build; Blender previews (back-face culled, low view) inspected. [Lessons](art/lessons.md).
+- **Unresolved:** owner Studio verdict and the logged import-axes result.
+
+## 2026-11-01 - Look test round 5: gate bands, stable lighting, vivid small caps
+
+- **Confirmed:** owner said it looked better; the gate's iron band outlines looked corrupted (front and back), the lighting kept changing between views, and small mushrooms looked dull and pale.
+- **Implemented/verified offline:** band edges bevelled 0.05 in the concept (library v15, gate turntables re-rendered); gate sampled at 0.04 with 4,000 iron triangles; close-up renders show clean outlines front and back, and every island faces outward. Nearby glows merged into shared lights (about 300 to about 90). Zone moods shift colour only. Small-cap colours deepened, glow strength 3.4 to 2.3. StyLua, Selene, luau-lsp clean; Rojo build.
+- **Unresolved:** owner Studio verdict. The idea that Roblox's light limit caused the shifting is inferred from the light count, not measured.
+
+## 2026-11-01 - Look test round 6: brighter small caps, rock texture options
+
+- **Confirmed:** owner said small mushrooms have colour now but feel too dim; rocks look basic and need texture on a scattered portion (not moss everywhere).
+- **Implemented/verified offline:** small-cap glow peak 1.0 to 1.6 (strength about 3.3) and cap lights 1.6; repainted, privately re-uploaded, fresh look-test window. Rock wall texture options in the library v16: carved fractures, mineral veins, weathering and lichen, chipped facets, mixed. Option 1 is pixel-identical to v6 (max diff 0). Turntables inspected; pockmarks rejected internally as bullet-hole-like.
+- **Unresolved:** owner's pick; Roblox build of the chosen option.
+
+## 2026-11-01 - Look test round 7: graphics-quality lighting flip, rock wall study
+
+- **Confirmed:** owner showed identical shots with different lighting and wants the brighter one always; rejected round 6 rock options (squiggle cracks, deformed rocks) and asked for a separate rock artifact with Slugterra-style cracks on a third of the rocks per wall (different per wall, evenly spread), one unique texture and one general texture on all rocks.
+- **Implemented/verified offline:** wall lights no longer cast shadows (the diagnosis that automatic graphics quality caused the flip is inferred from the screenshots). Rock shader rebuilt: angular, forked V-groove cracks (one per column, never the top row), fossil ammonite shells on two rocks, and grain, edge wear and crevice hatching on all rocks. Rock shapes unchanged; option 1 pixel-identical to v6. Turntables inspected over three iterations. [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) published; library v17.
+- **Unresolved:** owner verdict; Roblox build of the chosen layers as four wall variants.
+
+## 2026-11-01 - Rock wall study round 8: real cracks only
+
+- **Confirmed:** owner loves the carved cracks and wants a few more; remove the faint squiggly lines; fossil shells not wanted.
+- **Implemented/verified offline:** cracks on five of the twelve big rocks with second cracks on about half; v6 painted cracks and buried-root boundary arcs removed from the study (surface ring test in the concept, convex lines off for study rock in the concept and painter); fossil code removed. Option 1 within 2 of 255 levels of v6. Turntables inspected; study page v2 and library v18 published.
+- **Unresolved:** owner's final look; Roblox build of walls A to D.
+
+## 2026-11-01 - Rock wall base design and Roblox walls A-D
+
+- **Confirmed:** owner wanted a few more crystals (top left was bland) and asked for this to be the base design for rock walls, with crack, moss, mushroom and crystal positions changing per wall and every corner filled; then put it in the Roblox Studio look test.
+- **Implemented/verified offline:** region-based dressing per wall (six regions, three crystal and three mushroom clusters shuffled, tiny mushrooms everywhere; 6-7 crystals per wall), measured on each wall's cracked surface; moss shifted per wall. v6 anchors frozen (they had drifted up to about 0.2 studs from the current surface). Walls A-D built, island orientation checked, privately uploaded, and alternating in the look-test ring.
+- **Unresolved:** owner's Studio verdict.
+
+## 2026-11-01 - Lobby round 10: crack spread, gate bands, moderation check
+
+- **Confirmed:** owner loves the base wall design; reported one wall rendering oddly, top-left cracks rare, and one gate band unlike the others; asked to start Floppy and the blaster next.
+- **Implemented/verified offline:** per-region crack picks (top-left cracks on three of four walls), top-row cracks from the lower rim, bands sized to each block. Rebuilt gate and walls A-D; islands outward; all uploaded assets Approved before reopening Studio. Odd wall attributed to pending moderation (inferred; textures were complete and Approved on read-back).
+- **Unresolved:** owner's Studio check.
+
+## 2026-11-01 - Floppy and the blaster in the Slugshot look; barrel options
+
+- **Confirmed:** owner asked for Floppy and the blaster in the new style in their own artifact, and a more dangerous-looking barrel without a redesign or colour change.
+- **Implemented/verified offline:** barrel variants from a copy of the accepted blaster (fangs, claws, armour and vents, combined) and turntable renders in the look; renders inspected (fangs enlarged after review). Page published.
+- **Unresolved:** owner's choice; Roblox ink shells and glow for both.
+
+## 2026-11-01 - Blaster: curved pincer tips
+
+- **Confirmed:** owner dislikes the planar slanted tips and their corner on every option; bottom prong should point up; facing tips need a feature; front view needs a detail.
+- **Implemented/verified offline:** tips lofted from the prongs' own cross-sections in four options; turntables inspected (a charge-node ray-cast fix after review). Page updated with Floppy's new bulbs and spots.
+- **Unresolved:** owner's pick.
+
+## 2026-11-01 - Blaster bladed ridge final, in Roblox
+
+- **Confirmed:** owner picked the bladed ridge; asked to remove the dip before the blade, shorten about 15%, then make it the Roblox model.
+- **Implemented/verified offline:** revised tip from a clean cut with slope lead and a ridge that only lowers; export with ink shells (orange part decimated to 7k), private upload Approved, mapping updated, Floppy test place rebuilt and opened.
+- **Unresolved:** Studio check and owner verdict.
+
+## 2026-11-01 - Documentation checkpoint for this chat
+
+- **Confirmed:** owner asked to update all documentation from this chat (design, wording, lessons) and push as a checkpoint; Codex is doing the same for its own chat.
+- **Implemented:** style guide gains the Roblox lighting rules and the character look; lobby assets records what is built; owner design language gains this chat's phrases and dictation slips. Detailed rounds remain in `docs/art/lessons.md`, `docs/art/look-pack.md`, `docs/slugs/blaster-refinement.md` and the Floppy catalogue entry (slug pipeline branch).
+
+
+
+
 ## 2026-10-31 - Blender skill routing guide
 
 - Rewrote `docs/slugs/skill-routing.md` from the actual installed `SKILL.md` files (28 EL4CTEO, 30 RobLe3, 1 project). Replaced the generated inventory and removed `build_skill_routing.py`; `check_skill_routing.py` now checks coverage.
@@ -245,6 +313,88 @@
 - **Confirmed:** owner requested Slugterra-inspired crystal formations as cavern light sources and asked that concurrent gun and animation work be preserved.
 - **Implemented:** five original Blender designs, 16 formations, visible crystal-hosted point lights and a cool native Roblox post-processing look, in separately named `-crystals` place builds.
 - **Verified, limited:** Blender FBX roundtrip and automated movement, foundation and map checks passed. **Unresolved:** subjective visual review and Studio/device performance. See [research](research/rocklock-crystals.md) and [Rocklock](rocklock.md).
+
+
+
+## 2026-11-01 — Look test round 3
+
+- **Owner feedback:** add a mini stairway/slab under the portal energy; walls looked blue ("don't just make the rocks blue"), so light them from above instead; small wall mushrooms look like angular shards.
+- **Implemented:** gate v4 steps (concept and library updated); neutral ambient and fog plus a warm-white spotlight above each wall; small-detail triangle floor, 0.05-stud wall sampling and thinner small-cap ink. Rebuilt and re-uploaded the wall, mushroom and gate; library v14. Checks: lint, types and build pass; not yet seen in Studio by the agent.
+
+## 2026-11-01 — Look test round 2
+
+- **Owner feedback (Studio screenshots):** likes every design; walls too dark and far to see; crystals and mushrooms glow but don't light the walls; giant mushroom slightly deformed. Wants subtle animation: graceful spore stream from giant mushrooms that lights the area and dissipates at the floor, star twinkles on every crystal (wall ones too) scaled by size, portal animation. Small mushrooms: glow only (spores would be too much).
+- **Implemented:** per-crystal and per-cap lights, twinkles, spore stream with light-carrying lead spores, portal sparks, embers and pulse; brighter ambient, thinner fog; rebuilt mushroom cap. Checks: StyLua, Selene, luau-lsp, Rojo build. Not yet seen in Studio by the agent.
+- **Process note:** a PowerShell `-like "*`**"` unsaved check matched every title (the backtick is consumed inside double quotes), so stale Studio windows stayed open; fixed by closing them by start time. Studio window titles do not show unsaved state reliably.
+
+## 2026-11-01 — Look pack first pass
+
+- **Confirmed:** Roblox has no custom shaders, so the owner asked for our own look pack built from Roblox features plus baked assets; approved private Open Cloud uploads; asked that Floppy and the blaster get the same ink/glow look.
+- **Implemented:** [look pack](art/look-pack.md) pipeline and runtime module; five final assets uploaded privately; look-test place built and opened. Problems solved on the way: marching-cubes winding (shells went inward), smudgy vertex-colour ink (switched to per-texel painting), invalid bake texels (Cycles fills the whole image; validity from zero positions), stale glow entries, ink shells greyed by lights (black Neon).
+- **Unresolved:** owner's Studio verdict; Floppy skinned ink shell and blaster outline.
+
+## 2026-11-01 — Designs final, lessons recorded
+
+- **Confirmed:** owner approved every library design as final and asked for documentation of what was hard and how it was solved, including how to read vague phrasing next time.
+- **Implemented:** library v13 marks all designs Final; new [art lessons](art/lessons.md); environment phrase table and working pattern added to [owner design language](slugs/owner-design-language.md); roadmap, asset plan, index and status updated.
+
+## 2026-11-01 — Wall dressing anchored; designs ready for final review
+
+- **Owner request:** no wall mushrooms (especially tiny ones) or crystals hovering off the rock. Bark mushrooms on the giant mushroom were requested, then withdrawn ("too much mushroom"). After reviewing the wall change the owner considers all designs approved and ready to hand off.
+- **Implemented/verified:** the wall's rock body is now `wallMass`; `tools/lobby/wall_sites.py` ray-marches 23 dressing spots onto that surface on the GPU, searching a small neighbourhood for front-facing, non-overhang rock, and writes the anchors into the page (21 placed, 2 skipped with no suitable surface). Mushroom stems root 0.15 studs inside the rock and grow out along the normal and up; crystals sink 0.25 studs. A bounding early-out without margin first produced false sphere hits; fixed with a 0.5-stud margin. The agent inspected four turntable frames: dressing sits on the rock. Library v12.
+- **Unresolved:** owner's final review.
+
+## 2026-10-31 — Smoother library viewing
+
+- **Owner report:** views now render but moving around feels laggy and glitchy compared with the first version.
+- **Implemented:** turntables now 36 frames (10 degree steps) drawn to a 2D canvas only when the frame changes (was 16 frames moved as a large CSS background every frame); Live 3D restored to near-original smoothness (starts at 90% resolution, keeps 80% while dragging, full frame rate when animating, no draws when idle with motion off). Library v11. **Unresolved:** owner confirmation.
+
+## 2026-10-31 — Library without WebGL
+
+- **Owner report:** WebGL stayed disabled after a full Chrome restart with graphics acceleration on; asked for a working approach, suggesting rendering on open rather than all at once.
+- **Implemented/verified:** the page is split into a shared `lib` script (asset data and pure uniform maths) and page logic. `tools/lobby/render_library.py` renders 32 turntable sheets (16 frames each) offline from the same shader in about 17 s; the agent inspected the rock wall sheet and a contact sheet of six assets. The page defaults to these rendered views, loading each sheet only when that asset/variant is opened; Live 3D (per-asset shaders, adaptive resolution) is opt-in and falls back to renders on failure. Published as library v10 with the renders as artifact files.
+- **Unresolved:** owner confirmation in their browser. Noted while inspecting renders: PvP energy reads pale yellow rather than orange, the geode interior is hard to read, and the crimson field's rock is a flat slab.
+
+## 2026-10-31 — Asset library freezing Chrome
+
+- **Owner report:** opening the library froze the whole Chrome browser.
+- **Implemented:** one small shader program per asset, compiled lazily (the single all-asset shader was the likely GPU hang on Windows/ANGLE); bounding early-outs for crystals, rock chunks, wall dressing and baby mushrooms; fewer march/shadow/AO samples; adaptive resolution starting at 45% and an idle frame cap of about 25 fps. JS syntax and shader structure checked; **not verified in a browser**.
+- **Unresolved:** owner confirmation that the page now opens smoothly.
+
+## 2026-10-31 — Concept round 5
+
+- **Owner feedback:** crystals liked except the crimson shard field (shards detached from the rock); wants seven more, more unique designs (14 total). Rock wall vines "ruin it": remove them and add a few tiny glowing mushrooms in cracks. Mushrooms need a colour bank (purple, green, lime, violet, etc.) viewable for the giant mushroom; small mushrooms take a random colour from a bank of 14.
+- **Implemented (library v7):** crimson v2 (tighter spread on a larger rock); designs 8-14: Sapphire geode, Magenta floating heart, Jade crystal tree, Gold spiral, Molten split boulder, Pearl hanging cluster, Aurora urchin; rock wall v5 without vines, plus tiny glowing mushrooms; a 14-colour mushroom bank (mint, cyan, azure, violet, purple, magenta, pink, coral, amber, gold, lime, green, teal, frost) with a Colour selector for the giant mushroom and random bank colours for every small mushroom.
+- **Unresolved:** owner review; not visually checked by the agent.
+
+## 2026-10-31 — Concept round 4
+
+- **Owner feedback:** raised gate symbols hard to read under bold ink; gates 1.5x bigger; mushroom only needs to look more attached to the ground plus spores; crystals "basically perfect" but need seven variants in seven colours ("we need a lot of variety"); rock wall v3 "the worst", v1 best for simplicity: rebuild simply with moss, cracks, sprouting mushrooms, poking crystals and vines, after Slugterra/fantasy walls.
+- **Implemented (library v6):** symbols as flush glowing inlays with a fine painted edge (no ink outline); gates scaled 1.5x (about 21 studs); mushroom v2 with five ground-diving roots, mossy mound, baby mushrooms and drifting glowing spores; crystals with seven variants (Cyan cluster, Violet spire, Amber fan, Rose crown, Emerald spray, Frost spires, Crimson shard field); rock wall v4 = v1 masses plus painted broken cracks, more moss, three sprouting mushroom clusters, five poking crystals and four vines with glow bulbs. A reference search found only stylised asset packs; the common pattern is simple rock with dressing.
+- **Unresolved:** owner review; page not visually checked by the agent.
+
+## 2026-10-31 — Gate identities and rock wall v3
+
+- **Confirmed:** Slugshot mix is "amazing". Rock wall v2 still not liked: the lines through the face looked weird and it felt plain. Gates get a symbol on the keystone gem (PvP two swords, exploration a map) and gate colours for energy, bolts and gem: PvP orange, Training green, Veylume purple (owner "100% sure"); symbol grey or matching.
+- **Implemented:** library v5: three gate variants (Training symbol chosen as a target; symbol in grey metal); rock wall v3 with strata removed, a crystal-lit alcove, bracket fungi, ledge mushrooms and painted warm/cool stone patches.
+- **Unresolved:** owner review; crystal cluster and mushroom critiques pending.
+
+## 2026-10-31 — Slugshot mix treatment and rock wall v2
+
+- **Confirmed:** owner loves Inked Cavern and wants it as the main treatment, but keeps the others: dark rocks look better with Comic Cavern; glowing/clear things (mushroom, crystals) with Inked Cavern; characters always Inked Cavern. Comic Cavern swallowed the portal's grey bands and orange bolts, which Living Comic did not. Rock wall v1 "too basic".
+- **Implemented:** per-material "Slugshot mix" default in the asset library (rock/stone/floor = Comic, glow/organic/characters = Inked, metal details = thick outline with Living Comic inner lines) and rock wall v2 (skyline spires and notch, overhang ledge, strata, hanging moss, glowing crystal shards). Recorded in the [style guide](art/style-guide.md#treatment-rule-slugshot-mix-confirmed-2026-10-31).
+- **Unresolved:** owner review of v2 and the remaining critiques.
+
+## 2026-10-31 — Treatment direction
+
+- **Confirmed:** owner rejected the Enchanted treatment and wants a look between Comic Cavern and Living Comic, closer to Comic Cavern but not as heavy. **Implemented:** Inked Cavern treatment (ink width 1.45x, near-black charcoal ink, slightly reduced glow/bloom) as the asset library's default; Enchanted removed. **Unresolved:** owner confirmation.
+- **Owner follow-up:** Inked Cavern was "not there enough": the owner wants Living Comic's clean look with Comic Cavern's thick ink and shadowing. **Implemented:** treatments now set ink, interior-line density, shadow depth and shadow-edge hardness separately. Inked Cavern = Comic Cavern ink (1.7x, near-black), slightly fewer interior lines than Living Comic, Living Comic glow, deeper shadows (floor 0.1) with a crisp comic light-to-shadow edge (0.65).
+
+## 2026-10-31 — Lobby branch and asset library
+
+- **Confirmed:** owner agreed with the build order (a few Blender hero assets first to set the look, then a greybox layout, then all assets built in Blender to fit it) and asked for a live 3D concept library like Floppy's.
+- **Implemented:** branch `experiment/lobby` in worktree `C:/Users/runni/slugshot-lobby` (private Floppy/blaster files copied, ignored). [Asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) v1 shows four concept assets (rock wall, crystal cluster, giant mushroom, portal frame) with treatments A/B/C, views and a 5-stud figure. A first-pass headless Blender build script exists but was not run; it waits for concept approval.
+- **Unresolved:** owner review of the four concepts and the treatment; the page was not visually checked by the agent before publishing.
 
 
 ## 2026-10-31 — Bridge style leaning

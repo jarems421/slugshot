@@ -4,11 +4,24 @@ The props and kits the lobby needs, to be authored in Blender so the space looks
 
 Research basis: [Slugterra environment research](../research/slugterra-environment.md).
 
+**Final, 2026-11-01:** the owner approved every library design (rock wall v6, 14 crystals, giant mushroom v2 with 14-colour bank, three gates v3) as final. Lessons: [art lessons](lessons.md).
+
 Source: owner request, 2026-10-31 ("build some assets in Blender so that stuff just doesn't look like AI slop… plan out what different assets we're going to have around the lobby… stuff like the Slugterra mushrooms, which are very distinct"). **Status: the list is Considering.** The owner confirms, cuts or adds items before production. Each asset's own design is agreed at concept stage.
 
 ## Originality rule
 
 Slugterra is the reference for **categories and atmosphere**: giant glowing cave fungi, huge crystals, hideouts built into rock, slug habitats, glowing caverns. Every Slugshot asset is an **original design** in that category with its own silhouette, proportions and details. Never trace or copy a specific show prop. Each asset's note records its references and how ours differs.
+
+## Asset library (live 3D concepts)
+
+**Built for Roblox and in the look test (2026-11-01):** rock wall walls A-D (`rock-wall-4` to `rock-wall-7`, the base design: Slugterra-style carved cracks on five of twelve rocks picked per region, surface texture on every rock, and a crystal or mushroom cluster in each of six regions with tiny mushrooms between; layouts and moss differ per wall), crystals 1 and 11, the mint giant mushroom, and the PvP gate (v4 steps, bevelled bands). The original v6 wall (`rock-wall-1`) stays as the approved reference. Rejected rock textures: zigzag "squiggle" cracks, chipped facets, pockmarks, veins, lichen and fossil shells.
+
+Owner request, 2026-10-31: every asset is first agreed as a rotatable 3D concept in the private [asset library page](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), the same workflow that settled Floppy. Source: [asset-library.html](asset-library.html). Each concept is defined in that page as exact signed-distance maths, so the Blender build (`tools/lobby/build_vignette.py`, first pass, paused until concepts are agreed) reproduces the agreed forms. Republish to the same URL and add each new asset to it.
+
+**Rendered turntables (2026-10-31):** live WebGL froze Chrome on the owner's Windows machine and Chrome then disabled WebGL entirely, so the page now shows offline-rendered 36-frame turntables (10 degree steps, drawn on a 2D canvas) by default, with Live 3D as an opt-in button. After changing the page, re-render and publish:
+
+1. `python tools/lobby/render_library.py` (needs Node plus a Python with moderngl, numpy and Pillow; about 20 s on the owner's RTX 3070). It evaluates the page's own `lib` script and shader, so renders match the live view. Output goes to ignored `build/lobby/renders/`.
+2. Copy `docs/art/asset-library.html` and `build/lobby/renders/` into the session scratchpad and publish the page with `url` set to the library and `files` listing `renders/*.jpg` (the publish tool only accepts supporting files from the working directory or scratchpad).
 
 ## Production standard (every asset)
 
@@ -50,7 +63,7 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | PvP gate | P2 | Straight ahead of spawn and the grandest gate. Warmer, more dramatic frame with orange energy. |
 | Training gate | P2 | Left of PvP. Cool, clean, practical frame. |
 | Veylume gate | P2 | Right of PvP; the exploration world. Mysterious: overgrown, sealed or dormant, hinting at the biomes beyond. Green/teal/violet glow. |
-| Portal frame | P1 | Base design that the three gates vary from: a shared frame language with a distinct crown and energy per mode. |
+| Portal frame | P1 | Base design that the three gates vary from. Confirmed 2026-10-31: each gate has a symbol on the keystone gem (PvP crossed swords, Training target, Veylume map; symbol in grey metal) and its own colour for the energy, gem and bolts: **PvP orange, Training green, Veylume purple**. |
 | Entrance | P2 | Behind spawn, on the far side of the round hub from PvP. |
 | Gate signage | P2 | A large painted sign over each gate, readable from spawn. |
 
@@ -63,15 +76,15 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | Boulders and rock clusters (S/M/L) | P2 | Break up edges and frame paths. |
 | Stalactites and stalagmites | P2 | Sell the scale and the "ancient cavern". Exaggerated tapers. |
 | Ceiling and backdrop rock | P2 | Distant cavern shell, lightest ink, low detail. |
-| Crystal clusters (small, medium, giant) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
+| Crystals: fourteen designs in fourteen colours (owner, 2026-10-31) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
 | Water feature: pool, drip or small waterfall | P3 | Calm movement and sound. Considering. |
 
 ### Fungi and flora (Slugterra-category, original designs)
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
-| Giant cave mushrooms (2–3 distinct silhouettes) | P1→P2 | Signature environment prop. Glowing caps, characterful stems. Some tall enough to canopy paths or act as platforms. |
-| Mushroom clusters (small) | P2 | Ground dressing around rocks and paths, glow in clumps. |
+| Giant cave mushrooms (2–3 distinct silhouettes; any colour from the 14-colour mushroom bank) | P1→P2 | Signature environment prop. Glowing caps, characterful stems. Some tall enough to canopy paths or act as platforms. |
+| Mushroom clusters (small; each mushroom a random colour from the 14-colour bank) | P2 | Ground dressing around rocks and paths, glow in clumps. |
 | Shelf fungi on walls | P3 | Bracket fungi on rock faces, small glow spots. |
 | Glowing moss and lichen patches | P2 | Soft colour on rock; may be texture/decal rather than mesh. |
 | Hanging vines and glow-bulb plants | P3 | Vertical life from the ceiling; gentle sway. |

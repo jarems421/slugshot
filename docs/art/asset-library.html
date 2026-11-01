@@ -1,0 +1,1658 @@
+<title>Slugshot Asset Library</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: asset shelf across the top, one large rotatable cavern stage with treatment and view controls, design notes beside it; stacks on phones. */
+:root {
+  --bg: #e4e6ea;
+  --paper: #f3f4f6;
+  --ink: #1d2028;
+  --muted: #5b6070;
+  --rule: #c8ccd5;
+  --accent: #1d7471;
+  --warm: #b4541a;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12141a; --paper: #1b1e26; --ink: #e3e5ec; --muted: #9aa0b2; --rule: #333846; --accent: #6fd0c6; --warm: #f0955a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12141a; --paper: #1b1e26; --ink: #e3e5ec; --muted: #9aa0b2; --rule: #333846; --accent: #6fd0c6; --warm: #f0955a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 5.5vw, 52px); line-height: 1; margin: 6px 0 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 24px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 500; }
+p { margin: 0; }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.asset {
+  text-align: left; display: grid; gap: 4px; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; font: inherit;
+}
+.asset .name { font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.2; }
+.asset .meta { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--muted); }
+.asset[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.asset:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip { justify-self: start; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; color: var(--warm); }
+.layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: grid; gap: 10px; min-width: 0; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--rule); background: #0b0c12; touch-action: none; cursor: grab; }
+.canvas-box:active { cursor: grabbing; }
+canvas { width: 100%; height: 100%; display: block; }
+.fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #e3e5ec; }
+.sprite { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #0b0c12; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 13px; color: #c9ccd8; }
+.note { font-size: 13px; color: var(--muted); }
+button.ctl:disabled { opacity: .45; cursor: default; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #c9ccd8; background: rgba(12,13,20,.6); padding: 3px 8px; border-radius: 6px; }
+.tag { position: absolute; right: 12px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #c9ccd8; background: rgba(12,13,20,.6); padding: 3px 8px; border-radius: 6px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.row .label { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 84px; }
+button.ctl { font-family: var(--mono); font-size: 13px; padding: 7px 11px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+button.ctl[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.notes { display: grid; gap: 16px; min-width: 0; }
+dl { margin: 0; display: grid; gap: 12px; }
+dt { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; }
+.caveat { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+.planned { display: grid; gap: 10px; }
+.planned ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.planned li { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px dashed var(--rule); color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Slugshot · lobby · final designs · 1 Nov 2026</div>
+    <h1>Asset Library</h1>
+  </div>
+
+  <div class="shelf" id="shelf" role="group" aria-label="Assets"></div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" id="box">
+        <canvas id="view" aria-label="Rotatable 3D concept of the selected asset" hidden></canvas>
+        <canvas class="sprite" id="sprite" aria-label="Turntable render of the selected asset"></canvas>
+        <div class="loading" id="loading" hidden>Loading render…</div>
+        <div class="hint">Drag to turn</div>
+        <div class="tag" id="tag">Slugshot mix</div>
+      </div>
+      <div class="row" role="group" aria-label="Treatment">
+        <span class="label">Treatment</span>
+        <button class="ctl" id="t-mix" data-treat="3">Slugshot mix</button>
+        <button class="ctl" id="t-inked" data-treat="1">Inked Cavern</button>
+        <button class="ctl" id="t-a" data-treat="0">Comic Cavern</button>
+        <button class="ctl" id="t-c" data-treat="2">Living Comic</button>
+        <span class="note" id="treat-note">Rendered views use Slugshot mix. Turn on Live 3D to compare treatments.</span>
+      </div>
+      <div class="row" role="group" aria-label="Camera">
+        <span class="label">View</span>
+        <button class="ctl" id="v-three" data-view="three">Three-quarter</button>
+        <button class="ctl" id="v-front" data-view="front">Front</button>
+        <button class="ctl" id="v-side" data-view="side">Side</button>
+        <button class="ctl" id="v-back" data-view="back">Back</button>
+        <button class="ctl" id="v-player" data-view="player">Player eye</button>
+      </div>
+      <div class="row" id="var-row" role="group" aria-label="Variant" hidden>
+        <span class="label">Variant</span>
+        <span class="row" id="var-btns"></span>
+      </div>
+      <div class="row">
+        <span class="label">Show</span>
+        <button class="ctl" id="fig" aria-pressed="true">Scale figure (5 studs)</button>
+        <button class="ctl" id="motion" aria-pressed="true">Motion on</button>
+        <button class="ctl" id="live" aria-pressed="false">Live 3D off</button>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="eyebrow" id="n-kind"></div>
+      <h2 id="n-name"></h2>
+      <dl id="n-list"></dl>
+      <p class="caveat">Concept render, not the game model. The default view is a 36-frame turntable rendered from the same shader; Live 3D runs it in your browser with zoom, tilt, animation and treatment comparison. Agree the shape and feel here; the Blender build then reproduces these forms exactly, with inverted-hull ink lines and painted textures for Roblox.</p>
+      <div class="planned">
+        <h3>Planned, not built yet</h3>
+        <ul id="planned"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes;
+uniform float uT, uAsset, uGate;   // uGate: 0 PvP, 1 Training, 2 Veylume
+uniform vec3 uGateEdge, uGateCore, uGateHot;
+// Crystal variant: uCa (count, spread, max height, min height; count 0 = hand-authored cluster),
+// uCb (tilt min, tilt max, radius, ring layout), uCc (lean-forward layout, lift, base height, seed).
+uniform vec4 uCa, uCb, uCc;
+uniform vec3 uCbase, uCrDeep, uCrBright;
+uniform float uCs;           // special crystal design 1-7 (0 = authored or generated)
+// Crystal colour gradient: x mode (0 height/a, 1 constant a, 2 hanging (a - y)/b, 3 bright toward centre at
+// height b over radius a, 4 bright toward tips away from centre at height b over radius a).
+uniform vec4 uCrG;
+// Mushroom colour bank (owner, 2026-10-31): 14 glow colours. The giant mushroom shows the chosen one;
+// small mushrooms each pick one at random. Small caps carry their bank index in the id: 15 + index*0.05.
+uniform vec3 uBank[14];
+uniform vec3 uCapDark, uCapLight, uCapGlow;
+const float GS = 1.5;        // gates are 1.5x the original concept (owner, 2026-10-31)
+uniform vec3 uRo, uRight, uUp, uFwd;
+uniform vec4 uFig;          // xyz position, w = shown
+uniform vec4 uTreat;        // current mode's ink width scale, crease sensitivity, glow, bloom (bloom used globally)
+// Treatment sets: 0 Comic Cavern, 1 Inked Cavern, 2 Living Comic.
+uniform vec4 uTr0, uTr1, uTr2;
+uniform vec3 uInk0, uInk1, uInk2;
+uniform vec2 uSh0, uSh1, uSh2;   // shadow floor, comic shadow-edge hardness (0 soft, 1 hard)
+uniform vec3 uAm;
+uniform float uMode;             // 0-2 = one treatment everywhere, 3 = Slugshot mix (per material)
+uniform vec3 uGlowPos, uGlowCol;
+uniform vec2 uRockLayers;        // rock wall texture study: x cracks, y surface texture on every rock
+uniform float uWallSeed;         // which variant of the wall module, so tiled walls differ
+uniform float uCrackMask;        // bit i set = mass i cracks (one per column plus one), chosen in the lib script
+
+// Units: 1 = 1 Roblox stud. Front of every asset faces -z.
+const float PI = 3.14159265;
+
+float hash1(float n) { return fract(sin(n*127.1 + 3.7)*43758.5453); }
+float noise3(vec3 x) {
+  vec3 i = floor(x); vec3 f = fract(x); f = f*f*(3.0 - 2.0*f);
+  float n = i.x + i.y*57.0 + 113.0*i.z;
+  return mix(mix(mix(hash1(n), hash1(n + 1.0), f.x), mix(hash1(n + 57.0), hash1(n + 58.0), f.x), f.y),
+             mix(mix(hash1(n + 113.0), hash1(n + 114.0), f.x), mix(hash1(n + 170.0), hash1(n + 171.0), f.x), f.y), f.z);
+}
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+float sdEll(vec3 p, vec3 r) { float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/k1; }
+float sdBox(vec3 p, vec3 b) { vec3 q = abs(p) - b; return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0); }
+
+// Exact distance to a quadratic Bezier (after Inigo Quilez); returns (distance, t).
+vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
+  vec3 a = B - A, b = A - 2.0*B + C, c = a*2.0, d = A - pos;
+  float kk = 1.0/dot(b, b);
+  float kx = kk*dot(a, b);
+  float ky = kk*(2.0*dot(a, a) + dot(d, b))/3.0;
+  float kz = kk*dot(d, a);
+  vec2 res;
+  float p = ky - kx*kx, p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
+  if (h >= 0.0) {
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q)/2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
+    vec3 e = d + (c + b*t)*t;
+    res = vec2(dot(e, e), t);
+  } else {
+    float z = sqrt(-p);
+    float v = acos(q/(p*z*2.0))/3.0;
+    float m = cos(v), n = sin(v)*1.732050808;
+    vec3 t = clamp(vec3(m + m, -n - m, n - m)*z - kx, 0.0, 1.0);
+    vec3 e1 = d + (c + b*t.x)*t.x;
+    vec3 e2 = d + (c + b*t.y)*t.y;
+    res = vec2(dot(e1, e1), t.x);
+    float dis = dot(e2, e2);
+    if (dis < res.x) res = vec2(dis, t.y);
+  }
+  res.x = sqrt(res.x);
+  return res;
+}
+
+vec3 bankColor(float idx) {
+  vec3 c = uBank[0];
+  for (int i = 0; i < 14; i++) { if (abs(float(i) - idx) < 0.5) c = uBank[i]; }
+  return c;
+}
+
+// ---------- shared: a rounded mass trimmed by a few broad fracture planes
+float chunk(vec3 p, vec3 c, vec3 r, float seed) {
+  vec3 q = p - c;
+  float bs = length(q) - max(r.x, max(r.y, r.z));
+  if (bs > 0.4) return bs;
+  float d = sdEll(q, r);
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    vec3 n = normalize(vec3(hash1(seed + fi*1.7)*2.0 - 1.0, hash1(seed + fi*3.1)*1.6 - 0.45, hash1(seed + fi*5.3)*2.0 - 1.0));
+    float off = length(r*n)*(0.58 + 0.24*hash1(seed + fi*7.9));
+    d = smax(d, dot(q, n) - off, 0.16);
+  }
+  return d;
+}
+
+// ---------- 0: rock wall module v6 (20 x 12 x 5 studs): v1's simple masses, dressing anchored to the rock
+float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r);
+float crystalDir(vec3 p, vec3 base, vec3 dir, float h, float r);
+// The wall's rock body alone; dressing is anchored onto this surface by tools/lobby/wall_sites.py.
+// The wall's 15 rock masses: 5 along the bottom, 4 in the middle, 3 on top, 3 pebbles in front.
+void wallMassParams(int i, out vec3 c, out vec3 r, out float seed, out float k) {
+  k = 0.12;
+  if (i < 5) {
+    float fi = float(i);
+    c = vec3(-8.4 + 4.2*fi + 0.6*(hash1(fi + 1.0) - 0.5), 3.0, 0.4*(hash1(fi + 9.0) - 0.5));
+    r = vec3(2.5 + 0.5*hash1(fi + 3.0), 3.3 + 0.6*hash1(fi + 4.0), 2.3);
+    seed = fi*13.0 + 1.0;
+  } else if (i < 9) {
+    float fi = float(i - 5);
+    c = vec3(-6.3 + 4.2*fi + 0.6*(hash1(fi + 21.0) - 0.5), 8.1 + 0.6*(hash1(fi + 22.0) - 0.5), 0.7);
+    r = vec3(2.2 + 0.4*hash1(fi + 23.0), 2.6 + 0.5*hash1(fi + 24.0), 2.0);
+    seed = fi*17.0 + 40.0;
+  } else if (i < 12) {
+    float fi = float(i - 9);
+    c = vec3(-4.6 + 4.6*fi + 0.5*(hash1(fi + 31.0) - 0.5), 11.1, 0.5);
+    r = vec3(2.0 + 0.5*hash1(fi + 33.0), 1.3, 1.7);
+    seed = fi*19.0 + 80.0;
+  } else {
+    float fi = float(i - 12);
+    c = vec3(-7.2 + 6.6*fi + hash1(fi + 41.0) - 0.5, 0.5, -2.9 - 0.4*hash1(fi + 42.0));
+    r = vec3(1.1 + 0.3*hash1(fi + 43.0), 0.75, 0.95);
+    seed = fi*23.0 + 120.0;
+    k = 0.1;
+  }
+}
+// Rock wall texture study (owner rounds 7-8, 1 Nov 2026). The masses keep their shapes; cracks are shallow
+// V-grooves carved into the front faces. Round 6's zigzag fractures read as squiggles and its chips deformed
+// the rocks; round 7's fossil shells were dropped ("mid").
+bool isCrackMass(int i) {
+  return mod(floor(uCrackMask/pow(2.0, float(i)) + 0.01), 2.0) > 0.5;
+}
+float sdSeg2(vec2 p, vec2 a, vec2 b, out float h) {
+  vec2 pa = p - a, ba = b - a;
+  h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h);
+}
+// A Slugterra-style crack across a mass's front face, in its local xy: it starts near the rim, runs inward in
+// four straight segments that turn sharply one way then the other, and forks once. Wide at the rim, tapering
+// to a hairline. `scale` shortens and thins a secondary crack; `low` starts it on the lower half of the rim (top-row
+// rocks, so a crack never opens across a top seen from above). Returns (distance to the crack's edge, half-width).
+vec2 crackLine(vec2 x, vec3 r, float cs, float scale, float low) {
+  float th = low > 0.5 ? 3.1416*(1.15 + 0.7*hash1(cs + 1.0)) : hash1(cs + 1.0)*6.2832;
+  vec2 a = vec2(cos(th)*r.x, sin(th)*r.y)*0.8;
+  vec2 dir = normalize(-a + (vec2(hash1(cs + 2.0), hash1(cs + 3.0)) - 0.5)*r.xy*0.9);
+  float turn = hash1(cs + 4.0) > 0.5 ? 1.0 : -1.0;
+  float best = 1e5, bw = 0.0;
+  vec2 fork = a, forkDir = dir;
+  for (int k = 0; k < 4; k++) {
+    float fk = float(k);
+    dir = rot(turn*(0.2 + 0.4*hash1(cs + 20.0 + fk)))*dir;
+    turn = -turn;
+    vec2 b = a + dir*min(r.x, r.y)*(0.34 + 0.18*hash1(cs + 10.0 + fk))*scale;
+    float h;
+    float dd = sdSeg2(x, a, b, h);
+    float w = mix(0.21, 0.015, (fk + h)/4.0)*(0.6 + 0.4*scale);
+    if (dd - w < best) { best = dd - w; bw = w; }
+    if (k == 1) { fork = b; forkDir = dir; }
+    a = b;
+  }
+  dir = rot(turn*(0.65 + 0.4*hash1(cs + 30.0)))*forkDir;
+  a = fork;
+  for (int k = 0; k < 2; k++) {
+    float fk = float(k);
+    dir = rot(-turn*0.3*hash1(cs + 40.0 + fk))*dir;
+    vec2 b = a + dir*min(r.x, r.y)*(0.22 + 0.12*hash1(cs + 50.0 + fk))*scale;
+    float h;
+    float dd = sdSeg2(x, a, b, h);
+    float w = mix(0.11, 0.012, (fk + h)/2.0)*(0.6 + 0.4*scale);
+    if (dd - w < best) { best = dd - w; bw = w; }
+    a = b;
+  }
+  return vec2(best, bw);
+}
+// All cracks on a mass: the main crack, plus a shorter second one from another edge on about half of them.
+vec2 massCracks(vec2 x, vec3 r, float cs, float low) {
+  vec2 cl = crackLine(x, r, cs, 1.0, low);
+  if (hash1(cs + 90.0) < 0.55) {
+    vec2 c2 = crackLine(x, r, cs + 100.0, 0.62, low);
+    if (c2.x < cl.x) cl = c2;
+  }
+  return cl;
+}
+float wallMass(vec3 p) {
+  float d = 1e5;
+  for (int i = 0; i < 15; i++) {
+    vec3 c, r; float seed, k;
+    wallMassParams(i, c, r, seed, k);
+    float di = chunk(p, c, r, seed);
+    if (di < 0.5 && i < 12) {
+      vec3 q = p - c;
+      float front = q.z + 0.3*r.z;  // front-most faces only, so cracks never slot across a top
+      if (uRockLayers.x > 0.5 && isCrackMass(i)) {
+        vec2 cl = massCracks(q.xy, r, uWallSeed*31.7 + seed*1.3, i >= 9 ? 1.0 : 0.0);
+        float below = clamp(-di/0.3, 0.0, 1.0);
+        di = max(di, -max(max(cl.x + cl.y*below, -di - 0.3), front));
+      }
+    }
+    d = smin(d, di, k);
+  }
+  return d + 0.07*(noise3(p*0.9) - 0.5);
+}
+// The mass a surface point belongs to, for painted features: returns its index; q is the local position.
+float wallMassAt(vec3 p, out vec3 q, out vec3 rad, out float seed) {
+  float best = 1e5, idx = 0.0;
+  q = p; rad = vec3(1.0); seed = 0.0;
+  for (int i = 0; i < 15; i++) {
+    vec3 c, r; float s, k;
+    wallMassParams(i, c, r, s, k);
+    float di = chunk(p, c, r, s);
+    if (di < best) { best = di; idx = float(i); q = p - c; rad = r; seed = s; }
+  }
+  return idx;
+}
+// A crystal growing out of the rock at surface point s with surface normal n, base sunk into the rock.
+void wallCrystal(vec3 p, vec3 s, vec3 n, float seed, inout float cr) {
+  float h = 1.1 + 0.6*hash1(seed + 231.0);
+  float far = length(p - s) - (h + 0.8);
+  if (far > 0.5) { cr = min(cr, far); return; }
+  vec3 dir = normalize(n + vec3(0.0, 0.45, 0.0));
+  cr = min(cr, crystalDir(p, s - n*0.25, dir, h, 0.22 + 0.08*hash1(seed + 232.0)));
+}
+// A small mushroom sprouting from the rock at surface point s: stem rooted inside the rock, growing out
+// along the normal and up; cap colour picked at random from the bank.
+void wallShroom(vec3 p, vec3 s, vec3 n, float seed, float tiny, inout float stems, inout float caps, inout float capIdx) {
+  float h = tiny > 0.5 ? 0.3 + 0.3*hash1(seed + 223.0) : 0.55 + 0.55*hash1(seed + 213.0);
+  float far = length(p - s) - (h + 0.9);
+  if (far > 0.5) { stems = min(stems, far); caps = min(caps, far); return; }
+  vec3 dir = normalize(n*0.6 + vec3(0.0, 1.0, 0.0));
+  vec3 b = s - n*0.15;
+  vec3 tip = s + n*0.05 + dir*h;
+  stems = min(stems, capT(p, b, tip, tiny > 0.5 ? 0.06 : 0.11, tiny > 0.5 ? 0.045 : 0.075));
+  float cs = tiny > 0.5 ? 0.15 + 0.11*hash1(seed + 225.0) : 0.3 + 0.2*hash1(seed + 215.0);
+  float cd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*cs), -(p.y - tip.y + 0.18*cs), 0.03);
+  if (cd < caps) { caps = cd; capIdx = floor(hash1(seed + 216.0)*13.99); }
+}
+vec2 rockWall(vec3 p) {
+  float bound = sdBox(p - vec3(0.0, 6.2, -1.0), vec3(12.5, 7.2, 4.9));
+  if (bound > 1.0) return vec2(bound, 1.0);
+  float d = wallMass(p);
+  vec2 r = vec2(d, 1.0);
+  if (d > 2.2) return vec2(d - 1.7, 1.0);
+  float cr = 1e5, stems = 1e5, caps = 1e5, capIdx = 0.0;
+  // @wall-dressing-begin
+  // Generated by tools/lobby/wall_sites.py: each spot sits on the measured rock surface.
+  if (uRockLayers.x + uRockLayers.y < 0.5) {
+    // v6 as approved.
+    wallCrystal(p, vec3(0.950, 0.550, -3.415), vec3(0.787, 0.072, -0.613), 0.0, cr);
+    wallCrystal(p, vec3(-4.050, 6.450, 0.159), vec3(-0.182, 0.714, -0.676), 2.0, cr);
+    wallCrystal(p, vec3(-3.800, 6.500, 0.146), vec3(-0.177, 0.720, -0.671), 3.0, cr);
+    wallCrystal(p, vec3(7.300, 3.800, -1.837), vec3(-0.423, 0.179, -0.888), 4.0, cr);
+    wallShroom(p, vec3(-6.700, 2.000, -1.835), vec3(0.521, -0.189, -0.832), 5.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-6.300, 2.400, -1.617), vec3(0.655, -0.123, -0.745), 6.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-6.000, 2.000, -1.454), vec3(-0.675, 0.102, -0.730), 7.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(3.550, 5.150, -1.757), vec3(-0.064, 0.829, -0.556), 8.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(5.000, 5.050, -1.646), vec3(0.214, 0.775, -0.595), 10.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.500, 9.300, -1.061), vec3(0.141, 0.325, -0.935), 11.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.100, 9.600, -0.831), vec3(0.315, 0.429, -0.847), 12.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.800, 9.300, -0.836), vec3(0.434, 0.333, -0.837), 13.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-2.200, 4.600, -1.227), vec3(-0.089, 0.406, -0.910), 14.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(6.350, 1.600, -0.979), vec3(0.182, -0.130, -0.975), 15.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(2.750, 7.450, -0.440), vec3(0.563, -0.199, -0.802), 16.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.600, 8.000, -1.027), vec3(-0.440, -0.009, -0.898), 17.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(0.800, 3.200, -2.304), vec3(0.227, 0.048, -0.973), 18.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.050, 9.750, -0.476), vec3(0.485, 0.547, -0.682), 19.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.800, 4.800, -1.462), vec3(-0.575, 0.405, -0.711), 20.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.200, 2.150, -1.771), vec3(-0.440, -0.193, -0.877), 21.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(3.000, 7.800, -0.359), vec3(0.546, -0.199, -0.814), 22.0, 1.0, stems, caps, capIdx);
+  } else if (uWallSeed < 1.5) {
+    // Wall A: one cluster per region, tiny mushrooms everywhere.
+    wallCrystal(p, vec3(-5.101, 8.447, -0.782), vec3(0.744, 0.230, -0.627), 100.0, cr);
+    wallCrystal(p, vec3(-4.865, 8.064, -0.578), vec3(0.714, -0.063, -0.697), 101.0, cr);
+    wallCrystal(p, vec3(-0.434, 9.478, -0.364), vec3(0.392, 0.719, -0.573), 102.0, cr);
+    wallCrystal(p, vec3(-0.272, 9.058, -0.495), vec3(0.656, 0.305, -0.690), 103.0, cr);
+    wallShroom(p, vec3(4.990, 10.505, -0.942), vec3(0.239, -0.192, -0.952), 104.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(4.784, 10.815, -0.983), vec3(0.346, 0.237, -0.908), 105.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(-6.625, 3.268, -1.668), vec3(0.542, 0.044, -0.839), 106.0, cr);
+    wallCrystal(p, vec3(-7.074, 3.239, -1.923), vec3(0.447, 0.037, -0.894), 107.0, cr);
+    wallShroom(p, vec3(-0.854, 1.930, -1.193), vec3(-0.689, -0.117, -0.715), 108.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.093, 2.311, -1.020), vec3(-0.705, -0.122, -0.698), 109.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.049, 1.562, -0.942), vec3(-0.710, -0.116, -0.695), 110.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.949, 3.432, -2.039), vec3(-0.092, 0.532, -0.842), 111.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.681, 3.751, -1.802), vec3(-0.098, 0.555, -0.826), 112.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.781, 3.086, -2.180), vec3(-0.111, 0.229, -0.967), 113.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-6.932, 7.842, -0.769), vec3(-0.682, -0.109, -0.723), 114.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.389, 11.454, 0.183), vec3(-0.687, -0.162, -0.709), 115.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.355, 7.752, -0.683), vec3(0.386, 0.362, -0.849), 116.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-9.301, 5.623, 0.101), vec3(-0.035, 0.762, -0.647), 117.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-2.610, 3.848, -1.795), vec3(0.598, 0.294, -0.745), 118.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(6.675, 0.931, -3.731), vec3(0.227, 0.720, -0.655), 119.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.959, 1.434, -1.409), vec3(-0.768, -0.170, -0.618), 120.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(0.085, 10.645, -0.953), vec3(-0.460, 0.067, -0.885), 121.0, 1.0, stems, caps, capIdx);
+  } else if (uWallSeed < 2.5) {
+    // Wall B: one cluster per region, tiny mushrooms everywhere.
+    wallShroom(p, vec3(-7.158, 9.099, -0.723), vec3(-0.717, -0.132, -0.685), 200.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.339, 9.483, -0.613), vec3(-0.720, -0.146, -0.678), 201.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.279, 8.779, -0.544), vec3(-0.713, -0.096, -0.695), 202.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(2.189, 9.090, -1.166), vec3(0.119, 0.210, -0.970), 203.0, cr);
+    wallCrystal(p, vec3(2.475, 8.743, -1.186), vec3(0.191, 0.138, -0.972), 204.0, cr);
+    wallCrystal(p, vec3(6.800, 7.960, -0.850), vec3(0.402, 0.394, -0.827), 205.0, cr);
+    wallCrystal(p, vec3(6.475, 8.271, -0.859), vec3(0.412, 0.408, -0.814), 206.0, cr);
+    wallShroom(p, vec3(-5.217, 2.600, -2.143), vec3(-0.280, -0.077, -0.957), 207.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.396, 2.901, -2.103), vec3(-0.396, -0.007, -0.918), 208.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.354, 2.251, -2.055), vec3(-0.341, -0.158, -0.927), 209.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.358, 2.582, -0.754), vec3(-0.680, -0.165, -0.714), 210.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.794, 2.867, -1.190), vec3(0.792, 0.008, -0.611), 211.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(7.267, 2.197, -2.013), vec3(-0.255, -0.173, -0.951), 212.0, cr);
+    wallCrystal(p, vec3(7.635, 2.457, -2.132), vec3(-0.155, -0.149, -0.977), 213.0, cr);
+    wallShroom(p, vec3(-4.047, 11.174, -1.148), vec3(-0.035, -0.069, -0.997), 214.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-2.418, 8.629, -1.036), vec3(-0.617, -0.199, -0.761), 215.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(5.378, 9.202, -0.728), vec3(-0.686, -0.186, -0.704), 216.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.601, 1.839, -1.986), vec3(0.205, -0.198, -0.959), 217.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.523, 1.518, -0.434), vec3(-0.712, -0.116, -0.692), 218.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(6.110, 4.760, -0.946), vec3(-0.571, 0.508, -0.645), 219.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.197, 5.684, -0.592), vec3(-0.106, 0.514, -0.851), 220.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.188, 7.516, -0.467), vec3(-0.705, -0.137, -0.695), 221.0, 1.0, stems, caps, capIdx);
+  } else if (uWallSeed < 3.5) {
+    // Wall C: one cluster per region, tiny mushrooms everywhere.
+    wallShroom(p, vec3(-7.943, 8.224, 0.191), vec3(-0.687, -0.098, -0.720), 300.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.934, 8.536, 0.140), vec3(-0.684, -0.101, -0.723), 301.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-7.806, 7.894, 0.108), vec3(-0.695, -0.105, -0.711), 302.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(1.883, 8.413, -1.284), vec3(0.029, 0.064, -0.998), 303.0, cr);
+    wallCrystal(p, vec3(1.507, 8.661, -1.250), vec3(-0.090, 0.124, -0.988), 304.0, cr);
+    wallCrystal(p, vec3(1.864, 8.863, -1.233), vec3(0.020, 0.170, -0.985), 305.0, cr);
+    wallCrystal(p, vec3(4.702, 10.735, -1.023), vec3(0.206, 0.109, -0.973), 306.0, cr);
+    wallCrystal(p, vec3(5.138, 10.623, -0.891), vec3(0.353, 0.190, -0.916), 307.0, cr);
+    wallShroom(p, vec3(-7.853, 3.996, -1.730), vec3(0.005, 0.750, -0.661), 308.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-8.049, 4.364, -1.332), vec3(-0.002, 0.734, -0.680), 309.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-8.021, 3.621, -2.135), vec3(0.043, 0.553, -0.832), 310.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(0.988, 4.842, -1.811), vec3(0.052, 0.082, -0.995), 311.0, cr);
+    wallCrystal(p, vec3(0.711, 5.196, -1.773), vec3(0.122, 0.280, -0.952), 312.0, cr);
+    wallShroom(p, vec3(7.177, 5.508, -0.696), vec3(-0.117, 0.504, -0.855), 313.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.010, 5.852, -0.452), vec3(-0.214, 0.649, -0.730), 314.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.004, 5.155, -0.884), vec3(-0.095, 0.521, -0.848), 315.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-3.407, 8.425, 0.107), vec3(0.078, 0.223, -0.972), 316.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.558, 9.212, -1.011), vec3(0.062, 0.636, -0.769), 317.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.612, 7.179, -0.742), vec3(0.469, -0.044, -0.882), 318.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-3.798, 3.266, -2.243), vec3(0.122, 0.052, -0.991), 319.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.507, 3.771, -1.580), vec3(-0.120, -0.076, -0.990), 320.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(6.789, 2.181, -1.832), vec3(-0.429, -0.186, -0.884), 321.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-4.485, 4.675, -2.005), vec3(-0.093, 0.368, -0.925), 322.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-4.089, 6.120, -0.906), vec3(0.041, 0.825, -0.563), 323.0, 1.0, stems, caps, capIdx);
+  } else {
+    // Wall D: one cluster per region, tiny mushrooms everywhere.
+    wallCrystal(p, vec3(-6.945, 8.933, -0.916), vec3(-0.720, -0.114, -0.684), 400.0, cr);
+    wallCrystal(p, vec3(-6.622, 9.246, -1.178), vec3(-0.218, 0.145, -0.965), 401.0, cr);
+    wallCrystal(p, vec3(2.188, 10.951, -0.260), vec3(0.801, -0.165, -0.575), 402.0, cr);
+    wallCrystal(p, vec3(1.957, 11.338, -0.490), vec3(0.672, 0.254, -0.696), 403.0, cr);
+    wallShroom(p, vec3(7.610, 7.908, -0.505), vec3(0.383, 0.364, -0.849), 404.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.349, 8.269, -0.457), vec3(0.357, 0.381, -0.853), 405.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.384, 7.539, -0.762), vec3(0.398, 0.344, -0.851), 406.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(-4.736, 4.189, -2.119), vec3(-0.190, 0.223, -0.956), 407.0, cr);
+    wallCrystal(p, vec3(-4.341, 4.405, -2.109), vec3(-0.033, 0.291, -0.956), 408.0, cr);
+    wallCrystal(p, vec3(-4.681, 4.629, -1.994), vec3(-0.180, 0.353, -0.918), 409.0, cr);
+    wallShroom(p, vec3(0.105, 4.768, -1.736), vec3(-0.109, -0.072, -0.991), 410.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.102, 5.152, -1.740), vec3(-0.135, -0.046, -0.990), 411.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.030, 4.390, -1.694), vec3(-0.120, -0.077, -0.990), 412.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.621, 4.599, -1.249), vec3(-0.058, 0.493, -0.868), 413.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.371, 4.988, -1.020), vec3(-0.076, 0.484, -0.872), 414.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.459, 4.221, -1.474), vec3(-0.041, 0.533, -0.845), 415.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-4.875, 8.228, -0.574), vec3(0.795, 0.210, -0.569), 416.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.057, 8.774, -1.064), vec3(0.317, 0.215, -0.924), 417.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(6.945, 9.823, 0.022), vec3(0.406, 0.344, -0.847), 418.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-6.417, 5.430, -0.065), vec3(0.283, 0.764, -0.580), 419.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.963, 2.041, -1.104), vec3(-0.698, -0.117, -0.707), 420.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.209, 2.149, -1.988), vec3(-0.275, -0.189, -0.943), 421.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.060, 1.365, -1.442), vec3(-0.120, -0.090, -0.989), 422.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-6.594, 7.395, -1.033), vec3(-0.692, -0.086, -0.717), 423.0, 1.0, stems, caps, capIdx);
+  }
+  // @wall-dressing-end
+  if (stems < r.x) r = vec2(stems, 4.0);
+  if (caps*0.85 < r.x) r = vec2(caps*0.85, 15.0 + capIdx*0.05);
+  if (cr*0.75 < r.x) r = vec2(cr*0.75, 3.0);
+  return r;
+}
+
+// ---------- 1: crystal cluster (about 5 studs tall)
+float crystal(vec3 p, vec3 base, float yaw, float tilt, float h, float r) {
+  vec3 q = p - base;
+  float bs = length(q) - (h + r + 0.7);
+  if (bs > 0.3) return bs;
+  q.xz = rot(yaw)*q.xz;
+  q.xy = rot(tilt)*q.xy;
+  float hr = max(abs(q.x)*0.8660254 + abs(q.z)*0.5, abs(q.z));
+  float body = max(hr - r*(1.0 - 0.08*q.y/h), max(-q.y - 0.6, q.y - h));
+  return max(body, q.y + hr*1.35 - h);
+}
+// Crystal pointing along any direction (unit dir), faceted hexagonal body and tip.
+float crystalDir(vec3 p, vec3 base, vec3 dir, float h, float r) {
+  vec3 q = p - base;
+  float bs = length(q - dir*(h*0.5 - 0.3)) - (h*0.5 + r + 0.6);
+  if (bs > 0.3) return bs;
+  vec3 up = abs(dir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+  vec3 ax = normalize(cross(up, dir));
+  vec3 az = cross(dir, ax);
+  vec3 l = vec3(dot(q, ax), dot(q, dir), dot(q, az));
+  float hr = max(abs(l.x)*0.8660254 + abs(l.z)*0.5, abs(l.z));
+  float body = max(hr - r*(1.0 - 0.08*l.y/h), max(-l.y - 0.6, l.y - h));
+  return max(body, l.y + hr*1.35 - h);
+}
+// Unit direction on a golden-angle spiral over the sphere; k in 0..1 runs from the top downward.
+vec3 spiralDir(float i, float k) {
+  float y = 1.0 - k;
+  float rr = sqrt(max(0.0, 1.0 - y*y));
+  float a = i*2.39996;
+  return vec3(cos(a)*rr, y, sin(a)*rr);
+}
+vec2 crystalSpecial(vec3 p) {
+  float bound = length(p - vec3(0.0, 3.5, 0.0)) - 8.0;
+  if (bound > 1.0) return vec2(bound, 3.0);
+  float d = 1e5, rock = 1e5;
+  if (uCs < 1.5) {
+    // 8 Geode: a thick rock shell broken open at the front, lined with crystals pointing inward.
+    vec3 c = vec3(0.0, 1.7, 0.2);
+    rock = abs(sdEll(p - c, vec3(2.7, 2.2, 2.5))) - 0.45;
+    rock = smax(rock, -p.z - 0.5 - 0.35*noise3(p*1.3), 0.25);
+    rock = smax(rock, -p.y, 0.1) + 0.08*(noise3(p*1.2) - 0.5);
+    for (int i = 0; i < 12; i++) {
+      float fi = float(i);
+      vec3 o = spiralDir(fi, (fi + 0.5)/12.0*0.95);
+      o.z = abs(o.z) + 0.25; o = normalize(o);
+      d = min(d, crystalDir(p, c + o*vec3(2.1, 1.7, 1.9), -normalize(o + vec3(0.0, -0.2, 0.0)), 0.9 + 0.6*hash1(fi + 501.0), 0.24 + 0.08*hash1(fi + 502.0)));
+    }
+  } else if (uCs < 2.5) {
+    // 9 Floating heart: a double-pointed crystal hovering and bobbing over its rock, shards circling it.
+    rock = chunk(p, vec3(0.0, 0.25, 0.0), vec3(1.7, 0.7, 1.5), 511.0);
+    float bob = 0.25*sin(uT*1.2);
+    vec3 hc = vec3(0.0, 3.4 + bob, 0.0);
+    d = min(crystalDir(p, hc, vec3(0.0, 1.0, 0.0), 2.3, 0.62), crystalDir(p, hc, vec3(0.0, -1.0, 0.0), 1.5, 0.62));
+    for (int i = 0; i < 6; i++) {
+      float fi = float(i);
+      float a = fi*1.0472 + uT*0.35;
+      vec3 sp = vec3(cos(a)*1.9, 3.0 + 0.7*sin(fi*2.1 + uT*0.8), sin(a)*1.9);
+      vec3 dir = normalize(vec3(cos(a)*0.4, 1.0, sin(a)*0.4));
+      d = min(d, crystalDir(p, sp, dir, 0.55, 0.14));
+      d = min(d, crystalDir(p, sp, -dir, 0.35, 0.14));
+    }
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float a = fi*2.094 + 0.5;
+      d = min(d, crystalDir(p, vec3(cos(a)*0.7, 0.5, sin(a)*0.7), normalize(vec3(cos(a)*0.5, 1.0, sin(a)*0.5)), 0.8, 0.2));
+    }
+  } else if (uCs < 3.5) {
+    // 10 Crystal tree: a trunk crystal that branches into smaller crystals near the top.
+    rock = chunk(p, vec3(0.0, 0.25, 0.0), vec3(2.0, 0.8, 1.8), 521.0);
+    d = crystalDir(p, vec3(0.0, 0.2, 0.0), normalize(vec3(0.08, 1.0, 0.0)), 5.4, 0.6);
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      float a = fi*2.39996 + 0.4;
+      float y = 2.0 + 0.45*fi;
+      vec3 dir = normalize(vec3(cos(a), 0.9 + 0.12*fi, sin(a)));
+      d = min(d, crystalDir(p, vec3(0.08*y/1.0*0.1 + cos(a)*0.25, y, sin(a)*0.25), dir, 1.9 - 0.15*fi, 0.3 - 0.02*fi));
+    }
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float a = fi*2.094 + 1.2;
+      d = min(d, crystalDir(p, vec3(cos(a)*0.9, 0.3, sin(a)*0.9), normalize(vec3(cos(a), 1.2, sin(a))), 1.0, 0.22));
+    }
+  } else if (uCs < 4.5) {
+    // 11 Spiral: crystals rising like a spiral staircase around a central spire.
+    rock = chunk(p, vec3(0.0, 0.25, 0.0), vec3(2.3, 0.8, 2.1), 531.0);
+    d = crystalDir(p, vec3(0.0, 0.2, 0.0), vec3(0.0, 1.0, 0.0), 5.6, 0.55);
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float a = fi*0.78;
+      float rr = 1.55 - 0.06*fi;
+      vec3 dir = normalize(vec3(cos(a)*0.35, 1.0, sin(a)*0.35));
+      d = min(d, crystalDir(p, vec3(cos(a)*rr, 0.15, sin(a)*rr), dir, 0.7 + 0.42*fi, 0.26 + 0.012*fi));
+    }
+  } else if (uCs < 5.5) {
+    // 12 Split boulder: a boulder cracked in two, crystals bursting up out of the widening crack.
+    float boulder = chunk(p, vec3(0.0, 1.6, 0.0), vec3(2.6, 2.0, 2.3), 541.0);
+    float crack = abs(p.x - 0.25*(p.z) - 0.15*sin(p.z*1.7)) - (0.12 + 0.28*clamp(p.y/3.0, 0.0, 1.0));
+    rock = smax(boulder, -crack, 0.12) + 0.06*(noise3(p*1.2) - 0.5);
+    for (int i = 0; i < 8; i++) {
+      float fi = float(i);
+      float z = -1.6 + 3.2*(fi + 0.5)/8.0;
+      float x = 0.25*z + 0.15*sin(z*1.7);
+      float side = mod(fi, 2.0) < 0.5 ? -1.0 : 1.0;
+      vec3 dir = normalize(vec3(side*(0.25 + 0.25*hash1(fi + 551.0)), 1.0, 0.15*(hash1(fi + 552.0) - 0.5)));
+      d = min(d, crystalDir(p, vec3(x, 0.4, z), dir, 2.6 + 1.8*sin((fi + 0.5)/8.0*PI)*hash1(fi + 553.0) + 1.0, 0.3 + 0.08*hash1(fi + 554.0)));
+    }
+  } else if (uCs < 6.5) {
+    // 13 Hanging cluster: crystals pointing down from a ceiling rock, for cavern ceilings.
+    rock = chunk(p, vec3(0.0, 8.0, 0.0), vec3(2.6, 1.0, 2.2), 561.0) + 0.06*(noise3(p*1.2) - 0.5);
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float k = (fi + 0.5)/9.0;
+      float a = fi*2.39996;
+      float rr = fi < 0.5 ? 0.0 : 1.5*sqrt(k);
+      vec3 dir = normalize(vec3(cos(a)*rr*0.35, -1.0, sin(a)*rr*0.35));
+      d = min(d, crystalDir(p, vec3(cos(a)*rr, 7.6, sin(a)*rr), dir, mix(3.6, 1.2, k)*(0.85 + 0.3*hash1(fi + 571.0)), mix(0.48, 0.26, k)));
+    }
+  } else {
+    // 14 Urchin: thin needles radiating out of a half-buried rock ball.
+    vec3 c = vec3(0.0, 0.5, 0.0);
+    rock = sdEll(p - c, vec3(1.3, 1.1, 1.3)) + 0.08*(noise3(p*1.6) - 0.5);
+    for (int i = 0; i < 14; i++) {
+      float fi = float(i);
+      vec3 o = spiralDir(fi, (fi + 0.5)/14.0*0.62);
+      d = min(d, crystalDir(p, c + o*0.8, o, 1.6 + 0.9*hash1(fi + 581.0), 0.17 + 0.05*hash1(fi + 582.0)));
+    }
+  }
+  vec2 r = vec2(d*0.75, 3.0);
+  if (rock < r.x) r = vec2(rock, 1.0);
+  return r;
+}
+vec2 crystalVariant(vec3 p) {
+  float bound = length(p - vec3(0.0, uCa.z*0.5, 0.0)) - (uCa.y + uCa.z + 1.5);
+  if (bound > 1.0) return vec2(bound, 3.0);
+  float d = 1e5;
+  for (int i = 0; i < 9; i++) {
+    float fi = float(i);
+    if (fi >= uCa.x) break;
+    float k = (fi + 0.5)/uCa.x;
+    float th = fi*2.39996 + uCc.w;
+    float rad = uCb.w > 0.5 ? uCa.y : (fi < 0.5 ? 0.0 : uCa.y*sqrt(k));
+    float h = mix(uCa.z, uCa.w, k)*(0.85 + 0.3*hash1(fi + uCc.w));
+    float tilt = mix(uCb.x, uCb.y, uCb.w > 0.5 ? hash1(fi*3.1 + uCc.w) : rad/max(uCa.y, 0.01));
+    float yaw = th + PI;
+    vec3 base = vec3(rad*cos(th), uCc.z + uCc.y*hash1(fi*7.3 + uCc.w), rad*sin(th));
+    if (uCc.x > 0.5) {  // lean forward out of a tall rock face
+      yaw = 1.5708 + 0.6*(hash1(fi*5.7 + uCc.w) - 0.5);
+      base = vec3(uCa.y*(hash1(fi*2.3 + uCc.w)*2.0 - 1.0), uCc.z + uCc.y*k, -uCbase.z*0.75);
+    }
+    d = min(d, crystal(p, base, yaw, tilt, h, uCb.z*(0.7 + 0.5*(1.0 - k))));
+  }
+  vec2 r = vec2(d*0.75, 3.0);
+  float rock = chunk(p, vec3(0.0, uCbase.y*0.4, 0.0), uCbase, 71.0 + uCc.w) + 0.05*(noise3(p*1.4) - 0.5);
+  if (rock < r.x) r = vec2(rock, 1.0);
+  return r;
+}
+vec2 crystals(vec3 p) {
+  if (uCs > 0.5) return crystalSpecial(p);
+  if (uCa.x > 0.5) return crystalVariant(p);
+  float bound = length(p - vec3(0.0, 2.3, 0.0)) - 5.6;
+  if (bound > 1.0) return vec2(bound, 3.0);
+  float d = crystal(p, vec3(0.0, 0.3, 0.0), 0.0, 0.05, 4.7, 0.72);
+  d = min(d, crystal(p, vec3(0.35, 0.3, 0.15), 0.8, 0.48, 3.3, 0.55));
+  d = min(d, crystal(p, vec3(-0.3, 0.3, 0.3), 2.6, 0.5, 2.6, 0.5));
+  d = min(d, crystal(p, vec3(-0.2, 0.3, -0.35), 4.0, 0.36, 3.6, 0.58));
+  d = min(d, crystal(p, vec3(0.6, 0.2, -0.3), 1.7, 0.72, 1.8, 0.4));
+  d = min(d, crystal(p, vec3(-0.6, 0.2, -0.1), 5.2, 0.66, 2.1, 0.42));
+  d = min(d, crystal(p, vec3(0.1, 0.2, 0.7), 3.3, 0.82, 1.3, 0.3));
+  vec2 r = vec2(d*0.75, 3.0);
+  float base = chunk(p, vec3(0.0, 0.2, 0.0), vec3(2.0, 0.8, 1.7), 71.0) + 0.05*(noise3(p*1.4) - 0.5);
+  if (base < r.x) r = vec2(base, 1.0);
+  return r;
+}
+
+// ---------- 2: giant cave mushroom (about 17 studs tall)
+const vec3 MA = vec3(0.0, 0.0, 0.0), MB = vec3(2.3, 6.4, 0.3), MC = vec3(1.3, 12.6, 0.9);
+vec3 capLocal(vec3 p) {
+  vec3 q = p - (MC + vec3(0.0, 0.3, 0.0));
+  q.xy = rot(0.12)*q.xy;
+  q.yz = rot(-0.1)*q.yz;
+  return q;
+}
+vec2 mushroom(vec3 p) {
+  float bound = sdBox(p - vec3(1.2, 9.0, 0.6), vec3(8.8, 10.0, 8.8));
+  if (bound > 1.0) return vec2(bound, 5.0);
+  vec2 bz = sdBezier(p, MA, MB, MC);
+  float rad = mix(1.25, 0.92, bz.y) + 0.2*sin(bz.y*PI);
+  float stem = bz.x - rad;
+  for (int i = 0; i < 3; i++) {
+    float a = float(i)*2.094 + 0.4;
+    vec3 q = p - vec3(cos(a)*1.25, 0.32, sin(a)*1.25);
+    q.xz = rot(a)*q.xz;
+    stem = smin(stem, sdEll(q, vec3(1.35, 0.55, 0.8)), 0.55);
+  }
+  // v2: five roots spreading out and diving into the floor so it grips the ground.
+  for (int i = 0; i < 5; i++) {
+    float a = float(i)*1.2566 + 0.9;
+    float len = 2.8 + 1.0*hash1(float(i) + 5.0);
+    vec3 dir = vec3(cos(a), 0.0, sin(a));
+    stem = smin(stem, capT(p, vec3(0.3, 1.1, 0.2) + dir*0.7, dir*len + vec3(0.0, -0.25, 0.0), 0.6, 0.14), 0.5);
+  }
+  stem += 0.05*sin(atan(p.z - 0.5, p.x - 1.0)*9.0 + p.y*0.9);
+  stem = smax(stem, -p.y, 0.05);
+  // Mossy mound the mushroom grows out of, with little mushrooms around it.
+  float mound = sdEll(p - vec3(0.3, -0.15, 0.2), vec3(4.4, 0.85, 4.1)) + 0.12*(noise3(p*1.1) - 0.5);
+  float babyStem = 1e5, babyCap = 1e5, babyIdx = 0.0;
+  if (p.y < 3.0) for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    float a = fi*1.37 + 0.4;
+    vec3 b = vec3(0.3 + cos(a)*(2.4 + 1.2*hash1(fi + 301.0)), 0.25, 0.2 + sin(a)*(2.4 + 1.2*hash1(fi + 301.0)));
+    float h = 0.6 + 0.8*hash1(fi + 302.0);
+    vec3 tip = b + vec3(0.2*cos(a), h, 0.2*sin(a));
+    babyStem = min(babyStem, capT(p, b, tip, 0.14, 0.1));
+    float bd = smax(sdEll(p - tip, vec3(1.0, 0.55, 1.0)*(0.38 + 0.25*hash1(fi + 303.0))), -(p.y - tip.y + 0.06), 0.04);
+    if (bd < babyCap) { babyCap = bd; babyIdx = floor(hash1(fi + 304.0)*13.99); }
+  }
+  stem = min(stem, babyStem);
+  vec3 q = capLocal(p);
+  float ang = atan(q.z, q.x), rr = length(q.xz);
+  float R = 7.0*(1.0 + 0.07*sin(5.0*ang + 0.6) + 0.035*sin(9.0*ang + 2.0));
+  q.y += 0.9*pow(clamp(rr/7.0, 0.0, 1.3), 3.0)*(0.6 + 0.4*sin(2.0*ang + 1.0));
+  float s = 7.0/R;
+  vec3 qs = vec3(q.x*s, q.y, q.z*s);
+  float cap = smax(sdEll(qs, vec3(7.0, 3.4, 7.0)), -sdEll(qs - vec3(0.0, -1.5, 0.0), vec3(6.3, 2.3, 6.3)), 0.35);
+  float gills = smoothstep(0.3, -0.7, q.y)*smoothstep(1.4, 2.3, rr)*smoothstep(6.7, 5.6, rr);
+  cap -= 0.15*gills*pow(abs(sin(14.0*ang)), 2.0);
+  vec2 r = vec2(stem*0.8, 4.0);
+  if (cap*0.75 < r.x) r = vec2(cap*0.75, 5.0);
+  if (babyCap*0.8 < r.x) r = vec2(babyCap*0.8, 15.0 + babyIdx*0.05);
+  if (mound < r.x) r = vec2(mound, 12.0);
+  return r;
+}
+
+// ---------- 3: portal frame (about 13 studs tall, 12.5 wide)
+const float PR = 5.2, PHT = 0.8, PSPRING = 6.5, PHD = 1.0;
+// Returns arc-length position along the frame's centreline and the signed radial offset from it.
+vec2 portalFrame(vec3 p) {
+  float L = 2.0*PSPRING + PR*PI;
+  if (p.y > PSPRING) {
+    vec2 v = vec2(p.x, p.y - PSPRING);
+    float a = atan(v.y, v.x);
+    return vec2(PSPRING + PR*(PI - clamp(a, 0.0, PI)), length(v) - PR);
+  }
+  return vec2(p.x < 0.0 ? p.y : L - p.y, abs(p.x) - PR);
+}
+float sdBox2(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
+float sword(vec2 p) {
+  float blade = max(sdBox2(p - vec2(0.0, 0.2), vec2(0.075, 0.6)), p.y - 0.78 + abs(p.x)*1.6);
+  float guard = sdBox2(p - vec2(0.0, -0.44), vec2(0.27, 0.06));
+  float grip = sdBox2(p - vec2(0.0, -0.62), vec2(0.05, 0.13));
+  return min(min(blade, guard), min(grip, length(p - vec2(0.0, -0.8)) - 0.085));
+}
+// Gate symbols in symbol space (about -0.9..0.9): crossed swords, target, folded map.
+float gateSymbol(vec2 p) {
+  if (uGate < 0.5) return min(sword(rot(0.72)*p), sword(rot(-0.72)*p));
+  if (uGate < 1.5) {
+    float r = length(p);
+    return min(min(abs(r - 0.66) - 0.08, abs(r - 0.38) - 0.08), r - 0.13);
+  }
+  float zig = abs(fract(p.x/0.5 + 0.5) - 0.5)*2.0;
+  float sheet = sdBox2(vec2(p.x, p.y - 0.08*zig + 0.04), vec2(0.75, 0.52));
+  vec2 xm = p - vec2(0.33, 0.14);
+  float xMark = min(sdBox2(rot(0.785)*xm, vec2(0.16, 0.035)), sdBox2(rot(-0.785)*xm, vec2(0.16, 0.035)));
+  float folds = abs(abs(p.x) - 0.25) - 0.018;
+  float trail = max(abs(length(p - vec2(-0.2, -0.55)) - 0.55) - 0.025, abs(fract(atan(p.y + 0.55, p.x + 0.2)*4.0) - 0.5) - 0.22);
+  return max(sheet, -min(min(xMark, folds), trail));
+}
+vec2 portal(vec3 p) {
+  float bound = sdBox(p - vec3(0.0, 6.6, 0.0), vec3(7.6, 7.6, 1.8));
+  if (bound > 1.0) return vec2(bound, 6.0);
+  float L = 2.0*PSPRING + PR*PI;
+  float bl = L/19.0;
+  vec2 fr = portalFrame(p);
+  float idx = floor(fr.x/bl);
+  float f = fr.x/bl - idx;
+  float gap = min(f, 1.0 - f)*bl;
+  float key = 1.0 - step(0.5, abs(idx - 9.0));
+  float jit = 0.14*(hash1(idx*3.7) - 0.5) + 0.28*key;
+  float stone = smax(abs(fr.y) - PHT - jit, abs(p.z) - PHD - 0.5*jit - 0.18*key, 0.14);
+  stone = smax(stone, 0.06 - gap, 0.06);
+  for (int i = 0; i < 2; i++) {
+    float sx = i == 0 ? -1.0 : 1.0;
+    stone = min(stone, sdBox(p - vec3(sx*PR, 0.35, 0.0), vec3(1.5, 0.35, 1.35)) - 0.06);
+  }
+  // Steps up to the energy (owner, 2026-11-01): a slab filling the gap under the opening, its top level with
+  // the bottom of the energy, and a lower step in front of and behind it.
+  stone = min(stone, sdBox(p - vec3(0.0, 0.33, 0.0), vec3(PR - 0.35, 0.33, PHD + 0.3)) - 0.04);
+  stone = min(stone, sdBox(p - vec3(0.0, 0.16, 0.0), vec3(PR - 1.4, 0.16, PHD + 1.2)) - 0.04);
+  stone = max(stone, -p.y);
+  vec2 r = vec2(stone, 6.0);
+  float band = 1e5;
+  for (int i = 0; i < 4; i++) {
+    float bi = i == 0 ? 2.0 : i == 1 ? 5.0 : i == 2 ? 13.0 : 16.0;
+    float sc = (bi + 0.5)*bl;
+    // Each band stands the same height off its own block, whatever that block's jitter (owner round 10: the bands
+    // did not all match). Edges bevelled 0.05 (round 4): sharp edges meshed into saw teeth in Roblox.
+    float bj = 0.14*(hash1(bi*3.7) - 0.5);
+    vec3 bq = vec3(abs(fr.y) - PHT - bj - 0.13, abs(p.z) - PHD - 0.5*bj - 0.12, abs(fr.x - sc) - 0.24) + 0.05;
+    band = min(band, length(max(bq, 0.0)) + min(max(bq.x, max(bq.y, bq.z)), 0.0) - 0.05);
+  }
+  if (band < r.x) r = vec2(band, 7.0);
+  // Keystone gem: a faceted rhombus with a flat table carrying the gate's symbol in raised metal.
+  vec3 g = p - vec3(0.0, PSPRING + PR, -PHD - 0.42);
+  float rh = abs(g.x)/0.85 + abs(g.y)/1.2;
+  float gem = max((rh - 1.0)*0.55, max(-g.z - 0.3 + 0.12*rh, g.z - 0.1));
+  if (gem < r.x) r = vec2(gem, 8.0);
+  float inner = p.y > PSPRING ? length(vec2(p.x, p.y - PSPRING)) - (PR - PHT) : abs(p.x) - (PR - PHT);
+  float memb = max(max(inner + 0.05, abs(p.z) - 0.04), 0.7 - p.y);
+  if (memb < r.x) r = vec2(memb, 9.0);
+  return r;
+}
+
+// ---------- scale figure: R6 proportions, 5 studs tall
+float figure(vec3 p) {
+  vec3 q = p - uFig.xyz;
+  float d = sdBox(q - vec3(0.0, 3.0, 0.0), vec3(1.0, 1.0, 0.5));
+  d = min(d, sdBox(q - vec3(-0.5, 1.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(0.5, 1.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(-1.5, 3.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(1.5, 3.0, 0.0), vec3(0.49, 1.0, 0.5)));
+  d = min(d, sdBox(q - vec3(0.0, 4.6, 0.0), vec3(0.55, 0.55, 0.55)) - 0.08);
+  return d;
+}
+
+vec2 map(vec3 p) {
+  vec2 r;
+#if ASSET == 0
+  r = rockWall(p);
+#elif ASSET == 1
+  r = crystals(p);
+#elif ASSET == 2
+  r = mushroom(p);
+#else
+  r = portal(p/GS); r.x *= GS;
+#endif
+  if (uFig.w > 0.5) { float f = figure(p); if (f < r.x) r = vec2(f, 10.0); }
+  if (p.y < r.x) r = vec2(p.y, 11.0);
+  return r;
+}
+
+// Slugshot mix (owner rule, 2026-10-31): dark rock, stone and floor use Comic Cavern; glowing, clear,
+// organic things and characters use Inked Cavern; small metal details keep a thick outline but
+// Living Comic's light inner lines so the ink doesn't swallow them.
+float group(float id) {
+  if (uMode < 2.5) return uMode;
+  if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5) return 0.0;
+  return 1.0;
+}
+bool metalDetail(float id) { return uMode > 2.5 && (abs(id - 7.0) < 0.5 || abs(id - 8.0) < 0.5 || abs(id - 13.0) < 0.5); }
+vec4 TR(float id) {
+  float g = group(id);
+  vec4 r = g < 0.5 ? uTr0 : g < 1.5 ? uTr1 : uTr2;
+  if (metalDetail(id)) r.y = uTr2.y;
+  return r;
+}
+float creaseScale(float id) { return metalDetail(id) ? uTr2.x : TR(id).x; }
+vec3 INK(float id) { float g = group(id); return g < 0.5 ? uInk0 : g < 1.5 ? uInk1 : uInk2; }
+vec2 SH(float id) { float g = group(id); return g < 0.5 ? uSh0 : g < 1.5 ? uSh1 : uSh2; }
+float AM(float id) { float g = group(id); return g < 0.5 ? uAm.x : g < 1.5 ? uAm.y : uAm.z; }
+
+bool emissive(float id) { return abs(id - 3.0) < 0.5 || abs(id - 5.0) < 0.5 || abs(id - 9.0) < 0.5 || id > 13.5; }
+// Ink width by importance: hero props thick, architecture thinner (style guide §1).
+float inkWidth(float id) {
+  float w = 0.07;
+  if (id < 1.5 || abs(id - 11.0) < 0.5) w = 0.045;
+  if (abs(id - 9.0) < 0.5) w = 0.0;
+  return w*TR(id).x;
+}
+
+vec3 normalAt(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  float h = 0.004;
+  return normalize(k.xyy*map(p + k.xyy*h).x + k.yyx*map(p + k.yyx*h).x + k.yxy*map(p + k.yxy*h).x + k.xxx*map(p + k.xxx*h).x);
+}
+
+float shadow(vec3 ro, vec3 rd) {
+  float res = 1.0, t = 0.08;
+  for (int i = 0; i < 18; i++) {
+    float h = map(ro + rd*t).x;
+    res = min(res, 8.0*h/t);
+    t += clamp(h, 0.08, 1.6);
+    if (res < 0.01 || t > 30.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+float ao(vec3 p, vec3 n) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 4; i++) {
+    float h = 0.22*float(i);
+    o += (h - map(p + n*h).x)*s; s *= 0.7;
+  }
+  return clamp(1.0 - 0.55*o, 0.0, 1.0);
+}
+
+vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
+  emit = vec3(0.0); spec = 0.08;
+  if (uAsset > 2.5 && id > 5.5 && id < 9.5) p /= GS;
+  float nz = noise3(p*0.32) + 0.5*noise3(p*0.9) - 0.75;
+  if (id < 1.5) {
+    vec3 c = mix(vec3(0.085, 0.092, 0.13), vec3(0.20, 0.205, 0.26), smoothstep(-0.3, 0.3, nz));
+    float warmPatch = smoothstep(0.45, 0.75, noise3(p*0.11 + vec3(4.0, 1.0, 2.0)));
+    c = mix(c, c*vec3(1.35, 1.1, 0.85), 0.6*warmPatch);
+    float crack = (1.0 - smoothstep(0.0, 0.022, abs(noise3(p*vec3(0.38, 0.24, 0.38)) - 0.5)))
+                * smoothstep(0.45, 0.62, noise3(p*0.21 + vec3(7.0, 3.0, 1.0)));
+    // v6's painted noise cracks; the texture study drops them (owner round 8: "the faint line that just squiggles
+    // around everywhere").
+    if (uRockLayers.x + uRockLayers.y < 0.5) c *= 1.0 - 0.75*crack;
+    // Walls A-D shift their moss so neighbouring walls differ (v6 keeps its own).
+    float mossShift = uRockLayers.x + uRockLayers.y > 0.5 ? uWallSeed*7.31 : 0.0;
+    float moss = smoothstep(0.35, 0.8, n.y)*smoothstep(0.3, 0.6, noise3(p*0.45 + mossShift));
+    if (uRockLayers.x + uRockLayers.y > 0.5) {
+      vec3 q, rad; float seed;
+      int mi = int(wallMassAt(p, q, rad, seed) + 0.5);
+      float front = 1.0 - step(-0.3*rad.z, q.z);
+      vec3 ink = vec3(0.012, 0.012, 0.016);
+      if (uRockLayers.y > 0.5) {
+        // Surface texture on every rock: mottling and grain flecks, worn pale edges, and comic hatching in
+        // the crevices (curvature from the wall's own shape).
+        c *= 0.8 + 0.4*noise3(p*1.8);
+        c *= 1.0 - 0.45*smoothstep(0.76, 0.82, noise3(p*9.0));
+        c *= 1.0 + 0.4*smoothstep(0.8, 0.86, noise3(p*9.0 + 31.0));
+        float e = 0.12;
+        float lap = (wallMass(p + vec3(e, -e, -e)) + wallMass(p + vec3(-e, -e, e)) + wallMass(p + vec3(-e, e, -e))
+                   + wallMass(p + vec3(e, e, e)) - 4.0*wallMass(p))/(e*e);
+        c *= 1.0 + 0.55*smoothstep(1.8, 5.0, lap);
+        float crev = 1.0 - smoothstep(-3.5, -0.5, lap);
+        float hatch = 1.0 - smoothstep(0.08, 0.13, abs(fract(dot(p, vec3(0.7, 0.7, 0.2))*5.0) - 0.5));
+        c *= 1.0 - 0.7*hatch*crev*step(0.38, noise3(p*2.5));
+      }
+      if (uRockLayers.x > 0.5 && mi < 12 && isCrackMass(mi)) {
+        // Crack: inked inside, with a pale chipped lip along its edge.
+        vec2 cl = massCracks(q.xy, rad, uWallSeed*31.7 + seed*1.3, mi >= 9 ? 1.0 : 0.0);
+        c *= 1.0 + 0.45*front*(smoothstep(0.0, 0.02, cl.x) - smoothstep(0.03, 0.09, cl.x));
+        c = mix(c, ink, front*(1.0 - smoothstep(-0.015, 0.01, cl.x)));
+      }
+    }
+    return mix(c, vec3(0.13, 0.22, 0.11), 0.85*moss);
+  }
+  if (id < 3.5) {
+    float h;
+    if (uCrG.x < 0.5) h = clamp(p.y/uCrG.y, 0.0, 1.0);
+    else if (uCrG.x < 1.5) h = uCrG.y;
+    else if (uCrG.x < 2.5) h = clamp((uCrG.y - p.y)/uCrG.z, 0.0, 1.0);
+    else if (uCrG.x < 3.5) h = 1.0 - clamp((length(p - vec3(0.0, uCrG.z, 0.0)) - 0.4)/uCrG.y, 0.0, 1.0);
+    else h = clamp((length(p - vec3(0.0, uCrG.z, 0.0)) - 0.6)/uCrG.y, 0.0, 1.0);
+    vec3 c = mix(uCrDeep, uCrBright, h*h);
+    float pulse = 0.85 + 0.15*sin(uT*0.9 + p.y*0.8);
+    emit = c*(0.25 + 1.3*h)*TR(id).z*pulse;
+    spec = 0.6;
+    return c*0.6;
+  }
+  if (id < 4.5) {
+    float streak = noise3(p*vec3(1.6, 0.18, 1.6));
+    vec3 c = mix(vec3(0.46, 0.41, 0.31), vec3(0.68, 0.63, 0.49), streak);
+    // The giant mushroom's stem glows under its cap; wall sprouts (asset 0) never do, however high they sit.
+    emit = uCapGlow*0.6*0.35*smoothstep(10.5, 12.8, p.y)*TR(id).z*step(0.5, uAsset);
+    return c;
+  }
+  if (id < 5.5) {
+    vec3 q = capLocal(p);
+    float under = smoothstep(-0.05, -0.45, n.y);
+    vec3 c = mix(uCapDark, uCapLight, smoothstep(-0.3, 0.3, nz));
+    vec3 g = q*0.55;
+    vec3 gi = floor(g);
+    float best = 9.0;
+    for (int x = -1; x <= 1; x++) for (int y = -1; y <= 1; y++) for (int z = -1; z <= 1; z++) {
+      vec3 cell = gi + vec3(float(x), float(y), float(z));
+      float hh = cell.x*7.1 + cell.y*31.7 + cell.z*113.3;
+      vec3 pt = cell + vec3(hash1(hh), hash1(hh + 1.3), hash1(hh + 2.7));
+      best = min(best, length(g - pt));
+    }
+    float spot = (1.0 - smoothstep(0.2, 0.3, best))*(1.0 - under)*smoothstep(-0.2, 0.3, n.y);
+    float pulse = 0.85 + 0.15*sin(uT*0.7 + q.x*0.4);
+    vec3 glow = uCapGlow;
+    c = mix(c, mix(uCapGlow, vec3(1.0), 0.25), spot);
+    c = mix(c, uCapGlow*0.3, under);
+    emit = glow*(1.3*spot + 1.5*under)*TR(id).z*pulse;
+    spec = 0.25;
+    return c;
+  }
+  if (id < 6.5) return mix(vec3(0.20, 0.185, 0.20), vec3(0.34, 0.31, 0.31), smoothstep(-0.3, 0.3, nz));
+  if (id < 7.5) {
+    vec2 fr = portalFrame(p);
+    float L = 2.0*PSPRING + PR*PI, bl = L/19.0;
+    float bolt = 0.0;
+    for (int i = 0; i < 4; i++) {
+      float bi = i == 0 ? 2.0 : i == 1 ? 5.0 : i == 2 ? 13.0 : 16.0;
+      vec2 dd = vec2(fr.x - (bi + 0.5)*bl, abs(fr.y) - 0.5);
+      bolt = max(bolt, 1.0 - smoothstep(0.12, 0.16, length(dd)));
+    }
+    spec = 0.5;
+    emit = uGateCore*0.35*bolt*TR(id).z;
+    return mix(vec3(0.085, 0.085, 0.095), mix(uGateEdge, uGateCore, 0.55), bolt);
+  }
+  if (id < 8.5) {
+    spec = 0.8;
+    float facet = 0.5 + 0.5*sin(dot(n, vec3(9.0, 7.0, 5.0)));
+    emit = mix(uGateEdge, uGateCore, 0.4 + 0.3*facet)*0.55*TR(id).z*(0.9 + 0.1*sin(uT*1.1));
+    // Symbol: a glowing inlay flush with the gem's flat face, edged by a fine painted line.
+    // Flush, so no heavy ink outline swallows it (owner: the raised bold symbols were hard to read).
+    vec3 g = p - vec3(0.0, PSPRING + PR, -PHD - 0.42);
+    float sym = gateSymbol(g.xy/0.6)*0.6;
+    float face = smoothstep(-0.7, -0.9, n.z);
+    float fill = (1.0 - smoothstep(0.0, 0.012, sym))*face;
+    float edge = (1.0 - smoothstep(0.012, 0.03, abs(sym - 0.012)))*face;
+    vec3 c = mix(uGateEdge, uGateCore, 0.35);
+    c = mix(c, uGateHot, fill);
+    emit = mix(emit, uGateHot*1.4*TR(id).z, fill);
+    c = mix(c, uGateEdge*0.25, edge*0.85);
+    emit *= 1.0 - 0.85*edge;
+    return c;
+  }
+  if (id < 9.5) {
+    vec2 v = vec2(p.x, p.y - PSPRING*0.82);
+    float a = atan(v.y, v.x), r = length(v);
+    float sw = 0.5 + 0.5*sin(a*3.0 + r*1.4 - uT*1.3);
+    float sw2 = 0.5 + 0.5*sin(a*5.0 - r*2.1 + uT*0.8);
+    vec3 c = mix(uGateEdge, uGateCore, sw*0.75 + sw2*0.25);
+    c = mix(c, uGateHot, smoothstep(3.0, 0.0, r)*0.5);
+    emit = c*1.6*TR(id).z;
+    return c*0.3;
+  }
+  if (id < 10.5) return vec3(0.42, 0.43, 0.47);
+  if (id > 14.5) {
+    // Small mushroom cap: a random colour from the bank, glowing softly, brightest underneath.
+    vec3 bc = bankColor(floor((id - 15.0)/0.05 + 0.5));
+    float under = smoothstep(-0.05, -0.45, n.y);
+    float pulse = 0.85 + 0.15*sin(uT*1.1 + p.x*2.0 + p.y);
+    emit = bc*(0.55 + 1.0*under)*TR(id).z*pulse;
+    spec = 0.35;
+    return bc*0.45;
+  }
+  if (id > 13.5) {
+    float pulse = 0.8 + 0.2*sin(uT*1.2 + p.x);
+    emit = vec3(0.75, 1.0, 0.5)*1.2*TR(id).z*pulse;
+    spec = 0.5;
+    return vec3(0.55, 0.75, 0.35);
+  }
+  if (id > 12.5) { spec = 0.55; return vec3(0.55, 0.56, 0.6); }
+  if (id > 11.5 && id < 12.5) {
+    float tip = smoothstep(9.0, 6.0, p.y);
+    return mix(vec3(0.10, 0.19, 0.09), vec3(0.20, 0.32, 0.13), noise3(p*1.8))*(1.0 - 0.3*tip);
+  }
+  vec3 c = mix(vec3(0.05, 0.055, 0.075), vec3(0.10, 0.105, 0.13), smoothstep(-0.3, 0.3, nz));
+  float crack = 1.0 - smoothstep(0.0, 0.04, abs(noise3(vec3(p.x, 0.0, p.z)*0.35) - 0.5));
+  return mix(c, c*0.45, crack);
+}
+
+void main() {
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.0*uFwd);
+  vec3 ro = uRo;
+  vec3 bg = mix(vec3(0.012, 0.013, 0.024), vec3(0.05, 0.05, 0.095), smoothstep(-0.3, 0.8, rd.y));
+  float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
+  bool graze = false; float grazeId = 0.0;
+  for (int i = 0; i < 120; i++) {
+    vec3 pp = ro + rd*t;
+    vec2 h = map(pp);
+    if (h.x < 0.002*t) { hitId = h.y; break; }
+    if (emissive(h.y)) glowAcc += exp(-h.x*1.4)*0.012*min(h.x + 0.2, 1.0);
+    if (h.x < minH) { minH = h.x; minId = h.y; }
+    // The ray dipped close to a form and is moving away again: a silhouette edge in front.
+    if (h.x > prevH && prevH < inkWidth(prevId) && !graze && t > 0.5) { graze = true; grazeId = prevId; }
+    prevH = h.x; prevId = h.y;
+    t += h.x*0.85;
+    if (t > 110.0) break;
+  }
+  vec3 col = bg;
+  float ink = 0.0;
+  vec3 inkC = INK(hitId > 0.0 ? hitId : minId);
+  if (hitId > 0.0) {
+    vec3 p = ro + rd*t;
+    vec3 n = normalAt(p);
+    vec3 v = -rd;
+    vec3 emit; float spec;
+    vec3 alb = albedo(hitId, p, n, emit, spec);
+    float occ = ao(p, n);
+    vec3 lk = normalize(vec3(-0.35, 1.0, -0.45));
+    vec3 lw = normalize(vec3(-1.0, 0.35, -0.35));
+    vec3 lr = normalize(vec3(0.6, 0.45, 1.0));
+    float sh = shadow(p + n*0.03, lk);
+    // Comic shadowing: the light-to-shadow turn and cast shadows get a crisper, graphic edge.
+    float ndl = max(dot(n, lk), 0.0);
+    vec2 shade = SH(hitId);
+    ndl = mix(ndl, smoothstep(0.12, 0.3, ndl)*mix(0.75, 1.0, ndl), shade.y);
+    sh = mix(sh, smoothstep(0.35, 0.6, sh), shade.y);
+    vec3 key = vec3(0.70, 0.78, 1.0)*1.25*ndl*mix(shade.x, 1.0, sh);
+    vec3 warm = vec3(1.0, 0.6, 0.3)*0.42*max(dot(n, lw), 0.0);
+    float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+    vec3 rim = vec3(0.55, 0.42, 1.0)*0.7*fres*max(dot(n, lr) + 0.4, 0.0);
+    vec3 amb = mix(vec3(0.03, 0.035, 0.07), vec3(0.09, 0.10, 0.16), n.y*0.5 + 0.5)*occ*AM(hitId);
+    vec3 gv = uGlowPos - p;
+    float gd = length(gv);
+    vec3 glow = uGlowCol*TR(hitId).z*max(dot(n, gv/gd), 0.0)*40.0/(gd*gd + 6.0);
+    col = alb*(key + warm + amb + glow) + rim*alb*1.6;
+    vec3 hv = normalize(lk + v);
+    col += spec*sh*pow(max(dot(n, hv), 0.0), 40.0)*vec3(0.75, 0.82, 1.0);
+    col += emit;
+    float fade = smoothstep(70.0, 30.0, t);
+    col = mix(bg, col, fade);
+    // Ink 1: creases between forms (concave curvature), the inked fractures.
+    float e = 0.09*max(creaseScale(hitId), 0.6);
+    float cs = TR(hitId).y;
+    vec2 s1 = map(p + vec3(e, -e, -e)), s2 = map(p + vec3(-e, -e, e)), s3 = map(p + vec3(-e, e, -e)), s4 = map(p + vec3(e, e, e));
+    float d0 = map(p).x;
+    float lap = (s1.x + s2.x + s3.x + s4.x - 4.0*d0)/e;
+    // SDF Laplacian is negative in concave creases and positive on convex edges.
+    // Convex edge lines are dropped on the rock wall's texture study: on its ellipsoid masses they drew faint
+    // stray arcs across the faces (owner round 8: "the faint line that just squiggles around everywhere").
+    float convex = hitId < 1.5 && uRockLayers.x + uRockLayers.y > 0.5 ? 0.0 : 0.5;
+    float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
+    // Ink 2: material boundaries (stone to iron, stem to cap, object to floor).
+    float idEdge = (abs(s1.y - hitId) + abs(s2.y - hitId) + abs(s3.y - hitId) + abs(s4.y - hitId)) > 0.5 ? 1.0 : 0.0;
+    if (uRockLayers.x + uRockLayers.y > 0.5) {
+      // Rock wall texture study: boundaries measured along the surface, as the Roblox painter does. The diagonal
+      // samples dipped under the rock, found the buried roots of crystals and stems and drew stray arcs.
+      vec3 t1 = normalize(cross(n, abs(n.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));
+      vec3 t2 = cross(n, t1);
+      idEdge = 0.0;
+      for (int k = 0; k < 6; k++) {
+        float a = float(k)*1.0472;
+        vec3 q = p + (t1*cos(a) + t2*sin(a))*0.045;
+        for (int j = 0; j < 2; j++) q -= normalAt(q)*map(q).x;
+        if (abs(map(q - normalAt(q)*0.01).y - hitId) > 0.5) idEdge = 1.0;
+      }
+    }
+    if (abs(hitId - 9.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
+    ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
+    // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
+    if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }
+  } else if (minH < inkWidth(minId)) {
+    ink = 1.0;
+  }
+  col = mix(col, inkC, ink);
+#if ASSET == 2
+  {
+    // Glowing spores drifting down from the cap, analytic points so they cost almost nothing.
+    float tEnd = hitId > 0.0 ? t : 1e4;
+    float spore = 0.0;
+    for (int i = 0; i < 22; i++) {
+      float fi = float(i);
+      float a = fi*2.39996 + 0.3*uT*(0.2 + 0.1*hash1(fi));
+      float rr = 1.5 + 5.0*hash1(fi + 401.0);
+      float fall = fract(hash1(fi + 402.0) + uT*0.035*(0.6 + hash1(fi + 403.0)));
+      vec3 sp = MC + vec3(cos(a)*rr, -0.8 - 9.0*fall, sin(a)*rr) + vec3(0.3*sin(uT*0.7 + fi), 0.0, 0.3*cos(uT*0.6 + fi));
+      vec3 w = sp - ro;
+      float along = dot(w, rd);
+      if (along > 0.0 && along < tEnd) {
+        float dd = length(w - rd*along);
+        spore += exp(-dd*dd*90.0/(1.0 + along*0.02))*(1.0 - fall)*smoothstep(0.0, 0.1, fall);
+      }
+    }
+    col += mix(uCapGlow, vec3(1.0), 0.2)*spore*1.4*TR(5.0).z;
+  }
+#endif
+  col += glowAcc*uTreat.w*(uAsset > 2.5 ? uGateCore*0.9 : vec3(0.5, 0.9, 0.85));
+  col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  vec2 q = gl_FragCoord.xy/uRes;
+  col *= 0.85 + 0.15*pow(16.0*q.x*q.y*(1.0 - q.x)*(1.0 - q.y), 0.25);
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script id="lib">
+// Shared by the page and by tools/lobby/render_library.py (offline turntable renders): asset data and
+// the pure camera/uniform maths. No DOM access here.
+(function (root) {
+  // Mushroom colour bank (owner, 2026-10-31). Colour 1 is the approved original blue cap with mint glow.
+  const MUSH = [
+    ["Mint", [0.30, 1.0, 0.76]], ["Cyan", [0.35, 0.9, 1.0]], ["Azure", [0.35, 0.55, 1.0]], ["Violet", [0.65, 0.45, 1.0]],
+    ["Purple", [0.8, 0.35, 0.95]], ["Magenta", [1.0, 0.4, 0.8]], ["Pink", [1.0, 0.6, 0.75]], ["Coral", [1.0, 0.55, 0.4]],
+    ["Amber", [1.0, 0.75, 0.3]], ["Gold", [1.0, 0.92, 0.45]], ["Lime", [0.7, 1.0, 0.35]], ["Green", [0.4, 0.95, 0.45]],
+    ["Teal", [0.25, 0.85, 0.7]], ["Frost", [0.88, 0.95, 1.0]]
+  ].map(([name, glow], i) => ({
+    name, bright: glow, colour: true, glow,
+    dark: i === 0 ? [0.15, 0.24, 0.36] : glow.map((v, k) => v*0.16 + [0.05, 0.06, 0.09][k]),
+    light: i === 0 ? [0.27, 0.41, 0.52] : glow.map((v, k) => v*0.32 + [0.07, 0.08, 0.11][k])
+  }));
+  // Crystal variants (owner, 2026-10-31: seven shapes, seven colours). Variant 1 is the hand-authored cluster.
+  const CRYSTALS = [
+    { name: "Cyan cluster", deep: [0.02, 0.09, 0.15], bright: [0.42, 0.93, 1.0], authored: true },
+    { name: "Violet spire", deep: [0.08, 0.02, 0.16], bright: [0.78, 0.55, 1.0], a: [7, 1.1, 7.0, 1.6], b: [0.08, 0.65, 0.85, 0], c: [0, 0.3, 0.25, 11], base: [1.9, 0.85, 1.7] },
+    { name: "Amber fan", deep: [0.16, 0.06, 0.0], bright: [1.0, 0.72, 0.28], a: [9, 2.6, 2.9, 1.2], b: [0.45, 1.05, 0.55, 0], c: [0, 0.2, 0.2, 23], base: [2.8, 0.7, 2.2] },
+    { name: "Rose crown", deep: [0.16, 0.02, 0.07], bright: [1.0, 0.55, 0.75], a: [9, 1.7, 3.2, 2.0], b: [0.2, 0.45, 0.5, 1], c: [0, 0.3, 0.25, 37], base: [2.3, 0.8, 2.3] },
+    { name: "Emerald spray", deep: [0.0, 0.11, 0.05], bright: [0.5, 0.95, 0.62], a: [8, 1.0, 2.4, 1.2], b: [0.7, 1.15, 0.42, 0], c: [1, 2.4, 0.5, 41], base: [1.6, 2.1, 1.4] },
+    { name: "Frost spires", deep: [0.06, 0.09, 0.14], bright: [0.88, 0.95, 1.0], a: [5, 0.7, 6.6, 3.4], b: [0.04, 0.3, 0.75, 0], c: [0, 0.2, 0.25, 53], base: [1.7, 0.8, 1.5] },
+    // Crimson v2: tighter spread on a larger rock so every shard grows out of it (owner, 2026-10-31).
+    { name: "Crimson shard field", deep: [0.16, 0.0, 0.02], bright: [1.0, 0.35, 0.3], a: [9, 2.1, 1.7, 0.6], b: [0.2, 0.8, 0.3, 0], c: [0, 0.1, 0.1, 67], base: [3.9, 0.55, 3.4] },
+    // Designs 8-14: hand-built shapes (owner: "more unique and cool").
+    { name: "Sapphire geode", deep: [0.01, 0.03, 0.16], bright: [0.3, 0.5, 1.0], special: 1, g: [3, 2.0, 1.7], view: [[0, 1.8, 0], 17], glow: [0, 1.7, -1.2] },
+    { name: "Magenta floating heart", deep: [0.14, 0.0, 0.12], bright: [1.0, 0.4, 0.85], special: 2, g: [1, 0.8, 0], view: [[0, 2.8, 0], 17], glow: [0, 3.4, -1.6] },
+    { name: "Jade crystal tree", deep: [0.0, 0.1, 0.07], bright: [0.35, 0.95, 0.75], special: 3, g: [0, 6.0, 0], view: [[0, 3.2, 0], 19], glow: [0, 3.5, -2.0] },
+    { name: "Gold spiral", deep: [0.16, 0.11, 0.0], bright: [1.0, 0.9, 0.4], special: 4, g: [0, 5.8, 0], view: [[0, 3.0, 0], 18], glow: [0, 3.0, -2.2] },
+    { name: "Molten split boulder", deep: [0.18, 0.04, 0.0], bright: [1.0, 0.48, 0.12], special: 5, g: [0, 5.0, 0], view: [[0, 2.6, 0], 19], glow: [0, 3.0, -2.5] },
+    { name: "Pearl hanging cluster", deep: [0.14, 0.09, 0.12], bright: [1.0, 0.82, 0.9], special: 6, g: [2, 7.6, 3.8], view: [[0, 5.6, 0], 19], glow: [0, 5.0, -1.8] },
+    { name: "Aurora urchin", deep: [0.0, 0.22, 0.24], bright: [0.8, 0.5, 1.0], special: 7, g: [4, 2.4, 0.5], view: [[0, 1.6, 0], 15], glow: [0, 1.6, -2.0] }
+  ];
+  // Rock wall texture study (owner rounds 7-8, 1 Nov 2026): Slugterra-style cracks on five of the twelve big rocks
+  // in each wall, spread evenly and placed differently per wall, plus surface texture on all. Fossils dropped.
+  // layers = [cracks, surface]; seed = which variant of the module. Option 1 is the approved v6.
+  const ROCKTEX = [
+    { name: "v6 as approved", seed: 1, layers: [0, 0], bright: [0.2, 0.205, 0.26] },
+    { name: "Wall A · cracks", seed: 1, layers: [1, 0], bright: [0.05, 0.05, 0.07] },
+    { name: "Wall A · surface texture", seed: 1, layers: [0, 1], bright: [0.42, 0.43, 0.47] },
+    { name: "Wall A · both", seed: 1, layers: [1, 1], bright: [0.75, 0.6, 0.85] },
+    { name: "Wall B · both", seed: 2, layers: [1, 1], bright: [0.75, 0.6, 0.85] },
+    { name: "Wall C · both", seed: 3, layers: [1, 1], bright: [0.75, 0.6, 0.85] },
+    { name: "Wall D · both", seed: 4, layers: [1, 1], bright: [0.75, 0.6, 0.85] }
+  ];
+  // The wall's twelve big masses in six regions, top row first (left, centre, right), matching the dressing's regions.
+  // Five of the six regions, the skipped one picked at random, each crack one rock, so cracks are as likely in any
+  // corner (owner round 10: top-left cracks were rare when the top row never cracked). Bit i = mass i cracks.
+  const ROCK_REGIONS = [[5, 9], [6, 7, 10], [8, 11], [0, 1], [2], [3, 4]];
+  function rockPicks(seed) {
+    const rnd = k => { const x = Math.sin(seed*91.7 + k*12.9898)*43758.5453; return x - Math.floor(x); };
+    const skip = Math.floor(rnd(20)*ROCK_REGIONS.length);
+    return ROCK_REGIONS.reduce((mask, region, i) =>
+      i === skip ? mask : mask + Math.pow(2, region[Math.floor(rnd(i)*region.length)]), 0);
+  }
+  const ASSETS = [
+    {
+      id: "rock-wall", name: "Rock wall module", kind: "Cavern kit · natural", size: "20 × 12 × 5 studs", version: "v6",
+      variants: ROCKTEX, variantLabel: "Texture",
+      target: [0, 6, 0], dist: 34, figure: [-3, 0, -5.5], glow: [1.6, 1.6, -3.6], glowCol: [0.45, 0.95, 1.0],
+      notes: [
+        ["v6", "Every mushroom and crystal is now anchored to the rock: each spot was measured on the actual rock surface, the base sinks slightly into the stone and it grows out and up from there, so nothing hovers. Kept: v1's simple rock masses, moss, broken painted cracks, three small mushroom clusters, tiny glowing mushrooms in random bank colours, and crystals poking out in a few places."],
+        ["References", "Stylised fantasy cave walls generally keep the rock simple and let the dressing carry the interest: moss, vines, glowing fungi and crystals in a few accent spots."],
+        ["Treatment", "Slugshot mix: the rock uses Comic Cavern ink, while the moss, mushrooms and crystals use Inked Cavern."],
+        ["Modular use", "Tiles side by side and stacks for the cavern walls, the spiralling caverns and the mainland edge."],
+        ["Texture study", "Round 8: Slugterra-style cracks on five of the twelve big rocks (one per column plus one, so they spread evenly, placed differently on walls A-D), about half with a second shorter crack, and surface texture on every rock: grain, worn pale edges and comic hatching in the crevices. v6's faint painted squiggle cracks are gone, and so are round 7's fossil shells. The rocks keep their shapes."],
+        ["Round 6 options (rejected)", "Round 5 (owner: the rocks look basic): each option adds texture to a scattered portion of the masses, never all. 2 Carved fractures: forked, jagged cracks cut into about half the big masses. 3 Mineral veins: thin seams in the crystals' cyan, faintly glowing. 4 Weathering & lichen: each mass leans warm, cool or dark, with ochre or sage lichen speckles on some and dark drip streaks under ledges. 5 Chipped facets: flat broken-off faces with crisp edges on about half (round pockmarks were tried and looked like bullet holes). 6 Mixed: a few of each together."],
+        ["Status", "v6 approved 1 Nov 2026; the owner likes the real cracks (round 8); texture study awaiting a final look."]
+      ]
+    },
+    {
+      id: "crystals", name: "Crystals", kind: "Cavern kit · glow accent", size: "fourteen designs, 2-9 studs tall", version: "v3",
+      variants: CRYSTALS,
+      target: [0, 2.4, 0], dist: 15, figure: [3.6, 0, -1.5], glow: [0, 3.0, -1.6], glowCol: [0.45, 0.95, 1.0],
+      notes: [
+        ["Shape", "Seven hexagonal crystals with faceted pyramid tips, fanning out of a chunky rock base at different angles and heights."],
+        ["Glow", "Each crystal darkens toward its root and brightens toward the tip, with a slow pulse. It lights the rock around it: a vibrant accent against calm stone."],
+        ["Ink", "Prop weight. Facet edges stay crisp; the outline holds the glow together."],
+        ["Designs 1-7", "Cyan cluster (the original), Violet spire, Amber fan, Rose crown, Emerald spray out of a rock face, Frost spires, and a Crimson shard field (v2: every shard now grows out of its rock)."],
+        ["Designs 8-14", "More unique, hand-built shapes: a Sapphire geode broken open and lined with crystals, a Magenta floating heart that hovers and bobs with shards circling it, a Jade crystal tree, a Gold spiral staircase of crystals, a Molten split boulder with crystals bursting from the crack, a Pearl hanging cluster for cavern ceilings, and an Aurora urchin whose needles fade from teal to violet."],
+        ["Status", "Designs 1-6 approved; Crimson v2 and designs 8-14 awaiting your review."]
+      ]
+    },
+    {
+      id: "mushroom", name: "Giant cave mushroom", kind: "Fungi and flora · signature", size: "about 17 studs tall, cap 14 studs across", version: "v2",
+      variants: MUSH, variantLabel: "Colour",
+      target: [1, 8.5, 0.5], dist: 36, figure: [-5.5, 0, -3], glow: [1.3, 10.5, 0.9], glowCol: [0.3, 1.0, 0.75],
+      notes: [
+        ["Shape", "An original design: a leaning, gently curving stem with ridged bark and three root lobes gripping the floor. The cap is lopsided, its wavy lip droops further on one side and curls under."],
+        ["Glow", "Radial gills underneath glow mint and light the stem from above. Soft glowing spots are scattered over the dusty blue cap, pulsing slowly."],
+        ["Ink", "Hero weight: the thickest lines in the scene."],
+        ["Originality", "It captures Slugterra's giant-cavern-fungus category with its own silhouette: the lean, root lobes, lopsided curled cap and spot pattern are Slugshot's."],
+        ["v2 changes", "More attached to the ground: five roots spread out and dive into the floor, it grows out of a low mossy mound, and little mushrooms sprout around its base. Glowing spores drift slowly down from the cap."],
+        ["Colour bank", "Fourteen glow colours: mint (the original), cyan, azure, violet, purple, magenta, pink, coral, amber, gold, lime, green, teal and frost. Pick one with the Colour buttons. Small mushrooms everywhere, including the ones around this mushroom's base and on the rock wall, each take a random colour from the same bank."],
+        ["Variants planned", "Two more silhouettes (a tall slender one and a squat wide one), and small clusters."],
+        ["Status", "Concept v2, awaiting your review."]
+      ]
+    }
+  ];
+  const GATE_SHARED = [
+    ["Frame", "Nineteen chunky stone blocks form a round-topped arch on two plinths, each block slightly out of line. Graphite iron bands clamp four blocks, studded with bolts in the gate's colour."],
+    ["Keystone gem", "A large faceted gem in the gate's colour, with the gate's symbol glowing in its flat face so you can tell at a glance where it leads."],
+    ["Treatment", "Slugshot mix: the stone uses Comic Cavern ink; the gem, bands and bolts keep a thick outline with light inner lines, and the symbol has no ink outline at all, so it stays readable."],
+    ["Colour", "The energy, bolts and gem all take the gate's colour: PvP orange, Training green, Veylume purple (owner choice, 2026-10-31)."]
+  ];
+  const GATES = [
+    { id: "gate-pvp", name: "PvP gate", gate: 0, symbol: "Crossed swords", edge: [0.70, 0.17, 0.05], core: [1.0, 0.62, 0.25], hot: [1.0, 0.86, 0.6] },
+    { id: "gate-training", name: "Training gate", gate: 1, symbol: "Target", edge: [0.05, 0.42, 0.12], core: [0.42, 1.0, 0.45], hot: [0.85, 1.0, 0.75] },
+    { id: "gate-veylume", name: "Veylume gate", gate: 2, symbol: "Folded map with a marked trail", edge: [0.30, 0.09, 0.58], core: [0.78, 0.5, 1.0], hot: [0.95, 0.86, 1.0] }
+  ];
+  GATES.forEach(g => ASSETS.push({
+    id: g.id, name: g.name, kind: "Landmark · gate", size: "about 21 studs tall, 19 wide", version: "v4", shader: 3, gate: g.gate,
+    edge: g.edge, core: g.core, hot: g.hot,
+    target: [0, 10.2, 0], dist: 42, figure: [-12.8, 0, -3.8], glow: [0, 9, -3.8], glowCol: g.core,
+    notes: [["Symbol", g.symbol + ", as a glowing inlay in the keystone gem."], ...GATE_SHARED,
+            ["v4 changes", "A stone slab now fills the gap under the energy, its top level with the bottom of the portal, with a lower step in front and behind: a mini stairway up to the portal (owner, 1 Nov 2026). The iron bands now have softly bevelled edges, which mesh cleanly in Roblox."],
+            ["v3 changes", "1.5x bigger. The raised bold symbol was hard to read, so the symbol is now a glowing inlay flush with the gem's face, edged by a fine painted line instead of heavy ink."],
+            ["Status", "Concept v3, awaiting your review."]]
+  }));
+  const PLANNED = ["Floating spawn rock", "Droopy wooden bridge", "Maelstrom sinkhole", "Sky Well light column", "Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
+  const TREAT = [
+    { name: "Comic Cavern", t: [1.7, 1.35, 0.85, 0.25], ink: [0.006, 0.006, 0.008], amb: 0.85, shade: [0.25, 0.0] },
+    // Owner direction, 2026-10-31: Living Comic's clean surfaces (few interior lines, its glow)
+    // with Comic Cavern's thick near-black ink and deeper, crisper comic shadows.
+    { name: "Inked Cavern", t: [1.7, 0.95, 1.1, 0.5], ink: [0.006, 0.006, 0.008], amb: 0.8, shade: [0.1, 0.65] },
+    { name: "Living Comic", t: [1.0, 1.0, 1.1, 0.6], ink: [0.03, 0.028, 0.04], amb: 1.0, shade: [0.25, 0.0] },
+    // Default: per-material rule. Global bloom follows Inked Cavern.
+    { name: "Slugshot mix", t: [1.7, 0.95, 1.1, 0.5], mix: true }
+  ];
+  const VIEWS = { three: [-0.65, 0.22], front: [0, 0.1], side: [1.57, 0.1], back: [3.14, 0.2], player: [-0.35, 0.06] };
+  // Owner approved every design as final on 2026-11-01.
+  ASSETS.forEach(a => {
+    a.final = true;
+    a.notes = a.notes.filter(([k]) => k !== "Status").concat([["Status", "Final design, approved by the owner on 1 Nov 2026. Next: build in Blender from these exact shapes."]]);
+  });
+  const FRAMES = 36, SHEET = { cols: 6, w: 512, h: 384 }, BASE_YAW = -0.65, PITCH = 0.22;
+
+  function shaderIndex(i) { const a = ASSETS[i]; return a.shader !== undefined ? a.shader : i; }
+  function variantCount(i) { const a = ASSETS[i]; return a.variants ? a.variants.length : 1; }
+  function frameKey(i, v) { return ASSETS[i].id + "-" + (v + 1); }
+  function variantView(a, variant) {
+    const v = a.variants && a.variants[variant];
+    if (!v || v.authored || v.colour || v.layers !== undefined) return { target: a.target, dist: a.dist };
+    if (v.special) return { target: v.view[0], dist: v.view[1] };
+    const h = v.a[2] + v.c[1];
+    return { target: [0, h*0.45, 0], dist: Math.max(15, v.a[1]*3 + h*2.2) };
+  }
+  function cameraBasis(cam) {
+    const cy = Math.cos(cam.pitch);
+    const tgt = [cam.tx, cam.ty, cam.tz];
+    const ro = [tgt[0] + Math.sin(cam.yaw)*cy*cam.dist, Math.max(0.6, tgt[1] + Math.sin(cam.pitch)*cam.dist), tgt[2] - Math.cos(cam.yaw)*cy*cam.dist];
+    let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+    let r = [f[2], 0, -f[0]]; const rl = Math.hypot(...r); r = r.map(v => -v/rl);
+    const u = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+    return { ro, r, u, f };
+  }
+  // Every uniform for one view, as name -> array of floats. s: {asset, variant, treat, figOn, time, cam, width, height}
+  function uniformsFor(s) {
+    const a = ASSETS[s.asset], variant = s.variant, U = {};
+    const T = TREAT[s.treat], B = cameraBasis(s.cam);
+    U.uRes = [s.width, s.height]; U.uT = [s.time]; U.uAsset = [shaderIndex(s.asset)]; U.uGate = [a.gate || 0];
+    U.uGateEdge = a.edge || [0.7, 0.17, 0.05]; U.uGateCore = a.core || [1, 0.62, 0.25]; U.uGateHot = a.hot || [1, 0.86, 0.6];
+    U.uRo = B.ro; U.uRight = B.r; U.uUp = B.u; U.uFwd = B.f;
+    const isCrystal = a.id === "crystals";
+    const V = isCrystal ? a.variants[variant] : null;
+    const fv = V && !V.authored ? V : null;
+    const figX = fv ? (fv.special ? 5.0 : fv.a[1] + fv.base[0] + 2.0) : a.figure[0];
+    U.uFig = [figX, a.figure[1], a.figure[2], s.figOn ? 1 : 0];
+    U.uTreat = T.t; U.uMode = [s.treat];
+    [0, 1, 2].forEach(k => { U["uTr" + k] = TREAT[k].t; U["uInk" + k] = TREAT[k].ink; U["uSh" + k] = TREAT[k].shade; });
+    U.uAm = [TREAT[0].amb, TREAT[1].amb, TREAT[2].amb];
+    const M = a.id === "mushroom" ? MUSH[variant] : MUSH[0];
+    U.uCapDark = M.dark; U.uCapLight = M.light; U.uCapGlow = M.glow;
+    U.uCs = [V && V.special ? V.special : 0];
+    if (V && V.special) {
+      U.uCa = [0, 0, 0, 0]; U.uCb = [0, 0, 0, 0]; U.uCc = [0, 0, 0, 0]; U.uCbase = [1, 1, 1];
+      U.uCrG = [V.g[0], V.g[1], V.g[2], 0]; U.uGlowPos = V.glow;
+    } else if (V && !V.authored) {
+      U.uCa = V.a; U.uCb = V.b; U.uCc = V.c; U.uCbase = V.base;
+      U.uCrG = [0, V.a[2] + V.c[1] + V.c[2], 0, 0]; U.uGlowPos = [0, V.a[2]*0.6 + V.c[1]*0.5, -2.2];
+    } else {
+      U.uCa = [0, 0, 0, 0]; U.uCb = [0, 0, 0, 0]; U.uCc = [0, 0, 0, 0]; U.uCbase = [1, 1, 1];
+      U.uCrG = isCrystal ? [0, 4.7, 0, 0] : [1, 0.75, 0, 0]; U.uGlowPos = a.glow;
+    }
+    const CV = V || CRYSTALS[0];
+    U.uCrDeep = CV.deep; U.uCrBright = CV.bright;
+    U.uGlowCol = V ? V.bright : a.id === "mushroom" ? M.glow : a.glowCol;
+    const RT = a.id === "rock-wall" ? ROCKTEX[variant] : null;
+    U.uRockLayers = RT ? RT.layers : [0, 0]; U.uWallSeed = [RT ? RT.seed : 1];
+    U.uCrackMask = [rockPicks(RT ? RT.seed : 1)];
+    return U;
+  }
+  const BANK = MUSH.flatMap(m => m.glow);
+  // The turntable frames rendered offline: yaw steps of 360/FRAMES degrees from the three-quarter view.
+  function renderCam(i, v, frame) {
+    const vw = variantView(ASSETS[i], v);
+    return { yaw: BASE_YAW + frame*2*Math.PI/FRAMES, pitch: PITCH, dist: vw.dist*0.8, tx: vw.target[0], ty: vw.target[1], tz: vw.target[2] };
+  }
+  root.SlugLib = { MUSH, CRYSTALS, ASSETS, PLANNED, TREAT, VIEWS, FRAMES, SHEET, BASE_YAW, PITCH, BANK,
+    shaderIndex, variantCount, frameKey, variantView, cameraBasis, uniformsFor, renderCam };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>
+(function () {
+  const L = window.SlugLib;
+  const { ASSETS, MUSH, PLANNED, TREAT, VIEWS, FRAMES, BASE_YAW } = L;
+
+  const shelf = document.getElementById("shelf");
+  ASSETS.forEach((a, i) => {
+    const b = document.createElement("button");
+    b.className = "asset"; b.id = "asset-" + a.id; b.dataset.index = i;
+    b.innerHTML = `<span class="name"></span><span class="meta"></span><span class="chip"></span>`;
+    b.querySelector(".chip").textContent = (a.final ? "Final " : "Concept ") + (a.version || "v1");
+    b.querySelector(".name").textContent = a.name;
+    b.querySelector(".meta").textContent = a.kind;
+    shelf.appendChild(b);
+  });
+  const plannedEl = document.getElementById("planned");
+  PLANNED.forEach(n => { const li = document.createElement("li"); li.textContent = n; plannedEl.appendChild(li); });
+
+  const canvas = document.getElementById("view");
+  const box = document.getElementById("box");
+  const sprite = document.getElementById("sprite");
+  const loading = document.getElementById("loading");
+  function fail(msg) {
+    box.querySelectorAll(".fallback").forEach(n => n.remove());
+    const d = document.createElement("div"); d.className = "fallback"; d.textContent = msg; box.appendChild(d);
+    setTimeout(() => d.remove(), 6000);
+  }
+
+  // Two modes. "Rendered" (default) shows turntable frames rendered offline from the same shader: light,
+  // works without WebGL. "Live 3D" runs the shader in the browser and is opt-in, because the live shader
+  // froze Chrome on the owner's Windows machine (2026-10-31).
+  let live = false;
+  let current = 0, treat = 3, figOn = true, variant = 0;
+  const varRow = document.getElementById("var-row"), varBtns = document.getElementById("var-btns");
+  const rgb = c => `rgb(${c.map(v => Math.round(Math.min(1, v)*255)).join(",")})`;
+  function setVariant(i) {
+    variant = i;
+    varBtns.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === i)));
+    const vw = L.variantView(ASSETS[current], variant);
+    [goal.tx, goal.ty, goal.tz] = vw.target; goal.dist = vw.dist;
+    showSprite();
+  }
+  function buildVariants(a) {
+    varBtns.textContent = "";
+    varRow.hidden = !a.variants;
+    if (!a.variants) return;
+    varRow.querySelector(".label").textContent = a.variantLabel || "Variant";
+    a.variants.forEach((v, i) => {
+      const b = document.createElement("button");
+      b.className = "ctl"; b.id = "variant-" + (i + 1); b.dataset.v = i;
+      const sw = document.createElement("span"); sw.className = "sw"; sw.style.background = rgb(v.bright);
+      b.append(sw, document.createTextNode(`${i + 1} · ${v.name}`));
+      b.addEventListener("click", () => setVariant(i));
+      varBtns.appendChild(b);
+    });
+  }
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let motion = !reduce, time = 3.0, last = performance.now();
+  const cam = { yaw: BASE_YAW, pitch: 0.22, dist: 30, tx: 0, ty: 6, tz: 0 };
+  const goal = { ...cam };
+
+  function showNotes(a) {
+    document.getElementById("n-kind").textContent = a.kind + " · " + a.size;
+    document.getElementById("n-name").textContent = a.name;
+    const dl = document.getElementById("n-list"); dl.textContent = "";
+    a.notes.forEach(([k, v]) => {
+      const div = document.createElement("div");
+      const dt = document.createElement("dt"); dt.textContent = k;
+      const dd = document.createElement("dd"); dd.textContent = v;
+      div.append(dt, dd); dl.appendChild(div);
+    });
+  }
+  function select(i, keepView) {
+    current = i;
+    const a = ASSETS[i];
+    shelf.querySelectorAll(".asset").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.index === i)));
+    [goal.tx, goal.ty, goal.tz] = a.target; goal.dist = a.dist;
+    if (!keepView) { goal.yaw = VIEWS.three[0]; goal.pitch = VIEWS.three[1]; }
+    showNotes(a);
+    variant = 0;
+    buildVariants(a);
+    if (a.variants) setVariant(0); else showSprite();
+    try { history.replaceState(null, "", "#" + a.id); } catch (e) {}
+  }
+  function setTreat(i) {
+    treat = i;
+    document.querySelectorAll("[data-treat]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.treat === i)));
+    updateTag();
+  }
+  function updateTag() {
+    document.getElementById("tag").textContent = live ? TREAT[treat].name : "Slugshot mix · rendered";
+    document.querySelectorAll("[data-treat]").forEach(b => { b.disabled = !live; });
+    document.getElementById("treat-note").hidden = live;
+  }
+
+  // ---------- rendered turntable
+  const loaded = {};
+  let spriteKey = "";
+  function frameIndex(yaw) {
+    const step = 2*Math.PI/FRAMES;
+    return ((Math.round((yaw - BASE_YAW)/step) % FRAMES) + FRAMES) % FRAMES;
+  }
+  function showSprite() {
+    if (live) return;
+    const key = L.frameKey(current, variant);
+    if (key === spriteKey) return;
+    spriteKey = key;
+    const url = "renders/" + key + ".jpg";
+    const apply = () => { if (spriteKey === key) { sheet = loaded[url]; drawn = -1; loading.hidden = true; } };
+    if (loaded[url]) { apply(); return; }
+    loading.hidden = false;
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => { loaded[url] = img; apply(); };
+    img.onerror = () => { if (spriteKey === key) { loading.hidden = true; fail("This render couldn't load. Reload the page to try again."); } };
+    img.src = url;
+  }
+  let sheet = null, drawn = -1;
+  const sctx = sprite.getContext("2d");
+  function drawSprite() {
+    if (!sheet) return;
+    const w = Math.round(box.clientWidth*Math.min(window.devicePixelRatio || 1, 2)), h = Math.round(w*0.75);
+    if (sprite.width !== w || sprite.height !== h) { sprite.width = w; sprite.height = h; drawn = -1; }
+    const k = frameIndex(cam.yaw);
+    if (k === drawn) return;
+    drawn = k;
+    const { cols, w: fw, h: fh } = L.SHEET;
+    sctx.imageSmoothingQuality = "high";
+    sctx.drawImage(sheet, (k % cols)*fw, Math.floor(k/cols)*fh, fw, fh, 0, 0, w, h);
+  }
+
+  shelf.addEventListener("click", e => { const b = e.target.closest(".asset"); if (b) select(+b.dataset.index); });
+  document.querySelectorAll("[data-treat]").forEach(b => b.addEventListener("click", () => setTreat(+b.dataset.treat)));
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+    const v = VIEWS[b.dataset.view]; goal.yaw = v[0]; goal.pitch = v[1];
+    const vw = L.variantView(ASSETS[current], variant);
+    goal.dist = b.dataset.view === "player" ? vw.dist*0.6 : vw.dist;
+  }));
+  const figBtn = document.getElementById("fig");
+  figBtn.addEventListener("click", () => { figOn = !figOn; figBtn.setAttribute("aria-pressed", String(figOn)); });
+  const motionBtn = document.getElementById("motion");
+  function setMotion(on) { motion = on; motionBtn.setAttribute("aria-pressed", String(on)); motionBtn.textContent = on ? "Motion on" : "Motion off"; }
+  setMotion(motion);
+  motionBtn.addEventListener("click", () => setMotion(!motion));
+
+  let drag = null, pinch = null;
+  const pointers = new Map();
+  box.addEventListener("pointerdown", e => { pointers.set(e.pointerId, [e.clientX, e.clientY]); box.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY }; });
+  box.addEventListener("pointermove", e => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (pinch && live) goal.dist = Math.max(6, Math.min(90, goal.dist*pinch/d));
+      pinch = d; return;
+    }
+    if (!drag) return;
+    goal.yaw -= (e.clientX - drag.x)*0.008;
+    if (live) goal.pitch = Math.max(-0.05, Math.min(1.2, goal.pitch + (e.clientY - drag.y)*0.005));
+    drag = { x: e.clientX, y: e.clientY };
+  });
+  function up(e) { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (pointers.size === 0) drag = null; }
+  box.addEventListener("pointerup", up);
+  box.addEventListener("pointercancel", up);
+  box.addEventListener("wheel", e => { if (!live) return; e.preventDefault(); goal.dist = Math.max(6, Math.min(90, goal.dist*(1 + Math.sign(e.deltaY)*0.08))); }, { passive: false });
+
+  // ---------- live 3D (opt-in)
+  let gl = null, U = null, broken = false;
+  const programs = {};
+  function sh(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const VS = document.getElementById("vs").textContent, FS = document.getElementById("fs").textContent;
+  function startGL() {
+    if (gl) return true;
+    const opts = { antialias: false, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false };
+    gl = canvas.getContext("webgl", opts) || canvas.getContext("experimental-webgl", opts);
+    if (!gl) return false;
+    canvas.addEventListener("webglcontextlost", e => { e.preventDefault(); broken = true; setLive(false); fail("Live 3D lost its graphics connection, so the page switched back to rendered views."); });
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    return true;
+  }
+  // One small program per asset, compiled the first time that asset is viewed live.
+  function useProgramFor(shaderIndex, names) {
+    let P = programs[shaderIndex];
+    if (!P) {
+      const prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS.replace("precision highp float;", "precision highp float;\n#define ASSET " + shaderIndex)));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+      const u = {};
+      names.forEach(n => u[n] = gl.getUniformLocation(prog, n));
+      P = programs[shaderIndex] = { prog, u, loc: gl.getAttribLocation(prog, "aPos") };
+      gl.useProgram(prog);
+      const bankLoc = gl.getUniformLocation(prog, "uBank");
+      if (bankLoc) gl.uniform3fv(bankLoc, new Float32Array(L.BANK));
+    }
+    gl.useProgram(P.prog);
+    gl.enableVertexAttribArray(P.loc);
+    gl.vertexAttribPointer(P.loc, 2, gl.FLOAT, false, 0, 0);
+    U = P.u;
+  }
+  const liveBtn = document.getElementById("live");
+  function setLive(on) {
+    if (on && (broken || !startGL())) {
+      on = false;
+      fail("Live 3D isn't available in this browser right now, so the rendered views stay on.");
+    }
+    live = on;
+    liveBtn.setAttribute("aria-pressed", String(on));
+    liveBtn.textContent = on ? "Live 3D on" : "Live 3D off";
+    canvas.hidden = !on; sprite.hidden = on;
+    if (!on) { cam.pitch = goal.pitch = 0.22; spriteKey = ""; showSprite(); }
+    updateTag();
+  }
+  liveBtn.addEventListener("click", () => setLive(!live));
+
+  let moving = 0, quality = 0.9, slow = 0, fast = 0;
+  function resize(scale) {
+    const w = Math.round(Math.min(860, box.clientWidth)*scale);
+    const h = Math.round(w*0.75);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const raw = (now - last)/1000;
+    const dt = Math.min(0.05, raw); last = now;
+    if (motion) time += dt;
+    let delta = 0;
+    for (const k of ["yaw", "pitch", "dist", "tx", "ty", "tz"]) { const d = (goal[k] - cam[k])*Math.min(1, dt*6); cam[k] += d; delta += Math.abs(d); }
+    if (!live) { drawSprite(); return; }
+    if (broken) return;
+    // Adaptive resolution: start low, sharpen only while frames stay quick, back off when they don't.
+    if (raw > 0.06) { slow++; fast = 0; } else if (raw < 0.028) { fast++; slow = 0; }
+    if (slow > 3) { quality = Math.max(0.3, quality*0.8); slow = 0; }
+    if (fast > 10) { quality = Math.min(1.1, quality*1.1); fast = 0; }
+    moving = (drag || delta > 0.002) ? 0.4 : Math.max(0, moving - dt);
+    if (!moving && !motion) return;  // nothing changes on screen
+    resize(moving > 0 ? quality*0.8 : quality);
+    const S = L.uniformsFor({ asset: current, variant, treat, figOn, time, cam, width: canvas.width, height: canvas.height });
+    try { useProgramFor(L.shaderIndex(current), Object.keys(S)); }
+    catch (e) { console.error(e); broken = true; setLive(false); fail("Live 3D couldn't start on this device, so the page switched back to rendered views."); return; }
+    for (const n in S) {
+      const loc = U[n], v = S[n];
+      if (!loc) continue;
+      if (v.length === 1) gl.uniform1f(loc, v[0]);
+      else if (v.length === 2) gl.uniform2fv(loc, v);
+      else if (v.length === 3) gl.uniform3fv(loc, v);
+      else gl.uniform4fv(loc, v);
+    }
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  const startAt = ASSETS.findIndex(a => "#" + a.id === location.hash);
+  select(startAt >= 0 ? startAt : 0);
+  setTreat(3);
+  setLive(false);
+  Object.assign(cam, goal);
+  requestAnimationFrame(frame);
+})();
+</script>

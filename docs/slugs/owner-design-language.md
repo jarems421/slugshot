@@ -22,7 +22,7 @@ Sources: [Floppy catalogue entry](catalog/flopper-inspired.md), [Blender lessons
 
 ## Voice-dictation slips (this chat)
 
-He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider animation" = spiral animation, "glue" = glow, "class" = glass, "doc under eyes" = dark under-eyes, "slime fits inside the shell" = slug, "slug terror" = Slugterra, "floppy" = the slug's name (not a description), "Veilume"/"volume" = Veylume (the exploration world), "jewel board" = duel board, "Badlands"/"Badland" = Borderlands (the comic-ink art style; see [style guide](../art/style-guide.md)). Ask only if the sound-alike is still ambiguous.
+He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider animation" = spiral animation, "glue" = glow, "class" = glass, "doc under eyes" = dark under-eyes, "slime fits inside the shell" = slug, "slug terror" = Slugterra, "floppy" = the slug's name (not a description), "Veilume"/"volume" = Veylume (the exploration world), "jewel board" = duel board, "Cosmic Cavern"/"Living Cosmic" = Comic Cavern/Living Comic, "Badlands"/"Badland" = Borderlands (the comic-ink art style; see [style guide](../art/style-guide.md)). Ask only if the sound-alike is still ambiguous.
 
 ## What phrases have meant
 
@@ -130,3 +130,41 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | "almost perfect" (wall run), "fine" (slide) | 10 degree roll away from the wall, gun hand never grabs the wall on its side; slide lean and canted gun. | — |
 
 Working style seen this session: the owner judges by playtest and reports in short rounds; research what successful games do before building ("do research", "what makes it feel good"), cite it, then implement; keep one option per thing ("concrete foundation"); confirm fixes from the Studio log (`%LOCALAPPDATA%\Roblox\logs`) when MCP is unavailable.
+
+## Environment and art direction (2026-10-31 to 11-01)
+
+From the lobby art-direction and asset-library rounds. Process lessons are in [art lessons](../art/lessons.md).
+
+| The owner says | What satisfied it | What failed or was rejected |
+| --- | --- | --- |
+| "Badlands-esque finish", "outline everything so nothing goes unnoticed" | Borderlands-style dark ink outlines over real 3D lighting. | — |
+| "vibrant like Slugterra, not neon", "calm and vibrant mix" | Calm dark stone base with selective glowing accents (about 70/20/10). | Saturated colour everywhere. |
+| "something between Comic Cavern and Living Comic, closer to Comic Cavern" | Living Comic's *clean* surfaces with Comic Cavern's *thick near-black ink and deep shadows*, plus a crisp comic light-to-shadow edge ("you nailed it"). | A straight numeric blend of the two presets ("not there enough"). |
+| "it looks better with Comic Cavern" (rocks) vs "glowy clear stuff needs Inked Cavern" | A per-material treatment rule; characters always Inked Cavern. | One treatment for everything. |
+| "engulfs the design" | Heavy ink hiding small details; fix with light interior lines on details or flush painted/emissive detail. | Bold raised symbols. |
+| "too basic", "plain" (rock wall) | Simple masses **plus** dressing: moss, broken cracks, small mushrooms, crystals poking out. | Bigger geometric changes (spires, ledges, alcoves, strata): "the worst one". |
+| "the lines going through look weird" | Remove long carved lines across forms; keep cracks short and painted. | Horizontal strata grooves. |
+| "V1 might have been the best because it was the most simple" | Roll back to the liked version and add only the listed items. | Iterating forward from a disliked version. |
+| "hovering on the wall" | Dressing projected onto the real surface, roots sunk into the rock. | Hand-placed coordinates. |
+| "more variations… we need a lot of variety" | A selectable bank (14 crystal designs, 14 mushroom colours); small props pick random colours from the bank. | — |
+| "more unique and cool" (crystals) | Hand-built distinct silhouettes: geode, floating heart, crystal tree, spiral, split boulder, hanging cluster, urchin. | Parameter variations of one cluster. |
+| "too much mushroom" | Stop adding a motif once it appears in several places. | Bark mushrooms on the giant mushroom (withdrawn). |
+| "more attached to the ground" (big plant/fungus) | Roots spreading and diving into the floor, a mossy mound, small growth around the base. | A stem simply standing on the floor. |
+| "something cool in the centre… dramatic and natural" | An opening above (Sky Well) and a swirling pit below (Maelstrom), with spawn on a floating rock. | Slug-themed centrepieces (canister tree, colossus, orrery, energy well) and biome features (crystal, mushroom). |
+| "droopy" bridges | Sagging wooden suspension bridges. | — |
+| "make it render upon being opened" | Load one asset at a time; offline-rendered turntables by default, live 3D opt-in. | One shader with every asset (froze Chrome). |
+| "buggy, laggy" after a performance fix | Restore smoothness: more turntable frames on a canvas; live 3D back to its original settings. | Over-throttled live view and 16-frame CSS sprites. |
+
+| "walls too dark and far", "glows don't light the wall" | Placed lights at the glows and over the walls. | Brighter blue ambient ("don't just make the rocks blue"). |
+| "black voids" (mushrooms), "sparkles from nowhere" | Technical faults, not taste: inside-out mesh pieces and mirrored effect positions. | — |
+| "the lighting keeps changing" | Studio's automatic graphics quality toggling shadows, plus too many lights and zone exposure changes. Fix the cause; also suggest Graphics Mode: Manual for judging. | — |
+| "the rocks just look so basic" | Real carved cracks on a share of rocks, spread evenly; surface grain, worn edges, crevice hatching on all. | Squiggly painted cracks ("you just wiggled around"), deformed rocks, fossils ("mid"). |
+| "Slugterra style cracks" | Straight segments with sharp alternating turns and one fork, wide at the rim tapering to a hairline, inked inside with a pale lip. | Smooth zigzag waves. |
+| "every corner has something" | Six face regions, each with a crystal or mushroom cluster, plus tiny mushrooms; different per wall. | One hand layout repeated. |
+| "it should be evenly random" | Pick per region, not per column with exclusions. | Rules that silently starve one area (top row never cracking). |
+| "looks like a toy" (blaster) | Sharper, curved, purposeful shapes; detail on plain faces. | Planar bevels "trying to be sharp but it's not"; hard corners where a slope starts; a dip before the blade. |
+| "more dirty than sick" | Lighter lit centres, bruised rim, sallow halo. | Dark brown blotches. |
+
+More dictation slips: "roadblocks"/"roadblock studio" = Roblox/Roblox Studio, "flop heap" = Floppy, "glue" = glow, "dispose" = the spots, "Veilume"/"volume" = Veylume, "jewel board" = duel board, "Cosmic Cavern"/"Living Cosmic" = Comic Cavern/Living Comic, "slug terror" = Slugterra, "dimish map" = a map of merging biomes (exact word unclear).
+
+**Working pattern in these rounds:** the owner critiques one asset at a time, praises with "perfect"/"beautiful" while adding one more tweak, interjects mid-task (the colour bank, then withdrawing bark mushrooms), and only offers options when stuck ("not sure what we could do"). When stuck, offer four or five clearly different directions with a recommendation. If all are rejected, ask what *kind* of thing (built, alive, natural, open) before offering more.

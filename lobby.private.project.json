@@ -1,0 +1,70 @@
+{
+  "name": "SlugshotLookTest",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34877,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "LookPack": {
+        "$path": "experiments/lobby/shared/LookPack.luau"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "LookTest": {
+        "$path": "experiments/lobby/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "LookTest": {
+          "$path": "experiments/lobby/client"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "LobbyAssets": {
+        "$path": "private-assets/lobby/LobbyAssets.luau"
+      },
+      "LobbyMaterials": {
+        "$path": "private-assets/lobby/materials.rbxmx"
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": {
+          "Enum": 4
+        },
+        "ClockTime": 0,
+        "Brightness": 0,
+        "ShadowSoftness": 0
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            4,
+            1,
+            4
+          ],
+          "Position": [
+            0,
+            0.01,
+            30
+          ],
+          "Transparency": 1,
+          "CanCollide": false
+        }
+      }
+    }
+  }
+}
