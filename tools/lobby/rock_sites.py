@@ -127,7 +127,8 @@ def fissure_map(vs, fs, ctx):
     fs = fs.replace("void main() {", "void unusedMain() {", 1) + """
 void main() {
   vec2 x = (gl_FragCoord.xy/400.0*2.0 - 1.0)*8.0;
-  fragColor = vec4(topFissure(x).x, 0.0, 0.0, 1.0);
+  vec2 fc = topFissure(x);
+  fragColor = vec4(fc.x, fc.y, 0.0, 1.0);
 }
 """
     vs, fs = desktop_glsl(vs, fs, 4)
@@ -137,8 +138,8 @@ void main() {
     fbo = ctx.framebuffer(color_attachments=[tex])
     fbo.use()
     vao.render()
-    data = np.frombuffer(fbo.read(components=4, dtype="f4"), dtype="f4").reshape(size, size, 4)[:, :, 0]
-    return data, size
+    data = np.frombuffer(fbo.read(components=4, dtype="f4"), dtype="f4").reshape(size, size, 4)
+    return data[:, :, 0], data[:, :, 1], size
 
 
 def crack_sites(data, size, count, spacing, inner, outer, rnd, taken, band=(-1.0, -0.02), per_sector=99):
@@ -170,28 +171,59 @@ def crack_sites(data, size, count, spacing, inner, outer, rnd, taken, band=(-1.0
 
 def sprouts(vs, fs, ctx):
     rnd = random.Random(53)
-    data, size = fissure_map(vs, fs, ctx)
+    data, widths, size = fissure_map(vs, fs, ctx)
     taken = []
     crystals = []
-    # Several really small ones sprouting from each crack (owner, 2026-11-01). Their bases sit down inside it.
-    labels, count = ndimage.label(data < -0.03)
+    # Mini copies of the standard cyan cluster, alternating with indigo (owner, 2026-11-01). Each is rooted into one of the
+    # crack's walls and leans up and out from it. A site is only used if the cluster clears the opposite wall and its neighbours.
+    grad_z, grad_x = np.gradient(data)
+    cell = 16/size
+
+    def solid(x, y, z):
+        if y >= 0:
+            return False
+        ix, iz = int(np.clip((x + 8)/cell, 0, size - 1)), int(np.clip((z + 8)/cell, 0, size - 1))
+        width = widths[iz, ix]
+        deep = min(0.25 + width*3, 1.0)
+        return data[iz, ix] + width*min(-y/deep, 1.0) >= 0 or -y > deep*0.9
+
+    labels, count = ndimage.label(data < -0.008)
+    colour = 0
     for crack in range(1, count + 1):
-        zs, xs = np.nonzero(labels == crack)
-        if len(xs) < 60:
-            continue
+        zs, xs = np.nonzero((labels == crack) & (data > -0.07) & (data < -0.012))
         chosen = 0
         for i in rnd.sample(range(len(xs)), len(xs)):
-            x, z = (xs[i] + 0.5)/size*16 - 8, (zs[i] + 0.5)/size*16 - 8
+            iz, ix = zs[i], xs[i]
+            x, z = (ix + 0.5)/size*16 - 8, (iz + 0.5)/size*16 - 8
             if min(abs(x), abs(z)) < 1.3 and math.hypot(x, z) > 4.0:
                 continue
-            if any(math.hypot(x - a, z - b) < 0.42 for a, b in taken):
+            if any(math.hypot(x - a, z - b) < 0.8 for a, b in taken):
+                continue
+            gx, gz = grad_x[iz, ix], grad_z[iz, ix]
+            length = math.hypot(gx, gz)
+            if length < 1e-5:
+                continue
+            gx, gz = gx/length, gz/length
+            width = widths[iz, ix]
+            wall = -data[iz, ix]/width*min(0.25 + width*3, 1.0)
+            # High on the wall, so the crystal stands up out of the crack and can be seen.
+            if not 0.05 < wall < 0.17:
+                continue
+            # The base sits inside the rock, so the wall visibly holds it.
+            site = [x + gx*0.05, -wall - 0.045, z + gz*0.05]
+            direction = norm([-gx*0.55 + rnd.uniform(-0.1, 0.1), 1.0, -gz*0.55 + rnd.uniform(-0.1, 0.1)])
+            s = rnd.uniform(0.05, 0.072)
+            reach = 4.7*s
+            if any(solid(*[site[k] + direction[k]*reach*f for k in range(3)]) for f in (0.4, 0.55, 0.7, 0.85, 1.0)):
                 continue
             taken.append((x, z))
-            direction = norm([x/20 + rnd.uniform(-0.3, 0.3), 1.0, z/20 + rnd.uniform(-0.3, 0.3)])
-            crystals.append(f"  smallCrystal(q, {vec([x, -0.09, z])}, {vec(direction)}, {rnd.uniform(0.17, 0.34):.2f}, {rnd.uniform(0.024, 0.048):.3f}, {float(rnd.randrange(14)):.1f}, res);")
+            crystals.append(f"  crackCluster(q, {vec(site)}, {vec(direction)}, {s:.3f}, {rnd.uniform(0, 6.28):.2f}, {19.0 if colour % 2 else 0.0}, res);")
+            colour += 1
             chosen += 1
-            if chosen == 6:
+            if chosen == 5:
                 break
+        if len(xs):
+            print(f"crack {crack}: {chosen} crystals")
     lines = []
     seed = 300.0
     # Eight single mushrooms along crack edges, spread around the island and out of the middle so they never clump

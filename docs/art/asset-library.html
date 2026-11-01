@@ -986,7 +986,7 @@ vec2 topFissure(vec2 x) {
   fissureSeg(x, vec2(-1.382, 0.242), vec2(-1.171, 0.321), 0.046, 0.024, best);
   fissureSeg(x, vec2(-1.171, 0.321), vec2(-0.960, 0.400), 0.024, 0.003, best);
   fissureSeg(x, vec2(-3.200, -0.800), vec2(-1.792, -0.768), 0.107, 0.003, best);
-  return vec2(best.x - best.y*0.6 - 0.004, max(best.y*1.6, 0.07));
+  return vec2(best.x - best.y*0.2 - 0.004, max(best.y*1.2, 0.07));
 }
 float fissureDepth(float halfWidth) { return min(0.25 + halfWidth*3.0, 1.0); }
 float rockBody(vec3 q) {
@@ -1374,6 +1374,21 @@ void smallCrystal(vec3 q, vec3 site, vec3 dir, float L, float R, float k, inout 
   float d = crystalDir(q, site - dir*0.08, dir, L, R);
   if (d < res.x) res = vec2(d, 19.0 + k*0.05);
 }
+// A shrunken copy of the standard cyan crystal cluster, growing out of a crack's wall along dir. colour 19 is the cracks' indigo.
+void crackCluster(vec3 q, vec3 site, vec3 dir, float s, float yaw, float colour, inout vec2 res) {
+  float far = length(q - site - dir*2.4*s) - 3.4*s;
+  if (far > res.x) return;
+  vec3 ax = normalize(cross(vec3(0.0, 0.0, 1.0), dir)), az = cross(ax, dir), d0 = q - site;
+  vec3 l = vec3(dot(d0, ax), dot(d0, dir), dot(d0, az))/s;
+  l.xz = rot(yaw)*l.xz;
+  float d = crystal(l, vec3(0.0), 0.0, 0.05, 4.7, 0.72);
+  d = min(d, crystal(l, vec3(0.35, 0.0, 0.15), 0.8, 0.48, 3.3, 0.55));
+  d = min(d, crystal(l, vec3(-0.3, 0.0, 0.3), 2.6, 0.5, 2.6, 0.5));
+  d = min(d, crystal(l, vec3(-0.2, 0.0, -0.35), 4.0, 0.36, 3.6, 0.58));
+  d = min(d, crystal(l, vec3(0.6, -0.1, -0.3), 1.7, 0.72, 1.8, 0.4));
+  d *= s*0.75;
+  if (d < res.x) res = vec2(d, 19.0 + colour*0.05);
+}
 // @rock-dressing-begin
 float rootField(vec3 q) {
   float d = 1e3, bs;
@@ -1520,48 +1535,39 @@ void rockSmallCrystals(vec3 q, inout vec2 res) {
 }
 void rockSprouts(vec3 q, inout vec2 res) {
   float stems = 1e5, caps = 1e5, capIdx = 0.0;
-  wallShroom(q, vec3(3.580, -0.060, -1.220), vec3(0.0, 1.0, 0.0), 300.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.420, -0.060, 3.060), vec3(0.0, 1.0, 0.0), 301.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-3.220, -0.060, -1.380), vec3(0.0, 1.0, 0.0), 302.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.220, -0.060, -3.660), vec3(0.0, 1.0, 0.0), 303.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(3.380, -0.060, -4.260), vec3(0.0, 1.0, 0.0), 304.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.340, -0.060, 4.500), vec3(0.0, 1.0, 0.0), 305.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(-2.620, -0.060, 2.060), vec3(0.0, 1.0, 0.0), 306.0, 2.0, stems, caps, capIdx);
-  wallShroom(q, vec3(1.180, -0.060, 3.140), vec3(0.0, 1.0, 0.0), 307.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(2.260, -0.060, -4.980), vec3(0.0, 1.0, 0.0), 300.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(3.180, -0.060, -1.620), vec3(0.0, 1.0, 0.0), 301.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-2.300, -0.060, 4.020), vec3(0.0, 1.0, 0.0), 302.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(1.620, -0.060, 2.900), vec3(0.0, 1.0, 0.0), 303.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(-4.100, -0.060, -1.940), vec3(0.0, 1.0, 0.0), 304.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(4.460, -0.060, 1.860), vec3(0.0, 1.0, 0.0), 305.0, 2.0, stems, caps, capIdx);
+  wallShroom(q, vec3(5.380, -0.060, -1.460), vec3(0.0, 1.0, 0.0), 306.0, 2.0, stems, caps, capIdx);
   if (stems < res.x) res = vec2(stems, 13.0);
   if (caps < res.x) res = vec2(caps, 15.0 + capIdx*0.05);
-  smallCrystal(q, vec3(0.980, -0.090, -2.980), vec3(0.236, 0.944, -0.231), 0.24, 0.025, 10.0, res);
-  smallCrystal(q, vec3(1.260, -0.090, -2.580), vec3(0.316, 0.946, 0.077), 0.22, 0.029, 6.0, res);
-  smallCrystal(q, vec3(1.020, -0.090, -3.500), vec3(-0.172, 0.938, -0.300), 0.26, 0.025, 1.0, res);
-  smallCrystal(q, vec3(1.820, -0.090, -1.620), vec3(0.143, 0.964, -0.224), 0.32, 0.035, 4.0, res);
-  smallCrystal(q, vec3(1.620, -0.090, -2.340), vec3(-0.190, 0.973, 0.128), 0.25, 0.032, 7.0, res);
-  smallCrystal(q, vec3(0.540, -0.090, -3.340), vec3(0.204, 0.936, -0.287), 0.22, 0.035, 6.0, res);
-  smallCrystal(q, vec3(2.980, -0.090, -3.140), vec3(0.180, 0.969, -0.171), 0.24, 0.029, 13.0, res);
-  smallCrystal(q, vec3(3.140, -0.090, -4.260), vec3(0.123, 0.951, -0.284), 0.22, 0.026, 10.0, res);
-  smallCrystal(q, vec3(3.180, -0.090, -2.460), vec3(0.385, 0.917, -0.107), 0.23, 0.026, 9.0, res);
-  smallCrystal(q, vec3(2.540, -0.090, -4.540), vec3(0.127, 0.968, -0.216), 0.29, 0.045, 1.0, res);
-  smallCrystal(q, vec3(3.260, -0.090, -3.540), vec3(-0.006, 1.000, 0.015), 0.23, 0.035, 2.0, res);
-  smallCrystal(q, vec3(2.700, -0.090, -3.500), vec3(0.200, 0.973, -0.111), 0.24, 0.039, 10.0, res);
-  smallCrystal(q, vec3(-4.220, -0.090, -1.660), vec3(-0.290, 0.937, 0.195), 0.21, 0.046, 2.0, res);
-  smallCrystal(q, vec3(-1.660, -0.090, 0.180), vec3(0.034, 0.988, 0.152), 0.28, 0.030, 3.0, res);
-  smallCrystal(q, vec3(-3.340, -0.090, -1.220), vec3(-0.025, 0.999, -0.039), 0.31, 0.027, 6.0, res);
-  smallCrystal(q, vec3(-3.300, -0.090, -0.620), vec3(-0.180, 0.956, 0.233), 0.23, 0.035, 3.0, res);
-  smallCrystal(q, vec3(-2.500, -0.090, -0.300), vec3(-0.256, 0.923, -0.286), 0.30, 0.027, 5.0, res);
-  smallCrystal(q, vec3(-2.060, -0.090, -0.300), vec3(0.075, 0.995, 0.059), 0.32, 0.028, 11.0, res);
-  smallCrystal(q, vec3(3.900, -0.090, 1.380), vec3(0.144, 0.971, 0.192), 0.33, 0.035, 5.0, res);
-  smallCrystal(q, vec3(4.260, -0.090, 1.620), vec3(0.403, 0.915, -0.031), 0.25, 0.036, 12.0, res);
-  smallCrystal(q, vec3(-2.900, -0.090, 4.260), vec3(0.052, 0.939, 0.340), 0.17, 0.025, 1.0, res);
-  smallCrystal(q, vec3(-2.300, -0.090, 2.300), vec3(-0.216, 0.971, 0.099), 0.26, 0.025, 11.0, res);
-  smallCrystal(q, vec3(-2.140, -0.090, 2.700), vec3(0.090, 0.970, 0.225), 0.33, 0.042, 12.0, res);
-  smallCrystal(q, vec3(-2.620, -0.090, 3.340), vec3(-0.320, 0.880, 0.351), 0.18, 0.045, 6.0, res);
-  smallCrystal(q, vec3(-1.940, -0.090, 3.100), vec3(0.069, 0.995, 0.067), 0.28, 0.029, 11.0, res);
-  smallCrystal(q, vec3(-2.500, -0.090, 3.780), vec3(-0.165, 0.982, 0.087), 0.33, 0.047, 6.0, res);
-  smallCrystal(q, vec3(3.180, -0.090, 2.420), vec3(0.199, 0.976, -0.092), 0.21, 0.046, 10.0, res);
-  smallCrystal(q, vec3(2.780, -0.090, 2.180), vec3(0.268, 0.962, 0.048), 0.17, 0.036, 9.0, res);
-  smallCrystal(q, vec3(2.700, -0.090, 2.660), vec3(-0.127, 0.937, 0.327), 0.24, 0.043, 0.0, res);
-  smallCrystal(q, vec3(2.140, -0.090, 2.340), vec3(-0.108, 0.993, -0.052), 0.28, 0.035, 8.0, res);
-  smallCrystal(q, vec3(3.980, -0.090, 2.580), vec3(0.398, 0.909, -0.126), 0.29, 0.024, 12.0, res);
-  smallCrystal(q, vec3(1.740, -0.090, 2.580), vec3(0.107, 0.994, 0.039), 0.24, 0.036, 10.0, res);
+  crackCluster(q, vec3(1.142, -0.206, -2.628), vec3(0.416, 0.831, -0.369), 0.061, 1.29, 0.0, res);
+  crackCluster(q, vec3(0.490, -0.120, -3.775), vec3(0.440, 0.891, -0.113), 0.052, 4.95, 19.0, res);
+  crackCluster(q, vec3(1.829, -0.199, -2.109), vec3(-0.527, 0.848, 0.057), 0.054, 1.37, 0.0, res);
+  crackCluster(q, vec3(1.916, -0.155, -1.256), vec3(0.254, 0.893, -0.372), 0.072, 0.67, 19.0, res);
+  crackCluster(q, vec3(3.149, -0.181, -2.810), vec3(-0.487, 0.866, -0.113), 0.055, 2.51, 0.0, res);
+  crackCluster(q, vec3(2.573, -0.179, -4.202), vec3(0.480, 0.847, -0.229), 0.052, 1.63, 19.0, res);
+  crackCluster(q, vec3(3.429, -0.157, -1.129), vec3(-0.498, 0.866, -0.032), 0.071, 5.08, 0.0, res);
+  crackCluster(q, vec3(3.182, -0.134, -1.907), vec3(0.321, 0.863, -0.390), 0.071, 3.80, 19.0, res);
+  crackCluster(q, vec3(3.310, -0.138, -3.733), vec3(-0.411, 0.912, -0.018), 0.051, 4.08, 0.0, res);
+  crackCluster(q, vec3(-5.087, -0.214, -1.622), vec3(0.312, 0.839, 0.446), 0.052, 1.64, 19.0, res);
+  crackCluster(q, vec3(-3.631, -0.205, -1.421), vec3(-0.231, 0.881, 0.413), 0.064, 5.15, 0.0, res);
+  crackCluster(q, vec3(-2.682, -0.213, -0.255), vec3(0.192, 0.899, -0.393), 0.062, 2.96, 19.0, res);
+  crackCluster(q, vec3(-1.316, -0.178, 0.176), vec3(-0.152, 0.860, 0.487), 0.051, 0.42, 0.0, res);
+  crackCluster(q, vec3(-1.917, -0.125, -0.824), vec3(-0.163, 0.867, 0.471), 0.051, 5.53, 19.0, res);
+  crackCluster(q, vec3(3.812, -0.208, 1.286), vec3(0.469, 0.870, 0.153), 0.053, 4.31, 0.0, res);
+  crackCluster(q, vec3(-2.450, -0.124, 3.904), vec3(-0.499, 0.859, -0.116), 0.050, 6.17, 19.0, res);
+  crackCluster(q, vec3(-2.455, -0.116, 3.064), vec3(0.400, 0.868, 0.293), 0.055, 2.81, 0.0, res);
+  crackCluster(q, vec3(-1.979, -0.190, 1.709), vec3(0.366, 0.901, 0.233), 0.060, 1.30, 19.0, res);
+  crackCluster(q, vec3(-2.826, -0.190, 4.680), vec3(0.484, 0.847, -0.218), 0.058, 4.32, 0.0, res);
+  crackCluster(q, vec3(2.587, -0.194, 2.130), vec3(-0.030, 0.883, 0.468), 0.068, 2.98, 19.0, res);
+  crackCluster(q, vec3(1.560, -0.136, 2.786), vec3(-0.273, 0.877, -0.395), 0.072, 4.00, 0.0, res);
+  crackCluster(q, vec3(4.674, -0.126, 2.748), vec3(-0.099, 0.875, -0.474), 0.063, 4.41, 19.0, res);
+  crackCluster(q, vec3(3.860, -0.186, 2.830), vec3(0.021, 0.840, -0.543), 0.063, 1.50, 0.0, res);
+  crackCluster(q, vec3(0.571, -0.165, 2.629), vec3(0.129, 0.845, -0.519), 0.056, 4.34, 19.0, res);
 }
 // @rock-dressing-end
 vec2 spawnRock(vec3 p) {
@@ -2844,9 +2850,16 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 deep, bright;
     bool small = id > 18.9;
     crystalPalette(floor((id - (small ? 19.0 : 18.0))/0.05 + 0.5), deep, bright);
+    if (id > 19.9) { deep = vec3(0.03, 0.015, 0.17); bright = vec3(0.46, 0.33, 1.0); }
     float h = clamp(rockBody(centreLocal(p))/(small ? 0.55 : 1.6), 0.0, 1.0);
+    if (small) h = mix(0.62, 1.0, h);
     if (ASSET == 5 && p.y > 15.0) h = clamp((WELL_LOW + 0.4 - p.y)/6.5 + 0.25, 0.15, 0.85);
+    if (small) {
+      vec3 cl = centreLocal(p);
+      if (cl.y > -0.6 && length(cl.xz) < 7.2) h = clamp((cl.y + 0.34)/0.5, 0.0, 1.0);
+    }
     vec3 c = mix(deep, bright, 0.15 + 0.7*h*h);
+    if (small) c *= 0.6 + 0.6*abs(dot(n, normalize(vec3(0.62, 0.28, -0.73))));
     emit = c*(0.25 + 0.75*h)*TR(id).z*(0.88 + 0.12*sin(uT*0.9 + p.y*1.3));
     spec = 0.6;
     return ASSET == 5 ? c*0.25 : c*0.6;

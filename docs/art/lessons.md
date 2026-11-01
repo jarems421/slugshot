@@ -230,3 +230,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Look before handing over:** a short camera check caught edge-on strips and water passing behind the rim, neither of which any offline check could show.
 - **Never let two shader programs share a hash-derived layout:** the sampling and painting programs compiled the hash differently, so crack paint and crack holes landed in different places for many rounds. If repainting never fixes something, compare what each program actually computes.
 - **Camera-facing sprites and flat transparent layers don't mix:** where a sprite crosses a layer it is cut in a straight line. Switching effects off one at a time found this in one run after a round of guessing.
+- **Tiny detail needs its own fine sampling:** mini crystals melted into blobs at the dressing's grid, and read as real faceted clusters once they had their own piece at a third of that step.
+- **Regenerating a call whose signature changed:** clear the old generated lines first, because the generator compiles the page they sit in.

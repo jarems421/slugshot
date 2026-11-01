@@ -417,6 +417,8 @@ local function buildRock()
 	place("hub-rock")
 	place("hub-rock-dress")
 	addTwinkles("hub-rock-dress", 1.5)
+	place("hub-gems")
+	addTwinkles("hub-gems", 1.3)
 	local debris = place("hub-rock-debris")
 	if debris then
 		for index = 0, 2 do

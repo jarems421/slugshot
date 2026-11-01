@@ -17,6 +17,7 @@ Requires Node, moderngl, numpy, scipy and scikit-image.
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -90,6 +91,7 @@ void main() {
   }
   if (abs(id - 9.0) < 0.5 || abs(id - 17.0) < 0.5 || abs(id - 13.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
   if (id > 2.3 && id < 2.5) { crease = smoothstep(0.2, 0.7, -lap)*0.85; idEdge *= 0.6; }
+  if (id > 18.9 && id < 20.0) { crease = 0.0; idEdge = 0.0; }  // far smaller than the ink's sampling reach
   if (abs(id - 12.0) < 0.5) crease = 0.0;
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
@@ -445,7 +447,7 @@ PIECES = {
         "item": "spawn-rock-1", "map": ROCK_DRESS, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
         "lo": (-10.5, 3.0, -10.5), "hi": (10.5, 14.5, 10.5), "step": 0.022, "normalH": 0.004, "sparkle": "Glow",
         "parts": [
-            part("Gems", in_crack_gems, 2600, 512, FINE_INK*0.8, 1.0, hard=True, cage=0.01),
+            part("Gems", in_crack_gems, 4200, 512, FINE_INK*0.7, 1.0, hard=True, cage=0.01),
             part("Sprouts", in_sprouts, 2400, 512, FINE_INK*0.8, 1.0, cage=0.012),
             part("Roots", by_id((3.5, 4.5)), 4500, 1024, PROP_INK*0.7, 0.7, cage=0.02),
             part("Glow", by_id((15.69, 16.0), (17.5, 20.0), (3.0, 3.5)), 4000, 1024, PROP_INK*1.1, 1.0, cage=0.02),
@@ -494,6 +496,11 @@ PIECES = {
     "hub-portal-pvp": portal_piece("gate-pvp-1", 1.35),
     "hub-portal-training": portal_piece("gate-training-1", 1.1),
     "hub-portal-veylume": portal_piece("gate-veylume-1", 1.1),
+    "hub-gems": {
+        "item": "spawn-rock-1", "map": "minis", "scale": 5.0, "origin": (0.0, 13.0, 0.0), "sparkle": "Minis", "bakeEmit": True,
+        "lo": (-8.0, 12.3, -8.0), "hi": (8.0, 13.6, 8.0), "step": 0.0075, "normalH": 0.0015,
+        "parts": [part("Minis", everything, 4600, 512, FINE_INK*0.7, 1.0, hard=True, cage=0.006)],
+    },
     # The falls' stone basins, and the pools that fill them. A pool is round, so it can turn in place.
     "hub-basin": {
         "item": "maelstrom-1", "map": POOLS, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "uRo": (0.0, 30.0, 0.0),
@@ -542,13 +549,13 @@ PIECES = {
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
     ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
-    # Cracks, painted by depth: a touch of lit stone at the lip, black walls, a thin strip of dark indigo at the very bottom.
-    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.74, 0.93, depthT);"),
+    # Cracks, painted by depth: a touch of lit stone at the lip, black walls, and glowing indigo welling up from the bottom.
+    ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.42, 0.93, depthT); core *= core;"),
     ("fissure = inside*(0.02 + 0.24*depthT*depthT + 1.7*core);", "fissure = inside*(core + 0.001);"),
     ("s = mix(s, mix(vec3(0.012, 0.016, 0.022), vec3(0.22, 0.75, 0.7), core), inside);",
-     "s = mix(s, mix(mix(vec3(0.14, 0.14, 0.18), vec3(0.003, 0.003, 0.006), smoothstep(0.0, 0.1, depthT)), vec3(0.022, 0.012, 0.13), core), inside);"),
-    ("vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));", "vec3 fissureLight = vec3(0.16, 0.1, 0.8);"),
-    ("emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;", "emit += fissureLight*(0.9*fissure + 0.07*fissureHalo*fissureHalo)*TR(id).z;"),
+     "s = mix(s, mix(mix(vec3(0.14, 0.14, 0.18), vec3(0.003, 0.003, 0.006), smoothstep(0.0, 0.1, depthT)), vec3(0.06, 0.035, 0.42), core), inside);"),
+    ("vec3 fissureLight = vec3(0.25, 0.95, 0.88)*(0.85 + 0.15*sin(uT*0.7 + l.x + l.z));", "vec3 fissureLight = vec3(0.2, 0.12, 1.0);"),
+    ("emit += fissureLight*(1.1*fissure + 0.5*fissureHalo*fissureHalo)*TR(id).z;", "emit += fissureLight*(1.1*fissure + 0.22*fissureHalo*fissureHalo)*TR(id).z;"),
     ("m *= 1.0 - fissureHalo*0.85;", "m *= 1.0 - fissureHalo*0.85; if (fissure > 0.0) m = 0.0;"),
     # Rope: fine dark strands (owner: low quality).
     ("float twist = 0.5 + 0.5*sin((abs(p.x)*2.6 + abs(p.z)*2.6 + p.y*2.2)*17.0);",
@@ -557,16 +564,26 @@ GAME_PAINT = (
 )
 
 
+def crack_clusters(page):
+    return "".join(re.findall(r"  crackCluster\(q, vec3.*?;\n", page))
+
+
 class PieceGpu(Gpu):
     def __init__(self, key):
         self.piece = PIECES[key]
         page = PAGE.read_text(encoding="utf-8")
+        clusters = crack_clusters(page)
+        if key == "hub-rock-dress":
+            page = page.replace(clusters, "")
         for old, new in GAME_PAINT:
             assert old in page, old
             page = page.replace(old, new)
         bank, items = dump_renders(extract(page, r'<script id="lib">(.*?)</script>'), {self.piece["item"]})
         fs = extract(page, r'<script id="fs" type="x-shader/x-fragment">(.*?)</script>')
         source = self.piece["map"]
+        if source == "minis":
+            source = ("vec2 assetMap(vec3 p) {\n  vec3 q = p - vec3(0.0, ROCK_TOP, 0.0);\n  vec2 res = vec2(1e3, 19.0);\n"
+                      + clusters + "  return res;\n}\n")
         if source in ("cliff", "juice", "falls", "flora"):
             source = maelstrom_maps(fs)[source]
         elif source in ("rock", "glow", "isles", "bits"):
@@ -792,24 +809,28 @@ def top_plate(gpu):
             "plateLo": lo[[0, 2]].astype("f4"), "plateStep": np.array(step, "f4")}
 
 
-def sparkle_points(gpu, key, out, limit=45):
+def sparkle_points(gpu, key, out):
+    """A twinkle at the tip of each of the piece's biggest crystals."""
     piece = PIECES[key]
-    data = np.load(out/f"{piece['sparkle']}.npz")
-    verts, faces = data["verts"], data["faces"]
-    edges = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]]])
-    graph = coo_matrix((np.ones(len(edges), dtype="i1"), (edges[:, 0], edges[:, 1])), shape=(len(verts), len(verts)))
-    count, labels = connected_components(graph, directed=False)
-    sizes = np.bincount(labels, minlength=count)
-    tips = []
-    for label in np.argsort(sizes)[::-1][:limit]:
-        if sizes[label] < 80:
-            break
-        v = verts[labels == label]
-        tips.append(v[np.argmax(np.linalg.norm(v - v.mean(axis=0), axis=1))])
-    tips = np.array(tips, "f4")
-    _, emit = gpu.paint(tips)
-    colours = emit[:, :3]/np.maximum(emit[:, :3].max(axis=1, keepdims=True), 1e-3)
-    points = [{"p": ((t - np.array(piece["origin"]))*piece["scale"]).tolist(), "c": c.tolist()} for t, c in zip(tips, colours)]
+    points = []
+    for name, limit in ((piece["sparkle"], 30),):
+        data = np.load(out/f"{name}.npz")
+        verts, faces = data["verts"], data["faces"]
+        edges = np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]]])
+        graph = coo_matrix((np.ones(len(edges), dtype="i1"), (edges[:, 0], edges[:, 1])), shape=(len(verts), len(verts)))
+        count, labels = connected_components(graph, directed=False)
+        sizes = np.bincount(labels, minlength=count)
+        tips = []
+        print(f"  {name}: {count} separate pieces", flush=True)
+        for label in np.argsort(sizes)[::-1][:limit]:
+            if sizes[label] < 80:
+                break
+            v = verts[labels == label]
+            tips.append(v[np.argmax(v[:, 1])])
+        tips = np.array(tips, "f4")
+        _, emit = gpu.paint(tips)
+        colours = emit[:, :3]/np.maximum(emit[:, :3].max(axis=1, keepdims=True), 1e-3)
+        points += [{"p": ((t - np.array(piece["origin"]))*piece["scale"]).tolist(), "c": c.tolist()} for t, c in zip(tips, colours)]
     (out/"points.json").write_text(json.dumps(points))
     print(f"  {len(points)} twinkle points", flush=True)
 
@@ -871,9 +892,9 @@ def mesh(key):
     (out/"meta.json").write_text(json.dumps(meta, indent=1))
 
 
-EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow", "Gems"}
+EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 0.45, "Gems": 2.2, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 2.6, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def paint(key):
@@ -926,6 +947,9 @@ def paint(key):
                 # Stems stay plain, so the caps read as what glows.
                 stems = dilate((np.abs(ids - 13.0) < 0.5)[..., None].astype("f4"), valid)[..., 0] > 0.5
                 mask = np.where(stems, 0.0, mask)
+            if g["name"] == "Minis":
+                # Glowing all over, brightest at the tips, so they light up from any angle (owner).
+                mask = np.maximum(mask, 0.6)
             Image.fromarray((mask*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-emit.png")
             over = base.max(axis=2)[valid & (mask > 0.5)]
             g["emit"] = f"textures/{g['name']}-emit.png"
