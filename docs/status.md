@@ -1,6 +1,6 @@
 # Current status
 
-**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well concept v5 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). **Unresolved:** owner review.
+**Implemented, 2026-11-01 (`experiment/lobby`):** Sky Well concept v6 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). **Unresolved:** owner review.
 
 **Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). Next: Sky Well, owner's choice. Not yet built for Roblox.
 

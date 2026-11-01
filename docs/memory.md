@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v6
+
+- **Owner feedback on v5:** the inside looks like a hole going into a storm, but it should look like the storm is coming through the hole, for example with lightning coming through.
+- **Implemented/verified offline:** swirling cloud pouring down the shaft and hanging below the mouth, jagged bolts down through the opening, flashes lighting the shaft, and broken rock lining it. Renders inspected.
+- **Unresolved:** owner review; all of this needs a Roblox technique, as Roblox has no volumetric cloud.
+
 ## 2026-11-01 - Sky Well v5
 
 - **Owner feedback on v4:** debris should bob more; some chunks are still too big; the light is too cylindrical and not diffused, which would look horrible on the map.
