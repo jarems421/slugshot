@@ -74,14 +74,43 @@ local function load(key: string): Model?
 	if hi.Y > lo.Y then
 		model:ScaleTo(model:GetScale() * info.height / (hi.Y - lo.Y))
 	end
-	-- Concept coordinates map onto the model through the centre of the painted bounds.
+	-- Concept coordinates map onto the model through the centre of the painted bounds, but the import also
+	-- flips axes (the concept's -Z side, where wall dressing faces, arrives facing +Z). A plain offset put
+	-- each wall's sparkles in the rock behind its crystals, so measure the flip: the one that best puts each
+	-- group's concept centre on its imported part wins.
 	lo, hi = paintedBounds(model)
-	LookPack.addEffects(model, info, private.fx, (lo + hi) / 2 - info.center)
+	local centre = (lo + hi) / 2
+	local scale = (hi.Y - lo.Y) / info.height
+	local best, bestError = Vector3.one, math.huge
+	for _, flip in
+		{
+			Vector3.new(1, 1, 1),
+			Vector3.new(-1, 1, -1),
+			Vector3.new(-1, 1, 1),
+			Vector3.new(1, 1, -1),
+		}
+	do
+		local err = 0
+		for name, spec in info.groups do
+			local part = model:FindFirstChild(name)
+			if part and part:IsA("MeshPart") then
+				err += ((part.Position - centre) - (spec.center - info.center) * flip * scale).Magnitude
+			end
+		end
+		if err < bestError then
+			best, bestError = flip, err
+		end
+	end
+	print(`LookTest: {key} import axes {best} (fit error {string.format("%.2f", bestError)})`)
+	LookPack.addEffects(model, info, private.fx, function(p: Vector3): Vector3
+		return centre + (p - info.center) * best * scale
+	end)
 	loaded[key] = model
 	return model:Clone()
 end
 
--- Stand a model on the floor at (x, z), turned by yaw degrees (0 = its front faces -Z).
+-- Stand a model on the floor at (x, z), turned by yaw degrees (0 = the concept's front, its -Z side,
+-- faces +Z after import).
 local function place(key: string, x: number, z: number, yaw: number): Model?
 	local model = load(key)
 	if not model then

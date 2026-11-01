@@ -44,6 +44,12 @@ How Slugshot gets its "Living Comic-Book Fantasy" look in Roblox, which has no c
 - **Walls:** the owner disliked the blue cast ("don't just make the rocks blue"). Ambient and fog are now dark and nearly neutral, and each wall is lit from above its top edge by a warm-white `SpotLight` with shadows.
 - **Small mushrooms read as "angular shards":** about 21 wall mushrooms shared roughly 300 triangles. Small-detail groups now keep at least a quarter of their dense triangles (up to 4,000), the wall is sampled at 0.05 studs, and small caps and wall stems use a 0.06-stud outline so the ink stays in proportion.
 
+## Round 4 (owner 2026-11-01)
+
+- **Black-void mushrooms, missing crystals:** Blender's normal recalculation had turned open pieces inside out (wall caps, stems and crystals, and gate iron and stone). Builds now keep the outward marching-cubes winding with a per-island guard. See [lessons](lessons.md#recalculate-outside-turned-small-pieces-inside-out).
+- **Ragged black patches at sprout bases:** material-boundary ink is now a thin contact line measured along the surface.
+- **Sparkles from gaps:** effect points now follow the axis flip Roblox applies to glTF imports, measured per asset at load.
+
 ## Pipeline: final concept to Roblox
 
 Run from the lobby worktree. Python means the scratch venv with moderngl, numpy, Pillow and scikit-image. Blender is 5.2.3.

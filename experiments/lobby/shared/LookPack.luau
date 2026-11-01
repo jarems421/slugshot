@@ -212,7 +212,7 @@ function LookPack.blend(moods: { Mood }, weights: { number }): Mood
 	}
 end
 
-export type GroupSpec = { ink: string?, emissive: number }
+export type GroupSpec = { ink: string?, emissive: number, center: Vector3 }
 
 -- Asset rules for a model imported from the Blender pipeline: clone the prebuilt SurfaceAppearance for
 -- each painted group (map setters are plugin-only), turn "_Ink" shells into flat unlit-looking charcoal,
@@ -306,15 +306,16 @@ end
 -- Glow effects for an imported asset (round 2, owner 2026-11-01): every crystal gets a small light that
 -- lights the rock around it plus star twinkles scaled to its size; small glowing mushroom caps get a light
 -- only (no spores); the giant mushroom drops a continuous stream of glowing spores that fade at the floor.
--- `conceptToWorld` maps concept coordinates (studs) to the model's world position.
+-- `conceptToWorld` maps concept coordinates (studs) to world space, including the axis flip the import
+-- applies (measured in LookTest.server).
 function LookPack.addEffects(
 	model: Model,
 	info: AssetInfo,
 	fx: { spore: number, twinkle: number },
-	conceptToWorld: Vector3
+	conceptToWorld: (Vector3) -> Vector3
 )
 	for _, pt in info.points do
-		local world = pt.p + conceptToWorld
+		local world = conceptToWorld(pt.p)
 		local size = math.max(pt.s, 0.3)
 		local part = fxPart("Glow_" .. pt.kind, world, Vector3.one * size * 1.6, model)
 		if pt.kind == "crystal" then
@@ -352,7 +353,7 @@ function LookPack.addEffects(
 		local glow = spores.c
 		local source = fxPart(
 			"SporeSource",
-			spores.p + conceptToWorld,
+			conceptToWorld(spores.p),
 			Vector3.new(spores.r * 2, 0.4, spores.r * 2),
 			model
 		)
@@ -373,7 +374,7 @@ function LookPack.addEffects(
 			NumberSequenceKeypoint.new(0.85, 0.25),
 			NumberSequenceKeypoint.new(1, 1),
 		})
-		e.Lifetime = NumberRange.new((spores.p.Y + conceptToWorld.Y) / fall * 0.95)
+		e.Lifetime = NumberRange.new(conceptToWorld(spores.p).Y / fall * 0.95)
 		e.Rate = 9
 		e.Speed = NumberRange.new(fall * 0.9, fall * 1.1)
 		e.SpreadAngle = Vector2.new(8, 8)

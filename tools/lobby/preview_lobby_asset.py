@@ -36,6 +36,7 @@ for o in list(scene.objects):
 
 def textured(name, g):
     mat = bpy.data.materials.new("Preview_" + name)
+    mat.use_backface_culling = True  # as Roblox does, so inside-out pieces show up here too
     mat.use_nodes = True
     nt = mat.node_tree
     bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
@@ -102,10 +103,11 @@ scene.collection.objects.link(warm)
 cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
 scene.collection.objects.link(cam)
 scene.camera = cam
-for name, yaw in (("threequarter", -0.65), ("front", 0.0)):
-    d = size*1.9
-    # Blender front is -Y (Roblox -Z).
-    cam.location = centre + Vector((math.sin(yaw)*d, -math.cos(yaw)*d, size*0.45))
+# The low view looks up under overhangs, where a player standing next to the asset sees it.
+for name, yaw, dist, rise in (("threequarter", -0.65, 1.9, 0.45), ("front", 0.0, 1.9, 0.45), ("low", 0.35, 0.8, -0.3)):
+    d = size*dist
+    # The concept's front (its -Z side, where wall dressing faces) is Blender +Y.
+    cam.location = centre + Vector((math.sin(yaw)*d, math.cos(yaw)*d, size*rise))
     cam.rotation_euler = (centre - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.render.filepath = str(OUT/f"preview_{name}.png")
     bpy.ops.render.render(write_still=True)

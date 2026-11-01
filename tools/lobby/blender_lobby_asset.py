@@ -17,6 +17,7 @@ from pathlib import Path
 import bmesh
 import bpy
 import numpy as np
+from mathutils.bvhtree import BVHTree
 
 ARGS = sys.argv[sys.argv.index("--") + 1:]
 KEY = ARGS[0]
@@ -69,12 +70,41 @@ def build_dense(name, data):
         p.use_smooth = True
     obj = bpy.data.objects.new(name + "_Dense", me)
     bpy.context.scene.collection.objects.link(obj)
-    select_only(obj)
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.mesh.normals_make_consistent(inside=False)
-    bpy.ops.object.mode_set(mode="OBJECT")
     return obj
+
+
+def orient_like(low, dense):
+    """Keep the marching-cubes winding, which faces outward. Blender's "recalculate outside" guesses wrong
+    on open pieces (a mushroom cap cut where it meets its stem) and turned whole caps, stems and crystals
+    inside out, so Roblox culled them and only their ink showed. Flip any island the dense mesh disagrees
+    with instead."""
+    tree = BVHTree.FromObject(dense, bpy.context.evaluated_depsgraph_get())
+    bm = bmesh.new()
+    bm.from_mesh(low.data)
+    seen, flipped = set(), 0
+    for face in bm.faces:
+        if face in seen:
+            continue
+        island, stack = [], [face]
+        seen.add(face)
+        while stack:
+            f = stack.pop()
+            island.append(f)
+            for e in f.edges:
+                for g in e.link_faces:
+                    if g not in seen:
+                        seen.add(g)
+                        stack.append(g)
+        votes = 0
+        for f in island:
+            normal = tree.find_nearest(f.calc_center_median())[1]
+            votes += 1 if normal is not None and normal.dot(f.normal) > 0 else -1
+        if votes < 0:
+            bmesh.ops.reverse_faces(bm, faces=island)
+            flipped += 1
+    bm.to_mesh(low.data)
+    bm.free()
+    return flipped
 
 
 def make_low(dense, name, target):
@@ -89,10 +119,12 @@ def make_low(dense, name, target):
         md.use_collapse_triangulate = True
         select_only(low)
         bpy.ops.object.modifier_apply(modifier=md.name)
+    flipped = orient_like(low, dense)
+    if flipped:
+        print(f"{name}: re-oriented {flipped} islands")
     select_only(low)
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.mesh.normals_make_consistent(inside=False)
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.004)
     bpy.ops.object.mode_set(mode="OBJECT")
     for p in low.data.polygons:

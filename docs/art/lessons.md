@@ -79,6 +79,24 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - Raising a blue-violet ambient to make walls visible tinted all the stone blue, and the owner rejected it.
 - **Rule:** keep ambient dark and near neutral, and light surfaces with placed lights so materials keep their own colour.
 
+### "Recalculate outside" turned small pieces inside out
+
+- **Symptom (owner, round 4):** some wall mushrooms were "black voids" with a ring of light and no glow, some sprout bases looked strange, few crystals showed and sparkles came "from nowhere".
+- **Cause:** each material group is an open surface, cut where it meets the next material. Blender's `normals_make_consistent` guesses wrong on open pieces: it flipped 13 of 52 wall caps, 15 of 34 stems, the biggest wall crystals, and part of the gate's iron and stone. Roblox culls back faces, so a flipped piece vanished and its ink shell (built along the flipped normals) became a shrunken black copy.
+- **Fix:** keep the marching-cubes winding, which faces outward. `orient_like` flips any decimated island the dense mesh disagrees with as a guard. Previews now cull back faces like Roblox and include a low view under overhangs; they had hidden the problem.
+- **Check:** compare every island's face normals with the dense source mesh. All groups now read zero flipped islands.
+
+### Boundary ink sampled into the air
+
+- **Symptom:** ragged black patches around crystal and mushroom bases, and dark stems and caps.
+- **Cause:** the concept's material-boundary ink compares four diagonal samples about 0.15 to 0.3 studs away. Painted per texel, those samples landed in the air beyond thin stems and caps, where the nearest material is the rock. That inked 63% of stem texels, 42% of caps and 23% of crystals.
+- **Fix:** the painter samples a ring of points in the surface's tangent plane, snaps each back onto the surface and inks only where the material changes there: a fixed 0.045-stud contact line. Coverage dropped to 4%, 7% and 2%. Crease ink is unchanged.
+
+### Roblox flips the axes of glTF imports
+
+- The concept's −Z side, where wall dressing faces, arrives in Roblox facing +Z. Effect points placed with a plain offset were mirrored into the rock behind each crystal, so twinkles rose from gaps.
+- The look test now measures the flip per asset: it records each group's concept centre and picks the axis flip that best lands those centres on the imported parts. The Output log prints the result as `LookTest: <key> import axes …`.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

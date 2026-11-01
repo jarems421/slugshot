@@ -67,7 +67,9 @@ def effect_points(k):
     data = {f.stem: np.load(f) for f in meshes.glob("*.npz")}
     allv = np.concatenate([d["verts"] for d in data.values()])
     lo, hi = allv.min(axis=0), allv.max(axis=0)
-    out = {"height": round(float(hi[1] - lo[1]), 3), "center": ((lo + hi)/2).tolist(), "points": []}
+    out = {"height": round(float(hi[1] - lo[1]), 3), "center": ((lo + hi)/2).tolist(), "points": [],
+           # Each group's bounds centre lets the look test measure how Roblox oriented the import.
+           "groupCenters": {n: ((d["verts"].min(axis=0) + d["verts"].max(axis=0))/2).tolist() for n, d in data.items()}}
     for name, kind, cell in (("Crystal", "crystal", 2.0), ("GlowCap", "cap", 3.0), ("Gem", "gem", 6.0)):
         if name not in data:
             continue
@@ -157,7 +159,8 @@ def main():
         lines.append("\t\t\tgroups = {")
         for name, g in e["groups"].items():
             ink = f'"{g["ink"]}"' if g["ink"] else "nil"
-            lines.append(f'\t\t\t\t{name} = {{ ink = {ink}, emissive = {g["emissive"]} }},')
+            centre = v3(e["groupCenters"][name])
+            lines.append(f'\t\t\t\t{name} = {{ ink = {ink}, emissive = {g["emissive"]}, center = {centre} }},')
         lines.append("\t\t\t},")
         lines.append("\t\t\tpoints = {")
         for pt in e["points"]:

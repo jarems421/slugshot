@@ -72,14 +72,25 @@ void main() {
   float id = assetMap(p - n*0.01).y;
   vec3 emit; float spec;
   vec3 alb = albedo(id, p, n, emit, spec);
-  // Interior ink exactly as the library draws it: creases plus material boundaries.
+  // Interior ink: creases exactly as the library draws them, plus material boundaries.
   float e = 0.09*max(creaseScale(id), 0.6);
   float cs = TR(id).y;
   vec2 s1 = assetMap(p + vec3(e, -e, -e)), s2 = assetMap(p + vec3(-e, -e, e));
   vec2 s3 = assetMap(p + vec3(-e, e, -e)), s4 = assetMap(p + vec3(e, e, e));
   float lap = (s1.x + s2.x + s3.x + s4.x - 4.0*assetMap(p).x)/e;
   float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + 0.5*smoothstep(1.4/cs, 2.4/cs, lap);
-  float idEdge = (abs(s1.y - id) + abs(s2.y - id) + abs(s3.y - id) + abs(s4.y - id)) > 0.5 ? 1.0 : 0.0;
+  // Material boundaries are found along the surface: a ring of points in the tangent plane, each snapped
+  // back onto the surface, so the line has a fixed width. The library's four diagonal samples reach past
+  // thin stems and caps into air, where the nearest material is the rock, and inked most of each sprout.
+  vec3 t1 = normalize(cross(n, abs(n.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));
+  vec3 t2 = cross(n, t1);
+  float idEdge = 0.0;
+  for (int k = 0; k < 6; k++) {
+    float a = float(k)*1.0472;
+    vec3 q = p + (t1*cos(a) + t2*sin(a))*0.045;
+    for (int j = 0; j < 2; j++) q -= assetNormal(q)*assetMap(q).x;
+    if (abs(assetMap(q - assetNormal(q)*0.01).y - id) > 0.5) idEdge = 1.0;
+  }
   if (abs(id - 9.0) < 0.5) { crease = 0.0; idEdge *= 0.6; }
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge);
   alb = mix(alb, INK(id), ink);

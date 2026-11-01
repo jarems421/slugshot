@@ -595,3 +595,9 @@
 
 - **Confirmed:** owner asked that lessons from the Floppy design rounds be recorded so later slugs avoid the same errors, including what their phrases mean in practice (e.g. "dark spots").
 - **Implemented:** [owner design language](slugs/owner-design-language.md) collects phrase-to-outcome mappings drawn only from recorded rounds, the owner's working style, and the draw/holster runtime lessons from `experiment/rocklock-unified`. The creature-production procedure (both skill copies) now reads it first and records new meanings there.
+
+## 2026-11-01 - Look test round 4: inside-out pieces, boundary ink, import axes
+
+- **Confirmed:** owner said the look was better but some wall mushrooms rendered as black voids with no glow, sprout bases looked odd, few crystals showed and sparkles came from rock gaps.
+- **Implemented/verified offline:** island check showed Blender's normal recalculation had flipped 13/52 wall caps, 15/34 stems, 7/32 crystals (half the crystal faces) and part of the gate. Builds keep the marching-cubes winding with a per-island guard; recheck reads zero flipped islands in every group. Boundary ink coverage fell from 63/42/23% (stems/caps/crystals) to 4/7/2%. Effect points now use a measured axis flip. StyLua, Selene, luau-lsp clean; Rojo build; Blender previews (back-face culled, low view) inspected. [Lessons](art/lessons.md).
+- **Unresolved:** owner Studio verdict and the logged import-axes result.
