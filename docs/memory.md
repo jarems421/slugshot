@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v8
+
+- **Owner feedback on v7:** better, but the storm overlaps the rocks and crystals and must be a lot more contained, as if trying to escape while being sucked back into the sky. Lightning goes outward; it should be short zaps of light in the clouds, not long bolts striking down.
+- **Implemented/verified offline:** cloud held inside the opening, short tongues curling back in, texture flowing up and in; six short forked zaps that light the cloud around them. Renders inspected.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Sky Well v7
 
 - **Owner feedback on v6:** the storm reads as coming through from the side but not looking straight up, and the lightning "does not look like lightning". Asked for Slugterra and fantasy game lightning references.
