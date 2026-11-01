@@ -119,6 +119,21 @@ function CrosshairStyles.size(value: any): number
 	return math.clamp(value, CrosshairStyles.MinSize, CrosshairStyles.MaxSize)
 end
 
+function CrosshairStyles.resize(parent: Frame, size: number)
+	-- Resize the centered frame itself so its anchor stays on the aim point.
+	parent.Size = UDim2.fromOffset(18 * size, 18 * size)
+	local design = parent:FindFirstChild("Design")
+	if design then
+		for _, layer in design:GetChildren() do
+			local sightRing = layer:FindFirstChild("SightRing")
+			local stroke = sightRing and sightRing:FindFirstChildOfClass("UIStroke")
+			if stroke then
+				stroke.Thickness = (if layer.Name == "Ink" then 3.2 else 1.2) * size
+			end
+		end
+	end
+end
+
 local function round(frame: Frame)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0.5, 0)

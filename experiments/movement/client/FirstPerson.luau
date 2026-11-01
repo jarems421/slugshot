@@ -15,6 +15,16 @@ local THIRD_MIN, THIRD_MAX = Config.Camera.MinZoom, Config.Camera.MaxZoom
 local player = Players.LocalPlayer
 local wanted = false
 local started = false
+local landing = 0
+
+-- Current landing dip (studs), written by the camera and read by the hands.
+function FirstPerson.setLanding(value: number)
+	landing = value
+end
+
+function FirstPerson.landing(): number
+	return landing
+end
 
 local function zoom(): number
 	local camera = workspace.CurrentCamera

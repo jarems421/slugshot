@@ -5,6 +5,7 @@ local shared = game:GetService("ReplicatedStorage"):WaitForChild("MovementExperi
 local Clips = require(shared.Clips)
 local Config = require(shared.Config)
 local Flip = require(script.Parent.FirstPersonFlip)
+local Tuning = require(script.Parent.Tuning)
 local CameraLab = {}
 local IDENTITY = CFrame.identity
 local player = Players.LocalPlayer
@@ -113,9 +114,9 @@ function CameraLab.step(dt: number, character: Model?, first: boolean): (CFrame,
 			local wind = ramp(t, 0, 0.07) * (1 - ramp(t, 0.07, 0.2))
 			local bank = ramp(t, 0.08, 0.27) * (1 - ramp(t, 0.36, 0.68))
 			rotation = CFrame.Angles(
-				math.rad(front * (3 * wind - 8 * bank)),
+				math.rad(front * (3 * wind - Tuning.values.spotPitch * bank)),
 				0,
-				math.rad(side * (4 * wind - 19 * bank))
+				math.rad(side * (4 * wind - Tuning.values.spotRoll * bank))
 			)
 			offset = cue.offset * 2.2 + Vector3.new(0, -0.025 * wind, 0)
 			fov = 2.5 * bank

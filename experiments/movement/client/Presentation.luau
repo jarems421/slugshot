@@ -11,7 +11,17 @@ local shared = game:GetService("ReplicatedStorage"):WaitForChild("MovementExperi
 local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
+local FirstPerson = require(script.Parent.FirstPerson)
+local Recoil = require(script.Parent.BlasterRecoil)
+local Tuning = require(script.Parent.Tuning)
 local Presentation = {}
+-- A small third-person fit adjustment in the grip frame: out of the palm, up
+-- toward the trigger, and muzzle-down. The local viewmodel keeps
+-- the original grip when entering first person.
+local function thirdPersonGrip(): CFrame
+	local T = Tuning.values
+	return CFrame.new(T.gripOut, T.gripUp, 0) * CFrame.Angles(math.rad(-T.gripDown), 0, 0)
+end
 local readGait: (Model) -> (number, number) = function(_)
 	return 0, 0
 end
@@ -1213,16 +1223,80 @@ function Presentation.start(clips: Clips.Library)
 			if torsoPart and torsoPart:IsA("BasePart") then
 				-- The rotation taking the hanging arm (down) onto the aim, in torso axes.
 				local target = torsoPart.CFrame:VectorToObjectSpace(rig.pointDir).Unit
+				local firstPerson = character == Players.LocalPlayer.Character
+					and FirstPerson.active()
+				if not firstPerson then
+					-- Reach towards side and rear targets, moving the shoulder ahead
+					-- of the torso as the arm crosses inward. The shot still uses its
+					-- own cursor ray when the visual reaches its shoulder limit.
+					local yaw = math.atan2(target.X, -target.Z)
+					-- Aiming left, the upper body turns toward the target (the hips stay put),
+					-- so the arm rarely reaches its limit. Measured from the root: the torso
+					-- already carries last frame's turn.
+					local base = character:FindFirstChild("HumanoidRootPart")
+					local wanted = 0
+					if base and base:IsA("BasePart") then
+						local aimFlat = base.CFrame:VectorToObjectSpace(rig.pointDir)
+						local bodyYaw = math.atan2(aimFlat.X, -aimFlat.Z)
+						if bodyYaw < 0 then
+							wanted = math.max(bodyYaw, math.rad(-Tuning.values.aimTwist))
+						end
+					end
+					rig.pointTwist = (rig.pointTwist or 0)
+						+ (wanted - (rig.pointTwist or 0)) * Math.alpha(12, dt)
+					pose.Waist = CFrame.Angles(0, -rig.pointTwist * rig.pointWeight, 0)
+						* (pose.Waist or IDENTITY)
+					-- Keep the arm on the target's side of the body. Crossing left
+					-- stops at the same modest inward angle from either front or back.
+					if target.Z > 0.15 then
+						rig.pointRear = true
+					elseif target.Z < -0.15 then
+						rig.pointRear = false
+					end
+					if yaw < 0 then
+						yaw = if rig.pointRear
+							then math.min(yaw, math.rad(Tuning.values.aimInward - 180))
+							else math.max(yaw, math.rad(-Tuning.values.aimInward))
+					end
+					local pitch = math.asin(math.clamp(target.Y, -1, 1))
+					target = Vector3.new(
+						math.sin(yaw) * math.cos(pitch),
+						math.sin(pitch),
+						-math.cos(yaw) * math.cos(pitch)
+					)
+				end
 				local axis = DOWN:Cross(target)
 				local turn = math.acos(math.clamp(DOWN:Dot(target), -1, 1))
 				local arm = if axis.Magnitude > 1e-4
 					then CFrame.fromAxisAngle(axis.Unit, turn)
 					else IDENTITY
-				pose.RightShoulder = (pose.RightShoulder or IDENTITY):Lerp(arm, rig.pointWeight)
+				local pointed = arm
+				if not firstPerson then
+					-- Smooth the wrap at directly behind rather than snapping sides.
+					rig.pointVisual = (rig.pointVisual or pointed):Lerp(pointed, Math.alpha(18, dt))
+					pointed = rig.pointVisual
+				else
+					rig.pointVisual = nil
+				end
+				pose.RightShoulder = (pose.RightShoulder or IDENTITY):Lerp(pointed, rig.pointWeight)
 				pose.RightElbow = (pose.RightElbow or IDENTITY):Lerp(IDENTITY, rig.pointWeight)
 			end
+		else
+			rig.pointVisual = nil
 		end
 
+		if
+			character:GetAttribute("BlasterFlourish") == nil
+			and not (character == Players.LocalPlayer.Character and FirstPerson.active())
+		then
+			local follow = Recoil.follow(
+				character:GetAttribute("BlasterRecoilAt"),
+				os.clock(),
+				character:GetAttribute("BlasterRecoilCharge"),
+				character:GetAttribute("BlasterRecoilStyle")
+			)
+			pose.RightShoulder = follow.Rotation * (pose.RightShoulder or IDENTITY)
+		end
 		for _, limb in A.FoldLimbs do
 			pose[limb[1]] = chord(pose[limb[1]], pose[limb[2]])
 			pose[limb[2]], pose[limb[3]] = nil, nil
@@ -1237,6 +1311,36 @@ function Presentation.start(clips: Clips.Library)
 		-- intended clearance using the real rig's proportions.
 		pose.Root = rootPose
 		local rigPose = if rig.r6 then toR6(pose, scratch(rig, 24)) else pose
+		-- Limb folding above keeps rotation only. Apply shoulder clearance afterwards,
+		-- using the rendered block's bounds rather than an offset that folding erases.
+		if
+			rig.r6
+			and rig.pointWeight > 0.001
+			and not (character == Players.LocalPlayer.Character and FirstPerson.active())
+		then
+			local torso = character:FindFirstChild("Torso")
+			if torso and torso:IsA("BasePart") then
+				for _, link in rig.chain do
+					if link.joint ~= "Right Shoulder" then
+						continue
+					end
+					local shoulder = rigPose[link.joint] or IDENTITY
+					local frame = link.c0 * shoulder * link.c1
+					local h = link.half
+					local extentX = math.abs(frame.XVector.X) * h.X
+						+ math.abs(frame.YVector.X) * h.Y
+						+ math.abs(frame.ZVector.X) * h.Z
+					local minX = frame.X - extentX
+					local crossing = smoothstep((torso.Size.X / 2 + 0.15 - minX) / 0.3)
+					-- A little overlap is intentional: keep the shoulder connected.
+					-- Front aim shifts slightly forward; rear aim shifts slightly back.
+					local direction = shoulder:VectorToWorldSpace(DOWN)
+					local depth = 0.22 * crossing * math.clamp(direction.Z / 0.25, -1, 1)
+					rigPose[link.joint] = CFrame.new(0, 0, depth) * shoulder
+					break
+				end
+			end
+		end
 		if rig.r6 and action and action.kind == "WallRun" and rig.cling then
 			-- The R6 shoulder pivot is inside the block arm: at the raised drag angle
 			-- it sinks into the torso. Ease the arm outward and slightly up/forward as
@@ -1285,7 +1389,10 @@ function Presentation.start(clips: Clips.Library)
 			if rig.gripWeld ~= grip then
 				rig.gripWeld, rig.gripBase = grip, grip.C0
 			end
-			grip.C0 = rig.gripBase * CFrame.Angles(if holding then rig.wrist else 0, 0, 0)
+			local firstPerson = character == Players.LocalPlayer.Character and FirstPerson.active()
+			grip.C0 = rig.gripBase
+				* CFrame.Angles(if holding then rig.wrist else 0, 0, 0)
+				* (if firstPerson then CFrame.identity else thirdPersonGrip())
 		end
 		-- What was rendered, for the Studio probe only: attribute writes every frame for
 		-- every character are wasted work in a live game.

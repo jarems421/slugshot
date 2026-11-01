@@ -12,6 +12,7 @@ local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
 local Traversal = require(script.Traversal)
 local FirstPerson = require(script.FirstPerson)
+local Tuning = require(script.Tuning)
 local AimCursor = require(script.AimCursor)
 local Reticle = require(script.Reticle)
 local FirstPersonFlip = require(script.FirstPersonFlip)
@@ -55,6 +56,7 @@ local headBase: Vector3? = nil -- first person: slow baseline of the head's offs
 local flipWeight, viewRoll, viewPitch = 0, 0, 0
 local headFollow = Vector3.zero
 local runLeanOffset = Vector3.zero
+local landStart, landAmount, airFall, wasGrounded = -math.huge, 0, 0, true
 local flipCueOffset = Vector3.zero
 local shownAction: string? = nil
 -- What the action view added to the camera last frame. Roblox's camera scripts read the
@@ -140,6 +142,8 @@ local function attach(newCharacter: Model)
 	runLeanOffset = Vector3.zero
 	flipCueOffset = Vector3.zero
 	flipWeight, viewRoll, viewPitch = 0, 0, 0
+	landStart, landAmount, airFall, wasGrounded = -math.huge, 0, 0, true
+	FirstPerson.setLanding(0)
 	bouncing = false
 	sprinting, aiming, testMove = false, false, nil
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
@@ -1454,14 +1458,38 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		leanTarget = forward * FirstView.RunLean.Forward * weight
 			+ Vector3.new(0, -FirstView.RunLean.Drop * weight, 0)
 	end
+	if first and onGround and not acro and speed <= 2 then
+		-- At rest the head leans out over the body, so the hands sit in the lower view.
+		local idle = if character:GetAttribute("BlasterPoint") ~= nil then 0.35 else 1
+		leanTarget = forward * Tuning.values.idleLean * idle
+			+ Vector3.new(0, -Tuning.values.idleDrop * idle, 0)
+	end
 	runLeanOffset = if first
 		then runLeanOffset:Lerp(leanTarget, Math.alpha(FirstView.RunLean.Rate, dt))
 		else Vector3.zero
+	-- Landing: the view drops with the body and recovers. Translation only, so aim holds.
+	if onGround and not wasGrounded and airFall > 14 then
+		local impact = math.clamp((airFall - 14) / (75 - 14), 0, 1)
+		landStart, landAmount = now, Tuning.values.landDip * (0.3 + 0.7 * impact)
+	end
+	if not onGround then
+		airFall = math.max(-root.AssemblyLinearVelocity.Y, 0)
+	end
+	wasGrounded = onGround
+	local landAge = now - landStart
+	local landing = 0
+	if first and landAge < 0.42 then
+		local fall = math.clamp(landAge / 0.07, 0, 1)
+		local rise = math.clamp((landAge - 0.07) / 0.35, 0, 1)
+		landing = landAmount * (1 - (1 - fall) ^ 2) * (1 - rise * rise * (3 - 2 * rise))
+	end
+	FirstPerson.setLanding(landing)
 	humanoid.CameraOffset = cameraBase
 		+ root.CFrame:VectorToObjectSpace(right * shoulder.X)
 		+ Vector3.new(0, shoulder.Y + viewBounce * movementShake, 0)
 		+ headFollow
 		+ flipCueOffset
+		- Vector3.new(0, landing, 0)
 	-- The player's FOV setting moves the whole range (sprint/slide kicks stay relative).
 	local fieldOfView = (player:GetAttribute("FieldOfView") or Config.Camera.Fov) :: number
 	local fov = fieldOfView

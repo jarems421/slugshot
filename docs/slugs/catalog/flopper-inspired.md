@@ -1,5 +1,13 @@
 # First slug: Flopper-inspired creature
 
+**Current model and burrow, implemented/verified:** the flat base is now a rounded dark underside below the ground plane, with the standing look unchanged. Recovery lasts 1.5 s from impact with a belly skid, a much wigglier roll and a screwing dig, with ground swells and lumpy debris. Native shots and offline checks passed; owner approval pending. [Evidence](../../evidence/2026-11-01-review-pass.json), [underside](../../evidence/2026-11-01-floppy-underside.png).
+
+## Confirmed post-shot recovery (2026-11-01; implemented for owner testing)
+
+**Owner-directed refinement:** roll from the belly onto the back before diving. During burrowing, actively wriggle/dig into the ground and gather a small dirt-and-rock rim with smooth transitions. Implemented with the existing rig, ground-sampled colors and a gradually building rim. Native Studio roll/dig/rim checks passed; owner artistic approval remains pending. [Current recovery evidence](../../evidence/2026-11-01-floppy-roll-dig.json).
+
+Floppy lands on its belly, wriggles briefly, then makes a little upward hop and burrows into the ground where it landed. The burrow represents returning to inventory. This replaces the earlier hop-to-owner and puff exit design. Target impacts drop to the floor before recovery. The existing body/head/tail/antenna bones animate the wriggle and crouch; the hop turns head-first into a straight-down dive. Cooldown availability is independent of the recovery scene. Full combat checks and one native Studio shot passed, with four-view imported-rig pose evidence. The owner still needs to approve the animation. See the [shared recovery details and evidence](../recovery.md).
+
 ## Confirmed — owner brief, 2026-10-31
 
 Create a distinct original Slugshot creature inspired by Flopper. A soft, squishy and somewhat goofy personality; pale cream/light yellow-green body, olive facial accents, large expressive eyes, a broad head, narrower flexible middle, flared lower body and small flexible appendages. Squash/stretch and expressive motion are central. This species does not transform. This is the first creature design; the reference is not a mandate to import or reproduce someone else's model.

@@ -1,12 +1,12 @@
 --!strict
--- Draws slug shots on this client: the flight (tumbling end over end), the comedic
--- splat, the quick hop back to the shooter and a puff where it vanishes. The return is
--- cosmetic: the cooldown alone decides when the slug is ready, so a slug still hopping
--- when its cooldown ends just puffs away (owner, 2026-10-31).
+-- Draws flight and impact, then Floppy's local fall/wriggle/hop/burrow recovery.
+-- Recovery is independent of the firing cooldown and never races to the shooter.
+local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
+local Recovery = require(script.Parent.FloppyRecovery)
 
 local Visuals = {}
 
@@ -32,17 +32,13 @@ type Flight = {
 	model: Model,
 	start: number,
 	t: number,
-	phase: string,
-	phaseStart: number,
 	params: RaycastParams,
-	normal: Vector3,
-	heading: Vector3,
-	from: Vector3,
-	hop: number,
-	hops: number,
-	hopFrom: Vector3,
+	recovery: Recovery.State?,
 }
 local flights: { Flight } = {}
+local CANISTER_GLOW = Color3.fromRGB(215, 240, 160) -- Floppy's bulb glow
+type Pop = { locate: () -> Vector3?, part: Part, started: number }
+local pops: { Pop } = {}
 
 local function standIn(): Model
 	local model = Instance.new("Model")
@@ -92,13 +88,6 @@ local function bead(size: number, color: Color3, position: Vector3): Part
 	return part
 end
 
-local function puff(position: Vector3)
-	local part = bead(0.3, PUFF, position)
-	part.Material = Enum.Material.Neon
-	part.Transparency = 0.2
-	fade(part, 0.22, { Size = Vector3.one * 1.3 })
-end
-
 -- Muddy splat: a flat stain on the surface plus a spray of goo beads.
 local function splat(position: Vector3, normal: Vector3)
 	local stain = Instance.new("Part")
@@ -121,6 +110,38 @@ local function splat(position: Vector3, normal: Vector3)
 	end
 end
 
+-- The slug is back: a soft glow blooms in the canister and follows the moving gun.
+function Visuals.canisterPop(locate: () -> Vector3?)
+	local position = locate()
+	if not position then
+		return
+	end
+	local part = bead(0.12, CANISTER_GLOW, position)
+	part.Material = Enum.Material.Neon
+	table.insert(pops, { locate = locate, part = part, started = os.clock() })
+end
+
+-- The burrow's materials load on first use, which froze the first dig of a session
+-- for most of a second. Show each once, nearly invisible, before a shot can land.
+local function prewarm()
+	local camera = workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	for index, material in
+		{ Enum.Material.Ground, Enum.Material.Rock, Enum.Material.Slate, Enum.Material.Sand }
+	do
+		local part = bead(0.04, GOO, camera.CFrame * Vector3.new(index * 0.02, 0, -1))
+		part.Material = material
+		part.Transparency = 0.97
+		local lump = Instance.new("SpecialMesh")
+		lump.MeshType = Enum.MeshType.Sphere
+		lump.Parent = part
+		Debris:AddItem(part, 3)
+	end
+end
+prewarm()
+
 function Visuals.launch(launch: Launch)
 	local slug = Combat.Slugs[launch.slugId]
 	if not slug then
@@ -136,6 +157,7 @@ function Visuals.launch(launch: Launch)
 	local model = Visuals.model(launch.slugId)
 	model:PivotTo(CFrame.lookAt(launch.origin, launch.origin + launch.velocity))
 	model.Parent = folder
+	model:SetAttribute("ShotId", launch.id)
 	local now = os.clock()
 	table.insert(flights, {
 		launch = launch,
@@ -143,15 +165,8 @@ function Visuals.launch(launch: Launch)
 		model = model,
 		start = now,
 		t = 0,
-		phase = "fly",
-		phaseStart = now,
 		params = params,
-		normal = Vector3.yAxis,
-		heading = launch.velocity.Unit,
-		from = launch.origin,
-		hop = 0,
-		hops = 1,
-		hopFrom = launch.origin,
+		recovery = nil,
 	})
 end
 
@@ -204,99 +219,75 @@ function Visuals.popup(position: Vector3, damage: number, distance: number)
 	end)
 end
 
-local function feetOf(player: Player): Vector3?
-	local character = player.Character
-	local root = character and character:FindFirstChild("HumanoidRootPart")
-	if root and root:IsA("BasePart") then
-		return root.Position - Vector3.new(0, 2.6, 0)
-	end
-	return nil
-end
-
--- Upright, facing its way of travel, back to the given surface normal.
-local function upright(position: Vector3, normal: Vector3, heading: Vector3): CFrame
-	local forward = heading - normal * heading:Dot(normal)
-	if forward.Magnitude < 1e-3 then
-		forward = normal:Cross(Vector3.xAxis)
-	end
-	return CFrame.lookAt(position, position + forward.Unit, normal)
-end
-
 local function finish(index: number, flight: Flight)
-	puff(flight.model:GetPivot().Position)
 	flight.model:Destroy()
 	table.remove(flights, index)
 end
 
 RunService.RenderStepped:Connect(function()
 	local now = os.clock()
+	for index = #pops, 1, -1 do
+		local pop = pops[index]
+		local age = (now - pop.started) / 0.32
+		local position = pop.locate()
+		if age >= 1 or not position then
+			pop.part:Destroy()
+			table.remove(pops, index)
+		else
+			pop.part.Position = position
+			pop.part.Size = Vector3.one * (0.12 + 0.55 * (1 - (1 - age) ^ 3))
+			pop.part.Transparency = 0.15 + 0.85 * age * age
+		end
+	end
 	for index = #flights, 1, -1 do
 		local flight = flights[index]
 		local launch, slug = flight.launch, flight.slug
-		if flight.phase == "fly" then
-			local before = flight.t
-			flight.t = math.min(now - flight.start, Combat.MaxFlight)
-			local hit =
-				Combat.sweep(launch.origin, launch.velocity, slug, before, flight.t, flight.params)
-			if hit then
-				local _, velocity = Combat.at(launch.origin, launch.velocity, slug, flight.t)
-				flight.phase, flight.phaseStart = "splat", now
-				flight.normal, flight.heading = hit.Normal, velocity.Unit
-				flight.from = hit.Position + hit.Normal * (slug.Size * 0.22)
-				splat(hit.Position, hit.Normal)
-			elseif flight.t >= Combat.MaxFlight then
-				finish(index, flight)
-				continue
-			else
-				local position, velocity = Combat.at(launch.origin, launch.velocity, slug, flight.t)
-				local spin = -2 * math.pi * slug.Tumble * flight.t
-				flight.model:PivotTo(
-					CFrame.lookAt(position, position + velocity) * CFrame.Angles(spin, 0, 0)
-				)
-			end
+		if not flight.model.Parent then
+			table.remove(flights, index)
+			continue
 		end
-		if flight.phase == "splat" then
-			local s = math.clamp((now - flight.phaseStart) / Combat.SplatTime, 0, 1)
-			-- Flattened on impact, then pulls itself back together.
-			local squash = (1 - s) * 0.12
-			flight.model:PivotTo(
-				upright(flight.from - flight.normal * squash, flight.normal, flight.heading)
+		if flight.recovery then
+			if Recovery.step(flight.recovery, now) then
+				finish(index, flight)
+			end
+			continue
+		end
+		local before = flight.t
+		flight.t = math.min(now - flight.start, Combat.MaxFlight)
+		local hit =
+			Combat.sweep(launch.origin, launch.velocity, slug, before, flight.t, flight.params)
+		local position, velocity = Combat.at(launch.origin, launch.velocity, slug, flight.t)
+		if hit then
+			splat(hit.Position, hit.Normal)
+			local victim = Combat.victim(hit.Instance)
+			local recovery = Recovery.new(
+				flight.model,
+				slug.Size,
+				hit.Position,
+				hit.Normal,
+				velocity,
+				flight.params,
+				victim,
+				now
 			)
-			if s >= 1 then
-				local feet = feetOf(launch.shooter)
-				local distance = if feet then (feet - flight.from).Magnitude else 0
-				flight.phase, flight.phaseStart = "hop", now
-				flight.hops = math.clamp(math.ceil(distance / 10), 1, 3)
-				flight.hop, flight.hopFrom = 0, flight.from
-			end
-		end
-		if flight.phase == "hop" then
-			local feet = feetOf(launch.shooter)
-			if not feet or now >= launch.readyAt then
-				finish(index, flight)
-				continue
-			end
-			local each = Combat.ReturnTime / flight.hops
-			local hop = math.min(math.floor((now - flight.phaseStart) / each), flight.hops)
-			if hop >= flight.hops then
-				finish(index, flight)
-				continue
-			end
-			if hop ~= flight.hop then
-				flight.hop, flight.hopFrom = hop, flight.model:GetPivot().Position
-			end
-			-- Each hop covers an even share of what is left, toward where the shooter is now.
-			local target = flight.hopFrom:Lerp(feet, 1 / (flight.hops - hop))
-			local u = (now - flight.phaseStart - hop * each) / each
-			local span = target - flight.hopFrom
-			local height = 0.8 + span.Magnitude * 0.12
-			local position = flight.hopFrom + span * u + Vector3.yAxis * (height * 4 * u * (1 - u))
+			flight.recovery = recovery
+			Recovery.step(recovery, now)
+		elseif flight.t >= Combat.MaxFlight then
+			-- An unlanded shot falls locally; only a void/unsupported surface times out.
+			flight.recovery = Recovery.new(
+				flight.model,
+				slug.Size,
+				position,
+				Vector3.zero,
+				velocity,
+				flight.params,
+				nil,
+				now
+			)
+		else
+			local spin = -2 * math.pi * slug.Tumble * flight.t
 			flight.model:PivotTo(
-				upright(
-					position,
-					Vector3.yAxis,
-					if span.Magnitude > 0.05 then span else flight.heading
-				)
+				CFrame.lookAt(position, position + velocity) * CFrame.Angles(spin, 0, 0)
 			)
 		end
 	end

@@ -68,6 +68,17 @@ slotName.TextSize = 14
 slotName.TextColor3 = Color3.fromRGB(229, 239, 248)
 slotName.Text = `1  {string.upper(slug.Label)}`
 slotName.Parent = slotFrame
+local slotScale = Instance.new("UIScale")
+slotScale.Parent = slotFrame
+local slotFlash = Instance.new("Frame") -- blinks when the slug returns
+slotFlash.Size = UDim2.fromScale(1, 1)
+slotFlash.BackgroundColor3 = Color3.fromRGB(215, 240, 160)
+slotFlash.BackgroundTransparency = 1
+slotFlash.ZIndex = 4
+slotFlash.Parent = slotFrame
+corner(slotFlash, 10)
+local RETURN_TWEEN = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local wasCooling = false
 local shade = Instance.new("Frame") -- drains downward as the cooldown runs out
 shade.Size = UDim2.fromScale(1, 0)
 shade.BackgroundColor3 = Color3.new(0, 0, 0)
@@ -139,6 +150,7 @@ end
 -- The shoulder, the aim point under the cursor (the crosshair when shift-locked) and
 -- the muzzle a gun's reach along the line to it.
 local function aim(): (Vector3?, Vector3?)
+	-- Shots leave the actual gun's muzzle, in every view.
 	local character = player.Character
 	local camera = workspace.CurrentCamera
 	local torso = character and character:FindFirstChild("Torso")
@@ -160,11 +172,14 @@ local function aim(): (Vector3?, Vector3?)
 	local ray = camera:ViewportPointToRay(cursor.X, cursor.Y)
 	local hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
 	local point = if hit then hit.Position else ray.Origin + ray.Direction * 300
-	-- First person: shots leave the actual held gun's muzzle.
 	local muzzle = Viewmodel.muzzle()
 	if muzzle then
+		-- A point behind the muzzle (a wall between camera and gun) keeps the camera's line.
 		local toward = point - muzzle
-		return muzzle, if toward.Magnitude > 0.5 then toward.Unit else ray.Direction
+		return muzzle,
+			if toward.Magnitude > 0.5 and toward.Unit:Dot(ray.Direction) > 0
+				then toward.Unit
+				else ray.Direction
 	end
 	local from = torso.CFrame * shoulder.C0.Position
 	local toward = point - from
@@ -190,6 +205,13 @@ local function fire()
 	nextId += 1
 	readyAt = now + Combat.Cooldown
 	aimDirection, pointUntil = direction, now + POINT_HOLD
+	local recoilStyle = if player:GetAttribute("RecoilAnimation") == "Flip" then "Flip" else "Kick"
+	local character = player.Character
+	if character then
+		character:SetAttribute("BlasterRecoilStyle", recoilStyle)
+		character:SetAttribute("BlasterRecoilCharge", charge)
+		character:SetAttribute("BlasterRecoilAt", now)
+	end
 	Visuals.launch({
 		id = nextId,
 		shooter = player,
@@ -199,6 +221,7 @@ local function fire()
 		readyAt = readyAt,
 	})
 	remote:FireServer("Fire", {
+		recoil = recoilStyle,
 		id = nextId,
 		slot = SLOT,
 		origin = origin,
@@ -253,6 +276,12 @@ remote.OnClientEvent:Connect(function(kind: string, data: any)
 		})
 		local character = data.shooter.Character
 		if character then
+			character:SetAttribute(
+				"BlasterRecoilStyle",
+				if data.recoil == "Flip" then "Flip" else "Kick"
+			)
+			character:SetAttribute("BlasterRecoilCharge", data.charge or 0)
+			character:SetAttribute("BlasterRecoilAt", os.clock())
 			pointing[character] = os.clock() + POINT_HOLD
 			character:SetAttribute("BlasterPoint", data.velocity.Unit)
 		end
@@ -300,7 +329,16 @@ local function setCanister(tool: Tool, visible: boolean)
 	if shown[tool] == visible then
 		return
 	end
+	local returned = visible and shown[tool] == false
 	shown[tool] = visible
+	if returned then
+		Visuals.canisterPop(if tool.Parent == player.Character
+			then Viewmodel.canister
+			else function(): Vector3?
+				local handle = tool:FindFirstChild("Handle")
+				return if handle and handle:IsA("BasePart") then handle.Position else nil
+			end)
+	end
 	local floppy = tool:FindFirstChild("Floppy")
 	if not floppy then
 		return
@@ -366,6 +404,15 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 	local remaining = math.max(readyAt - now, 0)
+	if remaining <= 0 and wasCooling then
+		-- The slug is back in the gun: mark it on the slot and at the crosshair.
+		Reticle.pulseReady()
+		slotScale.Scale = 1.14
+		slotFlash.BackgroundTransparency = 0.45
+		TweenService:Create(slotScale, RETURN_TWEEN, { Scale = 1 }):Play()
+		TweenService:Create(slotFlash, RETURN_TWEEN, { BackgroundTransparency = 1 }):Play()
+	end
+	wasCooling = remaining > 0
 	shade.Size = UDim2.fromScale(1, remaining / Combat.Cooldown)
 	countdown.Text = if remaining > 0 then string.format("%.1f", remaining) else ""
 	slotFrame.BackgroundTransparency = if tool then 0.2 else 0.5

@@ -2,6 +2,8 @@
 
 ## Confirmed
 
+On 2026-11-01 the owner approved local post-shot recovery: slugs land, shake off and burrow into the ground, representing a return to inventory. Floppy belly-flops, wriggles and rolls onto its back, then hops into its burrow. Recovery presentation is independent of firing cooldown readiness, avoiding fast return traffic across crowded matches. Floppy's sequence is implemented with offline and limited Studio verification; owner animation approval and future species clips remain open. See [recovery](slugs/recovery.md).
+
 On 2026-10-31 the owner requested a first, original Flopper-inspired small slug with a soft expressive design and no transformation, plus a lasting catalogue for all future slug briefs and research. Potential abilities remain ideas; no combat implementation was requested. See [design record](slugs/catalog/flopper-inspired.md).
 
 The owner additionally authorized a reusable custom-rig creature **technical pipeline** on 2026-10-30, with temporary test creatures in an isolated worktree. That request did not by itself approve finished ProtoformBase art, species or combat; the first original creature draft was requested separately above. See [ADR 0016](decisions/0016-slug-asset-pipeline.md) and [pipeline](slugs/pipeline.md). Concurrent map and movement work stays separate.

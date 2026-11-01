@@ -17,6 +17,7 @@ local STYLE = {
 	ReadyFrequency = 6,
 	Vibration = Vector2.new(0.16, 0.12), -- subpixel ring motion, never the aim mark
 	SheenSpeed = 110,
+	PulseTime = 0.3,
 }
 local CUT = NumberSequence.new({
 	NumberSequenceKeypoint.new(0, 0),
@@ -32,8 +33,8 @@ type Ring = {
 	root: Frame,
 	modeScale: UIScale,
 	scale: UIScale,
-	markScale: UIScale,
 	mark: Frame,
+	markSize: number,
 	style: string,
 	color: Color3,
 	right: Half,
@@ -46,8 +47,11 @@ type Ring = {
 	sheen: Frame,
 	sheenStroke: UIStroke,
 	sheenMask: UIGradient,
+	pulse: Frame,
+	pulseStroke: UIStroke,
 }
 local ring: Ring? = nil
+local pulseAge = math.huge
 local progress: number? = nil
 local chargeAge, fullTime = 0, 0
 local wasFull = false
@@ -148,12 +152,11 @@ function Reticle.create(parent: Instance): Frame
 	mark.Size = UDim2.fromOffset(18, 18)
 	mark.BackgroundTransparency = 1
 	mark.Parent = root
-	local markScale = Instance.new("UIScale")
-	markScale.Name = "MarkScale"
-	markScale.Parent = mark
 	local selectedStyle = CrosshairStyles.find(player:GetAttribute("CrosshairStyle"))
 	local selectedColor = CrosshairStyles.color(player:GetAttribute("CrosshairColor"))
 	CrosshairStyles.draw(mark, selectedStyle.id, selectedColor)
+	local markSize = CrosshairStyles.size(player:GetAttribute("CrosshairSize"))
+	CrosshairStyles.resize(mark, markSize)
 	local charge = Instance.new("Frame")
 	charge.Name = "ChargeRing"
 	charge.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -206,6 +209,10 @@ function Reticle.create(parent: Instance): Frame
 		NumberSequenceKeypoint.new(1, 0.1),
 	})
 	sheenMask.Parent = sheenStroke
+	-- Parented outside the charge ring, which is hidden while the slug is away.
+	local pulse, pulseStroke = circle(root, "ReadyPulse", 1.4)
+	pulse.Visible = false
+	pulseStroke.Color = STYLE.Charge
 	local startCap, tip = cap(charge, "StartCap"), cap(charge, "ChargeTip")
 	startCap.Position = UDim2.fromScale(0.5, 0.5 - STYLE.Radius / STYLE.Diameter)
 	local motes: { Frame } = {}
@@ -216,8 +223,8 @@ function Reticle.create(parent: Instance): Frame
 		root = charge,
 		modeScale = modeScale,
 		scale = scale,
-		markScale = markScale,
 		mark = mark,
+		markSize = markSize,
 		style = selectedStyle.id,
 		color = selectedColor,
 		right = right,
@@ -230,6 +237,8 @@ function Reticle.create(parent: Instance): Frame
 		sheen = sheen,
 		sheenStroke = sheenStroke,
 		sheenMask = sheenMask,
+		pulse = pulse,
+		pulseStroke = pulseStroke,
 	}
 	return root
 end
@@ -238,21 +247,39 @@ function Reticle.setCharge(value: number?)
 	progress = if value then math.clamp(value, 0, 1) else nil
 end
 
+-- One thin ring closes in on the crosshair when the slug is back. The aim mark is untouched.
+function Reticle.pulseReady()
+	pulseAge = 0
+end
+
 function Reticle.step(dt: number)
 	local current = ring
 	if not current then
 		return
 	end
+	pulseAge += dt
+	local pulsing = pulseAge < STYLE.PulseTime
+	current.pulse.Visible = pulsing
+	if pulsing then
+		local t = pulseAge / STYLE.PulseTime
+		local size = (STYLE.Radius * 2 / STYLE.Diameter) * (1.35 - 0.35 * (1 - (1 - t) ^ 2))
+		current.pulse.Size = UDim2.fromScale(size, size)
+		current.pulseStroke.Transparency = 0.2 + 0.8 * t * t
+	end
 	local selectedStyle = CrosshairStyles.find(player:GetAttribute("CrosshairStyle"))
 	local selectedColor = CrosshairStyles.color(player:GetAttribute("CrosshairColor"))
+	local selectedSize = CrosshairStyles.size(player:GetAttribute("CrosshairSize"))
 	if current.style ~= selectedStyle.id or current.color ~= selectedColor then
 		CrosshairStyles.draw(current.mark, selectedStyle.id, selectedColor)
+		CrosshairStyles.resize(current.mark, selectedSize)
 		current.style, current.color = selectedStyle.id, selectedColor
+	elseif current.markSize ~= selectedSize then
+		CrosshairStyles.resize(current.mark, selectedSize)
 	end
+	current.markSize = selectedSize
 	current.modeScale.Scale = if FirstPerson.active()
 		then STYLE.FirstPersonScale
 		else STYLE.ThirdPersonScale
-	current.markScale.Scale = CrosshairStyles.size(player:GetAttribute("CrosshairSize"))
 	local value = progress
 	current.root.Visible = value ~= nil
 	if value == nil then

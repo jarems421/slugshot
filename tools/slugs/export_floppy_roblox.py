@@ -50,6 +50,13 @@ SKIN_ROUGHNESS_LOW = 0.10
 TORSO_STRETCH = 0.25
 STRETCH_TOP = 1.25
 SKIN_ROUGHNESS = 0.22
+# Rolled or diving, the flat base read as a "sawn off disc" (owner, 2026-11-01). Dome it below the
+# ground plane, where it stays hidden while standing, and darken it. Source units.
+UNDERSIDE_DEPTH = 0.3
+UNDERSIDE_FLAT_Z = 0.012
+UNDERSIDE_RINGS = 10
+UNDERSIDE_DARK = (0.31, 0.30, 0.20)
+UNDERSIDE_DARK_TOP = 0.03
 EYE_ROUGHNESS = 0.08
 FPS = 24
 LOOP_SECONDS = 12.0
@@ -212,16 +219,17 @@ def roughness_map(name, value):
     return img
 
 
-def body_roughness_map(body):
-    """Roughness by height on the body's own UVs: glossiest at the base, rising toward the head."""
+def body_heights(body):
     co = np.empty(len(body.data.vertices)*3)
     body.data.vertices.foreach_get("co", co)
-    z = co.reshape(-1, 3)[:, 2]
-    t = np.clip((z - 0.35)/(1.5 - 0.35), 0.0, 1.0)
-    rough = SKIN_ROUGHNESS_LOW + (SKIN_ROUGHNESS - SKIN_ROUGHNESS_LOW)*t*t*(3 - 2*t)
+    return co.reshape(-1, 3)[:, 2]
+
+
+def bake_vertex_values(body, name, rgb):
+    """Bake one colour per vertex onto the body's own UVs; returns the Non-Color image."""
     attr = body.data.color_attributes.new("gloss", "FLOAT_COLOR", "POINT")
-    attr.data.foreach_set("color", np.stack([np.ones_like(rough), rough, np.zeros_like(rough), np.ones_like(rough)], 1).astype(np.float32).ravel())
-    target = image("floppy-body-roughness", "Non-Color")
+    attr.data.foreach_set("color", np.column_stack([rgb, np.ones(len(rgb))]).astype(np.float32).ravel())
+    target = image(name, "Non-Color")
     mat = bpy.data.materials.new("BakeGloss")
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -245,8 +253,105 @@ def body_roughness_map(body):
         body.data.materials.append(m)
     bpy.data.materials.remove(mat)
     body.data.color_attributes.remove(body.data.color_attributes["gloss"])
+    return target
+
+
+def body_roughness_map(body):
+    """Roughness by height on the body's own UVs: glossiest at the base, rising toward the head."""
+    t = np.clip((body_heights(body) - 0.35)/(1.5 - 0.35), 0.0, 1.0)
+    rough = SKIN_ROUGHNESS_LOW + (SKIN_ROUGHNESS - SKIN_ROUGHNESS_LOW)*t*t*(3 - 2*t)
+    target = bake_vertex_values(body, "floppy-body-roughness", np.stack([np.ones_like(rough), rough, np.zeros_like(rough)], 1))
     save(target, "floppy-body-roughness.png")
     return target
+
+
+def round_underside(high):
+    """Replace the flat base with a soft domed belly. The flat faces have almost no interior vertices, so the
+    cap is rebuilt as rings from the rim; the rim keeps its place, so the standing silhouette is unchanged."""
+    bm = bmesh.new()
+    bm.from_mesh(high.data)
+    bm.normal_update()
+    uv_layer = bm.loops.layers.uv.active
+    flat = [f for f in bm.faces if f.normal.z < -0.5 and all(v.co.z < UNDERSIDE_FLAT_Z for v in f.verts)]
+    bmesh.ops.delete(bm, geom=flat, context="FACES")
+    # Walk the boundary into loops; the longest is the rim, any tiny leftovers are simply closed.
+    open_edges = {e for e in bm.edges if e.is_boundary}
+    loops = []
+    while open_edges:
+        start = open_edges.pop()
+        loop = [start.verts[0], start.verts[1]]
+        while True:
+            step = next((e for e in loop[-1].link_edges if e in open_edges), None)
+            if step is None:
+                break
+            open_edges.discard(step)
+            loop.append(step.other_vert(loop[-1]))
+        if loop[0] == loop[-1]:
+            loop.pop()
+        loops.append(loop)
+    loops.sort(key=len, reverse=True)
+    rim = loops[0]
+    for extra in loops[1:]:
+        bmesh.ops.holes_fill(bm, edges=[e for v in extra for e in v.link_edges if e.is_boundary], sides=0)
+    centre = sum((v.co for v in rim), Vector())/len(rim)
+    rim_uv = {v: next(l[uv_layer].uv.copy() for l in v.link_loops) for v in rim} if uv_layer else {}
+    previous = rim
+    faces = []
+    for ring in range(1, UNDERSIDE_RINGS + 1):
+        angle = ring/(UNDERSIDE_RINGS + 1)*math.pi/2
+        current = []
+        for vert in rim:
+            new = bm.verts.new(Vector((centre.x + (vert.co.x - centre.x)*math.cos(angle),
+                                       centre.y + (vert.co.y - centre.y)*math.cos(angle),
+                                       vert.co.z - UNDERSIDE_DEPTH*math.sin(angle))), vert)
+            current.append(new)
+        faces += [bm.faces.new((previous[i], previous[(i + 1) % len(rim)], current[(i + 1) % len(rim)], current[i]))
+                  for i in range(len(rim))]
+        previous = current
+    apex = bm.verts.new(Vector((centre.x, centre.y, centre.z - UNDERSIDE_DEPTH)), rim[0])
+    faces += [bm.faces.new((previous[i], previous[(i + 1) % len(rim)], apex)) for i in range(len(rim))]
+    # Each ring inherits its rim vertex's colour, weights and material, so the dome joins without a seam.
+    stride = len(rim)
+    for index, face in enumerate(faces):
+        face.smooth = True
+        if uv_layer:
+            column = index % stride
+            for loop in face.loops:
+                source = rim[column]
+                for k, candidate in enumerate((rim[column], rim[(column + 1) % stride])):
+                    if (loop.vert.co.xy - centre.xy).length_squared > 0 and                             abs((loop.vert.co.xy - centre.xy).normalized().dot((candidate.co.xy - centre.xy).normalized()) - 1) < 1e-6:
+                        source = candidate
+                loop[uv_layer].uv = rim_uv[source]
+    bm.normal_update()
+    if faces[-1].normal.z > 0:
+        bmesh.ops.reverse_faces(bm, faces=faces)
+    bm.to_mesh(high.data)
+    bm.free()
+    high.data.update()
+    print("underside", {"rimVerts": len(rim), "extraLoops": len(loops) - 1, "removedFlatFaces": len(flat),
+                        "depth": UNDERSIDE_DEPTH}, flush=True)
+
+
+def darken_underside(body, colour, normal):
+    """Fade the dome to one soft dark colour with a flat normal: its rings only stretch rim texture, which would
+    streak, and a plain shaded belly recedes instead of reading as a bright disc."""
+    t = np.clip((UNDERSIDE_DARK_TOP - body_heights(body))/(UNDERSIDE_DARK_TOP + UNDERSIDE_DEPTH*0.3), 0.0, 1.0)
+    mask = bake_vertex_values(body, "floppy-underside-mask", np.repeat((t*t*(3 - 2*t))[:, None], 3, axis=1))
+    amount = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+    mask.pixels.foreach_get(amount)
+    amount = amount.reshape(TEXTURE, TEXTURE, 4)[:, :, 0]
+    # Grow the mask a few texels so UV-island seams on the dome cannot show the bright skin behind them.
+    for _ in range(4):
+        amount = np.maximum.reduce([amount, np.roll(amount, 1, 0), np.roll(amount, -1, 0), np.roll(amount, 1, 1), np.roll(amount, -1, 1)])
+    amount = amount.reshape(-1, 1)
+    for img, flat in ((colour, UNDERSIDE_DARK), (normal, (0.5, 0.5, 1.0))):
+        pixels = np.empty(TEXTURE*TEXTURE*4, dtype=np.float32)
+        img.pixels.foreach_get(pixels)
+        pixels = pixels.reshape(-1, 4)
+        pixels[:, :3] += amount*(np.array(flat, dtype=np.float32) - pixels[:, :3])
+        img.pixels.foreach_set(pixels.ravel())
+        img.update()
+    bpy.data.images.remove(mask)
 
 
 def add_gloss(mat, img):
@@ -407,8 +512,11 @@ def verify(model, idle, expected_bones):
     report["boundsBlender"] = {"min": [round(v, 3) for v in lo], "max": [round(v, 3) for v in hi]}
     face = [c for m in meshes if m.name.startswith("Eye") for c in [m.matrix_world @ v.co for v in m.data.vertices]]
     report["facesPlusY"] = sum(c.y for c in face)/len(face) > 0
-    report["heightStuds"] = round(hi[2] - lo[2], 3)
+    # Standing height sits above the ground plane; the domed underside below it stays hidden on the floor.
+    report["heightStuds"] = round(hi[2], 3)
+    report["undersideDepthStuds"] = round(-lo[2], 3)
     assert 0.88 <= report["heightStuds"] <= 0.97, f"Floppy should be about 0.93 studs tall: {report['heightStuds']}"
+    assert 0.05 <= report["undersideDepthStuds"] <= 0.14, f"unexpected underside depth: {report['undersideDepthStuds']}"
     report["sizeStuds"] = [round(hi[i] - lo[i], 3) for i in range(3)]
     assert report["facesPlusY"], "eyes are not on the +Y side"
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -444,6 +552,7 @@ def main():
     high = bpy.data.objects["FloppyBody"]
     high.name = "FloppyBody_Source"
     skin = high.data.materials[0]
+    round_underside(high)
 
     body = low_copy(high, "FloppyBody", BODY_TRIANGLES)
     select_only([body])
@@ -455,6 +564,7 @@ def main():
     normal = image("floppy-body-normal", "Non-Color")
     bake_to(body, high, "EMIT", colour, emission_of(skin))
     bake_to(body, high, "NORMAL", normal)
+    darken_underside(body, colour, normal)
     paths = [save(colour, "floppy-body-color.png"), save(normal, "floppy-body-normal.png")]
     glow = None
     if glow_texture(skin):

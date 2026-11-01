@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-01",
+  "scope": "Local experimental training range; native Studio client with temporary injected review LocalScript in ignored alternate build",
+  "offline": "python tools/verify_combat.py passed",
+  "implementation": {
+    "default": "Kick",
+    "alternative": "Flip",
+    "settings": "M > Gameplay > Recoil animation",
+    "base_gun_pitch_degrees": [
+      22,
+      32
+    ],
+    "hand_follow_pitch_degrees": [
+      3,
+      5
+    ],
+    "charge": "tap to full; sampled per shot",
+    "flip": "accepted BlasterMotion Toss.Draw track after 0.06-second shot launch; same interpolation and catch/rebound",
+    "first_person": "gun transform applied directly to visible copy after smoothing; hidden source tool recoil suppressed to prevent double application",
+    "third_person": "native grip cosmetic transform plus bounded arm follow",
+    "network": "shot request selects cosmetic enum; server allowlists Kick/Flip in accepted Shot event",
+    "lifecycle": "holster clears recoil start; setting changes apply on next shot"
+  },
+  "runtime": {
+    "sample_checks": "both styles and charges 0/1: bounded finite translation and identity after one second",
+    "Kick": {
+      "charge": "full",
+      "rendered_pitch_rise_degrees": 36.94,
+      "max_rotation_from_baseline_radians": 0.64,
+      "max_visual_handle_to_arm_center_studs": 0.79,
+      "sampled_frames_over_0_7_seconds": 12,
+      "server_accepted_shot": 1
+    },
+    "Flip": {
+      "charge": "full",
+      "rendered_pitch_rise_degrees": 32.1,
+      "max_rotation_from_baseline_radians": 3.1,
+      "max_visual_handle_to_arm_center_studs": 1.47,
+      "sampled_frames_over_0_7_seconds": 12,
+      "server_accepted_shot": 2
+    },
+    "reequip": "visual rig present after UnequipTools/EquipTool cycle",
+    "cleanup": "review session closed; normal target range reopened; lobby window retained"
+  },
+  "limits": [
+    "One local client near 17 rendered frames per second during sampling.",
+    "No subjective owner approval.",
+    "No measured moving/tap trial, other-client playback or high-frame-rate visual review.",
+    "Settings selection in probe used the same local attribute; no automated pointer/button usability verdict.",
+    "Sample endpoint checks do not prove every visual catch frame."
+  ]
+}

@@ -1,12 +1,109 @@
 # Slug shooting (experiment)
 
+## Current state (2026-11-01; read this first)
+
+Newer entries below explain how each value was reached; earlier values are history. Feel values now live in `experiments/movement/client/Tuning.luau`. **In Studio, press P** for live sliders; Print writes changes to the Output so they can be baked in.
+
+| Area | Current behaviour | Owner position |
+| --- | --- | --- |
+| First-person running | Real animated arms, forward lean, stride-synced bounce | Moved on 2026-11-01; treat as baseline |
+| Flip camera | Spot default; Anchor and Ride in Settings. Front/back tilt raised from 8° to 13° at the owner's OK | Spot accepted; new tilt verdict pending |
+| First-person idle | Arms low by the sides, hands and gun in the lower view, slight lean, gun tipped down | First pass; verdict pending |
+| First-person landing | View dips with fall speed (0.21 studs on a plain jump) and hands trail it | Verdict pending |
+| Shot origin | Leaves the actual gun tip in every view | Verdict pending |
+| Slug return | Crosshair ring pulse, canister glow, slot flash when the cooldown ends | Verdict pending |
+| Crosshair | Seven styles, colour, 75-140% size, centred resize | Liked; centred resize not yet confirmed |
+| Charge ring | Soft white ring, fine vibration, moving highlight | Liked; rims and highlight not explicitly confirmed |
+| Third-person grip | 9° down, 0.18 studs up, 0.06 out | "Much better"; housing near trigger still slightly chunky, leave unless a clean fix appears |
+| Third-person aiming arm | Upper body turns up to 45° toward left-side targets; front/rear sectors, 40° inward limit, 0.22-stud shoulder shift | Owner asked for this fix; verdict pending |
+| First-person shooting angle | 88% angle settling while charging/firing; arm keeps moving | Owner agreed the approach, moved on |
+| Recoil | Kick up (22-32° gun, default) or Flip & catch in Settings | Owner moved on without further complaint; not explicit approval |
+| Fired slug size | 0.85 studs outside the barrel; hit radius still 0.3 | Owner moved on |
+| Recovery | 1.5 s from impact: belly skid, wiggly roll to back, hop, screwing head-first dig with moving ground and debris. Rounded dark underside | Owner asked for all of this; verdict pending |
+
+**Review response implemented, 2026-11-01:** [what the owner took from the review](reviews/2026-11-01-combat-feel-review.md), [evidence and limits](evidence/2026-11-01-review-pass.json).
+
+**Implemented/verified, 2026-11-01 - earth shapes:** the ground-friction pass looked wrong in close-up (near-black debris, round marbles, plank-like patches). Debris now reads as brown clods and grey rocks, and the ground patches are soft swells. Timings unchanged. [Evidence](evidence/2026-11-01-floppy-earth-shapes.json), [surfaces](evidence/2026-11-01-floppy-earth-shapes-surfaces.png).
+
+**Implemented/verified, 2026-11-01 - ground friction:** Floppy now pushes up and tilts seven ground-matched surface patches in time with its digging strokes. Twenty-four varied dirt/rock pieces emerge at staggered times, tumble outward and settle into uneven clusters. The descent lasts 1.0 second. Full combat checks and one native Studio target-shot test passed, including moving ground pieces and cleanup; four pose views were reviewed. This is cosmetic surface motion, not Terrain deformation. Owner feel/appearance approval and multiplayer load remain unverified. [Evidence](evidence/2026-11-01-floppy-ground-friction.json), [poses](evidence/2026-11-01-floppy-ground-friction-poses.png).
+
 Started 2026-10-31 on `experiment/rocklock-unified`. Code: `experiments/combat` (shared settings and flight model, server authority, client input/visuals/HUD, and the temporary range). Checks: `python tools/verify_combat.py`; runtime self-test lines (`[CombatSelfTest]`) appear in the Studio log when the range runs.
+
+## Confirmed recovery design (2026-11-01, Floppy implemented)
+
+**Earlier owner follow-up (0.85 s, 12-piece rim; superseded by the 1.0 s ground-friction and earth-shape passes above):** Floppy now wriggles and rolls from belly to back before the hop/dive. Its digging descent lasts 0.85 seconds with body/antenna motion and eased downward pulses. A small soil/rock ring grows around entry using the ground's color, then settles and fades. The roll, dig, 12-piece rim and cleanup passed a real native Studio target-shot check; owner timing/appearance verdict is pending. [Current evidence](evidence/2026-11-01-floppy-roll-dig.json), [pose sheet](evidence/2026-11-01-floppy-roll-dig-poses.png).
+
+The owner approved **local recovery and burrowing** to replace returning hops and the cooldown-driven puff. General slugs land, shake themselves off and burrow. **Floppy lands on its belly, may wriggle, then makes a little hop and burrows into the ground**, representing its return to inventory. Inventory availability keeps the existing cooldown independently of the recovery animation; the scene can finish naturally without racing back to the player or being cut off by readiness.
+
+This avoids fast return traffic in a crowded match and works with slug switching and hidden capsules. The 16-player example explains the readability concern, not a confirmed match format. [Full recovery specification](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md).
+
+**Implemented:** fired Floppy now falls off targets onto the floor, belly-flops, wriggles on the existing rig, crouches, hops 0.65 studs, turns head-first and burrows straight down with small local soil flecks. The recovery scene finishes independently of ammo readiness; the old return hops and puff are removed. This is procedural runtime animation on the existing imported model; no new mesh or animation upload is needed.
+
+**Verified:** full combat checks pass. One real Studio target hit completed all phases, persisted past the cooldown and cleaned up after burrowing. Native imported-rig poses were reviewed from four views. [Evidence and limits](evidence/2026-11-01-floppy-recovery.json), [pose sheet](evidence/2026-11-01-floppy-recovery-poses.png). The owner still needs to judge the timing and appearance; multiplayer and broader surface behavior remain unverified.
+
+## Larger slug outside the barrel (2026-11-01)
+
+**Confirmed:** owner wants the fired slug and its impact/return presentation larger and easier to see, suggesting roughly 0.75–1 stud while still small. **Implemented:** Floppy's outside-barrel visual height is 0.85 studs, up from 0.55 (about 55% larger in each dimension). The separate flight template keeps this scale through splat and return; the loaded slug still fits the chamber independently. Hit radius remains 0.3 studs. **Verified offline:** full combat checks passed; training range rebuilt/reopened. **Unresolved:** owner size/visibility verdict in Studio.
+
+## Slower slug return hops (2026-11-01)
+
+**Historical implementation:** the implemented [local burrow recovery](slugs/recovery.md) replaces these return hops. The old return-time setting and cooldown-driven puff have been removed from the current code.
+
+**Current owner retune:** speed up the 1.25-second version by about 33%. Return duration is now **0.94 seconds** (`1.25 / 1.33`, rounded). Combat offline checks pass; range reopened, owner feel verdict pending.
+
+**Confirmed:** owner finds the post-impact return too fast and asks for roughly “150% slower.” **Implemented:** interpreted as 150% more duration, increasing `Combat.ReturnTime` from 0.5 to 1.25 seconds (2.5 times the duration). Existing hop count and arcs use that longer timing. The 1.5-second firing cooldown and rule that a still-returning slug puffs when ready remain; a distant hit may therefore disappear before completing the slower return. **Verified offline:** full combat checks passed; range rebuilt/reopened. **Unresolved:** owner speed verdict and runtime return appearance.
+
+## Recoil options — large kick and flip/catch (2026-11-01, current)
+
+**Confirmed:** repeated recoil passes looked almost unchanged to the owner. The new request is a **large upward kick as the base**, plus a selectable shot-triggered flip in the air and catch like the existing draw animation, both with a Slugterra-inspired expressive blaster feel. This supersedes earlier requests for only a slight kick. Both remain cosmetic and experimental.
+
+**Implemented:** Settings → Gameplay → Recoil animation offers **Kick up** (default) and **Flip & catch**, held for the session. Shots snapshot the selected style; changing the setting affects the next shot. Kick up uses 22–32 degrees of wrist pitch plus 3–5 degrees of hand follow with charge. The alternate adds the accepted `BlasterMotion.Toss.Draw` track 0.06 seconds after the shot, reusing its toss, turn, catch dip and rebound. It finishes within the existing shot cooldown. Holstering clears the recoil; the server allowlists the cosmetic style in the accepted Shot message for other clients.
+
+**Presentation correction:** first-person recoil is now applied directly to the visible gun about its hand grip after smoothing, while the hidden native tool skips recoil in that mode. This removes dependency on the next native joint/physics update and avoids double application. Aim stabilization no longer tries to infer recoil from that hidden tool. Arm follow remains visible; camera/cursor orientation has no added recoil.
+
+**Verified offline:** full combat checks pass. **Verified in one native Studio client:** full-charge rendered gun pitch rose 36.94 degrees with Kick up; Flip & catch rose 32.10 degrees, reached 3.10 radians from its starting orientation and visibly separated farther from the arm. Both shots were server-accepted; a re-equip cycle preserved the visual rig. The sampling ran at about 17 FPS. The temporary injected review script stays only in an ignored alternate build; the normal range was reopened afterwards. [Evidence and limits](evidence/2026-11-01-recoil-options.json). **Unresolved:** owner feel/visual verdict, moving/tap comparison, other-client playback and high-FPS review.
+
+## Small shot recoil (2026-11-01)
+
+**Current iteration — owner verdict pending:** owner still could not feel enough recoil and asked for something “more animated,” slightly more dramatic and noticeable. This pass changes the motion shape: 35 ms fast attack, peak through 80 ms, eased return to 300 ms, then a small settling dip ending at 400 ms. Gun pitch scales from 7 to 11 degrees with charge. A smaller first-person hand/forearm follow-through is applied after pose smoothing so running cannot damp its attack; hand and gun remain attached. This is a contextual interpretation of “animated,” not yet an accepted preference. Combat offline checks passed and range reopened; subjective running/charge comparison remains pending.
+
+**Latest owner feedback:** the initial kick was only apparent standing still; wants a clearer upward kick that grows with charge, capped at a restrained amount. **Implemented/verified offline:** tap-to-full-charge muzzle lift is 4.5 to 7.5 degrees with 0.04 to 0.08 studs upward motion and 0.10 to 0.14 studs backward motion. Attack is 30 ms; recovery 230 ms. Validated charge is included in accepted Shot messages for observer presentation. Combat checks passed and range reopened. Owner verdict while running remains pending.
+
+**Confirmed:** owner wants a noticeable but small firing kick. **Implemented:** predicted local shots immediately trigger a cosmetic wrist kick; observers trigger it on the accepted Shot event. A shared non-accumulating recoil sample rises over 35 ms to 0.12 studs backward / 3.2 degrees muzzle-up, then returns over 185 ms. First-person aim stabilization excludes the recoil from its correction, so it does not cancel the kick. The camera and firing ray have no added recoil. **Verified offline:** `python tools/verify_combat.py` passed; range rebuilt/reopened. **Unresolved:** owner feel verdict, actual Studio playback and observer timing.
+
+## First-person shooting angle stability (2026-11-01)
+
+**Confirmed:** owner wants fluid arm movement while charging/firing, but excess movement-driven gun tilt is distracting even when shots remain accurate. **Implemented:** the first-person gun hand and gun rotate together towards the aim direction with 88% angular stabilization and a short blend, preserving shoulder travel and positional motion. A little angular sway remains. Stabilization releases for acrobatic actions and draw/holster flourishes. Third-person presentation is unchanged. **Verified offline:** `python tools/verify_combat.py` passed; training range rebuilt/reopened. **Unresolved:** owner feel/appearance verdict and live aim, transition and shooting checks.
+
+## Third-person aiming arm clearance (2026-11-01)
+
+**Latest owner correction:** full bounds clearance detached the shoulder too far. Owner accepts modest overlap, wants less intrusion than screenshot `122739`, and wants rear targets to put the arm behind the back. **Implemented/verified offline:** cap shoulder depth shift at 0.22 studs; use front/rear aiming sectors with a 40-degree inward limit from either direction and a small hysteresis around the side boundary. Smooth the pose transition. Clearance stays after limb folding, follows the selected front/back direction, and deliberately permits some overlap. Combat checks passed and the range reopened; owner visual/runtime verdict remains pending. This supersedes the full-clearance and front-only limits below.
+
+**Current correction:** owner supplied screenshot `2026-11-01 122739` as the maximum acceptable inward/backward pose. The wider arc reintroduced torso overlap. Inspection found that `chord()` discarded the previous shoulder translation when combining arm segments. The aiming arc now stops at -60/+120 degrees, and R6 shoulder clearance runs after limb folding: when the posed arm bounds approach/cross the torso side, move its rear face ahead of the torso front with 0.08-stud clearance. This also evaluates intermediate smoothed poses. Combat checks passed offline and the range reopened; the final screenshot match and live motion still require owner testing. Preserve this post-fold placement if refactoring, or the clipping fix silently disappears.
+
+**Owner follow-up:** the first limit was too restrictive; the arm pointed straight ahead while aiming behind. **Implemented:** enlarged the shoulder tracking arc, move the shoulder forward and outward when crossing inward, and smooth the transition near directly behind. The cursor ray remains unchanged. Combat checks passed offline and the range was reopened. **Unresolved:** owner evaluation of reach, torso clearance and smoothness in Studio.
+
+**Confirmed:** owner likes the arm tracking the cursor while charging, but extreme aim directions can fold it across or behind the torso. **Implemented:** third-person arm presentation tracks within a forward shoulder arc with a little outward clearance for inward aim; its visual direction returns toward the front for targets behind the character. Cursor ray and shot direction are unchanged, so at extreme angles the gun can point away from the actual shot. Local first-person arm tracking is unchanged. **Verified offline:** `python tools/verify_combat.py` passed and the training range was rebuilt and reopened. **Unresolved:** owner's visual verdict across angles, movement and shooting; Studio runtime and other-client presentation have not been tested in this refresh.
+
+## Third-person blaster grip adjustment (2026-11-01)
+
+**Owner verdict:** the revised hold is much better. The dark housing near the line and circular lights looks chunky and partly obscures the trigger area from this angle; this is a minor concern and the owner prefers leaving it if there is no clean fix. The housing belongs to the approved blaster design, so the accepted hold and mesh were left intact pending a clearer, worthwhile improvement.
+
+**Owner follow-up:** the initial 3-degree / 0.07-stud adjustment was too subtle. **Implemented/verified offline:** increased the downward angle to 9 degrees and the upward grip-frame shift to 0.18 studs; the outward shift stays 0.06 studs. The training range was rebuilt and reopened; visual and runtime verdict pending.
+
+**Confirmed:** owner requested only small third-person changes: angle the gun down slightly, expose more of the grip, and shift it up toward the trigger area. First-person presentation should stay as before. **Implemented:** a third-person-only client grip adjustment offsets the held blaster 0.06 studs outward and 0.07 studs upward in the grip frame and rotates it 3 degrees down. The existing wrist and draw/holster presentation compose with it; the local first-person grip uses the original frame. **Verified offline:** `python tools/verify_combat.py` passed. **Unresolved:** owner visual verdict and live draw, aim and shooting behavior in Studio.
+
+## Crosshair resize and training range refresh (2026-11-01)
+
+**Implemented:** the crosshair size setting resizes its centered frame, keeping the aim mark on the same point as its size changes. The Ring Dot stroke scales with it; crosshair color and the white charge ring remain independent. **Verified offline:** `python tools/verify_combat.py` passed. **Unresolved:** owner visual confirmation across sizes and camera modes.
+
+**Implemented:** the separate `build/SlugshotTempRange.rbxlx` was rebuilt with the latest locally available private final blaster and Floppy mappings and opened beside the lobby Studio window. The range remains the workspace for gun tuning. **Unresolved:** imported asset appearance, playback and shooting in this refreshed Studio session have not been playtested.
 
 ## Confirmed (owner, 2026-10-31)
 
 - Every slug shares one shot: tap fires at a decent speed; holding charges for more speed, an earlier transformation and less drop. Standard slugs always transform (later slugs); no failed transforms for now. Floppy is the weakest slug and never transforms.
 - Floppy: 5 damage against 100 base HP, a comedic splat, no knockback. It flies slowly, droops and does not travel far.
-- Ammo: a cooldown from the moment of firing is the only reload rule (proposed 1.5 s). After impact the slug recovers and hops back quickly; if the cooldown ends first it puffs away and counts as back. Frictionless, fast-paced and easy to track.
+- Ammo: a cooldown from the moment of firing is the reload rule (currently 1.5 s). **Recovery design revised by the owner, 2026-11-01:** recover and burrow locally, independently of cooldown readiness. This supersedes hopping back and puffing away when the timer expires; the [new recovery design](slugs/recovery.md) is implemented for Floppy.
 - The current map is a placeholder, not a source of truth. The target range is explicitly temporary.
 
 ## Implemented
@@ -17,7 +114,7 @@ Started 2026-10-31 on `experiment/rocklock-unified`. Code: `experiments/combat` 
 
 ## Proposed (tuning, owner playtest)
 
-Floppy launch 55 (tap) to 100 (full) studs/s, gravity 70, drag 1.2, hit radius 0.3, 2 tumbles/s, 0.55-stud flight size; full charge 0.8 s; splat 0.25 s; hop-back 0.5 s in 1–3 hops. All in `experiments/combat/shared/init.luau`.
+Floppy launch 55 (tap) to 100 (full) studs/s, gravity 70, drag 1.2, hit radius 0.3, 2 tumbles/s, 0.85-stud flight size; full charge 0.8 s. Recovery uses the local fall/skid/wriggle/crouch/hop/burrow sequence, with phase shares in `Combat.Recovery` and its total in `Tuning`. All values are in `experiments/combat/shared/init.luau`.
 
 ## Unresolved
 
@@ -107,6 +204,13 @@ The interpretations below are **Considering**, supported by the iterations in th
 - **Mid-flip shot disappears:** firing events can arrive before root physics. Keep the six-stud root-relative bound, bounded 0.25 s replication grace, cooldown reservation/rollback and swept flight catchup from receipt timing. Do not simply widen bounds, use an animated torso as authority, cancel committed shots on later holster, or skip early collisions. Reject non-finite vectors. See ADR 0013.
 - **Generic flip arms:** do not restore a shared tuck/paddle or replacement direction-blended pose tables. Anchor/Spot now reframe actual rendered shoulder motion; the pointing gun hand is reduced while the free hand retains the source motion. Ride retains body-relative arms. Projection is an intentional visibility adaptation, not exact screen-space third-person geometry.
 - **False runtime failures:** wait for rendered action state rather than 35 ms; background Studio can run near 15 FPS. Honor the three-second respawn cooldown. Teleporting through the backstop can trigger guards; approach by walking and record server rejects/correction deltas. A local action label alone is not server acceptance.
+- **Recoil "looks the same" after retuning:** first the visible gun copy was reading the hidden tool's joint, which arrived a physics step late. Apply recoil to the visible gun after pose smoothing. Confirm a change reaches the screen before raising its size again.
+- **Shoulder clearance silently does nothing:** limb folding (`chord()`) keeps rotation only and discards earlier shoulder translation. Apply clearance after folding.
+- **Numeric checks pass but the effect looks wrong:** counts and motion passed while burrow debris looked black, round and plank-like. Inspect a close-up at real scale before calling an effect done, on more than one floor type. `Part.Shape = Ball` forces a uniform size; use a `SpecialMesh` sphere for lumps.
+- **Literal `?` in notes:** piping non-ASCII text through a PowerShell here-string to Python corrupts it. Write notes with an editor or a UTF-8 script file, then search for stray `?`.
+- **Wrong Studio log:** with several Studio windows open, "newest log" can belong to another window. Search by a unique probe tag.
+- **First burrow froze for 0.7 s (seen once; cause inferred):** debris materials load on first use. `SlugVisuals` shows each once, nearly invisible, at startup; 10 shots across two fresh sessions then stayed under 20 ms.
+- **Stale probe results:** one capture read the previous run's log and reported old numbers. Filter logs by creation time and distrust identical results.
 - **Stale playtest:** close the exact generated range window, rebuild after closure, reopen. Saving stale Studio state can overwrite a new build. Preserve unrelated windows and keep this temporary target area.
 
 Baseline evidence: [camera/arms](evidence/2026-10-31-flip-camera-comparison.json), [framing/cadence](evidence/2026-10-31-arm-cadence-framing.json), [continuity](evidence/2026-10-31-first-person-smoothing.json), [equip](evidence/2026-10-31-first-person-equip.json), [shooting](evidence/2026-10-31-mid-flip-shooting.json), [ADR 0012](decisions/0012-first-person-body-presentation.md), [ADR 0013](decisions/0013-combat-origin-replication-grace.md), [ADR 0014](decisions/0014-acrobatic-camera-comparison.md). Values and older “current” headings below are historical unless consistent with this section/current source. Do not reopen accepted idle/shoulder/flip work because an old entry's verdict was pending.
@@ -248,4 +352,4 @@ Current visual arms are 12% longer than the shortened version, with matching cro
 
 **Crosshair symmetry and size, 2026-11-01:** Triad now has a north-facing top mark and mirrored lower marks. Micro Cross was checked: both lines are 5.5 units long and 1.2 wide. Settings adds a 75–140% size slider in 5% steps, default 100%, applied to the aiming mark and its preview independently of the white charge ring. Size lasts through respawn during the current session. Combat verification and Studio checks pass for native slider input, symmetry, centered aim at 75/100/140%, white unchanged charge, accepted shot, respawn and cursor/menu transitions. [Evidence/limits](evidence/2026-11-01-crosshair-size-symmetry.json). Owner appearance and touch/gamepad checks remain open.
 
-`CrosshairSize` is a local player session attribute; `CrosshairStyles.size` clamps values and defaults invalid numbers to 1. Apply it to `MarkScale` alone so the aiming mark remains centered and the charge ring does not grow. The live Settings preview follows the same multiplier.
+`CrosshairSize` is a local player session attribute; `CrosshairStyles.size` clamps values and defaults invalid numbers to 1. `CrosshairStyles.resize` applies it to the centered mark frame alone (replacing the original `MarkScale`, which drifted down-right when resizing), so the aiming mark stays centered and the charge ring does not grow. The live Settings preview follows the same multiplier.

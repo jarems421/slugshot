@@ -2,6 +2,16 @@
 
 Updated 2026-10-31. This is a working record, not a redesign of the pipeline or approval of the creature. [Current design and verification](catalog/flopper-inspired.md). Preserve the owner’s feedback, the model source and the render that produced it; do not equate a passing script with a good design. For what the owner's phrases have meant in practice (e.g. "squishy", "stuck on", "muddy spots") and the draw/holster runtime lessons, see [owner design language](owner-design-language.md).
 
+## Runtime burrow friction (2026-11-01)
+
+**Confirmed:** the preceding roll/dig animation was almost perfect, but simply sinking with appearing dirt did not convey ground resistance. **Implemented/verified:** synchronize ground-matched cosmetic patches with each dig stroke: lift, tilt and shove outward while staggered debris tumbles into varied clusters. Seven patches and 24 debris pieces passed a real Studio target-shot motion/cleanup check and four-view review. Avoid an evenly spaced ring or a delayed burst of particles. [Evidence](../evidence/2026-11-01-floppy-ground-friction.json). No Blender source changed and no Terrain is modified. Owner artistic approval remains pending.
+
+## Runtime debris shapes (2026-11-01)
+
+**Problem:** the burrow passed its piece-count and motion checks, yet close-ups showed near-black debris, marble-round clods and plank-like ground patches. **Causes:** Ground and Slate materials render much darker than their Color; `Part.Shape = Ball` forces a uniform size; thin rectangular slabs read as boards. **Implemented/verified:** lighter base colours, `SpecialMesh` sphere lumps, mixed wedge/corner-wedge/block rocks and half-buried soft swells. **Prevention:** view effects close up, at real scale, on several floors; counts do not establish appearance. [Evidence](../evidence/2026-11-01-floppy-earth-shapes.json). Owner approval pending.
+
+**Rounded underside (2026-11-01), implemented/verified offline and in Studio:** owner: "sawn off disc", and it makes the creature look stiff. Moving flat-base vertices did nothing, because the surface-net base has a dense rim and almost no interior vertices (first attempt: radius 0.049). `round_underside` deletes the flat faces and rebuilds rings from the rim; deleting with `FACES_ONLY` left wire edges that failed manifold checks, so use `FACES`. Rings stretch rim texture into streaks and seam dots, so `darken_underside` fades to one flat colour and flat normal, with the mask grown a few texels. The dome sits below the ground plane: standing height is unchanged at 0.935 studs. **Prevention:** inspect actual vertex distribution before planning a vertex edit. [Render](../evidence/2026-11-01-floppy-underside.png). Owner verdict pending.
+
 ## Artistic and visual lessons
 
 | Problem and known cause | Attempts and current response | Prevention and verification |
@@ -22,6 +32,18 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 
 ## Technical lessons
 
+### Floppy roll/dig and rim readability (2026-11-01)
+
+**Owner feedback:** roll belly-to-back, visibly wiggle/dig down and gather a small dirt/rock rim smoothly. **Implemented/verified in native Studio:** ease the roll about the body's long axis, retain the back pose through anticipation, interpolate into the head-first dive, and apply digging motion to every imported skeleton copy. Build the rim progressively from sampled ground colors and fade it after the creature has entered. The first rim radius was hidden under the exposed base; moving it just beyond the body silhouette made the ring visible in close-up. Four pose views, real-shot roll/dig and cleanup checks passed. [Current evidence](../evidence/2026-11-01-floppy-roll-dig.json). This is procedural Roblox animation; no Blender asset edit occurred. Owner timing/smoothness approval is still open.
+
+### Runtime recovery on the imported Floppy rig (2026-11-01)
+
+**Problem:** return hops were cut off by ammo readiness and ended with a puff; the owner instead approved a local belly-flop, wriggle, hop and head-first burrow.
+
+**Implemented/verified in one native Studio client:** separate the visual recovery lifecycle from the firing cooldown. Use the existing imported rig, resolve axes from the root/head/eye bones, and write transforms to every skeleton copy so the body, eyes and ink shell stay together. Raycast to ground after target impacts while excluding character models; do not assume the hit point is a floor. Only remove the model after sinking below the surface. The review captured four views and observed a complete real-shot phase sequence. [Evidence and limits](../evidence/2026-11-01-floppy-recovery.json).
+
+**Prevention:** keep runtime procedural motion owned by the recovery layer; the loaded/pedestal idle must not animate the fired clone. A model named `FloppyFlight` is distinct from the idle's `Floppy` selector. No Blender edit/export was needed; source asset QA is not evidence for runtime timing, and this review is not owner art approval.
+
 | Problem and cause | Attempts and current response | Prevention and verification |
 | --- | --- | --- |
 | The first headless preview failed because a generated empty scene had no World. | Added a preview World when absent. | Start preview setup by creating missing scene resources. **Verified:** repeated headless renders pass. |
@@ -37,7 +59,7 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 | Studio MCP was configured only for the main `slugshot` folder, so sessions in the slug worktree had no Studio tools. `claude mcp add … -- cmd.exe /c …` run from Git Bash rewrote `/c` into a path (`C:/`), and the server timed out. | Wrote the user-scope entry directly in `~/.claude.json` (`"command": "cmd.exe", "args": ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"]`); `claude mcp list` then showed it connected. It loads only after a session restart. | Register Studio MCP at user scope; don't pass `/c` style arguments through Git Bash. **Verified:** connection check passed; not used in-session. |
 | Rojo failed with "Failed to deserialize JSON" on a `SpawnLocation` whose `CFrame` was written as a position/orientation-matrix object. | Used `Position` and `Orientation` properties instead. | Prefer simple vector properties in project JSON. **Verified:** build succeeded. |
 
-## 2026-10-31 ? Accepted Floppy technical review
+## 2026-10-31 — Accepted Floppy technical review
 
 **Confirmed:** owner approved the final Floppy art and requested review/backup. Multi-angle and sampled idle views were inspected in the saved live Blender 5.2.3 scene; art was preserved. **Verified offline:** export hashes and FBX reimport pass, including 8.8k triangles, eight bones and a seamless 12-second scale-free idle. **Unresolved:** the generic Roblox mesh audit finds 18 inconsistent-winding edges and one degenerate skin face (plus nine non-manifold edges); passing the exporter's rig/budget/animation tests does not establish topology quality. Repair on a checkpoint/variant and compare silhouette/UVs before replacing the accepted asset. High-source meshes skip the generic overlap test at its default 300k cap; do not present that omission as a complete QA pass. A Highlight is unlit fill on the slug and cannot illuminate its chamber; keep that request unresolved. [Full review](../reviews/2026-10-31-work-review.md).
 

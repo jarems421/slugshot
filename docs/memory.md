@@ -1,6 +1,101 @@
 # Project memory
 
-## 2026-11-01 ? Main integration of committed branches
+## 2026-11-01 — Review response built
+
+- **Confirmed:** owner took most of the review: gun-tip shots, return cue, tuning panel, more flip tilt, landing reaction, rounded underside, belly skid, steep rock fix, left-aim fix, idle arms, and asked for a much livelier burrow. Sound later. Expects at most 12 players per map. Field-of-view framing already checked by the owner.
+- **Decision to confirm:** "lasts the 1.5 second window" implemented as impact to gone, since flight time varies. This shrinks the earlier 2.7-3 s recovery and its 1.0 s dig to 0.43 s. Adjustable on the P panel.
+- **Implemented/verified:** see [status](status.md) and [evidence](evidence/2026-11-01-review-pass.json). New private Floppy upload; rollback IDs in ignored `private-assets/floppy/before-rounded-underside`.
+- **Unresolved:** all owner feel verdicts; the wedged-in-rock fallback untested; chamber fit of the deeper model not inspected.
+
+## 2026-11-01 — Codex chat hand-off, burrow finish and review
+
+- **Confirmed:** owner asked for the Codex combat chat to be audited against the docs, its interrupted burrow work finished, the range reopened and the finished work reviewed. The session log is `~/.codex/sessions/2026/10/31/rollout-2026-10-31T16-52-35-01a192e0-98a0-79e2-b4fc-168f6839e3f1.jsonl`.
+- **Audit:** messages 2-45 were documented, committed and merged. Message 46 (branch merge) is recorded. Messages 47-75 had notes, but only uncommitted in the integration worktree, with these faults: `?` corruption, stale "current" statements, no wording lessons for grip/recoil/arm, and no record of the rejected return options. All repaired.
+- **Implemented/verified:** corrected burrow debris after close-ups showed it near-black, round and plank-like. Real-shot regression, four floor types and six-shot frame times recorded. [Evidence](evidence/2026-11-01-floppy-earth-shapes.json).
+- **Measured:** third-person shots spawn 1.1-3.2 studs from the gun tip. [Review](reviews/2026-11-01-combat-feel-review.md).
+- **Unresolved:** owner burrow verdict, commit of the integration worktree, and which review proposals to take. Proposals are not approved work.
+
+## 2026-11-01 - Floppy ground friction and messy debris
+
+- **Confirmed:** owner called burrowing almost perfect but wanted the ground to move while digging, then dirt/rock to accumulate; more debris and less uniform placement.
+- **Contextual language:** "friction" in burrowing means visible resistance and ground displacement synchronized with digging, rather than a slug simply sinking and debris appearing afterwards. "Messier" means varied sizes, clustered spacing, staggered emergence and tumbling, while keeping the effect local.
+- **Implemented/verified:** 1.0-second descent, seven ground-colored/material-matched moving surface patches and 24 varied debris pieces. Full combat checks and a real native Studio target shot passed, including heave/tilt and cleanup; four views inspected. [Evidence](evidence/2026-11-01-floppy-ground-friction.json).
+- **Unresolved:** owner friction/appearance verdict, other surface palettes, multiplayer/load. No actual Terrain edits or Blender asset changes.
+
+## 2026-11-01 - Floppy roll and digging refinement
+
+- **Confirmed:** owner wants Floppy to roll from belly onto back before burrowing; digging should visibly wriggle and gradually gather a small dirt/rock pile or ring with smooth transitions.
+- **Implemented/verified:** eased 0.95-second roll, back-to-dive interpolation and 0.85-second active digging descent. Twelve small mounds/rocks gather progressively with ground-sampled colors, then settle/fade. A real native Studio shot completed the roll, dig and rim cleanup; full combat checks pass. Four views inspected. [Evidence](evidence/2026-11-01-floppy-roll-dig.json).
+- **Lesson:** the first ring radius sat under Floppy's broad exposed base. Move it just beyond the body silhouette so it reads as gathering around the burrow, without making a large pile. This fixes the observed occlusion; subjective motion and size approval remain pending.
+
+## 2026-11-01 - Floppy recovery implemented
+
+- **Confirmed:** owner requested implementation: shoot, hit, fall to the floor, belly wriggle, jump and burrow straight down, representing return to inventory.
+- **Implemented/verified:** procedural runtime animation on the existing imported rig, including duplicate eye/ink skeletons. Target hits fall to supporting ground; the model is removed only after its burrow. Recovery no longer reads cooldown readiness. Full combat offline checks pass. One actual native Studio target shot traversed every phase, survived beyond cooldown, hopped 0.649 studs, animated upper-body bones and dived head-first, then cleaned up. Four-view pose evidence captured. [Evidence](evidence/2026-11-01-floppy-recovery.json).
+- **Unresolved:** owner timing/appearance verdict, wider surface coverage and multiplayer. No Blender source or asset upload changed. The normal target range was reopened after the temporary review session.
+
+## 2026-11-01 - Local burrow recovery approved
+
+- **Confirmed:** owner approved slugs recovering where they land: land, shake off, burrow, representing return to inventory. Floppy specifically lands on its belly, may wriggle, then makes a little upward hop and burrows.
+- **Confirmed context:** the owner rejected puff disappearance and worried that distant returns timed to the 1.5-second cooldown would race across a crowded 16-player map. Gun/capsule destinations also complicate switching and hidden capsules. Local creature animation avoids that traffic; cooldown availability remains independent. Do not revive timer-driven puff or fast map-spanning returns as the default.
+- **Documented, implementation pending:** [recovery specification](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md), combat and Floppy catalogue updated. The current runtime still has 0.94-second return hops and a puff; this turn adds no animation/code changes. Exact timing and wall/water/surface handling remain unresolved.
+
+## 2026-11-01 — Larger fired/returning slug
+
+- **Confirmed:** owner wants the slug small only for chamber fit, with a more visible 0.75–1 stud presentation after firing and on return. **Implemented/verified offline:** outside-barrel visual height 0.55 → 0.85 studs, shared by flight/impact/hops; loaded chamber fit and 0.3-stud hit radius remain separate. Combat checks passed and range reopened. Owner visual verdict pending.
+
+## 2026-11-01 — Slower return hops
+
+- **Confirmed/implemented:** owner requested about 33% faster after trying 1.25 seconds. Current duration is 0.94 seconds (1.25 / 1.33, rounded). Combat offline checks pass; range reopened, owner verdict pending.
+
+- **Confirmed:** owner requests roughly 150% slower slug hopping after impact. **Implemented/verified offline:** return duration 0.5 → 1.25 seconds (150% more time), keeping the existing arcs and cooldown/puff behavior. Combat checks passed and range reopened. Owner speed and runtime appearance verdict pending.
+
+## 2026-11-01 — Large base recoil and optional flip/catch
+
+- **Confirmed:** earlier recoil remained too subtle. Owner explicitly requests a big upward base kick and a selectable post-shot gun flip/catch inspired by the existing draw animation, with a Slugterra-esque feel. Do not continue interpreting this as merely a slight kick.
+- **Implemented/verified:** Kick up default and Flip & catch in Settings → Gameplay; charge scales the kick, the alternate reuses the accepted Toss.Draw curve. First-person gun recoil now applies directly after smoothing instead of relying on the hidden tool joint update. Native Studio full-charge pitch rises: Kick 36.94 degrees, Flip 32.10 degrees; both server-accepted, re-equip passed, bounded sample/endpoints passed. Combat offline checks pass. [Evidence](evidence/2026-11-01-recoil-options.json).
+- **Unresolved:** owner subjective verdict, moving/tap feel, high-FPS and multiplayer playback. Recoil options are session-local and cosmetic.
+
+## 2026-11-01 — Small gun recoil
+
+- **Confirmed:** previous charge-scaled kick remained too subtle. Owner asked for “more animated,” slightly more dramatic recoil. **Implemented/verified offline:** changed timing to fast attack, readable peak, eased recovery and subtle settle; added first-person hand follow-through after smoothing. This interpretation of “animated” awaits acceptance. Combat checks passed and range reopened.
+
+- **Confirmed:** initial recoil was too hard to notice while running; owner wants more upward kick, increasing with charge but capped. **Implemented/verified offline:** charge-scaled upward lift and wrist pitch, 30 ms attack / 230 ms recovery; accepted Shot events carry validated charge for observers. Combat checks passed; owner running/charge comparison pending.
+
+- **Confirmed:** owner wants a small but noticeable gun kick when firing. **Implemented/verified offline:** shot-triggered cosmetic wrist recoil shared by first/third-person gun presentation; quick rise and return, no accumulation, aim stabilization preserves it. Combat checks passed and range reopened. Live feel and observer playback pending.
+
+## 2026-11-01 — First-person gun tilt while shooting
+
+- **Confirmed:** owner wants moving arms and fluidity, with substantially less movement-driven gun tilt during charging/firing. “Steady” here means settling the gun angle while retaining arm travel and positional motion.
+- **Implemented/verified offline:** first-person hand/gun share aim-angle stabilization with slight residual angular motion and a short transition; acrobatic actions/flourishes release it. Combat checks passed and range reopened. Live feel and shooting verdict pending.
+
+## 2026-11-01 — Third-person charging arm
+
+- **Confirmed:** full arm-bounds clearance looked far too detached. Owner accepts slight torso overlap and requests rear aiming behind the back. **Implemented/verified offline:** capped shoulder shift at 0.22 studs and added front/rear sectors with 40-degree inward reach from either direction. Small side-boundary hysteresis and pose smoothing; combat checks pass. Visual/runtime verdict pending.
+
+- **Confirmed:** wider aiming arc again swallowed the arm; owner supplied `Screenshot 2026-11-01 122739.png` as the maximum inward/backward pose. **Root cause found:** `chord()` retained rotation only, discarding the previous shoulder translation. **Implemented/verified offline:** apply R6 bounds-based forward clearance after limb folding, with tighter yaw limits; combat checks pass and range reopened. Owner visual/runtime verdict pending.
+
+- **Confirmed:** owner found the first shoulder limit too restrictive for targets behind; wants the arm to reach as far as possible with a forward shoulder shift to avoid the body. **Implemented:** widened the aiming arc and added forward/outward clearance and rear-transition smoothing. Combat checks passed; live visual assessment remains.
+
+- **Confirmed:** owner likes cursor tracking while charging but reports the arm and gun folding into the torso or behind the character at extreme relative angles.
+- **Implemented/verified offline:** bounded third-person arm tracking and added modest shoulder clearance without changing the firing ray; extreme gun orientation may therefore differ from shot direction. Local first-person pose is unchanged. Combat checks passed and the range reopened; live appearance and shooting remain for testing.
+
+## 2026-11-01 — Third-person blaster fit
+
+- **Confirmed:** owner likes the revised hold much better. The dark housing around the illuminated line and circle can read chunky and hide the trigger from one view, but is low priority; leave it unless a clean improvement is found. No mesh or pose change made.
+
+- **Confirmed:** initial grip change looked nearly the same to the owner. **Implemented:** increased downward angle from 3 to 9 degrees and upward shift from 0.07 to 0.18 studs; rebuilt and reopened the range. Combat checks passed offline; visual verdict pending.
+
+- **Confirmed:** owner requested subtle third-person changes to angle the muzzle down, expose more grip and move the gun slightly up toward the trigger; preserve first person.
+- **Implemented/verified offline:** a client presentation grip offset composes with the existing wrist and flourish, and is disabled for the local first-person view. Combat checks passed. Owner visual and Studio runtime verdict pending.
+
+## 2026-11-01 — Crosshair centering and gun training range
+
+- **Confirmed:** owner reported the crosshair drifting down and right while resizing and requested a separate training arena with the latest blaster and Floppy designs for gun mechanics work.
+- **Implemented/verified offline:** centered-frame resize replaces the mark UIScale; Ring Dot stroke follows the chosen size. `python tools/verify_combat.py` passed. The range was rebuilt with the latest available private blaster and Floppy mappings and opened separately from the lobby Studio window.
+- **Unresolved:** owner visual centering and refreshed Studio asset/shooting playback.
+
+## 2026-11-01 — Main integration of committed branches
 
 - **Confirmed:** owner authorized review, merge and push of committed branches ahead of main, including concurrent lobby/design work. Live worktrees were left untouched.
 - **Implemented/verified offline:** merged creature, lobby and wall terrain histories into main integration. Preserved the later first-person combat camera, controls, reticle and single Athletic movement profile where older wall-run copies conflicted; terrain-following traversal was already present. Marked the 12-stud Eyrie to West Abutment route as a sprint jump after the pace retune. Renumbered creature ADRs to 0016 and 0017 to remove collisions. Creature Blender, combat and Rocklock V2 offline checks passed.
@@ -8,7 +103,7 @@
 
 
 
-## 2026-10-31 ? Review and backup of all local work
+## 2026-10-31 — Review and backup of all local work
 
 - **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
 - **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
@@ -144,7 +239,7 @@
 - Owner: lighting flickered between an orange-flare state and a dark state; the inside wasn't lit. Small PointLights inside the gun flicker with Roblox light culling and flared the orange prongs. Removed them; the loaded slug now has a constant sage-green Highlight fill (0.55); one faint pale-blue spill light remains. Lesson: don't rely on tiny interior lights for visibility.
 - Owner: light the inside calmly and lightly, not pale. Inner sage glow softened to 0.72 fill transparency. Session paused here at the owner's request; open items: owner verdict on the chamber glow, resizing the real Rocklock blaster (other branch), Studio MCP available after a session restart.
 
-## 2026-10-31 ? Review and backup of all local work
+## 2026-10-31 — Review and backup of all local work
 
 - **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
 - **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
@@ -169,7 +264,7 @@
 - **Implemented/verified offline:** original 0.42/0.34 s gestures, shared Floppy/Rocklock driver, native-grip additive poses and skinned/PBR-preserving cosmetic holster. Creature/movement/type/lint and numerical R6 sampling pass; [sources and evidence](slugs/blaster-motion.md).
 - **Unresolved:** actual Studio feel, rapid switching/death, peer rendering and owner art approval; official trailers were located but could not be downloaded, so no shot-specific motion claim.
 
-## 2026-10-31 ? Solid angular blaster muzzle
+## 2026-10-31 — Solid angular blaster muzzle
 
 - **Confirmed:** slightly extend barrel; lengthen/flatten downward slants; fill the two oval side vents with orange while keeping the central slug channel.
 - **Implemented/verified offline:** +0.080 stud muzzle reach, 0.24 versus 0.14 source-unit bevel run, solid front panels extruded from the existing cross-section. Orange mesh QA and exact-overlap checks pass; nine channel rays and six solid-panel samples pass; twelve GLB mesh bounds reimport exactly. Private mappings and test builds updated. [Evidence and inherited limits](slugs/blaster-refinement.md#solid-muzzle-and-shallower-bevel-follow-up-2026-10-31).
@@ -290,14 +385,14 @@
 
 ## 2026-10-30 - Rocklock cavern art pass
 
-## 2026-10-31 ? Slower movement pace (v7.39)
+## 2026-10-31 — Slower movement pace (v7.39)
 
 - **Confirmed:** owner asked for run 18, sprint/wall run 24, slide cap 26, slower locomotion and camera bounce, slightly slower flips and shorter jump reach at the existing heights.
 - **Implemented:** speed/cadence/camera/horizontal launch retune in the existing movement worktree; v7.38 source checkpoint retained under ignored `build/checkpoints/`. Baseline remains a stock-speed comparison. No private animation source edits or uploads.
 - **Implemented/verified offline:** full movement verifier and private build pass. Compared all profile jump power/gravity and action vertical launches plus slide decay/timing to the checkpoint; unchanged. New Studio process launched on the private v7.39 build, preserving other windows.
 - **Unresolved:** live gameplay and multiplayer checks, feet/limb cadence and flip/landing timing, camera comfort and owner verdict. [Details](movement-verification.md#v739-slower-movement-pace-2026-10-31).
 
-## 2026-10-31 ? Wall-run terrain continuation
+## 2026-10-31 — Wall-run terrain continuation
 
 - **Confirmed:** owner requested smooth traversal over small wall bumps/ledges, a corner-turn animation, and a new Studio test window.
 - **Implemented:** v7.38 on isolated branch/worktree `experiment/wallrun-terrain` / `C:/Users/runni/slugshot-wallrun-terrain`; bounded lookahead, multi-height probes, seam grace, inside turns and outside arcs, turn brace and test course. Existing private clip module copied only into ignored private storage for the local build. No external resources added.
@@ -305,14 +400,14 @@
 - **Unresolved:** runtime and multiplayer evidence, collision/contact at speed, input reversals and owner visual approval. [Evidence and playtest checklist](movement-verification.md#v738-uneven-walls-and-corners-2026-10-31).
 
 
-## 2026-10-31 ? Slower movement pace (v7.39)
+## 2026-10-31 — Slower movement pace (v7.39)
 
 - **Confirmed:** owner asked for run 18, sprint/wall run 24, slide cap 26, slower locomotion and camera bounce, slightly slower flips and shorter jump reach at the existing heights.
 - **Implemented:** speed/cadence/camera/horizontal launch retune in the existing movement worktree; v7.38 source checkpoint retained under ignored `build/checkpoints/`. Baseline remains a stock-speed comparison. No private animation source edits or uploads.
 - **Implemented/verified offline:** full movement verifier and private build pass. Compared all profile jump power/gravity and action vertical launches plus slide decay/timing to the checkpoint; unchanged. New Studio process launched on the private v7.39 build, preserving other windows.
 - **Unresolved:** live gameplay and multiplayer checks, feet/limb cadence and flip/landing timing, camera comfort and owner verdict. [Details](movement-verification.md#v739-slower-movement-pace-2026-10-31).
 
-## 2026-10-31 ? Wall-run terrain continuation
+## 2026-10-31 — Wall-run terrain continuation
 
 - **Confirmed:** owner requested smooth traversal over small wall bumps/ledges, a corner-turn animation, and a new Studio test window.
 - **Implemented:** v7.38 on isolated branch/worktree `experiment/wallrun-terrain` / `C:/Users/runni/slugshot-wallrun-terrain`; bounded lookahead, multi-height probes, seam grace, inside turns and outside arcs, turn brace and test course. Existing private clip module copied only into ignored private storage for the local build. No external resources added.
@@ -553,7 +648,7 @@
 - **Implemented/verified:** v7.33 uses current wall input, starts a no-input catch without along-wall momentum and brakes quickly; a one-client probe observed a 34-to-zero stop within 0.1 s and a resumed run. Checks and limits are in [movement verification](movement-verification.md#v733-wall-input-and-drag-2026-10-30).
 - **Unresolved:** the revised R6 pose and wall contact need visual review; real-key jump-off and multiplayer were not tested. Studio's temporary test sources were restored.
 
-## 2026-10-28 ? Foundation setup
+## 2026-10-28 — Foundation setup
 
 - Inspected an empty workspace and read the pasted request and PDF background. Kept the request authoritative; PDF gameplay instructions were not adopted.
 - Reused existing Rokit 1.2.0 and cached Rojo 7.7.1, StyLua 2.6.0, Selene 0.32.0 and Luau LSP 1.70.1. No tool, addon or third-party skill was installed.
@@ -848,20 +943,20 @@
 - v7.31: the owner shared wall-slide reference images (back to the wall, hand flat on it behind, other arm out) and wanted an instant stop and a straight-down slide. Fitted on the renderer at the blocks' corners. Lesson: contact for R6 blocks must be measured at the block corners, not the end centre, or limbs sink into surfaces.
 - v7.32: the slide began about 2 s after stopping (Space held kept the old 'climb with no direction' rule going), and the pose blend counted the pull toward the wall as running, so the owner saw a half-blended pose. Stopping now always slides; the pose was refitted with the hand at head height.
 
-## 2026-10-30 ? Rocklock spacious cavern greybox
+## 2026-10-30 — Rocklock spacious cavern greybox
 
 - **Confirmed:** the pasted owner request authorized the isolated playable map, original procedural Blender geometry, source/exports/previews and Studio tests; no controller/camera rebalance, main merge, publication or private-asset redistribution. Work is on `experiment/rocklock-greybox`.
-- **Confirmed correction:** the owner saw the first map and found it crowded. They want wide Slugterra-like caverns for gunplay and larger transformed slugs, not many closely packed structures. v2 expands 100 ? 90 to 160 ? 140, removes crowns, tower stairs, shoulder blocks and training stones, and uses broad ordinary ramps. Keep that spaciousness preference in later iterations.
-- **Implemented/verified:** shared layout ? headless Blender ? native, noncolliding faceted art plus 35 simple collision pieces; editable `.blend`, FBX roundtrip, eight previews, structured coordinates and disabled interaction metadata. Separate Rojo projects preserve the lab/foundation. A generated server copy adapts only initial placement through stable opposite spawn slots before validation history initializes; controller and camera sources are untouched. [ADR 0010](decisions/0010-rocklock-map.md).
-- **Implemented/verified:** full offline checks passed. Two Studio clients completed flank ramp/crossing, wall-run/kick, underpass, first jump, flip, slide/slide-jump, peer action observation and stable opposite respawn; each had 6 accepted actions, 0 rejected requests, 0 corrections. Two first-jump samples: about 16.46 travel and 10.87?10.88 rise. 108 enclosure rays hit boundary collision. [Results and limits](rocklock-verification.md).
+- **Confirmed correction:** the owner saw the first map and found it crowded. They want wide Slugterra-like caverns for gunplay and larger transformed slugs, not many closely packed structures. v2 expands 100 × 90 to 160 × 140, removes crowns, tower stairs, shoulder blocks and training stones, and uses broad ordinary ramps. Keep that spaciousness preference in later iterations.
+- **Implemented/verified:** shared layout → headless Blender → native, noncolliding faceted art plus 35 simple collision pieces; editable `.blend`, FBX roundtrip, eight previews, structured coordinates and disabled interaction metadata. Separate Rojo projects preserve the lab/foundation. A generated server copy adapts only initial placement through stable opposite spawn slots before validation history initializes; controller and camera sources are untouched. [ADR 0010](decisions/0010-rocklock-map.md).
+- **Implemented/verified:** full offline checks passed. Two Studio clients completed flank ramp/crossing, wall-run/kick, underpass, first jump, flip, slide/slide-jump, peer action observation and stable opposite respawn; each had 6 accepted actions, 0 rejected requests, 0 corrections. Two first-jump samples: about 16.46 travel and 10.87–10.88 rise. 108 enclosure rays hit boundary collision. [Results and limits](rocklock-verification.md).
 - **Unresolved:** subjective feel/scale, gunfight timing/balance, actual larger-form dimensions, exhaustive camera/escape/stuck tests, devices/controlled FPS/network impairments. One test client averaged ~68 ms/frame, the other ~16.85 ms; window focus/throttling was not controlled. A first harness failed because plugin-only settings() was called inside a game Script; it was corrected and rerun.
 - **Workflow lesson:** a fresh Studio file can show a Lighting Technology Migration dialog if the generated place defaults to Compatibility. Rocklock explicitly uses Voxel. Close the generated test window and discard temporary QA edits before rebuilding; preserve unrelated unsaved windows. Never save a stale open place over the rebuild.
 - **Implemented/verified final handoff:** the public original-clip build passed a spawn/flip/slide smoke (0 rejections/corrections). The final private map was rebuilt and reopened; W/Space reached the north cover with 0 rejections/corrections, then play stopped. Two noncolliding fill-light hosts improve the expanded floor visibility; final count 4,854 Parts / 35 solid pieces. QA fixtures are absent.
 
-## 2026-10-30 ? Rocklock v3 size change
+## 2026-10-30 — Rocklock v3 size change
 
-- **Confirmed:** the owner said v2 was too small and requested about 33% more size as the first change. **Implemented:** v3 scales both horizontal dimensions and the existing geometry/coordinates by 1.33, from 160 ? 140 to 212.8 ? 186.2 studs; floor area rises about 76.9%. Traversal heights, movement and camera stay unchanged.
-- **Implemented:** separate `-v3` public/private build outputs leave the owner?s already-playing v2 place and its unsaved session alone. Existing Blender source and export matched their recorded hashes before regeneration.
+- **Confirmed:** the owner said v2 was too small and requested about 33% more size as the first change. **Implemented:** v3 scales both horizontal dimensions and the existing geometry/coordinates by 1.33, from 160 × 140 to 212.8 × 186.2 studs; floor area rises about 76.9%. Traversal heights, movement and camera stay unchanged.
+- **Implemented:** separate `-v3` public/private build outputs leave the owner’s already-playing v2 place and its unsaved session alone. Existing Blender source and export matched their recorded hashes before regeneration.
 - **Verified, limited:** full automated foundation/movement/map checks passed; the v3 Studio place opened with 153.10-stud spawn separation, direct spawn cover, and all 108 boundary rays hitting collision. One correction was observed in an active play session; cause and repeatability remain unresolved. Two-client checks are recorded separately.
 - **Verified, v3 two-client rerun:** both clients completed their flank and underpass routes, wall runs/kicks, flips, slides/slide-jumps, observed peer actions and respawned to opposite ends; each had 6 accepted, 0 rejected and 0 corrections. The first attempt timed out at the old seven-second spawn-route limit under background throttling; the rerun used twice the limit. The separate owner play session had 1 correction and 1 suspect air boost (42 accepted, 0 rejected); cause unresolved and not reproduced by the scripted routes. [Evidence](evidence/2026-10-30-rocklock-v3.json).
 
@@ -927,7 +1022,7 @@
 - Owner: lighting flickered between an orange-flare state and a dark state; the inside wasn't lit. Small PointLights inside the gun flicker with Roblox light culling and flared the orange prongs. Removed them; the loaded slug now has a constant sage-green Highlight fill (0.55); one faint pale-blue spill light remains. Lesson: don't rely on tiny interior lights for visibility.
 - Owner: light the inside calmly and lightly, not pale. Inner sage glow softened to 0.72 fill transparency. Session paused here at the owner's request; open items: owner verdict on the chamber glow, resizing the real Rocklock blaster (other branch), Studio MCP available after a session restart.
 
-## 2026-10-31 ? Review and backup of all local work
+## 2026-10-31 — Review and backup of all local work
 
 - **Confirmed:** owner requested review of the Claude handoff, final Floppy and blaster plus committing/pushing all work including movement.
 - **Implemented/verified offline:** live multi-angle/idle review, source/export hashes, FBX reimport, full creature/movement checks and both Rocklock offline checks. [Detailed review](reviews/2026-10-31-work-review.md) records exact findings, branch separation and remaining gates.
@@ -951,7 +1046,7 @@
 - **Implemented/verified offline:** shared original 0.42/0.34 s Floppy/Rocklock gestures, palm-pivot additive driver and material-preserving holster clone; removed the competing old full spin. Movement/foundation and Rocklock v1/v2 checks pass. See [motion notes](blaster-motion.md).
 - **Unresolved:** actual Studio hand fit, rapid switching/death and peer playback. Maximum Studio windows blocked the new test window; existing sessions preserved.
 
-## 2026-10-31 ? Solid muzzle private mesh update
+## 2026-10-31 — Solid muzzle private mesh update
 
 - **Confirmed:** owner requests slightly longer, flatter angular muzzle tips and solid orange replacing both oval vents.
 - **Implemented/verified offline:** new private model mapping, with prior mapping preserved; Rocklock private places rebuilt and v2 checks pass. Source and geometry validation live on feature/slug-asset-pipeline. [Record](solid-muzzle.md).
@@ -1054,5 +1149,5 @@
 - **Implemented/verified offline and limited Studio:** multiply first-person length/crop by 0.9; visible R6 copies are 1.5685488 studs, source arms stay 2. Running eye offset follows actual chest pitch/velocity (up to 0.36 forward/0.12 down, rate 10; 35% while pointing), clears on view exit and is reset for death/character changes. Actual ~60 FPS check measured copy size 1.5685488, unchanged source size 2, mean forward run offset ~0.322 studs, zero induced look pitch and rest/third-person cleanup. Four idle/run tap, run charge and Spot flip shots accepted. [Evidence](evidence/2026-10-31-short-arms-run-lean.json). **Unresolved:** owner lean/length appearance verdict; death reset/device/multiplayer were not separately tested here. Source run rhythm/flaring, arm width, physics and Spot default are preserved.
 
 
-- **Running cadence request, 2026-10-31:** owner again asks for less smooth/more robust hands like third person; calls ?glitchy? the closest word. Contextual interpretation is crisper stroke beats/holds/reversals, not literal stutter, random shake or lower FPS. Still awaiting owner confirmation.
+- **Running cadence request, 2026-10-31:** owner again asks for less smooth/more robust hands like third person; calls “glitchy” the closest word. Contextual interpretation is crisper stroke beats/holds/reversals, not literal stutter, random shake or lower FPS. Still awaiting owner confirmation.
 - **Implemented/verified:** remove additional steady free-run pose rounding after the entry blend; apply a bounded four-degree source-angle accent around the Run midpoint (20 degrees). No new clock; pointing/idle/actions retain their filters, shortened length and forward/down lean remain. Full combat checks pass. Native ~60 FPS samples show rendered/source angular peaks ~1745/1946 before and ~2247/1993 deg/s after, zero induced camera pitch and no missing visual rig; arm copies stay 1.5685488 studs and source arms 2. Idle/run tap, run charge and flip tap accepted. These are sampled traces, not proof of better subjective feel. [Evidence](evidence/2026-10-31-running-stroke-accent.json). Owner running approval remains open; pre-change source is checkpointed under ignored build storage.

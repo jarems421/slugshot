@@ -16,6 +16,7 @@ local player = Players.LocalPlayer
 local movement = player.PlayerScripts:WaitForChild("MovementSandbox")
 local flipCamera = (require :: any)(movement:WaitForChild("AcrobaticCamera"))
 local crosshairs = (require :: any)(movement:WaitForChild("CrosshairStyles"))
+local recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
 local FOV_MIN, FOV_MAX = 60, 110
 local INK = Color3.fromRGB(229, 239, 248)
 local PANEL = Color3.fromRGB(20, 26, 34)
@@ -23,6 +24,9 @@ local ACCENT = Color3.fromRGB(255, 150, 60)
 
 if player:GetAttribute("FieldOfView") == nil then
 	player:SetAttribute("FieldOfView", Config.Camera.Fov)
+end
+if player:GetAttribute("RecoilAnimation") == nil then
+	player:SetAttribute("RecoilAnimation", recoil.Default)
 end
 if player:GetAttribute("HolsterMode") == nil then
 	player:SetAttribute("HolsterMode", "Hip")
@@ -184,6 +188,25 @@ for index, option in flipCamera.Options do
 	flipButtons[index] = control
 end
 refreshFlip()
+text(gameplay, "Recoil animation", 15, UDim2.fromOffset(20, 352), UDim2.fromOffset(340, 22))
+local kickButton = button(gameplay, "Kick up", UDim2.fromOffset(20, 382), UDim2.fromOffset(160, 36))
+kickButton.Name = "RecoilKick"
+local flipButton =
+	button(gameplay, "Flip & catch", UDim2.fromOffset(200, 382), UDim2.fromOffset(160, 36))
+flipButton.Name = "RecoilFlip"
+local function refreshRecoil()
+	local style = recoil.style(player:GetAttribute("RecoilAnimation"))
+	kickButton.BackgroundColor3 = if style == "Kick" then ACCENT else Color3.fromRGB(44, 54, 66)
+	flipButton.BackgroundColor3 = if style == "Flip" then ACCENT else Color3.fromRGB(44, 54, 66)
+end
+kickButton.Activated:Connect(function()
+	player:SetAttribute("RecoilAnimation", "Kick")
+end)
+flipButton.Activated:Connect(function()
+	player:SetAttribute("RecoilAnimation", "Flip")
+end)
+player:GetAttributeChangedSignal("RecoilAnimation"):Connect(refreshRecoil)
+refreshRecoil()
 -- Appearance is local to the aiming mark; charge colors remain in Reticle.
 text(appearance, "Crosshair style", 15, UDim2.fromOffset(20, 60), UDim2.fromOffset(340, 22))
 local selector = button(appearance, "", UDim2.fromOffset(20, 90), UDim2.fromOffset(340, 44))

@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-01",
+  "request": "Finish the interrupted burrow work: ground moves while digging; more, messier dirt and rock (owner, Codex chat message 75)",
+  "problem_seen_in_captures": [
+    "Earlier checks passed on counts and motion, but close-ups showed near-black debris on the range floor.",
+    "Dirt clods rendered as perfect spheres because Part.Shape Ball forces a uniform size.",
+    "Ground patches were thin rectangular slabs that read as planks."
+  ],
+  "implementation": {
+    "soil_and_stone": "lighter base colours; Rock material for stones",
+    "clods": "Part plus SpecialMesh sphere, stretched to irregular sizes",
+    "rocks": "mixed WedgePart, CornerWedgePart and block",
+    "ground_swells": "half-buried soft mounds in the floor colour; heave on each dig stroke and stay mounded",
+    "unchanged": "1.0 s burrow, 24 debris pieces, 7 ground pieces, all poses and phase timings",
+    "reversal": "ignored build/recovery-checkpoint/FloppyRecovery-before-earth-shapes.luau"
+  },
+  "offline": "python tools/verify_combat.py passed",
+  "native_studio_real_shot": {
+    "phases": "impact, fall, land, wriggle, crouch, hop, burrow all observed; alive after cooldown; cleanup passed",
+    "debris_count": 24,
+    "ground_pieces": 7,
+    "max_ground_piece_centre_above_floor_studs": 0.071,
+    "max_ground_piece_tilt_radians": 0.217,
+    "max_ground_piece_displacement_studs": 0.514,
+    "hop_height_studs": 0.649
+  },
+  "frame_times_6_shots_60fps": {
+    "effect_spawn_frame_ms": [
+      17,
+      18,
+      17,
+      16,
+      16,
+      17
+    ],
+    "worst_frame_ms": [
+      19,
+      19,
+      18,
+      18,
+      18,
+      111
+    ],
+    "note": "One shooter only. One 111 ms spike during burrow on shot 6, not repeated. An earlier single run logged the burrow phase about 0.8 s late; not reproduced in these six shots, cause not established."
+  },
+  "surfaces_viewed": [
+    "range grass Part",
+    "Slate Part",
+    "Sand Part",
+    "Concrete Part"
+  ],
+  "limits": [
+    "Filmstrip frames are frozen at set progress values, not continuous video.",
+    "Terrain floors, moving surfaces and ledge edges were not tested.",
+    "No multi-player load test. No device test.",
+    "Owner appearance verdict pending."
+  ]
+}

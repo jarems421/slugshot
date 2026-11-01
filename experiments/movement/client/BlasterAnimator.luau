@@ -9,6 +9,8 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Motion = require(script.Parent.BlasterMotion)
+local Recoil = require(script.Parent.BlasterRecoil)
+local FirstPerson = require(script.Parent.FirstPerson)
 
 local Animator = {}
 local started = false
@@ -281,6 +283,7 @@ local function equip(state: State, tool: Tool)
 end
 
 local function holster(state: State, tool: Tool)
+	state.character:SetAttribute("BlasterRecoilAt", nil)
 	-- Roblox can destroy RightGrip before ChildRemoved fires. Cache its hand and
 	-- C0 while equipped, rather than relying on the removed joint.
 	local hand, c0 = state.lastHand, state.lastC0
@@ -409,6 +412,15 @@ function Animator.start()
 				end
 				local tool = state.tool
 				local joint = if tool then findJoint(character, "RightGrip") else nil
+				local kick = Recoil.sample(
+					character:GetAttribute("BlasterRecoilAt"),
+					os.clock(),
+					character:GetAttribute("BlasterRecoilCharge"),
+					character:GetAttribute("BlasterRecoilStyle")
+				)
+				if character == Players.LocalPlayer.Character and FirstPerson.active() then
+					kick = CFrame.identity -- first-person copies apply recoil directly after smoothing
+				end
 				if tool and joint and joint.Part0 then
 					-- Clean held frame for a later holster: C0 without any flourish.
 					state.lastHand, state.lastC0 = joint.Part0, joint.C0
@@ -422,6 +434,9 @@ function Animator.start()
 				)
 				state.moving += (target - state.moving) * (1 - math.exp(-12 * dt))
 				if not state.phase then
+					if tool and joint then
+						joint.C1 = kick:Inverse() * tool.Grip
+					end
 					if ghost then
 						if ghost.vanish or vanishing(character) then
 							dropGhost(state) -- fully shrunk away, or the setting changed
@@ -472,12 +487,16 @@ function Animator.start()
 				local from = state.unstow
 				if drawing and tool and joint and joint.Part0 then
 					state.grip = joint
-					joint.C1 = tool.Grip * wrist:Inverse()
+					joint.C1 = kick:Inverse() * tool.Grip * wrist:Inverse()
 					-- The copy grows from the hip into the hand, then hands over.
 					local lifting = ghost ~= nil and from ~= nil and elapsed < Motion.Unstow
 					if ghost and from then
 						if lifting then
-							local held = joint.Part0.CFrame * joint.C0 * wrist * tool.Grip:Inverse()
+							local held = joint.Part0.CFrame
+								* joint.C0
+								* wrist
+								* tool.Grip:Inverse()
+								* kick
 							local u = Motion.smooth(elapsed / Motion.Unstow)
 							place(
 								ghost,

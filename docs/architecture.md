@@ -2,6 +2,8 @@
 
 Status: Confirmed foundation layout; gameplay architecture remains unresolved.
 
+**Implemented experimental Floppy recovery, 2026-11-01:** slug availability follows the firing cooldown while local post-impact recovery finishes independently. `SlugVisuals` delegates recovery to `FloppyRecovery`; this lifecycle raycasts to the floor, animates the existing duplicate skeletons and removes the model after its dive below the surface. It does not read `launch.readyAt` or travel back to the shooter. See [ADR 0018](decisions/0018-local-slug-recovery.md) and [recovery specification/evidence](slugs/recovery.md).
+
 ```text
 src/shared  -> ReplicatedStorage.Shared
 src/server  -> ServerScriptService.Server (Script)

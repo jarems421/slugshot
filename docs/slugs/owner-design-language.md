@@ -116,8 +116,9 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 
 | The owner says | What satisfied it (recorded) | What failed or was rejected |
 | --- | --- | --- |
-| "frictionless", "fast-paced", "easy to keep track of" (ammo) | One rule: a cooldown from firing (1.5 s), shown on an ammo slot; the slug hops back quickly as a visual. | A visible return that decides reload timing. |
-| "hop back" | Quick, bouncy 1-3 hops in a fixed ~0.5 s, puffing away if the cooldown ends first. | A zip/streak back. |
+| "frictionless", "fast-paced", "easy to keep track of" (ammo) | Cooldown from firing (currently 1.5 s), shown on the ammo slot. **2026-11-01 confirmed design, Floppy implemented for review:** local recovery animation can finish independently; the slug burrows at its landing site. | A visible travel return that decides reload timing or races to meet the cooldown. |
+| "hop back" (historical request, superseded 2026-11-01) | Earlier versions used quick returning hops, later retuned to 0.94 s. The owner has now approved **local burrow recovery** instead. [Current decision](recovery.md). | The owner rejected the timer-driven puff. Map-spanning recalls would be too hectic with many shooters. |
+| Floppy "lands on its belly", "wriggles", "jumps up and burrows" | **Confirmed design; implemented for owner testing:** belly-first landing, brief wriggle, little upward hop and head-first dive/burrow at the landing site. Its exit should read as a creature action representing return to inventory. A native target-hit sequence passed; subjective timing and animation approval remain pending. | Renaming the puff, shrinking out of sight, or sprinting/recalling across the map to satisfy a timer. |
 | "tiny bit of damage" | 5 of 100 HP, splat, no knockback. | Knockback. |
 | Tap vs hold | A tap still fires decently and (for later slugs) transforms; holding = faster, earlier transform, less drop. No failed transforms. | Requiring a charge to transform. |
 | "temporary" (test spaces) | Label it everywhere: file name, banner, in-world sign. The map is a placeholder, never a source of truth. | Unlabelled test areas. |
@@ -125,8 +126,8 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | "one-handed" | A light pistol is held in one hand. | A two-handed hold ("very inconsistent"). |
 | "feel the legs, not a floating camera" | Camera driven by the animated body (head motion), legs visible, gun reacting to that motion. | Added screen shake or a synthetic bob. |
 | "feels like an aneurysm", "forced to look at the ground/sky" | Root cause was a camera feedback bug (additions compounding through Roblox's camera scripts), fixed by undoing them each frame. | Repeating the tilt every frame on top of the read-back camera. |
-| "choppy", "crosshair flying around" (flips) | Unresolved: aim must stay stable; consider following only part of the flip. | Following the head's full flip rotation. |
-| "arms look elongated" | Unresolved: arms must look exactly like third-person R6 arms at any FOV. | Thin, long viewmodel arm blocks. |
+| "choppy", "crosshair flying around" (flips) | Spot: a brief directional bank that levels early, with aim steady. [Details](../combat.md#current-owner-decision-and-acceptance). | Following the head's full flip rotation as the default. |
+| "arms look elongated" | Real animated arm motion on slimmer square first-person copies, reframed. Full wording history is in [combat notes](../combat.md#owner-language-contextual-interpretations-to-carry-forward). | Thin, long viewmodel arm blocks; rounded shoulders. |
 | "almost perfect" (wall run), "fine" (slide) | 10 degree roll away from the wall, gun hand never grabs the wall on its side; slide lean and canted gun. | — |
 
 Working style seen this session: the owner judges by playtest and reports in short rounds; research what successful games do before building ("do research", "what makes it feel good"), cite it, then implement; keep one option per thing ("concrete foundation"); confirm fixes from the Studio log (`%LOCALAPPDATA%\Roblox\logs`) when MCP is unavailable.
@@ -168,3 +169,34 @@ From the lobby art-direction and asset-library rounds. Process lessons are in [a
 More dictation slips: "roadblocks"/"roadblock studio" = Roblox/Roblox Studio, "flop heap" = Floppy, "glue" = glow, "dispose" = the spots, "Veilume"/"volume" = Veylume, "jewel board" = duel board, "Cosmic Cavern"/"Living Cosmic" = Comic Cavern/Living Comic, "slug terror" = Slugterra, "dimish map" = a map of merging biomes (exact word unclear).
 
 **Working pattern in these rounds:** the owner critiques one asset at a time, praises with "perfect"/"beautiful" while adding one more tweak, interjects mid-task (the colour bank, then withdrawing bark mushrooms), and only offers options when stuck ("not sure what we could do"). When stuck, offer four or five clearly different directions with a recommendation. If all are rejected, ask what *kind* of thing (built, alive, natural, open) before offering more.
+
+## Burrowing ground friction (2026-11-01)
+
+**Confirmed contextual meaning:** "not enough friction" means the ground should visibly move while the creature digs, followed by dirt and rock piling up; sinking first and particles appearing later feels disconnected. "More messy" means varied sizes, uneven clustered spacing and staggered debris motion. **Implemented/verified for review:** seven heaving/tilting surface patches and 24 tumbling dirt/rock pieces; native motion/cleanup checks passed. This interpretation awaits the owner's artistic verdict. [Evidence](../evidence/2026-11-01-floppy-ground-friction.json).
+
+## Gun feel and slug recovery (2026-11-01)
+
+These are readings of this chat's context, not universal definitions. Prefer the owner's latest concrete correction.
+
+| The owner says | What it turned out to mean | What failed |
+| --- | --- | --- |
+| "small tweaks", "shouldn't look too much different, but it should look different" (grip) | The change must be obvious when comparing two screenshots. 9° and 0.18 studs landed. | 3° and 0.07 studs: "way too small of a difference". |
+| "slight kick", "nothing crazy" (recoil) | Still needs to read while running. It ended as a "big kick up": 22-32° on the gun. | 3.2°, 7.5° and 11° kicks, and a reshaped curve at similar size ("basically the same"). Part of this was a real bug: recoil was not reaching the visible gun properly. |
+| "more animated" (recoil) | Mainly bigger and more readable. Timing polish alone was not noticed. | Sharper attack and settle at small amplitude. |
+| "Slugterra-esque" (gun motion) | Expressive and flourish-like: reuse the accepted draw toss rather than inventing a motion. | — |
+| "absorbed into the body", "meshes in" (aiming arm) | The arm crossing into the torso at extreme aim. Some overlap is fine; a screenshot from the owner marks the limit. | Pointing straight ahead at rear targets ("too far in the opposite direction"). |
+| "shoulder looks way too detached" | Keep the shoulder near its normal place even if the arm overlaps a little. | Full clearance by moving the shoulder out of the torso. |
+| "excess tilt", "off-putting" (first-person gun) | The gun's angle, not the arm: keep the arm moving and settle the gun toward aim. | — |
+| "150% slower", then "33% faster" | 150% more time (0.5 → 1.25 s), then 1.25 / 1.33 = 0.94 s. Superseded by burrowing. | — |
+| "speed of light" | Too fast to follow; also the objection to any return timed to the cooldown. | Fast recall streaks. |
+| "poof", "feels like the poof" | Any exit where the slug just vanishes, even with a nicer effect. It must be something the creature does. | Puff; shrink at the hip. |
+| "roll around onto its back" | A visible belly-to-back roll before the hop. | Going straight from belly to hop. |
+| "not enough friction" (burrow) | The ground itself moves while it digs, then dirt piles up. In the charge ring, "friction" meant visible tension instead. Same word, different meaning. | Sinking first with dirt simply appearing. |
+| "more messy", "less uniform" (dirt) | Lumpy clods and angular rocks in uneven clusters at varied sizes. | An even ring, round marbles, flat plank-like patches. |
+| "imagine a 4v4v4v4" | A readability stress test for design decisions, not a confirmed match format. | — |
+
+**Working pattern in these rounds:** the owner asks for an opinion before committing ("what do you think?"), and "that makes sense" means go ahead. "If you can't think of a nice workaround, leave it" is genuine permission to leave it. Moving to the next item without comment usually means the last result is acceptable for now, but it is not formal approval, so don't record it as approved. When the owner says "this is how it's gonna be", write it down immediately as a confirmed decision.
+
+More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = the training range, "Slug Terra" = Slugterra.
+
+**Added after the review (2026-11-01):** "more animated/wiggly" for a creature means large overlapping motion through every bone, not a slightly bigger version of the same wobble; verdict pending. "Arms by your side but you can still see them" is a real geometry conflict at a level look: truly hanging hands sit below the frame, so the arms are framed low in the corners with the gun tipped down, and the owner can settle it on the P panel. "It stiffens the bottom" tied the model's flat base to how the animation reads, so check the model before only tuning motion. "We'll add sound later" and "I won't do 16 players" close those items rather than defer them to the next pass.

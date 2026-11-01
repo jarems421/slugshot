@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-01",
+  "implementation": "Procedural Roblox bone and model-pivot animation on the existing imported Floppy rig; no mesh/Blender source changes or uploads",
+  "offline": "python tools/verify_combat.py passed after final code adjustments",
+  "runtime": {
+    "context": "one native Studio client; real fully charged shot at the nearest training dummy",
+    "server_accepted_shot": 1,
+    "phase_seconds_after_release": {
+      "impact": 0.1,
+      "fall": 0.292,
+      "land": 0.649,
+      "wriggle": 0.832,
+      "crouch": 1.599,
+      "hop": 1.766,
+      "burrow": 2.199
+    },
+    "cleanup_seconds_after_release": 2.583,
+    "alive_after_1_5_second_cooldown": true,
+    "rendered_hop_height_studs": 0.649,
+    "observed_upper_body_bone_rotation_radians": 0.22,
+    "burrow_head_axis_dot_world_up": -1.0,
+    "belly_face_axis_down": "asserted during wriggle",
+    "phase_completion_and_visual_cleanup": "passed",
+    "pose_views": [
+      "front",
+      "side",
+      "back",
+      "three-quarter"
+    ]
+  },
+  "timing": {
+    "impact": 0.1,
+    "settle": 0.18,
+    "wriggle": 0.75,
+    "crouch": 0.16,
+    "hop": 0.42,
+    "burrow": 0.38,
+    "fall": "raycast/48 studs per second squared; at most 3 seconds"
+  },
+  "lifecycle": "No readyAt cutoff or poof; model removed after sinking below surface. Inventory cooldown remains 1.5 seconds. Dirt mark/clumps expire separately.",
+  "limits": [
+    "One local client and one actual dummy hit; no 16-player or network performance verdict.",
+    "Final small top-hit/water filter and hop squash release refinements passed offline checks but have no separate live edge-case result.",
+    "Static pose sheet is native imported-rig evidence, not a continuous animation recording or owner art approval.",
+    "Moving surfaces, water-only areas, unsupported ledges, and device/frame-rate coverage remain unverified."
+  ]
+}

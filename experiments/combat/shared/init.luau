@@ -14,15 +14,32 @@ export type Slug = {
 	Drag: number, -- 1/s; linear drag makes weak slugs fall short
 	Radius: number, -- hit radius (studs)
 	Tumble: number, -- end-over-end turns per second in flight
-	Size: number, -- in-flight length (studs)
+	Size: number, -- visual height outside the barrel (studs); used through flight and recovery
 	Transforms: boolean, -- Floppy is the one slug that never transforms
 }
 
 Combat.MaxHealth = 100
 Combat.ChargeTime = 0.8 -- seconds of holding for a full charge
 Combat.Cooldown = 1.5 -- from the moment of firing, hit or miss
-Combat.SplatTime = 0.25 -- the slug recovers from its splat
-Combat.ReturnTime = 0.5 -- then hops back in this long, whatever the distance
+-- Local creature recovery finishes naturally, independently of ammo readiness.
+Combat.Recovery = {
+	-- Shares of the owner's total window (Tuning recoveryTime, 1.5 s from impact).
+	ImpactTime = 0.06,
+	SkidTime = 0.24,
+	WriggleTime = 0.5,
+	CrouchTime = 0.07,
+	HopTime = 0.2,
+	BurrowTime = 0.43,
+	MinPace = 0.7, -- a long fall may overrun the window rather than rushing the creature
+	HopHeight = 0.65,
+	SkidPerSpeed = 0.035, -- studs of belly skid per stud/s of landing speed
+	MaxSkid = 1.8,
+	PilePieces = 24,
+	GroundPieces = 7,
+	FallGravity = 48,
+	MaxFallTime = 3,
+	StuckFallTime = 1.2, -- wedged between steep faces: burrow into the rock instead
+}
 Combat.MaxFlight = 3 -- seconds before an unlanded shot is dropped
 Combat.MuzzleReach = 2.4 -- studs from the shoulder to the muzzle along the aim
 -- Server checks: how far a claimed muzzle may sit from the shooter's movement root, and how
@@ -46,7 +63,7 @@ Combat.Slugs = {
 		Drag = 1.2,
 		Radius = 0.3,
 		Tumble = 2,
-		Size = 0.55,
+		Size = 0.85,
 		Transforms = false,
 	},
 } :: { [string]: Slug }

@@ -207,6 +207,8 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		params = params,
 	})
 	remote:FireAllClients("Shot", {
+		recoil = if payload.recoil == "Flip" then "Flip" else "Kick",
+		charge = charge,
 		shooter = player,
 		id = id,
 		slug = slugId,

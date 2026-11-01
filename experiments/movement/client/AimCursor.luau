@@ -20,6 +20,7 @@ end
 
 function AimCursor.menuOpen(): boolean
 	return player:GetAttribute("CombatSettingsOpen") == true
+		or player:GetAttribute("TuningPanelOpen") == true
 		or GuiService.MenuIsOpen
 		or UserInputService:GetFocusedTextBox() ~= nil
 end

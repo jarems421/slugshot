@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-01",
+  "request": "Roll from belly onto back, actively wriggle/dig down, small smooth gathering dirt/rock rim",
+  "offline": "python tools/verify_combat.py passed on final source",
+  "implementation": {
+    "roll_seconds": 0.95,
+    "burrow_seconds": 0.85,
+    "rim_pieces": 12,
+    "rim_sampling": "BasePart.Color or Terrain material color; soil/stone palette blended from supporting surface",
+    "entry": "smooth roll, back crouch, interpolated hop/dive, modulated descending dig",
+    "cleanup": "rim settles and fades after model removal; bounded Debris safety cleanup"
+  },
+  "native_studio": {
+    "actual_server_accepted_target_shot": true,
+    "alive_after_cooldown": true,
+    "roll_back_face_dot_world_up": 1.0,
+    "dive_head_axis_dot_world_up": -1.0,
+    "hop_height_studs": 0.649,
+    "body_bone_rotation_radians": 0.227,
+    "rim_count": 12,
+    "max_mound_height_studs": 0.137,
+    "rim_cleanup_passed": true,
+    "completion_seconds_after_release": 3.167,
+    "phase_seconds_after_release": {
+      "impact": 0.1,
+      "fall": 0.216,
+      "land": 0.567,
+      "wriggle": 0.75,
+      "crouch": 1.699,
+      "hop": 1.866,
+      "burrow": 2.301
+    },
+    "pose_views": [
+      "front",
+      "side",
+      "back",
+      "three-quarter"
+    ]
+  },
+  "limits": [
+    "One Studio client and grass range surface; no multiplayer/load or device/frame-rate coverage.",
+    "Other material palettes are implemented but not visually approved on each terrain type.",
+    "Pose captures are static samples; owner timing and smoothness approval remain pending.",
+    "No actual Terrain deformation, new mesh, Blender export or upload."
+  ]
+}

@@ -11,22 +11,16 @@ local player = Players.LocalPlayer
 local movement = player:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
 local FirstPerson = (require :: any)(movement:WaitForChild("FirstPerson"))
 local BlasterAnimator = (require :: any)(movement:WaitForChild("BlasterAnimator"))
+local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
 local FirstPersonFlip = (require :: any)(movement:WaitForChild("FirstPersonFlip"))
 local AcrobaticCamera = (require :: any)(movement:WaitForChild("AcrobaticCamera"))
+local Tuning = (require :: any)(movement:WaitForChild("Tuning"))
 local Viewmodel = {}
 local LIMBS = { "Left Leg", "Right Leg" }
-local ARM_SCALE = Vector3.new(0.64, 1.0738 * 1.12 * 0.9, 0.64) -- owner: 10% shorter, first-person copies only
-local SHOULDER_OUT = 0.19 -- per side, in torso space
-local REST_SHOULDER_OUT = -0.08
-local SHOULDER_CROP = 0.5915 * 1.12 * 0.9 -- same 10% reduction preserves crop/hand proportions
+local CROP_PER_LENGTH = 0.5915 / 1.0738 -- preserves crop/hand proportions at any arm length
 local POSE_RATE = 22 -- short render-space follow-through; camera/mouse look stays immediate
 local RUN_POSE_RATE = 90 -- restore the earlier short run follow, including at full pace
-local GUN_GRIP_RELEASE = 0.1 -- first-person gun sits nearer the fingertips, exposing more handle
-local IDLE_HAND_FRAME = Vector3.new(0, 0.05, 0.25)
 local RUN_HAND_FRAME = Vector3.new(0, 0.12, 0.25)
-local IDLE_HAND_PITCH = math.rad(18)
-local IDLE_SHOULDER_DEPTH = -0.05 -- small forward nudge from the relaxed +0.18 position
-local RUN_SHOULDER_DEPTH = -0.62 -- slight forward running roll; accepted idle stays separate
 local RUN_CHEST_WEIGHT = 0.25
 local RUN_POSTURE_DEPTH = 0.25 -- let the eyes move over the shoulders, rather than carrying them ahead
 local RUN_POSTURE_LIFT = 0.15
@@ -43,9 +37,11 @@ type Rig = { model: Model, character: Model, tool: Tool?, arms: { Arm }, gun: { 
 local rig: Rig? = nil
 local straightWeight = 0
 local postureWeight = 0
+local steadyWeight = 0
 local visualHandle: CFrame? = nil
 local cachedTool: Tool? = nil
 local muzzleOffset = Vector3.zero
+local canisterOffset = Vector3.zero
 local visibleParts: { [BasePart]: boolean } = {}
 
 local function equipped(): Tool?
@@ -60,11 +56,14 @@ local function equipped(): Tool?
 	return nil
 end
 
--- Actual muzzle in the real handle's frame, including rotated mesh extents.
-function Viewmodel.muzzle(): Vector3?
-	if not FirstPerson.active() then
-		return nil
-	end
+local function armScale(): Vector3
+	local T = Tuning.values
+	return Vector3.new(T.armWidth, T.armLength, T.armWidth)
+end
+
+-- Actual muzzle in the real handle's frame, including rotated mesh extents. The visible
+-- gun is the first-person copy when there is one, otherwise the held tool itself.
+local function gunPoint(where: () -> Vector3): Vector3?
 	local tool = equipped()
 	local handle = tool and tool:FindFirstChild("Handle")
 	if not tool or not handle or not handle:IsA("BasePart") then
@@ -72,7 +71,7 @@ function Viewmodel.muzzle(): Vector3?
 		return nil
 	end
 	if tool ~= cachedTool then
-		local front, canisterY = math.huge, 0
+		local front, canister = math.huge, Vector3.zero
 		for _, part in tool:GetDescendants() do
 			if part:IsA("BasePart") and part ~= handle then
 				local offset = handle.CFrame:ToObjectSpace(part.CFrame)
@@ -84,15 +83,28 @@ function Viewmodel.muzzle(): Vector3?
 					front = math.min(front, offset.Z - reach)
 				end
 				if string.find(part.Name, "Canister") then
-					canisterY = offset.Y
+					canister = offset.Position
 				end
 			end
 		end
-		muzzleOffset = Vector3.new(0, canisterY, if front < math.huge then front else -2)
+		muzzleOffset = Vector3.new(0, canister.Y, if front < math.huge then front else -2)
+		canisterOffset = canister
 		cachedTool = tool
 	end
 	return (if rig and rig.tool == tool and visualHandle then visualHandle else handle.CFrame)
-		* muzzleOffset
+		* where()
+end
+
+function Viewmodel.muzzle(): Vector3?
+	return gunPoint(function()
+		return muzzleOffset
+	end)
+end
+
+function Viewmodel.canister(): Vector3?
+	return gunPoint(function()
+		return canisterOffset
+	end)
 end
 
 local function prepare(part: BasePart)
@@ -109,6 +121,7 @@ local function drop()
 	rig, visualHandle = nil, nil
 	straightWeight = 0
 	postureWeight = 0
+	steadyWeight = 0
 end
 
 local function build(character: Model, tool: Tool?, camera: Camera): Rig
@@ -119,7 +132,7 @@ local function build(character: Model, tool: Tool?, camera: Camera): Rig
 		local source = character:FindFirstChild(name)
 		if source and source:IsA("BasePart") then
 			local copy = Instance.new("Part")
-			copy.Name, copy.Size, copy.Color = name, source.Size * ARM_SCALE, source.Color
+			copy.Name, copy.Size, copy.Color = name, source.Size * armScale(), source.Color
 			copy.Material = source.Material
 			copy.TopSurface, copy.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
 			prepare(copy)
@@ -167,7 +180,14 @@ end
 
 local nearEye: (BasePart, Vector3) -> number
 local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
+	local T = Tuning.values
 	local character = current.character
+	local point = character:GetAttribute("BlasterPoint")
+	local steady = typeof(point) == "Vector3"
+		and character:GetAttribute("FirstPersonAction") == nil
+		and character:GetAttribute("BlasterFlourish") == nil
+	steadyWeight += ((if steady then 1 else 0) - steadyWeight) * (1 - math.exp(-14 * dt))
+	local handle = current.tool and current.tool:FindFirstChild("Handle")
 	local root = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local velocity = if root and root:IsA("BasePart")
@@ -216,11 +236,10 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 		local lane = arm.side * (torso.Size.X + source.Size.X) / 2
 		local chestDepth = math.clamp(chest.RightVector.Z * lane * RUN_CHEST_WEIGHT, -0.11, 0.11)
 		local chestLift = math.clamp(chest.RightVector.Y * lane * 0.35, -0.05, 0.05)
-		local idleShoulder = torsoFrame
-			* (top.Position + Vector3.new(arm.side * REST_SHOULDER_OUT, 0, 0))
+		local idleShoulder = torsoFrame * (top.Position + Vector3.new(arm.side * T.idleOut, 0, 0))
 		local runShoulder = torsoFrame.Position
 			+ runFacing:VectorToWorldSpace(
-				Vector3.new(lane + arm.side * SHOULDER_OUT, top.Y + chestLift, top.Z)
+				Vector3.new(lane + arm.side * T.runOut, top.Y + chestLift, top.Z)
 			)
 		local shoulder = idleShoulder:Lerp(runShoulder, straightWeight)
 		local viewPose = runFacing:ToObjectSpace(sourceFrame.Rotation)
@@ -234,26 +253,24 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			* CFrame.Angles(pitch, 0, arm.side * out)
 			* CFrame.Angles(0, chestTwist, 0)
 		local rotation = sourceFrame.Rotation:Lerp(runRotation, straightWeight)
-		local fullSize = source.Size * ARM_SCALE
-		local crop = math.min(SHOULDER_CROP, fullSize.Y * 0.4)
+		local fullSize = source.Size * armScale()
+		local crop = math.min(T.armLength * CROP_PER_LENGTH, fullSize.Y * 0.4)
 		local target = camera.CFrame:ToObjectSpace(CFrame.new(shoulder) * rotation)
 		-- Ease shoulder depth independently of the source swing, so framing can
 		-- move between a relaxed idle and a more visible running reach.
-		local handFrame = IDLE_HAND_FRAME:Lerp(RUN_HAND_FRAME, straightWeight) * postureWeight
+		local handFrame = Vector3.new(0, T.idleLift, 0.25):Lerp(RUN_HAND_FRAME, straightWeight)
+			* postureWeight
 		local framedPosition = target.Position + handFrame
 		framedPosition += Vector3.new(0, RUN_POSTURE_LIFT * chestLean * straightWeight, 0)
-		local shoulderDepth = IDLE_SHOULDER_DEPTH
-			+ (
-					RUN_SHOULDER_DEPTH
-					+ chestDepth
-					+ RUN_POSTURE_DEPTH * chestLean
-					- IDLE_SHOULDER_DEPTH
-				)
+		local shoulderDepth = T.idleDepth
+			+ (T.runDepth + chestDepth + RUN_POSTURE_DEPTH * chestLean - T.idleDepth)
 				* straightWeight
 		framedPosition += Vector3.new(0, 0, (shoulderDepth - framedPosition.Z) * postureWeight)
+		-- The camera drops on landing; carry the hands further down so they trail it.
+		framedPosition -= Vector3.new(0, FirstPerson.landing() * 0.6, 0)
 		target = CFrame.new(framedPosition)
 			* target.Rotation
-			* CFrame.Angles(IDLE_HAND_PITCH * (1 - straightWeight) * postureWeight, 0, 0)
+			* CFrame.Angles(math.rad(T.idlePitch) * (1 - straightWeight) * postureWeight, 0, 0)
 		if flipCue then
 			-- Keep the drive/tuck visible instead of sending the hands behind the
 			-- steady view with the somersault. Release back to the real clip's pose.
@@ -289,6 +306,18 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			local pointing = arm.side == 1 and character:GetAttribute("BlasterPoint") ~= nil
 			target = target:Lerp(carry, carryWeight * (if pointing then pointingWeight else 1))
 		end
+		if arm.side == 1 and steadyWeight > 0.001 and handle and handle:IsA("BasePart") then
+			-- Keep shoulder travel and positional bounce, but settle the gun angle
+			-- towards the aim while charging/firing. Rotate the arm and gun together
+			-- so the hand stays attached; leave a little angular motion for life.
+			local gunFromArm = sourceFrame.Rotation:ToObjectSpace(handle.CFrame.Rotation)
+			local aimDirection = if typeof(point) == "Vector3"
+				then camera.CFrame:VectorToObjectSpace(point).Unit
+				else Vector3.new(0, 0, -1)
+			local settled = CFrame.lookAt(Vector3.zero, aimDirection) * gunFromArm:Inverse()
+			target = CFrame.new(target.Position)
+				* target.Rotation:Lerp(settled, 0.88 * steadyWeight)
+		end
 		local rate = if character:GetAttribute("BlasterPoint") ~= nil
 			then POSE_RATE * 2
 			elseif flipping and AcrobaticCamera.enabled() and AcrobaticCamera.status() < 3 then 72
@@ -296,7 +325,21 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 		local alpha = 1 - math.exp(-rate * dt)
 		local blended = if arm.frame then arm.frame:Lerp(target, alpha) else target
 		arm.frame = blended
-		local armFrame = camera.CFrame * blended
+		local rendered = blended
+		if arm.side == 1 then
+			-- Add the firing gesture after pose smoothing so movement cannot blur
+			-- away its fast attack. The gun follows this same hand frame.
+			local follow = Recoil.follow(
+				character:GetAttribute("BlasterRecoilAt"),
+				os.clock(),
+				character:GetAttribute("BlasterRecoilCharge"),
+				character:GetAttribute("BlasterRecoilStyle")
+			)
+			rendered = CFrame.new(blended.Position + follow.Position)
+				* follow.Rotation
+				* blended.Rotation
+		end
+		local armFrame = camera.CFrame * rendered
 		arm.copy.Size = Vector3.new(fullSize.X, fullSize.Y - crop, fullSize.Z)
 		arm.copy.Color = source.Color
 		arm.copy.CFrame = armFrame * CFrame.new(0, -(crop + arm.copy.Size.Y / 2), 0)
@@ -307,9 +350,26 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			-- Use the full virtual hand endpoint, independent of the shoulder crop.
 			-- Preserve aim/flourishes, with a small distal shift for a shallower grip.
 			gunMap = armFrame
-				* CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + GUN_GRIP_RELEASE), 0)
+				* CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + T.gripRelease), 0)
 				* sourceFrame:Inverse()
 		end
+	end
+	-- Apply the shot directly to the visible gun about its hand grip. Reading the
+	-- hidden tool's joint here depended on the next physics update and weakened
+	-- the fast kick. Keeping this after smoothing also preserves the toss/catch.
+	if handle and handle:IsA("BasePart") then
+		local held = gunMap * handle.CFrame
+		-- The idle hands lift forward into view; level the gun so it still hangs relaxed.
+		local relaxed = (1 - straightWeight) * postureWeight
+		held = held * CFrame.Angles(-math.rad(T.idlePitch + T.idleGunDown) * relaxed, 0, 0)
+		gunMap = held * handle.CFrame:Inverse()
+		local kick = Recoil.sample(
+			character:GetAttribute("BlasterRecoilAt"),
+			os.clock(),
+			character:GetAttribute("BlasterRecoilCharge"),
+			character:GetAttribute("BlasterRecoilStyle")
+		)
+		gunMap = held * kick * held:Inverse() * gunMap
 	end
 	visualHandle = nil
 	local gunFade = 1 - BlasterAnimator.handVisibility(character)
