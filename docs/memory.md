@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v4
+
+- **Owner feedback on v3:** preferred the earlier sharp rocks, which looked random and started high up; the bottom spikes looked organised; likes mixing rounder and sharper rocks. Likes the roots and vines. Wants small glowing jungle spores attached all along the vines, no mushrooms on this rock, many small crystals in their place, and roots attached to the rock with only a small tip poking out.
+- **Implemented/verified offline:** 16 sharp rocks at random positions, leans and lengths, starting high among jittered rounded masses; spores set into the stems; 38 small crystals in mixed colours replacing the mushrooms; roots measured on the rock at nine heights, ending in short tips. Close-up and turntable frames inspected. Larger crystal positions moved as a side effect.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Spawn rock v3
 
 - **Owner feedback on v2:** too far from the Slugterra feel, too much going on underneath, cramped, leafy and green; it should still look rocky. They do like the individual designs.
