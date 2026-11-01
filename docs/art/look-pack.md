@@ -70,6 +70,10 @@ How Slugshot gets its "Living Comic-Book Fantasy" look in Roblox, which has no c
 
 - **Rock Wall Study v2:** real cracks only, on five of the twelve big rocks, about half with a second crack. Surface texture on every rock. The faint squiggles (v6 painted cracks and buried-root outline arcs) and the fossil shells are removed. Awaiting the owner's final look before building four Roblox wall variants (`rock-wall-4` to `rock-wall-7`).
 
+## Round 9 (owner 2026-11-01)
+
+- **Base rock wall design:** cracks, surface texture, and in every region a crystal cluster or mushroom cluster with tiny mushrooms between (about seven crystals, up from four). Walls A-D (`rock-wall-4` to `rock-wall-7`) place everything differently and alternate around the look-test ring.
+
 ## Pipeline: final concept to Roblox
 
 Run from the lobby worktree. Python means the scratch venv with moderngl, numpy, Pillow and scikit-image. Blender is 5.2.3.

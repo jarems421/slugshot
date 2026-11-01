@@ -154,14 +154,16 @@ local function light(
 	return l
 end
 
--- Cavern enclosure: the rock wall module reused in a ring, all facing the centre (modular kit test).
+-- Cavern enclosure: the rock wall module in a ring, all facing the centre (modular kit test). Walls A-D (owner
+-- round 9: cracks, crystals, mushrooms and moss placed differently on each) alternate so neighbours never repeat.
+local WALLS = { "rock-wall-4", "rock-wall-5", "rock-wall-6", "rock-wall-7" }
 -- Each wall is lit from above its top edge by a soft warm-white spotlight angled down across its face
 -- (owner round 3: light the walls rather than tinting the whole cavern blue).
 for i = 0, 7 do
 	local angle = i * 45 + 22.5
 	local a = math.rad(angle)
 	local x, z = math.sin(a) * 52, -math.cos(a) * 52
-	local wall = place("rock-wall-1", x, z, -angle)
+	local wall = place(WALLS[i % #WALLS + 1], x, z, -angle)
 	if wall then
 		local lo, hi = paintedBounds(wall)
 		local centre = (lo + hi) / 2

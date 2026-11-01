@@ -625,3 +625,9 @@
 - **Confirmed:** owner loves the carved cracks and wants a few more; remove the faint squiggly lines; fossil shells not wanted.
 - **Implemented/verified offline:** cracks on five of the twelve big rocks with second cracks on about half; v6 painted cracks and buried-root boundary arcs removed from the study (surface ring test in the concept, convex lines off for study rock in the concept and painter); fossil code removed. Option 1 within 2 of 255 levels of v6. Turntables inspected; study page v2 and library v18 published.
 - **Unresolved:** owner's final look; Roblox build of walls A to D.
+
+## 2026-11-01 - Rock wall base design and Roblox walls A-D
+
+- **Confirmed:** owner wanted a few more crystals (top left was bland) and asked for this to be the base design for rock walls, with crack, moss, mushroom and crystal positions changing per wall and every corner filled; then put it in the Roblox Studio look test.
+- **Implemented/verified offline:** region-based dressing per wall (six regions, three crystal and three mushroom clusters shuffled, tiny mushrooms everywhere; 6-7 crystals per wall), measured on each wall's cracked surface; moss shifted per wall. v6 anchors frozen (they had drifted up to about 0.2 studs from the current surface). Walls A-D built, island orientation checked, privately uploaded, and alternating in the look-test ring.
+- **Unresolved:** owner's Studio verdict.
