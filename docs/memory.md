@@ -5,7 +5,9 @@
 - **Owner request:** make the portal area very grand and volcanic, with a few options to pick from in an artifact.
 - **Implemented/verified offline:** four concepts in the library's shader (asset `portal-plaza`, shader 8) using the approved gates: A Caldera Steps, B Forge Avenue, C Molten Crown, D Titan's Arch. Rendered with `tools/lobby/render_plaza.py`; frames inspected.
 - **Proposed, not approved:** all four move the volcano about 60 studs back at about 160 tall, draw the cavern wall beyond 300, and enlarge the gates. The agent recommended D.
-- **Unresolved:** the owner's pick. Nothing is built in Roblox.
+- **Confirmed:** the owner picked D, Titan's Arch, with Codex's volcano at about 115%, no greenery at its foot and a better eruption.
+- **Implemented, seen in Studio by camera captures:** arch, volcano, cracked lava ground, lava falls, flowing rivers, pylon fires and eruption, on the block-out ([lobby hub](art/lobby-hub.md)). Busiest view about 305k triangles and 188 draw calls on an RTX 3070.
+- **Unresolved:** owner verdict, walking checks of the new colliders, the rim climb and spiral route around the moved volcano, phone performance.
 
 ## 2026-11-01 - Hub designs in Roblox, owner review rounds
 

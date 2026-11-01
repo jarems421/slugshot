@@ -4,12 +4,11 @@ local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
-	{ name = "sky", from = Vector3.new(4, 4, 12), at = Vector3.new(0, 250, 0) },
-	{ name = "skyWide", from = Vector3.new(0, 20, 170), at = Vector3.new(0, 215, 0) },
-	{ name = "cave", from = Vector3.new(-120, 70, 120), at = Vector3.new(-210, 250, 190) },
-	{ name = "caveB", from = Vector3.new(150, 110, 60), at = Vector3.new(230, 240, 100) },
-	{ name = "shore", from = Vector3.new(0, 8, 110), at = Vector3.new(0, 210, 230) },
-	{ name = "shoreB", from = Vector3.new(-120, 12, -40), at = Vector3.new(-230, 220, -90) },
+	{ name = "spawn", from = Vector3.new(0, 9, -12), at = Vector3.new(0, 55, -200) },
+	{ name = "bridge", from = Vector3.new(0, 4, -90), at = Vector3.new(0, 50, -200) },
+	{ name = "under", from = Vector3.new(14, 6, -128), at = Vector3.new(0, 48, -170) },
+	{ name = "side", from = Vector3.new(120, 22, -110), at = Vector3.new(-5, 45, -180) },
+	{ name = "floor", from = Vector3.new(-32, 14, -125), at = Vector3.new(-20, 0, -150) },
 }
 
 local function read(name: string): number
@@ -47,6 +46,15 @@ task.spawn(function()
 		print(`HUBCHECK shot {stop.name}`)
 		task.wait(1)
 	end
+	-- The eruption, from the spawn rock, at known moments.
+	camera.CFrame = CFrame.lookAt(Vector3.new(0, 9, -12), Vector3.new(0, 80, -240))
+	task.wait(1)
+	workspace:SetAttribute("HubErupt", true)
+	for index = 1, 6 do
+		task.wait(0.85)
+		print(`HUBCHECK shot erupt{index}`)
+	end
+	task.wait(1)
 	camera.CameraType = Enum.CameraType.Custom
 	print("HUBCHECK tour ends")
 end)

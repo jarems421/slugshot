@@ -342,6 +342,72 @@ RunService.Heartbeat:Connect(function(dt: number)
 	end
 end)
 
+-- The volcano's eruption (owner: the old one wasn't animated enough). It builds, throws several waves of heavy blobs high in
+-- long arcs, keeps spitting as it dies away, then rests. Particles are few and fired in bursts, so resting costs nothing.
+local crater: BasePart? = nil
+local volley: { { at: number, name: string, count: number } } = {}
+local nextEruption = 5
+
+local function startEruption(t: number)
+	local scale = if low then 0.55 else 1
+	table.clear(volley)
+	local function add(at: number, name: string, count: number)
+		table.insert(
+			volley,
+			{ at = t + at, name = name, count = math.max(1, math.floor(count * scale)) }
+		)
+	end
+	-- The build-up: small spits, then a stronger one.
+	for i = 0, 4 do
+		add(i * 0.22, "Spits", 2 + i)
+	end
+	-- The main blast, then waves that lose strength.
+	local waves = { 1.15, 1.42, 1.75, 2.15, 2.65, 3.3 }
+	local sizes = { 20, 15, 11, 8, 5, 3 }
+	for i, at in waves do
+		add(at, "Blobs", sizes[i])
+		add(at, "Spits", sizes[i] + 3)
+	end
+	add(1.15, "Flare", 1)
+	add(1.15, "Blast", 4)
+	add(1.75, "Flare", 1)
+	add(1.75, "Blast", 2)
+	add(2.65, "Blast", 1)
+	-- A last few stragglers.
+	for i = 0, 3 do
+		add(4.0 + i * 0.5, "Spits", 2)
+	end
+	nextEruption = t + 9 + 6 * math.random()
+end
+
+local function eruptionStep(t: number)
+	if not crater then
+		local tagged = CollectionService:GetTagged("HubCrater")
+		local first = tagged[1]
+		if first and first:IsA("BasePart") then
+			crater = first
+		else
+			return
+		end
+	end
+	if t >= nextEruption then
+		startEruption(t)
+	end
+	for index = #volley, 1, -1 do
+		local shot = volley[index]
+		if t >= shot.at then
+			local e = (crater :: BasePart):FindFirstChild(shot.name)
+			if e and e:IsA("ParticleEmitter") then
+				e:Emit(shot.count)
+			end
+			table.remove(volley, index)
+		end
+	end
+end
+workspace:GetAttributeChangedSignal("HubErupt"):Connect(function()
+	nextEruption = 0
+end)
+
 local started = os.clock()
 local nextMove = 0
 RunService.RenderStepped:Connect(function(dt: number)
@@ -350,6 +416,7 @@ RunService.RenderStepped:Connect(function(dt: number)
 		nextMove = t + (if low then MOVE_RATE else 0)
 		moveParts(t)
 		flash(t, dt)
+		eruptionStep(t)
 	end
 	local camera = workspace.CurrentCamera
 	if not camera then

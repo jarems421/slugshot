@@ -22,6 +22,13 @@ The final hub designs built for the game, on top of the approved block-out, whos
 - Falls only come from their mouths and melt into the juice at its surface. Lanterns are solid and only move with the bridge. The ground matches the rock and rim you can see. No floating rocks in a bridge's path.
 - A Detail button in the place switches between High and Low. A game can't change Roblox's own graphics level.
 
+## Portal side (Confirmed, owner 2026-11-01)
+
+- **Titan's Arch:** the owner picked option D of the [portal plaza options](https://claude.ai/artifact/FwAA7bQqKwejZmXg2PTisg). Its opening was widened so the crater stays framed inside it from the spawn rock.
+- **Volcano:** Codex's Ember Crown, study 05 (`docs/art/remaining-concepts.md` and `site-volcano` in the `slugshot-lobby-concepts` worktree, uncommitted there), ported into the shader at 115% (150 studs tall), without the ferns, mushrooms, crystals and moss at its foot. Its centre moves to 268 studs from the hub, backing into the cavern wall.
+- **Eruption:** rebuilt because the owner found the old one under-animated: a build-up of spits, then six falling waves of heavy blobs in wide arcs, with a flash and underlit smoke, every 9 to 15 seconds. `HubMotion.client` fires it.
+- **Unresolved:** the old climb to the volcano's rim is gone, and the spiral route currently runs through the new volcano. Both need a decision at the terrain stage. The bounty board is still block-out.
+
 ## Roblox versions differ from the concept on purpose
 
 | Concept | Game |
@@ -34,6 +41,6 @@ The final hub designs built for the game, on top of the approved block-out, whos
 
 ## Costs
 
-Latest, after the ceiling: busiest view about 234k triangles, 131 draw calls and 107 MB of textures on an RTX 3070; about 330k across all pieces before automatic LOD. Still no phone evidence.
+Latest, after the portal side: busiest measured view about 305k triangles, 188 draw calls and 129 MB of textures on an RTX 3070. Still no phone evidence.
 
 Measured in Studio on an RTX 3070, before the last two rounds: about 145k to 195k triangles and 80 to 125 draw calls in most views, with the Low setting taking off about 10%. All pieces together are about 270k before Roblox's automatic LOD. Those numbers aren't phone evidence. The last two rounds weren't measured, because Play didn't start from the automated check.

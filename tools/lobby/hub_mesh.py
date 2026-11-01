@@ -93,6 +93,7 @@ void main() {
   if (id > 2.3 && id < 2.5) { crease = smoothstep(0.2, 0.7, -lap)*0.85; idEdge *= 0.6; }
   if (id > 18.9 && id < 20.0) { crease = 0.0; idEdge = 0.0; }  // far smaller than the ink's sampling reach
   if (id > 1.15 && id < 1.2) { crease = 0.0; idEdge = 0.0; }
+  if (id > 29.5 && id < 31.5) { crease = 0.0; idEdge *= 0.6; }
   if (abs(id - 12.0) < 0.5) crease = 0.0;
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
@@ -246,6 +247,36 @@ GATE = """vec2 assetMap(vec3 p) {
 POOLS = """vec2 assetMap(vec3 p) { return vec2(fallPool(p), 17.0); }
 """
 BOWLS = """vec2 assetMap(vec3 p) { return vec2(fallBasin(p), 1.0); }
+"""
+ARCH = """vec2 assetMap(vec3 p) {
+  float bowls = 1e3, fire = 1e3;
+  vec2 r = vec2(plazaStage(p), 32.0);
+  float py = plazaPylons(p, bowls, fire);
+  if (py < r.x) r = vec2(py, 32.0);
+  if (bowls < r.x) r = vec2(bowls, 33.0);
+  return r;
+}
+"""
+VOLCANO = """vec2 assetMap(vec3 p) {
+  vec2 r = vec2(volcanoD(p), 37.0);
+  float pool = volcanoPool(p);
+  if (pool < r.x) r = vec2(pool, 31.0);
+  return r;
+}
+"""
+# The ground of the portal side: stops at the pit, the wall and the zone's edges, and leaves the ravine open.
+PLAZA_FLOOR = """vec2 assetMap(vec3 p) {
+  float hr = length(p.xz + vec2(0.0, PZ_HUB)), a = atan(p.x, p.z + PZ_HUB), ch = plazaChannels(p.xz);
+  float g = smax(p.y*0.8, -max(ch, -p.y - 0.4), 0.06);
+  vec2 r = vec2(g, 30.0);
+  float l = max(ch, abs(p.y + 0.24) - 0.05);
+  if (l < r.x) r = vec2(l, 31.0);
+  float clip = max(max(20.4 - hr, hr - 61.0), (abs(a) - 0.71)*hr);
+  // The block-out's ravine stays open on this side (game x < 0, which is this scene's x > 0).
+  clip = max(clip, -max(max(0.436 - a, a - 0.72)*hr, max(41.0 - hr, hr - 55.0)));
+  r.x = max(r.x, clip);
+  return r;
+}
 """
 CEILING_VINES = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 12.0); ceilingVines(p, res); return res; }
 """
@@ -419,6 +450,28 @@ def gate_piece(direction, r):
     }
 
 
+PLAZA_PYLONS = ((6.2, -8.5), (14.0, -11.0))
+
+
+def near_pylon(_ids, c):
+    x = np.abs(c[:, 0])
+    return np.min([np.hypot(x - px, c[:, 2] - pz) for px, pz in PLAZA_PYLONS], axis=0) < 2.2
+
+
+def arch_side(sign):
+    def test(_ids, c):
+        return (np.hypot(c[:, 0], c[:, 1]) > 20.5) & (c[:, 1] > 2.0) & (np.abs(c[:, 2] - 0.8) < 5.0) & (c[:, 0]*sign >= 0)
+    return test
+
+
+def below_floor(_ids, c):
+    return c[:, 1] < -0.03
+
+
+def volcano_front(_ids, c):
+    return c[:, 2] < 25.0
+
+
 def portal_piece(item, scale):
     return {
         "item": item, "map": PORTAL, "scale": scale, "origin": (0.0, 0.0, 0.0), "lo": (-12.0, -0.3, -5.5), "hi": (12.0, 22.0, 5.5),
@@ -492,9 +545,9 @@ PIECES = {
         "parts": [part("Juice", everything, 6500, 1024, cage=1.3)],
     },
     # The block-out's sizes: PvP the largest at about 28 tall, the other two about 23.
-    "hub-portal-pvp": portal_piece("gate-pvp-1", 1.35),
-    "hub-portal-training": portal_piece("gate-training-1", 1.1),
-    "hub-portal-veylume": portal_piece("gate-veylume-1", 1.1),
+    "hub-portal-pvp": portal_piece("gate-pvp-1", 2.5),
+    "hub-portal-training": portal_piece("gate-training-1", 1.6),
+    "hub-portal-veylume": portal_piece("gate-veylume-1", 1.6),
     "hub-gems": {
         "item": "spawn-rock-1", "map": "minis", "scale": 5.0, "origin": (0.0, 13.0, 0.0), "sparkle": "Minis", "bakeEmit": True,
         "lo": (-8.0, 12.3, -8.0), "hi": (8.0, 13.6, 8.0), "step": 0.0075, "normalH": 0.0015,
@@ -529,6 +582,33 @@ PIECES = {
             part("Spires", by_id((1.09, 1.15)), 5000, 1024, ROCK_INK*1.4, 1.0, hard=True, cage=0.12),
             part("Mouth", inner_ring, 4500, 1024, ROCK_INK*1.2, 1.0, cage=0.1),
             *[part(f"Cave{i}", in_section(i, 4), 2200, 1024, cage=0.25) for i in range(4)],
+        ],
+    },
+    "hub-arch": {
+        "item": "portal-plaza-7", "map": ARCH, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.7,
+        "lo": (-40.0, -0.4, -14.0), "hi": (40.0, 30.5, 10.0), "step": 0.05, "normalH": 0.006,
+        "parts": [
+            part("Pylons", near_pylon, 2600, 1024, PROP_INK, 1.0, hard=True, cage=0.05),
+            part("ArchL", arch_side(-1), 3000, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
+            part("ArchR", arch_side(1), 3000, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
+            part("Base", everything, 3400, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
+        ],
+    },
+    "hub-volcano": {
+        "item": "portal-plaza-7", "map": VOLCANO, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
+        "lo": (-25.0, -1.2, -3.0), "hi": (25.0, 32.5, 48.0), "step": 0.08, "normalH": 0.012,
+        "parts": [
+            part("Pool", by_id((30.5, 31.5)), 300, 256, cage=0.06),
+            part("VolcanoFront", volcano_front, 7500, 1024, ROCK_INK*1.2, 1.0, cage=0.15),
+            part("VolcanoBack", everything, 1400, 512, cage=0.2),
+        ],
+    },
+    "hub-plaza-floor": {
+        "item": "portal-plaza-7", "map": PLAZA_FLOOR, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.4,
+        "lo": (-42.0, -0.5, -12.0), "hi": (42.0, 0.3, 30.0), "step": 0.05, "normalH": 0.006,
+        "parts": [
+            part("Cracks", below_floor, 3600, 1024, cage=0.05),
+            part("Floor", everything, 2400, 1024, cage=0.08),
         ],
     },
     "hub-ceiling-vines": {
@@ -783,6 +863,7 @@ def fx_textures():
     save("zap", (np.exp(-(bolt/0.018)**2) + 0.5*np.exp(-(bolt/0.07)**2) + 0.0*zig)*np.exp(-(y/0.92)**8))
     for name, a in (("spore", np.clip(np.exp(-(r/0.32)**2) + 0.35*np.exp(-(r/0.75)**2), 0, 1)),):
         save(name, a)
+    y_full, x_full = np.mgrid[-1:1:n*1j, -1:1:n*1j]
     h, w = 512, 256
     def tile(sigma_y, sigma_x, seed):
         noise = blur(blur(np.random.default_rng(seed).random((h, w)), 0, sigma_y), 1, sigma_x)
@@ -803,6 +884,17 @@ def fx_textures():
     colour = colour + (np.array((225, 255, 248), "f4") - colour)*(0.14*shine)[..., None]
     rgba = np.dstack([colour, alpha*255]).clip(0, 255).astype("u1")
     Image.fromarray(rgba, "RGBA").save(folder/"flow.png")
+    # Lava: dark crust plates split by bright cracks, with wavering edges, to scroll down a river or a fall.
+    veins = np.abs(tile(26, 16, 6) - 0.5) + 0.4*np.abs(tile(10, 7, 7) - 0.5)
+    crack = 1 - np.clip(veins/0.1, 0, 1)
+    band = 1 - np.clip(veins/0.24, 0, 1)
+    hot = np.array((255, 170, 60), "f4")[None, None]*crack[..., None] + np.array((225, 62, 14), "f4")[None, None]*(band*(1 - crack))[..., None]
+    lava = np.clip(hot + np.array((46, 14, 10), "f4")[None, None]*(1 - band)[..., None], 0, 255)
+    Image.fromarray(np.dstack([lava, alpha*255]).clip(0, 255).astype("u1"), "RGBA").save(folder/"lavaflow.png")
+    # A molten blob stretched along its flight, and a flame.
+    save("droplet", np.exp(-(x_full/0.34)**2 - (y_full/0.82)**2)*1.6)
+    tip = np.clip((y_full + 1)/2, 0, 1)
+    save("flame", np.exp(-(x_full/(0.55*(1 - tip**1.5) + 0.02))**2)*np.clip(tip*5, 0, 1)*np.clip((1 - tip)*3, 0, 1)*1.4)
     # A ripple spreading on the juice where a fall lands.
     ring = np.exp(-((r - 0.72)/0.09)**2) + 0.35*np.exp(-((r - 0.45)/0.08)**2)
     save("ripple", ring*(r < 1))
@@ -916,7 +1008,7 @@ def mesh(key):
 
 EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow", "CeilGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 2.2, "VolcanoFront": 1.5, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def paint(key):
@@ -947,7 +1039,8 @@ def paint(key):
         # runtime light has to reach it, which is what keeps this cheap on a phone.
         glowing_ids = (a0[:, 3] > 2.5) & ~((a0[:, 3] > 3.5) & (a0[:, 3] < 13.5))
         glowing = glowing_ids.mean() > 0.2
-        keep = (glowing and not PIECES[key].get("bakeEmit")) or g["name"] == "Cracks"
+        # Energy keeps its colour in the map and glows through its mask; baked in, it washes out to cream.
+        keep = (glowing and not PIECES[key].get("bakeEmit")) or g["name"] in ("Cracks", "Energy")
         base = alb if keep else np.clip(alb*0.85 + emit*0.9, 0, 1)
         base = np.clip(base*PIECES[key].get("gain", 1.0), 0, 1)
         Image.fromarray((to_srgb(base)*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-color.png")

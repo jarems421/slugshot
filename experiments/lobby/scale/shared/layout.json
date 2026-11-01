@@ -28,11 +28,11 @@
   ],
   "floorRadii": [85, 190, 205, 270, 275, 300],
   "portals": [
-    { "name": "Training", "angle": -18.5, "radius": 155, "rise": 0, "width": 14, "height": 21, "color": [86, 190, 110] },
-    { "name": "PvP", "angle": 0, "radius": 157, "rise": 4, "width": 18, "height": 26, "color": [240, 130, 50] },
-    { "name": "Veylume", "angle": 18.5, "radius": 155, "rise": 0, "width": 14, "height": 21, "color": [160, 100, 220] }
+    { "name": "Training", "angle": -22.3, "radius": 165, "rise": 1.5, "width": 20, "height": 29, "color": [86, 190, 110] },
+    { "name": "PvP", "angle": 0, "radius": 161, "rise": 6, "width": 30, "height": 44, "color": [240, 130, 50] },
+    { "name": "Veylume", "angle": 22.3, "radius": 165, "rise": 1.5, "width": 20, "height": 29, "color": [160, 100, 220] }
   ],
-  "pvpRise": { "radius": 155, "topRadius": 18, "baseRadius": 26, "height": 4 },
+  "pvpRise": { "radius": 161, "topRadius": 22, "baseRadius": 32, "height": 6 },
   "bountyBoard": { "angle": -10.5, "radius": 148, "width": 12, "height": 9 },
   "gunShop": { "angle": -90, "radius": 190, "width": 50, "depth": 40, "height": 18, "door": 14, "color": [170, 122, 74] },
   "pond": { "angle": 90, "radius": 155, "diameter": 70, "stones": 7, "mushrooms": 6, "slugs": 14 },

@@ -236,3 +236,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Even scatters read as polka dots:** glowing fungus looks natural in tight colonies of small, unevenly sized lights.
 - **Moss on a big surface goes camo fast:** noise patches covering half the Sky Well's ceiling read as flat green blobs. Keep it under about a fifth, small, soft and darker than the rock's lit tone.
 - **A part showing flat grey right after an upload is probably still processing:** look again a few minutes later before changing anything.
+- **Check sightlines before scaling a backdrop:** from the spawn rock the arch's keystone hid the crater, whatever the volcano's size. Widening the opening fixed it.
+- **Glowing surfaces washed out when their glow was baked into the colour map:** keep the colour in the map and let the mask carry the glow.

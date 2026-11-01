@@ -41,9 +41,9 @@ local FALL_FAN = { -72, -48, -24, 0, 24, 48, 72 }
 
 -- Pieces that glow more than the painted brightness suits under Roblox's bloom.
 local GLOW: { [string]: number } = {
-	["hub-portal-pvp"] = 0.45,
-	["hub-portal-training"] = 0.45,
-	["hub-portal-veylume"] = 0.45,
+	["hub-portal-pvp"] = 0.75,
+	["hub-portal-training"] = 0.75,
+	["hub-portal-veylume"] = 0.75,
 	["hub-storm"] = 0.7,
 }
 
@@ -56,6 +56,8 @@ local DISTANT = {
 	"hub-well-glow",
 	"hub-ceiling-gems",
 	"hub-ceiling-vines",
+	"hub-arch",
+	"hub-volcano",
 	"hub-well-isles",
 	"hub-well-bits",
 	"hub-rock-debris",
@@ -319,9 +321,19 @@ local function hideBlockOut()
 	if underside then
 		underside:Destroy()
 	end
+	-- Titan's Arch and the real volcano replace the block-out's. The climb to the old rim goes with it.
+	local oldVolcano = root:FindFirstChild("Volcano")
+	if oldVolcano then
+		oldVolcano:Destroy()
+	end
 	-- The real gates stand where the block-out's did.
 	local portals = root:FindFirstChild("Portals")
 	if portals then
+		for _, item in portals:GetChildren() do
+			if item:IsA("BasePart") and item.Name == "Surface" then
+				item.Transparency = 1
+			end
+		end
 		for _, entry in layout.portals do
 			hide(portals:FindFirstChild(entry.name))
 		end
@@ -359,6 +371,15 @@ local function hideBlockOut()
 			end
 		end
 		hide(shore:FindFirstChild("RimStrip"))
+		-- The portal side's ground art replaces its grey ground, which stays to walk on.
+		for _, item in shore:GetChildren() do
+			if item:IsA("BasePart") and item.Name == "Surface" then
+				local at = item.Position
+				if math.abs(math.deg(math.atan2(at.X, -at.Z))) < 40 then
+					item.Transparency = 1
+				end
+			end
+		end
 		-- The concept's mossy lip replaces the block-out's; its collider stays.
 		for _, item in shore:GetDescendants() do
 			if item.Name == "Lip" and item:IsA("BasePart") then
@@ -802,6 +823,292 @@ local function buildPortals()
 	end
 end
 
+-- The portal side: Titan's Arch, with Codex's Ember Crown volcano behind it. These were modelled facing away from the hub.
+local PLAZA = CFrame.new(0, 0, -157) * CFrame.Angles(0, math.pi, 0)
+local VOLCANO_Z = 111 -- studs behind the plaza's origin
+local VOLCANO_SCALE = 1.15
+local DOWN_AXIS = Vector3.new(0, -1, 0)
+
+local function placeInPlaza(key: string): Model?
+	local model = place(key)
+	if model then
+		model:PivotTo(PLAZA * model:GetPivot())
+	end
+	return model
+end
+
+local function volcCentre(y: number): (number, number)
+	local t = y / 130
+	return 4 * math.sin(t * 2.4) - 2 * t, -4 * t + 2 * math.sin(t * 3)
+end
+
+local function volcRadius(a: number, y: number): number
+	local t = math.clamp(y / 130, 0, 1)
+	local base = 84 - 54 * t ^ 0.72
+	local phase = a * 12 + 0.22 * math.sin(a * 3) + 0.13 * math.sin(t * 9 + a * 2)
+	local ridge = (1 - math.abs(math.sin(phase * 0.5))) ^ 1.6
+	return base
+		+ (ridge - 0.36) * (15 - 5 * t)
+		+ 1.15 * math.sin(t * math.pi * 6 + a * 2)
+		+ 2 * math.sin(a * 3 + 0.5) * (1 - t)
+end
+
+-- A point on the volcano's wall, in world space, in the study's own units of angle and height.
+local function volcWall(a: number, y: number, offset: number): Vector3
+	local cx, cz = volcCentre(y)
+	local r = volcRadius(a, y) + offset
+	return PLAZA
+		* Vector3.new(
+			(cx + math.cos(a) * r) * VOLCANO_SCALE,
+			y * VOLCANO_SCALE,
+			(cz + math.sin(a) * r) * VOLCANO_SCALE + VOLCANO_Z
+		)
+end
+
+local function buildVolcano()
+	placeInPlaza("hub-volcano")
+	-- Molten rivers, flowing, over the painted ones on the side facing the hub.
+	local rivers = {
+		{ -1.18, 5, 4.8, 0 },
+		{ -0.28, 25, 3.6, 1 },
+		{ 3.3106, 8, 4.5, 5 },
+		{ 4.2081, 21, 3.8, 6 },
+	}
+	for _, river in rivers do
+		local a0, lo, wide, k = river[1], river[2], river[3], river[4]
+		local segments = 5
+		for s = 0, segments - 1 do
+			local function at(f: number): (Vector3, number)
+				local t = f / segments
+				local y = 129 + (lo - 129) * t
+				local a = a0 + 0.08 * math.sin(y / 130 * 5 + k * 2)
+				local w = wide
+					* (0.72 + 0.23 * math.sin(t * 15 + k * 2))
+					* (0.55 + 0.45 * math.sin(math.pi * t * 0.7 + 0.35))
+				return volcWall(a, y, 1.6), w * 2.6 * VOLCANO_SCALE
+			end
+			local from, w0 = at(s)
+			local to, w1 = at(s + 1)
+			beam(
+				"LavaRiver",
+				from,
+				to,
+				w0,
+				w1,
+				fxTexture("lavaflow"),
+				Color3.new(1, 1, 1),
+				fade({ { 0, 0.12 }, { 1, 0.12 } }),
+				0.32,
+				2
+			)
+		end
+	end
+	-- The crater: what erupts is run by HubMotion.client.
+	local cx, cz = volcCentre(130)
+	local top = PLAZA * Vector3.new(cx * VOLCANO_SCALE, 147, cz * VOLCANO_SCALE + VOLCANO_Z)
+	local crater = holder("Crater", top, Vector3.new(26, 1, 26))
+	CollectionService:AddTag(crater, "HubCrater")
+	local function emitter(name: string): ParticleEmitter
+		local e = Instance.new("ParticleEmitter")
+		e.Name = name
+		e.Rate = 0
+		e.LightInfluence = 0
+		e.EmissionDirection = Enum.NormalId.Top
+		e.Parent = crater
+		return e
+	end
+	local molten = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 226, 150)),
+		ColorSequenceKeypoint.new(0.35, Color3.fromRGB(255, 142, 40)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 28, 8)),
+	})
+	-- Heavy blobs thrown high in long arcs, falling back on the slopes.
+	local blobs = emitter("Blobs")
+	blobs.Texture = fxTexture("droplet")
+	blobs.Orientation = Enum.ParticleOrientation.VelocityParallel
+	blobs.LightEmission = 1
+	blobs.Color = molten
+	blobs.Size = fade({ { 0, 6 }, { 0.15, 10 }, { 1, 5 } })
+	blobs.Transparency = fade({ { 0, 0 }, { 0.85, 0 }, { 1, 1 } })
+	blobs.Lifetime = NumberRange.new(3.2, 4.6)
+	blobs.Speed = NumberRange.new(55, 98)
+	blobs.SpreadAngle = Vector2.new(40, 40)
+	blobs.Acceleration = Vector3.new(0, -62, 0)
+	blobs.Drag = 0.12
+	-- A spray of small hot spits, wider and quicker to die.
+	local spits = emitter("Spits")
+	spits.Texture = fxTexture("droplet")
+	spits.Orientation = Enum.ParticleOrientation.VelocityParallel
+	spits.LightEmission = 1
+	spits.Color = molten
+	spits.Size = fade({ { 0, 3.6 }, { 1, 1 } })
+	spits.Lifetime = NumberRange.new(1.4, 2.6)
+	spits.Speed = NumberRange.new(30, 78)
+	spits.SpreadAngle = Vector2.new(55, 55)
+	spits.Acceleration = Vector3.new(0, -62, 0)
+	spits.Drag = 0.2
+	-- Underlit smoke thrown up with each blast.
+	local blast = emitter("Blast")
+	blast.Texture = fxTexture("mist")
+	blast.LightEmission = 0.35
+	blast.Color = ColorSequence.new(Color3.fromRGB(255, 118, 48), Color3.fromRGB(58, 40, 50))
+	blast.Size = fade({ { 0, 30 }, { 1, 95 } })
+	blast.Transparency = fade({ { 0, 0.35 }, { 1, 1 } })
+	blast.Lifetime = NumberRange.new(2.2, 3.6)
+	blast.Speed = NumberRange.new(16, 34)
+	blast.SpreadAngle = Vector2.new(18, 18)
+	-- The flash in the crater.
+	local flare = emitter("Flare")
+	flare.Texture = fxTexture("flash")
+	flare.LightEmission = 1
+	flare.Color = ColorSequence.new(Color3.fromRGB(255, 170, 70))
+	flare.Size = fade({ { 0, 80 }, { 1, 135 } })
+	flare.Transparency = fade({ { 0, 0.25 }, { 1, 1 } })
+	flare.Lifetime = NumberRange.new(0.45, 0.7)
+	flare.Speed = NumberRange.new(0)
+	-- The plume that's always rising.
+	local plume = emitter("Plume")
+	plume.Texture = fxTexture("mist")
+	plume.Color = ColorSequence.new(Color3.fromRGB(150, 98, 84), Color3.fromRGB(46, 40, 54))
+	plume.LightEmission = 0.1
+	plume.Size = fade({ { 0, 16 }, { 1, 58 } })
+	plume.Transparency = fade({ { 0, 1 }, { 0.2, 0.62 }, { 1, 1 } })
+	plume.Lifetime = NumberRange.new(9, 13)
+	plume.Rate = 1.5
+	plume.Speed = NumberRange.new(7, 11)
+	plume.SpreadAngle = Vector2.new(10, 10)
+	CollectionService:AddTag(plume, "HubMist")
+	pointLight(top + Vector3.new(0, 6, 0), Color3.fromRGB(255, 120, 50), 1.2, 45)
+end
+
+local function buildArch()
+	placeInPlaza("hub-plaza-floor")
+	placeInPlaza("hub-arch")
+	-- Fires on the pylons.
+	for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
+		for _, side in { -1, 1 } do
+			local position = PLAZA
+				* Vector3.new(side * spot[1] * 5, (spot[3] + 0.42) * 5, spot[2] * 5)
+			local source = holder("PylonFire", position, Vector3.new(4, 1, 4))
+			local flames = Instance.new("ParticleEmitter")
+			flames.Texture = fxTexture("flame")
+			flames.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 196, 90)),
+				ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 96, 24)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 28, 8)),
+			})
+			flames.LightEmission = 1
+			flames.LightInfluence = 0
+			flames.Size = fade({ { 0, 6.5 }, { 1, 2 } })
+			flames.Transparency = fade({ { 0, 0.2 }, { 0.7, 0.3 }, { 1, 1 } })
+			flames.Lifetime = NumberRange.new(0.6, 1.1)
+			flames.Rate = 12
+			flames.Speed = NumberRange.new(7, 12)
+			flames.SpreadAngle = Vector2.new(9, 9)
+			flames.EmissionDirection = Enum.NormalId.Top
+			flames.Parent = source
+			pointLight(position + Vector3.new(0, 4, 0), Color3.fromRGB(255, 120, 45), 0.6, 18)
+		end
+	end
+	-- The two lava falls beside the PvP gate, flat against the view from the hub.
+	for _, side in { -1, 1 } do
+		local top = PLAZA * Vector3.new(side * 34.5, 110, 4)
+		local foot = PLAZA * Vector3.new(side * 34.5, -1, 4)
+		ribbon(
+			top,
+			foot,
+			DOWN_AXIS,
+			Vector3.xAxis,
+			9.5,
+			fxTexture("lavaflow"),
+			Color3.new(1, 1, 1),
+			fade({ { 0, 0.06 }, { 1, 0.06 } }),
+			60,
+			0.55,
+			0
+		)
+		ribbon(
+			top,
+			foot,
+			DOWN_AXIS,
+			Vector3.xAxis,
+			8,
+			fxTexture("streak"),
+			Color3.fromRGB(255, 170, 70),
+			fade({ { 0, 0.55 }, { 1, 0.55 } }),
+			40,
+			1.1,
+			0.6
+		)
+		local base = holder("LavaFoot", foot + Vector3.new(0, 2, 0), Vector3.new(14, 0.5, 8))
+		local steam = Instance.new("ParticleEmitter")
+		steam.Texture = fxTexture("mist")
+		steam.Color = ColorSequence.new(Color3.fromRGB(255, 110, 44))
+		steam.LightEmission = 0.6
+		steam.LightInfluence = 0
+		steam.Size = fade({ { 0, 7 }, { 1, 18 } })
+		steam.Transparency = fade({ { 0, 1 }, { 0.2, 0.6 }, { 1, 1 } })
+		steam.Lifetime = NumberRange.new(1.4, 2.4)
+		steam.Rate = 3
+		steam.Speed = NumberRange.new(4, 9)
+		steam.EmissionDirection = Enum.NormalId.Top
+		steam.Shape = Enum.ParticleEmitterShape.Box
+		steam.Parent = base
+	end
+	-- Embers across the whole area.
+	local air = holder("PlazaEmbers", PLAZA * Vector3.new(0, 3, 30), Vector3.new(230, 4, 180))
+	local embers = Instance.new("ParticleEmitter")
+	embers.Texture = fxTexture("spore")
+	embers.Color = ColorSequence.new(Color3.fromRGB(255, 160, 70))
+	embers.LightEmission = 1
+	embers.LightInfluence = 0
+	embers.Brightness = 2
+	embers.Size = NumberSequence.new(0.7, 0.25)
+	embers.Transparency = fade({ { 0, 1 }, { 0.15, 0.1 }, { 0.8, 0.2 }, { 1, 1 } })
+	embers.Lifetime = NumberRange.new(7, 11)
+	embers.Rate = 7
+	embers.Speed = NumberRange.new(3, 6)
+	embers.EmissionDirection = Enum.NormalId.Top
+	embers.Shape = Enum.ParticleEmitterShape.Box
+	embers.Parent = air
+end
+
+-- What players bump into: the arch's feet, the pylons, the columns and the volcano itself, all invisible and simple.
+local function plazaColliders()
+	local parent = Instance.new("Folder")
+	parent.Name = "PlazaColliders"
+	parent.Parent = art
+	local function solid(size: Vector3, frame: CFrame, shape: Enum.PartType?)
+		local part = Instance.new("Part")
+		part.Name = "PlazaCollider"
+		part.Anchored = true
+		part.CanTouch = false
+		part.CastShadow = false
+		part.Transparency = 1
+		if shape then
+			part.Shape = shape
+		end
+		part.Size = size
+		part.CFrame = frame
+		part.Parent = parent
+	end
+	for _, side in { -1, 1 } do
+		solid(Vector3.new(28, 62, 46), PLAZA * CFrame.new(side * 127, 31, 4))
+		solid(Vector3.new(52, 60, 86), PLAZA * CFrame.new(side * 160, 30, -2))
+		solid(Vector3.new(10, 40, 10), PLAZA * CFrame.new(side * 31, 20, -42.5))
+		solid(Vector3.new(12, 50, 12), PLAZA * CFrame.new(side * 70, 25, -55))
+	end
+	for band = 0, 6 do
+		local y = 10 + band * 20
+		local r = (84 - 54 * math.clamp(y / 150, 0, 1) ^ 0.72) * VOLCANO_SCALE
+		solid(
+			Vector3.new(20, r * 2, r * 2),
+			PLAZA * CFrame.new(0, y, VOLCANO_Z) * CFrame.Angles(0, 0, math.pi / 2),
+			Enum.PartType.Cylinder
+		)
+	end
+end
+
 -- Invisible blocks for the runestones, so players run into stone rather than through it.
 local function gateColliders()
 	local parent = Instance.new("Folder")
@@ -839,6 +1146,9 @@ buildBridges()
 buildMaelstrom()
 buildSkyWell()
 buildPortals()
+buildVolcano()
+buildArch()
+plazaColliders()
 for _, key in DISTANT do
 	local model = art:FindFirstChild(key)
 	if model then

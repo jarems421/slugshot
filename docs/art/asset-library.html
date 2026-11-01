@@ -2934,14 +2934,14 @@ float figure(vec3 p) {
 
 // ---------- 8: the portal plaza, volcanic, as options to choose from. 1 unit = 5 studs. The PvP gate's foot is near the origin,
 // the spawn side is -z and the Maelstrom's centre is at z = -31.4. uPlaza picks the option.
-const float PZ_HUB = 31.4, PZ_VOLC = 28.0;
+const float PZ_HUB = 31.4, PZ_VOLC = 22.2, VOLC_S = 0.23;
 float hexD(vec2 q) { q = abs(q); return max(q.x*0.866 + q.y*0.5, q.y); }
 void plazaGateAt(int i, out vec3 b, out float yaw, out float s) {
   float o = uPlaza, sx = i == 0 ? 0.0 : i == 1 ? -1.0 : 1.0;
   if (o < 0.5) { b = i == 0 ? vec3(0.0, 8.0, 3.0) : vec3(sx*16.0, 3.2, -2.5); s = i == 0 ? 2.4 : 1.6; yaw = -sx*0.42; }
   else if (o < 1.5) { b = i == 0 ? vec3(0.0, 1.2, 7.4) : vec3(sx*15.0, 0.7, 3.5); s = i == 0 ? 2.4 : 1.5; yaw = -sx*0.5; }
   else if (o < 2.5) { b = i == 0 ? vec3(0.0, 1.3, 7.0) : vec3(sx*16.0, 1.0, 0.5); s = i == 0 ? 2.4 : 1.6; yaw = -sx*0.55; }
-  else { b = i == 0 ? vec3(0.0, 1.2, 1.8) : vec3(sx*12.5, 0.3, -0.6); s = i == 0 ? 2.5 : 1.6; yaw = -sx*0.3; }
+  else { b = i == 0 ? vec3(0.0, 1.2, 0.8) : vec3(sx*12.5, 0.3, -1.6); s = i == 0 ? 2.5 : 1.6; yaw = -sx*0.3; }
 }
 vec3 plazaGateLocal(vec3 p, int i, out float s) {
   vec3 b; float yaw;
@@ -3018,27 +3018,64 @@ float plazaChannels(vec2 x) {
   d = min(d, pzSeg(m, vec2(8.0, -8.8), vec2(14.0, -7.0), 0.2, 0.03));
   d = min(d, pzSeg(m, vec2(3.4, -9.0), vec2(0.8, -14.0), 0.18, 0.03));
   d = min(d, pzSeg(m, vec2(5.0, -3.0), vec2(22.0, -5.0), 0.34, 0.05));
-  d = min(d, length(vec2(m.x - 6.9, x.y - 1.8)) - 1.6);
+  d = min(d, length(vec2(m.x - 6.9, x.y - 0.8)) - 1.6);
   return d;
 }
-float volcanoHeight(float rr) { return 32.0*pow(1.0 - clamp((rr - 4.4)/12.5, 0.0, 1.0), 1.1); }
+// Unequal ribs and stepped fracture ledges, in the study's own units (130 tall before scaling).
+vec2 volcCentre(float y) { float t = y/130.0; return vec2(4.0*sin(t*2.4) - 2.0*t, -4.0*t + 2.0*sin(t*3.0)); }
+float volcRadius(float a, float y) {
+  float t = clamp(y/130.0, 0.0, 1.0), base = 84.0 - 54.0*pow(t, 0.72);
+  float phase = a*12.0 + 0.22*sin(a*3.0) + 0.13*sin(t*9.0 + a*2.0);
+  float ridge = pow(1.0 - abs(sin(phase*0.5)), 1.6);
+  float tiers = 1.15*sin(t*6.28318*3.0 + a*2.0) + 2.5*sin(floor(a*12.0/6.28318)*17.3 + floor(t*6.0)*9.7);
+  return base + (ridge - 0.36)*(15.0 - 5.0*t) + tiers + 2.0*sin(a*3.0 + 0.5)*(1.0 - t);
+}
+vec3 volcLocal(vec3 p) { return (p - vec3(0.0, 0.0, PZ_VOLC))/VOLC_S; }
+float volcanoD(vec3 p) {
+  vec3 c = volcLocal(p);
+  float r0 = length(c.xz);
+  if (r0 > 125.0 || c.y > 150.0) return (max(r0 - 112.0, c.y - 140.0))*VOLC_S;
+  vec2 q = c.xz - volcCentre(max(c.y, 0.0));
+  float a = mod(atan(q.y, q.x), 6.28318), r = length(q);
+  float rim = 130.0 + 3.6*sin(a*5.0 + 0.7) + 2.0*sin(a*9.0), rimR = volcRadius(a, 130.0);
+  float d = smax(r - volcRadius(a, max(c.y, 0.0)), c.y - rim, 2.0);
+  // The inside is a real bowl, low enough to show a glowing lip and exposed cliff.
+  float floorY = mix(122.0, rim, clamp((r - 19.0)/(rimR - 19.0), 0.0, 1.0));
+  d = smax(d, -max(floorY - c.y, r - rimR + 1.5), 1.0);
+  // A sculpted footing with a broken edge.
+  float a0 = mod(atan(c.z, c.x), 6.28318);
+  float foot = max(r0 - 94.0*(1.0 + 0.035*sin(a0*7.0) + 0.018*sin(a0*13.0)), c.y - 0.2);
+  d = smin(d, foot, 4.0);
+  return max(d, -c.y - 4.0)*VOLC_S*0.6;
+}
+float volcanoPool(vec3 p) {
+  vec3 c = volcLocal(p);
+  vec2 q = c.xz - volcCentre(130.0);
+  return max(length(q) - 19.2, abs(c.y - 122.4) - 0.4)*VOLC_S;
+}
+// A molten river on the wall, as the study has them. Negative inside; heat is how close it is to one.
+float volcRiver(vec3 c, out float heat) {
+  vec2 q = c.xz - volcCentre(max(c.y, 0.0));
+  float a = atan(q.y, q.x), r = length(q), best = 1e3;
+  heat = 0.0;
+  for (int k = 0; k < 7; k++) {
+    float fk = float(k);
+    float lo = k == 0 ? 5.0 : k == 1 ? 25.0 : k == 2 ? 13.0 : k == 3 ? 9.0 : k == 4 ? 38.0 : k == 5 ? 8.0 : 21.0;
+    float wd = k == 0 ? 4.8 : k == 1 ? 3.6 : k == 2 ? 4.2 : k == 3 ? 5.2 : k == 4 ? 3.4 : k == 5 ? 4.5 : 3.8;
+    float a0 = -1.18 + fk*0.897598 + 0.08*sin(c.y/130.0*5.0 + fk*2.0);
+    float dist = abs(atan(sin(a - a0), cos(a - a0)))*r;
+    float t = clamp((129.0 - c.y)/(129.0 - lo), 0.0, 1.0);
+    float w = wd*(0.72 + 0.23*sin(t*15.0 + fk*2.0))*(0.55 + 0.45*sin(3.1416*t*0.7 + 0.35));
+    float d = max(dist - w, max(c.y - 129.5, lo - c.y));
+    best = min(best, d);
+    heat += exp(-dist*dist*0.012)*smoothstep(lo - 6.0, lo + 14.0, c.y);
+  }
+  return best;
+}
 float plazaLava(vec3 p) {
   float o = uPlaza, x = abs(p.x);
   float d = max(plazaChannels(p.xz), abs(p.y + 0.24) - 0.05);
-  vec3 c = p - vec3(0.0, 0.0, PZ_VOLC);
-  float rr = length(c.xz);
-  if (rr < 22.0) {
-    d = min(d, max(rr - 4.0, abs(c.y - 30.4) - 0.1));
-    for (int s = 0; s < 3; s++) {
-      float a0 = s == 0 ? -1.2 : s == 1 ? -1.75 : -2.2;
-      for (int k = 0; k < 4; k++) {
-        float r0 = 4.0 + float(k)*3.1, r1 = r0 + 3.1;
-        float a = a0 + 0.14*sin(float(k)*2.1 + float(s)), a1 = a0 + 0.14*sin(float(k + 1)*2.1 + float(s));
-        vec3 u = vec3(cos(a)*r0, volcanoHeight(r0) + 0.1, sin(a)*r0), v = vec3(cos(a1)*r1, volcanoHeight(r1) + 0.1, sin(a1)*r1);
-        d = min(d, capT(c, u, v, 0.28 + 0.06*float(k), 0.34 + 0.06*float(k)));
-      }
-    }
-  }
+  d = min(d, volcanoPool(p));
   if (o < 0.5) {
     // Cascades down the sides of the great stair.
     float h, dd = sdSeg2(vec2(p.z, p.y), vec2(-1.5, 8.1), vec2(-11.8, -0.2), h);
@@ -3046,7 +3083,7 @@ float plazaLava(vec3 p) {
   } else if (o < 1.5) {
     d = min(d, sdBox(p - vec3(0.0, 8.0, 12.0), vec3(2.4, 8.4, 0.3)));
   } else if (o > 2.5) {
-    d = min(d, sdBox(vec3(x - 6.9, p.y - 10.0, p.z - 1.8), vec3(0.95, 10.3, 0.35)));
+    d = min(d, sdBox(vec3(x - 6.9, p.y - 11.0, p.z - 0.8), vec3(0.95, 11.3, 0.35)));
   }
   return d;
 }
@@ -3072,7 +3109,7 @@ float organTop(vec2 c) {
   }
   // Round the feet of the arch.
   float side = abs(c.x);
-  return step(23.0, side)*step(side, 38.0)*step(-9.0, c.y)*step(c.y, 12.0)*(6.0 + 15.0*smoothstep(38.0, 24.0, side))*(0.6 + 0.5*v);
+  return step(27.0, side)*step(side, 37.0)*step(-9.0, c.y)*step(c.y, 8.0)*(6.0 + 15.0*smoothstep(37.0, 27.5, side))*(0.6 + 0.5*v);
 }
 float plazaOrgan(vec3 p) {
   const float SIZE = 2.0;
@@ -3123,23 +3160,23 @@ float plazaStage(vec3 p) {
     d = min(d, max(ri - 5.8, abs(p.y - 1.15) - 0.15));
     d = min(d, max(rs - 5.4, abs(p.y - 0.25) - 0.75));
   } else {
-    d = sdBox(p - vec3(0.0, 0.6, 2.2), vec3(5.4, 0.6, 3.6));
-    d = min(d, sdBox(p - vec3(0.0, 0.3, 1.0), vec3(5.4, 0.3, 4.8)));
-    d = min(d, sdBox(vec3(x - 12.5, p.y - 0.15, p.z + 0.6), vec3(4.2, 0.15, 3.4)));
+    d = sdBox(p - vec3(0.0, 0.6, 1.2), vec3(5.4, 0.6, 3.6));
+    d = min(d, sdBox(p - vec3(0.0, 0.3, 0.0), vec3(5.4, 0.3, 4.8)));
+    d = min(d, sdBox(vec3(x - 12.5, p.y - 0.15, p.z + 1.6), vec3(4.2, 0.15, 3.4)));
     // The Titan's Arch, voussoir by voussoir.
-    const float R = 23.5;
+    const float R = 25.5;
     vec2 v = p.xy;
     float r = length(v), ang = atan(v.y, v.x), sa = PI/17.0;
-    if (abs(r - R) < 8.0 && abs(p.z - 1.8) < 8.0) {
+    if (abs(r - R) < 8.0 && abs(p.z - 0.8) < 8.0) {
       float k0 = floor(clamp(ang, 0.0, PI - 0.001)/sa);
       for (int j = -1; j <= 1; j++) {
         float k = clamp(k0 + float(j), 0.0, 16.0), mid = (k + 0.5)*sa, key = 1.0 - step(0.5, abs(k - 8.0));
         float along = r*sin(ang - mid), radial = r*cos(ang - mid) - R;
-        float depth = 3.3 + 0.5*sin(k*2.3) + 1.2*key;
-        d = min(d, sdBox(vec3(radial, along, p.z - 1.8), vec3(depth, sa*R*0.485, 2.9 + 0.3*sin(k*1.7) + 0.8*key)) - 0.05);
+        float depth = 2.8 + 0.4*sin(k*2.3) + 0.8*key;
+        d = min(d, sdBox(vec3(radial, along, p.z - 0.8), vec3(depth, sa*R*0.485, 2.9 + 0.3*sin(k*1.7) + 0.8*key)) - 0.05);
       }
     }
-    d = min(d, sdBox(vec3(x - R, p.y - 1.2, p.z - 1.8), vec3(4.6, 1.5, 4.2)));
+    d = min(d, sdBox(vec3(x - R, p.y - 1.2, p.z - 0.8), vec3(4.6, 1.5, 4.2)));
   }
   return min(d - 0.03, plazaOrgan(p));
 }
@@ -3154,17 +3191,9 @@ float plazaNature(vec3 p) {
   ground = smax(ground, 17.6 - hr, 0.2);
   float ch = plazaChannels(p.xz);
   ground = smax(ground, -max(ch, -p.y - 0.4), 0.06);
-  // The volcano, with lava spilling down the side facing the gates.
-  vec3 c = p - vec3(0.0, 0.0, PZ_VOLC);
-  float rr = length(c.xz);
-  float vol = 1e3;
-  if (rr < 30.0) {
-    float ang = atan(c.z, c.x);
-    float ridges = 0.7*sin(ang*7.0 + 1.0)*smoothstep(5.0, 14.0, rr) + 0.4*sin(ang*15.0 + rr*0.7);
-    vol = (p.y - volcanoHeight(rr) - ridges*smoothstep(16.9, 13.0, rr))*0.34;
-    vol = smax(vol, -(length(vec2(rr, c.y - 33.5)) - 5.6), 0.25);
-  } else vol = rr - 26.0;
-  float d = min(ground, vol);
+  float vol = volcanoD(p);
+  float d = ground;
+  vol = vol;
   // Option C's crown: black spires leaning in round the PvP island, with rocks standing in the lake.
   if (o > 1.5 && o < 2.5) {
     for (int i = 0; i < 9; i++) {
@@ -3186,6 +3215,8 @@ float plazaNature(vec3 p) {
 vec2 plaza(vec3 p) {
   float bowls = 1e3, fire = 1e3;
   vec2 res = vec2(plazaNature(p), 30.0);
+  float vd = volcanoD(p);
+  if (vd < res.x) res = vec2(vd, 37.0);
   float stage = plazaStage(p);
   if (stage < res.x) res = vec2(stage, 32.0);
   float py = plazaPylons(p, bowls, fire);
@@ -3235,6 +3266,40 @@ vec3 plazaFireLight(vec3 p) {
 vec3 plazaPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   spec = 0.05;
   emit = vec3(0.0);
+  if (id > 36.5) {
+    vec3 c = volcLocal(p);
+    float broad = noise3(c*0.055)*0.6 + noise3(c*0.12)*0.4, paint = noise3(c*0.2)*0.6 + noise3(c*0.42)*0.4;
+    vec3 s = mix(vec3(0.033, 0.039, 0.059), vec3(0.12, 0.13, 0.18), smoothstep(0.2, 0.8, broad));
+    s = mix(s, s*vec3(1.24, 1.05, 0.83), smoothstep(0.45, 0.75, noise3(c*0.032 + vec3(4.0, 1.0, 2.0)))*0.55);
+    float ang = atan(c.z, c.x), slab = floor((ang + 3.14159)/6.28318*12.0), row = floor((c.y + sin(slab*3.0)*8.0)/26.0);
+    float tint = fract(sin(slab*12.9898 + row*78.233)*43758.5453);
+    s *= 0.8 + 0.35*tint;
+    s = mix(s, s*vec3(0.92, 0.95, 1.22), smoothstep(0.7, 0.9, tint)*0.45);
+    s *= 0.9 + 0.2*paint;
+    // Ink fractures across the plates, short and straight.
+    float ledge = abs(fract((c.y + sin(slab*3.0)*8.0)/26.0) - 0.5);
+    float seam = (1.0 - smoothstep(0.012, 0.03, 0.5 - ledge))*step(0.45, fract(sin(slab*4.1 + row*9.7)*937.1));
+    float ribLine = abs(fract((ang + 3.14159)/6.28318*12.0) - 0.5);
+    seam = max(seam, (1.0 - smoothstep(0.01, 0.024, 0.5 - ribLine))*step(0.5, fract(sin(row*7.7 + slab*3.3)*417.3)));
+    s = mix(s, vec3(0.006, 0.007, 0.012), seam);
+    float heat, river = volcRiver(c, heat);
+    vec3 hotGlow = vec3(1.0, 0.3, 0.07)*min(heat, 1.3);
+    emit = s*(hotGlow*1.6 + vec3(0.18, 0.19, 0.26));
+    if (river < 0.0) {
+      vec2 flow = vec2(c.x + c.z, c.y)*0.1;
+      float molten = noise3(vec3(flow, 5.0))*0.6 + noise3(vec3(flow*2.3, 2.0))*0.4;
+      float vein = abs(noise3(vec3(flow*1.6, 9.0)) - 0.5);
+      vec3 hot = mix(vec3(1.0, 0.16, 0.03), vec3(1.0, 0.62, 0.14), smoothstep(0.25, 0.8, molten));
+      hot = mix(hot, vec3(0.06, 0.03, 0.04), smoothstep(0.1, 0.22, vein)*smoothstep(0.42, 0.62, molten)*0.8);
+      float edge = smoothstep(0.0, -1.5, river);
+      s = mix(s, hot*0.6, edge);
+      emit = mix(emit, hot*1.2, edge);
+    }
+    // The bowl glows from below.
+    float bowl = smoothstep(135.0, 122.0, c.y)*smoothstep(50.0, 30.0, length(c.xz));
+    emit += vec3(0.7, 0.2, 0.055)*bowl;
+    return s;
+  }
   if (id > 33.5) {
     float lick = 0.5 + 0.5*sin(p.y*5.0 + p.x*3.0 + p.z*2.0 + uT*2.0);
     emit = mix(vec3(1.0, 0.22, 0.03), vec3(1.0, 0.62, 0.14), 0.3 + 0.5*lick);
@@ -3293,9 +3358,9 @@ vec3 plazaPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     emit += vec3(1.0, 0.36, 0.06)*(1.0*fill + 0.1*exp(-max(rune, 0.0)*24.0));
   }
   // The arch's keystone carries the swords, and its stones their runes.
-  if (uPlaza > 2.5 && p.y > 16.0 && length(p.xy) > 19.0 && n.z < -0.6) {
+  if (uPlaza > 2.5 && p.y > 14.0 && length(p.xy) > 21.5 && n.z < -0.6) {
     float k = floor(clamp(atan(p.y, p.x), 0.0, 3.14)/(PI/17.0)), mid = (k + 0.5)*PI/17.0, r0 = length(p.xy);
-    float along = r0*sin(atan(p.y, p.x) - mid), radial = r0*cos(atan(p.y, p.x) - mid) - 23.5;
+    float along = r0*sin(atan(p.y, p.x) - mid), radial = r0*cos(atan(p.y, p.x) - mid) - 25.5;
     if (abs(k - 8.0) < 0.5) {
       gGate = 0.0;
       float sym = gateSymbol(vec2(along, radial)/2.8)*2.8;
@@ -3348,7 +3413,7 @@ vec3 plazaAir(vec3 ro, vec3 rd, float tEnd) {
   }
   for (int i = 0; i < 9; i++) {
     float fi = float(i), up = fi/8.0;
-    vec3 w = vec3(1.6*sin(fi*1.7), 34.0 + fi*5.5, PZ_VOLC + 1.2*cos(fi*2.3)) - ro;
+    vec3 w = vec3(1.6*sin(fi*1.7), 30.0 + fi*5.5, PZ_VOLC - 0.8 + 1.2*cos(fi*2.3)) - ro;
     float along = dot(w, rd);
     if (along > 0.0) {
       float dd = length(w - rd*along), spread = 3.0 + fi*1.5;
@@ -4445,7 +4510,7 @@ void main() {
       { name: "D: Titan's Arch", option: 3, bright: [1.0, 0.5, 0.15], figure: [-2.5, 0.0, -7], camera: { target: [0, 13, 4], dist: 41, pitch: 0.13 } },
       { name: "D: arriving", option: 3, bright: [1.0, 0.5, 0.15], figure: [0, -100, 0], camera: { target: [0, 11, 0], dist: 18.7, pitch: -0.545 } }
     ],
-    core: CENTRE_CORE, crG: [2, 4, 8], target: [0, 8, 2], dist: 64, figure: [0, 0.0, -12.5], glow: [0, 36, 28], glowCol: [1.0, 0.45, 0.12],
+    core: CENTRE_CORE, crG: [2, 4, 8], target: [0, 8, 2], dist: 64, figure: [0, 0.0, -12.5], glow: [0, 34, 21], glowCol: [1.0, 0.45, 0.12],
     notes: [["Status", "Options for the owner to choose from, 1 Nov 2026."]]
   }, {
     id: "bridge", name: "Wooden rope bridge", kind: "Landmark · hub", size: "50 studs long, 10 wide, about 5 of droop", version: "v2", noLive: true, shader: 7,
