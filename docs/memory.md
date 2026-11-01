@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v6
+
+- **Owner feedback on v5:** too tall; stop about three levels of rock higher; add more vines, including lower down. In the map, the rocks should float with a floating animation.
+- **Implemented/verified offline:** depth reduced from about 60 to about 40 studs; 15 vines, 6 of them growing from lower on the rock; dressing re-measured. Renders inspected.
+- **Confirmed for the build, not implemented:** floating animation on the rocks. Kept visual only, per the roadmap's rule that motion never moves players. Unresolved whether the owner also means the spawn island itself.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Spawn rock v5
 
 - **Owner direction:** two reference images. The base shape should look like the second: an inverted wedge of angular cliff columns under a flat top ("literally exactly how I want it"), keeping the extra features. Add floating debris like the first, natural and scattered.

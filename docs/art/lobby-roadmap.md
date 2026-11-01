@@ -98,6 +98,7 @@ Design notes:
 - Colour: keep both halves in calm, cool tones so the gates, lava and exhibitions stay the accents ([readability check](style-guide.md#readability-check-ask-of-every-scene)).
 - Motion: slow swirl, slow drifting rocks, gentle mist; calm, never busy.
 - Roblox technique to prove in Phase 1 or 2: a fake volumetric light column (layered transparent meshes or Beams, plus Atmosphere and bloom), swirling water (animated textures on layered spiral meshes) and floating rocks (slow client-side motion).
+- **Floating animation (Confirmed, owner 2026-11-01):** when the centrepiece goes into the map, the floating rocks and debris get a slow floating animation, visual only.
 - **Falling:** no barriers (owner, 2026-11-01). Players fall past the Maelstrom through mist and respawn on the spawn rock. Floating-rock and bridge motion must not move players: the spawn rock stays still or bobs only in visual effects.
 - Earlier ideas rejected 2026-10-31: slug-tube canister tree, ancient stone slug colossus, hanging slug orrery, slug-energy well with launching slugs.
 

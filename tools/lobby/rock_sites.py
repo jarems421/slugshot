@@ -141,15 +141,19 @@ def build(prober):
     # attached. Only a small tip pokes out at the end (owner, 2026-11-01).
     root_probes = []
     for r, a0 in enumerate([0.5, 2.1, 3.7, 5.2]):
-        heights = [-0.05, -0.6, -1.2, -1.9, -2.7, -3.6, -4.6, -5.8, -7.0]
+        heights = [-0.05, -0.5, -1.0, -1.5, -2.0, -2.6, -3.2, -3.9, -4.6]
         drift = [0.0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.13, 0.16]
         main = [(a0 + d + rnd.uniform(-0.04, 0.04), y) for d, y in zip(drift, heights)]
         side = 1.0 if r % 2 else -1.0
         fa, fy = main[5]
-        fork = [(fa + side*0.13*i, fy - 0.9*i) for i in range(1, 5)]
+        fork = [(fa + side*0.13*i, fy - 0.6*i) for i in range(1, 5)]
         root_probes.append((a0, [radial(prober, a, y) for a, y in main], [radial(prober, a, y) for a, y in fork]))
     # Vines: hang from the rim in loose groups, clear of the roots.
-    vine_probes = [(a, radial(prober, a, -0.05)) for a in [1.05, 1.28, 3.0, 4.45, 4.68]]
+    vine_probes = [(a, radial(prober, a, -0.05))
+                   for a in [0.1, 1.05, 1.28, 1.72, 3.0, 3.25, 4.45, 4.68, 5.75]]
+    # More vines growing out of the rock lower down (owner, 2026-11-01), spread around so they don't bunch up.
+    low_vine_probes = [(a, y, radial(prober, a, y)) for a, y in
+                       [(0.85, -1.6), (1.95, -2.4), (2.75, -1.4), (3.95, -2.2), (5.0, -1.5), (5.95, -2.6)]]
     # Larger crystals: eight designs in clearly different colours.
     crystal_probes = []
     order = [0, 1, 2, 3, 4, 7, 8, 10]
@@ -160,14 +164,14 @@ def build(prober):
         k = order[i]
         pull = CRYSTAL_STYLES[k][3]
         direction = norm([math.cos(a)*(0.8 - 0.6*pull), -0.62 - 0.4*pull, math.sin(a)*(0.8 - 0.6*pull)])
-        target = polar(a, rad, (rad/7 - 1)*9.5)
+        target = polar(a, rad, (rad/7 - 1)*6.3)
         origin = [t + d*13 for t, d in zip(target, direction)]
         crystal_probes.append((k, direction, prober.add(origin, [-d for d in direction])))
     # Small crystals, in place of the mushrooms and scattered further, in mixed colours.
     small_probes = []
     for i in range(38):
         a = rnd.uniform(0.0, 6.2832)
-        y = -0.5 - 6.5*rnd.random()**1.2
+        y = -0.5 - 4.0*rnd.random()**1.2
         small_probes.append((a, radial(prober, a, y)))
 
     hits = prober.run()
@@ -203,6 +207,10 @@ def build(prober):
         lines = "\n".join(f"    d = smin(d, {c}, 0.1);" for c in calls)
         roots.append(f"  bs = length(q - {vec(centre)}) - 8.0;\n  if (bs > 0.6) d = min(d, bs);\n  else {{\n{lines}\n  }}")
 
+    # Vines have their own random stream, so changing how many there are leaves the crystals where they were.
+    for _ in range(10):
+        rnd.random()
+    vine_rnd = random.Random(91)
     vines = []
     for i, (a, probe) in enumerate(vine_probes):
         p = surface(probe)
@@ -210,8 +218,19 @@ def build(prober):
             print(f"vine {i}: probe missed the rock, skipped")
             continue
         rr = math.hypot(p[0], p[2])
-        length = rnd.uniform(2.4, 4.8)
-        vines.append(f"  rockStrand(q, {vec(polar(a, rr + 0.22, -0.2))}, {vec(polar(a, rr - 0.5, 0.03))}, {length:.2f}, {rnd.uniform(0, 6.28):.2f}, res);")
+        length = vine_rnd.uniform(2.2, 4.4)
+        vines.append(f"  rockStrand(q, {vec(polar(a, rr + 0.22, -0.2))}, {vec(polar(a, rr - 0.5, 0.03))}, {length:.2f}, {vine_rnd.uniform(0, 6.28):.2f}, res);")
+    for i, (a, y, probe) in enumerate(low_vine_probes):
+        p = surface(probe)
+        if p is None:
+            print(f"low vine {i}: probe missed the rock, skipped")
+            continue
+        # The stem starts inside the rock, so it visibly grows out of the surface.
+        top = standoff(p, 0.14)
+        grip = standoff(p, -0.4)
+        grip[1] += 0.2
+        length = vine_rnd.uniform(1.7, 3.2)
+        vines.append(f"  rockStrand(q, {vec(top)}, {vec(grip)}, {length:.2f}, {vine_rnd.uniform(0, 6.28):.2f}, res);")
 
     crystals = []
     for i, (k, direction, probe) in enumerate(crystal_probes):
