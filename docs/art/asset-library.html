@@ -282,9 +282,10 @@ float sdSeg2(vec2 p, vec2 a, vec2 b, out float h) {
 }
 // A Slugterra-style crack across a mass's front face, in its local xy: it starts near the rim, runs inward in
 // four straight segments that turn sharply one way then the other, and forks once. Wide at the rim, tapering
-// to a hairline. `scale` shortens and thins a secondary crack. Returns (distance to the crack's edge, half-width).
-vec2 crackLine(vec2 x, vec3 r, float cs, float scale) {
-  float th = hash1(cs + 1.0)*6.2832;
+// to a hairline. `scale` shortens and thins a secondary crack; `low` starts it on the lower half of the rim (top-row
+// rocks, so a crack never opens across a top seen from above). Returns (distance to the crack's edge, half-width).
+vec2 crackLine(vec2 x, vec3 r, float cs, float scale, float low) {
+  float th = low > 0.5 ? 3.1416*(1.15 + 0.7*hash1(cs + 1.0)) : hash1(cs + 1.0)*6.2832;
   vec2 a = vec2(cos(th)*r.x, sin(th)*r.y)*0.8;
   vec2 dir = normalize(-a + (vec2(hash1(cs + 2.0), hash1(cs + 3.0)) - 0.5)*r.xy*0.9);
   float turn = hash1(cs + 4.0) > 0.5 ? 1.0 : -1.0;
@@ -317,10 +318,10 @@ vec2 crackLine(vec2 x, vec3 r, float cs, float scale) {
   return vec2(best, bw);
 }
 // All cracks on a mass: the main crack, plus a shorter second one from another edge on about half of them.
-vec2 massCracks(vec2 x, vec3 r, float cs) {
-  vec2 cl = crackLine(x, r, cs, 1.0);
+vec2 massCracks(vec2 x, vec3 r, float cs, float low) {
+  vec2 cl = crackLine(x, r, cs, 1.0, low);
   if (hash1(cs + 90.0) < 0.55) {
-    vec2 c2 = crackLine(x, r, cs + 100.0, 0.62);
+    vec2 c2 = crackLine(x, r, cs + 100.0, 0.62, low);
     if (c2.x < cl.x) cl = c2;
   }
   return cl;
@@ -335,7 +336,7 @@ float wallMass(vec3 p) {
       vec3 q = p - c;
       float front = q.z + 0.3*r.z;  // front-most faces only, so cracks never slot across a top
       if (uRockLayers.x > 0.5 && isCrackMass(i)) {
-        vec2 cl = massCracks(q.xy, r, uWallSeed*31.7 + seed*1.3);
+        vec2 cl = massCracks(q.xy, r, uWallSeed*31.7 + seed*1.3, i >= 9 ? 1.0 : 0.0);
         float below = clamp(-di/0.3, 0.0, 1.0);
         di = max(di, -max(max(cl.x + cl.y*below, -di - 0.3), front));
       }
@@ -412,17 +413,17 @@ vec2 rockWall(vec3 p) {
     wallShroom(p, vec3(3.000, 7.800, -0.359), vec3(0.546, -0.199, -0.814), 22.0, 1.0, stems, caps, capIdx);
   } else if (uWallSeed < 1.5) {
     // Wall A: one cluster per region, tiny mushrooms everywhere.
-    wallCrystal(p, vec3(-4.801, 8.297, 0.096), vec3(0.005, 0.039, -0.999), 100.0, cr);
-    wallCrystal(p, vec3(-4.715, 7.914, -0.389), vec3(0.787, -0.095, -0.609), 101.0, cr);
+    wallCrystal(p, vec3(-5.101, 8.447, -0.782), vec3(0.744, 0.230, -0.627), 100.0, cr);
+    wallCrystal(p, vec3(-4.865, 8.064, -0.578), vec3(0.714, -0.063, -0.697), 101.0, cr);
     wallCrystal(p, vec3(-0.434, 9.478, -0.364), vec3(0.392, 0.719, -0.573), 102.0, cr);
     wallCrystal(p, vec3(-0.272, 9.058, -0.495), vec3(0.656, 0.305, -0.690), 103.0, cr);
     wallShroom(p, vec3(4.990, 10.505, -0.942), vec3(0.239, -0.192, -0.952), 104.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(4.784, 10.815, -0.983), vec3(0.346, 0.237, -0.908), 105.0, 0.0, stems, caps, capIdx);
     wallCrystal(p, vec3(-6.625, 3.268, -1.668), vec3(0.542, 0.044, -0.839), 106.0, cr);
     wallCrystal(p, vec3(-7.074, 3.239, -1.923), vec3(0.447, 0.037, -0.894), 107.0, cr);
-    wallShroom(p, vec3(-1.004, 1.930, -0.821), vec3(0.009, 0.002, -1.000), 108.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(-1.243, 2.311, -0.800), vec3(-0.672, -0.136, -0.728), 109.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(-1.199, 1.562, -0.785), vec3(-0.724, -0.120, -0.680), 110.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-0.854, 1.930, -1.193), vec3(-0.689, -0.117, -0.715), 108.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.093, 2.311, -1.020), vec3(-0.705, -0.122, -0.698), 109.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-1.049, 1.562, -0.942), vec3(-0.710, -0.116, -0.695), 110.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.949, 3.432, -2.039), vec3(-0.092, 0.532, -0.842), 111.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.681, 3.751, -1.802), vec3(-0.098, 0.555, -0.826), 112.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.781, 3.086, -2.180), vec3(-0.111, 0.229, -0.967), 113.0, 0.0, stems, caps, capIdx);
@@ -443,9 +444,9 @@ vec2 rockWall(vec3 p) {
     wallCrystal(p, vec3(2.475, 8.743, -1.186), vec3(0.191, 0.138, -0.972), 204.0, cr);
     wallCrystal(p, vec3(6.800, 7.960, -0.850), vec3(0.402, 0.394, -0.827), 205.0, cr);
     wallCrystal(p, vec3(6.475, 8.271, -0.859), vec3(0.412, 0.408, -0.814), 206.0, cr);
-    wallShroom(p, vec3(-5.217, 2.450, -2.128), vec3(-0.287, -0.110, -0.952), 207.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(-5.396, 2.751, -2.097), vec3(-0.345, -0.052, -0.937), 208.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(-5.354, 2.101, -2.027), vec3(-0.343, -0.196, -0.919), 209.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.217, 2.600, -2.143), vec3(-0.280, -0.077, -0.957), 207.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.396, 2.901, -2.103), vec3(-0.396, -0.007, -0.918), 208.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-5.354, 2.251, -2.055), vec3(-0.341, -0.158, -0.927), 209.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(-1.358, 2.582, -0.754), vec3(-0.680, -0.165, -0.714), 210.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(-1.794, 2.867, -1.190), vec3(0.792, 0.008, -0.611), 211.0, 0.0, stems, caps, capIdx);
     wallCrystal(p, vec3(7.267, 2.197, -2.013), vec3(-0.255, -0.173, -0.951), 212.0, cr);
@@ -476,7 +477,7 @@ vec2 rockWall(vec3 p) {
     wallShroom(p, vec3(7.177, 5.508, -0.696), vec3(-0.117, 0.504, -0.855), 313.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.010, 5.852, -0.452), vec3(-0.214, 0.649, -0.730), 314.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.004, 5.155, -0.884), vec3(-0.095, 0.521, -0.848), 315.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(-2.957, 9.175, -0.721), vec3(-0.639, -0.155, -0.753), 316.0, 1.0, stems, caps, capIdx);
+    wallShroom(p, vec3(-3.407, 8.425, 0.107), vec3(0.078, 0.223, -0.972), 316.0, 1.0, stems, caps, capIdx);
     wallShroom(p, vec3(-1.558, 9.212, -1.011), vec3(0.062, 0.636, -0.769), 317.0, 1.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.612, 7.179, -0.742), vec3(0.469, -0.044, -0.882), 318.0, 1.0, stems, caps, capIdx);
     wallShroom(p, vec3(-3.798, 3.266, -2.243), vec3(0.122, 0.052, -0.991), 319.0, 1.0, stems, caps, capIdx);
@@ -487,20 +488,20 @@ vec2 rockWall(vec3 p) {
   } else {
     // Wall D: one cluster per region, tiny mushrooms everywhere.
     wallCrystal(p, vec3(-6.945, 8.933, -0.916), vec3(-0.720, -0.114, -0.684), 400.0, cr);
-    wallCrystal(p, vec3(-6.472, 9.246, -1.188), vec3(0.024, 0.229, -0.973), 401.0, cr);
+    wallCrystal(p, vec3(-6.622, 9.246, -1.178), vec3(-0.218, 0.145, -0.965), 401.0, cr);
     wallCrystal(p, vec3(2.188, 10.951, -0.260), vec3(0.801, -0.165, -0.575), 402.0, cr);
     wallCrystal(p, vec3(1.957, 11.338, -0.490), vec3(0.672, 0.254, -0.696), 403.0, cr);
-    wallShroom(p, vec3(7.760, 7.908, -0.436), vec3(0.397, 0.360, -0.844), 404.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(7.499, 8.269, -0.394), vec3(0.363, 0.372, -0.854), 405.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(7.534, 7.539, -0.692), vec3(0.397, 0.334, -0.855), 406.0, 0.0, stems, caps, capIdx);
-    wallCrystal(p, vec3(-4.586, 4.189, -2.144), vec3(-0.131, 0.213, -0.968), 407.0, cr);
-    wallCrystal(p, vec3(-4.191, 4.405, -2.110), vec3(0.020, 0.291, -0.957), 408.0, cr);
+    wallShroom(p, vec3(7.610, 7.908, -0.505), vec3(0.383, 0.364, -0.849), 404.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.349, 8.269, -0.457), vec3(0.357, 0.381, -0.853), 405.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.384, 7.539, -0.762), vec3(0.398, 0.344, -0.851), 406.0, 0.0, stems, caps, capIdx);
+    wallCrystal(p, vec3(-4.736, 4.189, -2.119), vec3(-0.190, 0.223, -0.956), 407.0, cr);
+    wallCrystal(p, vec3(-4.341, 4.405, -2.109), vec3(-0.033, 0.291, -0.956), 408.0, cr);
     wallCrystal(p, vec3(-4.681, 4.629, -1.994), vec3(-0.180, 0.353, -0.918), 409.0, cr);
     wallShroom(p, vec3(0.105, 4.768, -1.736), vec3(-0.109, -0.072, -0.991), 410.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(-0.102, 5.152, -1.740), vec3(-0.135, -0.046, -0.990), 411.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(-0.030, 4.390, -1.694), vec3(-0.120, -0.077, -0.990), 412.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.621, 4.599, -1.249), vec3(-0.058, 0.493, -0.868), 413.0, 0.0, stems, caps, capIdx);
-    wallShroom(p, vec3(7.221, 4.988, -1.006), vec3(-0.074, 0.503, -0.861), 414.0, 0.0, stems, caps, capIdx);
+    wallShroom(p, vec3(7.371, 4.988, -1.020), vec3(-0.076, 0.484, -0.872), 414.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(7.459, 4.221, -1.474), vec3(-0.041, 0.533, -0.845), 415.0, 0.0, stems, caps, capIdx);
     wallShroom(p, vec3(-4.875, 8.228, -0.574), vec3(0.795, 0.210, -0.569), 416.0, 1.0, stems, caps, capIdx);
     wallShroom(p, vec3(-1.057, 8.774, -1.064), vec3(0.317, 0.215, -0.924), 417.0, 1.0, stems, caps, capIdx);
@@ -812,8 +813,10 @@ vec2 portal(vec3 p) {
   for (int i = 0; i < 4; i++) {
     float bi = i == 0 ? 2.0 : i == 1 ? 5.0 : i == 2 ? 13.0 : 16.0;
     float sc = (bi + 0.5)*bl;
-    // Edges bevelled 0.05 (owner round 4): perfectly sharp band edges meshed into saw teeth in Roblox.
-    vec3 bq = vec3(abs(fr.y) - PHT - 0.13, abs(p.z) - PHD - 0.12, abs(fr.x - sc) - 0.24) + 0.05;
+    // Each band stands the same height off its own block, whatever that block's jitter (owner round 10: the bands
+    // did not all match). Edges bevelled 0.05 (round 4): sharp edges meshed into saw teeth in Roblox.
+    float bj = 0.14*(hash1(bi*3.7) - 0.5);
+    vec3 bq = vec3(abs(fr.y) - PHT - bj - 0.13, abs(p.z) - PHD - 0.5*bj - 0.12, abs(fr.x - sc) - 0.24) + 0.05;
     band = min(band, length(max(bq, 0.0)) + min(max(bq.x, max(bq.y, bq.z)), 0.0) - 0.05);
   }
   if (band < r.x) r = vec2(band, 7.0);
@@ -948,7 +951,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       }
       if (uRockLayers.x > 0.5 && mi < 12 && isCrackMass(mi)) {
         // Crack: inked inside, with a pale chipped lip along its edge.
-        vec2 cl = massCracks(q.xy, rad, uWallSeed*31.7 + seed*1.3);
+        vec2 cl = massCracks(q.xy, rad, uWallSeed*31.7 + seed*1.3, mi >= 9 ? 1.0 : 0.0);
         c *= 1.0 + 0.45*front*(smoothstep(0.0, 0.02, cl.x) - smoothstep(0.03, 0.09, cl.x));
         c = mix(c, ink, front*(1.0 - smoothstep(-0.015, 0.01, cl.x)));
       }
@@ -1227,16 +1230,15 @@ void main() {
     { name: "Wall C · both", seed: 3, layers: [1, 1], bright: [0.75, 0.6, 0.85] },
     { name: "Wall D · both", seed: 4, layers: [1, 1], bright: [0.75, 0.6, 0.85] }
   ];
-  // The wall's twelve big masses in four columns, left to right. One mass per column cracks, plus one more from a
-  // different column, so the cracks spread across the wall. The thin top row (9-11) never cracks: seen mostly
-  // from above, a crack there read as a black slot. Returns a bitmask (bit i = mass i cracks).
-  const ROCK_COLUMNS = [[0, 5], [1, 6], [2, 7], [3, 4, 8]];
+  // The wall's twelve big masses in six regions, top row first (left, centre, right), matching the dressing's regions.
+  // Five of the six regions, the skipped one picked at random, each crack one rock, so cracks are as likely in any
+  // corner (owner round 10: top-left cracks were rare when the top row never cracked). Bit i = mass i cracks.
+  const ROCK_REGIONS = [[5, 9], [6, 7, 10], [8, 11], [0, 1], [2], [3, 4]];
   function rockPicks(seed) {
     const rnd = k => { const x = Math.sin(seed*91.7 + k*12.9898)*43758.5453; return x - Math.floor(x); };
-    const crack = ROCK_COLUMNS.map((col, i) => col[Math.floor(rnd(i)*col.length)]);
-    const rest = ROCK_COLUMNS.flat().filter(m => !crack.includes(m));
-    crack.push(rest[Math.floor(rnd(9)*rest.length)]);
-    return crack.reduce((mask, m) => mask + Math.pow(2, m), 0);
+    const skip = Math.floor(rnd(20)*ROCK_REGIONS.length);
+    return ROCK_REGIONS.reduce((mask, region, i) =>
+      i === skip ? mask : mask + Math.pow(2, region[Math.floor(rnd(i)*region.length)]), 0);
   }
   const ASSETS = [
     {

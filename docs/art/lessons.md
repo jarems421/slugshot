@@ -157,6 +157,12 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **How:** `tools/lobby/wall_sites.py` splits the face into six regions and gives each a crystal cluster (two or three) or a mushroom cluster (three), plus tiny mushrooms everywhere. Each wall draws from its own seed and is measured on that wall's cracked surface. Moss shifts per wall.
 - **Found on the way:** the approved v6 anchors no longer match today's rock surface. Re-probing moves some by up to about 0.2 studs, so the rock moved after they were measured. They are frozen verbatim to keep v6 and its Roblox build unchanged; walls A-D are measured fresh. When rock geometry changes, re-run `wall_sites.py` straight away.
 
+### Round 10: freshly uploaded textures, even cracks, matching gate bands
+
+- **One wall looked bare and pale with unlit caps:** all four new walls' textures had been uploaded minutes before the owner played, and were probably still in Roblox moderation, which shows images blank. Every map read back as Approved afterwards. **Rule:** after an upload, query each asset's `moderationResult` through Open Cloud and reopen Studio only once all are Approved.
+- **Cracks rarely in the top left:** the top row never cracked, so the top-left region had one candidate rock at 50%. Cracks are now picked per region (the dressing's six regions; five of six crack, the skipped one random). Top-row cracks start on the lower half of the rim, so they never open across a top.
+- **Gate bands differed:** the bands were a fixed size while each block's thickness is jittered, so some bands sat proud and others sank. Each band now sits a fixed height above its own block.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

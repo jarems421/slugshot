@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01, round 10 (`experiment/lobby`):** owner loves the base wall design. Fixed uneven crack distribution (per-region picks, top-row cracks from below) and mismatched gate bands; the 'weird' wall was textures still in moderation (all Approved on read-back). Gate and walls A-D rebuilt, uploaded, moderation checked, Studio reopened. **Next (owner):** Floppy and the blaster in the Slugshot look, with blaster barrel options.
+
 **Implemented, 2026-11-01, round 9 (`experiment/lobby`):** base rock wall design agreed in principle: cracks, surface texture, and every region of the face dressed with a crystal or mushroom cluster plus tiny mushrooms. Each of walls A-D has its own layout and moss. Built `rock-wall-4` to `rock-wall-7` for Roblox, uploaded privately, and alternated them around the look-test ring. [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) v3, library v19. **Unresolved:** owner's Studio verdict.
 
 **Implemented, 2026-11-01, round 8 (`experiment/lobby`):** owner kept the real cracks and wanted more; squiggles and shells removed. [Rock Wall Study](https://claude.ai/artifact/N6fQNix47YnjrbyDbTig6C) v2 and library v18: cracks on five of the twelve big rocks (second crack on about half), surface texture, no painted squiggles or buried-root arcs, no fossils. **Unresolved:** owner's final look; then build walls A to D for Roblox.

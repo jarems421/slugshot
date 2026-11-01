@@ -631,3 +631,9 @@
 - **Confirmed:** owner wanted a few more crystals (top left was bland) and asked for this to be the base design for rock walls, with crack, moss, mushroom and crystal positions changing per wall and every corner filled; then put it in the Roblox Studio look test.
 - **Implemented/verified offline:** region-based dressing per wall (six regions, three crystal and three mushroom clusters shuffled, tiny mushrooms everywhere; 6-7 crystals per wall), measured on each wall's cracked surface; moss shifted per wall. v6 anchors frozen (they had drifted up to about 0.2 studs from the current surface). Walls A-D built, island orientation checked, privately uploaded, and alternating in the look-test ring.
 - **Unresolved:** owner's Studio verdict.
+
+## 2026-11-01 - Lobby round 10: crack spread, gate bands, moderation check
+
+- **Confirmed:** owner loves the base wall design; reported one wall rendering oddly, top-left cracks rare, and one gate band unlike the others; asked to start Floppy and the blaster next.
+- **Implemented/verified offline:** per-region crack picks (top-left cracks on three of four walls), top-row cracks from the lower rim, bands sized to each block. Rebuilt gate and walls A-D; islands outward; all uploaded assets Approved before reopening Studio. Odd wall attributed to pending moderation (inferred; textures were complete and Approved on read-back).
+- **Unresolved:** owner's Studio check.
