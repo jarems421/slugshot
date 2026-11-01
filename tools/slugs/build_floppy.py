@@ -46,11 +46,11 @@ DROOL = np.array([0.80, 0.79, 0.70])
 BAG = np.array([0.10, 0.07, 0.05])
 SORE_PALLOR = np.array([0.520, 0.530, 0.220])  # sallow, yellowed skin around a sore
 SORE_BRUISE = np.array([0.220, 0.160, 0.120])  # faint olive-mauve bruised rim
-SORE_PUS = np.array([0.620, 0.660, 0.160])     # lighter bilious yellow-green centre
+SORE_PUS = np.array([0.250, 0.280, 0.140])     # centre in the upper lids' sage (owner: match the top eyelids)
 BULB_GLOW = np.array([0.62, 0.80, 0.28])
 # Spore sores (owner, 2026-11-01): they should look sick, not dirty. Dark brown blotches read as grime;
-# sickness reads as sallow yellow-green pallor, a faint bruised rim and a lighter, wet, bilious centre that
-# glows faintly. Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
+# sickness reads as sallow yellow-green pallor, a faint bruised rim and a softly glowing centre, which takes the
+# upper lids' sage (owner). Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
 # Each sore is a primary spot plus one or two satellites centred on the surface: (x, y, z, radius).
 SPORES = np.array([
     (-0.772, 1.515, 0.142, 0.138),
@@ -273,8 +273,8 @@ def bulb_glow(dp):
     for s in (-1.0, 1.0):
         # Only the bulb sphere (radius 0.08) glows, not the skin it hangs beside.
         g = np.maximum(g, 1.0 - smoothstep(0.082, 0.095, np.linalg.norm(dp - antenna(s)[2], axis=1)))
-    # The sores' wet centres glow very faintly too.
-    return np.maximum(g, 0.18*spores(dp)[2])
+    # The sores' centres glow softly too, in their own sage.
+    return np.maximum(g, 0.45*spores(dp)[2])
 
 
 def skin_albedo(dp, n):

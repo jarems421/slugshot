@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01 (`feature/slug-asset-pipeline`):** Floppy design agreed by the owner (sage glowing sores matching the upper lids, glowing bulbs) and put into Roblox: skinned ink shell, real emissive mask and glow tint, privately uploaded (Approved), in `SlugshotFloppyTest-SlugshotLook` with the final blaster. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** Studio check.
+
 **Implemented, 2026-11-01 (`feature/slug-asset-pipeline`), revised twice:** sores now read sick not dirty (lighter bilious centre, bruised rim, sallow halo; face spot removed). owner could not see the first spots; now 22 sickly two-tone blotches, glow limited to the bulbs, and the packed-texture bug that kept spots off the game model is fixed. Earlier: Floppy gets softly glowing antenna bulbs and sixteen medium greenish-brown spore spots on the plain skin (concept, build port, repaired source texture and export glow mask). Rendered in the Slugshot look on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** owner verdict, upload and Studio.
 
 

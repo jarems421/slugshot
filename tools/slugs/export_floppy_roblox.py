@@ -37,6 +37,8 @@ EYE_TRIANGLES = 400
 TEXTURE = 1024
 BULB_GLOW = (0.62, 0.80, 0.28)  # antenna-bulb glow colour, as in build_floppy.BULB_GLOW
 BULB_GLOW_STRENGTH = 2.0
+# Slugshot look: Floppy carries an inverted-hull ink shell (owner, 2026-11-01: characters are always inked).
+INK_WIDTH = 0.011  # studs, at game scale
 # Slugs are about 1 stud tall in Roblox so they read clearly; the blaster is
 # resized to fit them (owner, 2026-10-31); then a third smaller, mostly by a narrower base. Source height 2.47 -> ~0.75 studs.
 GAME_SCALE = 0.34
@@ -286,6 +288,29 @@ def game_skin_material(colour, normal, rough, glow=None):
     return mat
 
 
+def ink_shell(body):
+    """A skinned copy of the game body pushed out along its normals with reversed faces: Roblox culls back faces,
+    so only a dark rim shows around Floppy, and it bends with him because it keeps his skin weights."""
+    shell = body.copy()
+    shell.data = body.data.copy()
+    shell.name = shell.data.name = "FloppyBody_Ink"
+    for c in body.users_collection:
+        c.objects.link(shell)
+    bm = bmesh.new()
+    bm.from_mesh(shell.data)
+    bm.normal_update()
+    for v in bm.verts:
+        v.co += v.normal*INK_WIDTH
+    bmesh.ops.reverse_faces(bm, faces=bm.faces)
+    bm.to_mesh(shell.data)
+    bm.free()
+    ink = bpy.data.materials.new("FloppyInk")
+    ink.diffuse_color = (0.006, 0.006, 0.008, 1.0)
+    shell.data.materials.clear()
+    shell.data.materials.append(ink)
+    return shell
+
+
 def roblox_idle(rig):
     """Copy of Idle with no bone scale: breathing becomes a gentle rise of the body and head."""
     source = bpy.data.actions["Idle"]
@@ -458,6 +483,7 @@ def main():
     idle = roblox_idle(rig)
     for b in rig.pose.bones:
         b.matrix_basis.identity()
+    meshes.append(ink_shell(body))
     OUT.mkdir(parents=True, exist_ok=True)
     settings = dict(EXPORT_SETTINGS, path_mode="COPY", embed_textures=True)
     select_only([rig] + meshes, active=rig)

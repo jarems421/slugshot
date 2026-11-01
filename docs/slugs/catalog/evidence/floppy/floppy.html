@@ -354,12 +354,12 @@ const vec3 EUCALYPT  = vec3(0.144, 0.148, 0.060);   // #6A6B45 moss-brown back m
 const vec3 BELLY_EDGE = vec3(0.157, 0.147, 0.048);  // #6E6B3E muddy brown-green belly outline
 const vec3 SORE_PALLOR = vec3(0.520, 0.530, 0.220); // sallow, yellowed skin around a sore
 const vec3 SORE_BRUISE = vec3(0.220, 0.160, 0.120); // faint olive-mauve bruised rim
-const vec3 SORE_PUS    = vec3(0.620, 0.660, 0.160); // lighter bilious yellow-green centre
+const vec3 SORE_PUS    = vec3(0.250, 0.280, 0.140); // centre in the upper lids' sage (owner: match the top eyelids)
 const vec3 BULB_GLOW = vec3(0.62, 0.80, 0.28);      // soft yellow-green glow of the antenna bulbs
 
 // Spore sores (owner, 2026-11-01): they should look sick, not dirty. Dark brown blotches read as grime;
-// sickness reads as sallow yellow-green pallor, a faint bruised rim and a lighter, wet, bilious centre that
-// glows faintly. Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
+// sickness reads as sallow yellow-green pallor, a faint bruised rim and a softly glowing centre, which takes the
+// upper lids' sage (owner). Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
 // Each sore is a primary spot plus one or two satellites centred on the surface: (x, y, z, radius).
 // Returns (pallor, bruised rim, bilious centre).
 vec3 sore(vec3 dp, vec3 c, float r) {
@@ -536,7 +536,7 @@ void main() {
       col += 0.5*wetness*pow(max(dot(n, hr), 0.0), 120.0);
       col += 0.18*fres*sky(reflect(rd, n));
       // The sores' wet centres glow very faintly.
-      col += SORE_PUS*0.22*spores(dp).z;
+      col += SORE_PUS*0.9*spores(dp).z;
       // Antenna bulbs glow softly (owner, 2026-11-01), so a slug's position reads in a dark cavern.
       for (int i = 0; i < 2; i++) {
         vec3 A, B, C;

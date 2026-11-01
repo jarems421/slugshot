@@ -99,3 +99,11 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 - **Earlier failure found:** the first round never reached the game texture, because re-packing an already packed image kept its old pixels. Fixed and verified: the game colour texture now differs in 97k texels.
 
 **Revision 2 (same day):** the owner found the blotches "more dirty than sick", mainly from the colour, plus the one above the mouth. Each sore now has a sallow halo, a faint bruised rim and a lighter bilious yellow-green centre that glows very faintly (also in the Roblox glow mask, at 0.18). The face spot and its satellites are removed, leaving 48 shapes. The greenish-brown theme is kept.
+
+**Revision 3 and Roblox (same day):** the owner found the bilious centres out of place and asked for the upper-lid colour, keeping the glow. Sore centres now use the upper-lid sage and glow softly. The owner liked the result and asked for it in Roblox.
+- **Outline:** `export_floppy_roblox.py` adds a skinned `FloppyBody_Ink` shell (0.011 studs, keeping the body's weights; verified on reimport: 8,000 triangles, at most 3 influences, 0.946 studs tall).
+- **Glow mask:** `upload_floppy_images.py` writes a real body emissive mask: the glow mask floored at 0.05, with a flat 0.05 mask for the eyes.
+- **Appearance:** `FloppyAppearance` divides the visibility floor by 0.05 so plain skin keeps its faint floor while bulbs and sores glow, tints emission yellow-green, and styles the shell near-black Neon.
+- **Upload:** model and maps uploaded privately; all 10 assets read Approved before Studio. `build/SlugshotFloppyTest-SlugshotLook.rbxlx` is open with the final blaster.
+
+**Unresolved:** Studio playback check (outline at runtime, glow strength on pedestal and in the canister).

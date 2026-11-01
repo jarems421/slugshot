@@ -17,6 +17,9 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[2]
 PRIVATE = ROOT / "private-assets/floppy"
 TEXTURES = ROOT / "build/slugs/floppy/roblox/textures"
+# Emissive mask value on plain skin. FloppyAppearance divides its visibility floor by this, so plain skin keeps the
+# same faint emission while the antenna bulbs and sore centres (mask up to 1) glow (owner, 2026-11-01).
+EMISSIVE_FLOOR = 0.05
 
 
 def main():
@@ -31,8 +34,14 @@ def main():
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     maps = {"bodyColor": "floppy-body-color.png", "bodyNormal": "floppy-body-normal.png",
             "eyeLColor": "floppy-eye-left.png", "eyeRColor": "floppy-eye-right.png"}
-    Image.new("L", (8, 8), 255).save(TEXTURES / "floppy-visibility-mask.png")
+    floor = round(EMISSIVE_FLOOR*255)
+    Image.new("L", (8, 8), floor).save(TEXTURES / "floppy-visibility-mask.png")
     maps["visibilityMask"] = "floppy-visibility-mask.png"
+    glow_path = TEXTURES / "floppy-body-glow.png"
+    if glow_path.exists():
+        with Image.open(glow_path) as glow:
+            glow.convert("L").point(lambda v: max(v, floor)).save(TEXTURES / "floppy-body-emissive.png")
+        maps["bodyEmissive"] = "floppy-body-emissive.png"
     for tag, filename in (("body", "floppy-body-roughness.png"),
                           ("eyeL", "floppy-eye-roughness-L.png"),
                           ("eyeR", "floppy-eye-roughness-R.png")):
@@ -97,8 +106,9 @@ def main():
             ET.SubElement(content, "url").text = "rbxassetid://" + str(value)
         # Small albedo-modulated emission provides a stable visibility floor;
         # it does not replace the real, broader lighting on surrounding objects.
+        mask = cache["bodyEmissive"]["id"] if name == "FloppyBody" and "bodyEmissive" in cache else cache["visibilityMask"]["id"]
         content = ET.SubElement(properties, "Content", name="EmissiveMaskContent")
-        ET.SubElement(content, "uri").text = "rbxassetid://" + str(cache["visibilityMask"]["id"])
+        ET.SubElement(content, "uri").text = "rbxassetid://" + str(mask)
     ET.ElementTree(document).write(PRIVATE / "materials.rbxmx", encoding="utf-8", xml_declaration=True)
     print("PASS: explicit image mapping and material templates written privately")
 
