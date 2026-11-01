@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-01 - Hub centrepiece concepts
+
+- **Confirmed:** the block-out is layout only; the owner wants the real designs in the Slugterra-style look, reviewed through the same asset library workflow as past designs. Sky Well: crystal-lined opening going off to a distant storm. Maelstrom: teal glow with a deep blue centre. Spawn rock: a chunk ripped out of the ground, sharp and cracked underneath, with roots, moss, vines, drips and some crystals, a bit ancient.
+- **Implemented/verified offline:** concept v1 of all three in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc), rendered and inspected over three rounds; page scripts syntax-checked and the page opened locally. Live 3D was not opened in a browser. The earlier library link could not be read from this account, so the whole library was republished at this new link.
+- **Considering:** Maelstrom water at 50 studs below the shore in the concept, against 70 in the block-out, so it can be seen from the edge.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Lobby scale map V1
 
 - **Confirmed:** owner agreed the order (scale map, then Sky Well, Maelstrom and spawn rock, then bridges, then terrain) and answered a full round of layout questions, recorded in the [roadmap](art/lobby-roadmap.md#scale-map-v1-2026-11-01). Changes from earlier decisions: no barriers, falling is a long plunge then respawn; the gun exhibition becomes a physical shop/armoury; slugs sit openly around the pond.

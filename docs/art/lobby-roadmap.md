@@ -89,6 +89,8 @@ Colour balance: lava and volcano glow are hero accents. Keep the surrounding roc
 - **Maelstrom (below):** a sinkhole in the middle of the hub, with glowing water spiralling down into the depths. Mist rises off it, catching the light from above.
 - **Spawn:** a floating rock in the light column, between the Sky Well and the Maelstrom. Four bridges lead out to solid mainland: forward to the portals, back to the entrance, left and right to the exhibitions.
 
+**Design direction, Confirmed by the owner 2026-11-01:** the Sky Well is a crystal-lined opening that goes off to a distant storm; the Maelstrom's water is glowing teal with a deep blue centre; the spawn rock is a chunk of rock ripped out of the ground, with a sharp, cracked underside, roots, moss, vines, drips and some crystals, and it should look a bit ancient. The block-out is layout only: the real look is the Slugterra-style designs and Slugshot look, not the plain block-out. Concept v1 of all three is in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc), awaiting review.
+
 Design notes:
 
 - The spiral of the Maelstrom echoes the spiralling caverns around the hub.
@@ -125,7 +127,7 @@ Lobby work goes in its **own branch and worktree** so it never interferes with C
 
 **Confirmed, 2026-11-01:** the owner approved the sketch as the general layout to build from, including the 200-across Sky Well. Treat the block-out as the baseline; fine-tuning happens as each asset is made. Pending for the asset stage: a bigger pond that reads as a little oasis, and a bigger waterfall and stream.
 
-**Agent's starting values, accepted as part of the sketch and open to fine-tuning:** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 150-wide light column, the 14-wide route, the 3-stud lip and the exact placements. The look-test verdict has not been recorded; the owner moved on without an explicit pass.
+**Agent's starting values, accepted as part of the sketch and open to fine-tuning:** every other number in [layout.json](../../experiments/lobby/scale/shared/layout.json), including the 150-wide light column, the 14-wide route, the 3-stud lip and the exact placements. Asked for a look-test verdict, the owner answered about the look overall: the plain block-out is not the art, and the designs will use the Slugterra-style look and assets. No verdict on the look-test place itself was given.
 
 **Build:** `python tools/lobby/build_scale.py` makes `build/SlugshotLobbyScale.rbxlx`; `--check` adds a self-test place. `python tools/lobby/scale_plan.py` draws the [plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) from the same numbers.
 

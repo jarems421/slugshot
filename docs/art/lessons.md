@@ -173,3 +173,10 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **What happened (2026-11-01):** `list_roblox_studios` stayed empty with several Studios open, and Windows refused to bring Studio to the foreground for keystrokes.
 - **What worked:** a check build (`tools/lobby/build_scale.py --check`) whose scripts measure themselves and print to the output, started by posting F5 directly to that window's handle. Results come from the newest `%LOCALAPPDATA%/Roblox/logs/*Studio*_last.log`, and `PrintWindow` captures the window without focus. A true-speed test character found a lip height bug that reading the numbers would not have.
 - **Testing falls:** teleporting the player trips the movement anti-cheat, which snaps them back. Move them at a legal speed instead.
+
+### Very large concepts (spawn rock, Sky Well, Maelstrom, 2026-11-01)
+
+- **Scale:** ink, ambient occlusion and fades in the library shader are tuned for prop-sized assets. Build huge assets in scaled units (1 unit = 5 or 10 studs) and scale the figure, so they keep the same look.
+- **What the first render showed:** rounded moss lumps read as green balls or lily pads, because ink outlines every raised shape; paint moss onto the rock instead. Long curved roots read as tentacles or tusks; keep them short, thin and close to the rock. Floating rocks with one thick trail read as mushrooms; give them a pointed underside and thin vines. Crystals seen end on read as flat white plates; angle them to show their sides and use a colour gradient so they don't blow out.
+- **Shore and backdrops:** the rock wall's moss noise turns into camouflage at this scale. Keep surrounding ground dark and fade it out so the eye stays on the asset.
+
