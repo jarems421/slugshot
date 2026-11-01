@@ -607,3 +607,9 @@
 - **Confirmed:** owner said it looked better; the gate's iron band outlines looked corrupted (front and back), the lighting kept changing between views, and small mushrooms looked dull and pale.
 - **Implemented/verified offline:** band edges bevelled 0.05 in the concept (library v15, gate turntables re-rendered); gate sampled at 0.04 with 4,000 iron triangles; close-up renders show clean outlines front and back, and every island faces outward. Nearby glows merged into shared lights (about 300 to about 90). Zone moods shift colour only. Small-cap colours deepened, glow strength 3.4 to 2.3. StyLua, Selene, luau-lsp clean; Rojo build.
 - **Unresolved:** owner Studio verdict. The idea that Roblox's light limit caused the shifting is inferred from the light count, not measured.
+
+## 2026-11-01 - Look test round 6: brighter small caps, rock texture options
+
+- **Confirmed:** owner said small mushrooms have colour now but feel too dim; rocks look basic and need texture on a scattered portion (not moss everywhere).
+- **Implemented/verified offline:** small-cap glow peak 1.0 to 1.6 (strength about 3.3) and cap lights 1.6; repainted, privately re-uploaded, fresh look-test window. Rock wall texture options in the library v16: carved fractures, mineral veins, weathering and lichen, chipped facets, mixed. Option 1 is pixel-identical to v6 (max diff 0). Turntables inspected; pockmarks rejected internally as bullet-hole-like.
+- **Unresolved:** owner's pick; Roblox build of the chosen option.

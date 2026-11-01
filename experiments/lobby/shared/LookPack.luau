@@ -343,10 +343,13 @@ function LookPack.addEffects(
 			joined.reach = math.max(joined.reach, (joined.p - world).Magnitude + size)
 			joined.crystal = joined.crystal or pt.kind == "crystal"
 		else
-			table.insert(
-				clusters,
-				{ p = world, rgb = rgb, weight = size, reach = size, crystal = pt.kind == "crystal" }
-			)
+			table.insert(clusters, {
+				p = world,
+				rgb = rgb,
+				weight = size,
+				reach = size,
+				crystal = pt.kind == "crystal",
+			})
 		end
 		if pt.kind == "crystal" then
 			local part = fxPart("Twinkle", world, Vector3.one * size * 1.6, model)
@@ -381,7 +384,7 @@ function LookPack.addEffects(
 		pointLight(
 			part,
 			Color3.new(rgb.X, rgb.Y, rgb.Z),
-			if cluster.crystal then 1.2 else 1.0,
+			if cluster.crystal then 1.2 else 1.6,
 			range
 		)
 	end

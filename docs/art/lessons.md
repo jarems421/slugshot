@@ -114,6 +114,17 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - Small caps with pastel bank colours read "dull and pale": glow strength about 3.4 pushed the bright channels past 1 and tone mapping turned them white.
 - **Fix (Roblox build only):** square each small-cap channel against its brightest one and cap the glow so the brightest channel reaches 1. The concept page keeps the original bank.
 
+### Rock texture: features on a portion of masses
+
+- **Owner (round 6):** the rocks "look so basic"; moss worked, but not on every rock, so other kinds of texture are needed on a scattered portion.
+- **Approach:** the wall's 15 masses are indexed (`wallMassParams`), and a hash of each mass's seed picks which ones carry a feature. Geometry features live in `wallMass`, painted ones in the rock albedo through `wallMassAt`. Option 1 stays pixel-identical to the approved v6, which was checked.
+- **What read and what did not, in the turntables:**
+  - Hairline cracks were invisible at viewing distance. Cracks need a 0.13-stud carved width plus a painted ink line and a light chipped edge.
+  - Thick noise isolines made glowing blobs, not veins. The threshold has to be narrow.
+  - Cell-grid lichen dots read as polka dots. Crusty noise patches work.
+  - Round pockmarks always collected crease ink at their centres and read as bullet holes, even as shallow saucers. They were dropped for chipped facets.
+- **Small caps:** capping their glow at 1 kept the colour but was "too dim". The deepened colours allow a 1.6 peak (about concept strength) without washing out.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

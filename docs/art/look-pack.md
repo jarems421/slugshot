@@ -56,6 +56,11 @@ How Slugshot gets its "Living Comic-Book Fantasy" look in Roblox, which has no c
 - **Lighting kept changing:** nearby glows share one light (within 4 studs), cutting about 300 lights to about 90. Zone moods now shift colour only and fade over 10 studs instead of 18; exposure, fog density, haze, contrast and brightness stay at the Hub values.
 - **Small mushrooms pale:** small-cap colours deepened and their glow capped below white; their lights use the deeper colour too.
 
+## Round 6 (owner 2026-11-01)
+
+- **Small mushrooms too dim:** glow returns to about concept strength (3.2 to 3.4) with the deepened colours; their lights go from 1.0 to 1.6.
+- **Rocks look basic:** texture options for the rock wall are in the concept library (v16), awaiting the owner's pick: carved fractures, mineral veins, weathering and lichen, chipped facets, mixed. The look test still uses v6 (`rock-wall-1`); the chosen option builds as `rock-wall-<n>`.
+
 ## Pipeline: final concept to Roblox
 
 Run from the lobby worktree. Python means the scratch venv with moderngl, numpy, Pillow and scikit-image. Blender is 5.2.3.

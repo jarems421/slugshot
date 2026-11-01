@@ -85,9 +85,10 @@ def main():
             Image.fromarray((mask*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-emit.png")
             base = alb.max(axis=2)[valid & (mask > 0.5)]
             g["emit"] = f"textures/{g['name']}-emit.png"
-            # Small caps glow until their brightest channel reaches 1, not past it, so the colour survives.
+            # Small caps: round 4 stopped the glow at 1 to save the colour, which the owner found too dim. With the
+            # deepened colours the main channel can go to 1.6 while the others stay low, so the hue survives.
             if small.mean() > 0.5:
-                peak = min(peak, 1.0)
+                peak = min(peak, 1.6)
             g["emissiveStrength"] = round(min(6.0, peak/max(float(np.median(base)), 0.05)), 2)
         print(f"{g['name']}: painted {int(valid.sum())} texels" + (f", glow x{g['emissiveStrength']}" if "emit" in g else ""))
     (out/"build.json").write_text(json.dumps(report, indent=1))
