@@ -366,7 +366,7 @@ def well_bits_group(centre, i):
     return (0 if np.hypot(centre[0], centre[2]) < 6.0 else 3) + i % 3
 
 
-ISLANDS = [(0.52, 8.5), (2.44, 7.5), (3.75, 8.8), (5.24, 6.5), (1.48, 5.5)]
+ISLANDS = [(a, r*0.7) for a, r in ((0.52, 8.5), (2.44, 7.5), (3.75, 8.8), (5.24, 6.5), (1.48, 5.5))]
 
 
 def nearest_island(centre, _i):

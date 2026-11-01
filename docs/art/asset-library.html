@@ -1660,6 +1660,7 @@ vec2 skyWell(vec3 p) {
     float ang = fi == 0.0 ? 0.52 : fi == 1.0 ? 2.44 : fi == 2.0 ? 3.75 : fi == 3.0 ? 5.24 : 1.48;
     float rad = fi == 0.0 ? 8.5 : fi == 1.0 ? 7.5 : fi == 2.0 ? 8.8 : fi == 3.0 ? 6.5 : 5.5;
     float size = fi == 0.0 ? 0.75 : fi == 1.0 ? 1.0 : fi == 2.0 ? 0.6 : fi == 3.0 ? 0.85 : 0.55;
+    rad *= 0.7;
     ang += uT*ORBIT;
     miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.6*sin(uT*ORBIT*(4.0 + fi) + fi), sin(ang)*rad), size, fi + 1.0, res);
   }
@@ -1672,6 +1673,7 @@ vec2 skyWell(vec3 p) {
     float rad = 1.5 + 14.5*pow(hash1(fi*5.9 + 403.0), 0.75);
     rad *= mix(0.5, 1.0, smoothstep(5.5, 24.0, y));
     if (y > 24.5) rad = min(rad, 1.5 + 6.0*hash1(fi*7.7 + 404.0));
+    rad *= 0.7;  // owner, 2026-11-01: a noticeable amount tighter
     ang += spin*(rad < 6.0 ? 2.0 : 1.0);
     float big = hash1(fi*11.3 + 405.0);
     float size = 0.04 + 0.1*hash1(fi + 406.0) + 0.46*big*big*big*big*big;
