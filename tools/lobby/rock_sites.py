@@ -176,8 +176,9 @@ def sprouts(vs, fs, ctx):
         crystals.append(f"  smallCrystal(q, {vec([x, -0.05, z])}, {vec(direction)}, {rnd.uniform(0.45, 0.85):.2f}, {rnd.uniform(0.09, 0.14):.3f}, {float(rnd.randrange(14)):.1f}, res);")
     lines = []
     seed = 300.0
-    # Just a few mushrooms per crack, single and spaced apart, on the stone along its edge (owner, 2026-11-01).
-    for x, z in crack_sites(data, size, 16, 1.2, 2.2, 7.0, rnd, taken, band=(0.07, 0.24), per_sector=2):
+    # Eight single mushrooms along crack edges, spread around the island and out of the middle so they never clump
+    # (owner, 2026-11-01).
+    for x, z in crack_sites(data, size, 8, 2.6, 3.3, 7.0, rnd, taken, band=(0.07, 0.24), per_sector=1):
         lines.append(f"  wallShroom(q, {vec([x, -0.06, z])}, vec3(0.0, 1.0, 0.0), {seed:.1f}, 1.0, stems, caps, capIdx);")
         seed += 1.0
     print(f"{seed - 300:.0f} crack mushrooms, {len(crystals)} crack crystals anchored")

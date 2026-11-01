@@ -1,6 +1,6 @@
 # Current status
 
-**Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v9) in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). Next: Sky Well or Maelstrom, owner's choice. Not yet built for Roblox.
+**Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10) in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc). Next: Sky Well or Maelstrom, owner's choice. Not yet built for Roblox.
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v8 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): carved glowing cracks with depth, mushrooms along their edges. **Unresolved:** owner confirmation.
 

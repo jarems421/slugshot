@@ -1,5 +1,9 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v10, final
+
+- **Confirmed:** owner noticed the mushrooms concentrated in one area and asked for a third fewer. Now eight singles, spread around the island along crack edges and kept out of the middle. Renders inspected.
+
 ## 2026-11-01 - Spawn rock v9, final
 
 - **Confirmed:** owner asked for far fewer mushrooms, only a few per crack, and cracks slightly thinner and longer, then said "once that's done, yes, we've got it sorted". The island is marked final on that basis.
