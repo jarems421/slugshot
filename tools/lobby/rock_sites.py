@@ -142,11 +142,11 @@ def build(prober):
     root_probes = []
     for r, a0 in enumerate([0.5, 2.1, 3.7, 5.2]):
         heights = [-0.05, -0.6, -1.2, -1.9, -2.7, -3.6, -4.6, -5.8, -7.0]
-        drift = [0.0, 0.01, 0.03, 0.05, 0.09, 0.14, 0.2, 0.28, 0.36]
+        drift = [0.0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.13, 0.16]
         main = [(a0 + d + rnd.uniform(-0.04, 0.04), y) for d, y in zip(drift, heights)]
         side = 1.0 if r % 2 else -1.0
         fa, fy = main[5]
-        fork = [(fa + side*0.24*i, fy - 1.2*i) for i in range(1, 5)]
+        fork = [(fa + side*0.13*i, fy - 0.9*i) for i in range(1, 5)]
         root_probes.append((a0, [radial(prober, a, y) for a, y in main], [radial(prober, a, y) for a, y in fork]))
     # Vines: hang from the rim in loose groups, clear of the roots.
     vine_probes = [(a, radial(prober, a, -0.05)) for a in [1.05, 1.28, 3.0, 4.45, 4.68]]

@@ -195,3 +195,8 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Rule:** after a round of "add more" feedback, compare the result side by side with an approved asset before publishing, and judge the base-to-accent balance from the [readability check](style-guide.md#readability-check-ask-of-every-scene).
 - **Ink:** large dressed assets need the surface-measured material boundaries the rock wall uses, or buried parts draw black splotches.
 
+### Spawn rock v5: ask for a reference sooner (2026-11-01)
+
+- **What happened:** four rounds of words about the rock's shape didn't land; two reference images settled it at once. When shape feedback keeps circling, ask the owner for an image early.
+- **Blocks on a grid read as brick walls:** vary lengths widely, slant the ends, turn and lean each block, and thin the ink on joints, so no two line up into courses.
+

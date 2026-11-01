@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Spawn rock v5
+
+- **Owner direction:** two reference images. The base shape should look like the second: an inverted wedge of angular cliff columns under a flat top ("literally exactly how I want it"), keeping the extra features. Add floating debris like the first, natural and scattered.
+- **Implemented/verified offline:** base rebuilt as a wedge of tall tapered, turned blocks with uneven lengths and slanted breaks, narrowing to a low off-centre point; 40 pieces of slowly drifting debris; roots, vines, spores and crystals re-measured onto the new surface. Round masses and separate spikes removed. The first attempt read as a brick wall; irregular lengths and slanted ends fixed that. Renders inspected. Reference images are not stored in the repo.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Spawn rock v4
 
 - **Owner feedback on v3:** preferred the earlier sharp rocks, which looked random and started high up; the bottom spikes looked organised; likes mixing rounder and sharper rocks. Likes the roots and vines. Wants small glowing jungle spores attached all along the vines, no mushrooms on this rock, many small crystals in their place, and roots attached to the rock with only a small tip poking out.

@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v5 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): base rebuilt to the owner's reference, a wedge of cliff columns, with floating debris. **Unresolved:** owner review.
+
 **Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v4 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): random sharp rocks mixed with rounded masses, spores on the vines, small crystals instead of mushrooms, roots attached to the rock. **Unresolved:** owner review.
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v3 in the [asset library](https://claude.ai/artifact/EKaZ3kbFK8cS7XfTRuq1tc): rock first, in the approved rock wall's language, with far less dressing. **Unresolved:** owner review.

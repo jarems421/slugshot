@@ -848,94 +848,107 @@ float sharpShard(vec3 p, vec3 base, vec3 dir, float h, float r, float seed) {
   return max(hr - r*(1.0 - clamp(l.y/h, 0.0, 1.0)), -l.y - 0.3)*0.7;
 }
 float rockRim(float a) { return 7.0*(1.0 + 0.05*sin(a*3.0 + 1.0) + 0.035*sin(a*7.0 + 2.1) + 0.02*sin(a*13.0)); }
-// The underside's big rounded masses, in the rock wall's language: a chunky crust under the rim, then tiers narrowing
-// downward. Every second mass carries a Slugterra-style crack on its outward face.
-void rockMass(int i, out vec3 c, out vec3 r, out float seed) {
-  float fi = float(i), h = hash1(fi + 61.0), h2 = hash1(fi + 63.0), h3 = hash1(fi + 64.0), a, R, y;
-  if (i < 9) {
-    a = fi*0.698 + 0.5*(h - 0.5); R = 5.5 + 1.0*h2; y = -1.05 - 0.5*h3;
-    r = vec3(1.7 + 0.8*h, 1.1 + 0.6*hash1(fi + 62.0), 1.6);
-  } else if (i < 16) {
-    a = (fi - 9.0)*0.8976 + 0.5 + 0.7*(h - 0.5); R = 3.3 + 2.0*h2; y = -3.0 - 1.4*h3;
-    r = vec3(1.7 + 1.0*h, 1.6 + 0.9*hash1(fi + 62.0), 1.8);
-  } else if (i < 21) {
-    a = (fi - 16.0)*1.2566 + 1.1 + 0.9*(h - 0.5); R = 1.6 + 1.8*h2; y = -5.3 - 1.4*h3;
-    r = vec3(1.4 + 0.9*h, 1.5 + 0.9*hash1(fi + 62.0), 1.5);
-  } else {
-    a = (fi - 21.0)*3.1416 + 0.4 + h; R = 0.5 + 0.8*h2; y = -7.4 - 0.8*h3;
-    r = vec3(1.2 + 0.5*h, 1.4 + 0.5*h2, 1.2);
+// The island's base, from the owner's reference (2026-11-01): one inverted wedge built from tall, angular cliff blocks
+// of uneven lengths, broken horizontally and stepping inward as they go down, closing to a low off-centre point.
+const float ROCK_CELL = 1.55;
+const float ROCK_DEEP = 11.5;
+const vec2 ROCK_APEX = vec2(0.7, -0.5);
+float rockDepth(vec2 xz) { return ROCK_DEEP*max(1.0 - length(xz - ROCK_APEX)/8.4, 0.0); }
+// One slightly turned block, tapering a little toward its lower end.
+float rockBlock(vec3 q, vec2 c, float yaw, float hw, float hd, float top, float bottom, float slant, float cut) {
+  vec3 l = q - vec3(c.x, 0.0, c.y);
+  l.xz = rot(yaw)*l.xz;
+  l.x += 0.05*slant*(l.y - top);
+  float t = clamp((top - l.y)/(top - bottom), 0.0, 1.0);
+  float side = 1.0 - 0.22*t;
+  float ends = max(l.y - top, bottom + l.x*slant + l.z*slant*0.5 - l.y);
+  vec2 e = vec2(max(abs(l.x) - hw*side, abs(l.z) - hd*side), ends);
+  // One long corner sliced off, so the faces aren't all square to each other.
+  e.x = max(e.x, (l.x*cut + l.z)*0.707 - hd*side*0.8);
+  return (min(max(e.x, e.y), 0.0) + length(max(e, 0.0)) - 0.03)*0.72;
+}
+// Every block near q. Also reports the nearest block, for painting cracks on it.
+float rockBlocks(vec3 q, out vec3 bc, out vec3 bs, out float bseed) {
+  float best = 1e3;
+  bc = vec3(0.0); bs = vec3(1.0); bseed = 0.0;
+  vec2 g = floor(q.xz/ROCK_CELL);
+  for (int ix = -1; ix <= 1; ix++) for (int iz = -1; iz <= 1; iz++) {
+    vec2 id = g + vec2(float(ix), float(iz));
+    float k = id.x*17.3 + id.y*91.7;
+    vec2 c = (id + 0.5 + 0.92*(vec2(hash1(k + 3.0), hash1(k + 5.0)) - 0.5))*ROCK_CELL;
+    if (length(c) > rockRim(atan(c.y, c.x)) + 0.25) continue;
+    float deep = rockDepth(c)*(0.7 + 0.62*hash1(k + 7.0)) + 0.6;
+    float top = 0.1, w = ROCK_CELL*(0.42 + 0.3*hash1(k + 9.0)), dd = ROCK_CELL*(0.42 + 0.3*hash1(k + 10.0));
+    float yaw = 1.5*(hash1(k + 11.0) - 0.5);
+    vec2 at = c;
+    for (int t = 0; t < 3; t++) {
+      float ft = float(t), share = t == 2 ? 1.0 : 0.2 + 0.62*hash1(k + 13.0 + ft);
+      float bottom = t == 2 ? -deep : top - (top + deep)*share;
+      float slant = 0.9*(hash1(k + 23.0 + ft) - 0.5);
+      float b = rockBlock(q, at, yaw + 0.3*(hash1(k + 15.0 + ft) - 0.5), w, dd, top, bottom, slant, hash1(k + 25.0 + ft) > 0.5 ? 1.0 : -1.0);
+      if (b < best) {
+        best = b;
+        bc = vec3(at.x, (top + bottom)*0.5, at.y);
+        bs = vec3(w, (top - bottom)*0.5, dd);
+        bseed = k + ft*3.0;
+      }
+      // The next block steps in toward the point and narrows, leaving a ragged horizontal break.
+      top = bottom + 0.35;
+      at = mix(at, ROCK_APEX, 0.1 + 0.08*hash1(k + 17.0 + ft));
+      w *= 0.76 + 0.14*hash1(k + 19.0 + ft);
+      dd *= 0.76 + 0.14*hash1(k + 21.0 + ft);
+    }
   }
-  c = vec3(cos(a)*R, y, sin(a)*R);
-  seed = fi*13.0 + 5.0;
+  return best;
 }
-const float ROCK_MASSES = 23.0;
-// Cracks carved into one mass, as on the rock wall. Returns (distance to the crack's edge, half width).
-vec2 rockMassCrack(vec3 l, vec3 c, vec3 r, float seed) {
-  vec2 rad = normalize(c.xz);
-  return massCracks(vec2(dot(l.xz, vec2(-rad.y, rad.x)), l.y), r, seed*1.3, 0.0);
-}
-// A stone spike under the rock: tapers straight to a clean point, with nothing thin hanging off it.
-float stoneFang(vec3 p, vec3 base, vec3 dir, float h, float r, float seed) {
-  vec3 q = p - base;
-  float bs = length(q - dir*h*0.5) - (h*0.5 + r + 0.3);
-  if (bs > 0.3) return bs;
-  vec3 ax = normalize(cross(vec3(1.0, 0.0, 0.3), dir));
-  vec3 az = cross(dir, ax);
-  vec3 l = vec3(dot(q, ax), dot(q, dir), dot(q, az));
-  l.xz = rot(seed)*l.xz;
-  float hr = max(abs(l.x)*0.9 + abs(l.z)*0.35, abs(l.z)*0.95 + abs(l.x)*0.2);
-  return max(hr - r*(1.0 - clamp(l.y/h, 0.0, 1.0)), max(-l.y - 0.3, l.y - h))*0.7;
-}
-// The rock itself: a flat walkable plate with a torn rim, sitting on chunky rounded masses and a few stone spikes.
 float rockBody(vec3 q) {
-  float rr = length(q.xz), a = atan(q.z, q.x);
-  float d = smax(rr - rockRim(a)*(1.0 + min(q.y, 0.0)/14.0), max(q.y, -q.y - 2.0), 0.2)*0.85;
-  for (int i = 0; i < 23; i++) {
-    vec3 c, r; float seed;
-    rockMass(i, c, r, seed);
-    float di = chunk(q, c, r, seed);
-    if (di < 0.5 && mod(float(i), 2.0) < 0.5) {
-      vec3 l = q - c;
-      vec2 cl = rockMassCrack(l, c, r, seed);
-      float below = clamp(-di/0.3, 0.0, 1.0);
-      float behind = 0.3*r.x - dot(l.xz, normalize(c.xz));
-      di = max(di, -max(max(cl.x + cl.y*below, -di - 0.3), behind));
-    }
-    d = smin(d, di, 0.12);
-  }
-  for (int i = 0; i < 16; i++) {
-    float fi = float(i);
-    float a = hash1(fi*3.7 + 201.0)*6.2832, rad = 0.5 + 5.9*sqrt(hash1(fi*5.1 + 202.0));
-    float seed = fi*2.9 + 7.0;
-    vec3 base = vec3(cos(a)*rad, -0.7 - 6.2*(1.0 - rad/7.0)*(0.6 + 0.4*hash1(fi + 203.0)), sin(a)*rad);
-    float lean = 0.15 + 0.55*hash1(fi + 204.0), turn = a + 1.6*(hash1(fi + 205.0) - 0.5);
-    vec3 dir = normalize(vec3(cos(turn)*lean, -1.0, sin(turn)*lean));
-    float len = 2.0 + 5.2*hash1(fi + 206.0)*hash1(fi + 207.0) + 1.6*hash1(fi + 208.0);
-    d = smin(d, stoneFang(q, base, dir, len, 0.55 + 0.9*hash1(fi + 209.0), seed), 0.07);
-  }
-  d = smax(d, q.y, 0.06);
-  return d + smoothstep(0.1, -0.7, q.y)*0.07*(noise3(q*0.9) - 0.5);
+  vec3 bc, bs; float bseed;
+  float d = rockBlocks(q, bc, bs, bseed);
+  float rr = length(q.xz), toApex = length(q.xz - ROCK_APEX);
+  // A solid core stops any gap showing between blocks, and the flat plate carries the walkable top.
+  float core = (toApex - 7.0*(1.0 + min(q.y, 0.0)/(ROCK_DEEP*0.92)))*0.7;
+  d = min(d, core);
+  d = smin(d, smax(rr - rockRim(atan(q.z, q.x)), max(q.y, -q.y - 1.6), 0.12)*0.85, 0.06);
+  // Blocks only look at their neighbours, so never step further than one cell outside the wedge's envelope.
+  float envelope = (toApex - 8.6*(1.0 + min(q.y, 0.0)/ROCK_DEEP))*0.7;
+  envelope = max(envelope, -q.y - ROCK_DEEP - 2.0);
+  d = min(d, max(max(envelope, q.y), 0.0) + ROCK_CELL*0.7);
+  d = smax(d, q.y, 0.05);
+  float lower = smoothstep(0.1, -0.7, q.y);
+  return d + lower*(0.05*(noise3(q*1.6) - 0.5) + 0.018*(noise3(q*5.0) - 0.5));
 }
-// For painting: the crack on the nearest mass's outward face, or a large value if it has none.
+// For painting: a crack on the nearest block's outward face, or a large value if this block has none.
 float rockCrackAt(vec3 q) {
-  float best = 1e5, nearest = 0.0;
-  for (int i = 0; i < 23; i++) {
-    vec3 c, r; float seed;
-    rockMass(i, c, r, seed);
-    float di = chunk(q, c, r, seed);
-    if (di < best) { best = di; nearest = float(i); }
+  vec3 bc, bs; float bseed;
+  rockBlocks(q, bc, bs, bseed);
+  if (hash1(bseed*1.3 + 41.0) > 0.3 || bs.y < 1.5) return 1.0;
+  vec3 l = q - bc;
+  vec2 rad = normalize(bc.xz + vec2(0.001));
+  if (dot(l.xz, rad) < 0.0) return 1.0;
+  return massCracks(vec2(dot(l.xz, vec2(-rad.y, rad.x)), l.y), vec3(bs.x*1.3, bs.y, bs.z), bseed*0.7, 0.0).x;
+}
+// Floating debris: rubble torn off with the island, a few big pieces among many small ones, thick under the point and
+// thinning outward, drifting very slowly.
+void rockDebris(vec3 q, inout vec2 res) {
+  for (int i = 0; i < 40; i++) {
+    float fi = float(i);
+    float a = hash1(fi*3.3 + 301.0)*6.2832, spread = hash1(fi*5.7 + 302.0);
+    float rad = 0.6 + 13.0*spread*sqrt(spread), h = hash1(fi*7.9 + 303.0);
+    float y = rad > 8.0 ? -0.8 - 7.5*h : -rockDepth(vec2(cos(a), sin(a))*rad) - 0.9 - 6.5*h*h;
+    float big = hash1(fi*11.3 + 304.0);
+    float s = 0.09 + 0.2*hash1(fi + 305.0) + 0.75*big*big*big*big;
+    vec3 c = vec3(cos(a)*rad, y + 0.09*sin(uT*0.3 + fi*1.7), sin(a)*rad);
+    float bs = length(q - c) - s*1.5;
+    if (bs > res.x) continue;
+    vec3 l = q - c;
+    l.xz = rot(fi*1.3 + 0.05*uT*(0.5 - h))*l.xz;
+    l.xy = rot(fi*2.1)*l.xy;
+    l.yz = rot(fi*0.7)*l.yz;
+    float d = sdBox(l, s*vec3(1.0, 0.68, 0.82));
+    d = smax(d, dot(l, normalize(vec3(0.7, 0.8, 0.2))) - s*0.42, 0.02);
+    d = smax(d, dot(l, normalize(vec3(-0.5, -0.7, 0.6))) - s*0.5, 0.02);
+    if (d*0.8 < res.x) res = vec2(d*0.8, 1.0);
   }
-  if (mod(nearest, 2.0) > 0.5) return 1.0;
-  for (int i = 0; i < 23; i++) {
-    if (abs(float(i) - nearest) < 0.5) {
-      vec3 c, r; float seed;
-      rockMass(i, c, r, seed);
-      vec3 l = q - c;
-      if (0.3*r.x - dot(l.xz, normalize(c.xz)) > 0.0) return 1.0;
-      return rockMassCrack(l, c, r, seed).x;
-    }
-  }
-  return 1.0;
 }
 // One length of root: tapered, with the swelling and pinching of old wood.
 float rootSeg(vec3 q, vec3 a, vec3 b, vec3 c, float r0, float r1, float seed) {
@@ -1021,141 +1034,141 @@ void smallCrystal(vec3 q, vec3 site, vec3 dir, float L, float R, float k, inout 
 // @rock-dressing-begin
 float rootField(vec3 q) {
   float d = 1e3, bs;
-  bs = length(q - vec3(4.347, -3.850, 2.636)) - 8.0;
+  bs = length(q - vec3(4.982, -3.663, 2.683)) - 8.0;
   if (bs > 0.6) d = min(d, bs);
   else {
-    d = smin(d, rootSeg(q, vec3(3.876, -0.100, 1.731), vec3(5.122, -0.100, 2.602), vec3(5.758, -0.075, 3.097), 0.100, 0.280, 0.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(5.758, -0.075, 3.097), vec3(6.394, -0.050, 3.592), vec3(6.539, -0.325, 3.737), 0.280, 0.380, 1.70), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.539, -0.325, 3.737), vec3(6.685, -0.600, 3.882), vec3(6.640, -0.900, 4.039), 0.380, 0.440, 3.40), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.640, -0.900, 4.039), vec3(6.596, -1.200, 4.196), vec3(6.778, -1.550, 4.117), 0.440, 0.470, 5.10), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.778, -1.550, 4.117), vec3(6.960, -1.900, 4.038), vec3(6.783, -2.300, 4.068), 0.470, 0.470, 6.80), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.783, -2.300, 4.068), vec3(6.606, -2.700, 4.098), vec3(6.441, -3.150, 4.515), 0.470, 0.440, 8.50), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.441, -3.150, 4.515), vec3(6.277, -3.600, 4.932), vec3(6.044, -4.100, 4.847), 0.440, 0.390, 10.20), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.044, -4.100, 4.847), vec3(5.811, -4.600, 4.763), vec3(5.003, -5.200, 4.415), 0.390, 0.320, 11.90), 0.1);
-    d = smin(d, rootSeg(q, vec3(5.003, -5.200, 4.415), vec3(4.195, -5.800, 4.066), vec3(3.033, -6.400, 3.176), 0.320, 0.230, 13.60), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.033, -6.400, 3.176), vec3(1.870, -7.000, 2.287), vec3(1.938, -7.550, 2.573), 0.230, 0.040, 15.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(6.277, -3.600, 4.932), vec3(-1.430, -4.800, -0.649), vec3(0.933, -5.400, -0.014), 0.260, 0.260, 5.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(0.933, -5.400, -0.014), vec3(3.295, -6.000, 0.620), vec3(3.224, -6.600, 0.225), 0.260, 0.215, 6.70), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.224, -6.600, 0.225), vec3(3.153, -7.200, -0.171), vec3(2.349, -7.800, -0.319), 0.215, 0.155, 8.40), 0.1);
-    d = smin(d, rootSeg(q, vec3(2.349, -7.800, -0.319), vec3(1.546, -8.400, -0.468), vec3(1.751, -8.800, -0.473), 0.155, 0.030, 10.10), 0.1);
+    d = smin(d, rootSeg(q, vec3(4.466, -0.100, 1.994), vec3(5.698, -0.100, 2.894), vec3(6.327, -0.075, 3.401), 0.100, 0.280, 0.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(6.327, -0.075, 3.401), vec3(6.957, -0.050, 3.909), vec3(7.070, -0.325, 4.040), 0.280, 0.380, 1.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(7.070, -0.325, 4.040), vec3(7.184, -0.600, 4.171), vec3(7.094, -0.900, 4.265), 0.380, 0.440, 3.40), 0.1);
+    d = smin(d, rootSeg(q, vec3(7.094, -0.900, 4.265), vec3(7.004, -1.200, 4.358), vec3(6.740, -1.550, 3.972), 0.440, 0.470, 5.10), 0.1);
+    d = smin(d, rootSeg(q, vec3(6.740, -1.550, 3.972), vec3(6.477, -1.900, 3.586), vec3(6.154, -2.300, 3.444), 0.470, 0.470, 6.80), 0.1);
+    d = smin(d, rootSeg(q, vec3(6.154, -2.300, 3.444), vec3(5.831, -2.700, 3.302), vec3(5.221, -3.150, 3.214), 0.470, 0.440, 8.50), 0.1);
+    d = smin(d, rootSeg(q, vec3(5.221, -3.150, 3.214), vec3(4.611, -3.600, 3.127), vec3(4.258, -4.100, 2.862), 0.440, 0.390, 10.20), 0.1);
+    d = smin(d, rootSeg(q, vec3(4.258, -4.100, 2.862), vec3(3.905, -4.600, 2.596), vec3(3.846, -5.200, 2.649), 0.390, 0.320, 11.90), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.846, -5.200, 2.649), vec3(3.786, -5.800, 2.702), vec3(3.377, -6.400, 2.564), 0.320, 0.230, 13.60), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.377, -6.400, 2.564), vec3(2.968, -7.000, 2.426), vec3(3.069, -7.550, 2.720), 0.230, 0.040, 15.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(4.611, -3.600, 3.127), vec3(4.645, -4.500, 2.336), vec3(4.777, -4.950, 2.025), 0.260, 0.260, 5.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(4.777, -4.950, 2.025), vec3(4.909, -5.400, 1.714), vec3(4.850, -5.850, 1.357), 0.260, 0.215, 6.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(4.850, -5.850, 1.357), vec3(4.790, -6.300, 1.001), vec3(4.436, -6.750, 0.656), 0.215, 0.155, 8.40), 0.1);
+    d = smin(d, rootSeg(q, vec3(4.436, -6.750, 0.656), vec3(4.082, -7.200, 0.311), vec3(4.268, -7.600, 0.454), 0.155, 0.030, 10.10), 0.1);
   }
-  bs = length(q - vec3(-2.850, -3.850, 3.248)) - 8.0;
+  bs = length(q - vec3(-2.680, -3.663, 3.811)) - 8.0;
   if (bs > 0.6) d = min(d, bs);
   else {
-    d = smin(d, rootSeg(q, vec3(-1.889, -0.100, 3.918), vec3(-2.800, -0.100, 5.136), vec3(-3.196, -0.075, 5.825), 0.100, 0.280, 3.10), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.196, -0.075, 5.825), vec3(-3.592, -0.050, 6.514), vec3(-3.967, -0.325, 6.629), 0.280, 0.380, 4.80), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.967, -0.325, 6.629), vec3(-4.342, -0.600, 6.745), vec3(-4.325, -0.900, 6.820), 0.380, 0.440, 6.50), 0.1);
-    d = smin(d, rootSeg(q, vec3(-4.325, -0.900, 6.820), vec3(-4.308, -1.200, 6.895), vec3(-3.818, -1.550, 6.193), 0.440, 0.470, 8.20), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.818, -1.550, 6.193), vec3(-3.328, -1.900, 5.490), vec3(0.286, -2.300, 0.194), 0.470, 0.470, 9.90), 0.1);
-    d = smin(d, rootSeg(q, vec3(0.286, -2.300, 0.194), vec3(3.900, -2.700, -5.102), vec3(0.287, -3.150, -0.473), 0.470, 0.440, 11.60), 0.1);
-    d = smin(d, rootSeg(q, vec3(0.287, -3.150, -0.473), vec3(-3.326, -3.600, 4.155), vec3(-3.570, -4.100, 4.362), 0.440, 0.390, 13.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.570, -4.100, 4.362), vec3(-3.813, -4.600, 4.569), vec3(-3.805, -5.200, 3.999), 0.390, 0.320, 15.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.805, -5.200, 3.999), vec3(-3.798, -5.800, 3.429), vec3(-3.110, -6.400, 2.654), 0.320, 0.230, 16.70), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.110, -6.400, 2.654), vec3(-2.423, -7.000, 1.879), vec3(-2.713, -7.550, 1.935), 0.230, 0.040, 18.40), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.326, -3.600, 4.155), vec3(-5.329, -4.800, 4.100), vec3(-4.684, -5.400, 2.941), 0.260, 0.260, 7.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(-4.684, -5.400, 2.941), vec3(-4.039, -6.000, 1.783), vec3(-3.900, -6.600, 1.225), 0.260, 0.215, 9.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.900, -6.600, 1.225), vec3(-3.761, -7.200, 0.668), vec3(-2.829, -7.800, 0.273), 0.215, 0.155, 10.70), 0.1);
-    d = smin(d, rootSeg(q, vec3(-2.829, -7.800, 0.273), vec3(-1.896, -8.400, -0.122), vec3(-2.088, -8.800, -0.197), 0.155, 0.030, 12.40), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.186, -0.100, 4.535), vec3(-3.128, -0.100, 5.737), vec3(-3.525, -0.075, 6.426), 0.100, 0.280, 3.10), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.525, -0.075, 6.426), vec3(-3.922, -0.050, 7.114), vec3(-4.020, -0.325, 6.755), 0.280, 0.380, 4.80), 0.1);
+    d = smin(d, rootSeg(q, vec3(-4.020, -0.325, 6.755), vec3(-4.117, -0.600, 6.395), vec3(-3.938, -0.900, 6.274), 0.380, 0.440, 6.50), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.938, -0.900, 6.274), vec3(-3.760, -1.200, 6.153), vec3(-3.476, -1.550, 5.833), 0.440, 0.470, 8.20), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.476, -1.550, 5.833), vec3(-3.192, -1.900, 5.512), vec3(-3.221, -2.300, 5.068), 0.470, 0.470, 9.90), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.221, -2.300, 5.068), vec3(-3.250, -2.700, 4.625), vec3(-3.224, -3.150, 4.624), 0.470, 0.440, 11.60), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.224, -3.150, 4.624), vec3(-3.197, -3.600, 4.623), vec3(-2.879, -4.100, 4.201), 0.440, 0.390, 13.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.879, -4.100, 4.201), vec3(-2.561, -4.600, 3.779), vec3(-2.219, -5.200, 3.036), 0.390, 0.320, 15.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.219, -5.200, 3.036), vec3(-1.878, -5.800, 2.292), vec3(-1.541, -6.400, 1.845), 0.320, 0.230, 16.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(-1.541, -6.400, 1.845), vec3(-1.204, -7.000, 1.397), vec3(-1.441, -7.550, 1.543), 0.230, 0.040, 18.40), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.197, -3.600, 4.623), vec3(-2.969, -4.500, 3.284), vec3(-2.705, -4.950, 2.682), 0.260, 0.260, 7.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.705, -4.950, 2.682), vec3(-2.441, -5.400, 2.080), vec3(-2.292, -5.850, 1.735), 0.260, 0.215, 9.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.292, -5.850, 1.735), vec3(-2.142, -6.300, 1.390), vec3(-2.146, -6.750, 1.209), 0.215, 0.155, 10.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.146, -6.750, 1.209), vec3(-2.151, -7.200, 1.028), vec3(-2.362, -7.600, 1.043), 0.155, 0.030, 12.40), 0.1);
   }
-  bs = length(q - vec3(-4.079, -3.850, -2.697)) - 8.0;
+  bs = length(q - vec3(-4.120, -3.663, -2.586)) - 8.0;
   if (bs > 0.6) d = min(d, bs);
   else {
-    d = smin(d, rootSeg(q, vec3(-3.462, -0.100, -1.795), vec3(-4.664, -0.100, -2.722), vec3(-5.259, -0.075, -3.269), 0.100, 0.280, 6.20), 0.1);
-    d = smin(d, rootSeg(q, vec3(-5.259, -0.075, -3.269), vec3(-5.855, -0.050, -3.816), vec3(-6.259, -0.325, -4.096), 0.280, 0.380, 7.90), 0.1);
-    d = smin(d, rootSeg(q, vec3(-6.259, -0.325, -4.096), vec3(-6.663, -0.600, -4.375), vec3(-6.571, -0.900, -4.539), 0.380, 0.440, 9.60), 0.1);
-    d = smin(d, rootSeg(q, vec3(-6.571, -0.900, -4.539), vec3(-6.480, -1.200, -4.703), vec3(-6.581, -1.550, -4.490), 0.440, 0.470, 11.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(-6.581, -1.550, -4.490), vec3(-6.682, -1.900, -4.277), vec3(-5.904, -2.300, -4.238), 0.470, 0.470, 13.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(-5.904, -2.300, -4.238), vec3(-5.126, -2.700, -4.200), vec3(-4.647, -3.150, -3.890), 0.470, 0.440, 14.70), 0.1);
-    d = smin(d, rootSeg(q, vec3(-4.647, -3.150, -3.890), vec3(-4.168, -3.600, -3.581), vec3(-3.833, -4.100, -3.383), 0.440, 0.390, 16.40), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.833, -4.100, -3.383), vec3(-3.499, -4.600, -3.186), vec3(-2.867, -5.200, -2.858), 0.390, 0.320, 18.10), 0.1);
-    d = smin(d, rootSeg(q, vec3(-2.867, -5.200, -2.858), vec3(-2.235, -5.800, -2.531), vec3(-1.855, -6.400, -2.205), 0.320, 0.230, 19.80), 0.1);
-    d = smin(d, rootSeg(q, vec3(-1.855, -6.400, -2.205), vec3(-1.475, -7.000, -1.880), vec3(-1.555, -7.550, -2.154), 0.230, 0.040, 21.50), 0.1);
-    d = smin(d, rootSeg(q, vec3(-4.168, -3.600, -3.581), vec3(-6.092, -4.800, -3.093), vec3(-5.236, -5.400, -2.059), 0.260, 0.260, 9.60), 0.1);
-    d = smin(d, rootSeg(q, vec3(-5.236, -5.400, -2.059), vec3(-4.380, -6.000, -1.025), vec3(-3.876, -6.600, -0.495), 0.260, 0.215, 11.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(-3.876, -6.600, -0.495), vec3(-3.373, -7.200, 0.034), vec3(-2.376, -7.800, 0.193), 0.215, 0.155, 13.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(-2.376, -7.800, 0.193), vec3(-1.378, -8.400, 0.352), vec3(-1.581, -8.800, 0.354), 0.155, 0.030, 14.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(-4.311, -0.100, -2.236), vec3(-5.490, -0.100, -3.205), vec3(-6.073, -0.075, -3.772), 0.100, 0.280, 6.20), 0.1);
+    d = smin(d, rootSeg(q, vec3(-6.073, -0.075, -3.772), vec3(-6.657, -0.050, -4.339), vec3(-6.577, -0.325, -4.302), 0.280, 0.380, 7.90), 0.1);
+    d = smin(d, rootSeg(q, vec3(-6.577, -0.325, -4.302), vec3(-6.497, -0.600, -4.266), vec3(-6.120, -0.900, -4.174), 0.380, 0.440, 9.60), 0.1);
+    d = smin(d, rootSeg(q, vec3(-6.120, -0.900, -4.174), vec3(-5.743, -1.200, -4.081), vec3(-5.616, -1.550, -3.721), 0.440, 0.470, 11.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(-5.616, -1.550, -3.721), vec3(-5.490, -1.900, -3.361), vec3(-4.850, -2.300, -3.269), 0.470, 0.470, 13.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(-4.850, -2.300, -3.269), vec3(-4.210, -2.700, -3.176), vec3(-3.959, -3.150, -2.968), 0.470, 0.440, 14.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.959, -3.150, -2.968), vec3(-3.708, -3.600, -2.760), vec3(-3.570, -4.100, -2.654), 0.440, 0.390, 16.40), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.570, -4.100, -2.654), vec3(-3.431, -4.600, -2.548), vec3(-3.109, -5.200, -2.441), 0.390, 0.320, 18.10), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.109, -5.200, -2.441), vec3(-2.787, -5.800, -2.335), vec3(-2.719, -6.400, -2.296), 0.320, 0.230, 19.80), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.719, -6.400, -2.296), vec3(-2.651, -7.000, -2.258), vec3(-2.755, -7.550, -2.543), 0.230, 0.040, 21.50), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.708, -3.600, -2.760), vec3(-3.574, -4.500, -1.998), vec3(-3.465, -4.950, -1.669), 0.260, 0.260, 9.60), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.465, -4.950, -1.669), vec3(-3.356, -5.400, -1.340), vec3(-3.432, -5.850, -1.117), 0.260, 0.215, 11.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(-3.432, -5.850, -1.117), vec3(-3.508, -6.300, -0.895), vec3(-2.968, -6.750, -0.594), 0.215, 0.155, 13.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(-2.968, -6.750, -0.594), vec3(-2.427, -7.200, -0.292), vec3(-2.613, -7.600, -0.395), 0.155, 0.030, 14.70), 0.1);
   }
-  bs = length(q - vec3(2.584, -3.850, -3.555)) - 8.0;
+  bs = length(q - vec3(3.142, -3.663, -4.619)) - 8.0;
   if (bs > 0.6) d = min(d, bs);
   else {
-    d = smin(d, rootSeg(q, vec3(1.788, -0.100, -4.142), vec3(2.656, -0.100, -5.393), vec3(3.149, -0.075, -6.032), 0.100, 0.280, 9.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.149, -0.075, -6.032), vec3(3.641, -0.050, -6.671), vec3(3.778, -0.325, -6.802), 0.280, 0.380, 11.00), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.778, -0.325, -6.802), vec3(3.914, -0.600, -6.933), vec3(3.995, -0.900, -7.030), 0.380, 0.440, 12.70), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.995, -0.900, -7.030), vec3(4.076, -1.200, -7.127), vec3(4.038, -1.550, -7.177), 0.440, 0.470, 14.40), 0.1);
-    d = smin(d, rootSeg(q, vec3(4.038, -1.550, -7.177), vec3(4.000, -1.900, -7.227), vec3(4.013, -2.300, -6.761), 0.470, 0.470, 16.10), 0.1);
-    d = smin(d, rootSeg(q, vec3(4.013, -2.300, -6.761), vec3(4.025, -2.700, -6.294), vec3(4.049, -3.150, -6.049), 0.470, 0.440, 17.80), 0.1);
-    d = smin(d, rootSeg(q, vec3(4.049, -3.150, -6.049), vec3(4.072, -3.600, -5.805), vec3(3.533, -4.100, -4.652), 0.440, 0.390, 19.50), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.533, -4.100, -4.652), vec3(2.993, -4.600, -3.500), vec3(0.255, -5.200, -0.549), 0.390, 0.320, 21.20), 0.1);
-    d = smin(d, rootSeg(q, vec3(0.255, -5.200, -0.549), vec3(-2.483, -5.800, 2.401), vec3(-0.873, -6.400, 0.889), 0.320, 0.230, 22.90), 0.1);
-    d = smin(d, rootSeg(q, vec3(-0.873, -6.400, 0.889), vec3(0.737, -7.000, -0.622), vec3(0.972, -7.550, -0.756), 0.230, 0.040, 24.60), 0.1);
-    d = smin(d, rootSeg(q, vec3(4.072, -3.600, -5.805), vec3(3.007, -4.800, -2.633), vec3(3.100, -5.400, -2.145), 0.260, 0.260, 11.90), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.100, -5.400, -2.145), vec3(3.193, -6.000, -1.658), vec3(3.197, -6.600, -1.219), 0.260, 0.215, 13.60), 0.1);
-    d = smin(d, rootSeg(q, vec3(3.197, -6.600, -1.219), vec3(3.200, -7.200, -0.780), vec3(2.552, -7.800, -0.389), 0.215, 0.155, 15.30), 0.1);
-    d = smin(d, rootSeg(q, vec3(2.552, -7.800, -0.389), vec3(1.904, -8.400, 0.002), vec3(2.101, -8.800, 0.065), 0.155, 0.030, 17.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(1.956, -0.100, -4.530), vec3(2.843, -0.100, -5.772), vec3(3.343, -0.075, -6.407), 0.100, 0.280, 9.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.343, -0.075, -6.407), vec3(3.844, -0.050, -7.042), vec3(3.826, -0.325, -6.893), 0.280, 0.380, 11.00), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.826, -0.325, -6.893), vec3(3.808, -0.600, -6.744), vec3(3.707, -0.900, -6.599), 0.380, 0.440, 12.70), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.707, -0.900, -6.599), vec3(3.606, -1.200, -6.453), vec3(3.421, -1.550, -6.293), 0.440, 0.470, 14.40), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.421, -1.550, -6.293), vec3(3.236, -1.900, -6.132), vec3(3.258, -2.300, -5.872), 0.470, 0.470, 16.10), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.258, -2.300, -5.872), vec3(3.281, -2.700, -5.612), vec3(3.181, -3.150, -5.366), 0.470, 0.440, 17.80), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.181, -3.150, -5.366), vec3(3.082, -3.600, -5.121), vec3(3.235, -4.100, -4.997), 0.440, 0.390, 19.50), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.235, -4.100, -4.997), vec3(3.388, -4.600, -4.873), vec3(3.291, -5.200, -4.528), 0.390, 0.320, 21.20), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.291, -5.200, -4.528), vec3(3.193, -5.800, -4.182), vec3(2.643, -6.400, -3.413), 0.320, 0.230, 22.90), 0.1);
+    d = smin(d, rootSeg(q, vec3(2.643, -6.400, -3.413), vec3(2.093, -7.000, -2.644), vec3(2.371, -7.550, -2.761), 0.230, 0.040, 24.60), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.082, -3.600, -5.121), vec3(3.841, -4.500, -4.830), vec3(3.709, -4.950, -4.146), 0.260, 0.260, 11.90), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.709, -4.950, -4.146), vec3(3.577, -5.400, -3.462), vec3(3.505, -5.850, -3.006), 0.260, 0.215, 13.60), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.505, -5.850, -3.006), vec3(3.432, -6.300, -2.550), vec3(3.508, -6.750, -2.275), 0.215, 0.155, 15.30), 0.1);
+    d = smin(d, rootSeg(q, vec3(3.508, -6.750, -2.275), vec3(3.583, -7.200, -2.000), vec3(3.817, -7.600, -1.982), 0.155, 0.030, 17.00), 0.1);
   }
   return d;
 }
 void rockVines(vec3 q, inout vec2 res) {
-  rockStrand(q, vec3(3.471, -0.200, 6.051), vec3(3.113, 0.030, 5.426), 2.89, 5.13, res);
-  rockStrand(q, vec3(1.938, -0.200, 6.476), vec3(1.732, 0.030, 5.786), 2.76, 4.49, res);
-  rockStrand(q, vec3(-6.812, -0.200, 0.971), vec3(-6.099, 0.030, 0.869), 4.79, 4.34, res);
-  rockStrand(q, vec3(-2.039, -0.200, -7.593), vec3(-1.853, 0.030, -6.898), 4.56, 0.78, res);
-  rockStrand(q, vec3(-0.232, -0.200, -7.163), vec3(-0.209, 0.030, -6.443), 3.86, 3.82, res);
+  rockStrand(q, vec3(3.515, -0.200, 6.128), vec3(3.157, 0.030, 5.503), 2.89, 5.13, res);
+  rockStrand(q, vec3(1.967, -0.200, 6.574), vec3(1.761, 0.030, 5.884), 2.76, 4.49, res);
+  rockStrand(q, vec3(-7.544, -0.200, 1.075), vec3(-6.832, 0.030, 0.974), 4.79, 4.34, res);
+  rockStrand(q, vec3(-2.272, -0.200, -8.460), vec3(-2.085, 0.030, -7.765), 4.56, 0.78, res);
+  rockStrand(q, vec3(-0.254, -0.200, -7.841), vec3(-0.231, 0.030, -7.122), 3.86, 3.82, res);
 }
 void rockCrystals(vec3 q, inout vec2 res) {
-  crystalCluster(q, vec3(3.803, -5.997, 3.203), vec3(0.605, -0.613, 0.509), 4.0, 2.17, 0.22, 0.85, res);
-  crystalCluster(q, vec3(-1.504, -1.984, 0.063), vec3(-0.790, -0.613, 0.033), 0.0, 2.87, 0.48, 0.50, res);
-  crystalCluster(q, vec3(4.035, -4.317, -4.018), vec3(0.560, -0.613, -0.558), 7.0, 1.87, 0.55, 0.60, res);
-  crystalCluster(q, vec3(-0.170, -2.031, 3.699), vec3(-0.036, -0.613, 0.790), 2.0, 2.09, 0.31, 0.95, res);
-  crystalCluster(q, vec3(-3.997, -3.353, -4.787), vec3(-0.507, -0.613, -0.607), 8.0, 1.93, 0.41, 0.50, res);
-  crystalCluster(q, vec3(5.941, -2.591, 0.797), vec3(0.783, -0.613, 0.105), 3.0, 1.83, 0.32, 0.70, res);
-  crystalCluster(q, vec3(-5.150, -2.285, 3.585), vec3(-0.649, -0.613, 0.452), 10.0, 3.20, 0.38, 0.45, res);
-  crystalCluster(q, vec3(1.432, -2.267, -6.373), vec3(0.141, -0.767, -0.627), 1.0, 3.66, 0.36, 0.20, res);
+  crystalCluster(q, vec3(3.375, -5.564, 2.843), vec3(0.605, -0.613, 0.509), 4.0, 2.17, 0.22, 0.85, res);
+  crystalCluster(q, vec3(-3.766, -3.739, 0.157), vec3(-0.790, -0.613, 0.033), 0.0, 2.87, 0.48, 0.50, res);
+  crystalCluster(q, vec3(3.781, -4.039, -3.764), vec3(0.560, -0.613, -0.558), 7.0, 1.87, 0.55, 0.60, res);
+  crystalCluster(q, vec3(-0.211, -2.730, 4.600), vec3(-0.036, -0.613, 0.790), 2.0, 2.09, 0.31, 0.95, res);
+  crystalCluster(q, vec3(-3.472, -2.717, -4.158), vec3(-0.507, -0.613, -0.607), 8.0, 1.93, 0.41, 0.50, res);
+  crystalCluster(q, vec3(5.872, -2.537, 0.788), vec3(0.783, -0.613, 0.105), 3.0, 1.83, 0.32, 0.70, res);
+  crystalCluster(q, vec3(-4.418, -1.594, 3.076), vec3(-0.649, -0.613, 0.452), 10.0, 3.20, 0.38, 0.45, res);
+  crystalCluster(q, vec3(1.378, -1.975, -6.134), vec3(0.141, -0.767, -0.627), 1.0, 3.66, 0.36, 0.20, res);
 }
 void rockSmallCrystals(vec3 q, inout vec2 res) {
-  smallCrystal(q, vec3(1.473, -6.753, 2.800), vec3(0.779, -0.115, 0.617), 1.26, 0.184, 9.0, res);
-  smallCrystal(q, vec3(3.632, -5.322, 0.344), vec3(0.999, 0.025, 0.035), 0.68, 0.132, 8.0, res);
-  smallCrystal(q, vec3(-2.830, -3.839, 4.088), vec3(-0.695, -0.176, 0.697), 1.15, 0.139, 10.0, res);
-  smallCrystal(q, vec3(-5.750, -2.081, 3.361), vec3(-0.897, -0.393, 0.204), 0.66, 0.129, 3.0, res);
-  smallCrystal(q, vec3(-5.616, -5.591, 2.319), vec3(-0.634, 0.103, 0.767), 0.96, 0.115, 9.0, res);
-  smallCrystal(q, vec3(-3.867, -2.413, 5.136), vec3(-0.660, -0.015, 0.751), 1.10, 0.161, 0.0, res);
-  smallCrystal(q, vec3(1.449, -1.318, -7.242), vec3(0.485, 0.167, -0.859), 0.94, 0.163, 2.0, res);
-  smallCrystal(q, vec3(-3.239, -3.441, 4.049), vec3(-0.717, -0.180, 0.673), 1.28, 0.137, 8.0, res);
-  smallCrystal(q, vec3(-5.830, -1.275, -0.638), vec3(-0.746, -0.544, -0.384), 1.29, 0.115, 5.0, res);
-  smallCrystal(q, vec3(0.481, -3.256, -5.291), vec3(-0.039, -0.237, -0.971), 0.97, 0.159, 10.0, res);
-  smallCrystal(q, vec3(6.041, -2.271, 3.911), vec3(0.624, -0.276, 0.731), 1.29, 0.128, 5.0, res);
-  smallCrystal(q, vec3(5.937, -2.305, 2.230), vec3(0.734, -0.125, 0.667), 1.15, 0.149, 6.0, res);
-  smallCrystal(q, vec3(5.135, -1.757, 4.488), vec3(0.885, 0.071, 0.460), 0.95, 0.113, 0.0, res);
-  smallCrystal(q, vec3(-6.740, -4.661, -2.470), vec3(-0.786, -0.412, -0.460), 0.71, 0.122, 3.0, res);
-  smallCrystal(q, vec3(0.876, -3.083, -2.705), vec3(-0.448, -0.000, 0.894), 0.93, 0.160, 4.0, res);
-  smallCrystal(q, vec3(-6.773, -3.922, -0.564), vec3(-0.830, -0.483, -0.278), 0.69, 0.147, 11.0, res);
-  smallCrystal(q, vec3(5.951, -1.537, -3.939), vec3(0.980, -0.031, -0.197), 1.00, 0.137, 10.0, res);
-  smallCrystal(q, vec3(0.830, -3.702, -5.610), vec3(-0.137, -0.044, -0.990), 0.80, 0.175, 4.0, res);
-  smallCrystal(q, vec3(3.469, -4.629, -2.707), vec3(0.749, -0.053, -0.660), 0.71, 0.112, 4.0, res);
-  smallCrystal(q, vec3(7.243, -0.711, 0.177), vec3(0.850, -0.458, 0.260), 1.17, 0.122, 0.0, res);
-  smallCrystal(q, vec3(2.157, -2.009, -7.069), vec3(0.379, -0.310, -0.872), 1.27, 0.140, 9.0, res);
-  smallCrystal(q, vec3(-5.116, -0.896, -4.465), vec3(-0.803, -0.097, -0.589), 0.87, 0.132, 11.0, res);
-  smallCrystal(q, vec3(-6.118, -2.734, -2.519), vec3(-0.833, -0.295, -0.468), 0.92, 0.147, 2.0, res);
-  smallCrystal(q, vec3(-6.370, -0.507, 1.610), vec3(-0.988, -0.093, 0.127), 1.20, 0.164, 9.0, res);
-  smallCrystal(q, vec3(2.154, -5.803, -1.655), vec3(0.648, -0.407, -0.644), 0.75, 0.116, 2.0, res);
-  smallCrystal(q, vec3(-0.286, -4.170, -5.789), vec3(0.259, -0.244, -0.935), 1.13, 0.182, 7.0, res);
-  smallCrystal(q, vec3(1.024, -1.396, 6.995), vec3(0.533, -0.062, 0.844), 1.13, 0.131, 1.0, res);
-  smallCrystal(q, vec3(3.915, -2.214, -6.352), vec3(0.098, 0.061, -0.993), 0.76, 0.112, 8.0, res);
-  smallCrystal(q, vec3(-4.304, -6.076, 3.858), vec3(-0.941, 0.233, 0.244), 1.07, 0.130, 11.0, res);
-  smallCrystal(q, vec3(-1.771, -6.946, 2.610), vec3(-0.660, 0.183, 0.729), 1.17, 0.173, 1.0, res);
-  smallCrystal(q, vec3(2.564, -5.860, 5.772), vec3(0.669, -0.200, 0.716), 0.91, 0.141, 13.0, res);
-  smallCrystal(q, vec3(-1.811, -1.100, 6.314), vec3(-0.327, -0.377, 0.866), 0.66, 0.158, 10.0, res);
-  smallCrystal(q, vec3(-3.048, -5.656, 0.734), vec3(-0.647, -0.756, -0.104), 1.09, 0.140, 3.0, res);
-  smallCrystal(q, vec3(6.288, -3.985, 4.720), vec3(0.682, 0.115, 0.722), 1.21, 0.113, 8.0, res);
-  smallCrystal(q, vec3(4.222, -0.598, -5.386), vec3(0.662, -0.269, -0.700), 0.73, 0.167, 7.0, res);
-  smallCrystal(q, vec3(2.084, -2.108, -0.119), vec3(-0.926, -0.022, 0.378), 0.93, 0.149, 1.0, res);
-  smallCrystal(q, vec3(-3.234, -5.706, 0.671), vec3(-0.908, -0.408, -0.094), 0.96, 0.177, 3.0, res);
-  smallCrystal(q, vec3(-6.314, -2.057, 2.631), vec3(-0.644, 0.191, 0.741), 0.92, 0.149, 7.0, res);
+  smallCrystal(q, vec3(1.548, -6.753, 2.942), vec3(0.779, -0.115, 0.617), 1.26, 0.184, 9.0, res);
+  smallCrystal(q, vec3(5.367, -5.322, 0.509), vec3(0.999, 0.025, 0.035), 0.68, 0.132, 8.0, res);
+  smallCrystal(q, vec3(-2.993, -3.839, 4.324), vec3(-0.695, -0.176, 0.697), 1.15, 0.139, 10.0, res);
+  smallCrystal(q, vec3(-4.272, -2.081, 2.497), vec3(-0.897, -0.393, 0.204), 0.66, 0.129, 3.0, res);
+  smallCrystal(q, vec3(-2.780, -5.591, 1.148), vec3(-0.634, 0.103, 0.767), 0.96, 0.115, 9.0, res);
+  smallCrystal(q, vec3(-3.759, -2.413, 4.993), vec3(-0.660, -0.015, 0.751), 1.10, 0.161, 0.0, res);
+  smallCrystal(q, vec3(1.467, -1.318, -7.328), vec3(0.485, 0.167, -0.859), 0.94, 0.163, 2.0, res);
+  smallCrystal(q, vec3(-3.201, -3.441, 4.001), vec3(-0.717, -0.180, 0.673), 1.28, 0.137, 8.0, res);
+  smallCrystal(q, vec3(-6.740, -1.275, -0.738), vec3(-0.746, -0.544, -0.384), 1.29, 0.115, 5.0, res);
+  smallCrystal(q, vec3(0.531, -3.256, -5.840), vec3(-0.039, -0.237, -0.971), 0.97, 0.159, 10.0, res);
+  smallCrystal(q, vec3(5.555, -2.271, 3.597), vec3(0.624, -0.276, 0.731), 1.29, 0.128, 5.0, res);
+  smallCrystal(q, vec3(5.553, -2.305, 2.086), vec3(0.734, -0.125, 0.667), 1.15, 0.149, 6.0, res);
+  smallCrystal(q, vec3(5.867, -1.757, 5.127), vec3(0.885, 0.071, 0.460), 0.95, 0.113, 0.0, res);
+  smallCrystal(q, vec3(-3.369, -4.661, -1.235), vec3(-0.786, -0.412, -0.460), 0.71, 0.122, 3.0, res);
+  smallCrystal(q, vec3(-1.553, -3.083, 4.798), vec3(-0.448, -0.000, 0.894), 0.93, 0.160, 4.0, res);
+  smallCrystal(q, vec3(-4.064, -3.922, -0.338), vec3(-0.830, -0.483, -0.278), 0.69, 0.147, 11.0, res);
+  smallCrystal(q, vec3(5.941, -1.537, -3.932), vec3(0.980, -0.031, -0.197), 1.00, 0.137, 10.0, res);
+  smallCrystal(q, vec3(0.854, -3.702, -5.773), vec3(-0.137, -0.044, -0.990), 0.80, 0.175, 4.0, res);
+  smallCrystal(q, vec3(4.443, -4.629, -3.467), vec3(0.749, -0.053, -0.660), 0.71, 0.112, 4.0, res);
+  smallCrystal(q, vec3(7.570, -0.711, 0.185), vec3(0.850, -0.458, 0.260), 1.17, 0.122, 0.0, res);
+  smallCrystal(q, vec3(1.856, -2.009, -6.080), vec3(0.379, -0.310, -0.872), 1.27, 0.140, 9.0, res);
+  smallCrystal(q, vec3(-5.713, -0.896, -4.986), vec3(-0.803, -0.097, -0.589), 0.87, 0.132, 11.0, res);
+  smallCrystal(q, vec3(-4.888, -2.734, -2.012), vec3(-0.833, -0.295, -0.468), 0.92, 0.147, 2.0, res);
+  smallCrystal(q, vec3(-6.612, -0.507, 1.671), vec3(-0.988, -0.093, 0.127), 1.20, 0.164, 9.0, res);
+  smallCrystal(q, vec3(3.263, -5.803, -2.507), vec3(0.648, -0.407, -0.644), 0.75, 0.116, 2.0, res);
+  smallCrystal(q, vec3(-0.261, -4.170, -5.285), vec3(0.259, -0.244, -0.935), 1.13, 0.182, 7.0, res);
+  smallCrystal(q, vec3(0.948, -1.396, 6.476), vec3(0.533, -0.062, 0.844), 1.13, 0.131, 1.0, res);
+  smallCrystal(q, vec3(3.325, -2.214, -5.396), vec3(0.098, 0.061, -0.993), 0.76, 0.112, 8.0, res);
+  smallCrystal(q, vec3(-1.597, -6.076, 1.432), vec3(-0.941, 0.233, 0.244), 1.07, 0.130, 11.0, res);
+  smallCrystal(q, vec3(-0.876, -6.946, 1.292), vec3(-0.660, 0.183, 0.729), 1.17, 0.173, 1.0, res);
+  smallCrystal(q, vec3(1.154, -5.860, 2.597), vec3(0.669, -0.200, 0.716), 0.91, 0.141, 13.0, res);
+  smallCrystal(q, vec3(-1.957, -1.100, 6.824), vec3(-0.327, -0.377, 0.866), 0.66, 0.158, 10.0, res);
+  smallCrystal(q, vec3(-3.039, -5.656, 0.732), vec3(-0.647, -0.756, -0.104), 1.09, 0.140, 3.0, res);
+  smallCrystal(q, vec3(3.645, -3.985, 2.736), vec3(0.682, 0.115, 0.722), 1.21, 0.113, 8.0, res);
+  smallCrystal(q, vec3(4.594, -0.598, -5.860), vec3(0.662, -0.269, -0.700), 0.73, 0.167, 7.0, res);
+  smallCrystal(q, vec3(-5.318, -2.108, 0.303), vec3(-0.926, -0.022, 0.378), 0.93, 0.149, 1.0, res);
+  smallCrystal(q, vec3(-3.077, -5.706, 0.638), vec3(-0.908, -0.408, -0.094), 0.96, 0.177, 3.0, res);
+  smallCrystal(q, vec3(-5.062, -2.057, 2.109), vec3(-0.644, 0.191, 0.741), 0.92, 0.149, 7.0, res);
 }
 // @rock-dressing-end
 vec2 spawnRock(vec3 p) {
   vec3 q = p - vec3(0.0, ROCK_TOP, 0.0);
-  float bound = length(q - vec3(0.0, -5.0, 0.0)) - 15.0;
+  float bound = length(q - vec3(0.0, -7.0, 0.0)) - 21.0;
   if (bound > 1.0) return vec2(bound, 1.0);
   vec2 res = vec2(rockBody(q), 1.0);
   // Roots are warped slightly so they twist and wander like old wood.
@@ -1165,6 +1178,7 @@ vec2 spawnRock(vec3 p) {
   rockVines(q, res);
   rockCrystals(q, res);
   rockSmallCrystals(q, res);
+  rockDebris(q, res);
   return res;
 }
 // Position on the spawn rock in its own units, whichever concept is showing it.
@@ -1472,6 +1486,8 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       s *= 1.0 - 0.45*smoothstep(0.76, 0.82, noise3(p*9.0/scale));
       s *= 1.0 + 0.4*smoothstep(0.8, 0.86, noise3(p*9.0/scale + 31.0));
       float m = 0.0;
+      // Joints between blocks stay dark, so the columns read as separate forms.
+      float occ0 = clamp(0.5 + 3.0*rockBody(l + n*0.45), 0.0, 1.0);
       if (rr < 9.5 && l.y < 3.0) {
         float e = 0.12;
         float lap = (rockBody(l + vec3(e, -e, -e)) + rockBody(l + vec3(-e, -e, e)) + rockBody(l + vec3(-e, e, -e))
@@ -1493,7 +1509,8 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
         s *= 0.72;
         if (ASSET == 6 && n.y > 0.7) s *= 0.55*smoothstep(36.0, 19.0, length(p.xz)) + 0.02;
       }
-      emit = s*0.3*smoothstep(0.1, 0.7, -n.y);
+      emit = s*(0.34 + 0.3*smoothstep(0.1, 0.7, -n.y))*(rr < 9.5 && l.y < 3.0 ? 1.0 : 0.3);
+      emit *= 0.55 + 0.45*occ0;
       return mix(s, vec3(0.13, 0.22, 0.11), 0.85*m);
     }
 #endif
@@ -1556,13 +1573,13 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       // sap showing in some of the furrows.
       float sc = ASSET == 5 ? 2.0 : 1.0;
       vec3 g = p*sc + 0.5*vec3(noise3(p*sc*0.9), 0.0, noise3(p*sc*0.9 + 9.0));
-      float fur = abs(noise3(g*vec3(5.0, 1.1, 5.0)) - 0.5);
-      vec3 bark = mix(vec3(0.075, 0.045, 0.028), vec3(0.3, 0.19, 0.1), smoothstep(0.03, 0.2, fur));
+      float fur = abs(noise3(g*vec3(8.0, 1.0, 8.0)) - 0.5);
+      vec3 bark = mix(vec3(0.1, 0.06, 0.035), vec3(0.26, 0.165, 0.09), smoothstep(0.02, 0.14, fur));
       bark = mix(bark, bark*1.35, smoothstep(0.62, 0.8, noise3(p*sc*1.6)));
       float inGroove = 1.0 - smoothstep(0.012, 0.04, fur);
       bark *= 1.0 - 0.8*inGroove;
       float sap = inGroove*smoothstep(0.64, 0.74, noise3(p*sc*0.55 + 5.0));
-      emit = vec3(0.3, 0.95, 0.85)*sap*0.8*TR(id).z*(0.85 + 0.15*sin(uT*0.8 + p.y));
+      emit = vec3(0.3, 0.95, 0.85)*sap*0.8*TR(id).z*(0.85 + 0.15*sin(uT*0.8 + p.y)) + bark*0.14;
       return bark;
     }
 #endif
@@ -1767,8 +1784,11 @@ void main() {
     // SDF Laplacian is negative in concave creases and positive on convex edges.
     // Convex edge lines are dropped on the rock wall's texture study: on its ellipsoid masses they drew faint
     // stray arcs across the faces (owner round 8: "the faint line that just squiggles around everywhere").
-    float convex = hitId < 1.5 && (uRockLayers.x + uRockLayers.y > 0.5 || uAsset > 3.5) ? 0.0 : 0.5;
+    float convex = hitId < 1.5 && uRockLayers.x + uRockLayers.y > 0.5 ? 0.0 : uAsset > 3.5 ? 0.1 : 0.5;
     float crease = smoothstep(0.5/cs, 1.0/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
+#if ASSET >= 4
+    if (hitId < 1.5) crease = smoothstep(1.6/cs, 3.2/cs, -lap) + convex*smoothstep(1.4/cs, 2.4/cs, lap);
+#endif
     // Ink 2: material boundaries (stone to iron, stem to cap, object to floor).
     float idEdge = (abs(s1.y - hitId) + abs(s2.y - hitId) + abs(s3.y - hitId) + abs(s4.y - hitId)) > 0.5 ? 1.0 : 0.0;
     if (uRockLayers.x + uRockLayers.y > 0.5 || uAsset > 3.5) {
@@ -1978,23 +1998,24 @@ void main() {
   // Hub centrepiece, one vertical axis (owner, 2026-11-01). Variants here are camera views of one design.
   const CENTRE_CORE = [0.3, 0.95, 0.9];
   ASSETS.push({
-    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 60 tall", version: "v4", concept: true, noLive: true, shader: 4,
+    id: "spawn-rock", name: "Floating spawn rock", kind: "Landmark · hub centrepiece", size: "70 studs across, about 60 deep, plus debris", version: "v5", concept: true, noLive: true, shader: 4,
     variantLabel: "View",
     variants: [
-      { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 9, 0], dist: 26, pitch: 0.38 } },
-      { name: "From below", bright: [0.3, 0.95, 0.9], camera: { target: [0, 7.5, 0], dist: 25, pitch: -0.2 } }
+      { name: "From above", bright: [0.5, 0.52, 0.6], camera: { target: [0, 6.5, 0], dist: 29, pitch: 0.34 } },
+      { name: "From below", bright: [0.3, 0.95, 0.9], camera: { target: [0, 5.5, 0], dist: 28, pitch: -0.13 } }
     ],
-    core: CENTRE_CORE, crG: [2, 11, 8], target: [0, 9, 0], dist: 26, figure: [3.2, 13, -2.6], glow: [0, 1.5, 0], glowCol: [0.3, 0.95, 0.9],
+    core: CENTRE_CORE, crG: [2, 11, 8], target: [0, 6.5, 0], dist: 29, figure: [3.2, 13, -2.6], glow: [0, -1.5, 0], glowCol: [0.3, 0.95, 0.9],
     notes: [
       ["Idea", "A chunk of ground ripped out of the cavern floor and left hanging in the light, reading as rock first. The top is flat old ground with a torn edge, so 20 to 25 players have room."],
-      ["Rock", "A random mix of rounder rocks and sharp ones. Sharp rocks start high up, among the rounded masses, at uneven angles and lengths, so nothing reads as a ring or a row. The rounded masses use the rock wall's stone, grain, worn edges and crevice hatching."],
-      ["Cracks", "The same Slugterra-style cracks as the wall, on about half the rounded masses: straight segments with sharp turns and a fork, inked inside with a pale lip."],
+      ["Base shape", "Follows your reference: one big inverted wedge narrowing to a low, off-centre point, built from tall angular cliff blocks of uneven lengths, with ragged horizontal breaks stepping inward on the way down."],
+      ["Debris", "Rubble floats below and around the island: a few big pieces among many small ones, thickest under the point and thinning outward, drifting very slowly."],
+      ["Cracks", "The rock wall's stone colours and grain, with its Slugterra-style cracks on some of the larger blocks."],
       ["Crystals", "Eight larger clusters in different colours from the library designs, plus many small crystals scattered over the rock in mixed colours. No mushrooms on this rock."],
       ["Roots", "Four gripping roots that follow the rock's real surface the whole way down, each with one fork, ending in just a small poking tip. Dark furrowed bark with faint glowing sap."],
       ["Vines", "Five short vines with sparse leaves. Small glowing spores sit in the stems all the way down, each partly set into the stem so it reads as attached."],
       ["Moss", "The wall's soft sage moss on upward-facing rock, with a few patches down the sides. The middle of the top stays clear to walk on."],
       ["Treatment", "Slugshot mix, with thinner ink on the leaves and spores so it doesn't swallow them."],
-      ["Status", "Concept v4, awaiting your review."]
+      ["Status", "Concept v5, awaiting your review."]
     ]
   }, {
     id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v1", concept: true, noLive: true, shader: 5,
