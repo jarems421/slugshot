@@ -621,7 +621,9 @@ vec2 portal(vec3 p) {
   for (int i = 0; i < 4; i++) {
     float bi = i == 0 ? 2.0 : i == 1 ? 5.0 : i == 2 ? 13.0 : 16.0;
     float sc = (bi + 0.5)*bl;
-    band = min(band, max(max(abs(fr.y) - PHT - 0.13, abs(p.z) - PHD - 0.12), abs(fr.x - sc) - 0.24));
+    // Edges bevelled 0.05 (owner round 4): perfectly sharp band edges meshed into saw teeth in Roblox.
+    vec3 bq = vec3(abs(fr.y) - PHT - 0.13, abs(p.z) - PHD - 0.12, abs(fr.x - sc) - 0.24) + 0.05;
+    band = min(band, length(max(bq, 0.0)) + min(max(bq.x, max(bq.y, bq.z)), 0.0) - 0.05);
   }
   if (band < r.x) r = vec2(band, 7.0);
   // Keystone gem: a faceted rhombus with a flat table carrying the gate's symbol in raised metal.
@@ -1032,7 +1034,7 @@ void main() {
     edge: g.edge, core: g.core, hot: g.hot,
     target: [0, 10.2, 0], dist: 42, figure: [-12.8, 0, -3.8], glow: [0, 9, -3.8], glowCol: g.core,
     notes: [["Symbol", g.symbol + ", as a glowing inlay in the keystone gem."], ...GATE_SHARED,
-            ["v4 changes", "A stone slab now fills the gap under the energy, its top level with the bottom of the portal, with a lower step in front and behind: a mini stairway up to the portal (owner, 1 Nov 2026)."],
+            ["v4 changes", "A stone slab now fills the gap under the energy, its top level with the bottom of the portal, with a lower step in front and behind: a mini stairway up to the portal (owner, 1 Nov 2026). The iron bands now have softly bevelled edges, which mesh cleanly in Roblox."],
             ["v3 changes", "1.5x bigger. The raised bold symbol was hard to read, so the symbol is now a glowing inlay flush with the gem's face, edged by a fine painted line instead of heavy ink."],
             ["Status", "Concept v3, awaiting your review."]]
   }));

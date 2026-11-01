@@ -132,23 +132,26 @@ function LookPack.applyBase()
 	LookPack.applyMood(LookPack.Moods.Hub)
 end
 
+-- Zone moods shift colour only (owner round 4: "the lighting keeps changing"). Exposure, fog density, haze,
+-- contrast and brightness always come from the Hub, so walking between zones never re-lights the cavern.
 function LookPack.applyMood(mood: Mood)
+	local hub = LookPack.Moods.Hub
 	Lighting.Ambient = mood.ambient
 	Lighting.OutdoorAmbient = mood.outdoorAmbient
-	Lighting.ExposureCompensation = mood.exposure
+	Lighting.ExposureCompensation = hub.exposure
 	local atmosphere = Lighting:FindFirstChild("SlugshotAtmosphere") :: Atmosphere?
 	if atmosphere then
 		atmosphere.Color = mood.fog
 		atmosphere.Decay = mood.decay
-		atmosphere.Density = mood.density
-		atmosphere.Haze = mood.haze
+		atmosphere.Density = hub.density
+		atmosphere.Haze = hub.haze
 	end
 	local grade = Lighting:FindFirstChild("SlugshotGrade") :: ColorCorrectionEffect?
 	if grade then
 		grade.TintColor = mood.tint
-		grade.Contrast = mood.contrast
+		grade.Contrast = hub.contrast
 		grade.Saturation = mood.saturation
-		grade.Brightness = mood.brightness
+		grade.Brightness = hub.brightness
 	end
 end
 
@@ -303,23 +306,50 @@ local function pointLight(parent: Instance, color: Color3, brightness: number, r
 	l.Parent = parent
 end
 
--- Glow effects for an imported asset (round 2, owner 2026-11-01): every crystal gets a small light that
--- lights the rock around it plus star twinkles scaled to its size; small glowing mushroom caps get a light
--- only (no spores); the giant mushroom drops a continuous stream of glowing spores that fade at the floor.
+-- Glow effects for an imported asset (round 2, owner 2026-11-01): crystals and small glowing mushroom caps
+-- light the rock around them, crystals add star twinkles scaled to their size, small caps get no spores, and
+-- the giant mushroom drops a continuous stream of glowing spores that fade at the floor.
+-- Round 4 (owner: "the lighting keeps changing"): one light per emitter came to about 300 lights, and
+-- Roblox renders only so many near the camera, so lights faded in and out as it moved. Emitters within
+-- LIGHT_MERGE studs now share one light with their blended colour.
 -- `conceptToWorld` maps concept coordinates (studs) to world space, including the axis flip the import
 -- applies (measured in LookTest.server).
+local LIGHT_MERGE = 4
+
 function LookPack.addEffects(
 	model: Model,
 	info: AssetInfo,
 	fx: { spore: number, twinkle: number },
 	conceptToWorld: (Vector3) -> Vector3
 )
+	local clusters: { { p: Vector3, rgb: Vector3, weight: number, reach: number, crystal: boolean } } =
+		{}
 	for _, pt in info.points do
 		local world = conceptToWorld(pt.p)
 		local size = math.max(pt.s, 0.3)
-		local part = fxPart("Glow_" .. pt.kind, world, Vector3.one * size * 1.6, model)
+		local rgb = Vector3.new(pt.c.R, pt.c.G, pt.c.B) * size
+		local joined = nil
+		for _, cluster in clusters do
+			if (cluster.p - world).Magnitude < LIGHT_MERGE then
+				joined = cluster
+				break
+			end
+		end
+		if joined then
+			local total = joined.weight + size
+			joined.p = (joined.p * joined.weight + world * size) / total
+			joined.rgb += rgb
+			joined.weight = total
+			joined.reach = math.max(joined.reach, (joined.p - world).Magnitude + size)
+			joined.crystal = joined.crystal or pt.kind == "crystal"
+		else
+			table.insert(
+				clusters,
+				{ p = world, rgb = rgb, weight = size, reach = size, crystal = pt.kind == "crystal" }
+			)
+		end
 		if pt.kind == "crystal" then
-			pointLight(part, pt.c, 1.2, 6 + size * 5)
+			local part = fxPart("Twinkle", world, Vector3.one * size * 1.6, model)
 			local e = Instance.new("ParticleEmitter")
 			e.Name = "Twinkle"
 			e.Texture = "rbxassetid://" .. fx.twinkle
@@ -342,11 +372,18 @@ function LookPack.addEffects(
 			e.Shape = Enum.ParticleEmitterShape.Sphere
 			e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
 			e.Parent = part
-		elseif pt.kind == "cap" then
-			pointLight(part, pt.c, 1.0, 7)
-		else
-			pointLight(part, pt.c, 1.0, 10)
 		end
+	end
+	for _, cluster in clusters do
+		local rgb = cluster.rgb / math.max(cluster.rgb.X, cluster.rgb.Y, cluster.rgb.Z, 1e-3)
+		local part = fxPart("Glow", cluster.p, Vector3.one, model)
+		local range = math.min(6 + cluster.reach * 2, 14)
+		pointLight(
+			part,
+			Color3.new(rgb.X, rgb.Y, rgb.Z),
+			if cluster.crystal then 1.2 else 1.0,
+			range
+		)
 	end
 	local spores = info.spores
 	if spores then

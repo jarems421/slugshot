@@ -83,6 +83,8 @@ def effect_points(k):
             c = v[sel].mean(axis=0)
             col = e[sel].mean(axis=0)
             col = col/max(float(col.max()), 1e-3)
+            if kind == "cap":
+                col = col*col  # matches the deepened cap paint (paint_texels)
             out["points"].append({"kind": kind, "p": c.tolist(), "s": float(np.linalg.norm(v[sel] - c, axis=1).max()),
                                   "color": col.tolist()})
     if "Cap" in data and k.startswith("mushroom"):

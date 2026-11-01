@@ -50,6 +50,12 @@ How Slugshot gets its "Living Comic-Book Fantasy" look in Roblox, which has no c
 - **Ragged black patches at sprout bases:** material-boundary ink is now a thin contact line measured along the surface.
 - **Sparkles from gaps:** effect points now follow the axis flip Roblox applies to glTF imports, measured per asset at load.
 
+## Round 5 (owner 2026-11-01)
+
+- **Gate band outlines corrupted:** bevelled band edges in the concept (library v15), gate sampled at 0.04 studs, iron bands get 4,000 triangles.
+- **Lighting kept changing:** nearby glows share one light (within 4 studs), cutting about 300 lights to about 90. Zone moods now shift colour only and fade over 10 studs instead of 18; exposure, fog density, haze, contrast and brightness stay at the Hub values.
+- **Small mushrooms pale:** small-cap colours deepened and their glow capped below white; their lights use the deeper colour too.
+
 ## Pipeline: final concept to Roblox
 
 Run from the lobby worktree. Python means the scratch venv with moderngl, numpy, Pillow and scikit-image. Blender is 5.2.3.

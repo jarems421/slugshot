@@ -97,6 +97,23 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - The concept's −Z side, where wall dressing faces, arrives in Roblox facing +Z. Effect points placed with a plain offset were mirrored into the rock behind each crystal, so twinkles rose from gaps.
 - The look test now measures the flip per asset: it records each group's concept centre and picks the axis flip that best lands those centres on the imported parts. The Output log prints the result as `LookTest: <key> import axes …`.
 
+### Sharp box edges mesh into saw teeth
+
+- **Symptom (owner, round 5):** the outlines on the gate's iron bands looked corrupted, front and back.
+- **Cause:** the bands were perfectly sharp boxes. Marching cubes cannot reproduce a sharp edge at the sampling step, so the edges came out as teeth. Heavy decimation (about 37 triangles a band) made it worse, and the ink shell traced every tooth.
+- **Fix:** bevel sharp edges in the concept by at least the sampling step (0.05 studs on the bands), sample the gate at 0.04, and give `Iron` the small-detail triangle floor.
+
+### Too many small lights make the look shift with the camera
+
+- About 300 point lights (one per crystal and cap cluster) made the walls look different from shot to shot. Roblox renders only a limited number of lights near the camera, so they faded in and out as it moved.
+- Zone moods also changed exposure and fog density, which re-lit the whole cavern as the player walked.
+- **Rule:** merge nearby emitters into shared lights (within 4 studs: about 90 lights in the test place), and let zone moods shift colour only.
+
+### Light bank colours wash out under Roblox glow
+
+- Small caps with pastel bank colours read "dull and pale": glow strength about 3.4 pushed the bright channels past 1 and tone mapping turned them white.
+- **Fix (Roblox build only):** square each small-cap channel against its brightest one and cap the glow so the brightest channel reaches 1. The concept page keeps the original bank.
+
 ### Agent-side blind spots
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.

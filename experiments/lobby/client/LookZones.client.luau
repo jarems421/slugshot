@@ -8,7 +8,7 @@ local RunService = game:GetService("RunService")
 
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 
-local FADE = 18
+local FADE = 10 -- round 4: moods stay near their gates; the hub walls keep the Hub mood
 LookPack.applyBase()
 local zones = workspace:WaitForChild("LookZones")
 

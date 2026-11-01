@@ -65,6 +65,13 @@ def main():
         bpos = px[..., :3][valid]
         pos = np.stack([bpos[:, 0], bpos[:, 2], -bpos[:, 1]], axis=1).astype("f4")  # Blender -> Y-up studs
         a0, a1 = gpu.paint(pos)
+        # Small bank-coloured caps (owner round 4: "dull and pale"): the bank is light, and Roblox's glow on
+        # top washed it towards white. Square each channel against the brightest one, which keeps hue and
+        # peak but deepens the colour.
+        small = a0[:, 3] > 14.5
+        for a in (a0, a1):
+            c = a[small, :3]
+            a[small, :3] = c*c/np.maximum(c.max(axis=1, keepdims=True), 1e-4)
         h, w = valid.shape
         alb = np.zeros((h, w, 3), "f4"); emit = np.zeros((h, w, 3), "f4")
         alb[valid] = a0[:, :3]; emit[valid] = a1[:, :3]
@@ -78,6 +85,9 @@ def main():
             Image.fromarray((mask*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-emit.png")
             base = alb.max(axis=2)[valid & (mask > 0.5)]
             g["emit"] = f"textures/{g['name']}-emit.png"
+            # Small caps glow until their brightest channel reaches 1, not past it, so the colour survives.
+            if small.mean() > 0.5:
+                peak = min(peak, 1.0)
             g["emissiveStrength"] = round(min(6.0, peak/max(float(np.median(base)), 0.05)), 2)
         print(f"{g['name']}: painted {int(valid.sum())} texels" + (f", glow x{g['emissiveStrength']}" if "emit" in g else ""))
     (out/"build.json").write_text(json.dumps(report, indent=1))

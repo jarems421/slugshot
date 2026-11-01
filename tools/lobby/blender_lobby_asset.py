@@ -27,7 +27,7 @@ OUT = (Path("build/lobby/export")/KEY).resolve()
 TEX = 1024
 MIN_TRIS, MAX_TRIS = 300, 14000
 HARD = {"Crystal", "Iron", "Gem", "Stone"}  # faceted pieces keep sharp edges
-SMALL_DETAIL = {"GlowCap", "Stem", "Crystal", "Gem", "Bulb"}
+SMALL_DETAIL = {"GlowCap", "Stem", "Crystal", "Gem", "Bulb", "Iron"}
 
 
 def reset():

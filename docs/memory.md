@@ -601,3 +601,9 @@
 - **Confirmed:** owner said the look was better but some wall mushrooms rendered as black voids with no glow, sprout bases looked odd, few crystals showed and sparkles came from rock gaps.
 - **Implemented/verified offline:** island check showed Blender's normal recalculation had flipped 13/52 wall caps, 15/34 stems, 7/32 crystals (half the crystal faces) and part of the gate. Builds keep the marching-cubes winding with a per-island guard; recheck reads zero flipped islands in every group. Boundary ink coverage fell from 63/42/23% (stems/caps/crystals) to 4/7/2%. Effect points now use a measured axis flip. StyLua, Selene, luau-lsp clean; Rojo build; Blender previews (back-face culled, low view) inspected. [Lessons](art/lessons.md).
 - **Unresolved:** owner Studio verdict and the logged import-axes result.
+
+## 2026-11-01 - Look test round 5: gate bands, stable lighting, vivid small caps
+
+- **Confirmed:** owner said it looked better; the gate's iron band outlines looked corrupted (front and back), the lighting kept changing between views, and small mushrooms looked dull and pale.
+- **Implemented/verified offline:** band edges bevelled 0.05 in the concept (library v15, gate turntables re-rendered); gate sampled at 0.04 with 4,000 iron triangles; close-up renders show clean outlines front and back, and every island faces outward. Nearby glows merged into shared lights (about 300 to about 90). Zone moods shift colour only. Small-cap colours deepened, glow strength 3.4 to 2.3. StyLua, Selene, luau-lsp clean; Rojo build.
+- **Unresolved:** owner Studio verdict. The idea that Roblox's light limit caused the shifting is inferred from the light count, not measured.
