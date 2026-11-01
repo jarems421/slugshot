@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-01 - Maelstrom approved
+
+- **Confirmed:** owner asked for a little more juice texture and the mushrooms lower and clear of the bridges, then said "this is good". Maelstrom v4 stands. Bridges are next.
+- **Implemented/verified offline:** both, with bridge clearance calculated. Renders inspected.
+
 ## 2026-11-01 - Maelstrom v3
 
 - **Owner feedback on v2:** more vines down the sides, quite a few but not an insane amount; about five large tree mushrooms sprouting from the cliff edge and curving upward, attached and not weird; the "slug juice" should look thick and viscous.
