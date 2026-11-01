@@ -1,5 +1,9 @@
 # Project memory
 
+## 2026-11-01 - Sky Well approved for now
+
+- **Confirmed:** owner: "I think it's good for now", moving on to the next design, and noted that 10 or 11 iterations per structure is a lot. Sky Well v10 stands, and can be revisited in-game. Maelstrom is next, starting with decisions before any build.
+
 ## 2026-11-01 - Sky Well v10
 
 - **Owner feedback on v9:** lightning better, but the storm looks out of place and no longer looks like it is coming out. It should be a greyish purple storm cloud.
