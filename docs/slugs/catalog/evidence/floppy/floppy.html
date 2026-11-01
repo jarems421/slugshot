@@ -355,7 +355,8 @@ const vec3 BELLY_EDGE = vec3(0.157, 0.147, 0.048);  // #6E6B3E muddy brown-green
 const vec3 SORE_PALLOR = vec3(0.520, 0.530, 0.220); // sallow, yellowed skin around a sore
 const vec3 SORE_BRUISE = vec3(0.220, 0.160, 0.120); // faint olive-mauve bruised rim
 const vec3 SORE_PUS    = vec3(0.250, 0.280, 0.140); // centre in the upper lids' sage (owner: match the top eyelids)
-const vec3 BULB_GLOW = vec3(0.62, 0.80, 0.28);      // soft yellow-green glow of the antenna bulbs
+const vec3 BULB_GLOW = vec3(0.62, 0.80, 0.28);      // yellow-green glow of the antenna bulbs
+const vec3 BULB_LIT  = vec3(0.52, 0.68, 0.22);      // the bulbs' luminous core (owner: they must really glow)
 
 // Spore sores (owner, 2026-11-01): they should look sick, not dirty. Dark brown blotches read as grime;
 // sickness reads as sallow yellow-green pallor, a faint bruised rim and a softly glowing centre, which takes the
@@ -467,6 +468,7 @@ vec3 skinAlbedo(vec3 dp, vec3 n) {
     vec3 A, B, C;
     antenna(s, A, B, C);
     col = mix(col, EUCALYPT, 1.0 - smoothstep(0.075, 0.11, length(dp - C)));
+    col = mix(col, BULB_LIT, 1.0 - smoothstep(0.082, 0.095, length(dp - C)));
   }
   // Mouth interior.
   col = mix(col, col*vec3(0.90, 0.90, 0.80), 0.5*smoothstep(0.22, 0.0, dp.y));
@@ -542,7 +544,7 @@ void main() {
         vec3 A, B, C;
         antenna(i == 0 ? -1.0 : 1.0, A, B, C);
         // Only the bulb sphere (radius 0.08) glows, not the skin it hangs beside.
-        col += BULB_GLOW*0.9*(1.0 - smoothstep(0.082, 0.095, length(dp - C)));
+        col += BULB_GLOW*1.6*(1.0 - smoothstep(0.082, 0.095, length(dp - C)));
       }
     } else if (hitId < 2.5) {
       float side = dp.x < 0.0 ? -1.0 : 1.0;

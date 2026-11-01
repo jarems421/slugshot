@@ -107,3 +107,15 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 - **Upload:** model and maps uploaded privately; all 10 assets read Approved before Studio. `build/SlugshotFloppyTest-SlugshotLook.rbxlx` is open with the final blaster.
 
 **Unresolved:** Studio playback check (outline at runtime, glow strength on pedestal and in the canister).
+
+## Final design (2026-11-01)
+
+**Confirmed:** the owner made this the final Floppy design after one last change, which made the antenna bulbs really glow so slugs are more visible.
+
+**Implemented/verified offline:**
+- **Bulbs:** luminous yellow-green cores, in the concept, the build port and the painted source.
+- **Light:** `FloppyAppearance` adds a soft yellow-green PointLight on the head bone. The antenna bones sit at the roots, so they can't carry it.
+- **Final look:** sage sores matching the upper lids with a light glow, glowing bulbs, a skinned ink shell, and a real emissive mask.
+- **Upload:** all maps re-uploaded privately and Approved before opening `build/SlugshotFloppyTest-SlugshotLook.rbxlx`.
+
+**Unresolved:** owner Studio check (glow strength on the pedestal and in the canister); name and IP check before any publication.

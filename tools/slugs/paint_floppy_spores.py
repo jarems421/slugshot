@@ -107,6 +107,13 @@ def main():
     if not tex.image.is_float and tex.image.colorspace_settings.name == "sRGB":
         ratio = ratio**(1/2.2)  # 8-bit sRGB pixels: the same change, expressed in stored values
     px[..., :3] = np.clip(px[..., :3]*ratio, 0.0, 1.0)
+    # Bulbs: moss-brown -> luminous core, so their Roblox glow (colour x mask x strength) is bright.
+    lit = np.zeros((size, size))
+    lit[covered] = bf.bulbs(pts)
+    bulb_ratio = (bf.BULB_LIT/bf.MOSS)**1.12
+    if not tex.image.is_float and tex.image.colorspace_settings.name == "sRGB":
+        bulb_ratio = bulb_ratio**(1/2.2)
+    px[..., :3] = np.clip(px[..., :3]*((1.0 - lit[..., None]) + lit[..., None]*bulb_ratio), 0.0, 1.0)
     m = a_c
     tex.image.pixels.foreach_set(px.ravel())
     tex.image.filepath_raw = str(TEXTURES/"floppy-body.png")

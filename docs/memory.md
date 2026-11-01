@@ -545,3 +545,9 @@
 - **Confirmed:** owner said the glow made the sores look much lighter than the eyelids; keep a light glow.
 - **Implemented/verified offline:** sore glow 0.45 to 0.15 (concept 0.9 to 0.3); repainted, re-exported, emissive mask re-uploaded (Approved), Floppy test place rebuilt and reopened; page updated.
 - **Unresolved:** owner Studio check.
+
+## 2026-11-01 - Floppy final design
+
+- **Confirmed:** owner liked the sores and asked for brighter, really glowing antenna bulbs, then made this the final Floppy design.
+- **Implemented/verified offline:** luminous bulb cores (Roblox emission follows surface colour), head-bone PointLight, repaint, export, private re-upload (Approved), test place rebuilt and reopened; page updated. luau-lsp and Selene clean.
+- **Unresolved:** owner Studio check.

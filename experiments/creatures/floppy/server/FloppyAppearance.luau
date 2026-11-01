@@ -56,6 +56,22 @@ function Appearance.apply(model: Model, minimumLight: number?)
 	end
 	assert(applied == 3, `Floppy material binding expected 3 meshes, found {applied}`)
 	assert(inked == 1, `Floppy expected one ink shell, found {inked}`)
+	-- A soft yellow-green light from the head, so a slug lights up its surroundings and stands out in a dark
+	-- cavern (owner, 2026-11-01). The antenna bones sit at the antenna roots, so the head bone carries it.
+	local head = model:FindFirstChild("head", true)
+	if
+		head
+		and (head:IsA("Bone") or head:IsA("BasePart"))
+		and not head:FindFirstChild("SlugGlow")
+	then
+		local light = Instance.new("PointLight")
+		light.Name = "SlugGlow"
+		light.Color = GLOW_TINT
+		light.Brightness = 0.9
+		light.Range = 5
+		light.Shadows = false
+		light.Parent = head
+	end
 end
 
 return Appearance

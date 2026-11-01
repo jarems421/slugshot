@@ -48,6 +48,9 @@ SORE_PALLOR = np.array([0.520, 0.530, 0.220])  # sallow, yellowed skin around a 
 SORE_BRUISE = np.array([0.220, 0.160, 0.120])  # faint olive-mauve bruised rim
 SORE_PUS = np.array([0.250, 0.280, 0.140])     # centre in the upper lids' sage (owner: match the top eyelids)
 BULB_GLOW = np.array([0.62, 0.80, 0.28])
+# The bulb itself is a luminous yellow-green core (owner, 2026-11-01: the bulbs must really glow). Roblox emission
+# is surface colour x mask x strength, so moss-brown bulbs stayed dull however strong the mask.
+BULB_LIT = np.array([0.52, 0.68, 0.22])
 # Spore sores (owner, 2026-11-01): they should look sick, not dirty. Dark brown blotches read as grime;
 # sickness reads as sallow yellow-green pallor, a faint bruised rim and a softly glowing centre, which takes the
 # upper lids' sage (owner). Kept off the belly, back marks, eyes, mouth and antennae; none on the face above the mouth.
@@ -267,12 +270,17 @@ def spores(dp):
     return pallor, rim, centre
 
 
-def bulb_glow(dp):
-    """The antenna bulbs, which glow softly so a slug's position reads in a dark cavern."""
+def bulbs(dp):
+    """The antenna bulb spheres (radius 0.08), not the skin they hang beside."""
     g = np.zeros(len(dp))
     for s in (-1.0, 1.0):
-        # Only the bulb sphere (radius 0.08) glows, not the skin it hangs beside.
         g = np.maximum(g, 1.0 - smoothstep(0.082, 0.095, np.linalg.norm(dp - antenna(s)[2], axis=1)))
+    return g
+
+
+def bulb_glow(dp):
+    """Glow mask: the antenna bulbs in full, so a slug's position reads in a dark cavern, and the sores lightly."""
+    g = bulbs(dp)
     # The sores' centres glow lightly in their own sage; at 0.45 the glow lifted them well above the eyelid
     # colour they are meant to match (owner, 2026-11-01).
     return np.maximum(g, 0.15*spores(dp)[2])
@@ -314,6 +322,7 @@ def skin_albedo(dp, n):
         col = mix(col, LOWER_LID, near*lower)
         A, B, C = antenna(s)
         col = mix(col, MOSS, 1.0 - smoothstep(0.075, 0.11, np.linalg.norm(dp - C, axis=1)))
+    col = mix(col, BULB_LIT, bulbs(dp))
     col = col*(1.0 - 0.5*smoothstep(0.22, 0.0, y)[:, None]) + col*np.array([0.90, 0.90, 0.80])*(0.5*smoothstep(0.22, 0.0, y)[:, None])
     mouth = 1.0 - smoothstep(0.0, 0.2, np.linalg.norm(mouth_local(dp)/np.array([0.15, 0.045, 0.11]), axis=1) - 1.1)
     col = mix(col, MOUTH, mouth)
