@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-01 - Sky Well v3
+
+- **Owner feedback on v2:** the rock icicles are too uniform and basic, with annoying thin needle points, and need a complete redesign; floating islands far too big; a lot more loose debris in varied sizes, around the storm and not just around the islands.
+- **Implemented/verified offline:** irregular hanging crags from clusters of broken blocks; islands about 10 to 20 studs across; 80 pieces of debris through the space and up the shaft. Renders inspected.
+- **Unresolved:** owner review.
+
 ## 2026-11-01 - Sky Well v2
 
 - **Confirmed (owner's choices):** keep the idea and improve it; mostly cyan crystals with a few accents; storm dramatic but distant; drifting rocks are mini islands with debris.

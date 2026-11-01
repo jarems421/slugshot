@@ -1378,10 +1378,25 @@ vec2 skyWell(vec3 p) {
     float b = rockBlock(p, vec2(cos(ang), sin(ang))*rad, ang + 1.5*(hash1(k + 63.0) - 0.5), w, w*0.85,
       WELL_LOW + 1.5, WELL_LOW - 0.6 - 3.2*hash1(k + 64.0), 0.8*(hash1(k + 65.0) - 0.5), hash1(k + 66.0) > 0.5 ? 1.0 : -1.0);
     if (b < res.x) res = vec2(b, 1.0);
-    float dr = 14.0 + 5.0*hash1(k + 67.0), turn = ang + 0.2;
-    float sp = sharpShard(p, vec3(cos(turn)*dr, WELL_LOW + 0.6, sin(turn)*dr), vec3(0.0, -1.0, 0.0),
-      2.2 + 3.6*hash1(k + 68.0), 0.8 + 0.7*hash1(k + 69.0), k*1.3);
-    if (sp < res.x) res = vec2(sp, 1.0);
+  }
+  // Hanging crags: clusters of broken cliff blocks, very different in size and length, with blunt slanted ends and gaps
+  // between them, so they read as torn rock rather than rows of spikes.
+  s = PI*2.0/13.0; k0 = floor(a/s);
+  for (int j = -1; j <= 1; j++) {
+    float k = mod(k0 + float(j) + 13.0, 13.0);
+    if (hash1(k + 68.0) > 0.2) {
+      float ang = (k + 0.5)*s + 0.35*(hash1(k + 67.0) - 0.5);
+      float dr = 13.0 + 7.5*hash1(k + 69.0), big = 0.5 + 1.5*pow(hash1(k + 70.0), 2.0);
+      for (int t = 0; t < 3; t++) {
+        float ft = float(t), kk = k*5.0 + ft*9.0;
+        float oa = hash1(kk + 2.0)*6.2832, od = t == 0 ? 0.0 : big*(0.5 + 0.8*hash1(kk + 3.0));
+        vec2 c = vec2(cos(ang), sin(ang))*dr + vec2(cos(oa), sin(oa))*od;
+        float len = big*(1.0 + 2.8*hash1(kk + 4.0))*(t == 0 ? 1.0 : 0.62), w = big*(0.5 + 0.5*hash1(kk + 5.0));
+        float b = rockBlock(p, c, hash1(kk + 6.0)*3.0, w, w*(0.6 + 0.6*hash1(kk + 7.0)), WELL_LOW + 1.0, WELL_LOW - len,
+          1.1*(hash1(kk + 8.0) - 0.5), hash1(kk + 9.0) > 0.5 ? 1.0 : -1.0);
+        if (b < res.x) res = vec2(b, 1.0);
+      }
+    }
   }
   // Crystals line the opening, mostly cyan with a few violet linking to the storm.
   s = PI*2.0/18.0; k0 = floor(a/s);
@@ -1415,8 +1430,28 @@ vec2 skyWell(vec3 p) {
     float fi = float(i);
     float ang = fi == 0.0 ? 0.52 : fi == 1.0 ? 2.44 : fi == 2.0 ? 3.75 : fi == 3.0 ? 5.24 : 1.48;
     float rad = fi == 0.0 ? 8.5 : fi == 1.0 ? 7.5 : fi == 2.0 ? 8.8 : fi == 3.0 ? 6.5 : 5.5;
-    float size = fi == 0.0 ? 1.9 : fi == 1.0 ? 2.5 : fi == 2.0 ? 1.6 : fi == 3.0 ? 2.2 : 1.5;
+    float size = fi == 0.0 ? 0.75 : fi == 1.0 ? 1.0 : fi == 2.0 ? 0.6 : fi == 3.0 ? 0.85 : 0.55;
     miniIsland(p, vec3(cos(ang)*rad, 8.5 + fi*3.1 + 0.25*sin(uT*0.3 + fi), sin(ang)*rad), size, fi + 1.0, res);
+  }
+  // Loose debris all through the space, from specks to a few big chunks, including up the shaft around the storm.
+  for (int i = 0; i < 80; i++) {
+    float fi = float(i);
+    float ang = hash1(fi*3.1 + 401.0)*6.2832, y = 5.5 + 29.0*hash1(fi*4.3 + 402.0);
+    float rad = 1.5 + 21.0*pow(hash1(fi*5.9 + 403.0), 0.75);
+    if (y > 24.5) rad = min(rad, 1.5 + 6.0*hash1(fi*7.7 + 404.0));
+    float big = hash1(fi*11.3 + 405.0);
+    float size = 0.05 + 0.13*hash1(fi + 406.0) + 0.95*big*big*big*big*big;
+    vec3 c = vec3(cos(ang)*rad, y + 0.15*sin(uT*0.25 + fi*1.9), sin(ang)*rad);
+    if (length(p - c) - size*1.5 < res.x) {
+      vec3 l = p - c;
+      l.xz = rot(fi*1.3 + 0.04*uT*(0.5 - big))*l.xz;
+      l.xy = rot(fi*2.1)*l.xy;
+      l.yz = rot(fi*0.7)*l.yz;
+      float b = sdBox(l, size*vec3(1.0, 0.68, 0.82));
+      b = smax(b, dot(l, normalize(vec3(0.7, 0.8, 0.2))) - size*0.42, 0.02);
+      b = smax(b, dot(l, normalize(vec3(-0.5, -0.7, 0.6))) - size*0.5, 0.02)*0.8;
+      if (b < res.x) res = vec2(b, 1.0);
+    }
   }
   // The spawn rock at true scale, for size.
   vec2 rk = spawnRock((p - vec3(0.0, 1.0, 0.0))*2.0 + vec3(0.0, ROCK_TOP, 0.0));
@@ -1634,7 +1669,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       vec3 l = centreLocal(p);
       float rr = length(l.xz);
       float scale = ASSET == 5 ? 0.5 : 1.0;
-      bool mini = ASSET == 5 && l.y < 48.0 && rr >= 9.5;
+      bool mini = ASSET == 5 && (l.y >= 3.0 || rr >= 9.5) && (l.y < 48.0 || rr < 15.5);
       float calm = rr < 9.5 || mini ? 1.0 : 0.2;
       s *= 1.0 + calm*0.4*(noise3(p*1.8/scale) - 0.5);
       float flat0 = smoothstep(0.75, 0.95, n.y);
@@ -1965,6 +2000,9 @@ void main() {
     vec3 glow = uGlowCol*TR(hitId).z*max(dot(n, gv/gd), 0.0)*40.0/(gd*gd + 6.0);
 #if ASSET >= 4
     glow *= ASSET == 4 ? 2.5 : 7.0;   // these lights sit much further from the surfaces they light
+#if ASSET == 5
+    glow = min(glow, vec3(1.3));   // pieces drifting right beside the crystal ring would otherwise blow out to white
+#endif
 #endif
     col = alb*(key + warm + amb + glow) + rim*alb*1.6;
     vec3 hv = normalize(lk + v);
@@ -2250,7 +2288,7 @@ void main() {
       ["Status", "Concept v8, awaiting your review."]
     ]
   }, {
-    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v2", concept: true, noLive: true, shader: 5,
+    id: "sky-well", name: "Sky Well", kind: "Landmark · hub centrepiece", size: "200 studs across, 250 above the spawn rock", version: "v3", concept: true, noLive: true, shader: 5,
     variantLabel: "View",
     variants: [
       { name: "Up from the spawn rock", bright: [0.42, 0.93, 1.0], camera: { target: [0, 32, 0], dist: 38, pitch: -1.3 } },
@@ -2261,10 +2299,10 @@ void main() {
       ["Idea", "A huge opening in the cavern roof, wider than the Maelstrom below it, so it reads as a main centrepiece. Your two ideas combined: giant crystals line the opening, and the shaft climbs away to a distant storm."],
       ["Storm", "Dramatic but distant: bands of indigo and violet cloud wheeling in a slow spiral around a pale eye, echoing the Maelstrom, with clear silent lightning now and then. It is noticeable when you look up, but it does not light the lobby."],
       ["Crystals", "Big crystals ring the mouth with smaller ones further up the shaft, mostly cyan with a few violet that link to the storm. They brighten toward their tips and supply the light falling onto the hub."],
-      ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island, with sharp stalactites further out, trailing vines, and a soft 150-stud column of light."],
-      ["Drifting rocks", "Five mini islands in the same wedge shape as the spawn island, with mossy tops, trailing vines and their own rubble. Look only, and they drift slowly in the game."],
+      ["Below the mouth", "The mouth is broken cliff in the same angular blocks as the spawn island. Further out, irregular crags hang from the roof: clusters of broken blocks in very different sizes with blunt, slanted ends. Trailing vines and a soft 150-stud column of light complete it."],
+      ["Drifting rocks", "Five small islands, about 10 to 20 studs across, in the same wedge shape as the spawn island. Eighty pieces of loose debris fill the space around them and up the shaft around the storm, from specks to a few big chunks. Look only, and they drift slowly in the game."],
       ["Scale", "The spawn rock is shown at true scale with a player on it."],
-      ["Status", "Concept v2, awaiting your review."]
+      ["Status", "Concept v3, awaiting your review."]
     ]
   }, {
     id: "maelstrom", name: "Maelstrom", kind: "Landmark · hub centrepiece", size: "170 studs across, water 50 below the shore", version: "v1", concept: true, noLive: true, shader: 6,
