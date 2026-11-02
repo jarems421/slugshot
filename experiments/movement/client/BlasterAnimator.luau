@@ -474,6 +474,8 @@ function Animator.start()
 							* tool.Grip.Rotation
 						joint.C0 = joint.C0:Lerp(CFrame.new(joint.C0.Position) * gripRotation, w)
 					end
+					-- Apply the sampled spin after pose blending, about the native grip.
+					joint.C0 *= tool.Grip:Inverse() * Inspect.flourish(inspecting) * tool.Grip
 					joint.C1 = tool.Grip
 					character:SetAttribute("BlasterFlourish", "inspect")
 					continue

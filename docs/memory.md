@@ -1580,3 +1580,9 @@
 - **Implemented:** shared first-person grip/arm solve; seated grip; attached third-person shoulder; staged hop/look/turn/wiggle/lower with cosmetic weld restoration. Read-only pistol screenshot/reference research recorded; no copied game animation or creature source edits.
 - **Verification:** native frozen-beat review with 22 captures, fixed palm and Tool.Grip checks, barrel/arm alignment and actual relative head movement; normal loadout regression and offline checks recorded in [revision](slugs/inspect-revision.md).
 - **Unresolved:** owner art approval, broader devices, observer/network coverage. Prior passing code checks were not art approval.
+
+## 2026-11-02 - Final inspect lean/spins
+
+- **Confirmed:** slightly more leftward arm lean, slow spin on the raise and (after owner correction) a spin on the down-flick. Preserve Floppy's reaction.
+- **Implemented:** about 9 degrees more left lean; full eased forward/reverse turns across the existing raise/lower windows, using the draw/holster trigger-guard pivot. Apply full angles after pose interpolation so a 360-degree turn is not shortened by quaternion blending. Clear the forearm during transition; keep the held grip seated.
+- **Verification:** [revision/evidence](slugs/inspect-revision.md#final-lean-and-spin-follow-up-2026-11-02); owner final feel remains unapproved, and observer/network/device tests remain open.

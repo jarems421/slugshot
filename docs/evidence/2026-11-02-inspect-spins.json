@@ -1,0 +1,279 @@
+{
+  "date": "2026-11-02",
+  "baseline": "528e94b",
+  "request": "Slightly more left lean; slow spin raising and a spin on the down-flick; preserve reaction",
+  "held_lean_change_degrees": 8.6,
+  "raise_turn_seconds": 0.85,
+  "lower_turn_seconds": 0.8,
+  "pose_checks": [
+    "LOADOUTCHECK shot fp-0002",
+    "LOADOUTCHECK shot fp-0020",
+    "LOADOUTCHECK shot fp-0045",
+    "LOADOUTCHECK shot fp-0070",
+    "LOADOUTCHECK shot fp-0090",
+    "LOADOUTCHECK shot fp-0125",
+    "LOADOUTCHECK shot fp-0180",
+    "LOADOUTCHECK shot fp-0240",
+    "LOADOUTCHECK shot fp-0300",
+    "LOADOUTCHECK shot fp-0370",
+    "LOADOUTCHECK shot fp-0450",
+    "LOADOUTCHECK shot fp-0505",
+    "LOADOUTCHECK shot fp-0525",
+    "LOADOUTCHECK shot fp-0545",
+    "LOADOUTCHECK shot fp-0578",
+    "LOADOUTCHECK shot third-0002",
+    "LOADOUTCHECK shot third-0020",
+    "LOADOUTCHECK shot third-0045",
+    "LOADOUTCHECK shot third-0070",
+    "LOADOUTCHECK shot third-0090",
+    "LOADOUTCHECK shot third-0125",
+    "LOADOUTCHECK shot third-0180",
+    "LOADOUTCHECK shot third-0240",
+    "LOADOUTCHECK shot third-0300",
+    "LOADOUTCHECK shot third-0370",
+    "LOADOUTCHECK shot third-0450",
+    "LOADOUTCHECK shot third-0505",
+    "LOADOUTCHECK shot third-0525",
+    "LOADOUTCHECK shot third-0545",
+    "LOADOUTCHECK shot third-0578",
+    "LOADOUTCHECK PASS inspect review; native grip unchanged; head travel 0.243 studs"
+  ],
+  "loadout_regression": [
+    "LOADOUTCHECK key V",
+    "LOADOUTCHECK key 2",
+    "LOADOUTCHECK wheel down",
+    "LOADOUTCHECK wheel up",
+    "LOADOUTCHECK key R",
+    "LOADOUTCHECK shot first-person-look",
+    "LOADOUTCHECK shot first-person-wiggle",
+    "LOADOUTCHECK key V",
+    "LOADOUTCHECK wheel down",
+    "LOADOUTCHECK shot third-person-look",
+    "LOADOUTCHECK key Q",
+    "LOADOUTCHECK shot complete",
+    "LOADOUTCHECK PASS sparse slots, real keys/wheel, cooldowns, inspect, interruptions, rebinding, respawn, server rejection"
+  ],
+  "offline": "Full combat/foundation/movement checks passed; final visual-axis/clearance refinement passes formatting/lint and the 30-pose native review",
+  "screenshots": {
+    "fp-0002.png": "b55aeeb98382cfe6b67b0b739198510c4939d22e5d8cd0a804911c6b07a3cbd1",
+    "fp-0020.png": "6931dea1ed997a62ebe56ae182e4996908387c8292c0187d278b95b5f81da8b6",
+    "fp-0045.png": "5303c4ce75b5d53188eb6b3c5c8d57cb6ed4901ecb246a6847ca2b66e7c36245",
+    "fp-0070.png": "33b2726f0c3286f76059fdf3073d67b9f573716370fee27612884e015c384333",
+    "fp-0090.png": "cfeb6c1314ebec8bb72bd77d85eac465360083ee24bd7bfbdcb4b0343b39fa65",
+    "fp-0125.png": "24e8e847549f4117e6ccbdbca511efe768e17e981b8b76038ca8192561e8898f",
+    "fp-0180.png": "9cf88f6f4a3f0c6fda6f645b8c8795639ce2ef702b2c7cbd426b244c7e7b7dbd",
+    "fp-0240.png": "fed241d1ff4211f31fee3a0862b069c7a7f840411947b84a4e76811337aae465",
+    "fp-0300.png": "e159e7a443f45125b98a2937c1ceb1d3f87e0a8891afe293004db7cf42a5ac6d",
+    "fp-0370.png": "fc4f8ef3d674294ffe8d24ab87635abeea8fa814fc0e6b40c042b568455792b4",
+    "fp-0450.png": "a725f85a2d8013fd9d5a0df8f5a0c241b9833d557824a530168cb778560a7804",
+    "fp-0505.png": "f98fe3b1e02d2a64c9e38b0143f9e297a30b7be2c75531dacd7316f769e86cc8",
+    "fp-0525.png": "d666e877719a1262a9c694d768203dee2dd922dbd29303772f1967b677334ea4",
+    "fp-0545.png": "f3b5de17e3ef9beb21dbe45466e842292ed40d1f23974f872514e5306db04475",
+    "fp-0578.png": "f94703bcd1d248b1fed0b001570e70db76d1cb15a71dc64cdee64ce5e92f23f5",
+    "third-0002.png": "b2bc97e458c38ad604ce5cde9523145278f6ff8448fb484627f3311b36334067",
+    "third-0020.png": "dbecab5304e4235fbe7b7a80999c751e4eebdd8d60371d2be567e7504685f97a",
+    "third-0045.png": "cd844ec198d29c85ddad19b272824949f9294487df6e149aad33ad61f6b3f748",
+    "third-0070.png": "afcac51c3b70c1e8ccaa895206272054dfe4abe1fee8aecc704f326f3574b978",
+    "third-0090.png": "d8d9b47c5ce700f0009024df290e4d2ee828a23b8b2c70ae6d2e9d3964507907",
+    "third-0125.png": "64c319d180b0765eef9da89d1f6f02d3705100ab4bf2efd91224aea5419453b1",
+    "third-0180.png": "44af86bc7d2e742a54a62a6b3f08f567e9f99855ed317179db94e604b97e6539",
+    "third-0240.png": "2cb6de281ee1e9c496c1e5b9b2e0d53fa10b83fe6cdb8cdbcf2fa007c6cbbb51",
+    "third-0300.png": "ef9f8dcfed97678498a70d0f9dc3b87c77e8962697d98ecf7dbbf04d128a2b92",
+    "third-0370.png": "f690618ac93e10229c8914316f1bf712439f3fe681cf95e386c4c81f6733190a",
+    "third-0450.png": "0e8293ec4ab4794bd23172b6018edc2815962afbeb9bd5414ca230179e80d139",
+    "third-0505.png": "9b23716411999f41bfd467bd82a73d71fcdf0141c7787e9e4b12ebf6ed1db1c4",
+    "third-0525.png": "f78da0d0ba956cc072eea689d5eaab3f7cc3c83afc3c0bbbc5184e9b2c35811b",
+    "third-0545.png": "d99beec5d3fda5de61330a9962bf7586acc2cd07919aa07ab595a0f99becb727",
+    "third-0578.png": "77f206b689f617d71dcc9e61ea53dbdb14a8ec5a2bd88ef4530b067b597999ce"
+  },
+  "contact_report": {
+    "schema": "animation_contact_sheet_report.v1",
+    "frames": [
+      "build\\inspect-v4\\crops\\fp-0002.png",
+      "build\\inspect-v4\\crops\\fp-0020.png",
+      "build\\inspect-v4\\crops\\fp-0045.png",
+      "build\\inspect-v4\\crops\\fp-0070.png",
+      "build\\inspect-v4\\crops\\fp-0090.png",
+      "build\\inspect-v4\\crops\\fp-0125.png",
+      "build\\inspect-v4\\crops\\fp-0180.png",
+      "build\\inspect-v4\\crops\\fp-0240.png",
+      "build\\inspect-v4\\crops\\fp-0300.png",
+      "build\\inspect-v4\\crops\\fp-0370.png",
+      "build\\inspect-v4\\crops\\fp-0450.png",
+      "build\\inspect-v4\\crops\\fp-0505.png",
+      "build\\inspect-v4\\crops\\fp-0525.png",
+      "build\\inspect-v4\\crops\\fp-0545.png",
+      "build\\inspect-v4\\crops\\fp-0578.png",
+      "build\\inspect-v4\\crops\\third-0002.png",
+      "build\\inspect-v4\\crops\\third-0020.png",
+      "build\\inspect-v4\\crops\\third-0045.png",
+      "build\\inspect-v4\\crops\\third-0070.png",
+      "build\\inspect-v4\\crops\\third-0090.png",
+      "build\\inspect-v4\\crops\\third-0125.png",
+      "build\\inspect-v4\\crops\\third-0180.png",
+      "build\\inspect-v4\\crops\\third-0240.png",
+      "build\\inspect-v4\\crops\\third-0300.png",
+      "build\\inspect-v4\\crops\\third-0370.png",
+      "build\\inspect-v4\\crops\\third-0450.png",
+      "build\\inspect-v4\\crops\\third-0505.png",
+      "build\\inspect-v4\\crops\\third-0525.png",
+      "build\\inspect-v4\\crops\\third-0545.png",
+      "build\\inspect-v4\\crops\\third-0578.png"
+    ],
+    "frame_diff": [
+      {
+        "from": "fp-0002.png",
+        "to": "fp-0020.png",
+        "mean_rgb_diff": 0.8328130233525771
+      },
+      {
+        "from": "fp-0020.png",
+        "to": "fp-0045.png",
+        "mean_rgb_diff": 28.775877672023714
+      },
+      {
+        "from": "fp-0045.png",
+        "to": "fp-0070.png",
+        "mean_rgb_diff": 30.23365891714776
+      },
+      {
+        "from": "fp-0070.png",
+        "to": "fp-0090.png",
+        "mean_rgb_diff": 9.98724626826858
+      },
+      {
+        "from": "fp-0090.png",
+        "to": "fp-0125.png",
+        "mean_rgb_diff": 1.17337036459146
+      },
+      {
+        "from": "fp-0125.png",
+        "to": "fp-0180.png",
+        "mean_rgb_diff": 1.9248022052322256
+      },
+      {
+        "from": "fp-0180.png",
+        "to": "fp-0240.png",
+        "mean_rgb_diff": 2.64152348260259
+      },
+      {
+        "from": "fp-0240.png",
+        "to": "fp-0300.png",
+        "mean_rgb_diff": 1.4353084724606022
+      },
+      {
+        "from": "fp-0300.png",
+        "to": "fp-0370.png",
+        "mean_rgb_diff": 2.424058251417278
+      },
+      {
+        "from": "fp-0370.png",
+        "to": "fp-0450.png",
+        "mean_rgb_diff": 1.518501898372081
+      },
+      {
+        "from": "fp-0450.png",
+        "to": "fp-0505.png",
+        "mean_rgb_diff": 14.126226452384666
+      },
+      {
+        "from": "fp-0505.png",
+        "to": "fp-0525.png",
+        "mean_rgb_diff": 29.81891361106777
+      },
+      {
+        "from": "fp-0525.png",
+        "to": "fp-0545.png",
+        "mean_rgb_diff": 28.407267072346183
+      },
+      {
+        "from": "fp-0545.png",
+        "to": "fp-0578.png",
+        "mean_rgb_diff": 0.6086166328600405
+      },
+      {
+        "from": "fp-0578.png",
+        "to": "third-0002.png",
+        "mean_rgb_diff": 46.79826556405055
+      },
+      {
+        "from": "third-0002.png",
+        "to": "third-0020.png",
+        "mean_rgb_diff": 2.265935815602837
+      },
+      {
+        "from": "third-0020.png",
+        "to": "third-0045.png",
+        "mean_rgb_diff": 2.904529787234042
+      },
+      {
+        "from": "third-0045.png",
+        "to": "third-0070.png",
+        "mean_rgb_diff": 6.356807092198582
+      },
+      {
+        "from": "third-0070.png",
+        "to": "third-0090.png",
+        "mean_rgb_diff": 3.7369273049645386
+      },
+      {
+        "from": "third-0090.png",
+        "to": "third-0125.png",
+        "mean_rgb_diff": 2.3789755319148935
+      },
+      {
+        "from": "third-0125.png",
+        "to": "third-0180.png",
+        "mean_rgb_diff": 4.029095744680851
+      },
+      {
+        "from": "third-0180.png",
+        "to": "third-0240.png",
+        "mean_rgb_diff": 4.411803191489362
+      },
+      {
+        "from": "third-0240.png",
+        "to": "third-0300.png",
+        "mean_rgb_diff": 4.967268794326241
+      },
+      {
+        "from": "third-0300.png",
+        "to": "third-0370.png",
+        "mean_rgb_diff": 2.7144347517730494
+      },
+      {
+        "from": "third-0370.png",
+        "to": "third-0450.png",
+        "mean_rgb_diff": 1.6441613475177306
+      },
+      {
+        "from": "third-0450.png",
+        "to": "third-0505.png",
+        "mean_rgb_diff": 4.681339716312057
+      },
+      {
+        "from": "third-0505.png",
+        "to": "third-0525.png",
+        "mean_rgb_diff": 6.733104609929078
+      },
+      {
+        "from": "third-0525.png",
+        "to": "third-0545.png",
+        "mean_rgb_diff": 2.5901762411347518
+      },
+      {
+        "from": "third-0545.png",
+        "to": "third-0578.png",
+        "mean_rgb_diff": 2.754808510638298
+      }
+    ],
+    "warnings": [
+      "High frame-to-frame visual jump: 46.80"
+    ]
+  },
+  "limits": [
+    "Owner timing/feel verdict pending",
+    "One-client desktop Studio; no latency/observer/device coverage",
+    "Large contact differences include intentional spin poses and the camera cut; frozen poses do not prove smoothness"
+  ]
+}

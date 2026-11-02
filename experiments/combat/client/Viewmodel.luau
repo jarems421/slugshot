@@ -371,6 +371,9 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			local armToHandle = if gripJoint and gripJoint:IsA("JointInstance")
 				then gripJoint.C0 * gripJoint.C1:Inverse()
 				else source.CFrame:ToObjectSpace(handle.CFrame)
+			-- The arm carries the lift; the existing grip layer carries the full turn.
+			-- Remove that turn only from the arm target, retaining it in the gun map.
+			armToHandle *= Inspect.flourish(inspectTime):Inverse()
 			local handShift = CFrame.new(
 				0,
 				-(fullSize.Y - source.Size.Y / 2 + T.gripRelease - 0.28 * inspectWeight),

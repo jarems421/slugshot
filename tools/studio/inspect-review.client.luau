@@ -85,7 +85,9 @@ local ok, problem = pcall(function()
 				frame:PointToWorldSpace(Vector3.new(-4, 2.1, -5)),
 				frame.Position + Vector3.new(0, 1, -0.5)
 			)
-		for _, t in { 0.02, 0.45, 0.9, 1.25, 1.8, 2.4, 3.0, 3.7, 4.5, 5.25, 5.78 } do
+		for _, t in
+			{ 0.02, 0.2, 0.45, 0.7, 0.9, 1.25, 1.8, 2.4, 3.0, 3.7, 4.5, 5.05, 5.25, 5.45, 5.78 }
+		do
 			frozen = t
 			task.wait(0.4)
 			assert(
@@ -126,6 +128,12 @@ local ok, problem = pcall(function()
 	end
 	assert(headTravel > 0.1, "imported head did not visibly move")
 	assert(Inspect.hop(1.325) > 0.7, "hop apex missing")
+	assert(math.abs(Inspect.spinAngle(0.85) - 2 * math.pi) < 1e-6, "raise spin incomplete")
+	assert(math.abs(Inspect.spinAngle(5.65)) < 1e-6, "lower spin incomplete")
+	assert(
+		math.abs(Inspect.spinAngle(1.8) - Inspect.spinAngle(3.7)) < 1e-6,
+		"spin disturbed held reaction"
+	)
 	frozen = nil
 	character:SetAttribute("SlugInspectAt", nil)
 	print(
