@@ -6,6 +6,8 @@
 -- loaded in the equipped blaster. Each Floppy's own frame comes from its bones
 -- (eye to eye is sideways, root to head is up), so a Floppy lying in the gun
 -- moves the same way relative to himself.
+local Players = game:GetService("Players")
+local Inspect: any = nil -- resolved after startup; standalone creature places have no movement folder
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
@@ -88,6 +90,41 @@ local function setup(model: Model)
 			return CFrame.fromAxisAngle(axis, direction * EYE * t)
 		end
 	end
+	-- Add inspect to the existing driver, rather than racing a second bone writer.
+	local rootAxis = toLocal(root, -front)
+	local rootSide = toLocal(root, sideways)
+	local pivot = root.WorldCFrame:PointToObjectSpace((root.WorldPosition + head.WorldPosition) / 2)
+	motion[root] = function(_: number): CFrame
+		local tool = model:FindFirstAncestorOfClass("Tool")
+		local character = tool and tool.Parent
+		local t = if Inspect
+				and character
+				and character:IsA("Model")
+			then Inspect.elapsed(character)
+			else nil
+		if not t then
+			return CFrame.identity
+		end
+		local w = Inspect.weight(t)
+		return CFrame.new(pivot)
+			* CFrame.fromAxisAngle(rootAxis, Inspect.turn(t, "Floppy"))
+			* CFrame.fromAxisAngle(rootSide, math.rad(35) * w * math.clamp((2.5 - t) / 0.5, 0, 1))
+			* CFrame.fromAxisAngle(rootAxis, Inspect.wiggle(t))
+			* CFrame.new(-pivot)
+	end
+	local idleHead = motion[head]
+	local headSide = toLocal(head, sideways)
+	motion[head] = function(clock: number): CFrame
+		local tool = model:FindFirstAncestorOfClass("Tool")
+		local character = tool and tool.Parent
+		local t = if Inspect
+				and character
+				and character:IsA("Model")
+			then Inspect.elapsed(character)
+			else nil
+		local lift = if t then Inspect.weight(t) * math.clamp((2.5 - t) / 0.5, 0, 1) else 0
+		return idleHead(clock) * CFrame.fromAxisAngle(headSide, math.rad(30) * lift)
+	end
 	-- Roblox can create one skeleton per skinned mesh. Animate every copy;
 	-- a name-keyed dictionary alone silently leaves the other meshes at rest.
 	for _, bone in allBones do
@@ -131,17 +168,29 @@ CollectionService:GetInstanceAddedSignal("SlugIcon"):Connect(function(icon: Inst
 end)
 
 local start = os.clock()
-RunService.RenderStepped:Connect(function()
-	local t = (os.clock() - start) % LOOP
-	for model, motion in floppies do
-		if
-			not model:IsDescendantOf(workspace) and not CollectionService:HasTag(model, "SlugIcon")
-		then
-			floppies[model] = nil
-			continue
+RunService:BindToRenderStep(
+	"SlugshotFloppyIdle",
+	Enum.RenderPriority.Character.Value + 2,
+	function()
+		if not Inspect then
+			local movement = Players.LocalPlayer.PlayerScripts:FindFirstChild("MovementSandbox")
+			local module = movement and movement:FindFirstChild("SlugInspect")
+			if module then
+				Inspect = (require :: any)(module)
+			end
 		end
-		for bone, fn in motion do
-			bone.Transform = fn(t)
+		local t = (os.clock() - start) % LOOP
+		for model, motion in floppies do
+			if
+				not model:IsDescendantOf(workspace)
+				and not CollectionService:HasTag(model, "SlugIcon")
+			then
+				floppies[model] = nil
+				continue
+			end
+			for bone, fn in motion do
+				bone.Transform = fn(t)
+			end
 		end
 	end
-end)
+)

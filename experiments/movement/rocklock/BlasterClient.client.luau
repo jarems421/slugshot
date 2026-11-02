@@ -27,7 +27,7 @@ apply()
 -- The first slug's key draws and holsters the blaster. Resolve the actual Tool each press;
 -- holster/first-person visual copies are never tools.
 Keybinds.on("slug1", function(pressed: boolean)
-	if not pressed then
+	if not pressed or player:GetAttribute("PvpHud") == true then
 		return
 	end
 	local character = player.Character

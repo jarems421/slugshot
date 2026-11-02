@@ -80,7 +80,13 @@ type Shot = {
 	started: number,
 	params: RaycastParams,
 }
-type Shooter = { ready: { [number]: number }, window: number, count: number }
+type Shooter = {
+	ready: { [number]: number },
+	window: number,
+	count: number,
+	selected: number,
+	inspected: number,
+}
 local shots: { Shot } = {}
 local shooters: { [Player]: Shooter } = {}
 
@@ -97,11 +103,70 @@ local function blasterOf(character: Model): Tool?
 	return nil
 end
 
-local function reject(player: Player, id: any, reason: string)
-	remote:FireClient(player, "Rejected", { id = id, reason = reason })
+local function reject(player: Player, id: any, reason: string, slot: number?)
+	local state = shooters[player]
+	local remaining = if state and slot
+		then math.max((state.ready[slot] or 0) - os.clock(), 0)
+		else 0
+	remote:FireClient(player, "Rejected", { id = id, reason = reason, remaining = remaining })
+end
+
+local function stateOf(player: Player): Shooter
+	local state = shooters[player]
+	if not state then
+		state = { ready = {}, window = os.clock(), count = 0, selected = 1, inspected = -math.huge }
+		shooters[player] = state
+	end
+	return state
+end
+
+local function showSelection(character: Model, tool: Tool, state: Shooter)
+	tool:SetAttribute("SelectedSlugSlot", state.selected)
+	tool:SetAttribute("SelectedSlugId", Combat.Loadout[state.selected])
+	tool:SetAttribute("SlugReady", os.clock() >= (state.ready[state.selected] or 0))
+	character:SetAttribute("SelectedSlugSlot", state.selected)
 end
 
 remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
+	if kind == "Select" or kind == "Inspect" or kind == "CancelInspect" then
+		local character = player.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if not character or not humanoid or humanoid.Health <= 0 then
+			return
+		end
+		if kind == "CancelInspect" then
+			character:SetAttribute("SlugInspectAt", nil)
+			return
+		end
+		local state = stateOf(player)
+		local tool = blasterOf(character)
+		if kind == "Select" then
+			if
+				typeof(payload) ~= "number"
+				or payload ~= payload
+				or payload % 1 ~= 0
+				or payload < 1
+				or payload > Combat.SlotCount
+				or not Combat.Slugs[Combat.Loadout[payload]]
+			then
+				return
+			end
+			state.selected = payload
+			character:SetAttribute("SlugInspectAt", nil)
+			character:SetAttribute("SelectedSlugSlot", payload)
+			if tool then
+				showSelection(character, tool, state)
+			end
+		elseif
+			tool
+			and os.clock() >= (state.ready[state.selected] or 0)
+			and os.clock() - state.inspected >= 0.3
+		then
+			state.inspected = os.clock()
+			character:SetAttribute("SlugInspectAt", workspace:GetServerTimeNow())
+		end
+		return
+	end
 	if kind ~= "Fire" or typeof(payload) ~= "table" then
 		return
 	end
@@ -120,6 +185,13 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		or direction.Magnitude > 1.5
 	then
 		return reject(player, id, "shape")
+	end
+	if slot ~= slot or slot % 1 ~= 0 or slot < 1 or slot > Combat.SlotCount then
+		return reject(player, id, "slot")
+	end
+	local state = stateOf(player)
+	if slot ~= state.selected then
+		return reject(player, id, "selection", slot)
 	end
 	local slugId = Combat.Loadout[slot]
 	local slug = if slugId then Combat.Slugs[slugId] else nil
@@ -143,11 +215,6 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		return reject(player, id, "unarmed")
 	end
 	local now = os.clock()
-	local state = shooters[player]
-	if not state then
-		state = { ready = {}, window = now, count = 0 }
-		shooters[player] = state
-	end
 	if now - state.window > 1 then
 		state.window, state.count = now, 0
 	end
@@ -156,8 +223,9 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		return reject(player, id, "rate")
 	end
 	if now < (state.ready[slot] or 0) - Combat.CooldownTolerance then
-		return reject(player, id, "cooldown")
+		return reject(player, id, "cooldown", slot)
 	end
+	character:SetAttribute("SlugInspectAt", nil)
 	local readyAt = now + Combat.Cooldown
 	local previousReady = state.ready[slot]
 	-- Reserve before yielding: repeated requests cannot queue extra shots while the
@@ -185,10 +253,10 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		return fail("origin")
 	end
 	-- The canister shows empty until the slug is back (every client reads this).
-	tool:SetAttribute("SlugReady", false)
+	showSelection(character, tool, state)
 	task.delay(math.max(readyAt - os.clock(), 0), function()
 		if tool.Parent and (state.ready[slot] or 0) <= os.clock() + 0.01 then
-			tool:SetAttribute("SlugReady", true)
+			showSelection(character, tool, state)
 		end
 	end)
 	local params = RaycastParams.new()
@@ -212,6 +280,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		shooter = player,
 		id = id,
 		slug = slugId,
+		slot = slot,
 		origin = origin,
 		velocity = velocity,
 	})

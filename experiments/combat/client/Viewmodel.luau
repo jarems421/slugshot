@@ -9,6 +9,7 @@ local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 
 local player = Players.LocalPlayer
 local movement = player:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
+local Inspect = (require :: any)(movement:WaitForChild("SlugInspect"))
 local FirstPerson = (require :: any)(movement:WaitForChild("FirstPerson"))
 local BlasterAnimator = (require :: any)(movement:WaitForChild("BlasterAnimator"))
 local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
@@ -191,6 +192,8 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	local T = Tuning.values
 	local character = current.character
 	local point = character:GetAttribute("BlasterPoint")
+	local inspectTime = Inspect.elapsed(character)
+	local inspectWeight = if inspectTime then Inspect.weight(inspectTime) else 0
 	local action = character:GetAttribute("FirstPersonAction")
 	local sliding = action == "Slide"
 	local steady = typeof(point) == "Vector3"
@@ -352,6 +355,21 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			local gunAt = Vector3.new(0, -T.adsGunDown, -T.adsGunForward)
 			target = target:Lerp(CFrame.new(gunAt - reach * grip.Position) * reach, ads)
 		end
+		if arm.side == 1 and inspectWeight > 0 and handle and handle:IsA("BasePart") then
+			-- Articulate the cosmetic wrist independently of the rigid R6 arm.
+			-- Keep the palm at the grip, with the upper arm below the view.
+			local presented = CFrame.new(0.7, -0.35, -2.0)
+				* CFrame.Angles(math.rad(12), math.rad(55), math.rad(-14))
+			local palmInHandle = handle.CFrame:PointToObjectSpace(
+				(source.CFrame * CFrame.new(0, -source.Size.Y / 2, 0)).Position
+			)
+			local palm = presented * palmInHandle
+			local up = Vector3.new(0.45, -0.85, 0.28).Unit
+			local right = up:Cross(-Vector3.zAxis).Unit
+			local inspectShoulder = palm + up * (fullSize.Y + T.gripRelease)
+			local reach = CFrame.fromMatrix(inspectShoulder, right, up, right:Cross(up))
+			target = target:Lerp(reach, inspectWeight)
+		end
 		local rate = if character:GetAttribute("BlasterPoint") ~= nil
 			then POSE_RATE * 2
 			elseif flipping and AcrobaticCamera.enabled() and AcrobaticCamera.status() < 3 then 72
@@ -403,7 +421,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 		end
 		local held = gunMap * handle.CFrame
 		-- The idle hands lift forward into view; level the gun so it still hangs relaxed.
-		local relaxed = (1 - straightWeight) * postureWeight
+		local relaxed = (1 - straightWeight) * postureWeight * (1 - inspectWeight)
 		held = held * CFrame.Angles(-math.rad(T.idlePitch + T.idleGunDown) * relaxed, 0, 0)
 		gunMap = held * handle.CFrame:Inverse()
 		local kick = Recoil.sample(
@@ -413,6 +431,12 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			character:GetAttribute("BlasterRecoilStyle")
 		):Lerp(CFrame.identity, (1 - ADS_KICK_KEPT) * ads)
 		gunMap = held * kick * Recoil.vibration(os.clock()) * held:Inverse() * gunMap
+	end
+	if inspectWeight > 0 and handle and handle:IsA("BasePart") then
+		local presented = camera.CFrame
+			* CFrame.new(0.7, -0.35, -2.0)
+			* CFrame.Angles(math.rad(12), math.rad(55), math.rad(-14))
+		gunMap = gunMap:Lerp(presented * handle.CFrame:Inverse(), inspectWeight)
 	end
 	visualHandle = nil
 	local gunFade = 1 - BlasterAnimator.handVisibility(character)

@@ -25,13 +25,16 @@ local FirstPerson = (require :: any)(movement:WaitForChild("FirstPerson"))
 local Reticle = (require :: any)(movement:WaitForChild("Reticle"))
 local Keybinds = (require :: any)(movement:WaitForChild("Keybinds"))
 local remote = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
-local SLOT = 1
-local slugId = Combat.Loadout[SLOT]
+local selectedSlot = 1
+local slugId = Combat.Loadout[selectedSlot]
 local slug = Combat.Slugs[slugId]
 local POINT_HOLD = 0.35 -- the arm keeps pointing this long after a shot
 
 local charging, chargeStart = false, 0
-local readyAt = 0 -- predicted; the server's cooldown is the authority
+local readyAt = 0 -- predicted; the server owns cooldowns
+local cooldowns: { [number]: number } = {}
+local pending: { [number]: { slot: number, ready: number } } = {}
+local Inspect = (require :: any)(movement:WaitForChild("SlugInspect"))
 local nextId = 0
 local aimDirection = Vector3.new(0, 0, -1)
 local pointUntil = 0
@@ -73,6 +76,93 @@ local function blaster(): Tool?
 	end
 	return nil
 end
+
+local function cancelInspect()
+	local character = player.Character
+	if character and character:GetAttribute("SlugInspectAt") ~= nil then
+		character:SetAttribute("SlugInspectAt", nil)
+		remote:FireServer("CancelInspect")
+	end
+end
+
+local function selectSlot(slot: number): boolean
+	local id = Combat.Loadout[slot]
+	if AimCursor.menuOpen() or not id or not Combat.Slugs[id] then
+		return false
+	end
+	cancelInspect()
+	charging = false
+	Ads.set(false)
+	selectedSlot, slugId, slug = slot, id, Combat.Slugs[id]
+	readyAt = cooldowns[slot] or 0
+	remote:FireServer("Select", slot)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	if humanoid and humanoid.Health > 0 and not blaster() and backpack then
+		for _, item in backpack:GetChildren() do
+			if Combat.isBlaster(item) then
+				humanoid:EquipTool(item :: Tool)
+				break
+			end
+		end
+	end
+	return true
+end
+
+local function cycleSlot(direction: number)
+	for offset = 1, Combat.SlotCount do
+		local slot = (selectedSlot - 1 + direction * offset) % Combat.SlotCount + 1
+		if Combat.Loadout[slot] then
+			selectSlot(slot)
+			return
+		end
+	end
+end
+for slot = 1, Combat.SlotCount do
+	Keybinds.on(`slug{slot}`, function(pressed: boolean)
+		if pressed then
+			selectSlot(slot)
+		end
+	end)
+end
+Keybinds.on("nextSlug", function(pressed: boolean)
+	if pressed then
+		cycleSlot(1)
+	end
+end)
+Keybinds.on("previousSlug", function(pressed: boolean)
+	if pressed then
+		cycleSlot(-1)
+	end
+end)
+
+local function beginInspect(): boolean
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if
+		not character
+		or not humanoid
+		or humanoid.Health <= 0
+		or not blaster()
+		or charging
+		or Ads.wanted()
+		or AimCursor.menuOpen()
+		or os.clock() < readyAt
+		or character:GetAttribute("FirstPersonAction") ~= nil
+		or character:GetAttribute("BlasterFlourish") ~= nil
+		or Inspect.elapsed(character)
+	then
+		return false
+	end
+	remote:FireServer("Inspect")
+	return true
+end
+Keybinds.on("inspect", function(pressed: boolean)
+	if pressed then
+		beginInspect()
+	end
+end)
 
 -- The shoulder, the aim point under the cursor (the crosshair when shift-locked) and
 -- the muzzle a gun's reach along the line to it.
@@ -172,6 +262,8 @@ local function fire()
 	end
 	nextId += 1
 	readyAt = now + Combat.Cooldown
+	cooldowns[selectedSlot] = readyAt
+	pending[nextId] = { slot = selectedSlot, ready = readyAt }
 	aimDirection, pointUntil = gunAim or direction, now + POINT_HOLD
 	local recoilStyle = if player:GetAttribute("RecoilAnimation") == "Flip" then "Flip" else "Kick"
 	local character = player.Character
@@ -191,7 +283,7 @@ local function fire()
 	remote:FireServer("Fire", {
 		recoil = recoilStyle,
 		id = nextId,
-		slot = SLOT,
+		slot = selectedSlot,
 		origin = origin,
 		direction = direction,
 		charge = charge,
@@ -261,6 +353,7 @@ end
 
 local function beginCharge(): boolean
 	if not AimCursor.menuOpen() and blaster() and os.clock() >= readyAt then
+		cancelInspect()
 		charging, chargeStart = true, os.clock()
 		return true
 	end
@@ -277,6 +370,7 @@ end
 local function aimPressed(held: boolean)
 	if held then
 		if blaster() and FirstPerson.active() and not AimCursor.menuOpen() then
+			cancelInspect()
 			Ads.set(true)
 		end
 	else
@@ -316,6 +410,7 @@ end)
 remote.OnClientEvent:Connect(function(kind: string, data: any)
 	if kind == "Shot" and data.shooter == player then
 		lastAccepted = data.id
+		pending[data.id] = nil
 	elseif kind == "Shot" and data.shooter ~= player then
 		Visuals.launch({
 			id = data.id,
@@ -344,7 +439,14 @@ remote.OnClientEvent:Connect(function(kind: string, data: any)
 		lastRejected = data.reason
 		lastRejectedId = data.id
 		Visuals.cancel(player, data.id)
-		readyAt = 0
+		local request = pending[data.id]
+		if request and cooldowns[request.slot] == request.ready then
+			cooldowns[request.slot] = os.clock() + (data.remaining or 0)
+			if selectedSlot == request.slot then
+				readyAt = cooldowns[request.slot]
+			end
+		end
+		pending[data.id] = nil
 		warn(`[Combat] shot {data.id} rejected: {data.reason}`)
 	end
 end)
@@ -365,12 +467,22 @@ if RunService:IsStudio() then
 				target = target,
 				level = Combat.level(charge),
 			}
+		elseif command == "Select" then
+			selectSlot(value)
+		elseif command == "Cycle" then
+			cycleSlot(value)
+		elseif command == "Inspect" then
+			beginInspect()
 		elseif command == "Press" then
 			beginCharge()
 		elseif command == "Release" then
 			releaseCharge()
 		end
 		return {
+			selectedSlot = selectedSlot,
+			slugId = slugId,
+			inspecting = player.Character ~= nil
+				and Inspect.elapsed(player.Character :: Model) ~= nil,
 			charging = charging,
 			remaining = math.max(readyAt - os.clock(), 0),
 			lastSent = nextId,
@@ -448,6 +560,16 @@ RunService.RenderStepped:Connect(function()
 		Ads.set(false)
 	end
 	local action = character and character:GetAttribute("FirstPersonAction")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if
+		not tool
+		or AimCursor.menuOpen()
+		or action ~= nil
+		or not humanoid
+		or humanoid.Health <= 0
+	then
+		cancelInspect()
+	end
 	Ads.step(spiralDt, action == nil or action == "Slide")
 	if Ads.wanted() and not charging then
 		local _, _, gunAim = aim(0, true)
@@ -506,5 +628,5 @@ RunService.RenderStepped:Connect(function()
 			end
 		end
 	end
-	Hud.step(math.max(readyAt - now, 0), tool ~= nil)
+	Hud.step(cooldowns, selectedSlot, tool ~= nil, now)
 end)

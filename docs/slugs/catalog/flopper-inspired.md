@@ -131,3 +131,7 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 - **Upload:** all maps re-uploaded privately and Approved before opening `build/SlugshotFloppyTest-SlugshotLook.rbxlx`.
 
 **Unresolved:** owner Studio check (glow strength on the pedestal and in the canister); name and IP check before any publication.
+
+## Inspect gesture (2026-11-02)
+
+**Confirmed:** one-handed blaster raise; Floppy looks at the holder, smiles lazily, turns around and wiggles his bum. **Implemented:** runtime candidate on `feature/loadout-controls`, using existing bones and facial controls without changing the accepted source mesh. **Unresolved:** owner animation approval. See [briefs](inspect-profiles.md) and [checks](../../loadout-controls.md).

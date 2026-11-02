@@ -19,7 +19,8 @@ function AimCursor.centered(): boolean
 end
 
 function AimCursor.menuOpen(): boolean
-	return player:GetAttribute("CombatSettingsOpen") == true
+	return player:GetAttribute("PvpMenu") ~= nil
+		or player:GetAttribute("CombatSettingsOpen") == true
 		or player:GetAttribute("TuningPanelOpen") == true
 		or GuiService.MenuIsOpen
 		or UserInputService:GetFocusedTextBox() ~= nil

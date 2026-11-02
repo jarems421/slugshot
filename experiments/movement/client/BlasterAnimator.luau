@@ -11,6 +11,7 @@ local RunService = game:GetService("RunService")
 local Motion = require(script.Parent.BlasterMotion)
 local Recoil = require(script.Parent.BlasterRecoil)
 local FirstPerson = require(script.Parent.FirstPerson)
+local Inspect = require(script.Parent.SlugInspect)
 
 local Animator = {}
 local started = false
@@ -435,6 +436,48 @@ function Animator.start()
 					1
 				)
 				state.moving += (target - state.moving) * (1 - math.exp(-12 * dt))
+				local inspecting = Inspect.elapsed(character)
+				if inspecting and tool and joint and not state.phase then
+					if not state.shoulder then
+						local shoulder = findJoint(character, "Right Shoulder")
+						if shoulder then
+							state.shoulder = makeLayer(shoulder)
+						end
+					end
+					local layer = state.shoulder
+					local shoulder = layer and layer.joint
+					local parent = shoulder and shoulder.Part0
+					local hand = shoulder and shoulder.Part1
+					if layer and shoulder and shoulder:IsA("Motor6D") and parent and hand then
+						local w = Inspect.weight(inspecting)
+						local direction = Vector3.new(-0.25, 0.12, -1).Unit
+						local up = -direction
+						local right = (Vector3.xAxis - up * up.X).Unit
+						local reach = CFrame.fromMatrix(
+							layer.base.Position + direction * hand.Size.Y / 2,
+							right,
+							up,
+							right:Cross(up)
+						)
+						-- Solve through the current hold Transform rather than adding a
+						-- pitch that the carry style can rotate back down towards the hip.
+						local raised = reach * shoulder.C1 * shoulder.Transform:Inverse()
+						shoulder.C0 = layer.base:Lerp(raised, w)
+						local gunRotation = parent.CFrame.Rotation
+							* CFrame.Angles(math.rad(12), math.rad(-35), math.rad(-12))
+						local handRotation = parent.CFrame.Rotation * reach.Rotation
+						local wrist = gunRotation:Inverse() * handRotation * joint.C0.Rotation
+						joint.C1 = tool.Grip:Lerp(CFrame.new(tool.Grip.Position) * wrist, w)
+					else
+						joint.C1 = tool.Grip * Inspect.wrist(inspecting):Inverse()
+					end
+					character:SetAttribute("BlasterFlourish", "inspect")
+					continue
+				elseif character:GetAttribute("BlasterFlourish") == "inspect" then
+					restore(state.shoulder)
+					state.shoulder = nil
+					character:SetAttribute("BlasterFlourish", nil)
+				end
 				if not state.phase then
 					if tool and joint then
 						joint.C1 = kick:Inverse() * tool.Grip

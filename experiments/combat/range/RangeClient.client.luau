@@ -115,7 +115,7 @@ help.Font = Enum.Font.GothamMedium
 help.TextSize = 14
 help.TextColor3 = Color3.fromRGB(229, 239, 248)
 help.Text =
-	"TEMPORARY TEST RANGE  ·  LMB tap or hold to charge  ·  Scroll in: first person  ·  Ctrl shift-lock  ·  M settings"
+	"TEMPORARY TEST RANGE  ·  LMB tap or hold to charge  ·  V: first person | Wheel: slugs | R: inspect  ·  Ctrl shift-lock  ·  M settings"
 help.Parent = hud
 local helpRound = Instance.new("UICorner")
 helpRound.CornerRadius = UDim.new(0, 8)

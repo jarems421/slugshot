@@ -37,3 +37,7 @@ Every kick used to scale to zero while aiming, leaving a slow zoom that the owne
 ## Taste rules from the owner's feedback
 
 No halftone dot backgrounds ("never do that"). No thin glowing lines passed off as cracks. Hover grows by a few pixels with its shadow and never covers a neighbour. No whole-row highlights. Slot and menu slugs perform (wiggle, hop, smile) and never spin. See [lessons](art/lessons.md) and [owner design language](slugs/owner-design-language.md).
+
+## Loadout controls and inspect (2026-11-02)
+
+**Confirmed/implemented:** 1-5 and the wheel select carried slugs; V toggles first person, R inspects. All are rebindable in the existing settings. The selected slot drives firing and the bar, with independent cooldowns. See [implementation, native checks and remaining limits](loadout-controls.md). This supersedes earlier notes reserving wheel input for zoom or deferring slot selection.

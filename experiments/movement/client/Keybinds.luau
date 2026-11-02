@@ -38,8 +38,9 @@ Keybinds.Groups = {
 		rows = {
 			{ id = "fire", label = "Fire", main = "MouseButton1" },
 			{ id = "aim", label = "Aim", main = "MouseButton2" },
-			{ id = "nextSlug", label = "Next slug" },
-			{ id = "previousSlug", label = "Previous slug" },
+			{ id = "nextSlug", label = "Next slug", main = "WheelDown" },
+			{ id = "previousSlug", label = "Previous slug", main = "WheelUp" },
+			{ id = "inspect", label = "Inspect slug", main = "R" },
 			{ id = "slug1", label = "Slug 1", main = "One" },
 			{ id = "slug2", label = "Slug 2", main = "Two" },
 			{ id = "slug3", label = "Slug 3", main = "Three" },
@@ -52,7 +53,7 @@ Keybinds.Groups = {
 		rows = {
 			{ id = "inventory", label = "Inventory", main = "E" },
 			{ id = "settings", label = "Settings", main = "M" },
-			{ id = "firstPerson", label = "First person" },
+			{ id = "firstPerson", label = "First person", main = "V" },
 		},
 	},
 } :: { Group }
@@ -133,6 +134,12 @@ end
 
 local function handle(_: string, state: Enum.UserInputState, input: InputObject)
 	local name = input.KeyCode.Name
+	if UserInputService:GetFocusedTextBox() then
+		if state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
+			send(name, false)
+		end
+		return Enum.ContextActionResult.Pass
+	end
 	if paused then
 		return Enum.ContextActionResult.Sink
 	end

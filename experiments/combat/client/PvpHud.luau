@@ -1,6 +1,6 @@
 --!strict
 -- The match HUD (owner, 2026-11-01): a slim health bar under Roblox's top-left buttons and the soft
--- four-slot slug bar at the bottom centre. CombatClient drives the slots each frame.
+-- five-slot slug bar at the bottom centre. CombatClient drives the slots each frame.
 local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
@@ -213,37 +213,48 @@ function Hud.create(): ScreenGui
 	Keybinds.onChanged(refreshKeys)
 	refreshKeys()
 
-	-- Per frame, from CombatClient: remaining cooldown of the selected slot.
-	local selected = 1
-	local wasCooling = false
-	function Hud.step(remaining: number, armed: boolean)
-		local slot = slots[selected]
-		local shade, label, flash = slot.shade, slot.count, slot.flash
-		if not shade or not label or not flash then
-			return
-		end
-		if remaining <= 0 and wasCooling then
-			-- The slug is back in the gun.
-			slot.scale.Scale = 1.1
-			flash.BackgroundTransparency = 0.45
-			TweenService:Create(slot.scale, RETURN_TWEEN, { Scale = 1 }):Play()
-			TweenService:Create(flash, RETURN_TWEEN, { BackgroundTransparency = 1 }):Play()
-			if slot.icon then
-				SlugIcon.back(slot.icon)
+	-- Every slot retains its own cooldown while another slug is selected.
+	local cooling: { [number]: boolean } = {}
+	function Hud.step(
+		cooldowns: { [number]: number },
+		selected: number,
+		armed: boolean,
+		now: number
+	)
+		for index, slot in slots do
+			local remaining = math.max((cooldowns[index] or 0) - now, 0)
+			local shade, label, flash = slot.shade, slot.count, slot.flash
+			if shade and label and flash then
+				if remaining <= 0 and cooling[index] then
+					slot.scale.Scale = 1.1
+					flash.BackgroundTransparency = 0.45
+					TweenService:Create(slot.scale, RETURN_TWEEN, { Scale = 1 }):Play()
+					TweenService:Create(flash, RETURN_TWEEN, { BackgroundTransparency = 1 }):Play()
+					if slot.icon then
+						SlugIcon.back(slot.icon)
+					end
+				elseif remaining > 0 and not cooling[index] and slot.icon then
+					SlugIcon.leave(slot.icon)
+				end
+				cooling[index] = remaining > 0
+				shade.Size = UDim2.fromScale(1, math.clamp(remaining / Combat.Cooldown, 0, 1))
+				label.Text = if remaining > 0 then string.format("%.1f", remaining) else ""
 			end
-		elseif remaining > 0 and not wasCooling and slot.icon then
-			SlugIcon.leave(slot.icon) -- it has just been fired
+			slot.edge.Transparency = if index == selected and armed then 0 else 0.75
+			slot.key.BackgroundTransparency = if index == selected then 0 else 1
 		end
-		wasCooling = remaining > 0
-		shade.Size = UDim2.fromScale(1, remaining / Combat.Cooldown)
-		label.Text = if remaining > 0 then string.format("%.1f", remaining) else ""
-		slot.edge.Transparency = if armed then 0 else 0.55
 	end
 
 	gui.Parent = player:WaitForChild("PlayerGui")
 	return gui
 end
 
-function Hud.step(_remaining: number, _armed: boolean) end
+function Hud.step(
+	_cooldowns: { [number]: number },
+	_selected: number,
+	_armed: boolean,
+	_now: number
+)
+end
 
 return Hud

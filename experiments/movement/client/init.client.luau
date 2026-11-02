@@ -179,8 +179,7 @@ local function attach(newCharacter: Model)
 		camera.CameraSubject = newHumanoid
 		camera.CameraType = Enum.CameraType.Custom
 	end
-	player.CameraMinZoomDistance = Config.Camera.MinZoom
-	player.CameraMaxZoomDistance = Config.Camera.MaxZoom
+	FirstPerson.setActive(false)
 	print("[Movement sandbox] client attached", newCharacter.Name)
 end
 player.CharacterAdded:Connect(attach)

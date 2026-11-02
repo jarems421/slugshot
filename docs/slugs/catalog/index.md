@@ -17,3 +17,5 @@ Copy the [new slug record template](template.md) for each future creature. Recor
 5. **Unresolved:** owner feedback, visual quality, import/runtime evidence, licensing or gameplay decisions.
 
 Keep draft source and generated exports separately, as described in the [species guide](../species-guide.md). Do not publish or upload an asset solely because it appears in this catalogue.
+
+[Per-species inspect briefs](inspect-profiles.md) record the owner-requested Floppy and Inferno personality gestures separately from their combat abilities.

@@ -1128,7 +1128,7 @@ function Presentation.start(clips: Clips.Library)
 		-- has gone, so the flip reads while running (owner); actions keep their own arms.
 		-- While the gun is stowed ("stow") the arm is released back to its own pose.
 		local stage = character:GetAttribute("BlasterFlourish")
-		local flourish = stage == "draw" or stage == "holster"
+		local flourish = stage == "draw" or stage == "holster" or stage == "inspect"
 		local carried = holding or flourish
 		local presence, still = 0, 0
 		if carried then
