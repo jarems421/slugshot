@@ -1,0 +1,23 @@
+{
+  "title": "Slugshot Sound Library",
+  "url": "https://slugshot-sound-library.jarems421.chatgpt.site",
+  "project_id": "appgprj_6ae896549f408191a47c582430d1224c",
+  "audience": "owner-private",
+  "deployment_status": "succeeded",
+  "site_source_commit": "1a0e9d3addc9daa6c8b639059a42495ac9776535",
+  "unique_previews": 5,
+  "unfinished_event_groups": 65,
+  "internet_selections": 0,
+  "new_sounds_generated": false,
+  "source_checkout": "build/sites/sound-library",
+  "checks": [
+    "JavaScript syntax",
+    "Local HTTP/data/WAV resources",
+    "UI logic via lightweight DOM mock: counts/search/empty state/provenance/playlist order"
+  ],
+  "handoff": "Automatic approval review blocked browser launch; direct link provided",
+  "unverified": [
+    "Interactive browser and audible playback",
+    "Roblox integration"
+  ]
+}

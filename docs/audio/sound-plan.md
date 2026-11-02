@@ -6,6 +6,8 @@
 
 ## Listen first
 
+**Implemented, 2026-11-02:** owner requested easier playback and organized provenance/rationale. Open the private [Sound Library](https://slugshot-sound-library.jarems421.chatgpt.site): Play All/Next/Stop, individual players, search/category filters, explanations for each original preview, 65 unfinished event groups and a separate source list. Five originals, zero internet-sourced selections; the two existing Roblox built-in placeholder sources are identified but not redistributed. No further sounds were generated.
+
 [Open the five-sound listening page](style-test-v1.html), or [play the single review reel](../../assets/source/audio/style-test-v1/00-review-reel.wav).
 
 | Sketch | Intended character | File | Length / reel start |

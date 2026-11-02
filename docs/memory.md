@@ -1589,3 +1589,11 @@
 **Implemented/verified offline:** five original deterministic authored sketches (shot, three-stage charge phrase, taking damage, stone footstep, menu click), PCM16 mono 48 kHz, no clipping/nonfinite samples, zero endpoints, per-file hashes/peaks/RMS and concatenated review reel. [Listening page](audio/style-test-v1.html). Baseline c919351 in isolated `design/sound-direction`; concurrent lobby 7bda6a0 inspected read-only. No runtime changes, external samples/service, uploads or purchases.
 
 **Unresolved:** owner list/style/sample approval, auditory judgement and Roblox integration/playback/spatial/permissions tests. Numeric integrity does not prove sound quality. Work stops at the requested checkpoint; no additional unique sounds or variations generated.
+
+## 2026-11-02 - Private sound review website
+
+**Confirmed:** owner requested a simple organized website opened for easy listening, with purposes/reasons, a missing-sound list and original-versus-internet provenance. This does not approve generating the rest of the sound library.
+
+**Implemented/verified:** private [Slugshot Sound Library](https://slugshot-sound-library.jarems421.chatgpt.site) deployed successfully using Sites. Source checkout is ignored `build/sites/sound-library`; its dedicated Sites source repository is separate from the game repository (source commit `1a0e9d3addc9daa6c8b639059a42495ac9776535`). Play All/Next/Stop, per-sound controls/downloads, search/categories, five original rationale cards, 65 unfinished event groups and provenance sections. No internet audio selections; two Roblox built-in placeholder sources listed without redistributing them. No new sounds generated.
+
+**Verified offline/local:** JS syntax, served page/data/five WAVs, count/ordering, UI render/search/empty-state/source logic with a lightweight DOM mock. Hosted deployment reports succeeded. **Unresolved:** automatic approval review blocked browser-launch command; return the direct link. Manual browser/audio-output review remains pending; browser automation was unavailable, so no interactive browser pass claimed. Owner approval of the sound list/style is still pending.
