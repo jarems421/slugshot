@@ -2,6 +2,7 @@
 
 The playable range keeps the real single-Floppy loadout; fixtures never grant species.
 """
+import argparse
 import json
 from pathlib import Path
 import shutil
@@ -12,6 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--inspect-review", action="store_true")
+    args = parser.parse_args()
     generate()
     out = ROOT / 'build/loadout-check'
     out.mkdir(parents=True, exist_ok=True)
@@ -34,7 +38,7 @@ def main():
     project['name'] = 'SlugshotLoadoutCheck'
     project['tree']['ReplicatedStorage']['Combat']['$path'] = str(shared)
     project['tree']['StarterPlayer']['StarterPlayerScripts']['LoadoutCheck'] = {
-        '$path': str(ROOT / 'tools/studio/loadout-check.client.luau')}
+        '$path': str(ROOT / 'tools/studio' / ('inspect-review.client.luau' if args.inspect_review else 'loadout-check.client.luau'))}
     project['tree']['ServerScriptService']['LoadoutReloadFixture'] = {
         '$path': str(ROOT / 'tools/studio/loadout-reload.server.luau')}
     target = out / 'check.private.project.json'

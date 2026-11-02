@@ -1573,3 +1573,10 @@
 - **Implemented/verified:** combat/foundation/movement and creature checks; full Blender contract/roundtrip suite on unchanged authored assets. Native one-client fixture uses Floppy copies in slots 1/2/5, sends V/2/R/Q and wheel messages, and verifies sparse wrapping, per-slot cooldowns, held-charge cancellation, inspect interruption/completion, source and copied bone motion, rebinds, respawn and unselected-slot rejection. Flight regressions also pass. Evidence in [loadout note](loadout-controls.md).
 - **Lessons:** do not solve the first-person rigid arm from a rotated wrist alone; keep the palm at the grip with the arm below view. Resolve optional modules after startup. Bone writers must precede viewmodel copying; simulation-time Transform reads may be reset by native animation. Reapply camera mode after the character bootstrap.
 - **Unresolved:** owner art/feel verdict, Inferno runtime rig/face integration, a true second species, multi-client/latency and physical mouse/device coverage. No persistence, merge or experience publication in this task.
+
+## 2026-11-02 - Inspect correction after owner rejection
+
+- **Confirmed:** original inspect rejected for wrong grip in both views; later clarification: upward barrel in line with the arm, diagonally toward the holder, Floppy nearly upright.
+- **Implemented:** shared first-person grip/arm solve; seated grip; attached third-person shoulder; staged hop/look/turn/wiggle/lower with cosmetic weld restoration. Read-only pistol screenshot/reference research recorded; no copied game animation or creature source edits.
+- **Verification:** native frozen-beat review with 22 captures, fixed palm and Tool.Grip checks, barrel/arm alignment and actual relative head movement; normal loadout regression and offline checks recorded in [revision](slugs/inspect-revision.md).
+- **Unresolved:** owner art approval, broader devices, observer/network coverage. Prior passing code checks were not art approval.

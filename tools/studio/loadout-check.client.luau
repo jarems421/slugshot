@@ -28,10 +28,10 @@ local function capture(name: string)
 end
 
 local sampledRoot = CFrame.identity
-local sampledBone: Bone? = nil
+local sampledAttachment: Weld? = nil
 R:BindToRenderStep("LoadoutInspectEvidence", Enum.RenderPriority.Character.Value + 30, function()
-	if sampledBone then
-		sampledRoot = sampledBone.Transform
+	if sampledAttachment then
+		sampledRoot = sampledAttachment.C0
 	end
 end)
 local ok, problem = pcall(function()
@@ -103,22 +103,15 @@ local ok, problem = pcall(function()
 		return inspect.elapsed(character) ~= nil
 	end, "real R did not inspect")
 	local loaded = tool:FindFirstChild("Floppy")
-	local bone = loaded and loaded:FindFirstChild("root", true)
-	assert(bone and bone:IsA("Bone"), "root bone missing")
-	sampledBone = bone :: Bone
+	local attachment = loaded and loaded:FindFirstChildWhichIsA("Weld", true)
+	assert(attachment and attachment:IsA("Weld"), "loaded attachment missing")
+	sampledAttachment = attachment :: Weld
+	local rest = sampledAttachment.C0
 	task.wait(1.2)
-	assert(sampledRoot ~= CFrame.identity, "slug did not turn")
+	assert(sampledRoot ~= rest, "slug did not hop/turn")
 	local turning = sampledRoot
 	local visual = (workspace.CurrentCamera :: Camera):FindFirstChild("FirstPersonBodyVisual")
-	local copiedMotion = false
-	if visual then
-		for _, item in visual:GetDescendants() do
-			if item:IsA("Bone") and item.Name == "root" and item.Transform ~= CFrame.identity then
-				copiedMotion = true
-			end
-		end
-	end
-	assert(copiedMotion, "first person did not copy the inspect pose")
+	assert(visual and visual:FindFirstChild("Handle"), "first person gun missing")
 	capture("first-person-look")
 	task.wait(0.1)
 	assert(sampledRoot ~= turning, "slug pose frozen")
@@ -160,6 +153,19 @@ local ok, problem = pcall(function()
 	humanoid:UnequipTools()
 	task.wait(0.2)
 	assert(inspect.elapsed(character) == nil, "holster left inspect running")
+	if loaded then
+		for _, item in loaded:GetDescendants() do
+			if item:IsA("Weld") then
+				local base = item:GetAttribute("InspectRestC0")
+				if typeof(base) == "CFrame" then
+					assert(
+						(item.C0.Position - base.Position).Magnitude < 1e-5,
+						"holster retained a moved slug"
+					)
+				end
+			end
+		end
+	end
 	probe:Invoke("Select", 1)
 	waitFor(function()
 		return tool.Parent == character

@@ -10,3 +10,5 @@
 **Implemented:** reusable raise/lower sampling and a species turn profile in `SlugInspect`. Floppy's inspect composes with his current idle and facial driver; the accepted Blender art is preserved. **Unresolved:** Inferno's rig-specific glare and runtime integration; subjective timing, readability through the chamber, and observer playback.
 
 See [implementation and verification](../../loadout-controls.md). This record does not approve new abilities, change either slug's design or rename Inferno.
+
+**Confirmed correction, 2026-11-02:** the Floppy inspect is an upward barrel aligned with the arm, held diagonally toward the player; the first candidate was rejected for poor gun/hand placement. [Revision and review evidence](../inspect-revision.md) supersede its pose.

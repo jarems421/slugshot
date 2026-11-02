@@ -23,6 +23,7 @@ local TIP = Vector3.new(0.90, 1.44 + 0.25, 0.56)
 
 type Motion = { [Bone]: (number) -> CFrame }
 local floppies: { [Model]: Motion } = {}
+local inspectModels: { [Model]: () -> () } = {}
 
 local function setup(model: Model)
 	local bones: { [string]: Bone } = {}
@@ -91,39 +92,66 @@ local function setup(model: Model)
 		end
 	end
 	-- Add inspect to the existing driver, rather than racing a second bone writer.
-	local rootAxis = toLocal(root, -front)
-	local rootSide = toLocal(root, sideways)
-	local pivot = root.WorldCFrame:PointToObjectSpace((root.WorldPosition + head.WorldPosition) / 2)
-	motion[root] = function(_: number): CFrame
-		local tool = model:FindFirstAncestorOfClass("Tool")
+	local tool = model:FindFirstAncestorOfClass("Tool")
+	local handle = tool and tool:FindFirstChild("Handle")
+	local function inspectTime(): number?
 		local character = tool and tool.Parent
-		local t = if Inspect
+		return if Inspect
 				and character
 				and character:IsA("Model")
 			then Inspect.elapsed(character)
 			else nil
-		if not t then
-			return CFrame.identity
+	end
+	if tool and handle and handle:IsA("BasePart") then
+		local faceVector = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
+		local facing = (faceVector - up * faceVector:Dot(up)).Unit
+		local sx = handle.CFrame:VectorToObjectSpace(up:Cross(-facing))
+		local uy = handle.CFrame:VectorToObjectSpace(up)
+		local fz = handle.CFrame:VectorToObjectSpace(facing)
+		local sourceBasis = CFrame.fromMatrix(sx, uy, -fz)
+		-- The raised barrel already stands Floppy upright. Turn his face toward
+		-- the holder while retaining that long axis instead of tipping him flat.
+		local upright = CFrame.fromMatrix(fz, uy, sx) * sourceBasis:Inverse()
+		local pivot =
+			handle.CFrame:PointToObjectSpace((root.WorldPosition + head.WorldPosition) / 2)
+		local joints: { { joint: Weld, base: CFrame } } = {}
+		for _, item in model:GetDescendants() do
+			if item:IsA("Weld") and item.Part0 == handle then
+				local base = item:GetAttribute("InspectRestC0")
+				if typeof(base) ~= "CFrame" then
+					base = item.C0
+					item:SetAttribute("InspectRestC0", base)
+				end
+				table.insert(joints, { joint = item, base = base :: CFrame })
+			end
 		end
-		local w = Inspect.weight(t)
-		return CFrame.new(pivot)
-			* CFrame.fromAxisAngle(rootAxis, Inspect.turn(t, "Floppy"))
-			* CFrame.fromAxisAngle(rootSide, math.rad(35) * w * math.clamp((2.5 - t) / 0.5, 0, 1))
-			* CFrame.fromAxisAngle(rootAxis, Inspect.wiggle(t))
-			* CFrame.new(-pivot)
+		inspectModels[model] = function()
+			local t = inspectTime()
+			local pose = CFrame.identity
+			if t then
+				local stand = Inspect.stand(t)
+				local rotation = CFrame.fromAxisAngle(
+					uy,
+					Inspect.turn(t, "Floppy") + Inspect.wiggle(t)
+				) * upright:Lerp(CFrame.identity, 1 - stand)
+				local lift = (uy * (0.25 * stand + Inspect.hop(t)) - sx * (2.2 * stand)) * SCALE
+				pose = CFrame.new(lift + pivot) * rotation * CFrame.new(-pivot)
+			end
+			for _, entry in joints do
+				if entry.joint.Parent then
+					entry.joint.C0 = pose * entry.base
+				end
+			end
+		end
 	end
 	local idleHead = motion[head]
 	local headSide = toLocal(head, sideways)
 	motion[head] = function(clock: number): CFrame
-		local tool = model:FindFirstAncestorOfClass("Tool")
-		local character = tool and tool.Parent
-		local t = if Inspect
-				and character
-				and character:IsA("Model")
-			then Inspect.elapsed(character)
-			else nil
-		local lift = if t then Inspect.weight(t) * math.clamp((2.5 - t) / 0.5, 0, 1) else 0
-		return idleHead(clock) * CFrame.fromAxisAngle(headSide, math.rad(30) * lift)
+		local t = inspectTime()
+		local lift = if t then Inspect.stand(t) else 0
+		local nod = if t then math.sin((t - 1) * 6) * math.exp(-math.max(t - 1.4, 0) * 3) else 0
+		return idleHead(clock)
+			* CFrame.fromAxisAngle(headSide, math.rad(8) * lift + nod * 0.08 * lift)
 	end
 	-- Roblox can create one skeleton per skinned mesh. Animate every copy;
 	-- a name-keyed dictionary alone silently leaves the other meshes at rest.
@@ -185,8 +213,17 @@ RunService:BindToRenderStep(
 				not model:IsDescendantOf(workspace)
 				and not CollectionService:HasTag(model, "SlugIcon")
 			then
+				local restoreInspect = inspectModels[model]
+				if restoreInspect then
+					restoreInspect()
+				end
 				floppies[model] = nil
+				inspectModels[model] = nil
 				continue
+			end
+			local inspectModel = inspectModels[model]
+			if inspectModel then
+				inspectModel()
 			end
 			for bone, fn in motion do
 				bone.Transform = fn(t)

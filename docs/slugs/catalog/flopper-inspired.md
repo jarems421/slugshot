@@ -135,3 +135,5 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 ## Inspect gesture (2026-11-02)
 
 **Confirmed:** one-handed blaster raise; Floppy looks at the holder, smiles lazily, turns around and wiggles his bum. **Implemented:** runtime candidate on `feature/loadout-controls`, using existing bones and facial controls without changing the accepted source mesh. **Unresolved:** owner animation approval. See [briefs](inspect-profiles.md) and [checks](../../loadout-controls.md).
+
+**Owner correction, 2026-11-02:** rejected the first inspect. Barrel must point upward along the arm, diagonally toward the holder; Floppy nearly upright, with a smooth hop/look/turn/rear-wiggle before lowering. [Revised runtime candidate and checks](../inspect-revision.md). No accepted creature art was changed.

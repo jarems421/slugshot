@@ -450,27 +450,31 @@ function Animator.start()
 					local hand = shoulder and shoulder.Part1
 					if layer and shoulder and shoulder:IsA("Motor6D") and parent and hand then
 						local w = Inspect.weight(inspecting)
-						local direction = Vector3.new(-0.25, 0.12, -1).Unit
-						local up = -direction
-						local right = (Vector3.xAxis - up * up.X).Unit
-						local reach = CFrame.fromMatrix(
-							layer.base.Position + direction * hand.Size.Y / 2,
-							right,
-							up,
-							right:Cross(up)
-						)
-						-- Solve through the current hold Transform rather than adding a
-						-- pitch that the carry style can rotate back down towards the hip.
-						local raised = reach * shoulder.C1 * shoulder.Transform:Inverse()
+						-- Rotate the whole held arm through the native, unchanged grip.
+						-- Keep the shoulder pivot attached to the torso throughout.
+						local gunRotation = Inspect.gunRotation()
+						local handRotation = gunRotation * Inspect.armFromGun()
+						if
+							character ~= Players.LocalPlayer.Character or not FirstPerson.active()
+						then
+							-- R6 has no elbow: keep its whole arm comfortably forward at
+							-- chest height, and turn the pistol at the fixed palm pivot.
+							local up = Vector3.new(0.18, -0.64, 0.75).Unit
+							local right = (Vector3.xAxis - up * up.X).Unit
+							handRotation =
+								CFrame.fromMatrix(Vector3.zero, right, up, right:Cross(up))
+						end
+						local handFrame = CFrame.new(layer.base.Position)
+							* handRotation
+							* CFrame.new(-shoulder.C1.Position)
+						local raised = handFrame * shoulder.C1 * shoulder.Transform:Inverse()
 						shoulder.C0 = layer.base:Lerp(raised, w)
-						local gunRotation = parent.CFrame.Rotation
-							* CFrame.Angles(math.rad(12), math.rad(-35), math.rad(-12))
-						local handRotation = parent.CFrame.Rotation * reach.Rotation
-						local wrist = gunRotation:Inverse() * handRotation * joint.C0.Rotation
-						joint.C1 = tool.Grip:Lerp(CFrame.new(tool.Grip.Position) * wrist, w)
-					else
-						joint.C1 = tool.Grip * Inspect.wrist(inspecting):Inverse()
+						local gripRotation = handRotation:Inverse()
+							* gunRotation
+							* tool.Grip.Rotation
+						joint.C0 = joint.C0:Lerp(CFrame.new(joint.C0.Position) * gripRotation, w)
 					end
+					joint.C1 = tool.Grip
 					character:SetAttribute("BlasterFlourish", "inspect")
 					continue
 				elseif character:GetAttribute("BlasterFlourish") == "inspect" then

@@ -39,6 +39,13 @@ function Capture($name) {
     $bitmap.Save((Join-Path $OutDir "$name.png"), [System.Drawing.Imaging.ImageFormat]::Png)
     $graphics.Dispose(); $bitmap.Dispose()
     Write-Output "captured $name ($w x $h)"
+    if ($name -like 'fp-*' -or $name -like 'third-*') {
+        [Win]::SetForegroundWindow($hwnd) | Out-Null
+        Start-Sleep -Milliseconds 100
+        [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x4B, [IntPtr]1) | Out-Null
+        Start-Sleep -Milliseconds 40
+        [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x4B, [IntPtr]0xC0000001L) | Out-Null
+    }
 }
 function PressPlay {
     [Win]::SetForegroundWindow($hwnd) | Out-Null

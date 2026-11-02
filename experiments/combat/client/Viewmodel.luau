@@ -350,24 +350,34 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			local up = -ADS_ARM
 			local right = (Vector3.xAxis - up * up.X).Unit
 			local reach = CFrame.fromMatrix(Vector3.zero, right, up, right:Cross(up))
-			local grip = CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + T.gripRelease), 0)
-				* source.CFrame:ToObjectSpace(handle.CFrame)
+			local grip = CFrame.new(
+				0,
+				-(fullSize.Y - source.Size.Y / 2 + T.gripRelease - 0.28 * inspectWeight),
+				0
+			) * source.CFrame:ToObjectSpace(handle.CFrame)
 			local gunAt = Vector3.new(0, -T.adsGunDown, -T.adsGunForward)
 			target = target:Lerp(CFrame.new(gunAt - reach * grip.Position) * reach, ads)
 		end
-		if arm.side == 1 and inspectWeight > 0 and handle and handle:IsA("BasePart") then
-			-- Articulate the cosmetic wrist independently of the rigid R6 arm.
-			-- Keep the palm at the grip, with the upper arm below the view.
-			local presented = CFrame.new(0.7, -0.35, -2.0)
-				* CFrame.Angles(math.rad(12), math.rad(55), math.rad(-14))
-			local palmInHandle = handle.CFrame:PointToObjectSpace(
-				(source.CFrame * CFrame.new(0, -source.Size.Y / 2, 0)).Position
+		if
+			arm.side == 1
+			and inspectTime
+			and inspectWeight > 0
+			and handle
+			and handle:IsA("BasePart")
+		then
+			-- Solve the arm from the desired gun through the existing locked grip.
+			-- The same arm frame below drives BOTH the visible limb and the gun.
+			local gripJoint = source:FindFirstChild("RightGrip")
+			local armToHandle = if gripJoint and gripJoint:IsA("JointInstance")
+				then gripJoint.C0 * gripJoint.C1:Inverse()
+				else source.CFrame:ToObjectSpace(handle.CFrame)
+			local handShift = CFrame.new(
+				0,
+				-(fullSize.Y - source.Size.Y / 2 + T.gripRelease - 0.28 * inspectWeight),
+				0
 			)
-			local palm = presented * palmInHandle
-			local up = Vector3.new(0.45, -0.85, 0.28).Unit
-			local right = up:Cross(-Vector3.zAxis).Unit
-			local inspectShoulder = palm + up * (fullSize.Y + T.gripRelease)
-			local reach = CFrame.fromMatrix(inspectShoulder, right, up, right:Cross(up))
+			local presented = Inspect.viewGun(inspectTime)
+			local reach = presented * armToHandle:Inverse() * handShift:Inverse()
 			target = target:Lerp(reach, inspectWeight)
 		end
 		local rate = if character:GetAttribute("BlasterPoint") ~= nil
@@ -404,9 +414,22 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 		if arm.side == 1 then
 			-- Use the full virtual hand endpoint, independent of the shoulder crop.
 			-- Preserve aim/flourishes, with a small distal shift for a shallower grip.
-			gunMap = armFrame
-				* CFrame.new(0, -(fullSize.Y - source.Size.Y / 2 + T.gripRelease), 0)
-				* source.CFrame:Inverse()
+			local handShift = CFrame.new(
+				0,
+				-(fullSize.Y - source.Size.Y / 2 + T.gripRelease - 0.28 * inspectWeight),
+				0
+			)
+			gunMap = armFrame * handShift * source.CFrame:Inverse()
+			if inspectWeight > 0 and handle and handle:IsA("BasePart") then
+				local gripJoint = source:FindFirstChild("RightGrip")
+				if gripJoint and gripJoint:IsA("JointInstance") then
+					gunMap = armFrame
+						* handShift
+						* gripJoint.C0
+						* gripJoint.C1:Inverse()
+						* handle.CFrame:Inverse()
+				end
+			end
 		end
 	end
 	-- Apply the shot directly to the visible gun about its hand grip. Reading the
@@ -431,12 +454,6 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			character:GetAttribute("BlasterRecoilStyle")
 		):Lerp(CFrame.identity, (1 - ADS_KICK_KEPT) * ads)
 		gunMap = held * kick * Recoil.vibration(os.clock()) * held:Inverse() * gunMap
-	end
-	if inspectWeight > 0 and handle and handle:IsA("BasePart") then
-		local presented = camera.CFrame
-			* CFrame.new(0.7, -0.35, -2.0)
-			* CFrame.Angles(math.rad(12), math.rad(55), math.rad(-14))
-		gunMap = gunMap:Lerp(presented * handle.CFrame:Inverse(), inspectWeight)
 	end
 	visualHandle = nil
 	local gunFade = 1 - BlasterAnimator.handVisibility(character)
