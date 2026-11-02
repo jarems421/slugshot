@@ -10,6 +10,7 @@ local player = Players.LocalPlayer
 local movement = player:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
 local Ads = (require :: any)(movement:WaitForChild("Ads"))
 local Tuning = (require :: any)(movement:WaitForChild("Tuning"))
+local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
 
 local AdsSight = {}
 
@@ -21,6 +22,8 @@ local FRAME_WIDTH = 0.008
 local HALF_WIDTH, HALF_HEIGHT = 0.252, 0.196
 local FRAME_START_SCALE = 0.45 -- the frame blooms out of the pod from this size
 local INK = Color3.fromRGB(14, 14, 18)
+local STEP_FLASH = Color3.fromRGB(215, 240, 160) -- the frame lights up on each step: Floppy's bulb glow
+local STEP_WIDTH = 0.0035 -- the frame's line thickens with each step and holds, so power can be read at a glance
 -- One quadrant of the frame, as a share of half-width and half-height, from the bottom gap
 -- round to the top gap; a gap at the side splits it into two brackets.
 local BOTTOM = {
@@ -109,7 +112,11 @@ local function showHologram(gun: CFrame)
 	local base = gun * CFrame.new(0, T.adsGunDown, T.adsPaneBack)
 	-- The whole frame blooms up out of the pod at its bottom edge while each side draws itself.
 	local bloom = stage(BLOOM)
-	local scale = FRAME_START_SCALE + (1 - FRAME_START_SCALE) * bloom
+	-- Each charge step punches the frame out around the crosshair: three distinct hits, the aim untouched.
+	local hit = Recoil.stepHit(os.clock())
+	local scale = (FRAME_START_SCALE + (1 - FRAME_START_SCALE) * bloom) * (1 + T.adsStepFrame * hit)
+	local thickness = FRAME_WIDTH + STEP_WIDTH * Recoil.stage()
+	local tint = INK:Lerp(STEP_FLASH, math.clamp(hit, 0, 1))
 	local drawn = stage(TRACE)
 	local function place(point: Vector2): Vector3
 		return Vector3.new(point.X * w * scale, -h + (point.Y * h + h) * scale, 0)
@@ -124,7 +131,8 @@ local function showHologram(gun: CFrame)
 		local tip = a:Lerp(b, amount)
 		local span = tip - a
 		-- A hair over-long, so the mitred corners close.
-		bar.part.Size = Vector3.new(span.Magnitude + FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH)
+		bar.part.Size = Vector3.new(span.Magnitude + thickness, thickness, thickness)
+		bar.part.Color = tint
 		bar.part.CFrame = base
 			* CFrame.new((a + tip) / 2)
 			* CFrame.Angles(0, 0, math.atan2(span.Y, span.X))

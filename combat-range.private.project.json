@@ -86,6 +86,9 @@
       "FloppyAsset": {
         "$path": "private-assets/floppy/FloppyAsset.luau"
       },
+      "GooArt": {
+        "$path": "private-assets/ui/GooArt.luau"
+      },
       "Combat": {
         "$path": "experiments/combat/shared"
       }

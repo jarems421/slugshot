@@ -167,3 +167,11 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.
 - GLSL ES 1.0 has no shader compiler on this machine. Check brace and parenthesis balance and JS syntax with Node, and avoid names like `cross` that shadow built-ins.
+
+## UI motion and the "AI slop" feedback (2026-11-02)
+
+- **Roblox snaps UI to whole pixels.** Slow Position or Size changes step visibly ("0.5 frames a second"). Resample with ImageRectOffset instead.
+- **Scale hover by pixels, not percent.** A percentage makes wide buttons spill onto neighbours, and draw order then covers only one side.
+- **No generic effects.** The owner hates halftone dot backgrounds ("never do that") and thin glowing lines passed off as cracks. A glow cut off by its image shows straight edges, so check the alpha at the edges.
+- **A drip is one shape with the goo.** A sprite with its own outline placed on the edge reads as stuck on.
+- **Look before handing over.** `tools/studio/pvp_ui_check.ps1` captures real Play in under a minute.

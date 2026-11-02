@@ -1,122 +1,55 @@
 --!strict
--- The inventory (owner, 2026-11-01): the four carried slugs, every slug found so far and details for
--- the one selected. Choosing which slug sits in which slot comes with the second slug.
+-- The inventory (owner, 2026-11-02): small, opened with E, expanding up out of the slug bar. The bar below it is
+-- the loadout, so this only shows every slug found so far and details for the selected one, and the game stays
+-- in view around it. Choosing which slug sits in which slot comes with the second slug.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local Theme = require(script.Parent.PvpTheme)
+local Fx = require(script.Parent.PvpFx)
 local SlugIcon = require(script.Parent.SlugIcon)
 
 local player = Players.LocalPlayer
 local movement = player:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
 local Keybinds = (require :: any)(movement:WaitForChild("Keybinds"))
 
-local PANEL_W, PANEL_H, HEAD_H, DETAIL_W = 1100, 620, 60, 320
-local GRID_COLUMNS = 7
+local HEIGHT, PAD, GAP, COLUMNS = 244, 16, 8, 7
+local TILE_H = 50
+local OPEN_TIME, CLOSE_TIME = 0.3, 0.13
+local TILE_STAGGER = 0.018
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "Inventory"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.DisplayOrder = 10
+local bar =
+	player:WaitForChild("PlayerGui"):WaitForChild("CombatHUD"):WaitForChild("SlugBar") :: Frame
+local width = bar.Size.X.Offset
 
+-- A child of the slug bar, so it shares its scale and always sits right on top of it.
 local panel = Theme.new("Frame", {
-	Name = "Panel",
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(PANEL_W, PANEL_H),
-	BackgroundColor3 = Theme.Panel,
+	Name = "Inventory",
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 0, -9),
+	Size = UDim2.fromOffset(width, 0),
+	BackgroundColor3 = Color3.new(1, 1, 1),
 	BorderSizePixel = 0,
 	ClipsDescendants = true,
 	Visible = false,
-	Parent = gui,
+	ZIndex = 20,
+	Parent = bar,
 })
-Theme.corner(panel, 6)
+Theme.corner(panel, 17)
 Theme.edge(panel, 3)
-Theme.fit(gui, Theme.new("UIScale", { Parent = panel }), 1280)
-
-local head = Theme.new("Frame", {
-	Name = "Header",
-	Size = UDim2.new(1, 0, 0, HEAD_H),
-	BackgroundColor3 = Theme.Deep,
-	BorderSizePixel = 0,
+Theme.new("UIGradient", {
+	Color = ColorSequence.new(Fx.PanelTop, Fx.PanelBottom),
+	Rotation = 90,
 	Parent = panel,
 })
-Theme.new("Frame", {
-	Position = UDim2.new(0, 0, 1, -3),
-	Size = UDim2.new(1, 0, 0, 3),
-	BackgroundColor3 = Theme.Ink,
-	BorderSizePixel = 0,
-	Parent = head,
-})
-Theme.label(head, "Inventory", Theme.TitleBold, 28, {
-	Position = UDim2.fromOffset(24, 0),
-	Size = UDim2.fromOffset(300, HEAD_H - 3),
-	TextColor3 = Theme.Accent,
-})
--- Modal frees the cursor while the menu is open (first person locks it).
-local close = Theme.button(head, "×", Theme.Body, 28, {
-	Name = "Close",
-	Modal = true,
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, -8, 0, 6),
-	Size = UDim2.fromOffset(44, 44),
-	BackgroundTransparency = 1,
-})
-
-local LEFT_W = PANEL_W - DETAIL_W - 48
-local left = Theme.new("Frame", {
-	Name = "Slugs",
-	Position = UDim2.fromOffset(24, HEAD_H + 18),
-	Size = UDim2.fromOffset(LEFT_W, PANEL_H - HEAD_H - 36),
+local content = Theme.new("Frame", {
+	Name = "Content",
+	AnchorPoint = Vector2.new(0, 1),
+	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.fromOffset(width, HEIGHT),
 	BackgroundTransparency = 1,
 	Parent = panel,
 })
-Theme.label(left, "Loadout", Theme.Title, 20, { Size = UDim2.fromOffset(300, 28) })
-
-local icons: { SlugIcon.Icon } = {}
-local SLOT_W = (LEFT_W - 3 * 10) / 4
-for index = 1, Combat.SlotCount do
-	local slugId = Combat.Loadout[index]
-	local slot = Theme.new("Frame", {
-		Name = `Slot{index}`,
-		Position = UDim2.fromOffset((index - 1) * (SLOT_W + 10), 36),
-		Size = UDim2.fromOffset(SLOT_W, 150),
-		BackgroundColor3 = if slugId then Theme.Slot else Theme.Blank,
-		BorderSizePixel = 0,
-		ClipsDescendants = true,
-		Parent = left,
-	})
-	Theme.corner(slot, 14)
-	Theme.edge(slot, if slugId then 3 else 2, if slugId then Theme.Accent else Theme.Ink)
-	Theme.label(slot, tostring(index), Theme.Title, 15, {
-		Position = UDim2.fromOffset(3, 3),
-		Size = UDim2.fromOffset(24, 24),
-		TextXAlignment = Enum.TextXAlignment.Center,
-		TextColor3 = if slugId then Theme.OnAccent else Theme.Muted,
-		BackgroundColor3 = Theme.Accent,
-		BackgroundTransparency = if slugId then 0 else 1,
-		ZIndex = 4,
-	})
-	if slugId then
-		Theme.corner(slot:FindFirstChildOfClass("TextLabel") :: Instance, 7)
-		-- Stands on the slug's name rather than behind it.
-		table.insert(icons, SlugIcon.mount(slot, slugId, 0.74, false, 0.18))
-		Theme.label(slot, Combat.Slugs[slugId].Label, Theme.Title, 16, {
-			AnchorPoint = Vector2.new(0, 1),
-			Position = UDim2.new(0, 0, 1, -3),
-			Size = UDim2.new(1, 0, 0, 22),
-			TextXAlignment = Enum.TextXAlignment.Center,
-			ZIndex = 3,
-		})
-	else
-		Theme.label(slot, "Empty", Theme.Body, 13, {
-			Size = UDim2.fromScale(1, 1),
-			TextXAlignment = Enum.TextXAlignment.Center,
-			TextColor3 = Theme.Muted,
-		})
-	end
-end
 
 -- Every slug the player has, then one "?" for each still to find.
 local found: { string } = {}
@@ -124,31 +57,83 @@ for id in Combat.Slugs do
 	table.insert(found, id)
 end
 table.sort(found)
-Theme.label(left, `Slugs found: {#found} of {Combat.SlugTotal}`, Theme.Title, 20, {
-	Position = UDim2.fromOffset(0, 208),
-	Size = UDim2.fromOffset(400, 28),
+
+Theme.label(content, "Slugs", Theme.TitleBold, 22, {
+	Position = UDim2.fromOffset(PAD, 8),
+	Size = UDim2.fromOffset(70, 28),
+	TextColor3 = Theme.Accent,
+	TextStrokeColor3 = Theme.Ink,
+	TextStrokeTransparency = 0.4,
 })
-local TILE_W, TILE_H = (LEFT_W - (GRID_COLUMNS - 1) * 8) / GRID_COLUMNS, 86
+Theme.label(content, `{#found} of {Combat.SlugTotal} found`, Theme.Body, 13, {
+	Position = UDim2.fromOffset(PAD + 66, 8),
+	Size = UDim2.fromOffset(160, 28),
+	TextColor3 = Theme.Soft,
+})
+-- Modal frees the cursor while the menu is open (first person locks it).
+local close = Theme.button(content, "×", Theme.Body, 20, {
+	Name = "Close",
+	Modal = true,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.new(1, -24, 0, 22),
+	Size = UDim2.fromOffset(28, 28),
+	BackgroundColor3 = Fx.Button,
+	ZIndex = 2,
+})
+Theme.corner(close, 8)
+Theme.edge(close, 2)
+close.MouseEnter:Connect(function()
+	Fx.sound("hover")
+	Fx.tween(close, 0.25, { Rotation = 90, BackgroundColor3 = Fx.Coral }, Enum.EasingStyle.Back)
+end)
+close.MouseLeave:Connect(function()
+	Fx.tween(close, 0.25, { Rotation = 0, BackgroundColor3 = Fx.Button }, Enum.EasingStyle.Back)
+end)
+
+local tileW = (width - PAD * 2 - GAP * (COLUMNS - 1)) / COLUMNS
+local GRID_Y = 42
+type Pop = { scale: UIScale, index: number }
+local pops: { Pop } = {}
+local icons: { SlugIcon.Icon } = {}
 for index = 1, Combat.SlugTotal do
 	local slugId = found[index]
-	local tile = Theme.new("Frame", {
+	local position = UDim2.fromOffset(
+		PAD + ((index - 1) % COLUMNS) * (tileW + GAP),
+		GRID_Y + math.floor((index - 1) / COLUMNS) * (TILE_H + GAP)
+	)
+	local holder = Theme.new("Frame", {
 		Name = `Tile{index}`,
-		Position = UDim2.fromOffset(
-			((index - 1) % GRID_COLUMNS) * (TILE_W + 8),
-			244 + math.floor((index - 1) / GRID_COLUMNS) * (TILE_H + 8)
-		),
-		Size = UDim2.fromOffset(TILE_W, TILE_H),
-		BackgroundColor3 = if slugId then Theme.Slot else Theme.Blank,
-		BorderSizePixel = 0,
-		ClipsDescendants = true,
-		Parent = left,
+		Position = position,
+		Size = UDim2.fromOffset(tileW, TILE_H),
+		BackgroundTransparency = 1,
+		Parent = content,
 	})
-	Theme.corner(tile, 12)
-	Theme.edge(tile, 2, if slugId then Theme.Text else Theme.Ink)
+	table.insert(pops, { scale = Theme.new("UIScale", { Parent = holder }), index = index })
 	if slugId then
-		table.insert(icons, SlugIcon.mount(tile, slugId, 0.82, false))
+		local tile = Theme.button(holder, "", Theme.Body, 1, {
+			Size = UDim2.fromScale(1, 1),
+			ZIndex = 2,
+		})
+		local control = Fx.chunky(tile, {
+			accent = Theme.Accent,
+			radius = 10,
+			idle = Fx.Button,
+			selectedFill = Fx.Button,
+			selectedText = Theme.Text,
+			grow = 4,
+		})
+		control.set(index == 1) -- only one slug to select so far
+		table.insert(icons, SlugIcon.mount(tile, slugId, 0.8, false))
 	else
-		Theme.label(tile, "?", Theme.Title, 24, {
+		local tile = Theme.new("Frame", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundColor3 = Fx.Blank,
+			BorderSizePixel = 0,
+			Parent = holder,
+		})
+		Theme.corner(tile, 10)
+		Theme.edge(tile, 2)
+		Theme.label(tile, "?", Theme.Title, 20, {
 			Size = UDim2.fromScale(1, 1),
 			TextXAlignment = Enum.TextXAlignment.Center,
 			TextColor3 = Theme.Muted,
@@ -159,82 +144,97 @@ end
 -- Details of the selected slug. Floppy is the only one so far.
 local slugId = found[1]
 local slug = Combat.Slugs[slugId]
-local detail = Theme.new("Frame", {
+local DETAIL_Y = GRID_Y + 2 * TILE_H + GAP + 12
+local detail = Fx.card(content, {
 	Name = "Detail",
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, 0, 0, HEAD_H),
-	Size = UDim2.new(0, DETAIL_W, 1, -HEAD_H),
-	BackgroundColor3 = Color3.fromRGB(35, 42, 51),
-	BorderSizePixel = 0,
-	Parent = panel,
-})
-Theme.new("Frame", {
-	Size = UDim2.new(0, 3, 1, 0),
-	BackgroundColor3 = Theme.Ink,
-	BorderSizePixel = 0,
-	Parent = detail,
-})
+	Position = UDim2.fromOffset(PAD, DETAIL_Y),
+	Size = UDim2.fromOffset(width - PAD * 2, HEIGHT - DETAIL_Y - 14),
+}, 12)
 local view = Theme.new("Frame", {
 	Name = "View",
-	Position = UDim2.fromOffset(22, 16),
-	Size = UDim2.new(1, -44, 0, 224),
+	AnchorPoint = Vector2.new(0, 1),
+	Position = UDim2.new(0, 6, 1, 0),
+	Size = UDim2.fromOffset(64, 64),
 	BackgroundTransparency = 1,
 	Parent = detail,
 })
-local viewIcon = SlugIcon.mount(view, slugId, 0.7, true) -- room above it to hop
+local viewIcon = SlugIcon.mount(view, slugId, 0.86, true, 0.04, 1.4)
 table.insert(icons, viewIcon)
-Theme.label(detail, slug.Label, Theme.TitleBold, 32, {
-	Position = UDim2.fromOffset(22, 246),
-	Size = UDim2.new(1, -44, 0, 42),
+Theme.label(detail, slug.Label, Theme.TitleBold, 21, {
+	Position = UDim2.fromOffset(76, 6),
+	Size = UDim2.fromOffset(150, 26),
+	TextStrokeColor3 = Theme.Ink,
+	TextStrokeTransparency = 0.5,
 })
-Theme.label(detail, slug.Blurb, Theme.Body, 15, {
-	Position = UDim2.fromOffset(22, 288),
-	Size = UDim2.new(1, -44, 0, 26),
+Theme.label(detail, slug.Blurb, Theme.Body, 12, {
+	Position = UDim2.fromOffset(76, 32),
+	Size = UDim2.fromOffset(160, 34),
+	TextWrapped = true,
+	TextYAlignment = Enum.TextYAlignment.Top,
 	TextColor3 = Theme.Soft,
 })
 local function stat(y: number, title: string, value: string)
-	Theme.new("Frame", {
-		Position = UDim2.fromOffset(22, y),
-		Size = UDim2.new(1, -44, 0, 2),
-		BackgroundColor3 = Theme.Ink,
-		BorderSizePixel = 0,
-		Parent = detail,
-	})
-	Theme.label(detail, title, Theme.Body, 16, {
-		Position = UDim2.fromOffset(22, y + 2),
-		Size = UDim2.new(1, -44, 0, 36),
+	Theme.label(detail, title, Theme.Body, 12, {
+		Position = UDim2.new(1, -136, 0, y),
+		Size = UDim2.fromOffset(90, 20),
 		TextColor3 = Theme.Soft,
 	})
-	Theme.label(detail, value, Theme.Body, 16, {
-		Position = UDim2.fromOffset(22, y + 2),
-		Size = UDim2.new(1, -44, 0, 36),
+	Theme.label(detail, value, Theme.Body, 13, {
+		Position = UDim2.new(1, -56, 0, y),
+		Size = UDim2.fromOffset(46, 20),
 		TextXAlignment = Enum.TextXAlignment.Right,
 	})
 end
-stat(322, "Damage", tostring(slug.Damage))
-stat(360, "Ready again in", `{Combat.Cooldown} s`)
-local slotted = Theme.label(detail, "In slot 1", Theme.TitleBold, 18, {
-	Name = "Slotted",
-	AnchorPoint = Vector2.new(0, 1),
-	Position = UDim2.new(0, 22, 1, -20),
-	Size = UDim2.new(1, -44, 0, 48),
-	TextXAlignment = Enum.TextXAlignment.Center,
-	TextColor3 = Theme.OnAccent,
-	BackgroundColor3 = Theme.Accent,
-	BackgroundTransparency = 0,
-})
-Theme.corner(slotted, 4)
-Theme.edge(slotted, 2)
+stat(5, "Damage", tostring(slug.Damage))
+stat(24, "Ready in", `{Combat.Cooldown} s`)
+stat(43, "Carried", "Slot 1")
 
+local open = false
+local token = 0
 local function refreshOpen()
-	local open = player:GetAttribute("PvpMenu") == "Inventory"
-	panel.Visible = open
+	local want = player:GetAttribute("PvpMenu") == "Inventory"
+	if want == open then
+		return
+	end
+	open = want
+	token += 1
+	local mine = token
 	for _, icon in icons do
 		SlugIcon.setActive(icon, open)
+	end
+	if open then
+		panel.Visible = true
+		panel.Size = UDim2.fromOffset(width, 0)
+		Fx.tween(
+			panel,
+			OPEN_TIME,
+			{ Size = UDim2.fromOffset(width, HEIGHT) },
+			Enum.EasingStyle.Back
+		)
+		Fx.sound("select")
+		-- The tiles pop in across and up, following the panel out.
+		for _, pop in pops do
+			pop.scale.Scale = 0.4
+			Fx.tween(
+				pop.scale,
+				0.22,
+				{ Scale = 1 },
+				Enum.EasingStyle.Back,
+				0.06 + pop.index * TILE_STAGGER
+			)
+		end
+	else
+		Fx.tween(panel, CLOSE_TIME, { Size = UDim2.fromOffset(width, 0) })
+		task.delay(CLOSE_TIME, function()
+			if mine == token then
+				panel.Visible = false
+			end
+		end)
 	end
 end
 player:GetAttributeChangedSignal("PvpMenu"):Connect(refreshOpen)
 close.Activated:Connect(function()
+	Fx.sound("click")
 	Theme.setMenu(nil)
 end)
 Keybinds.on("inventory", function(pressed: boolean)
@@ -242,5 +242,7 @@ Keybinds.on("inventory", function(pressed: boolean)
 		Theme.toggleMenu("Inventory")
 	end
 end)
+for _, icon in icons do
+	SlugIcon.setActive(icon, false)
+end
 refreshOpen()
-gui.Parent = player:WaitForChild("PlayerGui")

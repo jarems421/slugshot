@@ -60,6 +60,13 @@ Tuning.values = {
 	chargeMoveStep = 1.6, -- extra step kick on the gun at full movement
 	chargeStepPulse = 0.7, -- view hit per step, every state (deg)
 	adsShake = 0.25, -- share of the charge vibration kept through the sight
+	-- Each step while aiming (owner, 2026-11-02). None of these can move the aim: the roll turns about the crosshair,
+	-- the shove runs along its line, and the gun and sight frame jump around it.
+	adsStepRoll = 1.1, -- view roll per step (deg)
+	adsStepShove = 0.12, -- eye shoved back per step (studs)
+	adsStepPulse = 0.9, -- view hit per step (deg)
+	adsStepGun = 0.9, -- gun shoved back along the barrel per step
+	adsStepFrame = 0.1, -- sight frame swell per step
 	-- How much of the droop each shot level corrects. 1: lands on the crosshair. 0: flies
 	-- straight from the gun and droops.
 	shotArcOne = 0.3,
@@ -117,6 +124,11 @@ Tuning.Entries = {
 	entry("spiralLight", "Light strength", "Charge spiral", 0, 1, 0.05),
 	entry("adsZoom", "Zoom", "ADS", 1, 2, 0.05),
 	entry("adsShake", "Charge vibration", "ADS", 0, 1, 0.01),
+	entry("adsStepRoll", "View roll per step (deg)", "ADS", 0, 4, 0.05),
+	entry("adsStepShove", "View shove per step (studs)", "ADS", 0, 0.5, 0.01),
+	entry("adsStepPulse", "View hit per step (deg)", "ADS", 0, 4, 0.05),
+	entry("adsStepGun", "Gun kick per step", "ADS", 0, 3, 0.05),
+	entry("adsStepFrame", "Sight frame swell per step", "ADS", 0, 0.4, 0.01),
 	entry("adsGunDown", "Gun below crosshair", "ADS", 0.2, 1.6, 0.01),
 	entry("adsGunForward", "Gun distance", "ADS", 1, 3, 0.01),
 	entry("adsPaneSize", "Pane size", "ADS", 0.5, 2.5, 0.05),

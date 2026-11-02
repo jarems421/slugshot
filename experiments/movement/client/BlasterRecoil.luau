@@ -11,6 +11,7 @@ local CLUNK_SIZE = { 0.8, 1, 1.4 }
 local KICK_ATTACK, KICK_LENGTH = 0.025, 0.17
 local VIEW_RATE = 8 -- the view's held tighten stays gradual; snapping it read as zooming
 local STEP_RATE = 60 -- held level snaps at each step; a slow ease reads as drawing a bow
+local ADS_VIEW_RATE = 30 -- through the sight the tighten clicks in with each step for the same reason
 local stage, clunkStage, clunkAt = 0, 0, -math.huge
 local shakeLevel, heldLevel, viewLevel, moving, shakePhase = 0, 0, 0, 0, 0
 local clunkListeners: { (number) -> () } = {}
@@ -84,7 +85,8 @@ function Recoil.setCharging(value: number, movement: number, dt: number)
 	local toward = 1 - math.exp(-STEP_RATE * dt)
 	shakeLevel += (STAGE_SHAKE[stage + 1] - shakeLevel) * toward
 	heldLevel += (stage / STAGES - heldLevel) * toward
-	viewLevel += (stage / STAGES - viewLevel) * (1 - math.exp(-VIEW_RATE * dt))
+	local viewRate = VIEW_RATE + (ADS_VIEW_RATE - VIEW_RATE) * Ads.weight()
+	viewLevel += (stage / STAGES - viewLevel) * (1 - math.exp(-viewRate * dt))
 	moving += (math.clamp(movement, 0, 1) - moving) * (1 - math.exp(-8 * dt))
 	-- Slower and larger on the move, where a fine fast shake is lost in the arm swing.
 	shakePhase += (42 + (24 - 42) * moving) * dt
@@ -125,7 +127,9 @@ function Recoil.vibration(now: number): CFrame
 		* free
 		* (1 + (Tuning.values.chargeMoveStep - 1) * moving)
 	local held = heldLevel * free
-	if jolt == 0 and amount < 1e-3 and held < 1e-3 then
+	-- Through the sight the gun only jumps back along the barrel, so it stays on the crosshair.
+	local aimedJolt = clunk(now) * Tuning.values.adsStepGun * Ads.weight()
+	if jolt == 0 and aimedJolt == 0 and amount < 1e-3 and held < 1e-3 then
 		return CFrame.identity
 	end
 	local far = if FirstPerson.active() then 1 else 2.2
@@ -133,7 +137,7 @@ function Recoil.vibration(now: number): CFrame
 	return CFrame.new(
 		math.noise(at, 1.3) * 0.032 * amount,
 		math.noise(at, 7.1) * 0.032 * amount + (0.06 * held + 0.05 * jolt) * far,
-		math.noise(at, 13.7) * 0.02 * amount + (0.2 * held + 0.16 * jolt) * far
+		math.noise(at, 13.7) * 0.02 * amount + (0.2 * held + 0.16 * jolt + 0.16 * aimedJolt) * far
 	) * CFrame.Angles(
 		math.noise(at, 21.9) * math.rad(1.2) * amount + math.rad(2.5 * held + 7 * jolt),
 		math.noise(at, 29.3) * math.rad(1.2) * amount + math.rad(1.5 * jolt) * kickSide(),
@@ -164,18 +168,27 @@ end
 -- The whole view's share: it tightens a little with each stage and holds, in every camera view.
 function Recoil.viewPunch(): number
 	-- Each step hits the view too, in every state, so it reads even when the gun is not watched.
-	local hit = clunk(os.clock()) * (1 - Ads.weight())
-	return -Tuning.values.chargeViewTighten * viewLevel - Tuning.values.chargeStepPulse * hit
+	local hit = clunk(os.clock())
+	local aimed = Ads.weight()
+	local pulse = Tuning.values.chargeStepPulse * (1 - aimed) + Tuning.values.adsStepPulse * aimed
+	return -Tuning.values.chargeViewTighten * viewLevel - pulse * hit
 end
 
 -- Each step shoves the eye back and rolls the view. Both leave the crosshair's direction alone.
 function Recoil.viewKick(): CFrame
-	local hit = clunk(os.clock()) * (1 - Ads.weight())
+	local hit = clunk(os.clock())
 	if hit == 0 then
 		return CFrame.identity
 	end
-	return CFrame.new(0, 0, Tuning.values.chargeStepShove * hit)
-		* CFrame.Angles(0, 0, math.rad(Tuning.values.chargeStepRoll * hit) * kickSide())
+	local aimed = Ads.weight()
+	local shove = Tuning.values.chargeStepShove * (1 - aimed) + Tuning.values.adsStepShove * aimed
+	local roll = Tuning.values.chargeStepRoll * (1 - aimed) + Tuning.values.adsStepRoll * aimed
+	return CFrame.new(0, 0, shove * hit) * CFrame.Angles(0, 0, math.rad(roll * hit) * kickSide())
+end
+
+-- For the sight frame: how hard the last step is hitting right now, 0 to about 1.4.
+function Recoil.stepHit(now: number): number
+	return clunk(now)
 end
 
 function Recoil.sample(started: any, now: number, charge: any, style: any): CFrame

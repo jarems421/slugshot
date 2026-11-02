@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local Theme = require(script.Parent.PvpTheme)
 local SlugIcon = require(script.Parent.SlugIcon)
+local GooBar = require(script.Parent.GooBar)
 
 local player = Players.LocalPlayer
 local movement = player:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
@@ -22,9 +23,6 @@ local FILL = 0.82 -- the slug's share of its slot: fills it without touching the
 local HEADROOM = 1.7 -- the view is taller than the slot, so a hop leaves the top of the bar
 local NUMBER_HOLD = 2 -- seconds the health number shows in "On change" mode
 local RETURN_TWEEN = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local TRAIL_TWEEN =
-	TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.2)
-local BAR_TWEEN = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 type Slot = {
 	frame: Frame,
@@ -48,12 +46,13 @@ function Hud.create(): ScreenGui
 	gui.Name = "CombatHUD"
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	-- Health ---------------------------------------------------------------------------
 	local health = Theme.new("Frame", {
 		Name = "Health",
 		BackgroundTransparency = 1,
-		Size = UDim2.fromOffset(350, 48),
+		Size = UDim2.fromOffset(350, 64),
 		Parent = gui,
 	})
 	-- Under Roblox's top-left buttons, which a game cannot move.
@@ -64,41 +63,17 @@ function Hud.create(): ScreenGui
 	GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(placeHealth)
 	placeHealth()
 	Theme.fitHud(gui, Theme.new("UIScale", { Parent = health }))
-	local track = Theme.new("Frame", {
-		Name = "Track",
-		BackgroundColor3 = Theme.Ink,
-		BorderSizePixel = 0,
-		Size = UDim2.fromOffset(290, 14),
-		Position = UDim2.fromOffset(2, 5),
-		ClipsDescendants = true,
-		Parent = health,
-	})
-	Theme.corner(track, 2)
-	Theme.edge(track, 2)
-	local trail = Theme.new("Frame", {
-		Name = "Trail",
-		BackgroundColor3 = Theme.Text,
-		BorderSizePixel = 0,
-		Size = UDim2.fromScale(1, 1),
-		Parent = track,
-	})
-	local fill = Theme.new("Frame", {
-		Name = "Fill",
-		BackgroundColor3 = Theme.Health,
-		BorderSizePixel = 0,
-		Size = UDim2.fromScale(1, 1),
-		Parent = track,
-	})
+	local goo = GooBar.new(health, Vector2.new(2, 2), 290, 16)
 	local number = Theme.label(health, "100", Theme.TitleBold, 22, {
 		Name = "Number",
-		Position = UDim2.fromOffset(302, 0),
+		Position = UDim2.fromOffset(304, 1),
 		Size = UDim2.fromOffset(46, 24),
 		TextStrokeColor3 = Theme.Ink,
 		TextStrokeTransparency = 0.5,
 	})
 	local sprint = Theme.label(health, "Sprint on", Theme.Body, 13, {
 		Name = "Sprint",
-		Position = UDim2.fromOffset(0, 27),
+		Position = UDim2.fromOffset(0, 48),
 		Size = UDim2.fromOffset(120, 18),
 		TextColor3 = Theme.Accent,
 		TextStrokeColor3 = Theme.Ink,
@@ -129,9 +104,7 @@ function Hud.create(): ScreenGui
 		local function update()
 			local share = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
 			number.Text = tostring(math.ceil(humanoid.Health))
-			fill.BackgroundColor3 = if share <= 0.3 then Theme.HealthLow else Theme.Health
-			TweenService:Create(fill, BAR_TWEEN, { Size = UDim2.fromScale(share, 1) }):Play()
-			TweenService:Create(trail, TRAIL_TWEEN, { Size = UDim2.fromScale(share, 1) }):Play()
+			goo.set(share)
 			if humanoid.Health ~= last then
 				last = humanoid.Health
 				shownUntil = os.clock() + NUMBER_HOLD

@@ -51,7 +51,7 @@ Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 
 -- Slot order; switching between slots comes with the second slug.
 Combat.Loadout = { "Floppy" }
-Combat.SlotCount = 4 -- owner, 2026-11-01: four carried slugs for now
+Combat.SlotCount = 5 -- owner, 2026-11-02: five carried slugs
 Combat.SlugTotal = 13 -- owner, 2026-11-01: Floppy plus twelve planned models
 
 Combat.Slugs = {

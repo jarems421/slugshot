@@ -412,6 +412,13 @@ function SlugIcon.back(icon: Icon)
 	icon.nextMove = math.huge
 end
 
+-- A little hop of joy, if it is not already doing something.
+function SlugIcon.hop(icon: Icon)
+	if not icon.move and not icon.away and icon.model then
+		start(icon, hop, "hop")
+	end
+end
+
 -- Off-screen icons skip their work.
 function SlugIcon.setActive(icon: Icon, active: boolean)
 	icon.active = active

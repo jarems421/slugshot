@@ -44,12 +44,13 @@ Keybinds.Groups = {
 			{ id = "slug2", label = "Slug 2", main = "Two" },
 			{ id = "slug3", label = "Slug 3", main = "Three" },
 			{ id = "slug4", label = "Slug 4", main = "Four" },
+			{ id = "slug5", label = "Slug 5", main = "Five" },
 		},
 	},
 	{
 		name = "Other",
 		rows = {
-			{ id = "inventory", label = "Inventory", main = "I" },
+			{ id = "inventory", label = "Inventory", main = "E" },
 			{ id = "settings", label = "Settings", main = "M" },
 			{ id = "firstPerson", label = "First person" },
 		},

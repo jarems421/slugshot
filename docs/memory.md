@@ -1203,3 +1203,7 @@
 
 - Owner: the mouth is blurry; wants it crisp on the big range Floppy with clean smile movement, keeping the drool. Wiggle smoother and more noticeable; hop should look like a gelatinous thing hopping, with a greater landing reaction, then look up and smile. Replace the happy hop ("too much hopping"). Overall: "more transitional. Alive. Emotional. And smooth", not "choppy animations cutting to each other".
 - Done: mouth texture strip, jelly bones, new private upload, spring-driven `SlugIcon` performance, and rising out of the floor instead of the happy hop. Owner verdict pending. See [lessons](slugs/blender-lessons.md).
+
+## 2026-11-02 - Dripping goo health bar
+
+- Owner picked Dripping Goo from seven options. Their worry was the blocky fill, not distraction: the design demands a fluid inside, and slightly more swash. Roblox UI has no shaders, so the liquid is scrolling textures in a CanvasGroup (plain clipping ignores rounded corners and rotation). A cut-off liquid end with a cap showed a hard step at the wave, so a mask in the empty colour shapes the end instead.

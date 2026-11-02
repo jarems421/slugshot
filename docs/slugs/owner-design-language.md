@@ -244,3 +244,7 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 ## Icon animation phrases (2026-11-02)
 
 "More transitional. Alive. Emotional. And smooth" against "choppy animations cutting to each other" meant moves must flow from one to the next. A spring-driven performance that only sets targets, with crouch, stretch, a wobbling landing and a reaction afterwards, earned "that's perfect". "Too much hopping" meant give each event its own move: the slot's return became rising out of the floor.
+
+## Menu phrases (2026-11-02)
+
+"It just looks so basic, like a simple drawing" and "pop way more", "dimensional" meant depth and response: raised controls, light, motion on hover. He added that whatever is added it must "still feel like Slugterra, most importantly": pop alone is not the goal, so effects are tied to the world (crystals, goo, cracks, a live slug).
