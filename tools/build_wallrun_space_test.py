@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "build/wallrun-space"
@@ -17,7 +18,7 @@ def main():
 function Arena.create()
  local model = Instance.new("Model"); model.Name = "WallRunSpaceFixture"
  for _, d in {{"Floor", Vector3.new(900,2,80), Vector3.new(0,-1,20)},
-              {"TallWall", Vector3.new(900,180,2), Vector3.new(0,90,26)}} do
+              {"TallWall", Vector3.new(900,100,2), Vector3.new(0,50,26)}} do
   local p = Instance.new("Part"); p.Name=d[1]; p.Size=d[2]; p.Position=d[3]; p.Anchored=true; p.Parent=model
  end
  model.Parent=workspace; return model
@@ -39,12 +40,19 @@ return Arena
     project["name"] = "SlugshotWallRunSpaceRegression"
     project["tree"]["ServerScriptService"]["MovementSandbox"] = {
         "$path": str(server), "Arena": {"$path": str(arena)}}
+    driver = OUT / "Probe.client.luau"
+    shutil.copyfile(ROOT / "tools/studio/wallrun-space-regression.luau", driver)
     project["tree"]["StarterPlayer"]["StarterPlayerScripts"]["WallRunSpaceProbe"] = {
-        "$path": str(ROOT / "tools/studio/wallrun-space-regression.luau")}
+        "$path": str(driver)}
     target = OUT / "test.project.json"
     target.write_text(json.dumps(project, indent=2))
     subprocess.run(["rojo", "build", str(target), "--output",
                     str(ROOT / "build/SlugshotWallRunSpaceRegression.rbxlx")], cwd=ROOT, check=True)
+    tree = ET.parse(ROOT / "build/SlugshotWallRunSpaceRegression.rbxlx")
+    drivers = [item for item in tree.iter("Item")
+               if item.findtext("Properties/string[@name='Name']") == "WallRunSpaceProbe"]
+    assert len(drivers) == 1 and drivers[0].get("class") == "LocalScript", "Regression driver must execute on the client"
+
 
 
 if __name__ == "__main__":

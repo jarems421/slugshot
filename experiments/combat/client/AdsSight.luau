@@ -14,10 +14,10 @@ local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
 
 local AdsSight = {}
 
-local DOOR_ANGLE = math.rad(112)
+local DOOR_ANGLE = math.rad(100)
 local DOOR_HINGE = 0.0425 -- from each door's centre to its outer edge
-local EMITTER_RISE = 0.05
-local PRONG_SPREAD = math.rad(34)
+local EMITTER_RISE = 0.018
+local PRONG_SPREAD = math.rad(22)
 local FRAME_WIDTH = 0.008
 local HALF_WIDTH, HALF_HEIGHT = 0.252, 0.196
 local FRAME_START_SCALE = 0.45 -- the frame blooms out of the pod from this size
@@ -40,13 +40,19 @@ type Stage = { from: number, to: number }
 local DOORS: Stage = { from = 0, to = 0.42 }
 local EMITTER: Stage = { from = 0.14, to = 0.56 }
 local PRONGS: Stage = { from = 0.28, to = 0.68 }
-local BLOOM: Stage = { from = 0.34, to = 1 }
-local TRACE: Stage = { from = 0.34, to = 0.92 }
+local BLOOM: Stage = { from = 0.62, to = 1 }
+local TRACE: Stage = { from = 0.62, to = 1 }
 
 type Bar = { part: BasePart, a: Vector2, b: Vector2, start: number, finish: number }
 local bars: { Bar } = {}
 local folder: Folder? = nil
 local open = 0
+local frameInCamera: CFrame? = nil
+
+-- Read-only progress for deterministic Studio visual checks.
+function AdsSight.progress(): number
+	return open
+end
 
 local function stage(s: Stage): number
 	local t = math.clamp((open - s.from) / (s.to - s.from), 0, 1)
@@ -105,11 +111,20 @@ local function hideHologram()
 	end
 end
 
-local function showHologram(gun: CFrame)
+local function showHologram(camera: Camera, gun: CFrame)
 	local T = Tuning.values
 	local w, h = HALF_WIDTH * T.adsPaneSize, HALF_HEIGHT * T.adsPaneSize
 	-- Centred on the crosshair, whatever the size.
 	local base = gun * CFrame.new(0, T.adsGunDown, T.adsPaneBack)
+	if Ads.aiming() then
+		frameInCamera = camera.CFrame:ToObjectSpace(base)
+	elseif frameInCamera then
+		-- Fade at the crosshair while the gun lowers, rather than dragging through it.
+		base = camera.CFrame * frameInCamera
+	end
+	local aligned = if Ads.aiming()
+		then math.clamp((Ads.weight() - 0.85) / 0.15, 0, 1)
+		else Ads.weight()
 	-- The whole frame blooms up out of the pod at its bottom edge while each side draws itself.
 	local bloom = stage(BLOOM)
 	-- Each charge step punches the frame out around the crosshair: three distinct hits, the aim untouched.
@@ -130,14 +145,14 @@ local function showHologram(gun: CFrame)
 		local a, b = place(bar.a), place(bar.b)
 		local tip = a:Lerp(b, amount)
 		local span = tip - a
-		-- A hair over-long, so the mitred corners close.
-		bar.part.Size = Vector3.new(span.Magnitude + thickness, thickness, thickness)
+		-- Exact endpoints keep diagonal strokes from poking past a corner.
+		bar.part.Size = Vector3.new(span.Magnitude, thickness, thickness)
 		bar.part.Color = tint
 		bar.part.CFrame = base
 			* CFrame.new((a + tip) / 2)
 			* CFrame.Angles(0, 0, math.atan2(span.Y, span.X))
 		-- Fades in as it draws, and the frame as a whole fades with the open and close.
-		bar.part.Transparency = 1 - math.min(amount * 2.5, 1) * math.min(bloom * 2.5, 1)
+		bar.part.Transparency = 1 - math.min(amount * 2.5, 1) * math.min(bloom * 2.5, 1) * aligned
 	end
 end
 
@@ -175,9 +190,9 @@ local function moveMechanism(tool: Tool)
 	for name, sign in DOOR_SIDES do
 		local item = rest[name]
 		if item then
-			-- Each door swings up about its outer edge, like a clamshell.
+			-- Covers fold outward and down alongside the saddle, below the sight opening.
 			local hinge = CFrame.new(sign * DOOR_HINGE, 0, 0)
-			item.weld.C0 = item.base * hinge * CFrame.Angles(0, 0, -sign * doors) * hinge:Inverse()
+			item.weld.C0 = item.base * hinge * CFrame.Angles(0, 0, sign * doors) * hinge:Inverse()
 		end
 	end
 	local emitter = rest.AdsEmitter
@@ -193,9 +208,25 @@ local function moveMechanism(tool: Tool)
 		local item = rest[name]
 		if item then
 			item.weld.C0 = item.base
-				* CFrame.new(0, rise + prongs * 0.035, 0)
+				* CFrame.new(0, rise + prongs * 0.005, 0)
 				* CFrame.Angles(0, 0, -sign * PRONG_SPREAD * prongs)
 			item.part.Transparency = if prongs > 0 then 0 else 1
+		end
+	end
+end
+
+-- Weld C0 changes are not reflected in source CFrames until physics steps. Update
+-- the visible mechanism from those welds immediately, in the same pose as its frame.
+local function syncMechanism(camera: Camera, tool: Tool, gun: CFrame)
+	local visual = camera:FindFirstChild("FirstPersonBodyVisual")
+	if not visual then
+		return
+	end
+	for name, item in restOf(tool) do
+		local copy = visual:FindFirstChild(name)
+		if copy and copy:IsA("BasePart") then
+			copy.CFrame = gun * item.weld.C0 * item.weld.C1:Inverse()
+			copy.Transparency = item.part.Transparency
 		end
 	end
 end
@@ -216,8 +247,11 @@ function AdsSight.update(camera: Camera, tool: Tool?, gun: CFrame?, dt: number)
 	if not folder then
 		build(camera)
 	end
+	if gun and tool then
+		syncMechanism(camera, tool, gun)
+	end
 	if gun and open > 0 then
-		showHologram(gun)
+		showHologram(camera, gun)
 	else
 		hideHologram()
 	end

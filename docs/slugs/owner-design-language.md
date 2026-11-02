@@ -150,6 +150,7 @@ From the lobby art-direction and asset-library rounds. Process lessons are in [a
 | "more variations… we need a lot of variety" | A selectable bank (14 crystal designs, 14 mushroom colours); small props pick random colours from the bank. | — |
 | "more unique and cool" (crystals) | Hand-built distinct silhouettes: geode, floating heart, crystal tree, spiral, split boulder, hanging cluster, urchin. | Parameter variations of one cluster. |
 | "too much mushroom" | Stop adding a motif once it appears in several places. | Bark mushrooms on the giant mushroom (withdrawn). |
+| "too far off slug vibe", "too much going on", "cramped", "just looks leafy and green", "should still look rocky" (spawn rock) | Agent's reading, unconfirmed: return to the approved rock wall language. Rock dominates; big rounded masses, inked cracks with pale lips, soft sage moss, and only a few accents. | Piling up every requested detail: "more moss", "more crystals", "real vines" were each right, but all at full strength buried the rock. |
 | "more attached to the ground" (big plant/fungus) | Roots spreading and diving into the floor, a mossy mound, small growth around the base. | A stem simply standing on the floor. |
 | "something cool in the centre… dramatic and natural" | An opening above (Sky Well) and a swirling pit below (Maelstrom), with spawn on a floating rock. | Slug-themed centrepieces (canister tree, colossus, orrery, energy well) and biome features (crystal, mushroom). |
 | "droopy" bridges | Sagging wooden suspension bridges. | — |

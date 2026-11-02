@@ -14,14 +14,18 @@ function MotionMath.finite(value: number): boolean
 	return value == value and math.abs(value) < math.huge
 end
 
--- A reversal or an input mostly along the wall is steering, even at a corner.
+-- Any clear outward component includes ordinary 45-degree diagonals.
 function MotionMath.wallRunKickIntent(
 	away: number,
-	along: number,
 	threshold: number,
-	followingCorner: boolean?
+	followingCorner: boolean?,
+	lateral: boolean?
 ): boolean
-	return not followingCorner and away > threshold and away > math.abs(along)
+	return (not followingCorner or lateral == true) and away > threshold
+end
+
+function MotionMath.wallRunMantleIntent(away: number, threshold: number): boolean
+	return -away >= threshold
 end
 
 type WallRunSettings = typeof(require(script.Parent.Config).Traversal.WallRun)

@@ -46,6 +46,7 @@ local overlap: OverlapParams? = nil
 local hops, lastHop, lastGrounded = 0, -math.huge, 0
 local lastMantle, lastMantleCheck = -math.huge, -math.huge
 local jumpHeld, jumpWindow, lastJumpRequest = false, 0, -math.huge
+local mantleBlockedForJump = false
 local hopBuffer = 0
 local flipBuffer, groundPress = 0, -math.huge -- a double jump pressed too early, and the last jump press
 local slideBuffer, slideHeld = 0, false -- a slide pressed before it could start, and Shift down
@@ -153,6 +154,7 @@ local function attach(newCharacter: Model)
 	sprinting, aiming, testMove = false, false, nil
 	sprintTapped = false
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
+	mantleBlockedForJump = false
 	rays, overlap = Traversal.params(newCharacter)
 	hops, lastHop, lastMantle, lastGrounded = 0, -math.huge, -math.huge, os.clock()
 	-- Every touchdown restores the flip, including a landing that jumps again on the
@@ -201,6 +203,25 @@ end
 local function flat(vector: Vector3): Vector3?
 	local result = Vector3.new(vector.X, 0, vector.Z)
 	return if result.Magnitude > 0.01 then result.Unit else nil
+end
+
+-- Sample bound keys at the press itself: movement smoothing must not delay a kick.
+local function jumpMoveIntent(): (Vector3?, boolean)
+	if testMove and os.clock() < testUntil then
+		return flat(testMove), false
+	end
+	local function axis(action: string): number
+		return if Keybinds.held(action) then 1 else 0
+	end
+	local raw = Vector3.new(axis("right") - axis("left"), 0, axis("back") - axis("forward"))
+	if raw.Magnitude < 0.1 then
+		raw = if UserInputService:GetLastInputType() == Enum.UserInputType.Keyboard
+			then Vector3.zero
+			else controls:GetMoveVector()
+	end
+	local camera = workspace.CurrentCamera
+	local forward = (camera and flat(camera.CFrame.LookVector)) or Vector3.new(0, 0, -1)
+	return flat(forward:Cross(Vector3.yAxis) * raw.X - forward * raw.Z), math.abs(raw.X) > 0.1
 end
 
 -- Seconds until the character lands, from the floor distance and vertical speed.
@@ -413,6 +434,9 @@ end
 -- state, zero velocity). `direction` looks for the ledge that way (the wall being
 -- run) instead of along the input; a kick or wall run in progress gives way.
 local function startMantle(now: number, direction: Vector3?): boolean
+	if mantleBlockedForJump then
+		return false
+	end
 	if
 		(acro and acro.kind ~= "WallHop" and acro.kind ~= "WallRun" and acro.kind ~= "Flip")
 		or not character
@@ -615,16 +639,17 @@ local function kickLaunch(
 	along: Vector3,
 	kickSpeed: number,
 	up: number,
-	part: Instance?
+	part: Instance?,
+	input: Vector3?
 ): (Vector3, number, Vector3?)
 	local settings = Trav.WallHop
 	local camera = workspace.CurrentCamera
-	local wanted: Vector3 = (
-		if move.Magnitude > 0.1
+	local wanted: Vector3 = input
+		or (if move.Magnitude > 0.1
 			then flat(move)
 			elseif camera then flat(camera.CFrame.LookVector)
-			else nil
-	) or away
+			else nil)
+		or away
 	if -wanted:Dot(away) > settings.UpInto and part ~= nil and part ~= upKickWall then
 		upKickWall = part
 		local face = if root then flat(root.CFrame.LookVector) else nil
@@ -776,7 +801,7 @@ local function tryWallRun(now: number, input: Vector3): boolean
 end
 
 -- Leave the wall: Jump kicks off it; otherwise drop away from it.
-local function endWallRun(now: number, jump: boolean)
+local function endWallRun(now: number, jump: boolean, input: Vector3?)
 	local wall = acro
 	if not wall or wall.kind ~= "WallRun" or not root then
 		return
@@ -785,12 +810,15 @@ local function endWallRun(now: number, jump: boolean)
 	lastWallPart, lastWallTime = wall.part, os.clock()
 	local run = Trav.WallRun
 	if jump then
+		mantleBlockedForJump = true
+		jumpWindow = 0
 		local launch, up, face = kickLaunch(
 			wall.away,
 			wall.direction * wall.speed * run.JumpCarry,
 			run.JumpAway,
 			run.JumpUp,
-			wall.part
+			wall.part,
+			input
 		)
 		kickOff(now, launch, up, wall.away, wall.contact, face)
 		return
@@ -815,6 +843,7 @@ end
 -- Jump presses: on a wall run, mantle its top or start a climb/kick; else a ledge
 -- ahead takes priority, then a wall to kick off.
 local function onJumpPress()
+	mantleBlockedForJump = false
 	jumpWindow = os.clock() + Trav.Mantle.JumpWindow
 	if not humanoid or not root or humanoid.Health <= 0 then
 		return
@@ -824,27 +853,23 @@ local function onJumpPress()
 		endSlide() -- slide cancel: the jump (or mantle) carries the slide's speed
 	end
 	if acro and acro.kind == "WallRun" then
-		-- Space adjusts height, including short taps. Only a deliberate outward
-		-- press kicks off; reversing or following a corner must not count as a kick.
-		local wanted = if move.Magnitude > 0.1 then flat(move) else nil
+		-- Outward keys/diagonals jump immediately; only deliberate into-wall input
+		-- can mantle. Plain along-wall height taps stay attached, including near the lip.
+		local wanted, lateral = jumpMoveIntent()
+		local corner = acro.corner
 		local followingCorner = false
-		if wanted and acro.corner then
-			local corner = acro.corner
+		if wanted and corner then
 			local exit = if corner.reverse
 				then -corner.direction
 				else CFrame.Angles(0, corner.angle, 0):VectorToWorldSpace(corner.direction)
+			-- A forward height tap follows a corner; an added outward component is a kick.
 			followingCorner = wanted:Dot(exit) > Trav.WallRun.MinInput
+				and math.abs(wanted:Dot(acro.direction)) < Trav.WallRun.KickAway
 		end
-		local off = wanted ~= nil
-			and Math.wallRunKickIntent(
-				wanted:Dot(acro.away),
-				wanted:Dot(acro.direction),
-				Trav.WallRun.KickAway,
-				followingCorner
-			)
-		if off then
-			endWallRun(now, true)
-		else
+		local outward = if wanted then wanted:Dot(acro.away) else 0
+		if Math.wallRunKickIntent(outward, Trav.WallRun.KickAway, followingCorner, lateral) then
+			endWallRun(now, true, wanted)
+		elseif Math.wallRunMantleIntent(outward, Trav.WallRun.MantleInto) then
 			mantleFromWall(now)
 		end
 		return
@@ -1733,6 +1758,7 @@ if RunService:IsStudio() then
 			ready = true,
 			jumpHeld = jumpHeld,
 			wallSpeed = if acro and acro.kind == "WallRun" then acro.speed else nil,
+			wallAtTop = if acro and acro.kind == "WallRun" then acro.atTop == true else false,
 			wallNormal = if acro and acro.kind == "WallRun" then acro.away else nil,
 			shiftLocked = shiftLocked,
 			position = root.Position,

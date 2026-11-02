@@ -141,7 +141,9 @@ model:Destroy()
 
 -- The sight pod on top of the housing. Closed, it reads as part of the gun; the combat client
 -- opens it when aiming (AdsSight). Gun-space: X right, Y up, -Z toward the muzzle.
-local POD = Vector3.new(0, 0.712, -0.15)
+-- Seated on the receiver roof over the charger, 0.45 studs forward of the old mount.
+-- The short saddle feet follow the two roof levels; the cover stays flat when shut.
+local POD = Vector3.new(0, 0.68, -0.6)
 local function sightPart(
 	name: string,
 	size: Vector3,
@@ -161,7 +163,21 @@ end
 local GRAPHITE = Color3.fromRGB(37, 45, 52)
 local STEEL = Color3.fromRGB(162, 171, 177)
 local BURNT = Color3.fromRGB(150, 66, 32)
-sightPart("AdsBase", Vector3.new(0.19, 0.03, 0.3), Vector3.zero, GRAPHITE, Enum.Material.Metal)
+sightPart("AdsBase", Vector3.new(0.19, 0.026, 0.22), Vector3.zero, GRAPHITE, Enum.Material.Metal)
+sightPart(
+	"AdsMountFront",
+	Vector3.new(0.16, 0.052, 0.055),
+	Vector3.new(0, -0.038, -0.09),
+	GRAPHITE,
+	Enum.Material.Metal
+)
+sightPart(
+	"AdsMountRear",
+	Vector3.new(0.16, 0.034, 0.055),
+	Vector3.new(0, -0.029, 0.09),
+	GRAPHITE,
+	Enum.Material.Metal
+)
 sightPart(
 	"AdsEmitter",
 	Vector3.new(0.09, 0.03, 0.12),
@@ -181,15 +197,15 @@ local SIDES: { [string]: number } = { L = -1, R = 1 }
 for tag, sign in SIDES do
 	sightPart(
 		"AdsDoor" .. tag,
-		Vector3.new(0.085, 0.016, 0.28),
-		Vector3.new(sign * 0.0425, 0.036, 0),
+		Vector3.new(0.085, 0.016, 0.21),
+		Vector3.new(sign * 0.0425, 0.026, 0),
 		BURNT,
 		Enum.Material.Metal
 	)
 	sightPart(
 		"AdsProng" .. tag,
-		Vector3.new(0.012, 0.07, 0.03),
-		Vector3.new(sign * 0.028, 0.02, 0),
+		Vector3.new(0.012, 0.025, 0.03),
+		Vector3.new(sign * 0.028, 0.015, 0),
 		GRAPHITE,
 		Enum.Material.Metal,
 		1

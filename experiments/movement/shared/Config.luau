@@ -162,8 +162,9 @@ return table.freeze({
 			GroundDelay = 0.03,
 			Rise = { Min = 4, Max = 20, Carry = 0.55 }, -- upward speed on attach: Carry of the jump's, clamped
 			-- Jump holds and taps adjust height without a climb timeout or release kick.
-			-- To kick off, press Jump while steering mostly away from the wall.
+			-- To kick off, press Jump with an outward component, including a diagonal.
 			KickAway = 0.35,
+			MantleInto = 0.65, -- wall-run mantles require deliberate input into the wall
 			-- Studs above the root that must still be beside the wall to keep climbing; above
 			-- this the run holds its height along the top edge.
 			TopMargin = 1,

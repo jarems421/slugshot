@@ -56,6 +56,7 @@ Owner-approved look/feel excludes first-person running. Keep it unresolved until
 - Select each option: its camera and source-specific arms remain intact; selecting from third person does not force first person. A mid-flip selection queues without snapping the current turn. Preference survives respawn; a new session starts on Spot.
 - Preserve native first-person latch, camera/FOV undo, idle/shoulder geometry, hand/gun contact and holster/re-equip recovery. Tap and charged shots must still release during flips.
 - Use actual render waits (15 FPS background frames can exceed fixed 35 ms checks), honor three-second respawn cooldown, and approach traversal surfaces by walking. Record server rejection/correction deltas; local pose state alone is insufficient. Do not disable validation to satisfy a fixture.
+- For the PvP UI, also run the [real Play capture](pvp-ui.md#checking-it).
 - Run `python tools/verify_combat.py`; record actual Studio checks separately from offline analysis and owner acceptance. Probes live under `tools/studio`, outside normal builds. Close/rebuild/reopen the target range after playtestable changes; preserve unrelated Studio work.
 - Native UI automation: recalculate GUI coordinates after the command bar changes viewport height, account for GUI inset and hold mouse down long enough to cross a rendered frame. Early synthetic clicks were missed; current coordinates plus a 140 ms press activated all three buttons. Treat a missed synthetic event as a fixture question before modifying working UI code.
 

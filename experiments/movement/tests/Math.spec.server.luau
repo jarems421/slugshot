@@ -58,23 +58,44 @@ assert(
 	mathUtils.wallRunVerticalTarget(run.Speed, false, 100, false, run) == -run.SlideMax,
 	"Released slide caps downward speed"
 )
-for _, along in { -1, -0.8, 0, 0.8, 1 } do
+for _, away in { -1, -0.8, 0 } do
+	assert(not mathUtils.wallRunKickIntent(away, run.KickAway), "No outward input must not kick")
+end
+for _, away in { 0.5, math.sqrt(0.5), 1 } do
 	assert(
-		not mathUtils.wallRunKickIntent(0, along, run.KickAway),
-		"Steering alone never kicks off"
+		mathUtils.wallRunKickIntent(away, run.KickAway),
+		"Outward diagonals must kick without predominance"
+	)
+	assert(
+		not mathUtils.wallRunMantleIntent(away, run.MantleInto),
+		"Outward jump must never select mantle"
 	)
 end
 assert(
-	not mathUtils.wallRunKickIntent(0.6, 0.8, run.KickAway),
-	"Corner input mostly along is steering"
+	not mathUtils.wallRunKickIntent(1, run.KickAway, true),
+	"Plain corner-following height tap stays attached"
 )
-assert(not mathUtils.wallRunKickIntent(-1, 0, run.KickAway), "Into-wall input is not a kick")
-assert(mathUtils.wallRunKickIntent(1, 0, run.KickAway), "Deliberate outward press still kicks")
+assert(
+	not mathUtils.wallRunMantleIntent(0, run.MantleInto),
+	"Along-wall height tap must not mantle"
+)
+assert(
+	not mathUtils.wallRunMantleIntent(-0.3, run.MantleInto),
+	"A little inward drift must not mantle"
+)
+assert(
+	mathUtils.wallRunMantleIntent(-1, run.MantleInto),
+	"Deliberate into-wall press retains mantle"
+)
+assert(
+	mathUtils.wallRunMantleIntent(-math.sqrt(0.5), run.MantleInto),
+	"An inward diagonal can deliberately mantle"
+)
 print(
-	"[Movement tests] PASS: sustained climb, height taps, top hold, cling and outward kick intent"
+	"[Movement tests] PASS: sustained climb, height taps, diagonal kicks and deliberate mantle intent"
 )
 
 assert(
-	not mathUtils.wallRunKickIntent(1, 0, run.KickAway, true),
-	"Following the next corner face must not kick"
+	mathUtils.wallRunKickIntent(1, run.KickAway, true, true),
+	"Explicit outward strafe overrides corner following"
 )

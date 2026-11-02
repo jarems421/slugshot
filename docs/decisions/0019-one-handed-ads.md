@@ -21,3 +21,7 @@ Hold right mouse (or L2) with the blaster out. Aim is **one-handed**. A pod on t
 ## Consequences
 
 Movement stays frictionless because aiming has no speed penalty, unlike Valorant. That is open to revisit for balance. `experiments/movement/client/Ads.luau` holds the shared state and `Tuning.luau` holds the values. Evidence and limits: [face and ADS](../evidence/2026-11-01-face-and-ads.json).
+
+## Visual mounting correction (2026-11-02)
+
+Owner requested a forward, flat, seated mount and an opening that stays clear of the frame. The revised pod has saddle feet; covers fold down, the hologram draws after clearance, current weld transforms synchronize the visual copy, and the lowering frame fades at the crosshair rather than following the falling gun. A small ADS-only gun drop clears the orange hood; shot aiming and first-person-only policy stay intact. [Evidence and limits](../combat.md#ads-mount-and-clean-frame-opening-2026-11-02). Owner final appearance/feel approval remains unresolved.

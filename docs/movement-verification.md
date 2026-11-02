@@ -1,5 +1,20 @@
 # Movement prototype verification
 
+## Outward diagonals and deliberate wall-run mantles (2026-11-02)
+
+**Confirmed follow-up:** owner found the first fix too sticky; W+A/W+D/A+S/D+S should jump off when their sideways component points away from the current wall. Jump-off must win over the frequent near-top mantle, while deliberate mantling remains available.
+
+**Implemented:** outward component above 0.35 qualifies even when it equals the along-wall component. Explicit lateral input also overrides the corner-following exception when it points outward. Bound movement keys are sampled when Jump is pressed, using the current camera basis, before movement smoothing; gamepad/touch movement and rebindings retain their paths. The same sampled direction drives the launch, avoiding a kick in the previous travel direction. A plain along-wall/no-direction press stays a height adjustment. A wall-run mantle now requires at least 0.65 input into the wall. An outward press is handled first. After a wall-run kick, automatic mantle checks are blocked for that same jump press; a fresh press restores them. Ground/ordinary ledge mantle rules are unchanged. Sustained climb and no release kick remain.
+
+**Implemented regression coverage:** current controller fixture retains long hold/taps/reversal, adds immediate outward diagonals without a render-frame wait, a kick at the lip where a mantle is available, protection from mantle takeover during held jump, and a deliberate into-wall mantle. Numerical tests cover diagonal classification and explicit inward mantle intent. The disposable wall is now 100 studs high so both a six-second climb and lip checks fit the same run.
+
+**Verified offline:** `python tools/verify_combat.py` passes, including foundation/movement format, lint, strict types and public/private builds. A separate range build overlays only this movement source onto the concurrent PvP UI working-tree project, preserving its latest uncommitted UI/asset mappings without editing that worktree. Native results follow in the dated evidence.
+
+**Verified in native Studio, final run:** 362 six-second climb samples, 54.44-stud rise and zero editor-focus resets; all height taps/reversal retained. An immediate outward diagonal at the mantle-capable lip became WallHop with an outward launch and stayed out of Mantle throughout a 0.45-second held press. Forward and reverse outward diagonals kicked without waiting for movement smoothing. Repeated respawn/re-attachment and a deliberate inward press at the lip reached Mantle. [Structured evidence](evidence/2026-11-02-walljump-diagonals.json). Existing numeric 30/60/144 Hz and native wall-support/corner raycast regressions pass. The unchanged kong-vault end-pose assertion still fails; no claim is made that the entire native suite is green.
+
+**Limits:** physical keyboard/controller/touch feel and multiplayer remain owner/runtime checks. Existing unchanged kong-vault test failure remains outside this fix. No main merge, asset publication or concurrent source edits.
+
+
 ## Wall-run Space height controls (2026-11-02)
 
 **Confirmed:** owner reported upward input fading into descent after a few seconds and short height taps unexpectedly jumping away from the wall. Both were explicit legacy rules: `ClimbTime`/`ClimbFade`/`HeldSlide`, and `TapTime` on key release.
