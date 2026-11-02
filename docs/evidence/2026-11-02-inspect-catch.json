@@ -1,0 +1,371 @@
+{
+  "date": "2026-11-02",
+  "branch": "feature/loadout-controls",
+  "rejected_baseline": "dd5887a",
+  "request": "Toss upward, flip end-over-end, catch, then twist outward. Floppy stays in chamber; spring into turn; fluid bum shake without extra jiggles.",
+  "duration_seconds": 6.8,
+  "native_pose_review": [
+    "LOADOUTCHECK shot fp-0002",
+    "LOADOUTCHECK shot fp-0028",
+    "LOADOUTCHECK shot fp-0042",
+    "LOADOUTCHECK shot fp-0050",
+    "LOADOUTCHECK shot fp-0065",
+    "LOADOUTCHECK shot fp-0086",
+    "LOADOUTCHECK shot fp-0120",
+    "LOADOUTCHECK shot fp-0180",
+    "LOADOUTCHECK shot fp-0274",
+    "LOADOUTCHECK shot fp-0303",
+    "LOADOUTCHECK shot fp-0330",
+    "LOADOUTCHECK shot fp-0385",
+    "LOADOUTCHECK shot fp-0425",
+    "LOADOUTCHECK shot fp-0520",
+    "LOADOUTCHECK shot fp-0590",
+    "LOADOUTCHECK shot fp-0615",
+    "LOADOUTCHECK shot fp-0630",
+    "LOADOUTCHECK shot fp-0665",
+    "LOADOUTCHECK record fp",
+    "LOADOUTCHECK shot third-0002",
+    "LOADOUTCHECK shot third-0028",
+    "LOADOUTCHECK shot third-0042",
+    "LOADOUTCHECK shot third-0050",
+    "LOADOUTCHECK shot third-0065",
+    "LOADOUTCHECK shot third-0086",
+    "LOADOUTCHECK shot third-0120",
+    "LOADOUTCHECK shot third-0180",
+    "LOADOUTCHECK shot third-0274",
+    "LOADOUTCHECK shot third-0303",
+    "LOADOUTCHECK shot third-0330",
+    "LOADOUTCHECK shot third-0385",
+    "LOADOUTCHECK shot third-0425",
+    "LOADOUTCHECK shot third-0520",
+    "LOADOUTCHECK shot third-0590",
+    "LOADOUTCHECK shot third-0615",
+    "LOADOUTCHECK shot third-0630",
+    "LOADOUTCHECK shot third-0665",
+    "LOADOUTCHECK record third",
+    "LOADOUTCHECK PASS inspect review; native grip unchanged; head travel 0.042 studs; hip sweep 0.008 studs"
+  ],
+  "checks": [
+    "Tool.Grip/C1 unchanged",
+    "First-person barrel/arm alignment >0.97 while held",
+    "Airborne offset returns to the hand at catch before reveal",
+    "No lateral chamber-pivot escape",
+    "Conservative radial turn envelope and 681 axial hop samples remain within chamber",
+    "Imported head movement and independent hip sweep measured after rendering",
+    "Full raise/lower turns, held reaction angle and hop apex assertions"
+  ],
+  "offline": [
+    "python tools/verify_combat.py: PASS foundation/movement/combat formatting, lint, strict types, builds",
+    "python tools/verify_slugs.py: PASS contracts, data parity, Luau, foundation and build isolation",
+    "Final hip articulation additionally passes strict creature Luau analysis, formatting and lint"
+  ],
+  "screenshots": {
+    "fp-0002.png": "dad0e28ccefd8243b4d75b3362b2dadac319b87dd2862e640de48cf19d6d5eed",
+    "fp-0028.png": "e3cafb5bed34d1c9622413e305b78129874810cd57b35a6a575ae0961f4f4a42",
+    "fp-0042.png": "fdbfc6b280ab27b37a588567f23875fb01b5c3c7f9a818c897b51846e37af9b5",
+    "fp-0050.png": "595f108c54c862ef0c84079bbc898c753d0af1dd35855613e47b829e36cb960e",
+    "fp-0065.png": "4919cdab036852f766b5296df6be6743f7aeb7d25b93f25e62f83a964f6f831b",
+    "fp-0086.png": "303e9157382199950c2806783a3c1bf551b830290c2e4a37f42b9b888864d2da",
+    "fp-0120.png": "32ead7e270a31b08882892d127793374da9671704ccca60d578991feafa06f41",
+    "fp-0180.png": "484bbc33d8a787dcdd19ec231678be3c1a846c9d315f0a9b5d046f9bdd8f6f2a",
+    "fp-0274.png": "f54cd659a7ad823781fb97e80858c4f2d3b40cb569533b1c4286a03bb11c86fe",
+    "fp-0303.png": "80d383c785cdab2e064dd4f30b13afe5b08795793ea3b591b7e2926277b3b157",
+    "fp-0330.png": "60ca08f893124c3a30ea6184ca8cfe632e7a3acabd3f22db0ecd790f3419c926",
+    "fp-0385.png": "a00c9a78084210ff10d7b9ac2f684056df56851ae97f16f9771bc182899a54a8",
+    "fp-0425.png": "0b9718e80ab611ed8d7d8bf6a8c8870a0c0fa948bc5a0e86991ebfb42bc7cfdd",
+    "fp-0520.png": "8c700a005fc4b346b2c5364b4630d027f3eb8318498a9ce299337d3791ae4185",
+    "fp-0590.png": "9e05a18138f53da751d34d0d76f5bdd75f0d9f2bd092a68737e705319b2dbdc8",
+    "fp-0615.png": "e4d4cba352b8544a7b1e57dc855875bfb7f829702d660f30afc68b8560a76b12",
+    "fp-0630.png": "c50fe6c786b2aeb7f1d606bef8ffce54a9283e137fd0e843b9d7a87f600b3f15",
+    "fp-0665.png": "f153b71e666aa779e40890b084c20bfae1ce64f2bf1e9f7487c419b42b145e71",
+    "third-0002.png": "fd2f5072664e1446c35e229baf88336b58a706057123d8352375130a131577c2",
+    "third-0028.png": "459fd5d4765316978055064e4617d1a9a83bc6fe6a086d3fe98d9e86de2ed8f9",
+    "third-0042.png": "8686a8b16a54b62e4d01d795ec0333d196094bbb8a785941c5d71bf1f9760fcf",
+    "third-0050.png": "ec9fdc80626b92c07ca30687fb4094a41d63b1a24eba7f878f176754086b58ed",
+    "third-0065.png": "1667fae720d837965829905823015e05ee0bd99838327d1a5c7c21275de53a94",
+    "third-0086.png": "934b5e6e4b2d27d580650d71968fa81e61be437150c1ad912240f2aaee6ddeb8",
+    "third-0120.png": "7cf7b865c3a05bb5889a44de9b0660bbb920f6dde3e490ba182df156c8f9b250",
+    "third-0180.png": "bb4a104d48c8642276d20a5f4be5f6e10721587c2fb49ecf29f05e49689b9f02",
+    "third-0274.png": "9bac5134628e0420a48ab4f624e011c40f408b887384e9bea59f3d50f8687163",
+    "third-0303.png": "269fbc42ce5d653f7639901fed86e938507f9d24ca0a999776e3a5c472f287cc",
+    "third-0330.png": "b2fa4bf016c1d1fab155f27d334e088b45524eef4f853b61c0b3cd0d65022e18",
+    "third-0385.png": "1ec624a69b1cadb938e18ad13c0caab4dc2377be060674803081a39f86b9a59c",
+    "third-0425.png": "98e36a32b13d610b5e539d1babb676da63f4fc5be3d0864c126d39eaf5a5f2bc",
+    "third-0520.png": "3f812e9358c9798bbed11ef11a499c2537df2dfb6880ff8b0a409b44e2236af1",
+    "third-0590.png": "24030127b182b96a114daf54ea186734e6abd2e8bac0cfc218e94a20bd7e62af",
+    "third-0615.png": "3a2f9430bc91bccfc148a3341d1e53606c9a65cf092c484020733807bf12cb13",
+    "third-0630.png": "4b33e4be64004bcbf2f68fc09c9af871793e44c71c9d69b95de1c5e2bee14db0",
+    "third-0665.png": "b51c4c3a9a103c7536a2b94635390d5188f5de7bc2ef5403ba2bed44daa819aa"
+  },
+  "artifacts": {
+    "captures": "build\\inspect-v5\\hip-sweep",
+    "contact_sheet": "build\\inspect-v5\\final-contact-sheet.png",
+    "reaction_sheet": "build\\inspect-v5\\final-reaction-sheet.png",
+    "continuous_frames": {
+      "fp": {
+        "frames": 58,
+        "duration_ms": 7073,
+        "median_interval_ms": 120.6
+      },
+      "third": {
+        "frames": 61,
+        "duration_ms": 7128,
+        "median_interval_ms": 117.9
+      }
+    }
+  },
+  "contact_report": {
+    "schema": "animation_contact_sheet_report.v1",
+    "frames": [
+      "build\\inspect-v5\\final-crops\\fp-0002.png",
+      "build\\inspect-v5\\final-crops\\fp-0028.png",
+      "build\\inspect-v5\\final-crops\\fp-0042.png",
+      "build\\inspect-v5\\final-crops\\fp-0050.png",
+      "build\\inspect-v5\\final-crops\\fp-0065.png",
+      "build\\inspect-v5\\final-crops\\fp-0086.png",
+      "build\\inspect-v5\\final-crops\\fp-0120.png",
+      "build\\inspect-v5\\final-crops\\fp-0180.png",
+      "build\\inspect-v5\\final-crops\\fp-0274.png",
+      "build\\inspect-v5\\final-crops\\fp-0303.png",
+      "build\\inspect-v5\\final-crops\\fp-0330.png",
+      "build\\inspect-v5\\final-crops\\fp-0385.png",
+      "build\\inspect-v5\\final-crops\\fp-0425.png",
+      "build\\inspect-v5\\final-crops\\fp-0520.png",
+      "build\\inspect-v5\\final-crops\\fp-0590.png",
+      "build\\inspect-v5\\final-crops\\fp-0615.png",
+      "build\\inspect-v5\\final-crops\\fp-0630.png",
+      "build\\inspect-v5\\final-crops\\fp-0665.png",
+      "build\\inspect-v5\\final-crops\\third-0002.png",
+      "build\\inspect-v5\\final-crops\\third-0028.png",
+      "build\\inspect-v5\\final-crops\\third-0042.png",
+      "build\\inspect-v5\\final-crops\\third-0050.png",
+      "build\\inspect-v5\\final-crops\\third-0065.png",
+      "build\\inspect-v5\\final-crops\\third-0086.png",
+      "build\\inspect-v5\\final-crops\\third-0120.png",
+      "build\\inspect-v5\\final-crops\\third-0180.png",
+      "build\\inspect-v5\\final-crops\\third-0274.png",
+      "build\\inspect-v5\\final-crops\\third-0303.png",
+      "build\\inspect-v5\\final-crops\\third-0330.png",
+      "build\\inspect-v5\\final-crops\\third-0385.png",
+      "build\\inspect-v5\\final-crops\\third-0425.png",
+      "build\\inspect-v5\\final-crops\\third-0520.png",
+      "build\\inspect-v5\\final-crops\\third-0590.png",
+      "build\\inspect-v5\\final-crops\\third-0615.png",
+      "build\\inspect-v5\\final-crops\\third-0630.png",
+      "build\\inspect-v5\\final-crops\\third-0665.png"
+    ],
+    "frame_diff": [
+      {
+        "from": "fp-0002.png",
+        "to": "fp-0028.png",
+        "mean_rgb_diff": 22.8325466253569
+      },
+      {
+        "from": "fp-0028.png",
+        "to": "fp-0042.png",
+        "mean_rgb_diff": 25.434108903873803
+      },
+      {
+        "from": "fp-0042.png",
+        "to": "fp-0050.png",
+        "mean_rgb_diff": 5.688059149909887
+      },
+      {
+        "from": "fp-0050.png",
+        "to": "fp-0065.png",
+        "mean_rgb_diff": 6.195056497175141
+      },
+      {
+        "from": "fp-0065.png",
+        "to": "fp-0086.png",
+        "mean_rgb_diff": 16.208233602656787
+      },
+      {
+        "from": "fp-0086.png",
+        "to": "fp-0120.png",
+        "mean_rgb_diff": 10.859061822894517
+      },
+      {
+        "from": "fp-0120.png",
+        "to": "fp-0180.png",
+        "mean_rgb_diff": 7.424730676548609
+      },
+      {
+        "from": "fp-0180.png",
+        "to": "fp-0274.png",
+        "mean_rgb_diff": 2.2013354798209908
+      },
+      {
+        "from": "fp-0274.png",
+        "to": "fp-0303.png",
+        "mean_rgb_diff": 0.33051961201223096
+      },
+      {
+        "from": "fp-0303.png",
+        "to": "fp-0330.png",
+        "mean_rgb_diff": 2.282351720227609
+      },
+      {
+        "from": "fp-0330.png",
+        "to": "fp-0385.png",
+        "mean_rgb_diff": 0.6804998683757568
+      },
+      {
+        "from": "fp-0385.png",
+        "to": "fp-0425.png",
+        "mean_rgb_diff": 1.8910870137496711
+      },
+      {
+        "from": "fp-0425.png",
+        "to": "fp-0520.png",
+        "mean_rgb_diff": 0.6061653301743515
+      },
+      {
+        "from": "fp-0520.png",
+        "to": "fp-0590.png",
+        "mean_rgb_diff": 11.143324879006945
+      },
+      {
+        "from": "fp-0590.png",
+        "to": "fp-0615.png",
+        "mean_rgb_diff": 29.428831784217238
+      },
+      {
+        "from": "fp-0615.png",
+        "to": "fp-0630.png",
+        "mean_rgb_diff": 15.934193194014133
+      },
+      {
+        "from": "fp-0630.png",
+        "to": "fp-0665.png",
+        "mean_rgb_diff": 20.599774973168902
+      },
+      {
+        "from": "fp-0665.png",
+        "to": "third-0002.png",
+        "mean_rgb_diff": 52.84716020695381
+      },
+      {
+        "from": "third-0002.png",
+        "to": "third-0028.png",
+        "mean_rgb_diff": 6.7043514235789905
+      },
+      {
+        "from": "third-0028.png",
+        "to": "third-0042.png",
+        "mean_rgb_diff": 7.394633569739953
+      },
+      {
+        "from": "third-0042.png",
+        "to": "third-0050.png",
+        "mean_rgb_diff": 6.618386267858978
+      },
+      {
+        "from": "third-0050.png",
+        "to": "third-0065.png",
+        "mean_rgb_diff": 8.199556994552369
+      },
+      {
+        "from": "third-0065.png",
+        "to": "third-0086.png",
+        "mean_rgb_diff": 9.833916640970294
+      },
+      {
+        "from": "third-0086.png",
+        "to": "third-0120.png",
+        "mean_rgb_diff": 2.985028779936273
+      },
+      {
+        "from": "third-0120.png",
+        "to": "third-0180.png",
+        "mean_rgb_diff": 4.825723095898859
+      },
+      {
+        "from": "third-0180.png",
+        "to": "third-0274.png",
+        "mean_rgb_diff": 7.71952718676123
+      },
+      {
+        "from": "third-0274.png",
+        "to": "third-0303.png",
+        "mean_rgb_diff": 8.12710401891253
+      },
+      {
+        "from": "third-0303.png",
+        "to": "third-0330.png",
+        "mean_rgb_diff": 5.284087778805632
+      },
+      {
+        "from": "third-0330.png",
+        "to": "third-0385.png",
+        "mean_rgb_diff": 4.744613526570048
+      },
+      {
+        "from": "third-0385.png",
+        "to": "third-0425.png",
+        "mean_rgb_diff": 0.3118614451639428
+      },
+      {
+        "from": "third-0425.png",
+        "to": "third-0520.png",
+        "mean_rgb_diff": 4.420028779936273
+      },
+      {
+        "from": "third-0520.png",
+        "to": "third-0590.png",
+        "mean_rgb_diff": 6.406841401994039
+      },
+      {
+        "from": "third-0590.png",
+        "to": "third-0615.png",
+        "mean_rgb_diff": 8.342233014698325
+      },
+      {
+        "from": "third-0615.png",
+        "to": "third-0630.png",
+        "mean_rgb_diff": 5.26956161989927
+      },
+      {
+        "from": "third-0630.png",
+        "to": "third-0665.png",
+        "mean_rgb_diff": 6.648596464179257
+      }
+    ],
+    "warnings": [
+      "High frame-to-frame visual jump: 52.85"
+    ]
+  },
+  "review_findings": [
+    "Earlier barrel roll and visibility escape rejected by owner",
+    "Small toss arc rejected internally for near-forearm sweep; widened arc replaces it",
+    "Early FP framing clipped muzzle; carry depth corrected",
+    "Hip yaw alone read weakly on rounded back; lateral pelvis sweep and upper-body countershift added",
+    "Cold launch exposed Handle/weld replication race; setup now retries",
+    "Scriptable review camera cached native FP torso fade; capture fixture clears it in third person"
+  ],
+  "limits": [
+    "Owner art/feel verdict pending",
+    "One-client desktop Studio; no observer, latency or device coverage",
+    "Envelope checks are conservative authored bounds, not per-skinned-vertex collision tests",
+    "Recorded captures run about 8-9 fps; they do not measure the game renderer frame rate",
+    "One contact-sheet difference warning crosses the FP/third-person camera cut",
+    "No Blender asset/source/export modification or new uploaded asset in this task"
+  ],
+  "loadout_regression": [
+    "LOADOUTCHECK key V",
+    "LOADOUTCHECK key 2",
+    "LOADOUTCHECK wheel down",
+    "LOADOUTCHECK wheel up",
+    "LOADOUTCHECK key R",
+    "LOADOUTCHECK shot first-person-look",
+    "LOADOUTCHECK shot first-person-wiggle",
+    "LOADOUTCHECK key V",
+    "LOADOUTCHECK wheel down",
+    "LOADOUTCHECK shot third-person-look",
+    "LOADOUTCHECK key Q",
+    "LOADOUTCHECK shot complete",
+    "LOADOUTCHECK PASS sparse slots, real keys/wheel, cooldowns, inspect, interruptions, rebinding, respawn, server rejection"
+  ],
+  "loadout_regression_artifacts": "build/inspect-v5/final-regression",
+  "release_place": "build/SlugshotInspectCatch.rbxlx"
+}

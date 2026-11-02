@@ -55,6 +55,35 @@ function PressPlay {
     [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x74, [IntPtr]0xC0000001L) | Out-Null
 }
 
+function Record($view) {
+    $rect = New-Object Win+RECT
+    [Win]::GetWindowRect($hwnd, [ref]$rect) | Out-Null
+    $w = $rect.R - $rect.L; $h = $rect.B - $rect.T
+    $frames = Join-Path $OutDir "motion-$view"
+    New-Item -ItemType Directory -Force $frames | Out-Null
+    [Win]::SetForegroundWindow($hwnd) | Out-Null
+    [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x4B, [IntPtr]1) | Out-Null
+    Start-Sleep -Milliseconds 40
+    [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x4B, [IntPtr]0xC0000001L) | Out-Null
+    $watch = [System.Diagnostics.Stopwatch]::StartNew()
+    $timings = @()
+    $index = 0
+    while ($watch.Elapsed.TotalSeconds -lt 7.1) {
+        $bitmap = New-Object System.Drawing.Bitmap $w, $h
+        $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        $dc = $graphics.GetHdc()
+        [Win]::PrintWindow($hwnd, $dc, 2) | Out-Null
+        $graphics.ReleaseHdc($dc)
+        $timings += $watch.Elapsed.TotalMilliseconds
+        $bitmap.Save((Join-Path $frames ("{0:D4}.jpg" -f $index)), [System.Drawing.Imaging.ImageFormat]::Jpeg)
+        $graphics.Dispose(); $bitmap.Dispose()
+        $index++
+        Start-Sleep -Milliseconds 35
+    }
+    $timings | ConvertTo-Json | Set-Content (Join-Path $frames "timing.json")
+    Write-Output "recorded $view ($index real-time frames)"
+}
+
 Start-Sleep -Seconds 12
 PressPlay
 $lastPress = Get-Date
@@ -75,8 +104,9 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
                 $key = $log.Name + $line
                 if (-not $seen.ContainsKey($key)) {
                     $seen[$key] = $true
-                    if ($line -match "LOADOUTCHECK") { $running = $true }
+                    if ($line -match "LOADOUTCHECK (shot|record|key|wheel|PASS|FAIL)") { $running = $true }
                     if ($line -match "LOADOUTCHECK shot (\S+)") { Capture $Matches[1] }
+                    elseif ($line -match "LOADOUTCHECK record (fp|third)") { Record $Matches[1] }
                     elseif ($line -match "LOADOUTCHECK key result (.+)") { Write-Output "key result: $($Matches[1].Trim())" }
                     elseif ($line -match "LOADOUTCHECK key ([VR2Q])") {
                         $code = switch ($Matches[1]) { 'V' { 0x56 } 'R' { 0x52 } '2' { 0x32 } 'Q' { 0x51 } }

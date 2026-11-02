@@ -452,7 +452,7 @@ function Animator.start()
 						local w = Inspect.weight(inspecting)
 						-- Rotate the whole held arm through the native, unchanged grip.
 						-- Keep the shoulder pivot attached to the torso throughout.
-						local gunRotation = Inspect.gunRotation()
+						local gunRotation = Inspect.gunRotation(inspecting)
 						local handRotation = gunRotation * Inspect.armFromGun()
 						if
 							character ~= Players.LocalPlayer.Character or not FirstPerson.active()

@@ -249,3 +249,7 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 ## Menu phrases (2026-11-02)
 
 "It just looks so basic, like a simple drawing" and "pop way more", "dimensional" meant depth and response: raised controls, light, motion on hover. He added that whatever is added it must "still feel like Slugterra, most importantly": pop alone is not the goal, so effects are tied to the world (crystals, goo, cracks, a live slug).
+
+## Inspect flip and creature acting (2026-11-02)
+
+**Confirmed:** "flip the gun up and then you catch it" means an airborne end-over-end toss, catch, then a separate outward wrist turn to reveal the chamber side. A barrel roll/twirl did not satisfy it. "The slime shouldn't come out" means all inspect acting remains inside the chamber, even if an outward offset makes the face easier to see. "Springing up" means compress, extend quickly, turn while airborne and cushion the landing. "More fluid" with "don't add ... jiggles" means coordinated hip/upper-body motion with eased reversals, not a rigid whole-model swivel or extra jelly oscillation. This supersedes the prior spin interpretation; owner verdict on the new candidate remains open.

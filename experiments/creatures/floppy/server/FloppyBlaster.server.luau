@@ -275,10 +275,27 @@ assert(current > 1e-5, "Floppy eye spacing is zero")
 local target = math.min(
 	canisterSize.X * 0.84 / SOURCE_SIZE.X,
 	canisterSize.Y * 0.82 / SOURCE_SIZE.Z,
-	canisterSize.Z * 0.86 / SOURCE_SIZE.Y
+	canisterSize.Z * 0.86 / SOURCE_SIZE.Y,
+	-- Turning sweeps the source rectangle's corners. Reserve a circular
+	-- envelope plus articulation margin, not just its front-facing width.
+	math.min(canisterSize.X, canisterSize.Y)
+		* 0.9
+		/ (Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude + 0.2)
 )
 local shrink = target / current
 floppy:ScaleTo(floppy:GetScale() * shrink)
+-- Numeric containment contract for the client-only inspect, derived from this fit.
+floppy:SetAttribute("ChamberCentre", canisterCentre)
+floppy:SetAttribute("ChamberHalfSize", canisterSize / 2)
+floppy:SetAttribute("LoadedHalfLength", (SOURCE_SIZE.Y / 2 + 0.12) * target)
+floppy:SetAttribute(
+	"LoadedRadius",
+	(Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude / 2 + 0.1) * target
+)
+floppy:SetAttribute(
+	"InspectHopHeight",
+	math.max(0, math.min(0.035, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008))
+)
 local up = (head.WorldPosition - rootBone.WorldPosition).Unit
 local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
 local front = (face - up * face:Dot(up)).Unit

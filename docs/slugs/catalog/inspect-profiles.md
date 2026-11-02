@@ -12,3 +12,5 @@
 See [implementation and verification](../../loadout-controls.md). This record does not approve new abilities, change either slug's design or rename Inferno.
 
 **Confirmed correction, 2026-11-02:** the Floppy inspect is an upward barrel aligned with the arm, held diagonally toward the player; the first candidate was rejected for poor gun/hand placement. [Revision and review evidence](../inspect-revision.md) supersede its pose.
+
+**Confirmed/implemented correction, 2026-11-02:** shared presentation now tosses the gun, catches it, then twists outward. Floppy stays inside the chamber, compresses and springs into his turn, then uses articulated hip/upper-body motion for the bum shake without added jiggles. Prior visibility escape/barrel twirl are superseded. [Current candidate/evidence](../inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current); owner art approval remains unresolved. Inferno's separate runtime integration is still outside this branch.

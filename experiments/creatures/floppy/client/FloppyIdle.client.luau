@@ -38,6 +38,27 @@ local function setup(model: Model)
 	if not (root and head and eyeL and eyeR) then
 		return
 	end
+	local tool = model:FindFirstAncestorOfClass("Tool")
+	local handle = tool and tool:FindFirstChild("Handle")
+	if tool then
+		local attached = false
+		for _, item in model:GetDescendants() do
+			if item:IsA("Weld") and item.Part0 == handle then
+				attached = true
+				break
+			end
+		end
+		-- Model, Handle and weld references can replicate in separate batches.
+		-- Do not permanently register an idle-only model before its grip arrives.
+		if not handle or not handle:IsA("BasePart") or not attached then
+			task.delay(0.1, function()
+				if model.Parent and not floppies[model] then
+					setup(model)
+				end
+			end)
+			return
+		end
+	end
 	for _, bone in allBones do
 		bone.Transform = CFrame.identity
 	end
@@ -92,8 +113,6 @@ local function setup(model: Model)
 		end
 	end
 	-- Add inspect to the existing driver, rather than racing a second bone writer.
-	local tool = model:FindFirstAncestorOfClass("Tool")
-	local handle = tool and tool:FindFirstChild("Handle")
 	local function inspectTime(): number?
 		local character = tool and tool.Parent
 		return if Inspect
@@ -112,8 +131,14 @@ local function setup(model: Model)
 		-- The raised barrel already stands Floppy upright. Turn his face toward
 		-- the holder while retaining that long axis instead of tipping him flat.
 		local upright = CFrame.fromMatrix(fz, uy, sx) * sourceBasis:Inverse()
-		local pivot =
-			handle.CFrame:PointToObjectSpace((root.WorldPosition + head.WorldPosition) / 2)
+		local centre = model:GetAttribute("ChamberCentre")
+		local pivot = if typeof(centre) == "Vector3"
+			then centre
+			else handle.CFrame:PointToObjectSpace(
+				(root.WorldPosition + head.WorldPosition) / 2
+			)
+		local height = model:GetAttribute("InspectHopHeight")
+		local hopHeight = if typeof(height) == "number" then height else 0
 		local joints: { { joint: Weld, base: CFrame } } = {}
 		for _, item in model:GetDescendants() do
 			if item:IsA("Weld") and item.Part0 == handle then
@@ -130,13 +155,14 @@ local function setup(model: Model)
 			local pose = CFrame.identity
 			if t then
 				local stand = Inspect.stand(t)
-				local rotation = CFrame.fromAxisAngle(
-					uy,
-					Inspect.turn(t, "Floppy") + Inspect.wiggle(t)
-				) * upright:Lerp(CFrame.identity, 1 - stand)
-				local lift = (uy * (0.25 * stand + Inspect.hop(t)) - sx * (2.2 * stand)) * SCALE
+				local rotation = CFrame.fromAxisAngle(uy, Inspect.turn(t, "Floppy"))
+					* upright:Lerp(CFrame.identity, 1 - stand)
+				-- The barrel already stands him up. Keep the whole performance inside
+				-- the chamber; never slide him sideways through its glass to show him.
+				local lift = uy * hopHeight * Inspect.hop(t)
 				pose = CFrame.new(lift + pivot) * rotation * CFrame.new(-pivot)
 			end
+			model:SetAttribute("InspectPose", pose)
 			for _, entry in joints do
 				if entry.joint.Parent then
 					entry.joint.C0 = pose * entry.base
@@ -144,14 +170,46 @@ local function setup(model: Model)
 			end
 		end
 	end
+	-- Anticipate, spring, land, then sweep the hips. The upper body counters
+	-- that sweep so this is an articulated gesture rather than a rigid swivel.
+	local lower = bones.body_lower
+	if lower then
+		local uy, sx = toLocal(lower, up), toLocal(lower, sideways)
+		motion[lower] = function(_clock: number): CFrame
+			local t = inspectTime()
+			local sway = if t then Inspect.wiggle(t) else 0
+			return CFrame.new(sx * SCALE * 0.09 * sway / math.rad(9))
+				* CFrame.fromAxisAngle(uy, sway)
+		end
+	end
+	if upper then
+		local idleUpper = motion[upper]
+		local uy, fz, sx = toLocal(upper, up), toLocal(upper, front), toLocal(upper, sideways)
+		motion[upper] = function(clock: number): CFrame
+			local t = inspectTime()
+			if not t then
+				return idleUpper(clock)
+			end
+			local squeeze, sway = Inspect.compression(t), Inspect.wiggle(t)
+			local pose = CFrame.new(
+				(uy * (-0.10 * squeeze + 0.035 * Inspect.hop(t)) - sx * (0.05 * sway / math.rad(9)))
+					* SCALE
+			) * CFrame.fromAxisAngle(uy, -0.55 * sway) * CFrame.fromAxisAngle(fz, -0.35 * sway)
+			return idleUpper(clock):Lerp(pose, Inspect.stand(t))
+		end
+	end
 	local idleHead = motion[head]
-	local headSide = toLocal(head, sideways)
+	local headSide, headUp = toLocal(head, sideways), toLocal(head, up)
 	motion[head] = function(clock: number): CFrame
 		local t = inspectTime()
-		local lift = if t then Inspect.stand(t) else 0
-		local nod = if t then math.sin((t - 1) * 6) * math.exp(-math.max(t - 1.4, 0) * 3) else 0
-		return idleHead(clock)
-			* CFrame.fromAxisAngle(headSide, math.rad(8) * lift + nod * 0.08 * lift)
+		if not t then
+			return idleHead(clock)
+		end
+		local squeeze = Inspect.compression(t)
+		local pose = CFrame.new(headUp * SCALE * (-0.12 * squeeze + 0.06 * Inspect.hop(t)))
+			* CFrame.fromAxisAngle(headSide, math.rad(7) * Inspect.stand(t) - math.rad(9) * squeeze)
+			* CFrame.fromAxisAngle(headUp, -0.45 * Inspect.wiggle(t))
+		return idleHead(clock):Lerp(pose, Inspect.stand(t))
 	end
 	-- Roblox can create one skeleton per skinned mesh. Animate every copy;
 	-- a name-keyed dictionary alone silently leaves the other meshes at rest.

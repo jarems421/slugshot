@@ -107,7 +107,7 @@ local ok, problem = pcall(function()
 	assert(attachment and attachment:IsA("Weld"), "loaded attachment missing")
 	sampledAttachment = attachment :: Weld
 	local rest = sampledAttachment.C0
-	task.wait(1.2)
+	task.wait(1.9)
 	assert(sampledRoot ~= rest, "slug did not hop/turn")
 	local turning = sampledRoot
 	local visual = (workspace.CurrentCamera :: Camera):FindFirstChild("FirstPersonBodyVisual")
@@ -116,7 +116,7 @@ local ok, problem = pcall(function()
 	task.wait(0.1)
 	assert(sampledRoot ~= turning, "slug pose frozen")
 	capture("first-person-wiggle")
-	task.wait(2)
+	task.wait(3)
 	assert(inspect.elapsed(character) == nil, "inspect did not finish")
 	probe:Invoke("Inspect")
 	waitFor(function()
@@ -142,7 +142,7 @@ local ok, problem = pcall(function()
 	waitFor(function()
 		return inspect.elapsed(character) ~= nil
 	end, "third person inspect")
-	task.wait(1.3)
+	task.wait(1.8)
 	local camera = workspace.CurrentCamera :: Camera
 	local root = character:FindFirstChild("HumanoidRootPart") :: BasePart
 	camera.CameraType = Enum.CameraType.Scriptable

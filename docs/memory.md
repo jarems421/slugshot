@@ -1586,3 +1586,10 @@
 - **Confirmed:** slightly more leftward arm lean, slow spin on the raise and (after owner correction) a spin on the down-flick. Preserve Floppy's reaction.
 - **Implemented:** about 9 degrees more left lean; full eased forward/reverse turns across the existing raise/lower windows, using the draw/holster trigger-guard pivot. Apply full angles after pose interpolation so a 360-degree turn is not shortened by quaternion blending. Clear the forearm during transition; keep the held grip seated.
 - **Verification:** [revision/evidence](slugs/inspect-revision.md#final-lean-and-spin-follow-up-2026-11-02); owner final feel remains unapproved, and observer/network/device tests remain open.
+
+## 2026-11-02 - Toss/catch and contained inspect correction
+
+- **Confirmed:** "flip" means toss up, end-over-end flip, catch, then outward wrist reveal. Floppy must stay inside the chamber, spring into his turn, and shake his bum fluidly without extra jiggles. Prior spin/escape candidates rejected.
+- **Implemented:** isolated `feature/loadout-controls`; shared 6.8-second timing, wider toss arc and corrected FP carry depth, chamber-centred turn with conservative radial/axial fit, compression/extension, hip/upper/head counterrotation and staged face. Cold-launch Handle/weld replication race now retries before setup registers the loaded driver. No Blender source, published assets, main or concurrent lobby/SFX/Inferno work changed.
+- **Implemented/verified:** offline combat/creature checks, final 36-pose Studio review, real-time sequences and native loadout regression pass (including grip, chamber envelope, independent hip motion and holster cleanup); see [current revision/evidence](slugs/inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current). Preserve rejected sheets and distinguish native/offline checks from subjective art approval.
+- **Unresolved:** owner timing/feel verdict, multiplayer/latency and broader devices.

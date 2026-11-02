@@ -33,3 +33,7 @@ Decision: [ADR 0021](decisions/0021-loadout-controls-and-inspect.md).
 ## Inspect superseded after owner rejection
 
 **Confirmed, 2026-11-02:** the owner rejected the original inspect pose and clarified an upward barrel aligned with the raised arm, diagonally toward the holder. The [revised inspect](slugs/inspect-revision.md) replaces independent gun placement and bone-only whole-body turning with a shared grip solve and cosmetic attachment motion. Earlier passing assertions did not establish visual approval.
+
+## Current inspect correction (2026-11-02)
+
+**Confirmed/implemented:** the owner clarified a toss, end-over-end flip, catch, then outward wrist reveal. Floppy stays in the chamber and springs into his turn; his bum shake articulates the hips and upper body without added jiggles. The gesture is now 6.8 seconds; controls and interruption rules stay as previously verified. Earlier barrel-twirl/visibility-offset candidates are superseded. [Revision and evidence](slugs/inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current). Owner art/feel approval remains unresolved.
