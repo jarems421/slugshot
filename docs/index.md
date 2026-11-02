@@ -18,6 +18,8 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [First-person owner wording and recurring regression fixes](combat.md#owner-language-contextual-interpretations-to-carry-forward)
 - [Combat charge art direction and lobby references](research/charge-art-direction.md)
 - [Asset register and conventions](assets.md)
+- [Complete local environment preview](art/environment-preview/README.md)
+- [General shop concept](art/general-shop.md), [shop reference research](research/slugterra-shops.md) and [reusable curled cave fern](art/curled-cave-fern.md)
 - [Slug asset pipeline](slugs/pipeline.md), [rig contract](slugs/rig-specification.md), [species guide](slugs/species-guide.md), [transformation API](slugs/transformation-system.md), [Studio import](slugs/studio-import.md) and [evidence](slugs/verification.md)
 - [Slug design catalogue and records](slugs/catalog/index.md)
 - [Confirmed slug recovery and Floppy burrow sequence](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md)
