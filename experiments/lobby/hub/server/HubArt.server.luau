@@ -477,6 +477,15 @@ local function lighting()
 	-- Phone first: no shadows and no voxel-heavy lamps, so every device gets the same look. The concepts' shading is
 	-- painted in; a soft light from the Sky Well brings out the normal maps.
 	Lighting.GlobalShadows = false
+	-- As dark as the cavern. Roblox stops drawing far parts at lower graphics levels, and the bright default sky then
+	-- showed through wherever the far wall dropped out (phones especially).
+	local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
+	for _, face in { "SkyboxBk", "SkyboxDn", "SkyboxFt", "SkyboxLf", "SkyboxRt", "SkyboxUp" } do
+		(sky :: any)[face] = fxTexture("cavernsky")
+	end
+	sky.CelestialBodiesShown = false
+	sky.StarCount = 0
+	sky.Parent = Lighting
 	Lighting.ClockTime = 12
 	Lighting.GeographicLatitude = 35
 	Lighting.Brightness = 0.9
@@ -495,9 +504,10 @@ local function lighting()
 end
 
 -- A star twinkle at each crystal's tip (look-pack.md), scaled to how far away they're seen.
-local function addTwinkles(key: string, size: number)
+local function addTwinkles(key: string, size: number, drop: number?)
 	for index, point in private.assets[key].points do
-		local source = holder("Twinkle", point.p, Vector3.one * size * 0.4)
+		local source =
+			holder("Twinkle", point.p - Vector3.new(0, drop or 0, 0), Vector3.one * size * 0.4)
 		local e = Instance.new("ParticleEmitter")
 		e.Name = "Twinkle"
 		e.Texture = fxTexture("twinkle")
@@ -790,27 +800,38 @@ local function buildMaelstrom()
 	motes.Parent = pit
 end
 
+-- The owner lowered the ceiling from where the concept has it, and everything fixed to it comes down too.
+local CEILING_DROP = 250 - layout.cavern.ceilingY
+
+local function placeUnderCeiling(key: string): Model?
+	local model = place(key)
+	if model then
+		model:PivotTo(model:GetPivot() - Vector3.new(0, CEILING_DROP, 0))
+	end
+	return model
+end
+
 local function buildSkyWell()
-	place("hub-well-rock")
-	place("hub-well-glow")
-	addTwinkles("hub-well-glow", 6)
-	place("hub-ceiling-vines")
-	place("hub-ceiling-gems")
-	addTwinkles("hub-ceiling-gems", 7)
-	local isles = place("hub-well-isles")
+	placeUnderCeiling("hub-well-rock")
+	placeUnderCeiling("hub-well-glow")
+	addTwinkles("hub-well-glow", 6, CEILING_DROP)
+	placeUnderCeiling("hub-ceiling-vines")
+	placeUnderCeiling("hub-ceiling-gems")
+	addTwinkles("hub-ceiling-gems", 7, CEILING_DROP)
+	local isles = placeUnderCeiling("hub-well-isles")
 	if isles then
 		for index = 0, 4 do
 			setMotion(isles, `Isle{index}`, -ORBIT, 6, ORBIT * (4 + index), index * 1.0)
 		end
 	end
-	local bits = place("hub-well-bits")
+	local bits = placeUnderCeiling("hub-well-bits")
 	if bits then
 		for index = 0, 5 do
 			local spin = if index < 3 then -ORBIT * 2 else -ORBIT
 			setMotion(bits, `Bits{index}`, spin, 6, ORBIT * (4 + index % 3 * 2), index * 1.9)
 		end
 	end
-	local storm = place("hub-storm")
+	local storm = placeUnderCeiling("hub-storm")
 	if storm then
 		for index = 0, 5 do
 			-- Each layer winds a little faster toward the eye, which gives the cloud its depth.
@@ -828,7 +849,7 @@ local function buildSkyWell()
 		local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * 16
 		beam(
 			"LightShaft",
-			offset + Vector3.new(0, 262, 0),
+			offset + Vector3.new(0, 262 - CEILING_DROP, 0),
 			offset * 2.4 + Vector3.new(0, 18, 0),
 			80,
 			170,
@@ -840,8 +861,8 @@ local function buildSkyWell()
 		)
 	end
 	-- A soft round glow well under the storm. A sprite that crosses a flat cloud sheet is cut in a straight line there, which
-	-- read as a box in the sky (owner), so none may reach the sheets (the lowest is at 200).
-	local mouth = holder("MouthGlow", Vector3.new(0, 118, 0), Vector3.one)
+	-- read as a box in the sky (owner), so none may reach the sheets (the lowest is 50 under the ceiling).
+	local mouth = holder("MouthGlow", Vector3.new(0, 118 - CEILING_DROP, 0), Vector3.one)
 	local haze = Instance.new("ParticleEmitter")
 	haze.Texture = fxTexture("flash")
 	haze.Color = ColorSequence.new(Color3.fromRGB(150, 180, 225))
@@ -854,7 +875,7 @@ local function buildSkyWell()
 	haze.Speed = NumberRange.new(0)
 	haze.Parent = mouth
 	-- Lightning: the client moves this holder inside the storm and fires its two emitters.
-	local flash = holder("StormFlash", Vector3.new(0, 300, 0), Vector3.one)
+	local flash = holder("StormFlash", Vector3.new(0, 300 - CEILING_DROP, 0), Vector3.one)
 	local zap = Instance.new("ParticleEmitter")
 	zap.Name = "Zap"
 	zap.Texture = fxTexture("zap")

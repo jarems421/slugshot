@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Lower ceiling, rubble tornado, dark sky
+
+- **Owner request:** lower the ceiling noticeably (about 25 studs), make the floating rubble a short, tight tornado near the ceiling, and add small rubble under the spawn rock.
+- **Implemented, seen in Studio by camera captures:** all three ([lobby hub](art/lobby-hub.md)).
+- **Found and fixed, unrequested:** bright sky showed through when a camera was about 500+ studs from the far wall. Rays proved the wall complete, and the sky now matches the cavern. The distance-culling explanation is inferred from which views showed it, not measured.
+- **Unresolved:** the owner's verdict on the tornado's shape, and the arch stumps now sit close to the ceiling's crystals.
+
 ## 2026-11-02 - Volcano top, real blaster rune, route and entrance removed
 
 - **Owner request:** make the gun symbol the current blaster's silhouette, raise the crater pool to the rim with streams and animation blending into it, stop players falling in, and remove the spiral route and cave entrance.

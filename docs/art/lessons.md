@@ -254,3 +254,4 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Trace symbols from the real model:** hand-drawn silhouettes read as an older design; `tools/lobby/blaster_rune.py` regenerates the rune from the current mesh.
 - **Surfaces that must blend need one paint function and no moving parts at the join:** a spinning pool and separately painted streams could never line up.
 - **In `cut`-style patches, don't stop at a marker the same patch moves:** it silently ate the start of `volcanoFlow`; the shader compile caught it.
+- **Keep the sky the colour of the enclosure:** Roblox can stop drawing far parts at lower graphics levels, and anything bright behind them flashes through a closed cavern.

@@ -227,7 +227,7 @@ end
 -- Lightning: the clouds themselves light up from inside, with short zaps in the gaps between the sheets. Occasional and brief.
 local STORM_GLOW = 0.7
 local STORM_FLASH = 1.5
-local ZAP_LEVELS = { 245, 280, 325 } -- between the cloud sheets, so a zap never crosses one
+local ZAP_LEVELS = { 220, 255, 300 } -- between the cloud sheets, so a zap never crosses one
 local nextFlash = 3
 local flashLeft = 0
 local function flash(t: number, dt: number)

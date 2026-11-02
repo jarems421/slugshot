@@ -431,7 +431,8 @@ def well_bits_group(centre, i):
     return (0 if np.hypot(centre[0], centre[2]) < 6.0 else 3) + i % 3
 
 
-ISLANDS = [(a, r*0.7) for a, r in ((0.52, 8.5), (2.44, 7.5), (3.75, 8.8), (5.24, 6.5), (1.48, 5.5))]
+# The same places as the shader's: on its tornado at their heights.
+ISLANDS = [(a, 1.6 + 7.0*(min((17.0 + i*2.3 - 15.5)/12.5, 1.0))**1.5) for i, a in enumerate((0.52, 2.44, 3.75, 5.24, 1.48))]
 
 
 def nearest_island(centre, _i):
@@ -545,7 +546,7 @@ PIECES = {
         "item": "spawn-rock-1", "map": ROCK_DEBRIS, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
         "lo": (-15.0, 3.0, -15.0), "hi": (15.0, 13.0, 15.0), "step": 0.03, "normalH": 0.004,
         "components": debris_group(3), "gain": 1.7,
-        "parts": [part(f"Debris{i}", None, 800, 256, PROP_INK, 1.0, hard=True, cage=0.02) for i in range(3)],
+        "parts": [part(f"Debris{i}", None, 1300, 256, PROP_INK, 1.0, hard=True, cage=0.02) for i in range(3)],
     },
     "hub-gate-0": gate_piece(0, 6.6),
     "hub-gate-1": gate_piece(1, 6.85),
@@ -666,13 +667,13 @@ PIECES = {
     },
     "hub-well-isles": {
         "item": "sky-well-1", "map": "isles", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
-        "lo": (-13.0, 3.0, -13.0), "hi": (13.0, 26.0, 13.0), "step": 0.022, "normalH": 0.004,
+        "lo": (-11.0, 14.0, -11.0), "hi": (11.0, 30.0, 11.0), "step": 0.022, "normalH": 0.004,
         "components": nearest_island, "gain": 1.5,
         "parts": [part(f"Isle{i}", None, 700, 256, PROP_INK*1.3, 0.8, hard=True, cage=0.02) for i in range(5)],
     },
     "hub-well-bits": {
         "item": "sky-well-1", "map": "bits", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
-        "lo": (-17.5, 4.0, -17.5), "hi": (17.5, 36.0, 17.5), "step": 0.022, "normalH": 0.004,
+        "lo": (-11.0, 14.0, -11.0), "hi": (11.0, 31.0, 11.0), "step": 0.022, "normalH": 0.004,
         "components": well_bits_group, "gain": 1.5,
         "parts": [part(f"Bits{i}", None, 500, 256, PROP_INK*1.3, 1.0, hard=True, cage=0.02) for i in range(6)],
     },
@@ -903,6 +904,7 @@ def fx_textures():
     for name, a in (("spore", np.clip(np.exp(-(r/0.32)**2) + 0.35*np.exp(-(r/0.75)**2), 0, 1)),):
         save(name, a)
     y_full, x_full = np.mgrid[-1:1:n*1j, -1:1:n*1j]
+    Image.new("RGBA", (16, 16), (10, 11, 28, 255)).save(folder/"cavernsky.png")
     # The portal's swirl: a gentle bending of light, even from the middle out to a soft edge, so it covers the whole surface
     # (owner) rather than gathering at the centre.
     sy, sx = np.mgrid[-1:1:512j, -1:1:512j]
