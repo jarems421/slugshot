@@ -44,7 +44,7 @@ Tuning.values = {
 	spiralLight = 1,
 	-- Aiming down sights: zoom, the gun in first-person view, and the third-person camera.
 	adsZoom = 1.25,
-	adsGunDown = 0.98,
+	adsGunDown = 1.1,
 	adsGunForward = 1.75,
 	adsPaneBack = -0.15,
 	adsPaneSize = 1,

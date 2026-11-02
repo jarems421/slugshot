@@ -1,5 +1,14 @@
 # Project memory
 
+## 2026-11-02 - Seated ADS mechanism and clear aiming frame
+
+- **Confirmed (owner):** screenshots show parts poking through the opening frame and a mechanism hovering too far backward. Retain the clean Valorant-style open-frame direction; move/seat the mechanism forward and flat on the gun.
+- **Implemented:** pod from `(0,0.712,-0.15)` to `(0,0.68,-0.6)` in handle studs; compact base/saddle feet follow the receiver roof. Covers fold outward/down, prongs and emitter retract into a lower profile. Exact frame-stroke endpoints, later trace start, same-frame weld/copy synchronization, and camera-relative close fade remove transition overlap. Aimed gun lowers 0.12 studs; crosshair/shot ray untouched.
+- **Verified:** complete offline combat/movement/foundation checks; targeted native-gun server checks. Native closed-side and opening/closing/charge captures inspected; rendered hood-to-frame gaps 15 pixels open and 3 charged in the captured Studio viewport. Full-speed open/close, rapid interrupted toggles, a server-accepted aimed shot and holster cleanup passed; final log had no script errors. [Evidence](evidence/2026-11-02-ads-mount.json), [views](combat.md#ads-mount-and-clean-frame-opening-2026-11-02).
+- **Isolation:** fresh `fix/ads-mount` based on the completed movement fix. Native range snapshots retain latest uncommitted concurrent five-slot UI/bindings and charge-step feedback; no concurrent files modified. No mesh/animation upload, Blender edit or main merge.
+- **Unresolved:** owner's appearance/full-speed feel verdict, movement/peer and device/FOV checks. Refreshed `SlugshotAdsMountRange` prepared for review.
+
+
 ## 2026-11-02 - Responsive wall-run diagonals and mantle priority
 
 - **Confirmed (owner):** outward W+A/W+D/A+S/D+S combinations should jump off responsively. Mantle should occur less often specifically when trying to leave a wall run; retain deliberate mantle elsewhere.

@@ -1,5 +1,20 @@
 # Slug shooting (experiment)
 
+## ADS mount and clean frame opening (2026-11-02)
+
+**Confirmed:** owner provided `Screenshot 2026-11-02 083330.png`, `083341.png` and the earlier Valorant-style frame reference `Screenshot 2026-11-01 182419.png`. The opening parts must not poke through the sight edges; the folded mechanism must sit forward and flat on the receiver. The reference imagery is not redistributed.
+
+**Implemented:** original native sight pod centre moves 0.45 studs toward the muzzle and 0.032 down to `(0,0.68,-0.6)`. Its shorter 0.19 x 0.026 x 0.22 base has two short saddle feet. Native mesh queries at the mounting station found the roof at about Y=0.67356; the side view corroborates the seated contact. Covers fold outward/down 100 degrees instead of rising through the opening; emitter lift falls to 0.018 and the prongs are shorter. The trace begins at 62% of the mechanism clock, after the moving parts clear it, and stroke segments stop at their actual endpoints. Camera gun copies are synchronized directly from the current weld offsets, avoiding the previous physics-step lag. ADS gun-down is 1.1 instead of 0.98, leaving visible hood clearance while the sight remains centred on the crosshair. The frame fades in camera space while the gun lowers, and only appears after the raising pose aligns. Current concurrent charge-step tint/swell/line-weight feedback is preserved when its newer recoil API is present.
+
+**Verified offline:** `python tools/verify_combat.py` (foundation/movement/combat formatting, lint, strict types and public/private builds), plus targeted format/lint/strict analysis for `FloppyBlaster.server.luau`. The changes use original procedural Parts and welds; no Blender model edit, asset import/upload or experience publishing occurred.
+
+**Verified native:** closed side view; 20/40/60/80/100% opening; 80/60/40/20/0% closing; full charge. Inspected [side before](evidence/ads-mount/baseline-side.png), [side after](evidence/ads-mount/closed-side.png), [opening before](evidence/ads-mount/baseline-opening.png), [80% open](evidence/ads-mount/open-0.8.png), [fully open](evidence/ads-mount/open-1.png), [charged](evidence/ads-mount/charged.png) and [lowering](evidence/ads-mount/close-0.8.png). Raster gap between the visible orange hood and a frame-only lower stroke is 15 pixels open and 3 charged in this capture. Conservative OBB projections include empty mesh volume and were not treated as a rendered-surface overlap test. Full-speed opening/closing, three interrupted toggles, one server-acknowledged ADS shot and holster cleanup passed with no script errors in the final local client/server log. [Structured evidence and limits](evidence/2026-11-02-ads-mount.json).
+
+**Reproduce:** `python tools/build_ads_mount_check.py --ui-root <latest-ui-worktree> --review`, then `powershell -NoProfile -File tools/studio/ads_mount_check.ps1 -OutDir <ignored-output-folder>`. Omit `--review` to build the normal `build/SlugshotAdsMountRange.rbxlx`. The helper snapshots the current UI/bindings/charge modules, overlays this ADS source and completed wall-run controller, and retains private mappings in ignored output. It does not modify the supplied UI worktree. Early mixed-snapshot and driver-load errors are recorded separately from the final passing run.
+
+**Unresolved:** owner appearance/full-speed motion verdict, physical RMB/controller input, movement actions, peer view and graphics/FOV/device sweeps. The accepted shot proves acknowledgement, not a new accuracy or aim-balance claim. Camera direction, zoom, projectile calculations and first-person-only ADS policy are preserved.
+
+
 ## Current state (2026-11-01; read this first)
 
 Newer entries below explain how each value was reached; earlier values are history. Feel values now live in `experiments/movement/client/Tuning.luau`. **In Studio, press P** for live sliders; Print writes changes to the Output so they can be baked in.

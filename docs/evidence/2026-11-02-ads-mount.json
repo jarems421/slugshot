@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-02",
+  "branch": "fix/ads-mount",
+  "base": "79ca98c",
+  "referenceFiles": [
+    "Screenshot 2026-11-02 083330.png",
+    "Screenshot 2026-11-02 083341.png",
+    "Screenshot 2026-11-01 182419.png"
+  ],
+  "implemented": {
+    "mountCentreStuds": [
+      0,
+      0.68,
+      -0.6
+    ],
+    "previousMountCentreStuds": [
+      0,
+      0.712,
+      -0.15
+    ],
+    "mountBaseStuds": [
+      0.19,
+      0.026,
+      0.22
+    ],
+    "foldDegrees": 100,
+    "foldDirection": "outward and down",
+    "emitterRiseStuds": 0.018,
+    "adsGunDownStuds": 1.1,
+    "frameDrawStartsAtProgress": 0.62,
+    "frameClosedEdge": "exact segment endpoints",
+    "copySynchronization": "same-frame direct handle/weld transforms",
+    "closeBehavior": "camera-relative fade while the gun lowers"
+  },
+  "native": {
+    "stagesCaptured": "closed side, 20/40/60/80/100 percent open, 80/60/40/20/0 percent close, full charge",
+    "functionalPass": "full-speed open/close, three interrupted toggles, accepted aimed shot, holster frame cleanup",
+    "scriptErrors": 0,
+    "renderedClearance": {
+      "open-1": {
+        "orangeTopPixel": 887,
+        "frameBottomPixel": 871,
+        "gapPixels": 15
+      },
+      "charged": {
+        "orangeTopPixel": 892,
+        "frameBottomPixel": 888,
+        "gapPixels": 3
+      }
+    },
+    "meshQueryRoofAtMount": 0.6735610961914062,
+    "visualVerdict": "Reviewed closed side and cropped opening/full/charged/closing views; flat seated mount and clear hood-to-frame gap"
+  },
+  "boundsMetricNote": "OBB screen extents of imported mesh parts overlap the frame, because they include empty volume. Those conservative bounds were not treated as a geometry-pass test; rendered pixels and side views were inspected.",
+  "sourceIsolation": "Latest concurrent PvP UI, five-slot bindings and charge feedback preserved via ignored snapshot build; only ADS authored changes committed here. No concurrent source edited.",
+  "limits": [
+    "Owner appearance and full-speed feel approval pending",
+    "Movement actions, peer view and device/graphics/FOV sweeps not repeated",
+    "Native roof query is collision geometry, corroborated by side view; not a per-triangle render-surface fit"
+  ],
+  "earlyCheckIssues": [
+    "A mixed UI/keybind snapshot failed before ADS opened; builder now copies current movement modules and overlays only the controller/ADS framing value",
+    "Visual driver initially raced Combat folder creation; explicit WaitForChild fixes it",
+    "Intermediate capture still touched the orange hood; aimed gun lowered 0.12 studs and close fade stabilized before final review"
+  ]
+}
