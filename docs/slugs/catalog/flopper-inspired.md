@@ -119,3 +119,10 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 - **Upload:** all maps re-uploaded privately and Approved before opening `build/SlugshotFloppyTest-SlugshotLook.rbxlx`.
 
 **Unresolved:** owner Studio check (glow strength on the pedestal and in the canister); name and IP check before any publication.
+
+## Final in Roblox (2026-11-02)
+
+**Confirmed:** the owner, after reviewing large models in Studio: "floppies are perfect right now... you can even just finalize that floppy design."
+
+**Implemented:** no hull around the eyes or mouth; lids painted from their known colours with no rim or ring; socket walls in the lower lid colour; each upper lid closes along its lower lid; rings keep their pattern with a lime-to-emerald colour, fine ink and glow. In the display place the outline is a `Highlight`. **Unresolved:** this is on `feature/slug-asset-pipeline` with new private assets, not yet in main's game; his hull is still exported, and a game-wide outline plan is needed because Highlights are limited.
+

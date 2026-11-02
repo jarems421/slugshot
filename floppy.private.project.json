@@ -22,6 +22,12 @@
         "$className": "StarterPlayerScripts",
         "FloppyTest": {
           "$path": "experiments/creatures/floppy/client"
+        },
+        "MovementSandbox": {
+          "$className": "Folder",
+          "Tuning": {
+            "$path": "experiments/creatures/inferno/client/Tuning.luau"
+          }
         }
       }
     },
