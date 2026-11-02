@@ -211,7 +211,11 @@ def main():
             entry["inkShell"] = shell.name
             entry["inkTris"] = len(shell.data.polygons)
         # Where the part belongs in studs, Y up, for placing it in Roblox.
-        verts = (data["verts"] - np.array(origin))*scale
+        # From what is exported, because the game fits a piece by these: anything else moves it off what stands on it.
+        coords = np.zeros(len(low.data.vertices)*3)
+        low.data.vertices.foreach_get("co", coords)
+        coords = coords.reshape(-1, 3)
+        verts = (np.stack([coords[:, 0], coords[:, 2], -coords[:, 1]], axis=1) - np.array(origin))*scale
         entry["boundsMin"] = verts.min(axis=0).tolist()
         entry["boundsMax"] = verts.max(axis=0).tolist()
         report["groups"].append(entry)

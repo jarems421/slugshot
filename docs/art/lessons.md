@@ -284,3 +284,7 @@ Scattered props sharing one mesh need a budget per prop, not per part: 200 trian
 ## Simplifying a shape with hidden insides (2026-11-02)
 
 Blender's Decimate keeps triangles on sealed pockets inside a shape, because they are small and closed, and leaves the visible skin in huge shards that look like holes. Keep only the largest connected surface, and sample it near the final triangle size so little simplifying is needed. Measure the spread of triangle areas in the export: a median of 3 square studs with many far larger ones was the tell. A shape that must be walked on can be a separate smooth form with the detailed one baked onto it.
+
+## Placing things on simplified meshes (2026-11-02)
+
+Place what stands on a surface using the exported mesh, not the ideal shape: the grove's simplified ground differed by up to 2 studs, enough for plants to float. Sink feet a little and use the lowest ground under the whole foot. A piece's fit bounds must also come from the exported mesh, or the game rescales it. And a tapered square block reads as a pyramid at any size: tips need uneven faces, shelves and neighbouring crags. When a check reads Studio logs, make sure other open windows' logs aren't mixed in: a 0.903 size warning came from an older window.

@@ -713,7 +713,7 @@ PIECES = {
         "lo": (-48.0, -1.0, -20.0), "hi": (48.0, 3.0, 31.0), "step": 0.06, "normalH": 0.006,
         "parts": [
             part("Bed", by_id((40.5, 41.5)), 1200, 1024, cage=0.05),
-            part("Ground", everything, 3500, 2048, cage=0.08),
+            part("Ground", everything, 7000, 2048, cage=0.08),
         ],
     },
     "hub-grove-water": {

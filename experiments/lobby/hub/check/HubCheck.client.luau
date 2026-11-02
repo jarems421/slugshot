@@ -69,6 +69,49 @@ task.spawn(function()
 		previous = row
 	end
 	print(`HUBCHECK groveSurface steps={steps} sharp={sharp}`)
+	-- Whether what's baked into the grove touches what you stand on. On the ground, negative means sunk in and positive floating.
+	local scale = game:GetService("ReplicatedStorage"):WaitForChild("LobbyScale")
+	local feet = require(scale:WaitForChild("grove_feet")) :: any
+	local grove = CFrame.new(155, 0, 0) * CFrame.Angles(0, math.pi / 2, 0)
+	local report = function(name: string, gaps: { number })
+		table.sort(gaps)
+		print(
+			string.format(
+				"HUBCHECK groveFeet %s n=%d median=%.2f p90=%.2f worst=%.2f",
+				name,
+				#gaps,
+				gaps[math.ceil(#gaps / 2)] or 0,
+				gaps[math.ceil(#gaps * 0.9)] or 0,
+				gaps[#gaps] or 0
+			)
+		)
+	end
+	local art = workspace:WaitForChild("HubArt")
+	local under = RaycastParams.new()
+	under.FilterType = Enum.RaycastFilterType.Include
+	under.FilterDescendantsInstances = { art:WaitForChild("hub-grove-ground") }
+	local gaps = {}
+	for _, foot in feet.ground do
+		local at = grove * Vector3.new(foot[1], foot[2], foot[3])
+		local hit = workspace:Raycast(at + Vector3.new(0, 30, 0), Vector3.new(0, -60, 0), under)
+		if hit then
+			table.insert(gaps, at.Y - hit.Position.Y)
+		end
+	end
+	report("ground", gaps)
+	gaps = {}
+	for _, foot in feet.mountain do
+		local at = grove * Vector3.new(foot[1], foot[2], foot[3])
+		local axis = grove * Vector3.new(0, foot[2], feet.axisZ)
+		local inward = (axis - at).Unit
+		-- From outside the rock inward: positive means buried, negative floating. This hits collision, which sits a little outside the drawn rock.
+		local from = at - inward * 30
+		local hit = workspace:Raycast(from, inward * 60, only)
+		if hit then
+			table.insert(gaps, 30 - hit.Distance)
+		end
+	end
+	report("mountain", gaps)
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	print("HUBCHECK tour starts")

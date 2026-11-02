@@ -11,10 +11,14 @@ import json
 import math
 import random
 import re
+import struct
 from pathlib import Path
+
+import numpy as np
 
 PAGE = Path("docs/art/asset-library.html")
 SITES = Path("experiments/lobby/scale/shared/grove_slugs.json")
+FEET = Path("experiments/lobby/scale/shared/grove_feet.json")
 # As MTN_S and MTN_Z in the shader: the mountain is built at this share of its authored size, about this point.
 MTN_S, MTN_Z = 0.7, 8.6
 MOUNTAIN_Z = MTN_Z + (26.0 - MTN_Z)*MTN_S
@@ -62,8 +66,90 @@ def inside(x, y, z):
     return False
 
 
+def read_glb(path):
+    """Every solid triangle in an exported piece, ink left out, in concept units."""
+    data = path.read_bytes()
+    size = struct.unpack("<I", data[12:16])[0]
+    doc = json.loads(data[20:20 + size])
+    blob = data[20 + size + 8:]
+
+    def accessor(index):
+        item = doc["accessors"][index]
+        view = doc["bufferViews"][item["bufferView"]]
+        kind = {5126: "f4", 5125: "u4", 5123: "u2"}[item["componentType"]]
+        parts = 3 if item["type"] == "VEC3" else 1
+        return np.frombuffer(blob, kind, item["count"]*parts, view.get("byteOffset", 0) + item.get("byteOffset", 0)).reshape(-1, parts)
+
+    tris = []
+    for mesh in doc["meshes"]:
+        if mesh["name"].endswith("_Ink"):
+            continue
+        for primitive in mesh["primitives"]:
+            verts = accessor(primitive["attributes"]["POSITION"])
+            tris.append(verts[accessor(primitive["indices"]).reshape(-1, 3)])
+    return np.concatenate(tris).astype("f8")/5.0
+
+
+# The game's actual meshes differ from the ideal shapes, so what stands on them is placed on them (owner: floating). Build
+# hub-grove-ground and hub-grove-mountain first, then this.
+EXPORT = Path("build/lobby/export")
+MOUNTAIN_TRIS = read_glb(EXPORT/"hub-grove-mountain/hub-grove-mountain.glb") if (EXPORT/"hub-grove-mountain/hub-grove-mountain.glb").exists() else None
+GROUND_STEP = 0.05
+GROUND_LO = (-50.0, -22.0)
+
+
+def ground_grid():
+    path = EXPORT/"hub-grove-ground/hub-grove-ground.glb"
+    if not path.exists():
+        return None
+    grid = np.full((int(100/GROUND_STEP), int(56/GROUND_STEP)), np.nan)
+    for tri in read_glb(path):
+        ax, ay, az = tri[0]
+        bx, by, bz = tri[1]
+        cx, cy, cz = tri[2]
+        area = (bx - ax)*(cz - az) - (cx - ax)*(bz - az)
+        if abs(area) < 1e-9:
+            continue
+        i0 = max(int((min(ax, bx, cx) - GROUND_LO[0])/GROUND_STEP), 0)
+        i1 = min(int((max(ax, bx, cx) - GROUND_LO[0])/GROUND_STEP) + 1, grid.shape[0] - 1)
+        j0 = max(int((min(az, bz, cz) - GROUND_LO[1])/GROUND_STEP), 0)
+        j1 = min(int((max(az, bz, cz) - GROUND_LO[1])/GROUND_STEP) + 1, grid.shape[1] - 1)
+        if i1 < i0 or j1 < j0:
+            continue
+        xs = GROUND_LO[0] + np.arange(i0, i1 + 1)[:, None]*GROUND_STEP
+        zs = GROUND_LO[1] + np.arange(j0, j1 + 1)[None, :]*GROUND_STEP
+        u = ((xs - cx)*(bz - cz) - (zs - cz)*(bx - cx))/((ax - cx)*(bz - cz) - (az - cz)*(bx - cx))
+        v = ((xs - ax)*(cz - az) - (zs - az)*(cx - ax))/((bx - ax)*(cz - az) - (bz - az)*(cx - ax))
+        w = 1.0 - u - v
+        hit = (u >= -0.001) & (v >= -0.001) & (w >= -0.001)
+        y = u*ay + v*by + w*cy
+        cell = grid[i0:i1 + 1, j0:j1 + 1]
+        cell[hit] = np.where(np.isnan(cell[hit]), y[hit], np.maximum(cell[hit], y[hit]))
+    return grid
+
+
+GROUND_GRID = ground_grid()
+
+
 def surface_radius(a, y):
     """Coming in from outside at this angle and height, where the rock's mass is first met."""
+    if MOUNTAIN_TRIS is not None:
+        ys = MOUNTAIN_TRIS[:, :, 1]
+        near = MOUNTAIN_TRIS[(ys.min(axis=1) <= y) & (ys.max(axis=1) >= y)]
+        origin = np.array((0.0, y, MOUNTAIN_Z))
+        direction = np.array((math.cos(a), 0.0, math.sin(a)))
+        e1, e2 = near[:, 1] - near[:, 0], near[:, 2] - near[:, 0]
+        h = np.cross(direction, e2)
+        det = (e1*h).sum(axis=1)
+        safe = np.abs(det) > 1e-9
+        e1, e2, h, det, corner = e1[safe], e2[safe], h[safe], det[safe], near[safe, 0]
+        s = origin - corner
+        u = (s*h).sum(axis=1)/det
+        q = np.cross(s, e1)
+        v = (q*direction).sum(axis=1)/det
+        t = (e2*q).sum(axis=1)/det
+        hits = t[(u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)]
+        return float(hits.max()) if hits.size else 0.0
     r = 56.0
     while r > 0.0:
         if inside(r*math.cos(a), y, MOUNTAIN_Z + r*math.sin(a)):
@@ -94,6 +180,20 @@ def pond_edge(x, z):
 
 
 def ground(x, z):
+    """Where the game's ground mesh actually is, or the ideal shape where it has none."""
+    if GROUND_GRID is not None:
+        i, j = int((x - GROUND_LO[0])/GROUND_STEP), int((z - GROUND_LO[1])/GROUND_STEP)
+        if 0 <= i < GROUND_GRID.shape[0] and 0 <= j < GROUND_GRID.shape[1] and not math.isnan(GROUND_GRID[i, j]):
+            return float(GROUND_GRID[i, j])
+    return ground_shape(x, z)
+
+
+def rest(x, z, reach):
+    """The lowest ground under something this wide, so no side of its foot hangs over a dip."""
+    return min([ground(x, z)] + [ground(x + reach*math.cos(k*0.785), z + reach*math.sin(k*0.785)) for k in range(8)])
+
+
+def ground_shape(x, z):
     """The same shape as groveHeight in the shader."""
     edge = pond_edge(x, z)
     h = 0.25*math.sin(x*0.31 + 1.0)*math.sin(z*0.27) + 0.12*math.sin(x*0.9 + z*0.7)
@@ -118,7 +218,7 @@ def shrooms(rnd):
         a = math.radians(degrees)
         r = pond_radius(a) + far
         x, z = r*math.cos(a), r*math.sin(a)
-        top.append((x, ground(x, z) - 0.2, z, height))
+        top.append((x, rest(x, z, 0.25*height) - 0.1, z, height))
         more.append((cap, -0.08*height*math.cos(a), -0.08*height*math.sin(a), colour))
     # Standing out from the mountain's ledges.
     for a, y, height, cap, colour in ((3.75, 5.0, 3.6, 1.8, 1), (4.0, 10.5, 2.8, 1.4, 2), (5.4, 6.0, 3.8, 1.9, 0), (5.75, 12.0, 2.6, 1.3, 3), (3.4, 13.5, 2.5, 1.3, 3),
@@ -134,7 +234,7 @@ def shrooms(rnd):
         r = pond_radius(a) + rnd.uniform(0.6, 6.0)
         x, z = r*math.cos(a), r*math.sin(a)
         height = rnd.uniform(0.5, 1.2)
-        top.append((x, ground(x, z) - 0.05, z, height))
+        top.append((x, rest(x, z, 0.2*height) - 0.06, z, height))
         more.append((height*rnd.uniform(0.45, 0.65), rnd.uniform(-0.1, 0.1), rnd.uniform(-0.1, 0.1), rnd.choice((0, 1, 2, 3))))
     return top, more
 
@@ -146,7 +246,7 @@ def bushes(rnd):
     while len(rows) < 100 and tries < 4000:
         tries += 1
         a, y = rnd.uniform(2.3, 7.1) % (2*math.pi), 26.0*rnd.random()**1.5 + 0.4
-        x, y0, z = on_mountain(a, y, 0.15)
+        x, y0, z = on_mountain(a, y, 0.3)
         if (not clear_of_falls(x, y) and z < MOUNTAIN_Z) or any(math.dist((x, y0, z), row[:3]) < 1.5 for row in rows):
             continue
         rows.append((x, y0, z, rnd.uniform(0.55, 1.25)*(1.15 - y/36)))
@@ -209,22 +309,22 @@ def flora(rnd, stones):
             x, z = cx + rnd.gauss(0, 1.1), cz + rnd.gauss(0, 1.1)
             if pond_edge(x, z) < 0.4 or any(math.hypot(x - s[0], z - s[2]) < s[3] + 0.5 for s in stones):
                 continue
-            flowers.append((x, ground(x, z) - 0.03, z, rnd.randrange(3) + rnd.uniform(0.75, 1.3)*0.1 + rnd.random()*0.0))
+            flowers.append((x, rest(x, z, 0.12) - 0.1, z, rnd.randrange(3) + rnd.uniform(0.75, 1.3)*0.1 + rnd.random()*0.0))
     for a, far in ((3.3, 6.5), (3.9, 7.5), (5.6, 6.0), (6.05, 7.0), (0.5, 5.0), (2.5, 5.5), (2.0, 3.2), (1.15, 3.0), (4.3, 9.0), (5.15, 9.5)):
         r = pond_radius(a) + far
         x, z = r*math.cos(a), r*math.sin(a)
-        ferns.append((x, ground(x, z) - 0.03, z, rnd.uniform(0.75, 1.1)))
+        ferns.append((x, rest(x, z, 0.3) - 0.1, z, rnd.uniform(0.75, 1.1)))
     return flowers, ferns
 
 
 def crystals():
     rows, more = [], []
     for a, y, colour, scale in ((3.55, 3.0, 0, 1.3), (4.05, 8.0, 1, 1.1), (5.45, 3.5, 1, 1.4), (5.9, 9.5, 0, 1.0), (4.45, 14.0, 2, 0.9), (5.0, 21.0, 1, 0.75), (4.3, 24.5, 2, 0.7), (3.2, 14.0, 0, 0.9)):
-        x, y0, z = on_mountain(a, y, 0.1)
+        x, y0, z = on_mountain(a, y, 0.35)
         rows.append((x, y0, z, colour))
         more.append((0.55*math.cos(a), 0.65, 0.55*math.sin(a), scale))
     for x, z, colour, scale in ((-9.5, -3.8, 1, 0.55), (9.6, -1.2, 0, 0.6), (8.4, 4.8, 2, 0.5), (-8.2, 5.4, 0, 0.55)):
-        rows.append((x, ground(x, z) - 0.05, z, colour))
+        rows.append((x, rest(x, z, 0.4*scale) - 0.12, z, colour))
         more.append((0.0, 1.0, 0.0, scale))
     # A few growing up out of the shallows.
     for x, z, colour, scale in ((-5.6, 1.4, 1, 0.3), (5.6, 0.9, 0, 0.26), (2.3, -5.4, 2, 0.24)):
@@ -237,7 +337,7 @@ def vines(rnd):
     rows = []
     while len(rows) < 16:
         a, y = rnd.uniform(3.3, 6.1), rnd.uniform(6.0, 25.0)
-        x, y0, z = on_mountain(a, y, -0.15)
+        x, y0, z = on_mountain(a, y, 0.1)
         if clear_of_falls(x, y):
             rows.append((x, y0, z, rnd.uniform(2.0, 5.5)))
     return rows
@@ -290,12 +390,13 @@ def slugs(stones):
 def main():
     rnd = random.Random(29)
     top, more = shrooms(rnd)
+    bush_rows = bushes(rnd)
     stones = boulders(rnd)
     flowers, ferns = flora(rnd, stones)
     gems, gem_more = crystals()
     slug_rows = slugs(stones)
     block = "// @grove-begin\n// Generated by tools/lobby/grove_sites.py. See there before editing.\n"
-    block += vec4s("GROVE_SHROOM", top) + vec4s("GROVE_CAP", more) + vec4s("GROVE_BUSH", bushes(rnd)) + vec4s("GROVE_STONE", stones)
+    block += vec4s("GROVE_SHROOM", top) + vec4s("GROVE_CAP", more) + vec4s("GROVE_BUSH", bush_rows) + vec4s("GROVE_STONE", stones)
     block += vec4s("GROVE_FLOWER", flowers) + vec4s("GROVE_FERN", ferns) + vec4s("GROVE_GEM", gems) + vec4s("GROVE_GEM_DIR", gem_more)
     block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_PAD", lily_pads()) + vec4s("GROVE_SLUG", slug_rows) + "// @grove-end\n"
     text = PAGE.read_text(encoding="utf-8")
@@ -306,6 +407,13 @@ def main():
     sites = [{"x": round(x*5, 2), "y": round(y*5, 2) if index < 9 else round(ground(x, z)*5, 2), "z": round(z*5, 2), "heading": round(h, 3)}
              for index, (x, y, z, h) in enumerate(slug_rows)]
     SITES.write_text(json.dumps(sites, indent=1) + "\n", encoding="utf-8")
+    # For the check build: where everything baked into a piece should touch its surface.
+    studs = lambda rows: [[round(r[0]*5, 2), round(r[1]*5, 2), round(r[2]*5, 2)] for r in rows]
+    FEET.write_text(json.dumps({"ground": studs(flowers + ferns + [t for t in top if t[1] < 1.6]), "mountain": studs([t for t in top if t[1] >= 1.6] + bush_rows + [g for g in gems if g[1] > 1.6]),
+                                "axisZ": MOUNTAIN_Z*5}) + "\n", encoding="utf-8")
+    if GROUND_GRID is not None:
+        off = [abs(ground(f[0], f[2]) - ground_shape(f[0], f[2]))*5 for f in flowers]
+        print(f"flowers: game ground differs from the ideal shape by {sum(off)/len(off):.2f} studs on average, {max(off):.2f} at most")
     print(f"grove: {len(top)} mushrooms, {len(flowers)} flowers, {len(ferns)} ferns, {len(stones)} stones, 30 slugs")
 
 

@@ -999,3 +999,9 @@
 - **Confirmed:** owner: too close to the ceiling, tips should be more distinct, the surface should look jagged without real cracks to fall into, and the front had gaps.
 - **Implemented/verified in Studio:** 137 studs tall (was 185) and about 293 across (was 390); smooth solid body with the jagged rock baked on; three, two and one tips. The gaps were huge shards left by simplifying a mesh with sealed pockets inside; the mesh is now its clean outer skin. Check run: 0 failed pieces, 182 floor raycasts with 0 holes, 30 slugs, captures inspected.
 - **Unresolved:** owner's verdict. Running and climbing it weren't tried by hand; 475 of 5,463 two-stud steps on it change height by over 7 studs, which measures steepness and doesn't separate faces from any leftover ledges. Mobile check not re-run. The concept page still shows the older jagged mountain.
+
+## 2026-11-02 - Grove peaks and floating props
+
+- **Confirmed:** owner: peaks looked like pyramids; mushrooms and crystals floated off the mountain; flowers and mushrooms floated on the ground.
+- **Implemented/verified in Studio:** tips with uneven faces, shelves and side crags. A sign slip had left the solid body about 10 studs inside the shape props were placed on; fixed. `grove_sites.py` now places on the exported ground and mountain meshes. Check run: 54 ground feet all sunk in, by 0.44 at least and about 1 stud typically; 0 failed pieces. Captures inspected.
+- **Unresolved:** owner's verdict. The mountain's feet come from its exported mesh, but the Studio ray check there hits collision, so it can't confirm them independently. Running and climbing weren't tried by hand. The mobile check wasn't re-run.
