@@ -14,8 +14,10 @@ from pathlib import Path
 
 PAGE = Path("docs/art/asset-library.html")
 MOUNTAIN_Z = 26.0
-# The same as peakInfo in the shader: centre x, centre z, height, radius, profile, lean x, lean z.
-PEAKS = ((0.0, 26.0, 34.0, 18.5, 1.05, 0.0, 0.0, 5.0), (-18.0, 26.0, 25.0, 14.0, 0.95, -1.2, 0.0, 4.0), (18.5, 27.0, 20.0, 12.5, 1.2, 3.2, -0.4, 3.0), (0.0, 32.0, 14.0, 25.0, 1.0, 0.0, 0.0, 6.0))
+# The same as peakInfo in the shader: centre x, centre z, height, radius, profile, lean x, lean z, ridges.
+PEAKS = ((0.0, 26.0, 34.0, 18.5, 1.05, 0.0, 0.0, 5.0), (-18.0, 26.0, 25.0, 14.0, 0.95, -1.2, 0.0, 4.0), (18.5, 27.0, 20.0, 12.5, 1.2, 3.2, -0.4, 3.0),
+         (0.0, 32.0, 14.0, 20.0, 1.0, 0.0, 0.0, 6.0), (-9.5, 19.5, 17.0, 7.5, 0.95, 0.0, 0.0, 3.0), (10.0, 20.0, 13.5, 7.0, 1.0, 0.0, 0.0, 3.0),
+         (-29.0, 29.0, 13.0, 9.0, 0.9, 0.0, 0.0, 3.0), (30.0, 30.0, 10.5, 8.0, 1.0, 0.0, 0.0, 3.0))
 FRONT = 1.5*math.pi
 
 
@@ -29,22 +31,32 @@ def peak_r(y, height, radius, profile):
 
 
 def inside(x, y, z):
+    """The same shape as peakRad and peakWander in the shader."""
     for index, (cx, cz, height, radius, profile, lx, lz, ridges) in enumerate(PEAKS):
+        if y >= height:
+            continue
         t = min(max(y/height, 0.0), 1.0)
-        qx, qz = x - cx - lx*t*t, z - cz - lz*t*t
-        a, seed = math.atan2(qz, qx) % (2*math.pi), index*1.7 + 0.6
-        phase = (a + 0.12*math.sin(t*5.0 + seed) - 4.71239)*ridges*0.5 + 1.5708
-        ridge = (1.0 - abs(math.sin(phase)))**1.6
-        lump = 0.15*math.sin(a*2.0 + seed*1.7) + 0.1*math.sin(a*3.0 + t*4.0 + seed*2.9) + 0.07*math.sin(t*13.0 + a*2.0 + seed)
-        gully = smoothstep(0.2, 0.8, abs(math.atan2(math.sin(a - 4.71239), math.cos(a - 4.71239))))
-        if y < height and math.hypot(qx, qz) < peak_r(y, height, radius, profile)*(0.92 + 0.36*ridge*(1.0 - 0.35*t) + lump*gully):
+        seed = index*1.7 + 0.6
+        if index == 0:
+            wx, wz = 0.05*radius*t*math.sin(t*4.7 + seed), 0.0
+        else:
+            wx, wz = 0.1*radius*t*math.sin(t*4.7 + seed), 0.1*radius*t*math.cos(t*3.9 + seed*1.6)
+        qx, qz = x - cx - lx*t*t - wx, z - cz - lz*t*t - wz
+        a = math.atan2(qz, qx) % (2*math.pi)
+        gully = smoothstep(0.2, 0.8, abs(math.atan2(math.sin(a - 4.71239), math.cos(a - 4.71239)))) if index in (0, 3) else 1.0
+        brk = (0.05*math.sin(t*17.0 + a*1.5 + seed) + 0.03*math.sin(t*31.0 - a*2.2 + seed*1.3))*gully
+        body = radius*max(1.0 - min(max(t + brk, 0.0), 1.0), 0.0)**profile
+        bulge = 0.28*math.sin(t*math.pi*(1.0 + 0.35*math.sin(a + seed)))*gully
+        ridge = (1.0 - abs(math.sin((a + 0.12*math.sin(t*5.0 + seed) - 4.71239)*ridges*0.5 + 1.5708)))**1.6
+        lump = 0.18*math.sin(a*2.0 + seed*1.7) + 0.12*math.sin(a*3.0 + t*4.0 + seed*2.9) + 0.08*math.sin(t*13.0 + a*2.0 + seed)
+        if math.hypot(qx, qz) < body*(1.0 + bulge)*(0.92 + 0.36*ridge*(1.0 - 0.35*t) + lump*gully):
             return True
     return False
 
 
 def surface_radius(a, y):
     """Coming in from outside at this angle and height, where the rock's mass is first met."""
-    r = 46.0
+    r = 56.0
     while r > 0.0:
         if inside(r*math.cos(a), y, MOUNTAIN_Z + r*math.sin(a)):
             return r
@@ -58,16 +70,26 @@ def on_mountain(a, y, inset=0.2):
 
 
 def pond_radius(a):
-    return 7.0*(1.0 + 0.07*math.sin(a*3.0 + 1.0) + 0.05*math.sin(a*5.0 + 2.0))
+    return 7.0*(1.0 + 0.07*math.sin(a*3.0 + 1.0) + 0.05*math.sin(a*5.0 + 2.0) + 0.035*math.sin(a*9.0 + 0.7))
+
+
+def smin(a, b, k):
+    h = min(max(0.5 + 0.5*(b - a)/k, 0.0), 1.0)
+    return b + (a - b)*h - k*h*(1.0 - h)
+
+
+def pond_edge(x, z):
+    """The same as pondEdge in the shader: negative in the water."""
+    base = math.hypot(x, z) - pond_radius(math.atan2(z, x))
+    return smin(base, math.hypot(x - 0.4, (z - 7.6)/0.85) - 2.9, 1.2)
 
 
 def ground(x, z):
     """The same shape as groveHeight in the shader."""
-    r, a = math.hypot(x, z), math.atan2(z, x)
-    edge = r - pond_radius(a)
+    edge = pond_edge(x, z)
     h = 0.25*math.sin(x*0.31 + 1.0)*math.sin(z*0.27) + 0.12*math.sin(x*0.9 + z*0.7)
     bank = smoothstep(0.0, 3.0, edge)
-    return h*bank + 0.35*bank - 0.55*(1.0 - smoothstep(-1.6, 0.0, edge)) + 0.8*smoothstep(8.0, 16.0, z)
+    return h*bank + 0.35*bank - 0.55*(1.0 - smoothstep(-1.6, 0.0, edge)) + 0.8*smoothstep(10.0, 16.0, z)
 
 
 def clear_of_falls(x, y):
@@ -135,6 +157,35 @@ def boulders(rnd):
         r = pond_radius(a) + rnd.uniform(-0.1, 0.9)
         x, z = r*math.cos(a), r*math.sin(a)
         rows.append((x, ground(x, z) - 0.05, z, rnd.uniform(0.45, 1.0)))
+    # Big rocks framing the falls where they land, then a rough shore in clusters of mixed sizes. Their own random stream, so nothing
+    # else moves.
+    shore = random.Random(77)
+    rows += [(-3.6, 0.0, 8.4, 1.25), (4.2, 0.0, 8.2, 1.35), (-2.9, -0.1, 6.5, 0.7), (3.6, -0.1, 6.2, 0.65), (-4.9, 0.1, 9.6, 1.0), (5.5, 0.1, 9.4, 0.9)]
+    for degrees in (12, 48, 118, 150, 186, 214, 244, 268, 296, 322, 348):
+        a0 = math.radians(degrees)
+        for _ in range(shore.randint(2, 4)):
+            a = a0 + shore.uniform(-0.1, 0.1)
+            r = pond_radius(a) + shore.uniform(-0.25, 0.5)
+            x, z = r*math.cos(a), r*math.sin(a)
+            size = shore.choice((0.18, 0.25, 0.32, 0.45, 0.65))
+            rows.append((x, ground(x, z) - 0.03*size, z, size))
+    return rows
+
+
+def lily_pads():
+    rnd = random.Random(53)
+    rows = []
+    for cx, cz, count in ((-5.2, 3.6, 5), (5.1, 3.2, 4), (-3.2, -4.9, 4), (4.3, -4.1, 3)):
+        tries = 0
+        placed = 0
+        while placed < count and tries < 60:
+            tries += 1
+            x, z = cx + rnd.gauss(0, 0.8), cz + rnd.gauss(0, 0.8)
+            size = rnd.uniform(0.28, 0.5)
+            if pond_edge(x, z) > -0.5 or any(math.hypot(x - p[0], z - p[1]) < size + p[2] + 0.05 for p in rows):
+                continue
+            rows.append((x, z, size, 1.0 if rnd.random() < 0.3 else 0.0))
+            placed += 1
     return rows
 
 
@@ -147,7 +198,7 @@ def flora(rnd, stones):
         cx, cz = r0*math.cos(a0), r0*math.sin(a0)
         for _ in range(rnd.randint(4, 6)):
             x, z = cx + rnd.gauss(0, 1.1), cz + rnd.gauss(0, 1.1)
-            if math.hypot(x, z) < pond_radius(math.atan2(z, x)) + 0.4 or any(math.hypot(x - s[0], z - s[2]) < s[3] + 0.5 for s in stones):
+            if pond_edge(x, z) < 0.4 or any(math.hypot(x - s[0], z - s[2]) < s[3] + 0.5 for s in stones):
                 continue
             flowers.append((x, ground(x, z) - 0.03, z, rnd.randrange(3) + rnd.uniform(0.75, 1.3)*0.1 + rnd.random()*0.0))
     for a, far in ((3.3, 6.5), (3.9, 7.5), (5.6, 6.0), (6.05, 7.0), (0.5, 5.0), (2.5, 5.5), (2.0, 3.2), (1.15, 3.0), (4.3, 9.0), (5.15, 9.5)):
@@ -166,6 +217,10 @@ def crystals():
     for x, z, colour, scale in ((-9.5, -3.8, 1, 0.55), (9.6, -1.2, 0, 0.6), (8.4, 4.8, 2, 0.5), (-8.2, 5.4, 0, 0.55)):
         rows.append((x, ground(x, z) - 0.05, z, colour))
         more.append((0.0, 1.0, 0.0, scale))
+    # A few growing up out of the shallows.
+    for x, z, colour, scale in ((-5.6, 1.4, 1, 0.3), (5.6, 0.9, 0, 0.26), (2.3, -5.4, 2, 0.24)):
+        rows.append((x, -0.35, z, colour))
+        more.append((0.1, 1.0, 0.05, scale))
     return rows, more
 
 
@@ -200,11 +255,26 @@ def slugs(stones):
             sx, sz = x + rnd.uniform(-1.1, 1.1)*min(step, 1), z + rnd.uniform(-1.1, 1.1)*min(step, 1)
             if len(rows) >= 30 or any(math.hypot(sx - row[0], sz - row[2]) < 0.8 for row in rows):
                 continue
-            if math.hypot(sx, sz) < pond_radius(math.atan2(sz, sx)) + 0.15:
+            if pond_edge(sx, sz) < 0.15:
                 continue
             # A few in mid hop.
             hop = rnd.uniform(0.18, 0.4) if len(rows) % 6 == 0 else 0.0
             rows.append((sx, ground(sx, sz) + hop, sz, rnd.uniform(0, 6.28)))
+    # Those on the ground step clear of any rock that landed on them; the first nine sit on stones on purpose.
+    moved = 0
+    for index in range(9, len(rows)):
+        x, y, z, heading = rows[index]
+        for stone in stones:
+            gap = math.hypot(x - stone[0], z - stone[2])
+            clear = stone[3] + 0.4
+            if gap < clear and abs(y - stone[1]) < 2.0:
+                push = clear/max(gap, 0.01)
+                x, z = stone[0] + (x - stone[0])*push, stone[2] + (z - stone[2])*push
+                moved += 1
+        if pond_edge(x, z) < 0.15:
+            continue
+        rows[index] = (x, ground(x, z) + max(y - ground(rows[index][0], rows[index][2]), 0.0), z, heading)
+    print(f"moved {moved} Floppies clear of rocks")
     return rows
 
 
@@ -217,7 +287,7 @@ def main():
     block = "// @grove-begin\n// Generated by tools/lobby/grove_sites.py. See there before editing.\n"
     block += vec4s("GROVE_SHROOM", top) + vec4s("GROVE_CAP", more) + vec4s("GROVE_BUSH", bushes(rnd)) + vec4s("GROVE_STONE", stones)
     block += vec4s("GROVE_FLOWER", flowers) + vec4s("GROVE_FERN", ferns) + vec4s("GROVE_GEM", gems) + vec4s("GROVE_GEM_DIR", gem_more)
-    block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_SLUG", slugs(stones)) + "// @grove-end\n"
+    block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_PAD", lily_pads()) + vec4s("GROVE_SLUG", slugs(stones)) + "// @grove-end\n"
     text = PAGE.read_text(encoding="utf-8")
     text, count = re.subn(r"// @grove-begin\n.*?// @grove-end\n", lambda _: block, text, flags=re.S)
     assert count == 1, "the page needs its generated block"

@@ -11,8 +11,11 @@
 - **Known flaw:** one small flower sits buried in a boulder near the close-up. The silhouette's middle crown can read slightly castle-like. The new rock takes about three times as long to render, and has no Roblox cost measured yet.
 - **Owner feedback on v2:** it looks like a castle and should look like a mountain again; once that's done, it's good to go into Roblox.
 - **Implemented, rendered offline and inspected (v3):** the same rock laid along the slopes as broken plates, with ridges from each summit. Middle peak about 170 studs, left about 125, right about 100; footprint about 320 by 290 studs measured from the placement shape, against 130 in the block-out. Renders now take `--gentle` in `tools/lobby/render_plaza.py`, after the owner's PC lagged during earlier runs.
-- **Known flaw:** a small flower head still pokes out of one boulder.
-- **Unresolved:** where such a large footprint fits in the slug zone, which the Roblox build must settle.
+- **Owner feedback on v3:** shape right, look wrong: odd tips, slopes so linear they read as perfect triangles, the falls not connected to the pond, and a basic pond.
+- **Implemented, rendered offline and inspected (v4):** uneven slopes, tilted rock layers, four lower spurs and broken-rock summits; the pond has an inlet reaching the falls' foot (they had landed about 10 studs behind its edge), a rocky shore, depth colour, drifting light, ripples, lily pads and crystals. Footprint about 390 studs, measured from the placement shape.
+- **Confirmed (owner):** swap about 10 Floppies for Inferno and make the slugs 1 stud, or about 0.8, with no re-render for this. Stand-ins measure about 0.98 studs and the game Floppy about 1, so this doesn't enlarge them; asked.
+- **Blocker:** Inferno has a final concept only, with its Blender model and Studio import pending on `feature/slug-asset-pipeline`, in another session's uncommitted work.
+- **Unresolved:** the owner's verdict on v4, where a 390-stud footprint fits in the slug zone.
 
 ## 2026-11-02 - Automatic mobile check
 
