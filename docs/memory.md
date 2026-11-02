@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Living lava and portals, rune-style gateway symbols
+
+- **Owner request:** a slow glow on the volcano's lava, livelier portals that must not look blocky, and cave and gun symbols that glow like the other runes.
+- **Implemented, seen in Studio by camera captures:** all three ([lobby hub](art/lobby-hub.md)). Motion was only sampled in stills.
+- **Owner feedback during the round:** blocky portals, blinding centres, then too dim with "broken shards" and a "little explosion"; animation should be noticeably slower.
+- **Unresolved:** owner verdict on the final portal brightness and speed, walking and wall-running on the solid art, phone performance, the spiral route.
+
 ## 2026-11-02 - Solid lobby art, blocky arch breaks, more steam
 
 - **Owner request:** stop the third-person camera going under the ground, make structures solid and skin-tight so they can be wall-run, make the arch breaks blocky, add light and dark steam, and turn the lava spitting off.

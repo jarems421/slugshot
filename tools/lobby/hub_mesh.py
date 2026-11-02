@@ -661,6 +661,7 @@ PIECES = {
 
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
+    ("vec3 c = mix(gEdge, gCore, sw*0.75 + sw2*0.25);\n    c = mix(c, gHot, smoothstep(3.0, 0.0, r)*0.5);", "vec3 c = gEdge;"),
     ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
     # Cracks, painted by depth: a touch of lit stone at the lip, black walls, and glowing azure welling up from the bottom.
     ("float core = smoothstep(0.34, 0.8, -fq.x/max(fq.y, 0.01));", "float core = smoothstep(0.42, 0.93, depthT); core *= core;"),
@@ -882,6 +883,15 @@ def fx_textures():
     for name, a in (("spore", np.clip(np.exp(-(r/0.32)**2) + 0.35*np.exp(-(r/0.75)**2), 0, 1)),):
         save(name, a)
     y_full, x_full = np.mgrid[-1:1:n*1j, -1:1:n*1j]
+    # The portals' layers, large and soft, all in alpha. The swirl is a gentle bending of a glow rather than separate arms,
+    # which read as broken shards (owner), and holds back at the centre, which blinded.
+    sy, sx = np.mgrid[-1:1:512j, -1:1:512j]
+    sr, sa = np.hypot(sx, sy), np.arctan2(sy, sx)
+    soft_edge = np.cos(np.clip(sr, 0, 1)*np.pi/2)**2
+    arms = 0.5 + 0.5*np.cos(3*sa + 4.2*np.log(sr + 0.12))
+    wisps = 0.5 + 0.5*np.sin(21*sr + 2.2*np.sin(3*sa) + sa)
+    save("swirl", (0.3 + 0.7*arms)*(0.82 + 0.18*wisps)*soft_edge*(1 - 0.55*np.exp(-(sr/0.3)**2)))
+    save("portalcore", np.exp(-(sr/0.5)**2)*soft_edge)
     h, w = 512, 256
     def tile(sigma_y, sigma_x, seed):
         noise = blur(blur(np.random.default_rng(seed).random((h, w)), 0, sigma_y), 1, sigma_x)
@@ -905,7 +915,7 @@ def fx_textures():
     # Lava: soft glints that drift down a thick flow. The mesh carries the look, so nothing here may read as an edge.
     glint = np.clip((tile(70, 9, 6) - 0.5)/0.3, 0, 1)
     side = np.clip((1 - np.abs(x))/0.5, 0, 1)
-    lava = np.array((255, 150, 45), "f4")[None, None]*np.ones((h, w, 1), "f4")
+    lava = np.array((255, 196, 96), "f4")[None, None]*np.ones((h, w, 1), "f4")
     Image.fromarray(np.dstack([lava, glint*side*255]).clip(0, 255).astype("u1"), "RGBA").save(folder/"lavaflow.png")
     # A molten blob stretched along its flight, and a flame.
     save("droplet", np.exp(-(x_full/0.34)**2 - (y_full/0.82)**2)*1.6)

@@ -289,6 +289,11 @@ local function setDetail(value: boolean)
 			e.Rate = if value then 1.5 else 3
 		end
 	end
+	for _, halo in CollectionService:GetTagged("HubLavaGlow") do
+		if halo:IsA("Beam") then
+			halo.Enabled = not value
+		end
+	end
 	if button then
 		button.Text = `Detail: {if value then "Low" else "High"}`
 	end
@@ -380,6 +385,42 @@ local function startEruption(t: number)
 	nextEruption = t + 9 + 6 * math.random()
 end
 
+-- Slow breathing glow: the lava and portal surfaces, and the halos over the lava. Slow enough that ten updates a second
+-- can't show steps.
+local nextPulse = 0
+local baseGlow: { [SurfaceAppearance]: number } = {}
+local function pulseStep(t: number)
+	if t < nextPulse then
+		return
+	end
+	nextPulse = t + 0.1
+	for _, part in CollectionService:GetTagged("HubPulse") do
+		local surface = part:FindFirstChildOfClass("SurfaceAppearance")
+		if surface then
+			local base = baseGlow[surface]
+			if not base then
+				base = surface.EmissiveStrength
+				baseGlow[surface] = base
+			end
+			local wave =
+				math.sin(t * part:GetAttribute("PulseRate") + (part:GetAttribute("Phase") or 0))
+			surface.EmissiveStrength = base * (1 + part:GetAttribute("PulseDepth") * wave)
+		end
+	end
+	if not low then
+		for _, halo in CollectionService:GetTagged("HubLavaGlow") do
+			if halo:IsA("Beam") then
+				local wave = 0.5 + 0.5 * math.sin(t * 0.55 + halo:GetAttribute("Phase"))
+				halo.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(0.5, 0.86 - 0.3 * wave),
+					NumberSequenceKeypoint.new(1, 1),
+				})
+			end
+		end
+	end
+end
+
 -- Off for now (owner, 2026-11-02); the volcano just steams.
 local ERUPTIONS = false
 
@@ -419,6 +460,7 @@ RunService.RenderStepped:Connect(function(dt: number)
 		nextMove = t + (if low then MOVE_RATE else 0)
 		moveParts(t)
 		flash(t, dt)
+		pulseStep(t)
 		if ERUPTIONS then
 			eruptionStep(t)
 		end

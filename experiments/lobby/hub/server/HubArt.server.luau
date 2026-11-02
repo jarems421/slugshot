@@ -872,10 +872,14 @@ end
 
 local function buildPortals()
 	local glow = {
-		PvP = { key = "hub-portal-pvp", color = Color3.fromRGB(255, 158, 64) },
-		Training = { key = "hub-portal-training", color = Color3.fromRGB(107, 255, 115) },
-		Veylume = { key = "hub-portal-veylume", color = Color3.fromRGB(199, 128, 255) },
-	} :: { [string]: { key: string, color: Color3 } }
+		PvP = { key = "hub-portal-pvp", scale = 2.5, color = Color3.fromRGB(255, 158, 64) },
+		Training = {
+			key = "hub-portal-training",
+			scale = 1.6,
+			color = Color3.fromRGB(107, 255, 115),
+		},
+		Veylume = { key = "hub-portal-veylume", scale = 1.6, color = Color3.fromRGB(199, 128, 255) },
+	} :: { [string]: { key: string, scale: number, color: Color3 } }
 	for _, entry in layout.portals do
 		local spec = glow[entry.name]
 		local model = place(spec.key)
@@ -886,26 +890,78 @@ local function buildPortals()
 			local frame = CFrame.lookAt(base, Vector3.new(0, base.Y, 0))
 			model:PivotTo(frame * model:GetPivot())
 			pointLight(base + frame.LookVector * 5 + Vector3.new(0, 8, 0), spec.color, 0.5, 14)
-			-- Embers drifting off the energy, few and slow.
-			local source = holder(
-				"PortalEmbers",
-				base + Vector3.new(0, 10, 0),
-				Vector3.new(entry.width, entry.height, 1)
-			)
-			source.CFrame = frame + Vector3.new(0, 10, 0)
+			-- The opening's true width, so nothing spills past the stones.
+			local energy = model:FindFirstChild("Energy", true) :: MeshPart
+			local across = 10.4 * spec.scale
+			local middle = energy.Position
+			-- A deep, plain field; everything brighter is added by the layers below.
+			local field = energy:FindFirstChildOfClass("SurfaceAppearance")
+			if field then
+				field.EmissiveStrength = 0.85
+			end
+			energy:SetAttribute("PulseRate", 0.35)
+			energy:SetAttribute("PulseDepth", 0.12)
+			energy:SetAttribute("Phase", entry.angle)
+			CollectionService:AddTag(energy, "HubPulse")
+			local bright = spec.color:Lerp(Color3.new(1, 1, 1), 0.3)
+			for _, side in { 1, -1 } do
+				local face = CFrame.lookAt(middle, middle + frame.LookVector * side)
+				local surface = holder(`PortalSurface{side}`, middle, Vector3.new(0.2, 0.2, 0.2))
+				surface.CFrame = face + face.LookVector * 0.5
+				-- Flat on the surface and adding light. Each fades out as the next fades in, and a new one starts exactly
+				-- as the last has turned by one arm (120 degrees), so together they read as one swirl turning steadily,
+				-- with nothing appearing or vanishing.
+				local function layer(
+					name: string,
+					texture: string,
+					size: number,
+					strength: number,
+					turn: number
+				)
+					local period = if turn > 0 then 120 / turn else 6
+					local e = Instance.new("ParticleEmitter")
+					e.Name = name
+					e.Texture = fxTexture(texture)
+					e.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+					e.EmissionDirection = Enum.NormalId.Front
+					e.Speed = NumberRange.new(0.02)
+					e.LightEmission = 1
+					e.LightInfluence = 0
+					e.Color = ColorSequence.new(spec.color)
+					e.Size = NumberSequence.new(size * across)
+					e.Transparency = fade({ { 0, 1 }, { 0.5, 1 - strength }, { 1, 1 } })
+					e.Lifetime = NumberRange.new(period * 2)
+					e.Rate = 1 / period
+					e.Rotation = NumberRange.new(0)
+					e.RotSpeed = NumberRange.new(turn)
+					e.Parent = surface
+					if side < 0 then
+						CollectionService:AddTag(e, "HubSpareTwinkle")
+					end
+				end
+				layer("Core", "portalcore", 0.95, 0.2, 0)
+				layer("SwirlWide", "swirl", 0.95, 0.8, 12)
+				layer("SwirlTight", "swirl", 0.58, 0.5, 16)
+			end
+			-- Sparks flying off the energy and floating up.
+			local source =
+				holder("PortalEmbers", middle, Vector3.new(across * 0.8, across * 1.1, 0.5))
+			source.CFrame = CFrame.lookAt(middle, middle + frame.LookVector)
+				+ frame.LookVector * 0.8
 			local embers = Instance.new("ParticleEmitter")
 			embers.Texture = fxTexture("spore")
-			embers.Color = ColorSequence.new(spec.color)
+			embers.Color = ColorSequence.new(bright)
 			embers.LightEmission = 1
 			embers.LightInfluence = 0
-			embers.Brightness = 2
-			embers.Size = NumberSequence.new(0.5, 0.15)
-			embers.Transparency = fade({ { 0, 1 }, { 0.2, 0.1 }, { 1, 1 } })
-			embers.Lifetime = NumberRange.new(2.5, 4.5)
-			embers.Rate = 5
-			embers.Speed = NumberRange.new(0.6, 1.6)
-			embers.SpreadAngle = Vector2.new(30, 30)
-			embers.EmissionDirection = Enum.NormalId.Top
+			embers.Brightness = 1.6
+			embers.Size = NumberSequence.new(0.7, 0.12)
+			embers.Transparency = fade({ { 0, 1 }, { 0.15, 0 }, { 1, 1 } })
+			embers.Lifetime = NumberRange.new(5, 8)
+			embers.Rate = 4
+			embers.Speed = NumberRange.new(0.4, 1)
+			embers.SpreadAngle = Vector2.new(35, 35)
+			embers.Acceleration = Vector3.new(0, 0.3, 0)
+			embers.EmissionDirection = Enum.NormalId.Front
 			embers.Shape = Enum.ParticleEmitterShape.Box
 			embers.Parent = source
 		end
@@ -916,7 +972,6 @@ end
 local PLAZA = CFrame.new(0, 0, -157) * CFrame.Angles(0, math.pi, 0)
 local VOLCANO_Z = 111 -- studs behind the plaza's origin
 local VOLCANO_SCALE = 1.15
-local DOWN_AXIS = Vector3.new(0, -1, 0)
 
 local function placeInPlaza(key: string): Model?
 	local model = place(key)
@@ -943,6 +998,11 @@ local function volcRadius(a: number, y: number): number
 end
 
 -- A point on the volcano's wall, in world space, in the study's own units of angle and height.
+-- The volcano's middle at this height, to find which way is out from its surface.
+local function volcanoAxis(at: Vector3): Vector3
+	return PLAZA * Vector3.new(0, at.Y, VOLCANO_Z)
+end
+
 local function volcWall(a: number, y: number, offset: number): Vector3
 	local cx, cz = volcCentre(y)
 	local r = volcRadius(a, y) + offset
@@ -956,6 +1016,16 @@ end
 
 local function buildVolcano()
 	local volcano = placeInPlaza("hub-volcano")
+	if volcano then
+		-- The lava breathes, slowly.
+		for _, part in volcano:GetDescendants() do
+			if part:IsA("MeshPart") and (part.Name == "Flows" or part.Name == "Pool") then
+				part:SetAttribute("PulseRate", 0.55)
+				part:SetAttribute("PulseDepth", 0.32)
+				CollectionService:AddTag(part, "HubPulse")
+			end
+		end
+	end
 	local pool = volcano and volcano:FindFirstChild("Pool", true)
 	if pool then
 		pool:SetAttribute("LocalSpin", ORBIT * 1.2)
@@ -980,11 +1050,11 @@ local function buildVolcano()
 					* (0.74 + 0.2 * math.sin(t * 15 + k * 2))
 					* (0.62 + 0.38 * math.sin(math.pi * t * 0.7 + 0.35))
 				-- On the thick flow's smooth surface, not the ribbed rock under it.
-				local s = y / 130
+				local height = y / 130
 				local over = 84
-					- 54 * s ^ 0.72
-					+ 0.45 * (15 - 5 * s)
-					+ 2 * math.sin(a * 3 + 0.5) * (1 - s)
+					- 54 * height ^ 0.72
+					+ 0.45 * (15 - 5 * height)
+					+ 2 * math.sin(a * 3 + 0.5) * (1 - height)
 				return volcWall(a, y, over + 5.5 - volcRadius(a, y)), w * 1.5 * VOLCANO_SCALE
 			end
 			-- Overlapping, each fading out at both ends, so none of them stops in a straight line.
@@ -998,10 +1068,25 @@ local function buildVolcano()
 				w1,
 				fxTexture("lavaflow"),
 				Color3.new(1, 1, 1),
-				fade({ { 0, 1 }, { 0.3, 0.5 }, { 0.7, 0.5 }, { 1, 1 } }),
-				0.05,
+				fade({ { 0, 1 }, { 0.3, 0.25 }, { 0.7, 0.25 }, { 1, 1 } }),
+				0.07,
 				1
 			)
+			-- A soft halo, standing off the flow. HubMotion brightens these in a slow wave running downhill.
+			local halo = beam(
+				"LavaHalo",
+				from + (from - volcanoAxis(from)).Unit * 4,
+				to + (to - volcanoAxis(to)).Unit * 4,
+				w0 * 2.4,
+				w1 * 2.4,
+				fxTexture("softbeam"),
+				Color3.fromRGB(255, 96, 24),
+				fade({ { 0, 1 }, { 0.5, 0.75 }, { 1, 1 } }),
+				0,
+				1
+			)
+			halo:SetAttribute("Phase", k * 1.7 - s * 0.8)
+			CollectionService:AddTag(halo, "HubLavaGlow")
 		end
 	end
 	-- The crater: what erupts is run by HubMotion.client.
@@ -1085,7 +1170,7 @@ local function buildVolcano()
 	steam.Color = ColorSequence.new(Color3.fromRGB(226, 214, 210), Color3.fromRGB(126, 120, 132))
 	steam.LightEmission = 0.05
 	steam.Size = fade({ { 0, 20 }, { 1, 85 } })
-	steam.Transparency = fade({ { 0, 1 }, { 0.18, 0.45 }, { 1, 1 } })
+	steam.Transparency = fade({ { 0, 1 }, { 0.12, 1 }, { 0.3, 0.45 }, { 1, 1 } })
 	steam.Lifetime = NumberRange.new(12, 18)
 	steam.Rate = 3
 	steam.Speed = NumberRange.new(4, 8)
@@ -1095,7 +1180,7 @@ local function buildVolcano()
 	smoke.Texture = fxTexture("mist")
 	smoke.Color = ColorSequence.new(Color3.fromRGB(58, 50, 60), Color3.fromRGB(22, 20, 28))
 	smoke.Size = fade({ { 0, 24 }, { 1, 95 } })
-	smoke.Transparency = fade({ { 0, 1 }, { 0.2, 0.4 }, { 1, 1 } })
+	smoke.Transparency = fade({ { 0, 1 }, { 0.3, 1 }, { 0.5, 0.45 }, { 1, 1 } })
 	smoke.Lifetime = NumberRange.new(12, 18)
 	smoke.Rate = 2.5
 	smoke.Speed = NumberRange.new(3, 6)

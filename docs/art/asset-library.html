@@ -1277,8 +1277,23 @@ float markerSymbol(vec2 g, float dir) {
     d = min(d, length(g - vec2(0.28, 0.56)) - 0.095);
     return min(d, length(g - vec2(0.7, 0.5)) - 0.095);
   }
-  if (dir < 2.5) return min(caveArch(g), caveFloor(g));
-  return blasterShape(g);
+  if (dir < 2.5) {
+    // The cave mouth with stalactites hanging in it, so it reads as a cave and not a doorway.
+    float d = min(caveArch(g), caveFloor(g));
+    d = min(d, poly3(g, vec2(-0.3, 0.5), vec2(-0.2, 0.12), vec2(-0.1, 0.5)));
+    d = min(d, poly3(g, vec2(-0.02, 0.56), vec2(0.07, 0.06), vec2(0.17, 0.56)));
+    return min(d, poly3(g, vec2(0.26, 0.44), vec2(0.33, 0.02), vec2(0.45, 0.3)));
+  }
+  // A blaster side on, simple enough to read small: grip, trigger guard, a windowed canister on top and a forked muzzle.
+  float gun = min(poly5(g, vec2(-0.72, -0.12), vec2(0.34, -0.12), vec2(0.42, 0.04), vec2(0.34, 0.2), vec2(-0.86, 0.2)), poly3(g, vec2(-0.86, 0.2), vec2(-0.86, 0.0), vec2(-0.72, -0.12)));
+  gun = min(gun, poly4(g, vec2(-0.8, -0.76), vec2(-0.42, -0.82), vec2(-0.3, -0.16), vec2(-0.7, -0.16)));
+  gun = min(gun, max(abs(box2(g - vec2(-0.05, -0.31), vec2(0.2, 0.15))) - 0.035, g.y + 0.12));
+  gun = min(gun, min(poly4(g, vec2(0.3, 0.2), vec2(0.44, 0.07), vec2(0.68, 0.14), vec2(0.62, 0.26)), poly3(g, vec2(0.62, 0.26), vec2(0.68, 0.14), vec2(1.0, 0.5))));
+  gun = min(gun, min(poly4(g, vec2(0.3, -0.12), vec2(0.62, -0.18), vec2(0.68, -0.06), vec2(0.44, 0.01)), poly3(g, vec2(0.62, -0.18), vec2(1.0, -0.42), vec2(0.68, -0.06))));
+  gun = min(gun, box2(g - vec2(-0.2, 0.42), vec2(0.3, 0.15)) - 0.03);
+  gun = min(gun, box2(g - vec2(0.2, 0.42), vec2(0.045, 0.19)));
+  gun = min(gun, poly3(g, vec2(-0.86, 0.24), vec2(-0.58, 0.24), vec2(-0.86, 0.56)));
+  return max(gun, -box2(g - vec2(-0.2, 0.42), vec2(0.2, 0.05)));
 }
 // Paints a filled shape with a crisp ink edge over what's already there.
 void inkFill(inout vec3 c, inout vec3 glow, float d, vec3 col, float lit) {
@@ -4055,13 +4070,6 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     float vein = 1.0 - smoothstep(0.0, 0.035, abs(noise3(l*5.0 + d0*4.0) - 0.5));
     vec3 stone = mix(vec3(0.05, 0.05, 0.07), col*0.3, 0.3 + 0.5*inner);
     emit = col*(1.6*fill + 0.34*halo + 0.05 + 0.24*inner + 0.3*vein*(0.35 + inner))*TR(id).z*(0.9 + 0.1*sin(uT*0.9 + dir));
-    if (dir > 1.5) {
-      // The two symbols with their own detail and colours.
-      vec3 sc = stone, sg = col*(0.05 + 0.2*inner + 0.3*vein*(0.35 + inner));
-      if (dir < 2.5) paintCave(g, col, sc, sg); else paintBlaster(g, col, sc, sg);
-      emit = (sg + col*0.3*halo*(1.0 - fill))*TR(id).z;
-      return sc;
-    }
     return mix(stone, col, fill);
   }
 #endif
