@@ -2,6 +2,8 @@
 
 ## Shot consistency and distinct Floppy powers (2026-11-02, current)
 
+**Delivery:** owner authorized delivery to `main` with documentation. Shooting implementation `6d3253d` and the preceding loadout/inspect/pose work are integrated with main hit reactions (`9e7a41c`) in `020c60c`. Post-merge combat/movement/foundation and creature checks pass; a fresh one-client Studio run passes the distance sweep, nine moving shots, two cover shots, shoulder fallback and shared flight/collision regressions. Owner feel and multiplayer limits below remain open.
+
 **Confirmed:** owner reports occasional distant/inaccurate shots around diagonal sprint starts and quick-scoping, plus a disproportionate range/drop change after stepping backward. First/second kicks should be slower and drop a little more; the third kick keeps its current speed and lands on the crosshair within physical reach. Latest first-person resting pose and 10-stud third-person camera preferences remain in place.
 
 **Implemented:** Floppy launch speeds are **85 / 100 / 115 studs/s** (previously 95/105/115). Gravity 70, drag 0.35, damage 7 and partial correction 0.86/0.95 stay. Shared solver now finds the earliest feasible low arc and continuously saturates at reachable distance. Removed the client full-reach-to-45-stud switch and the solver's 10% substitute-target search. The former caused a measured 29.19-degree angle jump between adjacent half-stud samples. Stronger drop is gradual, with natural physical range limits.

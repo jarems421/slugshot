@@ -1613,3 +1613,10 @@
 - **Evidence:** baseline angle jump 29.19 degrees; separate near-cover miss about 22 studs. New mathematical/live distance sweeps, nine actual moving first/third-person shots, in-frame camera stress and two close-cover shots plus a forced shoulder-fallback shot pass; collision witness survives 1/240 through 0.4-second intervals. Full offline combat/movement/foundation checks pass. [Current details and sanitized results](combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current).
 - **Test lesson:** perform prediction checks after committing release, not while the charge clock is still running. A slow diagnostic itself advanced a requested second kick to the third; that fixture error was corrected without changing the gameplay thresholds.
 - **Unresolved:** owner feel, exact physical-input replay, multiplayer observers/latency and moving targets. No merge/push/publication or unrelated source edits.
+
+## 2026-11-02 - Authorized main delivery
+
+- **Confirmed:** owner explicitly requested pushing this work to main with documentation. This supersedes the earlier task-local no-merge/push notes.
+- **Implemented/verified:** merged main `9e7a41c` into shooting work as `020c60c`, preserving damage-scaled hit reactions alongside loadout controls, latest inspect, owner pose/camera defaults and `6d3253d` shooting consistency. Documentation conflicts retain both current sections.
+- **Evidence:** post-merge `verify_combat.py` and `verify_slugs.py` pass. Fresh native one-client Studio regression passes shared flight, continuous distance sweeps, nine moving shots, two cover shots and missing-muzzle fallback. Sanitized delivery metrics are appended to the shooting evidence.
+- **Unresolved:** owner feel/art verdict, exact physical-input replay and multi-client/latency coverage. Ignored assets and generated places remain local.

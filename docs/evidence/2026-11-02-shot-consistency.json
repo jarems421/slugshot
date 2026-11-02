@@ -548,5 +548,37 @@
     "server": "local Studio",
     "network_simulation": "none"
   },
-  "source_hash_normalization": "UTF-8 with LF newlines"
+  "source_hash_normalization": "UTF-8 with LF newlines",
+  "main_delivery": {
+    "date": "2026-11-02",
+    "source_revision": "020c60c",
+    "main_integrated": "9e7a41c",
+    "authorization": "Owner explicitly requested push to main plus documentation.",
+    "offline_checks": [
+      "python tools/verify_combat.py: PASS",
+      "python tools/verify_slugs.py: PASS (without Blender; no authored asset edits)"
+    ],
+    "native": {
+      "studio_version": "0.745.0.7451137",
+      "clients": 1,
+      "network": "local server; no injected latency",
+      "fixture": "tools/build_shot_consistency_check.py",
+      "artifacts": "build/shot-consistency/main-delivery (ignored)",
+      "result": "SHOOTCHECK PASS shot consistency; CombatSelfTest ALL PASS",
+      "moving_shots": 9,
+      "max_visible_error": 0,
+      "max_moving_contact_disagreement_studs": 0.000208,
+      "max_full_power_error_studs": 0.000614,
+      "distance_max_step_degrees": [
+        1.991249577216513,
+        1.7133790297619775,
+        2.302057816366273
+      ],
+      "cover_shots": 2,
+      "shoulder_fallback_pass": true,
+      "mean_frame_seconds": 0.018996002567479374,
+      "max_frame_seconds": 0.9519317746162415
+    },
+    "limits": "Single client, setup/sweep included in frame timing; not a performance benchmark or multiplayer/latency/owner-feel approval. Earlier source hashes describe the earlier test revision."
+  }
 }
