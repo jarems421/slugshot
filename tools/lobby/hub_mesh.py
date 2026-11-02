@@ -285,6 +285,8 @@ VOLCANO = """vec2 assetMap(vec3 p) {
 GROVE_ITEM = "slug-grove-1"
 GROVE_MOUNTAIN = "vec2 assetMap(vec3 p) { return vec2(mountainD(p), 43.0); }\n"
 # The ground stops at the cliff, the zone's edges and the wall, and settles to the level next door as it gets there.
+GROVE_SOLID = "vec2 assetMap(vec3 p) { return vec2(mountainShell(p) + 0.06, 43.0); }\n"
+GROVE_SHELL = "vec2 assetMap(vec3 p) { return vec2(mountainShell(p), 43.0); }\n"
 GROVE_GROUND = """vec2 assetMap(vec3 p) {
   vec2 h = vec2(31.0 + p.z, p.x);
   float hr = length(h), a = atan(h.x, h.y);
@@ -506,6 +508,10 @@ def storm_discs():
     return {"StormBody": storm_surface(STORM_RIM, storm_body_y), "StormVeil": storm_surface(VEIL_RIM, storm_veil_y)}
 
 
+def grove_chunk(x0, x1, z0, z1):
+    return lambda _ids, c: (c[:, 0] >= x0) & (c[:, 0] < x1) & (c[:, 2] >= z0) & (c[:, 2] < z1)
+
+
 def grove_middle(_ids, c):
     return (np.abs(c[:, 0]) < 13.0) & (c[:, 2] < 30.0)
 
@@ -688,7 +694,7 @@ PIECES = {
     },
     "hub-volcano": {
         "item": "portal-plaza-7", "map": VOLCANO, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
-        "lo": (-25.0, -1.2, -3.0), "hi": (25.0, 32.5, 48.0), "step": 0.08, "normalH": 0.012,
+        "lo": (-25.0, -1.2, -3.0), "hi": (25.0, 35.5, 48.0), "step": 0.08, "normalH": 0.012,
         "parts": [
             part("Pool", by_id((30.5, 31.5)), 700, 1024, cage=0.06),
             part("Flows", by_id((37.5, 38.5)), 4800, 1024, FINE_INK*1.5, 1.0, cage=0.06),
@@ -696,15 +702,24 @@ PIECES = {
             part("VolcanoBack", everything, 1400, 512, cage=0.2),
         ],
     },
+    # The mesh is the flat-faced "shell"; the layered rock in "map" is baked onto it as colour and normals, so it can be run on (owner).
     "hub-grove-mountain": {
-        "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3, "gain": 3.0, "bakeEmit": True,
-        "lo": (-46.0, -1.2, -1.0), "hi": (46.0, 32.0, 54.0), "step": 0.07, "normalH": 0.005,
+        "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "shell": GROVE_SHELL, "shellStep": 0.2, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
+        "gain": 3.0, "bakeEmit": True, "lo": (-50.0, -1.2, -1.0), "hi": (50.0, 38.0, 60.0), "step": 0.06, "normalH": 0.004,
         "parts": [
-            part("MountainM", grove_middle, 7000, 2048, ROCK_INK*1.2, 1.0, hard=True, cage=0.1),
-            part("MountainA", grove_side(1), 4500, 1024, ROCK_INK*1.2, 1.0, hard=True, cage=0.1),
-            part("MountainB", grove_side(-1), 4500, 1024, ROCK_INK*1.2, 1.0, hard=True, cage=0.1),
-            part("MountainBack", everything, 1500, 512, hard=True, cage=0.1),
+            part("MountainM", grove_middle, 9000, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
+            part("MountainA", grove_side(1), 6000, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
+            part("MountainB", grove_side(-1), 6000, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
+            part("MountainBack", everything, 1500, 1024, hard=True, cage=0.7),
         ],
+    },
+    # What players touch on the mountain, hidden just under its surface. One shape over the whole mountain makes Roblox's collision
+    # bridge the valleys between peaks with invisible walls, so it comes in chunks small enough to fit tightly.
+    "hub-grove-solid": {
+        "item": GROVE_ITEM, "map": GROVE_SOLID, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1,
+        "lo": (-50.0, -1.2, -1.0), "hi": (50.0, 38.0, 60.0), "step": 0.12, "normalH": 0.01,
+        "parts": [part(f"Solid{i}{j}", grove_chunk(-50.0 + i*100.0/7, -50.0 + (i + 1)*100.0/7, -1.0 + j*61.0/5, -1.0 + (j + 1)*61.0/5), 700, 64, cage=0.1)
+                  for i in range(7) for j in range(5)],
     },
     "hub-grove-ground": {
         "item": GROVE_ITEM, "map": GROVE_GROUND, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.2, "bakeEmit": True,
@@ -841,6 +856,11 @@ class PieceGpu(Gpu):
         sprouts = "".join(re.findall(SPROUT, page))
         if key == "hub-rock-dress":
             page = re.sub(CLUSTER, "", re.sub(SPROUT, "", page))
+        # The mountain's paint samples its shape many times. Compiled into every piece's shader it made the driver take the wrong
+        # paint branch on other pieces (mushrooms came out in the ground's colours), so only the mountain gets it.
+        if key != "hub-grove-mountain":
+            page, count = re.subn(r"// @mountain-paint-begin.*?// @mountain-paint-end", "return vec3(0.0);", page, flags=re.S)
+            assert count == 1, "the page needs its mountain paint markers"
         for old, new in GAME_PAINT:
             assert old in page, old
             page = page.replace(old, new)
@@ -1336,6 +1356,9 @@ def paint(key):
             Image.new("L", (64, 64), 255).save(out/"textures"/"Energy-emit.png")
             Image.new("RGB", (64, 64), (128, 128, 255)).save(out/"textures"/"Energy-normal.png")
             g["emit"] = "textures/Energy-emit.png"
+        black = float((alb[valid].max(axis=1) < 0.012).mean())
+        if black > 0.5:
+            print(f"WARNING {g['name']}: {black:.0%} of texels are ink black", flush=True)
         print(f"{g['name']}: {int(valid.sum())} texels" + (f", glow x{g['emissiveStrength']}" if "emit" in g else ""), flush=True)
     (out/"build.json").write_text(json.dumps(report, indent=1))
 

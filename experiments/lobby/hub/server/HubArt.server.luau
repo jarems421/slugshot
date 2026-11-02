@@ -254,7 +254,6 @@ local SOLID: { [string]: { string } } = {
 	["hub-arch"] = { "Pylons", "ArchL", "ArchR", "Pillars", "Base" },
 	["hub-plaza-floor"] = { "Floor" },
 	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
-	["hub-grove-mountain"] = { "MountainM", "MountainA", "MountainB", "MountainBack" },
 	["hub-grove-ground"] = { "Ground", "Bed" },
 	["hub-grove-rocks"] = { "Stones", "Runes" },
 	["hub-grove-shrooms"] = { "Stems", "Caps" },
@@ -265,9 +264,9 @@ local SOLID: { [string]: { string } } = {
 local solidQueue: { MeshPart } = {}
 local function makeSolid(model: Model, key: string)
 	local names = SOLID[key]
-	if names then
+	if names or key == "hub-grove-solid" then
 		for _, part in model:GetDescendants() do
-			if part:IsA("MeshPart") and table.find(names, part.Name) then
+			if part:IsA("MeshPart") and (not names or table.find(names, part.Name)) then
 				table.insert(solidQueue, part)
 			end
 		end
@@ -1293,7 +1292,8 @@ local function buildVolcano()
 	plume.Size = fade({ { 0, 16 }, { 1, 58 } })
 	plume.Transparency = fade({ { 0, 1 }, { 0.2, 0.62 }, { 1, 1 } })
 	plume.Lifetime = NumberRange.new(9, 13)
-	plume.Rate = 1.5
+	plume.Rate = 1.9
+	plume:SetAttribute("HighRate", 1.9)
 	plume.Speed = NumberRange.new(7, 11)
 	plume.SpreadAngle = Vector2.new(10, 10)
 	CollectionService:AddTag(plume, "HubMist")
@@ -1305,7 +1305,8 @@ local function buildVolcano()
 	steam.Size = fade({ { 0, 20 }, { 1, 85 } })
 	steam.Transparency = fade({ { 0, 1 }, { 0.12, 1 }, { 0.3, 0.68 }, { 1, 1 } })
 	steam.Lifetime = NumberRange.new(12, 18)
-	steam.Rate = 3
+	steam.Rate = 3.8
+	steam:SetAttribute("HighRate", 3.8)
 	steam.Speed = NumberRange.new(4, 8)
 	steam.SpreadAngle = Vector2.new(38, 38)
 	CollectionService:AddTag(steam, "HubMist")
@@ -1315,7 +1316,8 @@ local function buildVolcano()
 	smoke.Size = fade({ { 0, 24 }, { 1, 95 } })
 	smoke.Transparency = fade({ { 0, 1 }, { 0.3, 1 }, { 0.5, 0.72 }, { 1, 1 } })
 	smoke.Lifetime = NumberRange.new(12, 18)
-	smoke.Rate = 2.5
+	smoke.Rate = 3.2
+	smoke:SetAttribute("HighRate", 3.2)
 	smoke.Speed = NumberRange.new(3, 6)
 	smoke.SpreadAngle = Vector2.new(30, 30)
 	CollectionService:AddTag(smoke, "HubMist")
@@ -1419,6 +1421,7 @@ local GROVE = CFrame.new(layout.pond.radius, 0, 0) * CFrame.Angles(0, math.pi / 
 local GROVE_KEYS = {
 	"hub-grove-ground",
 	"hub-grove-mountain",
+	"hub-grove-solid",
 	"hub-grove-water",
 	"hub-grove-falls",
 	"hub-grove-rocks",
@@ -1428,9 +1431,9 @@ local GROVE_KEYS = {
 	"hub-grove-gems",
 }
 local GROVE_FALL_TIERS = {
-	{ y0 = 19.2, y1 = 12.8, x = 0.5, w0 = 0.35, w1 = 0.6 },
-	{ y0 = 12.75, y1 = 6.4, x = 0.1, w0 = 0.7, w1 = 1.15 },
-	{ y0 = 6.35, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
+	{ y0 = 21, y1 = 14, x = 0.5, w0 = 0.35, w1 = 0.6 },
+	{ y0 = 13.95, y1 = 7, x = 0.1, w0 = 0.7, w1 = 1.15 },
+	{ y0 = 6.95, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
 }
 local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
 local GROVE_TINT = Color3.fromRGB(150, 245, 225)
@@ -1447,8 +1450,8 @@ end
 
 -- The falls' face, as groveFallZ in the concept.
 local function groveFallZ(y: number): number
-	local up = math.clamp((y / 0.85 + 0.8) / 39, 0, 1) ^ (1 / 1.3)
-	return 8.6 + (30 - 0.94 * 22.5 * (1 - up) - 8.6) * 0.85
+	local up = math.clamp((y / 0.93 + 0.8) / 39, 0, 1) ^ (1 / 1.3)
+	return 8.6 + (30 - 0.94 * 22.5 * (1 - up) - 8.6) * 0.93
 end
 
 local function groveFlow(

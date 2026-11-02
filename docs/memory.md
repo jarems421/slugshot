@@ -1011,3 +1011,9 @@
 - **Confirmed:** owner chose the direction with six reference pictures: one natural mountain of faces and ridges, not sharp stubby tips; a little bigger and taller; volcano and gate shorter; use the approved giant mushroom; plant the ferns deeper. Owner also said the pond looks poor.
 - **Implemented/verified in Studio:** tops are mountain 151, volcano 133 and gate 134 studs. Check run: 6 trees, 30 slugs, 57 solid parts in 15.6 s with 0 failed, 182 floor raycasts with 0 holes, 57 ground feet all sunk in. Captures inspected. About 860k triangles on desktop with the grove in view.
 - **Unresolved:** owner's verdict; the pond isn't redesigned; running on it wasn't tried by hand; the trees are the heaviest new cost and phones will need lighter ones; one `Failed to upload TexturePack` log line appeared with several Studio windows open and wasn't traced; the concept pages still show earlier mountains.
+
+## 2026-11-02 - Mountain finish and volcano walls
+
+- **Confirmed:** owner: mountain a little larger, higher resolution, Slugterra-style black lining but thin inner lines, rougher layered look; volcano walls between lava streams extended upward only, with a little more steam. Waterfall, pond, surroundings and Floppies are next.
+- **Implemented/verified in Studio:** tops are mountain 165, volcano 143 and gate 133 studs. Check run: 77 solid parts with 0 failed in 18.8 s, 182 floor raycasts with 0 holes, 57 ground feet sunk in, 6 trees, 30 slugs. Collision sits about 1 stud under the drawn rock (p90 0.58 under), worst 13 above at one of 91 points. Captures inspected.
+- **Unresolved:** owner's verdict. Running and climbing weren't tried by hand. About 920k triangles and 257 MB of textures with the grove in view, far over the phone guesses, and the mobile check wasn't re-run. A `Failed to upload TexturePack` log line recurs with several Studio windows open and isn't traced.

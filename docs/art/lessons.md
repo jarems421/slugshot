@@ -292,3 +292,7 @@ Place what stands on a surface using the exported mesh, not the ideal shape: the
 ## Mountain form (2026-11-02)
 
 Rounds of designing tips on a body failed because a peak isn't a part: in the owner's references the whole mountain is one form, with ridges unbroken from summit to foot. A height over a triangle grid with its corners sampled from a ridged shape gives real flat faces and hard edges. Ask for references before designing a distinctive shape: six written designs missed where six pictures from the owner settled it.
+
+## Shader size and collision on large meshes (2026-11-02)
+
+Adding many samples of a heavy shape to one paint branch made the driver run the wrong branch for other materials: mushrooms and crystals came out in the ground's colours, and unrelated code changes made the fault come and go. Keep heavy paint out of pieces that don't use it (`@mountain-paint` markers), and compare painted colours per piece after any shader growth. Precise collision on one huge mesh can stand tens of studs above a concave surface, so measure it against the drawn surface and split it into chunks. The owner reads raised rims as "the wall between the lava streams": tie such changes to where the streams actually are.

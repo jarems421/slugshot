@@ -11,6 +11,7 @@ local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "grovePeaks", from = Vector3.new(80, 50, 0), at = Vector3.new(270, 100, 0) },
 	{ name = "groveTree", from = Vector3.new(105, 7, -28), at = Vector3.new(140, 8, -28) },
 	{ name = "groveFern", from = Vector3.new(120, 6, 70), at = Vector3.new(140, 1, 55) },
+	{ name = "volcanoTop", from = Vector3.new(0, 95, -175), at = Vector3.new(0, 125, -270) },
 	{ name = "plaza", from = Vector3.new(0, 14, -95), at = Vector3.new(0, 70, -250) },
 	{ name = "groveSlugs", from = Vector3.new(170, 3.4, -43), at = Vector3.new(174, 1, -46) },
 	{ name = "crack", from = Vector3.new(-34, 9, -103), at = Vector3.new(-40, 0, -112) },
@@ -52,7 +53,7 @@ task.spawn(function()
 	local only = RaycastParams.new()
 	only.FilterType = Enum.RaycastFilterType.Include
 	only.FilterDescendantsInstances =
-		{ workspace:WaitForChild("HubArt"):WaitForChild("hub-grove-mountain") }
+		{ workspace:WaitForChild("HubArt"):WaitForChild("hub-grove-solid") }
 	local steps, sharp, previous = 0, 0, {}
 	for x = 170, 300, 2 do
 		local row = {}
@@ -114,6 +115,16 @@ task.spawn(function()
 		end
 	end
 	report("mountain", gaps)
+	-- How far the mountain's collision stands above what's drawn, seen from above: the air you'd run on.
+	gaps = {}
+	for _, top in feet.heights do
+		local at = grove * Vector3.new(top[1], top[2], top[3])
+		local hit = workspace:Raycast(Vector3.new(at.X, 215, at.Z), Vector3.new(0, -230, 0), only)
+		if hit then
+			table.insert(gaps, hit.Position.Y - at.Y)
+		end
+	end
+	report("collisionAboveRock", gaps)
 	local function tops(name: string): number
 		local model = art:FindFirstChild(name)
 		local most = 0

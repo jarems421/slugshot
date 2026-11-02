@@ -20,7 +20,7 @@ PAGE = Path("docs/art/asset-library.html")
 SITES = Path("experiments/lobby/scale/shared/grove_slugs.json")
 FEET = Path("experiments/lobby/scale/shared/grove_feet.json")
 # As MTN_S and MTN_Z in the shader: the mountain is built at this share of its authored size, about this point.
-MTN_S, MTN_Z = 0.85, 8.6
+MTN_S, MTN_Z = 0.93, 8.6
 MOUNTAIN_Z = MTN_Z + (30.0 - MTN_Z)*MTN_S
 TREES = Path("experiments/lobby/scale/shared/grove_trees.json")
 
@@ -224,7 +224,7 @@ def boulders(rnd):
     for x, z, size in ((-3.6, 2.2, 0.85), (-1.8, 3.9, 0.6), (2.6, 3.0, 0.95), (4.2, 0.8, 0.6), (-4.6, -0.8, 0.7), (1.0, -2.4, 0.55), (-1.6, -3.6, 0.45)):
         rows.append((x, -0.2, z, size))
     # Rough rock round the two basins the falls land in.
-    for x, y, z, size in ((-1.5, 12.72, fall_z(12.75), 0.75), (2.0, 12.65, fall_z(12.75), 0.85), (-2.0, 6.33, fall_z(6.35), 1.0), (2.6, 6.26, fall_z(6.35), 0.95)):
+    for x, y, z, size in ((-1.5, 13.92, fall_z(13.95), 0.75), (2.0, 13.85, fall_z(13.95), 0.85), (-2.0, 6.93, fall_z(6.95), 1.0), (2.6, 6.86, fall_z(6.95), 0.95)):
         rows.append((x, y, z, size))
     for _ in range(9):
         a = rnd.uniform(0, 2*math.pi)
@@ -352,6 +352,25 @@ def slugs(stones):
     return rows
 
 
+def mesh_heights():
+    """The drawn mountain's height at a grid of points, so the check build can compare its collision."""
+    a, b, c = MOUNTAIN_TRIS[:, 0], MOUNTAIN_TRIS[:, 1], MOUNTAIN_TRIS[:, 2]
+    rows = []
+    for x in np.arange(-34.0, 34.1, 4.0):
+        for z in np.arange(9.0, 40.0, 4.0):
+            d = (b[:, 2] - c[:, 2])*(a[:, 0] - c[:, 0]) + (c[:, 0] - b[:, 0])*(a[:, 2] - c[:, 2])
+            with np.errstate(divide="ignore", invalid="ignore"):
+                u = ((b[:, 2] - c[:, 2])*(x - c[:, 0]) + (c[:, 0] - b[:, 0])*(z - c[:, 2]))/d
+                v = ((c[:, 2] - a[:, 2])*(x - c[:, 0]) + (a[:, 0] - c[:, 0])*(z - c[:, 2]))/d
+            w = 1.0 - u - v
+            hit = (u >= 0) & (v >= 0) & (w >= 0)
+            if hit.any():
+                top = float((u[hit]*a[hit, 1] + v[hit]*b[hit, 1] + w[hit]*c[hit, 1]).max())
+                if top > 1.0:
+                    rows.append([round(float(x)*5, 1), round(top*5, 2), round(float(z)*5, 1)])
+    return rows
+
+
 def main():
     rnd = random.Random(29)
     top, more = shrooms(rnd)
@@ -378,7 +397,7 @@ def main():
     # For the check build: where everything baked into a piece should touch its surface.
     studs = lambda rows: [[round(r[0]*5, 2), round(r[1]*5, 2), round(r[2]*5, 2)] for r in rows]
     FEET.write_text(json.dumps({"ground": studs(flowers + ferns + [t for t in top if t[1] < 1.6]), "mountain": studs([t for t in top if t[1] >= 1.6] + bush_rows + [g for g in gems if g[1] > 1.6]),
-                                "axisZ": MOUNTAIN_Z*5}) + "\n", encoding="utf-8")
+                                "axisZ": MOUNTAIN_Z*5, "heights": mesh_heights()}) + "\n", encoding="utf-8")
     if GROUND_GRID is not None:
         off = [abs(ground(f[0], f[2]) - ground_shape(f[0], f[2]))*5 for f in flowers]
         print(f"flowers: game ground differs from the ideal shape by {sum(off)/len(off):.2f} studs on average, {max(off):.2f} at most")

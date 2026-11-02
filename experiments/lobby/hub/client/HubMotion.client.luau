@@ -292,7 +292,8 @@ local function setDetail(value: boolean)
 	end
 	for _, e in CollectionService:GetTagged("HubMist") do
 		if e:IsA("ParticleEmitter") then
-			e.Rate = if value then 1.5 else 3
+			local high = e:GetAttribute("HighRate") or 3
+			e.Rate = if value then high / 2 else high
 		end
 	end
 	for _, halo in CollectionService:GetTagged("HubLavaGlow") do

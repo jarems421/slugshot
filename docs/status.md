@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain at 165 studs with black lining and layered rock over a smooth runnable surface; volcano walls raised between the lava streams. **Next (owner):** waterfall, pond, surroundings and Floppies. **Unresolved:** owner's verdict; phone cost.
+
 **Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain rebuilt to the owner's references (151 studs), approved giant mushrooms as its trees, and the volcano and gate at 85% height. **Unresolved:** owner's verdict, pond redesign, phone cost.
 
 **Implemented, 2026-11-02 (`experiment/lobby`):** Slug Grove is in the hub place: mountain, falls, pond, mushrooms, plants and 30 Floppies at 1.3 studs. **Verified:** Studio check run with no errors or floor holes. **Unresolved:** owner's verdict, slug motion and phone cost; see [lobby hub](art/lobby-hub.md).
