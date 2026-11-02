@@ -1,0 +1,60 @@
+{
+  "status": "Considering: owner review only",
+  "sample_rate": 48000,
+  "channels": 1,
+  "encoding": "PCM16",
+  "provenance": "Original procedural synthesis from tools/audio/build_style_test.py; no external samples or franchise audio.",
+  "seed": 20261102,
+  "files": [
+    {
+      "file": "01-blaster-shot.wav",
+      "title": "Blaster shot",
+      "description": "Dry pressure snap, weight, short crystal-metal tail.",
+      "seconds": 0.62,
+      "reel_start_seconds": 0.4,
+      "sample_peak_dbfs": -3.1,
+      "rms_dbfs": -20.34,
+      "sha256": "f43ef372387853a22e6b61652b55e8b465d3a69f15848f64b943521c31cedb15"
+    },
+    {
+      "file": "02-charge-three-stages.wav",
+      "title": "Charge: three stages",
+      "description": "Air/motor bed with catches at 0.32, 0.64 and 0.96 seconds; short full hold. This is a review phrase, not a seamless runtime loop.",
+      "seconds": 1.65,
+      "reel_start_seconds": 1.72,
+      "sample_peak_dbfs": -5.35,
+      "rms_dbfs": -21.26,
+      "sha256": "57478f384fde7e189ef8eb21a8c63dfb668ad8909f5833f26270d442cde9144f"
+    },
+    {
+      "file": "03-taking-damage.wav",
+      "title": "Taking damage",
+      "description": "A dense body/cloth impact; distinct from the shooter's future hit-confirmation tick.",
+      "seconds": 0.43,
+      "reel_start_seconds": 4.07,
+      "sample_peak_dbfs": -5.17,
+      "rms_dbfs": -23.64,
+      "sha256": "14ebfed28ca9a26bf04497126d0001dc5026e7c8d0645f73a060fb7b6fcd5f84"
+    },
+    {
+      "file": "04-stone-footstep.wav",
+      "title": "Stone footstep",
+      "description": "One boot contact with stone grain and cloth friction; a single sketch, not a walk sequence.",
+      "seconds": 0.4,
+      "reel_start_seconds": 5.2,
+      "sample_peak_dbfs": -8.18,
+      "rms_dbfs": -26.69,
+      "sha256": "3225bc29e3f3c9e13c02bd18f63e35eface4083a17475b95d1adf218963c305c"
+    },
+    {
+      "file": "05-menu-click.wav",
+      "title": "Menu click",
+      "description": "A short tactile ceramic-wood click with a trace of crystal.",
+      "seconds": 0.24,
+      "reel_start_seconds": 6.3,
+      "sample_peak_dbfs": -14.97,
+      "rms_dbfs": -32.0,
+      "sha256": "de7b6e550a3e6c2e9388e2e45dbd3ae800f8d007d60e5085696a64d918c5dfb4"
+    }
+  ]
+}

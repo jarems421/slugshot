@@ -1579,3 +1579,13 @@
 **Implemented/verified:** isolated `fix/settings-persistence` worktree from integrated main; twelve validated preferences and all primary/secondary/cleared bindings; JSON-safe colour, asynchronous client hydration preserving early edits, status text, server batching/retries/leave and shutdown saves, expiring session leases and future-schema preservation. Full offline combat/movement/foundation checks and isolated Studio real-client/server and PlayerRemoving flush/release tests with injected storage passed. [ADR 0021](decisions/0021-player-settings-persistence.md), [evidence](evidence/2026-11-02-settings-persistence.json).
 
 **Unresolved:** actual Roblox cloud-backed leave/rejoin; the direct Studio MCP proxy returned empty instance lists. No experience published, API access enabled or concurrent work edited. No claim of cloud persistence from injected-store tests.
+
+## 2026-11-02 - Whole-game sound audit and five-sound direction test
+
+**Confirmed:** owner requested Step 1 event inventory/code hooks/hearing policies, shooting/damage/movement before menus, then Step 2 proposed style and about five sounds. Explicit stop for owner approval before the rest.
+
+**Considering:** tactile cavern fantasy, derived from the art guide; positional physical actions and private interface/confirmation layers. Full [event list and style proposal](audio/sound-plan.md) covers implemented systems and distinguishes future/unimplemented triggers, duplicate-sound risks and optional silence.
+
+**Implemented/verified offline:** five original deterministic authored sketches (shot, three-stage charge phrase, taking damage, stone footstep, menu click), PCM16 mono 48 kHz, no clipping/nonfinite samples, zero endpoints, per-file hashes/peaks/RMS and concatenated review reel. [Listening page](audio/style-test-v1.html). Baseline c919351 in isolated `design/sound-direction`; concurrent lobby 7bda6a0 inspected read-only. No runtime changes, external samples/service, uploads or purchases.
+
+**Unresolved:** owner list/style/sample approval, auditory judgement and Roblox integration/playback/spatial/permissions tests. Numeric integrity does not prove sound quality. Work stops at the requested checkpoint; no additional unique sounds or variations generated.

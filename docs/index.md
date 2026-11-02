@@ -14,6 +14,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Rocklock V2 redesign and destruction](rocklock-v2.md), [routes](diagrams/rocklock-v2-routes.svg), [interactions](diagrams/rocklock-v2-interactions.svg) and [ADR 0011](decisions/0011-rocklock-v2-destruction.md)
 - [Movement lab and playtest plan](movement.md)
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
+- [Sound event audit, proposed direction and five-sound approval batch](audio/sound-plan.md)
 - [PvP UI: HUD, inventory, settings, keybinds and goo](pvp-ui.md), [ADR 0020](decisions/0020-ui-goo-and-keybinds.md)
 - [Combat / temporary target range](combat.md), [first-person camera research and comparison](research/first-person-acrobatics.md) and [reversible camera experiment](decisions/0014-acrobatic-camera-comparison.md)
 - [First-person owner wording and recurring regression fixes](combat.md#owner-language-contextual-interpretations-to-carry-forward)

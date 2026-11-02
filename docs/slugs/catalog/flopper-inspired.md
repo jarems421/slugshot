@@ -131,3 +131,7 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 - **Upload:** all maps re-uploaded privately and Approved before opening `build/SlugshotFloppyTest-SlugshotLook.rbxlx`.
 
 **Unresolved:** owner Studio check (glow strength on the pedestal and in the canister); name and IP check before any publication.
+
+## Considering: first sound direction (2026-11-02)
+
+The whole-game [sound audit](../../audio/sound-plan.md) proposes very soft damp body contact, brief earth friction during the existing recovery/burrow, and sparse sleepy airy burbles for Floppy. These are unapproved audio ideas, not a change to the final visual design or motion. Blinks, glowing bulbs and UI idle performances should generally stay silent. Only five whole-game sketches were authored for review; none is a Floppy vocal or a finished burrow sound. Await owner approval before producing the creature sound set.
