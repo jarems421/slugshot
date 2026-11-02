@@ -1,5 +1,19 @@
 # Slug shooting (experiment)
 
+## Charge accuracy, gentler drop and white ADS (2026-11-02)
+
+**Confirmed:** owner wants useful, mildly weaker first/second kicks, precise third-kick aim, and no random lateral spread. Floppy retains its weak identity. Approved animations stay; the dark ADS frame needs contrast and its green charge flash must become a white, Borderlands-inspired glow.
+
+**Implemented:** removed the fixed 62-stud aim cutoff, which switched valid distant targets to a 45-stud zero. A reachable surface now gets a muzzle-to-target ballistic solution using shared server drag/gravity. The third visible kick guarantees full charge and full correction, independent of tuning sliders. Shoulder-origin fallback uses the same policy. Per-frame gun presentation reads the crosshair ray; ballistic solves happen on release. Unreachable/background surfaces retain a stable 45-stud zero. A weaker shot beyond its range retains a nearer reachable arc instead of abruptly firing flat.
+
+**Considering, owner feel pending:** Floppy speeds are 95/105/115 studs/s instead of 65/88/115; drag 0.35 instead of 1; first/second gravity compensation 0.86/0.95 instead of 0.3/0.6. Gravity 70, damage 7, tumbling and no transformation remain. Weaker shots still drop and land short, with no random sideways error. The incomplete ADS bracket uses a pale Neon core/fine charcoal rim; charge hits brighten to white. Frame shape, pod and kick timing remain.
+
+**Verified:** full combat/foundation/movement offline checks pass. Native shared-flight tests pass for 60 reachable distance/yaw/height combinations, lower-charge drop, unreachable boundaries, exact-vs-step integration and dummy collision. Thirteen actual accepted shots pass in ADS and first-person hip fire, including uphill/downhill targets. Full-charge surface error <0.003 studs at tested 25/65/85/100/120-stud placements. At 65 studs the ADS first/second kicks landed ~2.253/0.662 studs below the crosshair; third error <0.001. A 120-stud target 5 studs uphill is correctly unreachable. Native flash samples are white and both rim/core disappear on close. [Light background](evidence/shooting-feel/ads-light.png), [dark background](evidence/shooting-feel/ads-dark.png), [results/warnings/limits](evidence/2026-11-02-shooting-feel.json).
+
+**Reproduce:** `python tools/build_shooting_feel_check.py --review`, then `powershell -NoProfile -File tools/studio/shooting_feel_check.ps1 -OutDir build/shooting-feel/review`. Runner owns/closes only its own Studio window. Omit `--review` to build `build/SlugshotShootingFeelRange.rbxlx` without automated client/target fixtures. Private IDs/builds remain ignored.
+
+**Unresolved:** owner feel/art verdict, physical controls, third-person/moving targets, multiplayer/latency and device/FPS sweeps. Precision applies to reachable stationary aim points; projectiles still take time to travel and collide along their path.
+
 ## ADS mount and clean frame opening (2026-11-02)
 
 **Confirmed:** owner provided `Screenshot 2026-11-02 083330.png`, `083341.png` and the earlier Valorant-style frame reference `Screenshot 2026-11-01 182419.png`. The opening parts must not poke through the sight edges; the folded mechanism must sit forward and flat on the receiver. The reference imagery is not redistributed.

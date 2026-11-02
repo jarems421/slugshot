@@ -1553,3 +1553,9 @@
 
 - Owner asked for all uncommitted UI work to be committed and pushed to main with no conflicts, and docs updated. Merged main's 64 newer commits first; only `AdsSight` and notes conflicted. See [PvP UI](pvp-ui.md).
 - Later owner notes this round: slime must stay behind the slider knob; lost health flashes red; drips stop when their goo is gone; five slots; inventory on E, small and expanding; ADS kicks must be felt without hurting aim.
+
+## 2026-11-02 - Shooting feel and white sight
+
+- **Confirmed:** owner wants modest first/second kick speed loss/drop, precise third kick, Floppy to remain weak, and visible white ADS frame/charge flash. Animations were approved.
+- **Implemented/verified:** isolated `fix/shooting-feel` from main/UI `caa6b02`; removed 62-stud aim cutoff, shared muzzle/shoulder ballistic policy, third-kick full correction, closer speeds/reduced drag, white core/dark rim sight. Full offline checks, native flight regressions and 13 accepted real shots pass. Full-charge error <0.003 studs at tested distances up to 120; weaker 65-stud ADS shots land ~2.253/0.662 low. [Evidence](evidence/2026-11-02-shooting-feel.json), [details](combat.md#charge-accuracy-gentler-drop-and-white-ads-2026-11-02).
+- **Unresolved:** owner feel/art verdict, physical controls, third-person/moving targets, multiplayer/latency/device coverage. Physical range remains finite; initial regression's impossible uphill target became an explicit boundary test. No concurrent sources or main modified.

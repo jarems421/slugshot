@@ -76,11 +76,13 @@ end
 
 -- The shoulder, the aim point under the cursor (the crosshair when shift-locked) and
 -- the muzzle a gun's reach along the line to it.
--- At full charge (scaled down for lower levels): how far a surface can be for shots to land on it,
--- and where they cross the crosshair's line when nothing is in range.
-local TRUE_RANGE, OPEN_AIM = 62, 45
+-- Stable crosshair zero when there is no physically reachable surface under it.
+local OPEN_AIM = 45
 
-local function aim(charge: number): (Vector3?, Vector3?, Vector3?)
+local function aim(
+	charge: number,
+	presentationOnly: boolean?
+): (Vector3?, Vector3?, Vector3?, Vector3?)
 	-- Shots leave the actual gun's muzzle, in every view.
 	local character = player.Character
 	local camera = workspace.CurrentCamera
@@ -104,36 +106,32 @@ local function aim(charge: number): (Vector3?, Vector3?, Vector3?)
 	local hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
 	local point = if hit then hit.Position else ray.Origin + ray.Direction * 300
 	local muzzle = Viewmodel.muzzle()
+	if presentationOnly then
+		return muzzle, ray.Direction, ray.Direction, point
+	end
 	if muzzle then
 		-- A point behind the muzzle (a wall between camera and gun) keeps the camera's line.
 		local toward = point - muzzle
 		if toward.Magnitude <= 0.5 or toward.Unit:Dot(ray.Direction) <= 0 then
 			return muzzle, ray.Direction, ray.Direction
 		end
-		-- Slugs droop and leave from the gun, off to one side, so a straight shot lands low and
-		-- on the gun's side. A full charge launches along the arc that ends on the crosshair's
-		-- point; lower levels only part-correct it, so they land low and fall short.
-		local share = Combat.speed(slug, charge) / Combat.speed(slug, 1)
-		local target: Vector3
-		if hit and (point - muzzle).Magnitude <= TRUE_RANGE * share then
-			-- The slug's edge touches first, so its centre aims one radius off the surface.
-			target = point + hit.Normal * slug.Radius
-		else
-			-- Nothing in range behind the crosshair: a gentle arc crossing its line at a set
-			-- distance. Using the far surface's real distance is a big lob over anything nearer,
-			-- which overshot as soon as the crosshair slipped off a close target.
-			local along = ray.Direction:Dot(muzzle - ray.Origin) + OPEN_AIM * share
+		-- Use the actual surface whenever the full-charge arc can reach it. There is
+		-- no arbitrary distance switch that pulls a valid far target down to a near zero.
+		local target = if hit then point + hit.Normal * slug.Radius else point
+		local full = if hit then Combat.aimedDirection(muzzle, target, slug, 1) else nil
+		if not full then
+			local along = ray.Direction:Dot(muzzle - ray.Origin) + OPEN_AIM
 			target = ray.Origin + ray.Direction * along
 		end
-		local straight = (target - muzzle).Unit
-		local arc = Combat.aimedDirection(muzzle, target, slug, charge) or straight
 		local level = Combat.level(charge)
 		local correction = if level == 1
 			then Tuning.values.shotArcOne
 			elseif level == 2 then Tuning.values.shotArcTwo
-			else Tuning.values.aimArc
-		-- The gun points along the crosshair, not the arc, so it never jumps with the distance.
-		return muzzle, straight:Lerp(arc, correction).Unit, ray.Direction
+			else 1
+		local direction = if level == 3 and full
+			then full
+			else Combat.launchDirection(muzzle, target, slug, charge, correction)
+		return muzzle, direction, ray.Direction, point
 	end
 	local from = torso.CFrame * shoulder.C0.Position
 	local toward = point - from
@@ -143,16 +141,31 @@ local function aim(charge: number): (Vector3?, Vector3?, Vector3?)
 	local direction = toward.Unit
 	local origin = from + direction * Combat.MuzzleReach
 	local final = point - origin
+	local target = if hit then point + hit.Normal * slug.Radius else point
+	local full = if hit then Combat.aimedDirection(origin, target, slug, 1) else nil
+	if not full then
+		target = origin + ray.Direction * OPEN_AIM
+	end
+	local level = Combat.level(charge)
+	local correction = if level == 1
+		then Tuning.values.shotArcOne
+		elseif level == 2 then Tuning.values.shotArcTwo
+		else 1
 	return origin,
-		if final.Magnitude > 0.5 and final.Unit:Dot(direction) > 0 then final.Unit else direction,
-		ray.Direction
+		if final.Magnitude > 0.5
+			then Combat.launchDirection(origin, target, slug, charge, correction)
+			else direction,
+		ray.Direction,
+		point
 end
 
 local function fire()
 	charging = false
 	local tool = blaster()
 	local now = os.clock()
-	local charge = math.clamp((now - chargeStart) / Tuning.values.chargeTime, 0, 1)
+	local charge = if Recoil.stage() == 3
+		then 1
+		else math.clamp((now - chargeStart) / Tuning.values.chargeTime, 0, 1)
 	local origin, direction, gunAim = aim(charge)
 	if not tool or not origin or not direction then
 		return
@@ -341,8 +354,18 @@ end)
 if RunService:IsStudio() then
 	local probe = Instance.new("BindableFunction")
 	probe.Name = "CombatExperimentProbe"
-	probe.OnInvoke = function(command: string)
-		if command == "Press" then
+	probe.OnInvoke = function(command: string, value: any)
+		if command == "Aim" then
+			local charge = if typeof(value) == "number" then math.clamp(value, 0, 1) else 1
+			local origin, direction, gunAim, target = aim(charge)
+			return {
+				origin = origin,
+				direction = direction,
+				gunAim = gunAim,
+				target = target,
+				level = Combat.level(charge),
+			}
+		elseif command == "Press" then
 			beginCharge()
 		elseif command == "Release" then
 			releaseCharge()
@@ -427,7 +450,7 @@ RunService.RenderStepped:Connect(function()
 	local action = character and character:GetAttribute("FirstPersonAction")
 	Ads.step(spiralDt, action == nil or action == "Slide")
 	if Ads.wanted() and not charging then
-		local _, _, gunAim = aim(0)
+		local _, _, gunAim = aim(0, true)
 		if gunAim then
 			aimDirection = gunAim
 		end
@@ -449,7 +472,7 @@ RunService.RenderStepped:Connect(function()
 		local charge = math.clamp((now - chargeStart) / Tuning.values.chargeTime, 0, 1)
 		Reticle.setCharge(charge)
 		Recoil.setCharging(charge, moveWeight, spiralDt)
-		local _, _, gunAim = aim(charge)
+		local _, _, gunAim = aim(charge, true)
 		if gunAim then
 			aimDirection = gunAim
 		end

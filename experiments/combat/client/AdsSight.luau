@@ -1,6 +1,6 @@
 --!strict
 -- The holographic sight: a small pod on the blaster opens when aiming, then projects a clear
--- pane with a black, incomplete frame. The mechanism moves by weld, so the first-person gun
+-- pane with a pale, glowing incomplete frame and dark contrast edge. The mechanism moves by weld, so the first-person gun
 -- copies follow; the hologram is client-only and rides on the visible gun. Timing runs on its
 -- own clock, so aiming itself is never held up. The crosshair stays the player's normal HUD one.
 -- There is no glass: like the reference, only the frame is drawn and the view stays clear.
@@ -22,7 +22,8 @@ local FRAME_WIDTH = 0.008
 local HALF_WIDTH, HALF_HEIGHT = 0.252, 0.196
 local FRAME_START_SCALE = 0.45 -- the frame blooms out of the pod from this size
 local INK = Color3.fromRGB(14, 14, 18)
-local STEP_FLASH = Color3.fromRGB(215, 240, 160) -- the frame lights up on each step: Floppy's bulb glow
+local FRAME_WHITE = Color3.fromRGB(226, 230, 235)
+local STEP_FLASH = Color3.fromRGB(255, 255, 255) -- neutral white charge flash
 local STEP_WIDTH = 0.0035 -- the frame's line thickens with each step and holds, so power can be read at a glance
 -- One quadrant of the frame, as a share of half-width and half-height, from the bottom gap
 -- round to the top gap; a gap at the side splits it into two brackets.
@@ -43,7 +44,7 @@ local PRONGS: Stage = { from = 0.28, to = 0.68 }
 local BLOOM: Stage = { from = 0.62, to = 1 }
 local TRACE: Stage = { from = 0.62, to = 1 }
 
-type Bar = { part: BasePart, a: Vector2, b: Vector2, start: number, finish: number }
+type Bar = { part: BasePart, ink: BasePart, a: Vector2, b: Vector2, start: number, finish: number }
 local bars: { Bar } = {}
 local folder: Folder? = nil
 local open = 0
@@ -59,10 +60,10 @@ local function stage(s: Stage): number
 	return t * t * t * (t * (t * 6 - 15) + 10)
 end
 
-local function piece(class: string, color: Color3): BasePart
+local function piece(class: string, color: Color3, emissive: boolean?): BasePart
 	local part = Instance.new(class) :: BasePart
 	part.Color = color
-	part.Material = Enum.Material.SmoothPlastic
+	part.Material = if emissive then Enum.Material.Neon else Enum.Material.SmoothPlastic
 	part.Anchored, part.CanCollide, part.CanQuery, part.CanTouch = true, false, false, false
 	part.CastShadow = false
 	part.Transparency = 1
@@ -82,7 +83,8 @@ local function build(camera: Camera)
 			local b = path[i + 1] * Vector2.new(sign, 1)
 			local length = (path[i + 1] - path[i]).Magnitude
 			table.insert(bars, {
-				part = piece("Part", INK),
+				part = piece("Part", FRAME_WHITE, true),
+				ink = piece("Part", INK),
 				a = a,
 				b = b,
 				start = walked / total,
@@ -108,6 +110,7 @@ end
 local function hideHologram()
 	for _, bar in bars do
 		bar.part.Transparency = 1
+		bar.ink.Transparency = 1
 	end
 end
 
@@ -131,7 +134,7 @@ local function showHologram(camera: Camera, gun: CFrame)
 	local hit = Recoil.stepHit(os.clock())
 	local scale = (FRAME_START_SCALE + (1 - FRAME_START_SCALE) * bloom) * (1 + T.adsStepFrame * hit)
 	local thickness = FRAME_WIDTH + STEP_WIDTH * Recoil.stage()
-	local tint = INK:Lerp(STEP_FLASH, math.clamp(hit, 0, 1))
+	local tint = FRAME_WHITE:Lerp(STEP_FLASH, math.clamp(hit, 0, 1))
 	local drawn = stage(TRACE)
 	local function place(point: Vector2): Vector3
 		return Vector3.new(point.X * w * scale, -h + (point.Y * h + h) * scale, 0)
@@ -140,19 +143,25 @@ local function showHologram(camera: Camera, gun: CFrame)
 		local amount = math.clamp((drawn - bar.start) / (bar.finish - bar.start), 0, 1)
 		if amount <= 0 then
 			bar.part.Transparency = 1
+			bar.ink.Transparency = 1
 			continue
 		end
 		local a, b = place(bar.a), place(bar.b)
 		local tip = a:Lerp(b, amount)
 		local span = tip - a
 		-- Exact endpoints keep diagonal strokes from poking past a corner.
-		bar.part.Size = Vector3.new(span.Magnitude, thickness, thickness)
 		bar.part.Color = tint
-		bar.part.CFrame = base
+		local at = base
 			* CFrame.new((a + tip) / 2)
 			* CFrame.Angles(0, 0, math.atan2(span.Y, span.X))
+		bar.ink.Size = Vector3.new(span.Magnitude, thickness + 0.006, 0.004)
+		bar.ink.CFrame = at
+		bar.part.Size = Vector3.new(span.Magnitude, thickness, 0.004)
+		bar.part.CFrame = at * CFrame.new(0, 0, 0.004)
 		-- Fades in as it draws, and the frame as a whole fades with the open and close.
-		bar.part.Transparency = 1 - math.min(amount * 2.5, 1) * math.min(bloom * 2.5, 1) * aligned
+		local opacity = math.min(amount * 2.5, 1) * math.min(bloom * 2.5, 1) * aligned
+		bar.part.Transparency = 1 - opacity
+		bar.ink.Transparency = 1 - opacity
 	end
 end
 
