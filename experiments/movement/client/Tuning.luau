@@ -83,9 +83,8 @@ Tuning.values = {
 	adsStepFrame = 0.1, -- sight frame swell per step
 	-- How much of the droop each shot level corrects. 1: lands on the crosshair. 0: flies
 	-- straight from the gun and droops.
-	shotArcOne = 0.3,
-	shotArcTwo = 0.6,
-	aimArc = 1,
+	shotArcOne = 0.86,
+	shotArcTwo = 0.95,
 	-- Floppy's face at rest: tired, sick and lazy.
 	faceLid = 0.04,
 	faceTilt = 11,
@@ -153,7 +152,6 @@ Tuning.Entries = {
 	entry("chargeViewTighten", "View tighten (deg)", "Charge spiral", 0, 10, 0.25),
 	entry("shotArcOne", "One charge correction", "Accuracy", 0, 1, 0.05),
 	entry("shotArcTwo", "Two charge correction", "Accuracy", 0, 1, 0.05),
-	entry("aimArc", "Full charge correction", "Accuracy", 0, 1, 0.05),
 	entry("chargeMoveShake", "Vibration while moving", "Charge spiral", 1, 6, 0.05),
 	entry("chargeMoveStep", "Step kick while moving", "Charge spiral", 1, 6, 0.05),
 	entry("chargeStepRoll", "View roll per step (deg)", "Charge spiral", 0, 5, 0.05),

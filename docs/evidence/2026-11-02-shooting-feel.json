@@ -1,0 +1,223 @@
+{
+  "date": "2026-11-02",
+  "status": "Implemented/verified native; owner feel pending",
+  "branch": "fix/shooting-feel",
+  "base": "caa6b02",
+  "checks": {
+    "offline": "tools/verify_combat.py (includes foundation and movement): passed",
+    "native_self_test": "ALL PASS; exact-vs-step integration, 60 reachable full-charge target/yaw/height combinations, ordered drop at 25/45/65/85, weak-shot fallback, unreachable boundaries, kick thresholds, dummy spherecast",
+    "native_local_client_server": "13 accepted real shots through actual CombatClient/CombatServer and muzzle, visible kick gating, ADS then first-person hip, level/uphill/downhill targets; PASS",
+    "full_charge_max_error_studs": 0.0022292137145996094,
+    "white_flash_visible_neon_samples": 600,
+    "ADS_cleanup": "Both core and rim invisible after close",
+    "review": "Light/dark native screenshots visually inspected"
+  },
+  "values": {
+    "speeds_before": [
+      65,
+      88,
+      115
+    ],
+    "speeds_after": [
+      95,
+      105,
+      115
+    ],
+    "drag_before": 1,
+    "drag_after": 0.35,
+    "gravity": 70,
+    "lower_arc_correction": [
+      0.86,
+      0.95
+    ],
+    "full_correction": 1,
+    "damage": 7
+  },
+  "native_results": [
+    {
+      "charge": 0.3770894736849836,
+      "speed": 94.99999237060547,
+      "distance": 25,
+      "error": [
+        0,
+        -0.2508811950683594,
+        0
+      ],
+      "level": 1,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 0.7004972932426105,
+      "speed": 104.99999237060547,
+      "distance": 25,
+      "error": [
+        0,
+        -0.07492542266845703,
+        0
+      ],
+      "level": 2,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115.00000762939453,
+      "distance": 25,
+      "error": [
+        0,
+        -0.0018939971923828125,
+        0
+      ],
+      "level": 3,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 0.3760575939624577,
+      "speed": 95.00000762939453,
+      "distance": 65,
+      "error": [
+        0,
+        -2.2530670166015625,
+        0
+      ],
+      "level": 1,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 0.7021147368696371,
+      "speed": 105.00000762939453,
+      "distance": 65,
+      "error": [
+        0,
+        -0.6616864204406738,
+        0
+      ],
+      "level": 2,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115,
+      "distance": 65,
+      "error": [
+        0,
+        -0.0004487037658691406,
+        0
+      ],
+      "level": 3,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115,
+      "distance": 85,
+      "error": [
+        0,
+        -0.0011758804321289062,
+        0
+      ],
+      "level": 3,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115,
+      "distance": 100,
+      "error": [
+        0,
+        -0.000659942626953125,
+        0
+      ],
+      "level": 3,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115,
+      "distance": 120,
+      "error": [
+        0,
+        -0.0022292137145996094,
+        0
+      ],
+      "level": 3,
+      "mode": "ADS",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 0.3762455639180804,
+      "speed": 95.00000762939453,
+      "distance": 65,
+      "error": [
+        0,
+        -2.2532200813293457,
+        0
+      ],
+      "level": 1,
+      "mode": "first-person hip",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115.00001525878906,
+      "distance": 65,
+      "error": [
+        0,
+        -0.0006794929504394531,
+        0
+      ],
+      "level": 3,
+      "mode": "first-person hip",
+      "target_height_offset": 0
+    },
+    {
+      "charge": 1,
+      "speed": 115.00000762939453,
+      "distance": 85,
+      "error": [
+        0,
+        -0.002093076705932617,
+        0
+      ],
+      "level": 3,
+      "mode": "first-person hip",
+      "target_height_offset": -3
+    },
+    {
+      "charge": 1,
+      "speed": 115,
+      "distance": 85,
+      "error": [
+        0,
+        -0.0015478134155273438,
+        0
+      ],
+      "level": 3,
+      "mode": "first-person hip",
+      "target_height_offset": 5
+    }
+  ],
+  "failed_attempt": "Initial regression assumed 120 studs plus 5 uphill was reachable; solver correctly returned nil. Final suite tests level/downhill at 120 and explicitly checks unreachable uphill. No failed gameplay shot in either native attempt.",
+  "warnings": [
+    "Studio startup Redundant Flag ID: LuauIfLocal",
+    "Two Studio HTTP Curl connect warnings; no CreatorError or script stack in final session"
+  ],
+  "limits": [
+    "Stationary reachable aim point; finite-speed colliding projectiles, no moving-target interception guarantee.",
+    "One native local client/server session using scripted camera/charge input; no physical input, third-person, multiplayer, latency or device/FPS sweep.",
+    "Lower levels retain drop/range limits; 120 studs plus 5 uphill is beyond this profile.",
+    "Owner must judge speed/drop/glow feel."
+  ],
+  "reproduce": [
+    "python tools/build_shooting_feel_check.py --review",
+    "powershell -NoProfile -File tools/studio/shooting_feel_check.ps1 -OutDir build/shooting-feel/review",
+    "python tools/build_shooting_feel_check.py (playable range, no review fixtures)"
+  ]
+}

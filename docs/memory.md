@@ -1559,3 +1559,15 @@
 - Owner asked for reactions proportional to damage ("the more damage that's done, the more you should move. And be more hurt") and queried the lack of one while sliding and jumping. Built as a spring layered over every state; see [combat](combat.md#damage-scaled-hit-reaction-2026-11-02).
 - Owner asked whether UI textures and Floppy stay on their account. A clone test confirmed the assets do, and that private places need `private-assets/` or a re-upload. Found the GitHub repository is public and told the owner.
 - Owner tested hit reactions and asked to remove the low-health slump: it looks poor, could distract players and hides hit reactions. Removed.
+
+## 2026-11-02 - Shooting feel and white sight
+
+- **Confirmed:** owner wants modest first/second kick speed loss/drop, precise third kick, Floppy to remain weak, and visible white ADS frame/charge flash. Animations were approved.
+- **Implemented/verified:** isolated `fix/shooting-feel` from main/UI `caa6b02`; removed 62-stud aim cutoff, shared muzzle/shoulder ballistic policy, third-kick full correction, closer speeds/reduced drag, white core/dark rim sight. Full offline checks, native flight regressions and 13 accepted real shots pass. Full-charge error <0.003 studs at tested distances up to 120; weaker 65-stud ADS shots land ~2.253/0.662 low. [Evidence](evidence/2026-11-02-shooting-feel.json), [details](combat.md#charge-accuracy-gentler-drop-and-white-ads-2026-11-02).
+- **Unresolved:** owner feel/art verdict, physical controls, third-person/moving targets, multiplayer/latency/device coverage. Physical range remains finite; initial regression's impossible uphill target became an explicit boundary test. No concurrent sources or main modified.
+
+## 2026-11-02 - Shooting changes delivered to main
+
+- **Confirmed:** owner explicitly requested pushing the shooting/white ADS iteration and updating documentation.
+- **Implemented/verified:** implementation `064f7ed` and its documentation delivered from `fix/shooting-feel` to main. Main was clean and matched `origin/main` at `caa6b02`, allowing a fast-forward with no conflicts. Existing combat/movement/foundation checks and native evidence remain applicable; delivery changes documentation only. No restricted assets or ignored builds are included; concurrent lobby sources remain untouched.
+- **Unresolved:** owner feel/art verdict and the runtime coverage limits recorded in [combat notes](combat.md#charge-accuracy-gentler-drop-and-white-ads-2026-11-02).

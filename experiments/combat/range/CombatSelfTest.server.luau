@@ -38,6 +38,88 @@ for _, charge in { 0, 1 } do
 	)
 end
 
+-- At a target plane, integrate the exact shared flight until forward distance matches.
+local function atPlane(
+	origin: Vector3,
+	target: Vector3,
+	charge: number,
+	correction: number
+): Vector3?
+	local flat = Vector3.new(target.X - origin.X, 0, target.Z - origin.Z)
+	local axis = flat.Unit
+	local velocity = Combat.launchDirection(origin, target, floppy, charge, correction)
+		* Combat.speed(floppy, charge)
+	if
+		(Combat.at(origin, velocity, floppy, Combat.MaxFlight) - origin):Dot(axis) < flat.Magnitude
+	then
+		return nil
+	end
+	local low, high = 0, Combat.MaxFlight
+	for _ = 1, 28 do
+		local time = (low + high) / 2
+		if (Combat.at(origin, velocity, floppy, time) - origin):Dot(axis) < flat.Magnitude then
+			low = time
+		else
+			high = time
+		end
+	end
+	return Combat.at(origin, velocity, floppy, (low + high) / 2)
+end
+for _, distance in { 10, 25, 45, 65, 85, 100, 120 } do
+	for _, yaw in { 0, 0.7, 2.4 } do
+		local heights: { number } = if distance == 120 then { -5, 0 } else { -5, 0, 5 }
+		for _, height in heights do
+			local target = MUZZLE
+				+ Vector3.new(math.cos(yaw) * distance, height, math.sin(yaw) * distance)
+			local hit = atPlane(MUZZLE, target, 1, 1)
+			check(
+				hit ~= nil and (hit :: Vector3 - target).Magnitude < 0.01,
+				string.format(
+					"full charge %.0f studs/yaw %.1f/height %.0f matches aim",
+					distance,
+					yaw,
+					height
+				)
+			)
+		end
+	end
+end
+for _, distance in { 25, 45, 65, 85 } do
+	local target = MUZZLE + Vector3.new(distance, 0, 0)
+	local first = atPlane(MUZZLE, target, 1 / 3, 0.86)
+	local second = atPlane(MUZZLE, target, 2 / 3, 0.95)
+	local full = atPlane(MUZZLE, target, 1, 1)
+	check(first ~= nil and second ~= nil and full ~= nil, `all levels reach {distance} stud plane`)
+	if first and second and full then
+		local dropOne, dropTwo = target.Y - first.Y, target.Y - second.Y
+		check(
+			dropOne > dropTwo and dropTwo > 0 and dropOne < 4.1,
+			string.format(
+				"predictable modest drop at %d: %.3f/%.3f/%.3f",
+				distance,
+				dropOne,
+				dropTwo,
+				target.Y - full.Y
+			)
+		)
+		check(math.abs(first.Z) < 0.001 and math.abs(second.Z) < 0.001, "no lateral spread")
+	end
+end
+check(
+	Combat.aimedDirection(MUZZLE, MUZZLE + Vector3.new(500, 0, 0), floppy, 1) == nil,
+	"impossible full-charge target is explicit"
+)
+local nearReach =
+	Combat.launchDirection(MUZZLE, MUZZLE + Vector3.new(110, 0, 0), floppy, 1 / 3, 0.86)
+check(
+	nearReach.Y > 0 and math.abs(nearReach.Magnitude - 1) < 1e-5,
+	"out-of-reach weak shot keeps a finite raised arc"
+)
+check(
+	Combat.level(1 / 3) == 1 and Combat.level(2 / 3) == 2 and Combat.level(1) == 3,
+	"three kick thresholds"
+)
+
 -- How far a level or raised shot travels before reaching the floor (y = 0).
 local function reach(charge: number, degrees: number): (number, number)
 	local direction = Vector3.new(0, math.sin(math.rad(degrees)), -math.cos(math.rad(degrees)))

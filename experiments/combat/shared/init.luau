@@ -60,9 +60,9 @@ Combat.Slugs = {
 	Floppy = {
 		Label = "Floppy",
 		Damage = 7,
-		Speed = { 65, 88, 115 },
+		Speed = { 95, 105, 115 },
 		Gravity = 70,
-		Drag = 1,
+		Drag = 0.35,
 		Radius = 0.3,
 		Tumble = 2,
 		Size = 1, -- owner, 2026-11-01: permanent Floppy size outside the gun
@@ -128,6 +128,32 @@ function Combat.aimedDirection(
 		before = t
 	end
 	return nil
+end
+
+-- Lower charge loses height/velocity, never lateral accuracy. If its target is beyond
+-- that level's physical reach, retain a sensible near-reach arc instead of firing flat.
+function Combat.launchDirection(
+	origin: Vector3,
+	target: Vector3,
+	slug: Slug,
+	charge: number,
+	correction: number
+): Vector3
+	local offset = target - origin
+	if offset.Magnitude < 1e-4 then
+		return Vector3.new(0, 0, -1)
+	end
+	local straight = offset.Unit
+	local arc = Combat.aimedDirection(origin, target, slug, charge)
+	if not arc then
+		for step = 1, 12 do
+			arc = Combat.aimedDirection(origin, origin + offset * (0.9 ^ step), slug, charge)
+			if arc then
+				break
+			end
+		end
+	end
+	return if arc then straight:Lerp(arc, math.clamp(correction, 0, 1)).Unit else straight
 end
 
 function Combat.sweep(
