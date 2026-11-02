@@ -4,7 +4,8 @@ Reuses the scale place's movement adapter, then runs Rojo on the private hub pro
 Output: build/SlugshotLobbyHub.rbxlx. With --check it also builds build/SlugshotLobbyHubCheck.rbxlx, which adds the
 performance probe and camera tour from experiments/lobby/hub/check. With --phone it also builds
 build/SlugshotLobbyPhoneTest.rbxlx, for a private published copy: the self-running test from experiments/lobby/hub/phone,
-and only the original movement clips, so the owner's private clips stay off Roblox. Both stay out of the normal place.
+and only the original movement clips, so the owner's private clips stay off Roblox. With --mobile it also builds
+build/SlugshotLobbyMobileCheck.rbxlx for tools/lobby/mobile_check.py. All of these stay out of the normal place.
 """
 import json
 import subprocess
@@ -21,6 +22,8 @@ CHECK_PROJECT = ROOT/"build/lobby-scale/hub-check.project.json"
 CHECK_PLACE = ROOT/"build/SlugshotLobbyHubCheck.rbxlx"
 PHONE_PROJECT = ROOT/"build/lobby-scale/hub-phone.project.json"
 PHONE_PLACE = ROOT/"build/SlugshotLobbyPhoneTest.rbxlx"
+MOBILE_PROJECT = ROOT/"build/lobby-scale/hub-mobile.project.json"
+MOBILE_PLACE = ROOT/"build/SlugshotLobbyMobileCheck.rbxlx"
 
 
 def rojo_build(project, place):
@@ -55,6 +58,15 @@ def main():
         tree["StarterPlayer"]["StarterPlayerScripts"]["PhoneTest"] = {"$path": f"{phone}/PhoneTest.client.luau"}
         PHONE_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
         rojo_build(PHONE_PROJECT, PHONE_PLACE)
+    if "--mobile" in sys.argv:
+        project = json.loads(PROJECT.read_text(encoding="utf-8"))
+        project["name"] = "SlugshotLobbyMobileCheck"
+        tree = project["tree"]
+        rebase(tree)
+        mobile = "../../experiments/lobby/hub/mobile"
+        tree["StarterPlayer"]["StarterPlayerScripts"]["MobileCheck"] = {"$path": f"{mobile}/MobileCheck.client.luau"}
+        MOBILE_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
+        rojo_build(MOBILE_PROJECT, MOBILE_PLACE)
 
 
 if __name__ == "__main__":

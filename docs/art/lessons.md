@@ -260,3 +260,6 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **A patch script should write its files together at the end:** one that stops midway leaves some files changed and others not.
 - **Never send global keystrokes to Studio on a shared machine:** `SetForegroundWindow` can silently fail, and the keys go to whatever has focus, which may be someone else's session or a place that must not be published. Check the foreground window first, and hand outward-facing steps to the owner.
 - **Studio frame rates only count while focused:** an unfocused window is throttled to 15 fps, which looks like a performance problem.
+- **Graphics level in Studio:** game scripts can't set it (`settings()` needs the Plugin capability). A plugin setting `Rendering.QualityLevel` works and visibly changes the picture; `EditQualityLevel` had no visible effect in Play.
+- **Resizing the Studio window gives true device viewports:** panels take 200 by 295 pixels, so a 1044x685 window has an exact 844x390 view.
+- **Texture memory builds up during a run:** report its peak per device, not per view.

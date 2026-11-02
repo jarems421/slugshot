@@ -1,5 +1,11 @@
 # Project memory
 
+## 2026-11-02 - Automatic mobile check
+
+- **Confirmed (owner):** use an automatic estimate for now, then run real phone and iPad checks and fine-tune once the lobby is complete. The owner's phone is very bad, and testing it after every change would take too long. Nothing was published.
+- **Implemented, run twice in Studio:** `tools/lobby/mobile_check.py` ([details and first results](art/lobby-hub.md)).
+- **Unresolved:** real frame rates and calibrated budgets, which need the device run. One early probe shot at level 1 showed the gate, arch and volcano missing; it didn't recur in two full runs and is unexplained.
+
 ## 2026-11-02 - Phone test build
 
 - **Owner request:** publish a private copy to test on a phone and report the results.
