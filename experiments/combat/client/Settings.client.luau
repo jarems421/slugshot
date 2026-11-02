@@ -643,36 +643,6 @@ end
 Keybinds.onChanged(refreshChips)
 refreshChips()
 
-local sideCard = Theme.new("Frame", {
-	Name = "SideButtons",
-	AnchorPoint = Vector2.new(1, 0),
-	Position = UDim2.new(1, 0, 0, COLUMN_Y + 28 + 3 * ROW_H + 14),
-	Size = UDim2.fromOffset(COLUMN_W, 5 * ROW_H - 14),
-	BackgroundColor3 = Color3.fromRGB(35, 42, 51),
-	BorderSizePixel = 0,
-	Parent = controls,
-})
-Theme.corner(sideCard, 4)
-Theme.edge(sideCard, 2)
-Theme.label(sideCard, "Side mouse buttons", Theme.Title, 17, {
-	Position = UDim2.fromOffset(12, 8),
-	Size = UDim2.new(1, -24, 0, 24),
-	TextColor3 = Theme.Accent,
-})
-Theme.label(
-	sideCard,
-	"Left, Right, Middle and the wheel bind straight away. Roblox can't read side buttons yet, so set them to F13 and F14 in your mouse's app. Then press them here and they show as Side 1 and Side 2.",
-	Theme.Body,
-	13,
-	{
-		Position = UDim2.fromOffset(12, 36),
-		Size = UDim2.new(1, -24, 1, -44),
-		TextWrapped = true,
-		TextYAlignment = Enum.TextYAlignment.Top,
-		TextColor3 = Theme.Soft,
-	}
-)
-
 -- Gameplay ---------------------------------------------------------------------------
 local gameplay = pages.Gameplay
 local COLUMN = (CONTENT_W - 36) / 2
