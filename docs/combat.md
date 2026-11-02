@@ -18,6 +18,24 @@ Reproduce with `python tools/build_shot_consistency_check.py`, then `powershell 
 
 **Considering/unresolved:** owner's feel verdict on 85/100/115, live mouse/keyboard reproduction of the exact initial report, multi-client observers, latency and moving-target coverage. The authority model, accepted animations, authored assets and concurrent SFX/lobby/Inferno work are preserved. Earlier tuning entries below are historical; this section governs current projectile logic and speeds.
 
+## Damage-scaled hit reaction (2026-11-02)
+
+**Confirmed (owner):** the reaction must scale with damage: more damage, more movement and more visibly hurt. The owner was unsure about reactions while sliding and jumping; **proposed, for their verdict:** react in every state, at a reduced share in slides, flips and wall runs (`hitActionShare`). Physical knockback is **not** added: this is the body and view only, and the player's position does not change (owner, earlier: Floppy has no knockback). **Unresolved:** whether stronger slugs should physically shove.
+
+**Confirmed (owner):** the low-health slump is removed: it looked poor, could distract players and hid hit reactions. Below 35% health the character now idles normally, and `tools/mixamo_manifest.json` no longer maps the clip. Earlier notes mentioning an injured idle are historical.
+
+**Implemented:** `experiments/movement/client/HitReaction.luau`, a spring layered onto the pose in every state, for every character, so observers see it too. Severity is `hitBase + damage / hitFull`; heavier hits also recover more slowly and bring in more of the Mixamo flinch clip (grounded only). The combat server sets `HitDirection` and `HitTime` on the victim, so the body is pushed along the shot; other damage pushes it backward. The victim's first-person view rolls about the crosshair, moves along its line and widens, none of which moves the aim. Values are under "Getting hit" in the tuning panel (P). H now cycles 7, 15, 40 self-damage to compare hits alone.
+
+**Verified, real Play (`tools/studio/pvp_ui_check.ps1`), H self-damage, rendered joint peaks:**
+
+| Damage | Spring | Chest | Head | Arm |
+|---|---|---|---|---|
+| 7 | 0.26 | 9° | 10° | 22° |
+| 15 | 0.45 | 18° | 18° | 38° |
+| 40 | 1.04 | 50° | 61° | 100° |
+
+Against unhit controls of the same moves, a jump hit for 7 and a slide hit for 15 each add about 10° at the chest. A running crossfade was found to swallow the snap, so hits now cut it to 0.05 s. **Not verified:** feel, the view kick's feel, a real slug hit (the direction attribute was not exercised; the check has no second player), and flips or wall runs.
+
 ## Charge accuracy, gentler drop and white ADS (2026-11-02)
 
 **Delivery:** owner explicitly requested committing/pushing this iteration and updating documentation. Implementation `064f7ed`, developed on `fix/shooting-feel`, is delivered to `main`. Existing native evidence and the playable range remain available; delivery does not imply owner feel/art approval.

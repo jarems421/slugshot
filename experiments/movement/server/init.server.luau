@@ -501,13 +501,15 @@ request.OnServerEvent:Connect(function(player: Player, packet: any)
 			)
 		end
 	elseif packet.kind == "Hurt" then
-		-- Lab-only preview of hit reactions and the injured idle; not combat.
+		-- Lab-only preview of hit reactions; not combat.
 		if now - (state.lastHurt or -math.huge) < Config.Lab.HurtCooldown then
 			reject("hurt-rate")
 			return
 		end
 		state.lastHurt = now
-		humanoid:TakeDamage(Config.Lab.HurtAmount)
+		local amounts = Config.Lab.HurtAmounts
+		state.hurtStep = (state.hurtStep or 0) % #amounts + 1
+		humanoid:TakeDamage(amounts[state.hurtStep])
 	elseif packet.kind == "Respawn" then
 		if now - state.lastRespawn < 3 then
 			reject("respawn-rate")

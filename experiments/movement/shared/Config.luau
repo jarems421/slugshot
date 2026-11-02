@@ -186,7 +186,7 @@ return table.freeze({
 		},
 	},
 	Lab = {
-		HurtAmount = 15, -- H: self-damage to preview hit reactions; no combat rules
+		HurtAmounts = { 7, 15, 40 }, -- H: self-damage to preview hit reactions, a step up each press; no combat rules
 		HurtCooldown = 0.5,
 		Aim = false, -- RMB aim pose and click marker; off until aiming is in scope (owner, 2026-10-29)
 		SprintDoubleTap = 0.3, -- seconds between W presses that start a sprint
@@ -286,7 +286,6 @@ return table.freeze({
 				FadeIn = 0.5,
 				FadeOut = 0.6,
 			},
-			InjuredBelow = 0.35, -- health fraction for the injured idle
 		},
 		-- Small caps: a quick reversal spikes both, which read as a skid (owner: sharp turns).
 		Lean = { Bank = 0.0016, MaxBank = 0.1, Pitch = 0.0025, MaxPitch = 0.08, Rate = 9 },
