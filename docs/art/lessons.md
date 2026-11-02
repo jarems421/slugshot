@@ -280,3 +280,7 @@ A slope that narrows to zero always ends in a small, shrunken tip, however broke
 ## Grove in Roblox (2026-11-02)
 
 Scattered props sharing one mesh need a budget per prop, not per part: 200 triangles per mushroom cap read as faceted up close. Small emissive spots such as lily buds blow out to white at the strength that suits larger glowing shapes. Crowds of full-detail skinned models cost far more than the scenery around them, so check triangles with them in and out of view.
+
+## Simplifying a shape with hidden insides (2026-11-02)
+
+Blender's Decimate keeps triangles on sealed pockets inside a shape, because they are small and closed, and leaves the visible skin in huge shards that look like holes. Keep only the largest connected surface, and sample it near the final triangle size so little simplifying is needed. Measure the spread of triangle areas in the export: a median of 3 square studs with many far larger ones was the tell. A shape that must be walked on can be a separate smooth form with the detailed one baked onto it.

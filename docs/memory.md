@@ -993,3 +993,9 @@
 - **Confirmed:** owner approved building straight into Studio without another concept page, with wide sharp tips, one to three per big peak.
 - **Implemented/verified in Studio:** nine private pieces and 30 Floppies at 1.3 studs. Evidence from a check run: no errors in the filtered log, 182 floor raycasts with 0 holes, 30 slugs, 51 solid parts built in 18.5 s, and captures inspected. About 650-700k triangles on desktop with the grove in view.
 - **Unresolved:** owner's verdict; hopping and glancing weren't watched running; walking and climbing untested; mobile check not re-run; Inferno still uses Floppy stand-ins; plants are the concept's versions, not Codex's models; the size of the mountain against Veylume's overgrowth at 40-50 degrees.
+
+## 2026-11-02 - Grove mountain smaller and smooth
+
+- **Confirmed:** owner: too close to the ceiling, tips should be more distinct, the surface should look jagged without real cracks to fall into, and the front had gaps.
+- **Implemented/verified in Studio:** 137 studs tall (was 185) and about 293 across (was 390); smooth solid body with the jagged rock baked on; three, two and one tips. The gaps were huge shards left by simplifying a mesh with sealed pockets inside; the mesh is now its clean outer skin. Check run: 0 failed pieces, 182 floor raycasts with 0 holes, 30 slugs, captures inspected.
+- **Unresolved:** owner's verdict. Running and climbing it weren't tried by hand; 475 of 5,463 two-stud steps on it change height by over 7 studs, which measures steepness and doesn't separate faces from any leftover ledges. Mobile check not re-run. The concept page still shows the older jagged mountain.

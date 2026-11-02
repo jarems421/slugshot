@@ -15,13 +15,15 @@ from pathlib import Path
 
 PAGE = Path("docs/art/asset-library.html")
 SITES = Path("experiments/lobby/scale/shared/grove_slugs.json")
-MOUNTAIN_Z = 26.0
+# As MTN_S and MTN_Z in the shader: the mountain is built at this share of its authored size, about this point.
+MTN_S, MTN_Z = 0.7, 8.6
+MOUNTAIN_Z = MTN_Z + (26.0 - MTN_Z)*MTN_S
 # The same as peakInfo in the shader: centre x, centre z, height, radius, profile, lean x, lean z, ridges.
 PEAKS = ((0.0, 26.0, 31.0, 18.5, 1.05, 0.0, 0.0, 5.0), (-21.0, 26.0, 24.0, 13.0, 0.95, -1.2, 0.0, 4.0), (21.5, 27.0, 19.0, 12.0, 1.2, 3.2, -0.4, 3.0),
          (0.0, 32.0, 14.0, 20.0, 1.0, 0.0, 0.0, 6.0), (-9.5, 19.5, 17.0, 7.5, 0.95, 0.0, 0.0, 3.0), (10.0, 20.0, 13.5, 7.0, 1.0, 0.0, 0.0, 3.0),
          (-29.0, 29.0, 13.0, 9.0, 0.9, 0.0, 0.0, 3.0), (30.0, 30.0, 10.5, 8.0, 1.0, 0.0, 0.0, 3.0))
 # The same as peakTop in the shader.
-PEAK_TOPS = (0.3, 0.36, 0.38, 0.3, 0.12, 0.12, 0.12, 0.12)
+PEAK_TOPS = (0.36, 0.42, 0.44, 0.3, 0.12, 0.12, 0.12, 0.12)
 FRONT = 1.5*math.pi
 
 
@@ -36,6 +38,7 @@ def peak_r(y, height, radius, profile):
 
 def inside(x, y, z):
     """The same shape as peakRad and peakWander in the shader."""
+    x, y, z = x/MTN_S, y/MTN_S, MTN_Z + (z - MTN_Z)/MTN_S
     for index, (cx, cz, height, radius, profile, lx, lz, ridges) in enumerate(PEAKS):
         if y >= height:
             continue
@@ -70,6 +73,7 @@ def surface_radius(a, y):
 
 
 def on_mountain(a, y, inset=0.2):
+    y *= MTN_S
     r = surface_radius(a, y) - inset
     return r*math.cos(a), y, MOUNTAIN_Z + r*math.sin(a)
 
@@ -155,7 +159,7 @@ def boulders(rnd):
     for x, z, size in ((-3.6, 2.2, 0.85), (-1.8, 3.9, 0.6), (2.6, 3.0, 0.95), (4.2, 0.8, 0.6), (-4.6, -0.8, 0.7), (1.0, -2.4, 0.55), (-1.6, -3.6, 0.45)):
         rows.append((x, -0.2, z, size))
     # Rough rock round the two basins the falls land in.
-    for x, y, z, size in ((-1.5, 15.9, 17.1, 0.75), (2.0, 15.8, 17.1, 0.85), (-2.0, 7.9, 12.9, 1.0), (2.6, 7.8, 12.9, 0.95)):
+    for x, y, z, size in ((-1.5, 11.13, 14.55, 0.75), (2.0, 11.06, 14.55, 0.85), (-2.0, 5.53, 11.61, 1.0), (2.6, 5.46, 11.61, 0.95)):
         rows.append((x, y, z, size))
     for _ in range(9):
         a = rnd.uniform(0, 2*math.pi)

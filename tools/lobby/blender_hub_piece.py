@@ -173,7 +173,13 @@ def main():
         base.TEX = g["tex"]
         data = np.load(SRC/f"{name}.npz")
         dense = base.build_dense(name, data)
-        if g.get("authored"):
+        if g.get("shell"):
+            # A smoother form than the one baked onto it.
+            shell_form = base.build_dense(name + "_Shell", {"verts": data["shellVerts"], "faces": data["shellFaces"]})
+            low = decimated(shell_form, name, g["tris"], g["hard"])
+            bpy.data.objects.remove(shell_form)
+            bpy.context.view_layer.update()
+        elif g.get("authored"):
             low = base.build_dense(name, {"verts": data["lowVerts"], "faces": data["lowFaces"]})
             low.name = low.data.name = name
             planar_uv(low, 19.0, g.get("upright"))

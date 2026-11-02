@@ -6,8 +6,10 @@ local Stats = game:GetService("Stats")
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "grovePath", from = Vector3.new(75, 9, 0), at = Vector3.new(285, 70, 0) },
 	{ name = "grovePond", from = Vector3.new(112, 7, -24), at = Vector3.new(190, 14, 6) },
-	{ name = "grovePeaks", from = Vector3.new(60, 34, 60), at = Vector3.new(285, 120, 0) },
-	{ name = "groveTips", from = Vector3.new(100, 55, -80), at = Vector3.new(290, 150, 10) },
+	{ name = "groveFront", from = Vector3.new(105, 14, 0), at = Vector3.new(215, 18, 0) },
+	{ name = "groveLeft", from = Vector3.new(150, 16, -75), at = Vector3.new(235, 16, 20) },
+	{ name = "grovePeaks", from = Vector3.new(70, 40, 0), at = Vector3.new(270, 100, 0) },
+	{ name = "groveTips", from = Vector3.new(190, 110, -50), at = Vector3.new(265, 130, 0) },
 	{ name = "groveSlugs", from = Vector3.new(170, 3.4, -43), at = Vector3.new(174, 1, -46) },
 	{ name = "crack", from = Vector3.new(-34, 9, -103), at = Vector3.new(-40, 0, -112) },
 	{ name = "stormUp", from = Vector3.new(0, 9, 12), at = Vector3.new(0, 200, -10) },
@@ -44,6 +46,29 @@ task.spawn(function()
 	end
 	print(`HUBCHECK groveFloor tested={tested} holes={#holes} {table.concat(holes, " ")}`)
 	local slugs = workspace:WaitForChild("HubArt"):FindFirstChild("GroveSlugs")
+	-- Running on the mountain: how often the surface drops or jumps sharply between points two studs apart.
+	local only = RaycastParams.new()
+	only.FilterType = Enum.RaycastFilterType.Include
+	only.FilterDescendantsInstances =
+		{ workspace:WaitForChild("HubArt"):WaitForChild("hub-grove-mountain") }
+	local steps, sharp, previous = 0, 0, {}
+	for x = 170, 300, 2 do
+		local row = {}
+		for z = -130, 130, 2 do
+			local hit = workspace:Raycast(Vector3.new(x, 210, z), Vector3.new(0, -215, 0), only)
+			local y = hit and hit.Position.Y
+			row[z] = y
+			local before = previous[z]
+			if y and before and y > 2 and before > 2 then
+				steps += 1
+				if math.abs(y - before) > 7 then
+					sharp += 1
+				end
+			end
+		end
+		previous = row
+	end
+	print(`HUBCHECK groveSurface steps={steps} sharp={sharp}`)
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	print("HUBCHECK tour starts")

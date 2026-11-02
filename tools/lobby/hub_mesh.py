@@ -285,6 +285,7 @@ VOLCANO = """vec2 assetMap(vec3 p) {
 GROVE_ITEM = "slug-grove-1"
 GROVE_MOUNTAIN = "vec2 assetMap(vec3 p) { return vec2(mountainD(p), 43.0); }\n"
 # The ground stops at the cliff, the zone's edges and the wall, and settles to the level next door as it gets there.
+GROVE_SHELL = "vec2 assetMap(vec3 p) { return vec2(mountainShell(p), 43.0); }\n"
 GROVE_GROUND = """vec2 assetMap(vec3 p) {
   vec2 h = vec2(31.0 + p.z, p.x);
   float hr = length(h), a = atan(h.x, h.y);
@@ -507,11 +508,11 @@ def storm_discs():
 
 
 def grove_middle(_ids, c):
-    return (np.abs(c[:, 0]) < 13.0) & (c[:, 2] < 31.0)
+    return (np.abs(c[:, 0]) < 10.0) & (c[:, 2] < 27.0)
 
 
 def grove_side(sign):
-    return lambda _ids, c: (c[:, 0]*sign >= 13.0) & (c[:, 2] < 31.0)
+    return lambda _ids, c: (c[:, 0]*sign >= 10.0) & (c[:, 2] < 27.0)
 
 
 def gate_piece(direction, r):
@@ -696,14 +697,15 @@ PIECES = {
             part("VolcanoBack", everything, 1400, 512, cage=0.2),
         ],
     },
+    # The mesh is the smooth "shell"; the jagged rocks in "map" are baked onto it as colour and normals, so it can be run on (owner).
     "hub-grove-mountain": {
-        "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3, "gain": 3.0, "bakeEmit": True,
-        "lo": (-50.0, -1.2, 8.5), "hi": (50.0, 39.0, 50.0), "step": 0.09, "normalH": 0.012,
+        "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "shell": GROVE_SHELL, "shellStep": 0.4, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
+        "gain": 3.0, "bakeEmit": True, "lo": (-37.0, -1.2, -1.0), "hi": (37.0, 30.0, 47.0), "step": 0.08, "normalH": 0.012,
         "parts": [
-            part("MountainM", grove_middle, 9000, 2048, ROCK_INK*1.2, 0.5, cage=0.15),
-            part("MountainA", grove_side(1), 5500, 1024, ROCK_INK*1.2, 0.5, cage=0.15),
-            part("MountainB", grove_side(-1), 5500, 1024, ROCK_INK*1.2, 0.5, cage=0.15),
-            part("MountainBack", everything, 1200, 512, cage=0.2),
+            part("MountainM", grove_middle, 7000, 2048, ROCK_INK*1.2, 0.5, cage=1.0),
+            part("MountainA", grove_side(1), 4000, 1024, ROCK_INK*1.2, 0.5, cage=1.0),
+            part("MountainB", grove_side(-1), 4000, 1024, ROCK_INK*1.2, 0.5, cage=1.0),
+            part("MountainBack", everything, 1200, 512, cage=1.0),
         ],
     },
     "hub-grove-ground": {
@@ -834,7 +836,7 @@ def crack_clusters(page):
 
 
 class PieceGpu(Gpu):
-    def __init__(self, key):
+    def __init__(self, key, source=None):
         self.piece = PIECES[key]
         page = PAGE.read_text(encoding="utf-8")
         clusters = crack_clusters(page)
@@ -846,7 +848,7 @@ class PieceGpu(Gpu):
             page = page.replace(old, new)
         bank, items = dump_renders(extract(page, r'<script id="lib">(.*?)</script>'), {self.piece["item"]})
         fs = extract(page, r'<script id="fs" type="x-shader/x-fragment">(.*?)</script>')
-        source = self.piece["map"]
+        source = source or self.piece["map"]
         if source == "minis":
             source = ("vec2 assetMap(vec3 p) {\n  vec3 q = p - vec3(0.0, ROCK_TOP, 0.0);\n  vec2 res = vec2(1e3, 19.0);\n"
                       "  float stems = 1e5, caps = 1e5, capIdx = 0.0;\n" + sprouts
@@ -1155,8 +1157,31 @@ def mesh(key):
                 touched[faces[hit]] = True
                 hit = touched[faces].any(axis=1)
             tests[index] = hit
+    shell = None
+    if "shell" in piece:
+        shell_verts, shell_faces = sparse_surface(PieceGpu(key, piece["shell"]), piece["lo"], piece["hi"], piece["shellStep"])
+        # Only the outer skin: sealed pockets inside the rock would take the triangles, leaving huge shards on the surface.
+        edges = np.concatenate([shell_faces[:, [0, 1]], shell_faces[:, [1, 2]]])
+        graph = coo_matrix((np.ones(len(edges)), (edges[:, 0], edges[:, 1])), shape=(len(shell_verts), len(shell_verts)))
+        labels = connected_components(graph, directed=False)[1]
+        face_labels = labels[shell_faces[:, 0]]
+        outer = np.bincount(face_labels).argmax()
+        print(f"shell: kept {(face_labels == outer).sum()} of {len(shell_faces)} faces", flush=True)
+        shell_faces = shell_faces[face_labels == outer]
+        shell_centres = shell_verts[shell_faces].mean(axis=1)
+        shell_ids = np.zeros(len(shell_faces))
+        shell, taken = [], np.zeros(len(shell_faces), dtype=bool)
+        for spec in piece["parts"]:
+            hit = spec["test"](shell_ids, shell_centres) & ~taken
+            taken |= hit
+            for _ in range(piece.get("overlap", 0)):
+                touched = np.zeros(len(shell_verts), dtype=bool)
+                touched[shell_faces[hit]] = True
+                hit = touched[shell_faces].any(axis=1)
+            used, remap = np.unique(shell_faces[hit], return_inverse=True)
+            shell.append((shell_verts[used], remap.reshape(-1, 3).astype("i4")))
     groups = []
-    for spec, hit in zip(piece["parts"], tests):
+    for index, (spec, hit) in enumerate(zip(piece["parts"], tests)):
         sel = faces[hit]
         if len(sel) < 20:
             print(f"  {spec['name']}: empty, skipped")
@@ -1171,10 +1196,12 @@ def mesh(key):
         plate = key == "hub-rock" and spec["name"] == "Top"
         if plate:
             extra = top_plate(gpu)
+        if shell:
+            extra = dict(zip(("shellVerts", "shellFaces"), shell[index]))
         np.savez_compressed(out/f"{spec['name']}.npz", verts=verts[used], faces=remap.reshape(-1, 3).astype("i4"), **extra)
         groups.append({"name": spec["name"], "faces": int(len(sel)), "tris": spec["tris"], "tex": spec["tex"],
                        "ink": spec["ink"]/piece["scale"], "inkRatio": spec["inkRatio"], "hard": spec["hard"],
-                       "cage": spec["cage"], "authored": bool(extra) and not plate, "plate": plate, "upright": upright,
+                       "cage": spec["cage"], "authored": bool(extra) and not plate and not shell, "shell": bool(shell), "plate": plate, "upright": upright,
                        "tile": spec["tile"]})
         print(f"  {spec['name']:10s} {len(sel):9d} dense faces -> {spec['tris']} tris", flush=True)
     if "sparkle" in piece:

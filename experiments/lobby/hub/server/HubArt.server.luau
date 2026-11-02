@@ -1411,9 +1411,9 @@ local GROVE_KEYS = {
 	"hub-grove-gems",
 }
 local GROVE_FALL_TIERS = {
-	{ y0 = 24, y1 = 16, x = 0.5, w0 = 0.35, w1 = 0.6 },
-	{ y0 = 15.9, y1 = 8, x = 0.1, w0 = 0.7, w1 = 1.15 },
-	{ y0 = 7.9, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
+	{ y0 = 16.8, y1 = 11.2, x = 0.5, w0 = 0.35, w1 = 0.6 },
+	{ y0 = 11.15, y1 = 5.6, x = 0.1, w0 = 0.7, w1 = 1.15 },
+	{ y0 = 5.55, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
 }
 local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
 local GROVE_TINT = Color3.fromRGB(150, 245, 225)
@@ -1430,7 +1430,8 @@ end
 
 -- The falls' face, as groveFallZ in the concept.
 local function groveFallZ(y: number): number
-	return 26 - 0.94 * 18.5 * (0.3 + 0.7 * math.max(1 - y / 31, 0) ^ 1.05)
+	local authored = 26 - 0.94 * 18.5 * (0.36 + 0.64 * math.max(1 - y / 0.7 / 31, 0) ^ 1.05)
+	return 8.6 + (authored - 8.6) * 0.7
 end
 
 local function groveFlow(
@@ -1514,7 +1515,7 @@ local function groveWater()
 	mist.RotSpeed = NumberRange.new(-12, 12)
 	mist.Rate = 4
 	mist.Parent = landing
-	pointLight(foot + Vector3.new(0, 8, 0), GROVE_TINT, 1.3, 42)
+	pointLight(foot + Vector3.new(0, 6, 0), GROVE_TINT, 0.6, 32)
 	-- Rings spreading across the pond now and then, and spores drifting through the clearing.
 	local pond = holder("GrovePond", groveAt(0, -0.05, 0), Vector3.new(58, 0.5, 58))
 	local rings = ripples:Clone()
