@@ -3219,12 +3219,17 @@ float plazaStage(vec3 p) {
         vec3 q = vec3(radial, along, p.z - 0.8);
         float stone = sdBox(q, vec3(depth, sa*R*0.485, wide)) - 0.05;
         if (abs(k - kMax) < 0.5) {
-          // The torn end: jagged and slanted, with the top side reaching furthest.
-          float tear = along - 0.2 + 0.32*radial + 0.7*sin(radial*2.7 + q.z*1.9 + left*2.0) + 0.45*sin(q.z*3.7 - radial*1.3);
-          stone = smax(stone, tear, 0.08);
+          // The broken end is still masonry: squared-off notches where blocks came away.
+          float half_ = sa*R*0.485;
+          stone = max(stone, -sdBox(q - vec3(depth*0.55, half_*0.8, 0.0), vec3(depth*0.6, half_*0.7, wide + 1.0)));
+          stone = max(stone, -sdBox(q - vec3(-depth*0.55, half_*1.05, wide*0.62*(left*2.0 - 1.0)), vec3(depth*0.55, half_*0.75, wide*0.55)));
         }
         d = min(d, stone);
       }
+      // A smaller block left sitting on the end stone.
+      float mid2 = (kMax + 1.5)*sa, half2 = sa*R*0.485;
+      vec3 q2 = vec3(r*cos(ang - mid2) - R + 0.9, r*sin(ang - mid2) + half2*0.42, p.z - 0.8 + 0.8*(left*2.0 - 1.0));
+      d = min(d, sdBox(q2, vec3(1.45, half2*0.55, 1.35)) - 0.05);
     }
     // The pillars: stepped feet, a fluted shaft, collars, and a molten slot in the face toward the hub.
     vec3 q = vec3(x - R, p.y, p.z - 0.8);

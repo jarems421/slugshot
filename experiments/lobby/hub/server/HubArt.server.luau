@@ -1,8 +1,9 @@
 --!strict
 -- Brings the final hub designs into the lobby: spawn rock, runestone gateways, rope bridges, Maelstrom and Sky Well.
--- Everything is look-only on top of the block-out's simple colliders, so nothing here costs physics, and the parts of
--- the block-out these designs replace turn invisible (docs/art/lobby-hub.md). Asset ids live only in ignored
+-- Stone, rock and ground are solid exactly as drawn (see SOLID); ink, glow, water and anything that moves stay passable.
+-- The block-out parts these designs replace turn invisible or are removed (docs/art/lobby-hub.md). Asset ids live in
 -- private-assets/lobby. Motion runs on the client in HubMotion.client.
+local AssetService = game:GetService("AssetService")
 local CollectionService = game:GetService("CollectionService")
 local InsertService = game:GetService("InsertService")
 local Lighting = game:GetService("Lighting")
@@ -222,10 +223,86 @@ local function setMotion(
 	end
 end
 
+-- What is solid, exactly as drawn: players stand on it and wall-run it, and the camera stops at it because it is
+-- visible and queryable. Ink, glow, water, lava pools, foliage and anything that moves stay passable.
+local CLIFF = { "Cliff0", "Cliff1", "Cliff2", "Cliff3", "Cliff4", "Cliff5", "Cliff6", "Cliff7" }
+local GATE, PORTAL = { "Stone", "Key" }, { "Stone", "Iron" }
+local SOLID: { [string]: { string } } = {
+	["hub-rock"] = { "Top", "Upper", "Lower", "Cracks" },
+	["hub-rock-dress"] = { "Roots" },
+	["hub-gate-0"] = GATE,
+	["hub-gate-1"] = GATE,
+	["hub-gate-2"] = GATE,
+	["hub-gate-3"] = GATE,
+	["hub-cliff"] = CLIFF,
+	["hub-portal-pvp"] = PORTAL,
+	["hub-portal-training"] = PORTAL,
+	["hub-portal-veylume"] = PORTAL,
+	["hub-arch"] = { "Pylons", "ArchL", "ArchR", "Pillars", "Base" },
+	["hub-plaza-floor"] = { "Floor" },
+	["hub-volcano"] = { "Flows", "VolcanoFront", "VolcanoBack" },
+}
+
+-- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
+-- until it finishes. Building them one by one took over a minute.
+local solidQueue: { MeshPart } = {}
+local function makeSolid(model: Model, key: string)
+	local names = SOLID[key]
+	if names then
+		for _, part in model:GetDescendants() do
+			if part:IsA("MeshPart") and table.find(names, part.Name) then
+				table.insert(solidQueue, part)
+			end
+		end
+	end
+end
+
+local function buildCollision(whenDone: () -> ())
+	local started = os.clock()
+	local remaining, failed = #solidQueue, 0
+	local nextIndex = 1
+	for _ = 1, 8 do
+		task.spawn(function()
+			while nextIndex <= #solidQueue do
+				local part = solidQueue[nextIndex]
+				nextIndex += 1
+				local ok, shaped = pcall(function()
+					return AssetService:CreateMeshPartAsync(Content.fromUri(part.MeshId), {
+						CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
+						RenderFidelity = part.RenderFidelity,
+					})
+				end)
+				if ok then
+					part:ApplyMesh(shaped)
+					shaped:Destroy()
+					part.CanCollide = not part:HasTag("HubCameraOnly")
+					part.CanQuery = true
+				else
+					failed += 1
+					warn(`HubArt: {part:GetFullName()} stays passable: {shaped}`)
+				end
+				remaining -= 1
+				if remaining == 0 then
+					print(
+						string.format(
+							"HubArt: solid art built, %d parts, %d failed, %.1fs",
+							#solidQueue,
+							failed,
+							os.clock() - started
+						)
+					)
+					whenDone()
+				end
+			end
+		end)
+	end
+end
+
 local function place(key: string): Model?
 	local model = loadPiece(key)
 	if model then
 		model.Parent = art
+		makeSolid(model, key)
 	end
 	return model
 end
@@ -487,6 +564,12 @@ local function buildBridges()
 			)[dir] :: number
 		local frame = CFrame.Angles(0, turn, 0) * CFrame.new(centre, 0, 0)
 		local bridge = source:Clone()
+		for _, part in bridge:GetDescendants() do
+			if part:IsA("MeshPart") and part.Name == "Deck" then
+				part:AddTag("HubCameraOnly")
+				table.insert(solidQueue, part)
+			end
+		end
 		bridge.Name = `Bridge{dir}`
 		bridge:PivotTo(frame * bridge:GetPivot())
 		bridge:SetAttribute("Frame", frame)
@@ -996,6 +1079,28 @@ local function buildVolcano()
 	plume.Speed = NumberRange.new(7, 11)
 	plume.SpreadAngle = Vector2.new(10, 10)
 	CollectionService:AddTag(plume, "HubMist")
+	-- Slow and wide, so it hangs around the crater: rising straight up, the ceiling hid it from the spawn rock.
+	local steam = emitter("SteamLight")
+	steam.Texture = fxTexture("mist")
+	steam.Color = ColorSequence.new(Color3.fromRGB(226, 214, 210), Color3.fromRGB(126, 120, 132))
+	steam.LightEmission = 0.05
+	steam.Size = fade({ { 0, 20 }, { 1, 85 } })
+	steam.Transparency = fade({ { 0, 1 }, { 0.18, 0.45 }, { 1, 1 } })
+	steam.Lifetime = NumberRange.new(12, 18)
+	steam.Rate = 3
+	steam.Speed = NumberRange.new(4, 8)
+	steam.SpreadAngle = Vector2.new(38, 38)
+	CollectionService:AddTag(steam, "HubMist")
+	local smoke = emitter("SteamDark")
+	smoke.Texture = fxTexture("mist")
+	smoke.Color = ColorSequence.new(Color3.fromRGB(58, 50, 60), Color3.fromRGB(22, 20, 28))
+	smoke.Size = fade({ { 0, 24 }, { 1, 95 } })
+	smoke.Transparency = fade({ { 0, 1 }, { 0.2, 0.4 }, { 1, 1 } })
+	smoke.Lifetime = NumberRange.new(12, 18)
+	smoke.Rate = 2.5
+	smoke.Speed = NumberRange.new(3, 6)
+	smoke.SpreadAngle = Vector2.new(30, 30)
+	CollectionService:AddTag(smoke, "HubMist")
 	pointLight(top + Vector3.new(0, 6, 0), Color3.fromRGB(255, 120, 50), 1.2, 45)
 end
 
@@ -1053,72 +1158,42 @@ local function buildArch()
 end
 
 -- What players bump into: the arch's feet, the pylons, the columns and the volcano itself, all invisible and simple.
-local function plazaColliders()
-	local parent = Instance.new("Folder")
-	parent.Name = "PlazaColliders"
-	parent.Parent = art
-	local function solid(size: Vector3, frame: CFrame, shape: Enum.PartType?)
-		local part = Instance.new("Part")
-		part.Name = "PlazaCollider"
-		part.Anchored = true
-		part.CanTouch = false
-		part.CastShadow = false
-		part.Transparency = 1
-		if shape then
-			part.Shape = shape
+-- The hidden block-out shapes the solid art replaces, so nothing invisible stands proud of it.
+local function retireBlockOut()
+	local root = workspace:WaitForChild("LobbyScale") :: Model
+	local function retire(container: Instance?)
+		if container then
+			for _, item in container:GetDescendants() do
+				if item:IsA("BasePart") and item.Transparency >= 1 then
+					item:Destroy()
+				end
+			end
 		end
-		part.Size = size
-		part.CFrame = frame
-		part.Parent = parent
 	end
-	for _, side in { -1, 1 } do
-		solid(Vector3.new(36, 68, 36), PLAZA * CFrame.new(side * 105, 34, 4))
-		solid(Vector3.new(10, 40, 10), PLAZA * CFrame.new(side * 31, 20, -42.5))
-		solid(Vector3.new(12, 50, 12), PLAZA * CFrame.new(side * 70, 25, -55))
-	end
-	for band = 0, 6 do
-		local y = 10 + band * 20
-		local r = (84 - 54 * math.clamp(y / 150, 0, 1) ^ 0.72) * VOLCANO_SCALE
-		solid(
-			Vector3.new(20, r * 2, r * 2),
-			PLAZA * CFrame.new(0, y, VOLCANO_Z) * CFrame.Angles(0, 0, math.pi / 2),
-			Enum.PartType.Cylinder
-		)
-	end
-end
-
--- Invisible blocks for the runestones, so players run into stone rather than through it.
-local function gateColliders()
-	local parent = Instance.new("Folder")
-	parent.Name = "GateColliders"
-	parent.Parent = art
-	for dir = 0, 3 do
-		local r = layout.bridges.gates[tostring(dir)] * UNIT
-		local turn = (
-				{ [0] = 0, [1] = -math.pi / 2, [2] = math.pi, [3] = math.pi / 2 }
-			)[dir] :: number
-		local frame = CFrame.Angles(0, turn, 0) * CFrame.new(0, 0, -r)
-		local function solid(size: Vector3, offset: Vector3)
-			local part = Instance.new("Part")
-			part.Name = "GateCollider"
-			part.Anchored = true
-			part.CanTouch = false
-			part.CastShadow = false
-			part.Transparency = 1
-			part.Size = size
-			part.CFrame = frame * CFrame.new(offset)
-			part.Parent = parent
+	retire(root:FindFirstChild("SpawnRock"))
+	retire(root:FindFirstChild("Portals"))
+	local shore = root:FindFirstChild("Shore")
+	if shore then
+		for _, item in shore:GetDescendants() do
+			if item.Name == "Lip" and item:IsA("BasePart") then
+				item:Destroy()
+			end
 		end
-		for _, side in { 1, -1 } do
-			solid(Vector3.new(4.2, 11.6, 3.6), Vector3.new(side * 9.2, 5.8, 0))
+	end
+	-- The plunge's old walls stood in front of the cliff, which is solid now.
+	local maelstrom = root:FindFirstChild("Maelstrom")
+	if maelstrom then
+		for _, item in maelstrom:GetDescendants() do
+			if item:IsA("BasePart") and item.Transparency >= 1 then
+				item.CanCollide = false
+				item.CanQuery = false
+			end
 		end
-		solid(Vector3.new(23, 2.6, 3.4), Vector3.new(0, 12.9, 0))
 	end
 end
 
 lighting()
 hideBlockOut()
-gateColliders()
 buildRock()
 buildBridges()
 buildMaelstrom()
@@ -1126,7 +1201,10 @@ buildSkyWell()
 buildPortals()
 buildVolcano()
 buildArch()
-plazaColliders()
+buildCollision(function()
+	retireBlockOut()
+	workspace:SetAttribute("HubSolid", true)
+end)
 for _, key in DISTANT do
 	local model = art:FindFirstChild(key)
 	if model then

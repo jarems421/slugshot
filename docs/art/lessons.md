@@ -241,3 +241,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Size imported pieces from their longest side:** on a thin piece, a tiny height error scaled the whole floor by 6% and opened gaps at its edges.
 - **Hide block-out parts by what they are, not by where their centre is:** a long wedge's centre can sit in the neighbouring sector.
 - **Thick liquid needs its own smooth surface:** riding on ribbed rock made it faceted or half buried, and noise running along one diagonal turned into ladder rungs.
+- **Roblox's camera ignores invisible colliders:** it only stops at parts under 25% transparent, so hidden block-out ground let it pass under the map. Making the visible art solid fixes both the camera and phasing.
+- **Test collision with a pushed block, not `MoveTo`:** the movement controller ignores `MoveTo`, so a character that never moved looked like a blocked one. Include cases that must pass, so that a block that stops everywhere can't look like success.

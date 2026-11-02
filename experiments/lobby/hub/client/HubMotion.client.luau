@@ -380,6 +380,9 @@ local function startEruption(t: number)
 	nextEruption = t + 9 + 6 * math.random()
 end
 
+-- Off for now (owner, 2026-11-02); the volcano just steams.
+local ERUPTIONS = false
+
 local function eruptionStep(t: number)
 	if not crater then
 		local tagged = CollectionService:GetTagged("HubCrater")
@@ -416,7 +419,9 @@ RunService.RenderStepped:Connect(function(dt: number)
 		nextMove = t + (if low then MOVE_RATE else 0)
 		moveParts(t)
 		flash(t, dt)
-		eruptionStep(t)
+		if ERUPTIONS then
+			eruptionStep(t)
+		end
 	end
 	local camera = workspace.CurrentCamera
 	if not camera then

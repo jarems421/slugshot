@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Solid lobby art, blocky arch breaks, more steam
+
+- **Owner request:** stop the third-person camera going under the ground, make structures solid and skin-tight so they can be wall-run, make the arch breaks blocky, add light and dark steam, and turn the lava spitting off.
+- **Implemented, measured in Studio:** 40 parts get precise collision in about 6 s with no failures. Character-sized blocks pushed at 24 studs/s stopped at the pillar foot and shaft, pylon, plinth steps, runestone, stumps and volcano, and passed the open gate and open ground. A subset at 60 studs/s did not tunnel. A low pitch test held the camera at ground level. Forced bone movement still moves the bridge deck.
+- **Not verified:** real walking and wall-running, because the movement controller ignores scripted `MoveTo`; running this in a live server; phone physics cost. Open-ground checks were spot samples, so an invisible edge elsewhere is possible.
+- **Note to owner:** the eruption was particles, so switching it off saves little in triangles. Triangle counts are unchanged.
+
 ## 2026-11-02 - Portal side, round 2
 
 - **Owner request:** fix the floor where the whirlpool meets the volcano area, break the arch so the volcano shows, remove the arch's lava falls, match the crater lava to the rivers, make the rivers thick with goopy ends, and replace the arch's big sides with big pillars.
