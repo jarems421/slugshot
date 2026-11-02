@@ -263,3 +263,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Graphics level in Studio:** game scripts can't set it (`settings()` needs the Plugin capability). A plugin setting `Rendering.QualityLevel` works and visibly changes the picture; `EditQualityLevel` had no visible effect in Play.
 - **Resizing the Studio window gives true device viewports:** panels take 200 by 295 pixels, so a 1044x685 window has an exact 844x390 view.
 - **Texture memory builds up during a run:** report its peak per device, not per view.
+- **Start a green scene dark:** bright moss and glowing water at full strength flattened the first grove render into a toy. Dark ground and stone first, then saturation only on mushrooms, water and crystals.
+- **The ink's reach is fixed in world units:** at true scale it swallowed Floppy's face, so anything that small must draw its own lines.

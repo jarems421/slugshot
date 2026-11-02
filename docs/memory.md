@@ -1,5 +1,13 @@
 # Project memory
 
+## 2026-11-02 - Slug grove concept v1
+
+- **Owner request:** start the slug exhibition area: a green and teal mountain full of life with a pond, Floppies only for now and in a decent number, not crowded so the slugs stand out, mushrooms as the main trees round the lake, Codex's flowers and plants used a lot, and some Floppies glancing at a passing player then looking away (never all of them). Four reference images supplied. Concept first, as an artifact.
+- **Confirmed:** phone and iPad tests and the low-quality switch wait until the lobby is built.
+- **Implemented, rendered offline and inspected:** shader asset 9 `slug-grove` in the [asset library](art/asset-library.html), placed by `tools/lobby/grove_sites.py`. Floppies and Codex's plants are simplified stand-ins in the shader. Nothing is in Roblox.
+- **Proposed, not approved:** the mountain about 180 studs across against the block-out's 130; glancing rule of about one Floppy in four within about 15 studs; brighter antenna bulbs so Floppies read from afar.
+- **Unresolved:** the owner's verdict, footprint fit against neighbouring zones.
+
 ## 2026-11-02 - Automatic mobile check
 
 - **Confirmed (owner):** use an automatic estimate for now, then run real phone and iPad checks and fine-tune once the lobby is complete. The owner's phone is very bad, and testing it after every change would take too long. Nothing was published.
