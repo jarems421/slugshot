@@ -238,3 +238,6 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **A part showing flat grey right after an upload is probably still processing:** look again a few minutes later before changing anything.
 - **Check sightlines before scaling a backdrop:** from the spawn rock the arch's keystone hid the crater, whatever the volcano's size. Widening the opening fixed it.
 - **Glowing surfaces washed out when their glow was baked into the colour map:** keep the colour in the map and let the mask carry the glow.
+- **Size imported pieces from their longest side:** on a thin piece, a tiny height error scaled the whole floor by 6% and opened gaps at its edges.
+- **Hide block-out parts by what they are, not by where their centre is:** a long wedge's centre can sit in the neighbouring sector.
+- **Thick liquid needs its own smooth surface:** riding on ribbed rock made it faceted or half buried, and noise running along one diagonal turned into ladder rungs.

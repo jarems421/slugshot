@@ -188,7 +188,9 @@ local function loadPiece(key: string): Model?
 		conceptHi = conceptHi:Max(part.max)
 	end
 	local lo, hi = paintedBounds(model)
-	local scale = (conceptHi.Y - conceptLo.Y) / (hi.Y - lo.Y)
+	local conceptSize, importedSize = conceptHi - conceptLo, hi - lo
+	local scale = math.max(conceptSize.X, conceptSize.Y, conceptSize.Z)
+		/ math.max(importedSize.X, importedSize.Y, importedSize.Z)
 	if math.abs(scale - 1) > 0.002 then
 		print(`HubArt: {key} imported at {string.format("%.3f", 1 / scale)} of true size`)
 		model:ScaleTo(model:GetScale() * scale)
@@ -372,10 +374,14 @@ local function hideBlockOut()
 		end
 		hide(shore:FindFirstChild("RimStrip"))
 		-- The portal side's ground art replaces its grey ground, which stays to walk on.
+		local portalColor, growthColor = layout.zones[1].color, layout.overgrowth.color
+		local portalGround = Color3.fromRGB(portalColor[1], portalColor[2], portalColor[3])
+		local growthGround = Color3.fromRGB(growthColor[1], growthColor[2], growthColor[3])
 		for _, item in shore:GetChildren() do
 			if item:IsA("BasePart") and item.Name == "Surface" then
 				local at = item.Position
-				if math.abs(math.deg(math.atan2(at.X, -at.Z))) < 40 then
+				local angle = math.abs(math.deg(math.atan2(at.X, -at.Z)))
+				if item.Color == portalGround or (item.Color == growthGround and angle < 39) then
 					item.Transparency = 1
 				end
 			end
@@ -866,12 +872,17 @@ local function volcWall(a: number, y: number, offset: number): Vector3
 end
 
 local function buildVolcano()
-	placeInPlaza("hub-volcano")
+	local volcano = placeInPlaza("hub-volcano")
+	local pool = volcano and volcano:FindFirstChild("Pool", true)
+	if pool then
+		pool:SetAttribute("LocalSpin", ORBIT * 1.2)
+		CollectionService:AddTag(pool, "HubMover")
+	end
 	-- Molten rivers, flowing, over the painted ones on the side facing the hub.
 	local rivers = {
-		{ -1.18, 5, 4.8, 0 },
+		{ -1.18, 8, 4.8, 0 },
 		{ -0.28, 25, 3.6, 1 },
-		{ 3.3106, 8, 4.5, 5 },
+		{ 3.3106, 10, 4.5, 5 },
 		{ 4.2081, 21, 3.8, 6 },
 	}
 	for _, river in rivers do
@@ -879,16 +890,23 @@ local function buildVolcano()
 		local segments = 5
 		for s = 0, segments - 1 do
 			local function at(f: number): (Vector3, number)
-				local t = f / segments
+				local t = f / segments * 0.8
 				local y = 129 + (lo - 129) * t
 				local a = a0 + 0.08 * math.sin(y / 130 * 5 + k * 2)
 				local w = wide
-					* (0.72 + 0.23 * math.sin(t * 15 + k * 2))
-					* (0.55 + 0.45 * math.sin(math.pi * t * 0.7 + 0.35))
-				return volcWall(a, y, 1.6), w * 2.6 * VOLCANO_SCALE
+					* (0.74 + 0.2 * math.sin(t * 15 + k * 2))
+					* (0.62 + 0.38 * math.sin(math.pi * t * 0.7 + 0.35))
+				-- On the thick flow's smooth surface, not the ribbed rock under it.
+				local s = y / 130
+				local over = 84
+					- 54 * s ^ 0.72
+					+ 0.45 * (15 - 5 * s)
+					+ 2 * math.sin(a * 3 + 0.5) * (1 - s)
+				return volcWall(a, y, over + 5.5 - volcRadius(a, y)), w * 1.5 * VOLCANO_SCALE
 			end
-			local from, w0 = at(s)
-			local to, w1 = at(s + 1)
+			-- Overlapping, each fading out at both ends, so none of them stops in a straight line.
+			local from, w0 = at(s - 0.35)
+			local to, w1 = at(s + 1.35)
 			beam(
 				"LavaRiver",
 				from,
@@ -897,9 +915,9 @@ local function buildVolcano()
 				w1,
 				fxTexture("lavaflow"),
 				Color3.new(1, 1, 1),
-				fade({ { 0, 0.12 }, { 1, 0.12 } }),
-				0.32,
-				2
+				fade({ { 0, 1 }, { 0.3, 0.5 }, { 0.7, 0.5 }, { 1, 1 } }),
+				0.05,
+				1
 			)
 		end
 	end
@@ -982,8 +1000,14 @@ local function buildVolcano()
 end
 
 local function buildArch()
-	placeInPlaza("hub-plaza-floor")
-	placeInPlaza("hub-arch")
+	local floor = placeInPlaza("hub-plaza-floor")
+	if floor then
+		floor:PivotTo(floor:GetPivot() + Vector3.new(0, 0.08, 0))
+	end
+	local arch = placeInPlaza("hub-arch")
+	if arch then
+		setMotion(arch, "ArchBits", 0, 1.3, 0.55, 0)
+	end
 	-- Fires on the pylons.
 	for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
 		for _, side in { -1, 1 } do
@@ -1009,51 +1033,6 @@ local function buildArch()
 			flames.Parent = source
 			pointLight(position + Vector3.new(0, 4, 0), Color3.fromRGB(255, 120, 45), 0.6, 18)
 		end
-	end
-	-- The two lava falls beside the PvP gate, flat against the view from the hub.
-	for _, side in { -1, 1 } do
-		local top = PLAZA * Vector3.new(side * 34.5, 110, 4)
-		local foot = PLAZA * Vector3.new(side * 34.5, -1, 4)
-		ribbon(
-			top,
-			foot,
-			DOWN_AXIS,
-			Vector3.xAxis,
-			9.5,
-			fxTexture("lavaflow"),
-			Color3.new(1, 1, 1),
-			fade({ { 0, 0.06 }, { 1, 0.06 } }),
-			60,
-			0.55,
-			0
-		)
-		ribbon(
-			top,
-			foot,
-			DOWN_AXIS,
-			Vector3.xAxis,
-			8,
-			fxTexture("streak"),
-			Color3.fromRGB(255, 170, 70),
-			fade({ { 0, 0.55 }, { 1, 0.55 } }),
-			40,
-			1.1,
-			0.6
-		)
-		local base = holder("LavaFoot", foot + Vector3.new(0, 2, 0), Vector3.new(14, 0.5, 8))
-		local steam = Instance.new("ParticleEmitter")
-		steam.Texture = fxTexture("mist")
-		steam.Color = ColorSequence.new(Color3.fromRGB(255, 110, 44))
-		steam.LightEmission = 0.6
-		steam.LightInfluence = 0
-		steam.Size = fade({ { 0, 7 }, { 1, 18 } })
-		steam.Transparency = fade({ { 0, 1 }, { 0.2, 0.6 }, { 1, 1 } })
-		steam.Lifetime = NumberRange.new(1.4, 2.4)
-		steam.Rate = 3
-		steam.Speed = NumberRange.new(4, 9)
-		steam.EmissionDirection = Enum.NormalId.Top
-		steam.Shape = Enum.ParticleEmitterShape.Box
-		steam.Parent = base
 	end
 	-- Embers across the whole area.
 	local air = holder("PlazaEmbers", PLAZA * Vector3.new(0, 3, 30), Vector3.new(230, 4, 180))
@@ -1093,8 +1072,7 @@ local function plazaColliders()
 		part.Parent = parent
 	end
 	for _, side in { -1, 1 } do
-		solid(Vector3.new(28, 62, 46), PLAZA * CFrame.new(side * 127, 31, 4))
-		solid(Vector3.new(52, 60, 86), PLAZA * CFrame.new(side * 160, 30, -2))
+		solid(Vector3.new(36, 68, 36), PLAZA * CFrame.new(side * 105, 34, 4))
 		solid(Vector3.new(10, 40, 10), PLAZA * CFrame.new(side * 31, 20, -42.5))
 		solid(Vector3.new(12, 50, 12), PLAZA * CFrame.new(side * 70, 25, -55))
 	end

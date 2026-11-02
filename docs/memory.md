@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Portal side, round 2
+
+- **Owner request:** fix the floor where the whirlpool meets the volcano area, break the arch so the volcano shows, remove the arch's lava falls, match the crater lava to the rivers, make the rivers thick with goopy ends, and replace the arch's big sides with big pillars.
+- **Implemented, seen in Studio by camera captures:** all six ([lobby hub](art/lobby-hub.md)). The floor gap had two causes: pieces were sized from their height, which shrank the thin floor about 6%, and grey ground was hidden by part centre, which also hid neighbouring wedges. Pieces now size from their longest side.
+- **Side effect of the sizing fix:** `hub-juice` is about 6% smaller and `hub-bridge` about 1% smaller than the owner last saw them. No gaps seen in the capture views.
+- **Unresolved:** owner verdict, walking the new pillar colliders, whether the slow lava glints read as motion, phone performance, the rim climb and spiral route. `MovementTests/Clips.spec` line 95 reported an error in one check run; no movement files changed in this work.
+
 ## 2026-11-01 - Portal plaza options
 
 - **Owner request:** make the portal area very grand and volcanic, with a few options to pick from in an artifact.

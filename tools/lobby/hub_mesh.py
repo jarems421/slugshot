@@ -94,6 +94,7 @@ void main() {
   if (id > 18.9 && id < 20.0) { crease = 0.0; idEdge = 0.0; }  // far smaller than the ink's sampling reach
   if (id > 1.15 && id < 1.2) { crease = 0.0; idEdge = 0.0; }
   if (id > 29.5 && id < 31.5) { crease = 0.0; idEdge *= 0.6; }
+  if (id > 37.5) { crease = 0.0; idEdge *= 0.6; }
   if (abs(id - 12.0) < 0.5) crease = 0.0;
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
@@ -254,11 +255,16 @@ ARCH = """vec2 assetMap(vec3 p) {
   float py = plazaPylons(p, bowls, fire);
   if (py < r.x) r = vec2(py, 32.0);
   if (bowls < r.x) r = vec2(bowls, 33.0);
+  // The molten heart in each pillar's slot.
+  float heart = sdBox(vec3(abs(p.x) - 21.0, p.y - 6.2, p.z + 2.2), vec3(0.7, 3.3, 0.25));
+  if (heart < r.x) r = vec2(heart, 34.0);
   return r;
 }
 """
 VOLCANO = """vec2 assetMap(vec3 p) {
   vec2 r = vec2(volcanoD(p), 37.0);
+  float flow = volcanoFlow(p);
+  if (flow < r.x) r = vec2(flow, 38.0);
   float pool = volcanoPool(p);
   if (pool < r.x) r = vec2(pool, 31.0);
   return r;
@@ -271,9 +277,9 @@ PLAZA_FLOOR = """vec2 assetMap(vec3 p) {
   vec2 r = vec2(g, 30.0);
   float l = max(ch, abs(p.y + 0.24) - 0.05);
   if (l < r.x) r = vec2(l, 31.0);
-  float clip = max(max(20.4 - hr, hr - 61.0), (abs(a) - 0.71)*hr);
+  float clip = max(max(20.4 - hr, hr - 61.0), (abs(a) - 0.735)*hr);
   // The block-out's ravine stays open on this side (game x < 0, which is this scene's x > 0).
-  clip = max(clip, -max(max(0.436 - a, a - 0.72)*hr, max(41.0 - hr, hr - 55.0)));
+  clip = max(clip, -max(max(0.436 - a, a - 0.76)*hr, max(41.0 - hr, hr - 55.0)));
   r.x = max(r.x, clip);
   return r;
 }
@@ -460,8 +466,17 @@ def near_pylon(_ids, c):
 
 def arch_side(sign):
     def test(_ids, c):
-        return (np.hypot(c[:, 0], c[:, 1]) > 20.5) & (c[:, 1] > 2.0) & (np.abs(c[:, 2] - 0.8) < 5.0) & (c[:, 0]*sign >= 0)
+        return (np.hypot(c[:, 0], c[:, 1] - 12.0) > 17.0) & (c[:, 1] > 12.7) & (c[:, 0]*sign >= 0)
     return test
+
+
+def near_pillar(_ids, c):
+    return np.abs(np.abs(c[:, 0]) - 21.0) < 6.5
+
+
+def near_bits(_ids, c):
+    bits = ((-10.2, 31.0, 0.2), (-8.0, 29.4, 1.5), (-9.2, 27.3, -0.4), (13.0, 28.0, 0.2), (11.0, 26.0, 1.3))
+    return np.min([np.linalg.norm(c - np.array(b), axis=1) for b in bits], axis=0) < 1.5
 
 
 def below_floor(_ids, c):
@@ -586,26 +601,29 @@ PIECES = {
     },
     "hub-arch": {
         "item": "portal-plaza-7", "map": ARCH, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.7,
-        "lo": (-40.0, -0.4, -14.0), "hi": (40.0, 30.5, 10.0), "step": 0.05, "normalH": 0.006,
+        "lo": (-28.0, -0.4, -14.0), "hi": (28.0, 33.0, 8.0), "step": 0.05, "normalH": 0.006,
         "parts": [
             part("Pylons", near_pylon, 2600, 1024, PROP_INK, 1.0, hard=True, cage=0.05),
-            part("ArchL", arch_side(-1), 3000, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
-            part("ArchR", arch_side(1), 3000, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
-            part("Base", everything, 3400, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
+            part("ArchBits", near_bits, 240, 256, PROP_INK, 1.0, hard=True, cage=0.05),
+            part("ArchL", arch_side(-1), 1900, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
+            part("ArchR", arch_side(1), 1400, 1024, ROCK_INK, 1.0, hard=True, cage=0.08),
+            part("Pillars", near_pillar, 3400, 1024, ROCK_INK, 1.0, cage=0.08),
+            part("Base", everything, 1000, 512, ROCK_INK, 1.0, hard=True, cage=0.08),
         ],
     },
     "hub-volcano": {
         "item": "portal-plaza-7", "map": VOLCANO, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
         "lo": (-25.0, -1.2, -3.0), "hi": (25.0, 32.5, 48.0), "step": 0.08, "normalH": 0.012,
         "parts": [
-            part("Pool", by_id((30.5, 31.5)), 300, 256, cage=0.06),
-            part("VolcanoFront", volcano_front, 7500, 1024, ROCK_INK*1.2, 1.0, cage=0.15),
+            part("Pool", by_id((30.5, 31.5)), 300, 512, cage=0.06),
+            part("Flows", by_id((37.5, 38.5)), 4800, 1024, FINE_INK*1.5, 1.0, cage=0.06),
+            part("VolcanoFront", volcano_front, 6000, 1024, ROCK_INK*1.2, 1.0, cage=0.15),
             part("VolcanoBack", everything, 1400, 512, cage=0.2),
         ],
     },
     "hub-plaza-floor": {
         "item": "portal-plaza-7", "map": PLAZA_FLOOR, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.4,
-        "lo": (-42.0, -0.5, -12.0), "hi": (42.0, 0.3, 30.0), "step": 0.05, "normalH": 0.006,
+        "lo": (-42.0, -0.5, -18.0), "hi": (42.0, 0.3, 30.0), "step": 0.05, "normalH": 0.006,
         "parts": [
             part("Cracks", below_floor, 3600, 1024, cage=0.05),
             part("Floor", everything, 2400, 1024, cage=0.08),
@@ -884,13 +902,11 @@ def fx_textures():
     colour = colour + (np.array((225, 255, 248), "f4") - colour)*(0.14*shine)[..., None]
     rgba = np.dstack([colour, alpha*255]).clip(0, 255).astype("u1")
     Image.fromarray(rgba, "RGBA").save(folder/"flow.png")
-    # Lava: dark crust plates split by bright cracks, with wavering edges, to scroll down a river or a fall.
-    veins = np.abs(tile(26, 16, 6) - 0.5) + 0.4*np.abs(tile(10, 7, 7) - 0.5)
-    crack = 1 - np.clip(veins/0.1, 0, 1)
-    band = 1 - np.clip(veins/0.24, 0, 1)
-    hot = np.array((255, 170, 60), "f4")[None, None]*crack[..., None] + np.array((225, 62, 14), "f4")[None, None]*(band*(1 - crack))[..., None]
-    lava = np.clip(hot + np.array((46, 14, 10), "f4")[None, None]*(1 - band)[..., None], 0, 255)
-    Image.fromarray(np.dstack([lava, alpha*255]).clip(0, 255).astype("u1"), "RGBA").save(folder/"lavaflow.png")
+    # Lava: soft glints that drift down a thick flow. The mesh carries the look, so nothing here may read as an edge.
+    glint = np.clip((tile(70, 9, 6) - 0.5)/0.3, 0, 1)
+    side = np.clip((1 - np.abs(x))/0.5, 0, 1)
+    lava = np.array((255, 150, 45), "f4")[None, None]*np.ones((h, w, 1), "f4")
+    Image.fromarray(np.dstack([lava, glint*side*255]).clip(0, 255).astype("u1"), "RGBA").save(folder/"lavaflow.png")
     # A molten blob stretched along its flight, and a flame.
     save("droplet", np.exp(-(x_full/0.34)**2 - (y_full/0.82)**2)*1.6)
     tip = np.clip((y_full + 1)/2, 0, 1)
@@ -1008,7 +1024,7 @@ def mesh(key):
 
 EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow", "CeilGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 2.2, "VolcanoFront": 1.5, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def paint(key):
