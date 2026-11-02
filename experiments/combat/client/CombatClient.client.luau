@@ -166,13 +166,52 @@ end)
 
 -- The shoulder, the aim point under the cursor (the crosshair when shift-locked) and
 -- the muzzle a gun's reach along the line to it.
--- Stable crosshair zero when there is no physically reachable surface under it.
-local OPEN_AIM = 45
+-- A firing sample belongs to one completed rendered frame. Input callbacks run
+-- after the movement camera removes its temporary offset, but before its next
+-- presentation pass; mixing that camera with the old world-space muzzle is wrong.
+type AimFrame = {
+	character: Model,
+	camera: Camera,
+	tool: Tool?,
+	ray: Ray,
+	muzzle: Vector3?,
+	shoulder: Vector3,
+}
+local renderedAim: AimFrame? = nil
+RunService:BindToRenderStep(
+	"SlugshotRenderedAim",
+	Enum.RenderPriority.Character.Value + 20,
+	function()
+		local character, camera = player.Character, workspace.CurrentCamera
+		local torso = character and character:FindFirstChild("Torso")
+		local shoulder = torso and torso:FindFirstChild("Right Shoulder")
+		if
+			not character
+			or not camera
+			or not torso
+			or not torso:IsA("BasePart")
+			or not shoulder
+			or not shoulder:IsA("Motor6D")
+		then
+			renderedAim = nil
+			return
+		end
+		local cursor = AimCursor.point(camera)
+		renderedAim = {
+			character = character,
+			camera = camera,
+			tool = blaster(),
+			ray = camera:ViewportPointToRay(cursor.X, cursor.Y),
+			muzzle = Viewmodel.muzzle(),
+			shoulder = torso.CFrame * shoulder.C0.Position,
+		}
+	end
+)
 
 local function aim(
 	charge: number,
 	presentationOnly: boolean?
-): (Vector3?, Vector3?, Vector3?, Vector3?)
+): (Vector3?, Vector3?, Vector3?, Vector3?, boolean?)
 	-- Shots leave the actual gun's muzzle, in every view.
 	local character = player.Character
 	local camera = workspace.CurrentCamera
@@ -192,61 +231,62 @@ local function aim(
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { character, camera }
 	local cursor = AimCursor.point(camera)
-	local ray = camera:ViewportPointToRay(cursor.X, cursor.Y)
+	local frame = renderedAim
+	local useFrame = not presentationOnly
+		and frame
+		and frame.character == character
+		and frame.camera == camera
+		and frame.tool == blaster()
+	local ray = if useFrame
+		then (frame :: AimFrame).ray
+		else camera:ViewportPointToRay(cursor.X, cursor.Y)
 	local hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
 	local point = if hit then hit.Position else ray.Origin + ray.Direction * 300
-	local muzzle = Viewmodel.muzzle()
+	local muzzle = if useFrame then (frame :: AimFrame).muzzle else Viewmodel.muzzle()
 	if presentationOnly then
 		return muzzle, ray.Direction, ray.Direction, point
 	end
-	if muzzle then
-		-- A point behind the muzzle (a wall between camera and gun) keeps the camera's line.
-		local toward = point - muzzle
-		if toward.Magnitude <= 0.5 or toward.Unit:Dot(ray.Direction) <= 0 then
-			return muzzle, ray.Direction, ray.Direction
-		end
-		-- Use the actual surface whenever the full-charge arc can reach it. There is
-		-- no arbitrary distance switch that pulls a valid far target down to a near zero.
-		local target = if hit then point + hit.Normal * slug.Radius else point
-		local full = if hit then Combat.aimedDirection(muzzle, target, slug, 1) else nil
-		if not full then
-			local along = ray.Direction:Dot(muzzle - ray.Origin) + OPEN_AIM
-			target = ray.Origin + ray.Direction * along
-		end
-		local level = Combat.level(charge)
-		local correction = if level == 1
-			then Tuning.values.shotArcOne
-			elseif level == 2 then Tuning.values.shotArcTwo
-			else 1
-		local direction = if level == 3 and full
-			then full
-			else Combat.launchDirection(muzzle, target, slug, charge, correction)
-		return muzzle, direction, ray.Direction, point
+	local from = if useFrame
+		then (frame :: AimFrame).shoulder
+		else torso.CFrame * shoulder.C0.Position
+	if not muzzle then
+		local toward = point - from
+		local direction = if toward.Magnitude < Combat.MuzzleReach + 0.5
+			then ray.Direction
+			else toward.Unit
+		muzzle = from + direction * Combat.MuzzleReach
 	end
-	local from = torso.CFrame * shoulder.C0.Position
-	local toward = point - from
-	if toward.Magnitude < Combat.MuzzleReach + 0.5 then
-		toward = ray.Direction -- aiming at something touching the gun: fire straight on
+	-- Animated/viewmodel barrels can cross close cover before the camera does.
+	-- Start on the shooter's side and hit that cover, never beyond its surface.
+	local reach = muzzle - from
+	local obstruction = if reach.Magnitude > 1e-4
+		then workspace:Spherecast(from, slug.Radius, reach, params)
+		else nil
+	if obstruction then
+		local origin = obstruction.Position + obstruction.Normal * (slug.Radius + 0.01)
+		return origin, -obstruction.Normal, ray.Direction, point, true
 	end
-	local direction = toward.Unit
-	local origin = from + direction * Combat.MuzzleReach
-	local final = point - origin
+	local toward = point - muzzle
+	if hit and (toward.Magnitude <= 0.5 or toward.Unit:Dot(ray.Direction) <= 0) then
+		local origin = point + hit.Normal * (slug.Radius + 0.01)
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if
+			root
+			and root:IsA("BasePart")
+			and (origin - root.Position).Magnitude <= Combat.MaxOriginOffset
+		then
+			return origin, -hit.Normal, ray.Direction, point, true
+		end
+		return nil, nil, ray.Direction, point, true
+	end
 	local target = if hit then point + hit.Normal * slug.Radius else point
-	local full = if hit then Combat.aimedDirection(origin, target, slug, 1) else nil
-	if not full then
-		target = origin + ray.Direction * OPEN_AIM
-	end
 	local level = Combat.level(charge)
 	local correction = if level == 1
 		then Tuning.values.shotArcOne
 		elseif level == 2 then Tuning.values.shotArcTwo
 		else 1
-	return origin,
-		if final.Magnitude > 0.5
-			then Combat.launchDirection(origin, target, slug, charge, correction)
-			else direction,
-		ray.Direction,
-		point
+	local direction = Combat.launchDirection(muzzle :: Vector3, target, slug, charge, correction)
+	return muzzle, direction, ray.Direction, point
 end
 
 local function fire()
@@ -431,10 +471,13 @@ remote.OnClientEvent:Connect(function(kind: string, data: any)
 			pointing[character] = os.clock() + POINT_HOLD
 			character:SetAttribute("BlasterPoint", data.velocity.Unit)
 		end
-	elseif kind == "Impact" and data.shooter == player and data.damage > 0 then
-		Visuals.popup(data.position, data.damage, data.distance)
-		marker.TextTransparency = 0
-		TweenService:Create(marker, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
+	elseif kind == "Impact" then
+		Visuals.confirmImpact(data.shooter, data.id, data.position, data.normal, data.victim)
+		if data.shooter == player and data.damage > 0 then
+			Visuals.popup(data.position, data.damage, data.distance)
+			marker.TextTransparency = 0
+			TweenService:Create(marker, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
+		end
 	elseif kind == "Rejected" then
 		lastRejected = data.reason
 		lastRejectedId = data.id
@@ -459,13 +502,14 @@ if RunService:IsStudio() then
 	probe.OnInvoke = function(command: string, value: any)
 		if command == "Aim" then
 			local charge = if typeof(value) == "number" then math.clamp(value, 0, 1) else 1
-			local origin, direction, gunAim, target = aim(charge)
+			local origin, direction, gunAim, target, obstructed = aim(charge)
 			return {
 				origin = origin,
 				direction = direction,
 				gunAim = gunAim,
 				target = target,
 				level = Combat.level(charge),
+				obstructed = obstructed == true,
 			}
 		elseif command == "Select" then
 			selectSlot(value)

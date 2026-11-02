@@ -60,7 +60,7 @@ Combat.Slugs = {
 	Floppy = {
 		Label = "Floppy",
 		Damage = 7,
-		Speed = { 95, 105, 115 },
+		Speed = { 85, 100, 115 },
 		Gravity = 70,
 		Drag = 0.35,
 		Radius = 0.3,
@@ -92,7 +92,6 @@ function Combat.at(origin: Vector3, velocity: Vector3, slug: Slug, t: number): (
 	return position, terminal + (velocity - terminal) * decay
 end
 
--- First thing the slug's sphere touches between two flight times, if any.
 -- The launch direction whose arc passes through `target`, so a shot lands where it is aimed
 -- even though it droops. Returns nil when the target is beyond this speed's reach.
 function Combat.aimedDirection(
@@ -109,29 +108,39 @@ function Combat.aimedDirection(
 	local function needed(t: number): Vector3
 		return (offset - terminal * t) * k / (1 - math.exp(-k * t)) + terminal
 	end
-	-- Earliest arrival at this speed gives the flat arc rather than a high lob.
-	local before = 0.005
-	local t = before
-	while t < Combat.MaxFlight do
-		t += 0.01
-		if needed(t).Magnitude <= speed then
-			for _ = 1, 12 do
-				local middle = (before + t) / 2
-				if needed(middle).Magnitude <= speed then
-					t = middle
-				else
-					before = middle
-				end
-			end
-			return needed(t).Unit
-		end
-		before = t
+	if offset.Magnitude < 1e-4 then
+		return nil
 	end
-	return nil
+	-- Find the minimum required speed first. A fixed time scan can miss the
+	-- narrow feasible interval near maximum range and incorrectly switch arcs.
+	local low, high = 1e-5, Combat.MaxFlight
+	for _ = 1, 32 do
+		local a, b = low + (high - low) / 3, high - (high - low) / 3
+		if needed(a).Magnitude < needed(b).Magnitude then
+			high = b
+		else
+			low = a
+		end
+	end
+	local peak = (low + high) / 2
+	if needed(peak).Magnitude > speed then
+		return nil
+	end
+	-- Earliest arrival is the low arc; never choose the second/high root.
+	low, high = 1e-5, peak
+	for _ = 1, 28 do
+		local middle = (low + high) / 2
+		if needed(middle).Magnitude <= speed then
+			high = middle
+		else
+			low = middle
+		end
+	end
+	return needed(high).Unit
 end
 
--- Lower charge loses height/velocity, never lateral accuracy. If its target is beyond
--- that level's physical reach, retain a sensible near-reach arc instead of firing flat.
+-- Lower charge loses speed and retains incomplete gravity correction. Saturating
+-- its own reachable arc must not introduce discrete distance or angle switches.
 function Combat.launchDirection(
 	origin: Vector3,
 	target: Vector3,
@@ -146,14 +155,21 @@ function Combat.launchDirection(
 	local straight = offset.Unit
 	local arc = Combat.aimedDirection(origin, target, slug, charge)
 	if not arc then
-		for step = 1, 12 do
-			arc = Combat.aimedDirection(origin, origin + offset * (0.9 ^ step), slug, charge)
-			if arc then
-				break
+		-- Saturate continuously at the reachable point on this same line. The old
+		-- 10% distance steps and the client's 45-stud fallback produced hard cliffs.
+		local near, far = 0, 1
+		for _ = 1, 24 do
+			local scale = (near + far) / 2
+			local candidate = Combat.aimedDirection(origin, origin + offset * scale, slug, charge)
+			if candidate then
+				near, arc = scale, candidate
+			else
+				far = scale
 			end
 		end
 	end
-	return if arc then straight:Lerp(arc, math.clamp(correction, 0, 1)).Unit else straight
+	local amount = if Combat.level(charge) == 3 then 1 else math.clamp(correction, 0, 1)
+	return if arc then straight:Lerp(arc, amount).Unit else straight
 end
 
 function Combat.sweep(
@@ -164,13 +180,23 @@ function Combat.sweep(
 	to: number,
 	params: RaycastParams
 ): RaycastResult?
-	local a = Combat.at(origin, velocity, slug, from)
-	local b = Combat.at(origin, velocity, slug, to)
-	local step = b - a
-	if step.Magnitude < 1e-4 then
-		return nil
+	-- Both rendering and authority sweep the curved flight in short segments.
+	-- A rendering hitch must not replace a whole arc by one long straight chord.
+	local time = from
+	local a = Combat.at(origin, velocity, slug, time)
+	while time < to do
+		local nextTime = math.min(to, time + 1 / 120)
+		local b = Combat.at(origin, velocity, slug, nextTime)
+		local step = b - a
+		if step.Magnitude >= 1e-4 then
+			local hit = workspace:Spherecast(a, slug.Radius, step, params)
+			if hit then
+				return hit
+			end
+		end
+		time, a = nextTime, b
 	end
-	return workspace:Spherecast(a, slug.Radius, step, params)
+	return nil
 end
 
 -- The character or dummy a hit part belongs to (a model with a living Humanoid).

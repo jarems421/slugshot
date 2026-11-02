@@ -1,5 +1,23 @@
 # Slug shooting (experiment)
 
+## Shot consistency and distinct Floppy powers (2026-11-02, current)
+
+**Confirmed:** owner reports occasional distant/inaccurate shots around diagonal sprint starts and quick-scoping, plus a disproportionate range/drop change after stepping backward. First/second kicks should be slower and drop a little more; the third kick keeps its current speed and lands on the crosshair within physical reach. Latest first-person resting pose and 10-stud third-person camera preferences remain in place.
+
+**Implemented:** Floppy launch speeds are **85 / 100 / 115 studs/s** (previously 95/105/115). Gravity 70, drag 0.35, damage 7 and partial correction 0.86/0.95 stay. Shared solver now finds the earliest feasible low arc and continuously saturates at reachable distance. Removed the client full-reach-to-45-stud switch and the solver's 10% substitute-target search. The former caused a measured 29.19-degree angle jump between adjacent half-stud samples. Stronger drop is gradual, with natural physical range limits.
+
+Firing uses a camera/ray/muzzle sample from one completed rendered frame, after viewmodel placement, rather than mixing an input-phase camera with the previous gun pose. A shoulder-to-muzzle check stops shots at close cover. The former near-hit path could start beyond the surface under the crosshair: a native reproduction went 21.8 studs past it. Both real close-cover shots now hit the surface. Shared curved sweeps use at most 1/120-second segments, and an authoritative impact stops any still-flying local visual. The old per-render-frame chord missed a controlled arc collider during a 0.4-second stall; the revised sweep catches it across all tested intervals.
+
+**Implemented/verified:** full combat/movement/foundation formatting, lint, strict types and builds pass. New private native regressions pass a 641-point-per-level mathematical sweep, a 281-point live camera/muzzle distance sweep, nine actual moving shots across first-person ADS/hip fire and third person, an artificial in-frame camera perturbation, two close-cover shots plus a forced shoulder-fallback shot, and collision intervals from 1/240 second through a 0.4-second stall. Client/server contact disagreement is below 0.001 studs in the tested moving shots. The initial six onset shots did not reproduce a random sideways miss; close-cover overshoot and the distance threshold were separately reproduced and corrected. This does not claim every possible cause of the owner's intermittent symptom was observed.
+
+Reproduce with `python tools/build_shot_consistency_check.py`, then `powershell -ExecutionPolicy Bypass -File tools/studio/shooting_feel_check.ps1 -OutDir build/shot-consistency/review -Timeout 260`. Fixtures are not in the normal place. [ADR 0022](decisions/0022-shot-frame-and-flight-consistency.md), [sanitized evidence](evidence/2026-11-02-shot-consistency.json).
+
+**Implemented/verified long-range follow-up:** 13 actual shots pass across ADS/hip fire and elevated/downhill targets, including third kick at 120 studs. Maximum third-kick contact error is below 0.001 studs; first/second ADS drop at 65 studs is about 2.67/0.73 studs. A forced missing-muzzle test confirms the shoulder fallback also stops at close cover.
+
+**Current playable handoff:** `build/SlugshotShootingConsistent.rbxlx`; previous tuned preview saved/closed before reopening. The private regression fixtures are absent from this normal place.
+
+**Considering/unresolved:** owner's feel verdict on 85/100/115, live mouse/keyboard reproduction of the exact initial report, multi-client observers, latency and moving-target coverage. The authority model, accepted animations, authored assets and concurrent SFX/lobby/Inferno work are preserved. Earlier tuning entries below are historical; this section governs current projectile logic and speeds.
+
 ## Charge accuracy, gentler drop and white ADS (2026-11-02)
 
 **Delivery:** owner explicitly requested committing/pushing this iteration and updating documentation. Implementation `064f7ed`, developed on `fix/shooting-feel`, is delivered to `main`. Existing native evidence and the playable range remain available; delivery does not imply owner feel/art approval.

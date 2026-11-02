@@ -16,7 +16,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Loadout selection and inspect](loadout-controls.md), [ADR 0021](decisions/0021-loadout-controls-and-inspect.md)
 - [PvP UI: HUD, inventory, settings, keybinds and goo](pvp-ui.md), [ADR 0020](decisions/0020-ui-goo-and-keybinds.md)
-- [Combat / temporary target range](combat.md), [first-person camera research and comparison](research/first-person-acrobatics.md) and [reversible camera experiment](decisions/0014-acrobatic-camera-comparison.md)
+- [Combat / temporary target range](combat.md), [shot consistency](combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current), [ADR 0022](decisions/0022-shot-frame-and-flight-consistency.md), [first-person camera research and comparison](research/first-person-acrobatics.md) and [reversible camera experiment](decisions/0014-acrobatic-camera-comparison.md)
 - [First-person owner wording and recurring regression fixes](combat.md#owner-language-contextual-interpretations-to-carry-forward)
 - [Combat charge art direction and lobby references](research/charge-art-direction.md)
 - [Asset register and conventions](assets.md)

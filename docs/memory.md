@@ -1599,3 +1599,11 @@
 - **Confirmed:** owner wants the live P-panel Idle arms values Gun tips down = -20 and Arms up = -0.35 as defaults, plus a noticeably farther base third-person camera.
 - **Implemented/verified offline and in Studio:** Tuning defaults updated; fixed third-person distance is 10 rather than 7 studs. Combat/foundation/movement checks pass; fresh P panel shows both requested values as defaults, and native third-person view is visibly wider. New normal place is `build/SlugshotInspectTuned.rbxlx`; previous inspect preview saved before replacement, creature-design window preserved.
 - **Unresolved:** owner verdict on the chosen 10-stud camera distance. No other live panel values were requested or copied.
+
+## 2026-11-02 - Gun consistency and weak Floppy levels
+
+- **Confirmed:** owner wants occasional diagonal sprint/quick-scope distant misses fixed, no backward-distance drop cliff, slower/drop-prone first two kicks, and unchanged third-kick speed with precise reachable aim.
+- **Implemented/verified:** isolated `fix/shot-consistency` from `c2922fe`; shared continuous low-arc/range saturation replaces the 45-stud and 10% fallbacks, rendered firing samples stay coherent, nearby cover stops rather than bypasses the shot, and curved collision substeps plus server-impact confirmation prevent visuals from continuing through a missed hit. Speeds are 85/100/115; gravity/drag/damage and owner pose/camera defaults stay.
+- **Evidence:** baseline angle jump 29.19 degrees; separate near-cover miss about 22 studs. New mathematical/live distance sweeps, nine actual moving first/third-person shots, in-frame camera stress and two close-cover shots plus a forced shoulder-fallback shot pass; collision witness survives 1/240 through 0.4-second intervals. Full offline combat/movement/foundation checks pass. [Current details and sanitized results](combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current).
+- **Test lesson:** perform prediction checks after committing release, not while the charge clock is still running. A slow diagnostic itself advanced a requested second kick to the third; that fixture error was corrected without changing the gameplay thresholds.
+- **Unresolved:** owner feel, exact physical-input replay, multiplayer observers/latency and moving targets. No merge/push/publication or unrelated source edits.
