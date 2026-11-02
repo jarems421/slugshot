@@ -19,6 +19,7 @@ local Hud = {}
 local SLOT, GAP, PAD = 76, 7, 7
 local TOPBAR_FALLBACK = 58 -- height of Roblox's own buttons, until it reports it
 local FILL = 0.82 -- the slug's share of its slot: fills it without touching the edges
+local HEADROOM = 1.7 -- the view is taller than the slot, so a hop leaves the top of the bar
 local NUMBER_HOLD = 2 -- seconds the health number shows in "On change" mode
 local RETURN_TWEEN = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local TRAIL_TWEEN =
@@ -175,7 +176,6 @@ function Hud.create(): ScreenGui
 			Size = UDim2.fromOffset(SLOT, SLOT),
 			BackgroundColor3 = if slugId then Theme.Slot else Theme.SlotEmpty,
 			BorderSizePixel = 0,
-			ClipsDescendants = true,
 			Parent = bar,
 		})
 		Theme.corner(frame, 12)
@@ -199,7 +199,7 @@ function Hud.create(): ScreenGui
 		}
 		Theme.corner(slot.key, 5)
 		if slugId then
-			slot.icon = SlugIcon.mount(frame, slugId, FILL, true)
+			slot.icon = SlugIcon.mount(frame, slugId, FILL, true, nil, HEADROOM)
 			slot.shade = Theme.new("Frame", {
 				Name = "Shade",
 				Size = UDim2.fromScale(1, 0),
@@ -209,6 +209,7 @@ function Hud.create(): ScreenGui
 				ZIndex = 3,
 				Parent = frame,
 			})
+			Theme.corner(slot.shade :: any, 12)
 			slot.count = Theme.label(frame, "", Theme.TitleBold, 26, {
 				Name = "Count",
 				Size = UDim2.fromScale(1, 1),
@@ -224,6 +225,7 @@ function Hud.create(): ScreenGui
 				ZIndex = 5,
 				Parent = frame,
 			})
+			Theme.corner(slot.flash :: any, 12)
 		end
 		slots[index] = slot
 	end
@@ -254,8 +256,10 @@ function Hud.create(): ScreenGui
 			TweenService:Create(slot.scale, RETURN_TWEEN, { Scale = 1 }):Play()
 			TweenService:Create(flash, RETURN_TWEEN, { BackgroundTransparency = 1 }):Play()
 			if slot.icon then
-				SlugIcon.cheer(slot.icon)
+				SlugIcon.back(slot.icon)
 			end
+		elseif remaining > 0 and not wasCooling and slot.icon then
+			SlugIcon.leave(slot.icon) -- it has just been fired
 		end
 		wasCooling = remaining > 0
 		shade.Size = UDim2.fromScale(1, remaining / Combat.Cooldown)

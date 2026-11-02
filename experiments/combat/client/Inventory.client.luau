@@ -181,7 +181,7 @@ local view = Theme.new("Frame", {
 	BackgroundTransparency = 1,
 	Parent = detail,
 })
-local viewIcon = SlugIcon.mount(view, slugId, 0.86, true)
+local viewIcon = SlugIcon.mount(view, slugId, 0.7, true) -- room above it to hop
 table.insert(icons, viewIcon)
 Theme.label(detail, slug.Label, Theme.TitleBold, 32, {
 	Position = UDim2.fromOffset(22, 246),

@@ -100,6 +100,14 @@ local function setup(model: Model)
 			end
 		end
 	end
+	-- An icon's body is performed by SlugIcon; here it keeps only its eye rings.
+	if CollectionService:HasTag(model, "SlugIcon") then
+		for bone in motion do
+			if string.sub(bone.Name, 1, 4) ~= "eye_" then
+				motion[bone] = nil
+			end
+		end
+	end
 	floppies[model] = motion
 	print(`Floppy idle: animating {model:GetFullName()}`)
 end

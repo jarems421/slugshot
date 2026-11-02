@@ -50,6 +50,7 @@ type Face = {
 	wide: number,
 	jaw: number,
 	lid: number,
+	squint: number,
 	lookX: number,
 	lookY: number,
 	lookXTarget: number,
@@ -103,6 +104,7 @@ local function setup(model: Model)
 		wide = 0,
 		jaw = 0,
 		lid = 0,
+		squint = 0,
 		lookX = 0,
 		lookY = 0,
 		lookXTarget = 0,
@@ -170,12 +172,19 @@ local function step(face: Face, dt: number, camera: Vector3)
 	face.wide += (want.wide - face.wide) * blend
 	face.jaw += (want.jaw - face.jaw) * blend
 	face.lid += (want.lid - face.lid) * blend
+	-- An icon can also narrow its eyes and choose where to look.
+	local squint = face.model:GetAttribute("FaceSquint")
+	face.squint += ((if typeof(squint) == "number" then squint else 0) - face.squint) * blend
 	local icon = CollectionService:HasTag(face.model, "SlugIcon")
 	if not icon and (face.head.WorldPosition - camera).Magnitude > FAR then
 		return
 	end
 	-- Eyes dart to a new spot, then rest there.
-	if clock >= face.nextLook then
+	local chosenLook = face.model:GetAttribute("FaceLook")
+	if typeof(chosenLook) == "Vector2" then
+		face.lookXTarget, face.lookYTarget = chosenLook.X, chosenLook.Y
+		face.nextLook = clock + random:NextNumber(0.5, 2)
+	elseif clock >= face.nextLook then
 		face.nextLook = clock + random:NextNumber(2.5, 6)
 		face.lookXTarget = random:NextNumber(-1, 1)
 		face.lookYTarget = random:NextNumber(-1, 0.3) -- mostly gazing low
@@ -201,7 +210,8 @@ local function step(face: Face, dt: number, camera: Vector3)
 	local mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)
 	local jaw = face.jaw + 0.014 * mouthing
 	local lift = 0.006 * math.sin(clock * 1.7)
-	local lid = T.faceLid + face.lid + (T.faceBlinkClose - T.faceLid - face.lid) * blink
+	local open = face.lid + face.squint
+	local lid = T.faceLid + open + (T.faceBlinkClose - T.faceLid - open) * blink
 	-- The rims slope down toward the nose, which reads as anger: turn them so the outer corners
 	-- droop instead. Opening wide (surprise) relaxes this.
 	local droop = math.rad(T.faceTilt) * math.clamp(1 + face.lid / 0.09, 0, 1)

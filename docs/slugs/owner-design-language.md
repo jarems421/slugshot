@@ -240,3 +240,7 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 **Running vibration (2026-11-01):** 2.2x was barely noticeable and 3.5x with the arm "kicks your arm up" and throws the aim. The gun can carry the vibration; keep the arm calm.
 
 **ADS shake (2026-11-01):** "stable" followed by "ever so slight, just so you can feel the charge" means the sight keeps its place and only a tiny tremor remains. Earlier, a first-person shake of 0.006 studs was too light to notice, so an "ever so slight" effect still has to be visible.
+
+## Icon animation phrases (2026-11-02)
+
+"More transitional. Alive. Emotional. And smooth" against "choppy animations cutting to each other" meant moves must flow from one to the next. A spring-driven performance that only sets targets, with crouch, stretch, a wobbling landing and a reaction afterwards, earned "that's perfect". "Too much hopping" meant give each event its own move: the slot's return became rising out of the floor.

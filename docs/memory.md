@@ -1198,3 +1198,8 @@
 - Owner chose version 1 of the refined comic direction, with version 2's softer slug bar, slightly smaller slugs in slots and the neutral Moonlight accent, because it suits every slug's colours. Four slots, 13 slugs in total, sprint Toggle by default.
 - Owner dislikes spinning slot icons (wants small animations and a smile) and the crosshair drawing under menus (fixed with a higher display order).
 - Roblox exposes no usable side mouse buttons; the F13/F14 route is untested. Hover cannot show health in play because the cursor is locked. Status and limits: [status](status.md).
+
+## 2026-11-02 - Floppy mouth and icon performance
+
+- Owner: the mouth is blurry; wants it crisp on the big range Floppy with clean smile movement, keeping the drool. Wiggle smoother and more noticeable; hop should look like a gelatinous thing hopping, with a greater landing reaction, then look up and smile. Replace the happy hop ("too much hopping"). Overall: "more transitional. Alive. Emotional. And smooth", not "choppy animations cutting to each other".
+- Done: mouth texture strip, jelly bones, new private upload, spring-driven `SlugIcon` performance, and rising out of the floor instead of the happy hop. Owner verdict pending. See [lessons](slugs/blender-lessons.md).
