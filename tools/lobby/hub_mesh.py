@@ -736,8 +736,8 @@ PIECES = {
     },
     "hub-grove-falls": {
         "item": GROVE_ITEM, "map": GROVE_FALLS, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.3,
-        "lo": (-4.0, -0.5, 4.0), "hi": (4.0, 25.0, 24.0), "step": 0.04, "normalH": 0.008,
-        "parts": [part("Falls", everything, 1800, 1024, cage=0.03)],
+        "lo": (-6.0, -0.5, 4.0), "hi": (6.0, 24.0, 27.0), "step": 0.05, "normalH": 0.03,
+        "parts": [part("Falls", everything, 3000, 1024, FINE_INK*2.0, 1.0, cage=0.03)],
     },
     "hub-grove-rocks": {
         "item": GROVE_ITEM, "map": GROVE_ROCKS, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 2.2, "bakeEmit": True,

@@ -23,11 +23,10 @@ FEET = Path("experiments/lobby/scale/shared/grove_feet.json")
 MTN_S, MTN_Z = 0.93, 8.6
 MOUNTAIN_Z = MTN_Z + (30.0 - MTN_Z)*MTN_S
 TREES = Path("experiments/lobby/scale/shared/grove_trees.json")
+STREAM = Path("experiments/lobby/scale/shared/grove_stream.json")
+HOLE = (0.4, 21.0, 23.0)  # GROVE_HOLE in the shader
 
 
-def fall_z(y):
-    """The same as groveFallZ in the shader."""
-    return MTN_Z + (30.0 - 0.94*22.5*(1.0 - min(max((y/MTN_S + 0.8)/39.0, 0.0), 1.0)**(1.0/1.3)) - MTN_Z)*MTN_S
 FRONT = 1.5*math.pi
 
 
@@ -121,6 +120,97 @@ def surface_radius(a, y):
         t = (e2*q).sum(axis=1)/det
         hits = t[(u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)]
         return float(hits.max()) if hits.size else 0.0
+
+
+def mountain_hits(origin, direction):
+    """Distances along a ray to the game's mountain mesh, nearest first."""
+    origin, direction = np.array(origin, dtype="f8"), np.array(direction, dtype="f8")
+    corner = MOUNTAIN_TRIS[:, 0]
+    e1, e2 = MOUNTAIN_TRIS[:, 1] - corner, MOUNTAIN_TRIS[:, 2] - corner
+    h = np.cross(direction, e2)
+    det = (e1*h).sum(axis=1)
+    safe = np.abs(det) > 1e-9
+    e1, e2, h, det, corner = e1[safe], e2[safe], h[safe], det[safe], corner[safe]
+    s = origin - corner
+    u = (s*h).sum(axis=1)/det
+    q = np.cross(s, e1)
+    v = (q*direction).sum(axis=1)/det
+    t = (e2*q).sum(axis=1)/det
+    return np.sort(t[(u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)])
+
+
+def front_z(x, y):
+    """Where the mountain's face is, coming from the pond. None if the ray misses."""
+    hits = mountain_hits((x, y, 2.0), (0.0, 0.0, 1.0))
+    return 2.0 + float(hits[0]) if hits.size else None
+
+
+STREAM_LIFT = 0.42  # from the stream's middle to the rock; its half thickness is 0.28
+
+
+def stream_width(s):
+    return 0.95 + 0.85*s**0.85
+
+
+def stream_x(y):
+    return 0.4 + 0.42*math.sin(y*0.37 + 0.6)*min(y/4.0, 1.0)
+
+
+def span_z(x, y, width):
+    """The face furthest out across the stream's whole width, so no rock can come through it."""
+    found = [front_z(x + k*width, y) for k in (-1.0, -0.66, -0.33, 0.0, 0.33, 0.66, 1.0)]
+    found = [z for z in found if z is not None]
+    return min(found) if found else None
+
+
+def stream_path():
+    """Out of the cave along its floor, then down the face to the pond, as nodes a fixed length apart."""
+    hx, hy, hz = HOLE
+    rough = []
+    y = hy
+    while y > 0.0:
+        z = span_z(stream_x(y), y, stream_width(1.0 - y/hy))
+        # Only what's outside the cave; rays inside its mouth pass in to the back.
+        if z is not None and z < hz - 1.2:
+            rough.append([stream_x(y), y, z - STREAM_LIFT])
+        y -= 0.25
+    lip_x, lip_y, lip_z = rough[0]
+    cave = []
+    z = hz + 1.6
+    while z > lip_z + 0.5:
+        hits = mountain_hits((hx, hy - 0.2, z), (0.0, -1.0, 0.0))
+        if hits.size:
+            cave.append([hx + (lip_x - hx)*(hz + 1.6 - z)/(hz + 1.6 - lip_z), hy - 0.2 - float(hits[0]) + STREAM_LIFT, z])
+        z -= 0.4
+    # On into the pond.
+    points = np.array(cave + rough + [[0.4, 0.05, 8.9], [0.4, -0.08, 8.1]])
+    # Long smooth lines over the rocks, then back up over anything the smoothing cut into.
+    for _ in range(4):
+        points[1:-1] = (points[:-2] + 2.0*points[1:-1] + points[2:])/4.0
+    lengths = np.linalg.norm(np.diff(points, axis=0), axis=1)
+    run = np.concatenate([[0.0], np.cumsum(lengths)])
+    count = int(run[-1]/2.0)
+    nodes = np.stack([np.interp(np.linspace(0, run[-1], count + 1), run, points[:, k]) for k in range(3)], axis=1)
+    total = run[-1]
+    cave_end = len(cave)
+    widths = np.array([stream_width(i/count) for i in range(count + 1)])
+    for _ in range(6):
+        worst = 0.0
+        for i in range(count):
+            for t in (0.0, 0.25, 0.5, 0.75, 1.0):
+                p = nodes[i]*(1 - t) + nodes[i + 1]*t
+                if p[1] < 0.4 or p[1] > nodes[0][1] - 0.5 or p[2] > hz - 1.2:
+                    continue
+                face = span_z(p[0], p[1], widths[i]*(1 - t) + widths[i + 1]*t)
+                if face is not None and p[2] > face - STREAM_LIFT*0.8:
+                    push = p[2] - (face - STREAM_LIFT*0.8)
+                    worst = max(worst, push)
+                    nodes[i][2] -= push
+                    nodes[i + 1][2] -= push
+        if worst < 0.01:
+            break
+    print(f"stream: {count} segments, {total*5:.0f} studs long, {cave_end} cave points, last push {worst*5:.2f} studs")
+    return [(float(n[0]), float(n[1]), float(n[2]), float(w)) for n, w in zip(nodes, widths)]
 
 
 def on_mountain(a, y, inset=0.2):
@@ -224,7 +314,7 @@ def boulders(rnd):
     for x, z, size in ((-3.6, 2.2, 0.85), (-1.8, 3.9, 0.6), (2.6, 3.0, 0.95), (4.2, 0.8, 0.6), (-4.6, -0.8, 0.7), (1.0, -2.4, 0.55), (-1.6, -3.6, 0.45)):
         rows.append((x, -0.2, z, size))
     # Rough rock round the two basins the falls land in.
-    for x, y, z, size in ((-1.5, 13.92, fall_z(13.95), 0.75), (2.0, 13.85, fall_z(13.95), 0.85), (-2.0, 6.93, fall_z(6.95), 1.0), (2.6, 6.86, fall_z(6.95), 0.95)):
+    for x, y, z, size in ((-4.6, 13.9, front_z(-4.6, 13.9) or 18.0, 0.75), (5.2, 13.9, front_z(5.2, 13.9) or 18.0, 0.85), (-5.0, 7.0, front_z(-5.0, 7.0) or 14.0, 1.0), (5.6, 7.0, front_z(5.6, 7.0) or 14.0, 0.95)):
         rows.append((x, y, z, size))
     for _ in range(9):
         a = rnd.uniform(0, 2*math.pi)
@@ -379,10 +469,12 @@ def main():
     flowers, ferns = flora(rnd, stones)
     gems, gem_more = crystals()
     slug_rows = slugs(stones)
+    stream_rows = stream_path()
+    STREAM.write_text(json.dumps([[round(v, 3) for v in row] for row in stream_rows]) + "\n", encoding="utf-8")
     block = "// @grove-begin\n// Generated by tools/lobby/grove_sites.py. See there before editing.\n"
     block += vec4s("GROVE_SHROOM", top) + vec4s("GROVE_CAP", more) + vec4s("GROVE_BUSH", bush_rows) + vec4s("GROVE_STONE", stones)
     block += vec4s("GROVE_FLOWER", flowers) + vec4s("GROVE_FERN", ferns) + vec4s("GROVE_GEM", gems) + vec4s("GROVE_GEM_DIR", gem_more)
-    block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_PAD", lily_pads()) + vec4s("GROVE_SLUG", slug_rows) + "// @grove-end\n"
+    block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_PAD", lily_pads()) + vec4s("GROVE_SLUG", slug_rows) + vec4s("GROVE_STREAM", stream_rows) + "// @grove-end\n"
     text = PAGE.read_text(encoding="utf-8")
     text, count = re.subn(r"// @grove-begin\n.*?// @grove-end\n", lambda _: block, text, flags=re.S)
     assert count == 1, "the page needs its generated block"

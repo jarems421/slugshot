@@ -76,3 +76,7 @@ The owner chose an automatic estimate after each lobby or map change, with real 
 - **Volcano and gate:** Titan's Arch and the volcano stand at 85% height through `PLAZA_HEIGHT`, keeping their width (owner). The volcano's walls between its lava streams rise above the lava, slightly pointed, and its steam is about 25% denser (owner).
 - **Plants:** baked from the concept's versions of Codex's designs, because Codex's own models are 7,000 to 14,400 triangles each.
 - **Cost:** a Floppy is the heavy part, so slugs beyond 130 studs (60 at low detail) aren't drawn. A lighter slug model is the likely fix if phones struggle.
+
+### Grove stream (owner, 2026-11-02)
+
+Unlike the Maelstrom's falls, the grove's waterfall is a thick stream hugging the mountain. `stream_path` in `tools/lobby/grove_sites.py` traces it down the exported mountain mesh, taking the furthest-out rock across its whole width, then pushes nodes out until nothing comes through; rebuild `hub-grove-mountain` before running it. It writes `GROVE_STREAM` and `grove_stream.json`. Motion is two chains of beams node to node in `groveFlow`, each segment one texture repeat, so the pattern runs across joins. It starts inside a rough cave, `groveHole`, and the old gorge cut is gone.

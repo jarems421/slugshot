@@ -1017,3 +1017,9 @@
 - **Confirmed:** owner: mountain a little larger, higher resolution, Slugterra-style black lining but thin inner lines, rougher layered look; volcano walls between lava streams extended upward only, with a little more steam. Waterfall, pond, surroundings and Floppies are next.
 - **Implemented/verified in Studio:** tops are mountain 165, volcano 143 and gate 133 studs. Check run: 77 solid parts with 0 failed in 18.8 s, 182 floor raycasts with 0 holes, 57 ground feet sunk in, 6 trees, 30 slugs. Collision sits about 1 stud under the drawn rock (p90 0.58 under), worst 13 above at one of 91 points. Captures inspected.
 - **Unresolved:** owner's verdict. Running and climbing weren't tried by hand. About 920k triangles and 257 MB of textures with the grove in view, far over the phone guesses, and the mobile check wasn't re-run. A `Failed to upload TexturePack` log line recurs with several Studio windows open and isn't traced.
+
+## 2026-11-02 - Grove stream and cave
+
+- **Confirmed:** owner: the waterfall should stick to the mountain like a thick animated stream, flow over the rocks with none poking through, and come out of a rough hole that's neither big nor tight.
+- **Implemented/verified in Studio:** 14 segments, 141 studs long; the trace's last push was 0.00 studs, so no rock is above it at the sampled points. Captures of the mouth and stream inspected, and successive captures show the pattern moving. Check run: 77 solid parts with 0 failed, 182 floor raycasts with 0 holes.
+- **Unresolved:** owner's verdict on the motion and speed, which stills can't show; the pond is still to do; the mountain's four framing boulders moved aside from the stream.

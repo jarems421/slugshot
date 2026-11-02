@@ -13,6 +13,8 @@ local ServerStorage = game:GetService("ServerStorage")
 local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
 local rimShape =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
+local groveStream =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_stream")) :: any
 local groveTrees =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_trees")) :: any
 local groveSlugs =
@@ -1430,11 +1432,6 @@ local GROVE_KEYS = {
 	"hub-grove-dress",
 	"hub-grove-gems",
 }
-local GROVE_FALL_TIERS = {
-	{ y0 = 21, y1 = 14, x = 0.5, w0 = 0.35, w1 = 0.6 },
-	{ y0 = 13.95, y1 = 7, x = 0.1, w0 = 0.7, w1 = 1.15 },
-	{ y0 = 6.95, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
-}
 local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
 local GROVE_TINT = Color3.fromRGB(150, 245, 225)
 -- Every slug is this tall outside the gun (owner, 2026-11-02).
@@ -1448,61 +1445,63 @@ local function groveAt(x: number, y: number, z: number): Vector3
 	return GROVE * Vector3.new(x * UNIT, y * UNIT, z * UNIT)
 end
 
--- The falls' face, as groveFallZ in the concept.
-local function groveFallZ(y: number): number
-	local up = math.clamp((y / 0.93 + 0.8) / 39, 0, 1) ^ (1 / 1.3)
-	return 8.6 + (30 - 0.94 * 22.5 * (1 - up) - 8.6) * 0.93
-end
-
+-- Flowing water along the stream's own path, node to node, so it follows the mountain. Each segment is one repeat of the texture
+-- and all move at one speed, so the pattern runs on across the joins.
 local function groveFlow(
-	tier: { y0: number, y1: number, x: number, w0: number, w1: number },
-	offset: number,
+	lift: number,
 	texture: string,
 	color: Color3,
-	transparency: NumberSequence,
+	transparency: number,
 	speed: number,
 	emission: number
 )
-	local from = groveAt(tier.x, tier.y0, groveFallZ(tier.y0) - offset)
-	local to = groveAt(tier.x, tier.y1, groveFallZ(tier.y1) - offset)
-	local top, bottom = holder("FallFlow", from, Vector3.one), holder("FallFlow", to, Vector3.one)
-	local along = (to - from).Unit
-	local across = GROVE.XVector
-	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
-	-- The width runs along each attachment's Y.
-	local axes = CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
-	a0.CFrame, a1.CFrame = axes, axes
-	a0.Parent, a1.Parent = top, bottom
-	local b = Instance.new("Beam")
-	b.Attachment0, b.Attachment1 = a0, a1
-	b.Width0, b.Width1 = tier.w0 * 2 * UNIT, tier.w1 * 2 * UNIT
-	b.FaceCamera = false
-	b.Segments = 1
-	b.Texture = texture
-	b.TextureMode = Enum.TextureMode.Wrap
-	b.TextureLength = 30
-	b.TextureSpeed = speed
-	b.LightEmission = emission
-	b.LightInfluence = 0
-	b.Color = ColorSequence.new(color)
-	b.Transparency = transparency
-	b.Parent = top
+	local nodes: { Attachment } = {}
+	local count = #groveStream
+	for index, row in groveStream do
+		local before = groveStream[math.max(index - 1, 1)]
+		local after = groveStream[math.min(index + 1, count)]
+		local along = (groveAt(after[1], after[2], after[3]) - groveAt(
+			before[1],
+			before[2],
+			before[3]
+		)).Unit
+		local across = GROVE.XVector
+		local out = along:Cross(across).Unit
+		if out:Dot(Vector3.yAxis - GROVE.ZVector) < 0 then
+			out = -out
+		end
+		local node = holder("FallFlow", groveAt(row[1], row[2], row[3]) + out * lift, Vector3.one)
+		local a = Instance.new("Attachment")
+		-- The width runs along each attachment's Y.
+		a.CFrame = CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
+		a.Parent = node
+		table.insert(nodes, a)
+	end
+	for index = 1, count - 1 do
+		local b = Instance.new("Beam")
+		b.Attachment0, b.Attachment1 = nodes[index], nodes[index + 1]
+		b.Width0, b.Width1 = groveStream[index][4] * 2 * UNIT, groveStream[index + 1][4] * 2 * UNIT
+		b.FaceCamera = false
+		b.Segments = 1
+		b.Texture = texture
+		b.TextureMode = Enum.TextureMode.Wrap
+		b.TextureLength = (nodes[index].WorldPosition - nodes[index + 1].WorldPosition).Magnitude
+		b.TextureSpeed = speed
+		b.LightEmission = emission
+		b.LightInfluence = 0
+		b.Color = ColorSequence.new(color)
+		local from = if index == 1 then 1 else transparency
+		local to = if index == count - 1 then 1 else transparency
+		b.Transparency = NumberSequence.new(from, to)
+		b.Parent = nodes[index]
+	end
 end
 
 local function groveWater()
-	local melt = fade({ { 0, 0.25 }, { 0.85, 0.25 }, { 1, 1 } })
-	for _, tier in GROVE_FALL_TIERS do
-		groveFlow(tier, 0.28, fxTexture("flow"), Color3.new(1, 1, 1), melt, 0.7, 0.2)
-		groveFlow(
-			tier,
-			0.31,
-			fxTexture("streak"),
-			GROVE_TINT,
-			fade({ { 0, 1 }, { 0.1, 0.55 }, { 0.85, 0.5 }, { 1, 1 } }),
-			1.3,
-			0.5
-		)
-	end
+	groveFlow(1.6, fxTexture("flow"), Color3.fromRGB(205, 255, 248), 0.45, 1.5, 0.3)
+	groveFlow(1.75, fxTexture("streak"), GROVE_TINT, 0.4, 2.3, 0.6)
+	-- A soft light in the cave's mouth, as if the water glows back into it.
+	pointLight(groveAt(0.4, 20.5, 21.5), GROVE_TINT, 0.5, 22)
 	local foot = groveAt(GROVE_FOOT.X, GROVE_FOOT.Y, GROVE_FOOT.Z)
 	local landing = holder("GroveFoot", foot, Vector3.new(26, 0.5, 14))
 	local ripples = Instance.new("ParticleEmitter")
