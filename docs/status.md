@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-02 (concept only, not in Roblox):** Slug Grove v5: broad mountain summits with jagged crowns, about 185 studs tall in the middle. **Unresolved:** owner's verdict; size change for slugs is on `fix/slug-size`, not in this branch.
+
 **Implemented, 2026-11-02 (`experiment/lobby`), concept only, owner verdict pending:** slug grove v4 (uneven three-peak mountain, waterfall landing in a richer pond, mushrooms, Floppies; about 10 to become Inferno once its model exists) as shader asset 9 in the asset library. Device testing waits until the lobby is built.
 
 **Implemented, 2026-11-02 (`experiment/lobby`):** automatic mobile estimate, `python tools/lobby/mobile_check.py`, run twice in Studio. **Confirmed:** real phone and iPad tests wait until the lobby is complete; nothing is published.

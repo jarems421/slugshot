@@ -272,3 +272,7 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Keep concept renders gentle:** `--gentle` splits each frame into five times as many bands and rests between them, about doubling the time but leaving the PC usable.
 - **Measure where water lands against where the pond is:** the falls' foot sat about 10 studs behind the pond's edge, hidden by the bank, which read as disconnected from every angle.
 - **Regular rows and straight profiles read as architecture on any rock:** tilt the layers, vary the profile and add lower spurs before adding detail.
+
+## Mountain summits (2026-11-02)
+
+A slope that narrows to zero always ends in a small, shrunken tip, however broken its rocks are. Keep a share of the width at the top and split it into separate tapered masses with notches between them (owner: "too thin at the top"). In the grove's views the camera faces +z, so a peak at negative x appears on screen right.

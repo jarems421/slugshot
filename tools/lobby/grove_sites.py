@@ -15,9 +15,11 @@ from pathlib import Path
 PAGE = Path("docs/art/asset-library.html")
 MOUNTAIN_Z = 26.0
 # The same as peakInfo in the shader: centre x, centre z, height, radius, profile, lean x, lean z, ridges.
-PEAKS = ((0.0, 26.0, 34.0, 18.5, 1.05, 0.0, 0.0, 5.0), (-18.0, 26.0, 25.0, 14.0, 0.95, -1.2, 0.0, 4.0), (18.5, 27.0, 20.0, 12.5, 1.2, 3.2, -0.4, 3.0),
+PEAKS = ((0.0, 26.0, 32.0, 18.5, 1.05, 0.0, 0.0, 5.0), (-21.0, 26.0, 24.0, 13.0, 0.95, -1.2, 0.0, 4.0), (21.5, 27.0, 19.0, 12.0, 1.2, 3.2, -0.4, 3.0),
          (0.0, 32.0, 14.0, 20.0, 1.0, 0.0, 0.0, 6.0), (-9.5, 19.5, 17.0, 7.5, 0.95, 0.0, 0.0, 3.0), (10.0, 20.0, 13.5, 7.0, 1.0, 0.0, 0.0, 3.0),
          (-29.0, 29.0, 13.0, 9.0, 0.9, 0.0, 0.0, 3.0), (30.0, 30.0, 10.5, 8.0, 1.0, 0.0, 0.0, 3.0))
+# The same as peakTop in the shader.
+PEAK_TOPS = (0.34, 0.42, 0.44, 0.3, 0.12, 0.12, 0.12, 0.12)
 FRONT = 1.5*math.pi
 
 
@@ -45,7 +47,8 @@ def inside(x, y, z):
         a = math.atan2(qz, qx) % (2*math.pi)
         gully = smoothstep(0.2, 0.8, abs(math.atan2(math.sin(a - 4.71239), math.cos(a - 4.71239)))) if index in (0, 3) else 1.0
         brk = (0.05*math.sin(t*17.0 + a*1.5 + seed) + 0.03*math.sin(t*31.0 - a*2.2 + seed*1.3))*gully
-        body = radius*max(1.0 - min(max(t + brk, 0.0), 1.0), 0.0)**profile
+        top = PEAK_TOPS[index]
+        body = radius*(top + (1.0 - top)*max(1.0 - min(max(t + brk, 0.0), 1.0), 0.0)**profile)
         bulge = 0.28*math.sin(t*math.pi*(1.0 + 0.35*math.sin(a + seed)))*gully
         ridge = (1.0 - abs(math.sin((a + 0.12*math.sin(t*5.0 + seed) - 4.71239)*ridges*0.5 + 1.5708)))**1.6
         lump = 0.18*math.sin(a*2.0 + seed*1.7) + 0.12*math.sin(a*3.0 + t*4.0 + seed*2.9) + 0.08*math.sin(t*13.0 + a*2.0 + seed)

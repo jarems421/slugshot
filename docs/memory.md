@@ -981,3 +981,9 @@
 - **Confirmed:** owner liked the sores and asked for brighter, really glowing antenna bulbs, then made this the final Floppy design.
 - **Implemented/verified offline:** luminous bulb cores (Roblox emission follows surface colour), head-bone PointLight, repaint, export, private re-upload (Approved), test place rebuilt and reopened; page updated. luau-lsp and Selene clean.
 - **Unresolved:** owner Studio check.
+
+## 2026-11-02 - Slug grove concept v5
+
+- **Confirmed:** owner wants thick summits with several jagged spikes per peak, not small shrunken tips, and slugs at 1.3 studs outside the gun.
+- **Implemented:** summits keep 34-44% of their base width and end in crowns of three, four and three jagged masses. Heights are about 185, 130 and 110 studs; the foot stays about 390 across. Three stills were re-rendered and inspected.
+- **Unresolved:** owner's verdict; the two closer page views still show the previous summits; the two side crowns read a little flat; the footprint against the wall and Veylume needs checking in Roblox.
