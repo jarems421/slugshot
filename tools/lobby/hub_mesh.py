@@ -127,47 +127,56 @@ void main() {
 """
 
 
-# The storm can't be a volume on a phone, so it is a stack of thin discs, each painted with the concept's own cloud field
-# integrated over the height it stands for. Rotating them at slightly different rates gives the parallax of real depth.
-STORM_LEVELS = (21.0, 24.0, 27.0, 31.0, 36.0, 41.0)
-STORM_EYE = 45.0
-STORM_REACH = 9.25
-STORM = """
+# The storm can't be a volume on a phone. It is one solid body, a funnel rising to the lit eye and reaching behind the rock at
+# its rim, with a thin veil of cloud over it turning a little faster for depth. Separate flat sheets read as cut-off pieces.
+STORM_RIM = 10.4
+VEIL_RIM = 9.6
+
+
+def storm_body_y(r):
+    return 27.6 + 16.5*(1 - r/STORM_RIM)**1.6
+
+
+def storm_veil_y(r):
+    return 26.6 + 9.0*(1 - r/VEIL_RIM)**1.7
+
+
+STORM_FIELD = """
 uniform sampler2D uPos;
 layout(location = 0) out vec4 o0;
 layout(location = 1) out vec4 o1;
+// The spiral's clouds. All of it is smooth round the circle, so it has no seam.
+float stormField(vec2 x, float twist) {
+  float rr = length(x), sw = atan(x.y, x.x) + 1.5*log(rr + 0.6) + twist;
+  vec3 q = vec3(cos(sw)*rr*0.46, 1.7, sin(sw)*rr*0.46);
+  float n = 0.55*noise3(q) + 0.3*noise3(q*2.2 + 7.0) + 0.15*noise3(q*4.7 + 3.0);
+  return 0.8*n + 0.3*(0.5 + 0.5*sin(sw*3.0));
+}
+"""
+STORM = STORM_FIELD + """
 void main() {
   vec3 p = texelFetch(uPos, ivec2(gl_FragCoord.xy), 0).xyz;
-  if (p.y > 44.0) {
-    // The hollow, lit eye the spiral winds around, behind every layer.
-    float r = length(p.xz);
-    vec3 eye = mix(vec3(0.012, 0.011, 0.024), vec3(0.2, 0.19, 0.3), exp(-r*r*0.1));
-    o0 = vec4(eye, 0.0);
-    o1 = vec4(1.0);
-    return;
-  }
-  const int N = 6;
-  const float BAND = 3.2;
-  vec3 sum = vec3(0.0);
-  float alpha = 0.0, dt = BAND/float(N);
-  for (int i = 0; i < N; i++) {
-    vec3 q = vec3(p.x, p.y + BAND*0.5 - dt*(float(i) + 0.5), p.z);  // nearest the viewer first: they look up from below
-    q.y = p.y - BAND*0.5 + dt*(float(i) + 0.5);
-    float shade, den = stormCloud(q, 0.0, shade);
-    if (den > 0.0) {
-      float take = 1.0 - exp(-den*dt*2.2);
-      float shade2, near = stormCloud(q + vec3(0.0, -0.75, 0.0), 0.0, shade2);
-      float exposed = 1.0 - near;
-      vec3 cl = mix(vec3(0.007, 0.0065, 0.012), vec3(0.036, 0.03, 0.062), smoothstep(0.48, 0.6, shade));
-      cl = mix(cl, vec3(0.19, 0.162, 0.28), exposed*smoothstep(0.52, 0.72, shade));
-      cl += vec3(0.3, 0.28, 0.42)*exp(-length(q.xz)*0.8)*smoothstep(0.0, 8.0, q.y - WELL_LOW);
-      sum += (1.0 - alpha)*take*cl;
-      alpha += (1.0 - alpha)*take;
-    }
-  }
-  alpha *= 1.0 - smoothstep(5.6, 8.4, length(p.xz));
-  o0 = vec4(alpha > 0.0 ? sum/max(alpha, 0.001) : vec3(0.03), 0.0);
-  o1 = vec4(alpha);
+  float rr = length(p.xz), v = stormField(p.xz, 0.0);
+  // Folds lit on their leading edge, with a fine dark line where one meets the next.
+  float ridge = clamp((v - stormField(p.xz, -0.14))*5.0, 0.0, 1.0);
+  vec3 c = mix(vec3(0.012, 0.01, 0.024), vec3(0.05, 0.042, 0.09), smoothstep(0.38, 0.5, v));
+  c = mix(c, vec3(0.2, 0.17, 0.3), smoothstep(0.47, 0.6, v)*(0.45 + 0.55*ridge));
+  c = mix(c, vec3(0.3, 0.26, 0.42), smoothstep(0.62, 0.78, v)*ridge);
+  c *= 1.0 - 0.75*(1.0 - smoothstep(0.0, 0.014, abs(v - 0.47)));
+  c = mix(c, vec3(0.42, 0.4, 0.58), exp(-rr*rr*0.55));
+  c *= 1.0 - 0.5*smoothstep(8.0, 10.0, rr);
+  o0 = vec4(c, 0.0);
+  o1 = vec4(1.0);
+}
+"""
+STORM_VEIL = STORM_FIELD + """
+void main() {
+  vec3 p = texelFetch(uPos, ivec2(gl_FragCoord.xy), 0).xyz;
+  float rr = length(p.xz), v = stormField(p.xz, 1.9);
+  vec3 c = mix(vec3(0.05, 0.042, 0.09), vec3(0.26, 0.22, 0.38), smoothstep(0.5, 0.8, v));
+  float a = smoothstep(0.46, 0.74, v)*(1.0 - smoothstep(6.2, 9.3, rr))*smoothstep(0.8, 2.4, rr)*0.8;
+  o0 = vec4(c, 0.0);
+  o1 = vec4(a);
 }
 """
 
@@ -205,11 +214,13 @@ def well_maps(fs):
     solid = solid.replace("  float s = PI*2.0/20.0, k0 = floor(a/s);", "  s = PI*2.0/20.0; k0 = floor(a/s);")
     glow = slice_between(body, "  // Crystals line the opening", "  // Mini islands")
     glow = glow.replace("  ceilingCrystals(p, res);\n  ceilingVines(p, res);\n", "")  # their own pieces
+    # The shaft's crystals are behind the storm in the game, or would stick through it.
+    glow = glow.replace(slice_between(glow, "  s = PI*2.0/13.0", "  // Vines trailing"), "")
     isles = slice_between(body, "  // Mini islands", "  // Loose debris")
     bits = slice_between(body, "  // Loose debris", "  // The spawn rock at true scale")
     return {
-        # Clipped at the block-out's cavern wall and just above the shaft; the storm covers the top.
-        "rock": f"vec2 assetMap(vec3 p) {{\n{head}{solid}  res.x = max(res.x, max(rr - 31.0, p.y - 36.5));\n  return res;\n}}\n",
+        # Clipped at the block-out's cavern wall and just above where the storm's rim meets it.
+        "rock": f"vec2 assetMap(vec3 p) {{\n{head}{solid}  res.x = max(res.x, max(rr - 31.0, p.y - 30.0));\n  return res;\n}}\n",
         "glow": f"vec2 assetMap(vec3 p) {{\n{head}  vec2 res = vec2(1e3, 18.0);\n{glow}  return res;\n}}\n",
         "isles": f"vec2 assetMap(vec3 p) {{\n{head}  vec2 res = vec2(1e3, 1.0);\n{isles}  return res;\n}}\n",
         "bits": f"vec2 assetMap(vec3 p) {{\n{head}  vec2 res = vec2(1e3, 1.0);\n{bits}  return res;\n}}\n",
@@ -389,8 +400,8 @@ def inner_ring(_ids, c):
     return np.hypot(c[:, 0], c[:, 2]) < 20.8
 
 
-def part(name, test, tris, tex, ink=0.0, ink_ratio=1.0, hard=False, cage=None):
-    return {"name": name, "test": test, "tris": tris, "tex": tex, "ink": ink, "inkRatio": ink_ratio, "hard": hard, "cage": cage}
+def part(name, test, tris, tex, ink=0.0, ink_ratio=1.0, hard=False, cage=None, tile=None):
+    return {"name": name, "test": test, "tile": tile, "tris": tris, "tex": tex, "ink": ink, "inkRatio": ink_ratio, "hard": hard, "cage": cage}
 
 
 def split_components(verts, faces, assign):
@@ -440,27 +451,28 @@ def nearest_island(centre, _i):
     return int(np.argmin(d))
 
 
-def storm_discs():
-    """One disc for each level, seen from below, in rings so the texture has no long thin triangles."""
-    rings, sides = 5, 48
-    discs = {}
-    for name, y in [(f"Cloud{i}", level) for i, level in enumerate(STORM_LEVELS)] + [("Eye", STORM_EYE)]:
-        verts = [(0.0, y, 0.0)]
-        for ring in range(1, rings + 1):
-            radius = STORM_REACH*ring/rings
-            for side in range(sides):
-                angle = 2*np.pi*side/sides
-                verts.append((radius*np.cos(angle), y, radius*np.sin(angle)))
-        faces = []
+def storm_surface(rim, height):
+    """A round surface seen from below, denser toward the middle where the funnel curves most."""
+    rings, sides = 14, 64
+    verts = [(0.0, height(0.0), 0.0)]
+    for ring in range(1, rings + 1):
+        radius = rim*(ring/rings)**1.25
         for side in range(sides):
-            faces.append((0, 1 + side, 1 + (side + 1) % sides))
-        for ring in range(rings - 1):
-            base = 1 + ring*sides
-            for side in range(sides):
-                a, b = base + side, base + (side + 1) % sides
-                faces += [(a, a + sides, b), (b, a + sides, b + sides)]
-        discs[name] = (np.array(verts, "f4"), np.array(faces, "i4"))
-    return discs
+            angle = 2*np.pi*side/sides
+            verts.append((radius*np.cos(angle), height(radius), radius*np.sin(angle)))
+    faces = []
+    for side in range(sides):
+        faces.append((0, 1 + side, 1 + (side + 1) % sides))
+    for ring in range(rings - 1):
+        base = 1 + ring*sides
+        for side in range(sides):
+            a, b = base + side, base + (side + 1) % sides
+            faces += [(a, a + sides, b), (b, a + sides, b + sides)]
+    return np.array(verts, "f4"), np.array(faces, "i4")
+
+
+def storm_discs():
+    return {"StormBody": storm_surface(STORM_RIM, storm_body_y), "StormVeil": storm_surface(VEIL_RIM, storm_veil_y)}
 
 
 def gate_piece(direction, r):
@@ -607,14 +619,17 @@ PIECES = {
     },
     "hub-storm": {
         "item": "sky-well-1", "map": "bits", "scale": 10.0, "origin": (0.0, 1.0, 0.0), "normalH": 0.01, "storm": True,
-        "parts": [part(f"Cloud{i}", None, 500, 512) for i in range(len(STORM_LEVELS))] + [part("Eye", None, 500, 256)],
+        "parts": [part("StormBody", None, 1700, 1024), part("StormVeil", None, 1700, 1024)],
     },
     "hub-well-rock": {
         "item": "sky-well-1", "map": "rock", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
         "lo": (-31.5, 16.5, -31.5), "hi": (31.5, 37.0, 31.5), "step": 0.08, "normalH": 0.012, "overlap": 4,
         "parts": [
             part("Crown", by_id((1.02, 1.09)), 3000, 1024, ROCK_INK*1.4, 1.0, hard=True, cage=0.1),
-            part("Ring", by_id((1.15, 1.2)), 1400, 256, cage=0.06),
+            part("Ring", by_id((1.15, 1.175)), 4600, 1024, ROCK_INK, 1.0, hard=True, cage=0.06),
+            part("Pendants", by_id((1.175, 1.2)), 900, 1024, ROCK_INK*1.2, 1.0, hard=True, cage=0.08),
+            part("BorderA", lambda ids, c: by_id((1.115, 1.13))(ids, c) & (c[:, 2] < 0), 2600, 1024, ROCK_INK*1.3, 1.0, hard=True, cage=0.12),
+            part("BorderB", by_id((1.115, 1.13)), 2600, 1024, ROCK_INK*1.3, 1.0, hard=True, cage=0.12),
             part("Spires", by_id((1.09, 1.15)), 5000, 1024, ROCK_INK*1.4, 1.0, hard=True, cage=0.12),
             part("Mouth", inner_ring, 4500, 1024, ROCK_INK*1.2, 1.0, cage=0.1),
             *[part(f"Cave{i}", in_section(i, 4), 2200, 1024, cage=0.25) for i in range(4)],
@@ -646,6 +661,8 @@ PIECES = {
         "item": "portal-plaza-7", "map": PLAZA_FLOOR, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.4,
         "lo": (-42.0, -0.5, -18.0), "hi": (42.0, 0.3, 30.0), "step": 0.05, "normalH": 0.006,
         "parts": [
+            # Its own part, on a repeating map: sharing the floor's left it a few blurry pixels per stud (owner).
+            part("Lava", by_id((30.5, 31.5)), 900, 1024, tile=6.0),
             part("Cracks", below_floor, 3600, 1024, cage=0.05),
             part("Floor", everything, 2400, 1024, cage=0.08),
         ],
@@ -653,12 +670,16 @@ PIECES = {
     "hub-ceiling-vines": {
         "item": "sky-well-1", "map": CEILING_VINES, "scale": 10.0, "origin": (0.0, 1.0, 0.0), "gain": 1.5,
         "lo": (-32.0, 12.0, -32.0), "hi": (32.0, 29.5, 32.0), "step": 0.025, "normalH": 0.004,
-        "parts": [part("CeilVines", everything, 7000, 1024, FINE_INK*1.6, 1.0, cage=0.03)],
+        "parts": [part("CeilVines", everything, 10000, 1024, FINE_INK*1.6, 1.0, cage=0.03)],
     },
     "hub-ceiling-gems": {
         "item": "sky-well-1", "map": CEILING_GEMS, "scale": 10.0, "origin": (0.0, 1.0, 0.0), "sparkle": "CeilGems",
         "lo": (-32.0, 17.5, -32.0), "hi": (32.0, 29.5, 32.0), "step": 0.03, "normalH": 0.004,
-        "parts": [part("CeilGems", everything, 3200, 1024, PROP_INK*1.3, 1.0, hard=True, cage=0.03)],
+        "parts": [
+            part("CollarGems", lambda _ids, c: np.hypot(c[:, 0], c[:, 2]) < 13.0, 1500, 512, PROP_INK, 1.0, hard=True, cage=0.02),
+            part("BorderGems", lambda _ids, c: np.hypot(c[:, 0], c[:, 2]) > 25.6, 2200, 1024, PROP_INK*1.3, 1.0, hard=True, cage=0.03),
+            part("CeilGems", everything, 3200, 1024, PROP_INK*1.3, 1.0, hard=True, cage=0.03),
+        ],
     },
     "hub-well-glow": {
         "item": "sky-well-1", "map": "glow", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
@@ -737,7 +758,7 @@ class PieceGpu(Gpu):
             frame["uRo"] = list(self.piece["uRo"])
         item = {**item, "frames": [frame]}
         normal = NORMAL.replace("NORMAL_H", f"{self.piece['normalH']:.4f}")
-        super().__init__(page, item, bank, asset_map=source + normal, mains={"grid": GRID, "paint": PAINT, "ids": IDS, "storm": STORM})
+        super().__init__(page, item, bank, asset_map=source + normal, mains={"grid": GRID, "paint": PAINT, "ids": IDS, "storm": STORM, "stormVeil": STORM_VEIL})
 
     def ids(self, verts):
         return self.paint(verts, program="ids")[0][:, 0]
@@ -778,8 +799,8 @@ def storm_mesh(key):
     groups = []
     for name, (verts, faces) in storm_discs().items():
         np.savez_compressed(out/f"{name}.npz", verts=verts, faces=faces)
-        groups.append({"name": name, "faces": len(faces), "tris": len(faces), "tex": 256 if name == "Eye" else 512, "ink": 0.0,
-                       "inkRatio": 1.0, "hard": False, "cage": 0.1, "flat": True})
+        groups.append({"name": name, "faces": len(faces), "tris": len(faces), "tex": 1024 if name == "StormBody" else 512, "ink": 0.0,
+                       "inkRatio": 1.0, "hard": False, "cage": 0.1, "flat": True, "half": STORM_RIM + 0.1})
     (out/"meta.json").write_text(json.dumps({"key": key, "scale": 10.0, "origin": [0.0, 1.0, 0.0], "groups": groups, "rig": None}, indent=1))
 
 
@@ -792,7 +813,7 @@ def storm_paint(key):
         valid = np.abs(px[..., :3]).sum(axis=2) > 0
         bpos = px[..., :3][valid]
         pos = np.stack([bpos[:, 0], bpos[:, 2], -bpos[:, 1]], axis=1).astype("f4")
-        a0, a1 = gpu.paint(pos, program="storm")
+        a0, a1 = gpu.paint(pos, program="stormVeil" if g["name"] == "StormVeil" else "storm")
         h, w = valid.shape
         rgb, alpha = np.zeros((h, w, 3), "f4"), np.zeros((h, w, 3), "f4")
         rgb[valid], alpha[valid] = a0[:, :3], a1[:, :3]
@@ -802,7 +823,7 @@ def storm_paint(key):
         rgba = np.dstack([shown, np.clip(alpha[..., 0], 0, 1)])
         Image.fromarray((rgba*255 + 0.5).astype("u1"), "RGBA").save(out/"textures"/f"{g['name']}-color.png")
         g["color"] = f"textures/{g['name']}-color.png"
-        g["alpha"] = g["name"] != "Eye"
+        g["alpha"] = g["name"] == "StormVeil"
         Image.fromarray((np.clip(alpha[..., 0], 0, 1)*255).astype("u1")).save(out/"textures"/f"{g['name']}-emit.png")
         g["emit"] = f"textures/{g['name']}-emit.png"
         g["emissiveStrength"] = 1.0
@@ -1048,7 +1069,8 @@ def mesh(key):
         np.savez_compressed(out/f"{spec['name']}.npz", verts=verts[used], faces=remap.reshape(-1, 3).astype("i4"), **extra)
         groups.append({"name": spec["name"], "faces": int(len(sel)), "tris": spec["tris"], "tex": spec["tex"],
                        "ink": spec["ink"]/piece["scale"], "inkRatio": spec["inkRatio"], "hard": spec["hard"],
-                       "cage": spec["cage"], "authored": bool(extra) and not plate, "plate": plate, "upright": upright})
+                       "cage": spec["cage"], "authored": bool(extra) and not plate, "plate": plate, "upright": upright,
+                       "tile": spec["tile"]})
         print(f"  {spec['name']:10s} {len(sel):9d} dense faces -> {spec['tris']} tris", flush=True)
     if "sparkle" in piece:
         sparkle_points(gpu, key, out)
@@ -1056,9 +1078,61 @@ def mesh(key):
     (out/"meta.json").write_text(json.dumps(meta, indent=1))
 
 
-EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow", "CeilGems"}
+EVEN_GLOW = {"Glow", "Sprouts", "Caps", "WellGlow", "CeilGems", "CollarGems", "BorderGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+
+
+def magma_maps(out, g):
+    """A seamless sheet of magma: dark plates of crust split by crisp, glowing cracks, with finer cracks inside the plates."""
+    n = 1024
+    y, x = np.mgrid[0:1:n*1j, 0:1:n*1j]*(n - 1)/n
+
+    def soft(seed, radius):
+        kernel = np.exp(-(np.arange(-radius*3, radius*3 + 1)/radius)**2)
+        kernel /= kernel.sum()
+        noise = np.random.default_rng(seed).random((n, n))
+        spectrum = np.fft.fft(kernel, n)
+        noise = np.fft.ifft(np.fft.fft(noise, axis=0)*spectrum[:, None], axis=0).real
+        noise = np.fft.ifft(np.fft.fft(noise, axis=1)*spectrum[None, :], axis=1).real
+        return (noise - noise.min())/(noise.max() - noise.min())
+
+    def cracks(count, seed, wobble):
+        rng = np.random.default_rng(seed)
+        wx, wy = x + wobble*(soft(seed + 1, 40) - 0.5), y + wobble*(soft(seed + 2, 40) - 0.5)
+        first, second = np.full((n, n), 9.0), np.full((n, n), 9.0)
+        for i in range(count):
+            for j in range(count):
+                px, py = (i + rng.uniform(0.12, 0.88))/count, (j + rng.uniform(0.12, 0.88))/count
+                d = np.hypot((wx - px + 0.5) % 1.0 - 0.5, (wy - py + 0.5) % 1.0 - 0.5)
+                second = np.where(d < first, first, np.minimum(second, d))
+                first = np.minimum(first, d)
+        return second - first
+
+    def rise(a, b, v):
+        t = np.clip((v - a)/(b - a), 0, 1)
+        return t*t*(3 - 2*t)
+
+    main, fine = cracks(6, 11, 0.1), cracks(15, 23, 0.05)
+    plate = soft(41, 26)
+    grain = soft(43, 3)
+    heat = 1 - rise(0.005, 0.042, main)
+    heat = np.maximum(heat, 0.62*(1 - rise(0.002, 0.012, fine))*rise(0.03, 0.06, main))
+    heat = np.maximum(heat, 0.34*rise(0.55, 0.8, plate))
+    ramp = [(0.0, (26, 15, 15)), (0.3, (120, 22, 6)), (0.55, (232, 78, 10)), (0.8, (255, 140, 30)), (1.0, (255, 205, 90))]
+    colour = np.dstack([np.interp(heat, [k for k, _ in ramp], [c[i] for _, c in ramp]) for i in range(3)])
+    colour = colour*(0.84 + 0.32*grain[..., None]*(1 - heat[..., None]) + 0.16*heat[..., None])
+    textures = out/"textures"
+    Image.fromarray(np.clip(colour, 0, 255).astype("u1")).save(textures/"Lava-color.png")
+    Image.fromarray((np.clip(heat*1.25, 0, 1)*255).astype("u1")).save(textures/"Lava-emit.png")
+    height = rise(0.0, 0.05, main) + 0.3*rise(0.0, 0.014, fine) + 0.25*grain
+    dx, dy = np.roll(height, -1, 1) - np.roll(height, 1, 1), np.roll(height, -1, 0) - np.roll(height, 1, 0)
+    normal = np.dstack([-dx*7, dy*7, np.ones_like(dx)])
+    normal /= np.linalg.norm(normal, axis=2, keepdims=True)
+    Image.fromarray(((normal*0.5 + 0.5)*255).astype("u1")).save(textures/"Lava-normal.png")
+    g["color"], g["normal"], g["emit"] = "textures/Lava-color.png", "textures/Lava-normal.png", "textures/Lava-emit.png"
+    g["emissiveStrength"] = 1.15
+    print("Lava: repeating magma map", flush=True)
 
 
 def paint(key):
@@ -1071,6 +1145,9 @@ def paint(key):
     for g in report["groups"]:
         for field in ("emit", "emissiveStrength"):
             g.pop(field, None)
+        if g.get("tile"):
+            magma_maps(out, g)
+            continue
         px = np.load(out/g["positions"])[::-1]
         valid = np.abs(px[..., :3]).sum(axis=2) > 0
         bpos = px[..., :3][valid]

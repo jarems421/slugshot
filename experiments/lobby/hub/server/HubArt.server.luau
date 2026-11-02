@@ -833,10 +833,10 @@ local function buildSkyWell()
 	end
 	local storm = placeUnderCeiling("hub-storm")
 	if storm then
-		for index = 0, 5 do
-			-- Each layer winds a little faster toward the eye, which gives the cloud its depth.
-			setMotion(storm, `Cloud{index}`, ORBIT * (1.7 + index * 0.16), 0, 0, 0)
-			local sheet = storm:FindFirstChild(`Cloud{index}`, true)
+		-- One swirl: its body, and a thin veil of cloud turning a little faster over it for depth.
+		for name, rate in { StormBody = 1.8, StormVeil = 2.4 } do
+			setMotion(storm, name, ORBIT * rate, 0, 0, 0)
+			local sheet = storm:FindFirstChild(name, true)
 			local surface = sheet and sheet:FindFirstChildWhichIsA("SurfaceAppearance")
 			if surface then
 				CollectionService:AddTag(surface, "HubStormCloud")
@@ -860,8 +860,8 @@ local function buildSkyWell()
 			1
 		)
 	end
-	-- A soft round glow well under the storm. A sprite that crosses a flat cloud sheet is cut in a straight line there, which
-	-- read as a box in the sky (owner), so none may reach the sheets (the lowest is 50 under the ceiling).
+	-- A soft round glow well under the storm. A sprite that crosses the storm's surface is cut along it, which read as
+	-- a box in the sky (owner), so none may reach it.
 	local mouth = holder("MouthGlow", Vector3.new(0, 118 - CEILING_DROP, 0), Vector3.one)
 	local haze = Instance.new("ParticleEmitter")
 	haze.Texture = fxTexture("flash")
@@ -889,6 +889,21 @@ local function buildSkyWell()
 	zap.Speed = NumberRange.new(0)
 	zap.Rotation = NumberRange.new(0, 360)
 	zap.Parent = flash
+	-- The cloud round the bolt lighting up.
+	local bloom = Instance.new("ParticleEmitter")
+	bloom.Name = "Bloom"
+	bloom.Texture = fxTexture("flash")
+	bloom.Color = ColorSequence.new(Color3.fromRGB(190, 180, 255))
+	bloom.LightEmission = 1
+	bloom.LightInfluence = 0
+	bloom.Size = NumberSequence.new(70, 80)
+	bloom.Transparency = fade({ { 0, 0.45 }, { 1, 1 } })
+	bloom.Lifetime = NumberRange.new(0.25, 0.4)
+	bloom.Rate = 0
+	bloom.Speed = NumberRange.new(0)
+	bloom.Parent = flash
+	-- The veil's height at the middle of the storm, for placing the bolts just under it.
+	flash:SetAttribute("VeilY", 256 - CEILING_DROP)
 end
 
 local function buildPortals()
@@ -1243,6 +1258,41 @@ local function buildArch()
 	if floor then
 		floor:PivotTo(floor:GetPivot() + Vector3.new(0, 0.08, 0))
 	end
+	if floor then
+		local lava = floor:FindFirstChild("Lava", true)
+		if lava then
+			lava:SetAttribute("PulseRate", 0.55)
+			lava:SetAttribute("PulseDepth", 0.25)
+			CollectionService:AddTag(lava, "HubPulse")
+		end
+	end
+	-- A slight glow standing over the cracks, in plaza units. Each stops at the pit's edge.
+	for index, crack in
+		{
+			{ 3.0, -3.8, 13.0, -14.0, 0.42, 0.04 },
+			{ 1.2, -3.8, 3.87, -11.36, 0.42, 0.15 },
+			{ 8.0, -8.8, 14.0, -7.0, 0.2, 0.03 },
+			{ 3.4, -9.0, 2.3, -11.1, 0.18, 0.1 },
+			{ 5.0, -3.0, 16.5, -3.6, 0.34, 0.05 },
+		}
+	do
+		for _, side in { -1, 1 } do
+			local halo = beam(
+				"CrackGlow",
+				PLAZA * Vector3.new(side * crack[1] * 5, 1, crack[2] * 5),
+				PLAZA * Vector3.new(side * crack[3] * 5, 1, crack[4] * 5),
+				math.max(crack[5] * 26, 3),
+				math.max(crack[6] * 26, 3),
+				fxTexture("softbeam"),
+				Color3.fromRGB(255, 96, 24),
+				fade({ { 0, 1 }, { 0.5, 0.75 }, { 1, 1 } }),
+				0,
+				1
+			)
+			halo:SetAttribute("Phase", index * 1.9)
+			CollectionService:AddTag(halo, "HubLavaGlow")
+		end
+	end
 	local arch = placeInPlaza("hub-arch")
 	if arch then
 		setMotion(arch, "ArchBits", 0, 1.3, 0.55, 0)
@@ -1349,14 +1399,12 @@ for _, key in DISTANT do
 		end
 	end
 end
--- Stacked sheets of cloud are the most expensive thing to draw when looking up, so a phone drops every other one.
+-- The veil is see-through cloud across most of the screen when looking up, so low detail drops it.
 local storm = art:FindFirstChild("hub-storm")
 if storm then
-	for _, name in { "Cloud1", "Cloud3" } do
-		local part = storm:FindFirstChild(name, true)
-		if part then
-			CollectionService:AddTag(part, "HubSpareCloud")
-		end
+	local veil = storm:FindFirstChild("StormVeil", true)
+	if veil then
+		CollectionService:AddTag(veil, "HubSpareCloud")
 	end
 end
 print("HubArt: built")

@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Ceiling redesign, one-piece storm, crisp floor lava
+
+- **Owner request:** crisper floor lava with a slight glow, a more interesting ceiling border, replace the black ring and its glowing lines (rune slabs suggested), fill the empty perimeter round the storm with small rocks and crystals, and make the storm one entity.
+- **Implemented, seen in Studio by camera captures:** all five ([lobby hub](art/lobby-hub.md)). The lightning was fired on purpose at both ends of its range and showed no cut lines.
+- **Agent's design choice, owner verdict needed:** the hanging rune stones and rock curtain at the border; the dark paving behind the crown.
+- **Not verified:** the storm's motion, which was only sampled in stills; phone performance. Spawn view rose from about 270k to 296k triangles and 194 to 210 draw calls.
+
 ## 2026-11-02 - Lower ceiling, rubble tornado, dark sky
 
 - **Owner request:** lower the ceiling noticeably (about 25 studs), make the floating rubble a short, tight tornado near the ceiling, and add small rubble under the spawn rock.

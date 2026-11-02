@@ -91,6 +91,17 @@ def build_plate(name, data):
     return low
 
 
+def tile_uv(obj, size):
+    """Straight down in world space, repeating every `size` units, so a small map stays crisp over a big area."""
+    mesh = obj.data
+    while mesh.uv_layers:
+        mesh.uv_layers.remove(mesh.uv_layers[0])
+    layer = mesh.uv_layers.new(name="UVMap")
+    for loop in mesh.loops:
+        co = mesh.vertices[loop.vertex_index].co
+        layer.data[loop.index].uv = (co.x/size, co.y/size)
+
+
 def planar_uv(obj, half, upright=False):
     """Straight down (or straight on, for an upright sheet), so a round surface has no seams in its maps."""
     mesh = obj.data
@@ -173,16 +184,19 @@ def main():
             # Straight-down maps: island seams in an alpha texture drew hard square patches in the storm.
             low = base.build_dense(name, {"verts": data["verts"], "faces": data["faces"]})
             low.name = low.data.name = name
-            planar_uv(low, 9.5)
+            planar_uv(low, g["half"])
         else:
             low = decimated(dense, name, g["tris"], g["hard"])
-        if not g.get("flat"):
+        if g.get("tile"):
+            tile_uv(low, g["tile"])
+        elif not g.get("flat"):
             base.bake_normal(dense, low, g["cage"])
-        base.bake_positions(low)
+        if not g.get("tile"):
+            base.bake_positions(low)
         low.data.materials.clear()
         low.data.materials.append(bpy.data.materials.new(name))
         exports.append(low)
-        entry = {"name": name, "tris": len(low.data.polygons), "tex": g["tex"], "positions": f"textures/{name}-pos.npy"}
+        entry = {"name": name, "tris": len(low.data.polygons), "tex": g["tex"], "positions": f"textures/{name}-pos.npy", "tile": g.get("tile")}
         if not g.get("flat"):
             entry["normal"] = f"textures/{name}-normal.png"
         if g["ink"] > 0:
