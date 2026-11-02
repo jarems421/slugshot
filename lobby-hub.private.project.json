@@ -93,6 +93,12 @@
       },
       "FloppyMaterials": {
         "$path": "private-assets/floppy/materials.rbxmx"
+      },
+      "LobbyAssets": {
+        "$path": "private-assets/lobby/LobbyAssets.luau"
+      },
+      "LobbyMaterials": {
+        "$path": "private-assets/lobby/materials.rbxmx"
       }
     }
   }

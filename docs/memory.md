@@ -1005,3 +1005,9 @@
 - **Confirmed:** owner: peaks looked like pyramids; mushrooms and crystals floated off the mountain; flowers and mushrooms floated on the ground.
 - **Implemented/verified in Studio:** tips with uneven faces, shelves and side crags. A sign slip had left the solid body about 10 studs inside the shape props were placed on; fixed. `grove_sites.py` now places on the exported ground and mountain meshes. Check run: 54 ground feet all sunk in, by 0.44 at least and about 1 stud typically; 0 failed pieces. Captures inspected.
 - **Unresolved:** owner's verdict. The mountain's feet come from its exported mesh, but the Studio ray check there hits collision, so it can't confirm them independently. Running and climbing weren't tried by hand. The mobile check wasn't re-run.
+
+## 2026-11-02 - Mountain rebuilt to the owner's references
+
+- **Confirmed:** owner chose the direction with six reference pictures: one natural mountain of faces and ridges, not sharp stubby tips; a little bigger and taller; volcano and gate shorter; use the approved giant mushroom; plant the ferns deeper. Owner also said the pond looks poor.
+- **Implemented/verified in Studio:** tops are mountain 151, volcano 133 and gate 134 studs. Check run: 6 trees, 30 slugs, 57 solid parts in 15.6 s with 0 failed, 182 floor raycasts with 0 holes, 57 ground feet all sunk in. Captures inspected. About 860k triangles on desktop with the grove in view.
+- **Unresolved:** owner's verdict; the pond isn't redesigned; running on it wasn't tried by hand; the trees are the heaviest new cost and phones will need lighter ones; one `Failed to upload TexturePack` log line appeared with several Studio windows open and wasn't traced; the concept pages still show earlier mountains.

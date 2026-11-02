@@ -288,3 +288,7 @@ Blender's Decimate keeps triangles on sealed pockets inside a shape, because the
 ## Placing things on simplified meshes (2026-11-02)
 
 Place what stands on a surface using the exported mesh, not the ideal shape: the grove's simplified ground differed by up to 2 studs, enough for plants to float. Sink feet a little and use the lowest ground under the whole foot. A piece's fit bounds must also come from the exported mesh, or the game rescales it. And a tapered square block reads as a pyramid at any size: tips need uneven faces, shelves and neighbouring crags. When a check reads Studio logs, make sure other open windows' logs aren't mixed in: a 0.903 size warning came from an older window.
+
+## Mountain form (2026-11-02)
+
+Rounds of designing tips on a body failed because a peak isn't a part: in the owner's references the whole mountain is one form, with ridges unbroken from summit to foot. A height over a triangle grid with its corners sampled from a ridged shape gives real flat faces and hard edges. Ask for references before designing a distinctive shape: six written designs missed where six pictures from the owner settled it.

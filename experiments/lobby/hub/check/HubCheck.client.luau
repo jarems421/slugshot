@@ -6,10 +6,12 @@ local Stats = game:GetService("Stats")
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "grovePath", from = Vector3.new(75, 9, 0), at = Vector3.new(285, 70, 0) },
 	{ name = "grovePond", from = Vector3.new(112, 7, -24), at = Vector3.new(190, 14, 6) },
-	{ name = "groveFront", from = Vector3.new(105, 14, 0), at = Vector3.new(215, 18, 0) },
-	{ name = "groveLeft", from = Vector3.new(150, 16, -75), at = Vector3.new(235, 16, 20) },
-	{ name = "grovePeaks", from = Vector3.new(70, 40, 0), at = Vector3.new(270, 100, 0) },
-	{ name = "groveTips", from = Vector3.new(190, 110, -50), at = Vector3.new(265, 130, 0) },
+	{ name = "groveFront", from = Vector3.new(100, 14, 0), at = Vector3.new(230, 60, 0) },
+	{ name = "groveLeft", from = Vector3.new(150, 16, -95), at = Vector3.new(245, 40, 20) },
+	{ name = "grovePeaks", from = Vector3.new(80, 50, 0), at = Vector3.new(270, 100, 0) },
+	{ name = "groveTree", from = Vector3.new(105, 7, -28), at = Vector3.new(140, 8, -28) },
+	{ name = "groveFern", from = Vector3.new(120, 6, 70), at = Vector3.new(140, 1, 55) },
+	{ name = "plaza", from = Vector3.new(0, 14, -95), at = Vector3.new(0, 70, -250) },
 	{ name = "groveSlugs", from = Vector3.new(170, 3.4, -43), at = Vector3.new(174, 1, -46) },
 	{ name = "crack", from = Vector3.new(-34, 9, -103), at = Vector3.new(-40, 0, -112) },
 	{ name = "stormUp", from = Vector3.new(0, 9, 12), at = Vector3.new(0, 200, -10) },
@@ -112,6 +114,25 @@ task.spawn(function()
 		end
 	end
 	report("mountain", gaps)
+	local function tops(name: string): number
+		local model = art:FindFirstChild(name)
+		local most = 0
+		for _, part in if model then model:GetDescendants() else {} do
+			if part:IsA("MeshPart") then
+				most = math.max(most, part.Position.Y + part.Size.Y / 2)
+			end
+		end
+		return most
+	end
+	print(
+		string.format(
+			"HUBCHECK tops mountain=%.0f volcano=%.0f gate=%.0f",
+			tops("hub-grove-mountain"),
+			tops("hub-volcano"),
+			tops("hub-arch")
+		)
+	)
+	print(`HUBCHECK groveTrees count={#(art:WaitForChild("GroveTrees", 5) or art):GetChildren()}`)
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	print("HUBCHECK tour starts")

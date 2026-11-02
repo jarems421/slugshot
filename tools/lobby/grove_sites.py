@@ -20,50 +20,20 @@ PAGE = Path("docs/art/asset-library.html")
 SITES = Path("experiments/lobby/scale/shared/grove_slugs.json")
 FEET = Path("experiments/lobby/scale/shared/grove_feet.json")
 # As MTN_S and MTN_Z in the shader: the mountain is built at this share of its authored size, about this point.
-MTN_S, MTN_Z = 0.7, 8.6
-MOUNTAIN_Z = MTN_Z + (26.0 - MTN_Z)*MTN_S
-# The same as peakInfo in the shader: centre x, centre z, height, radius, profile, lean x, lean z, ridges.
-PEAKS = ((0.0, 26.0, 31.0, 18.5, 1.05, 0.0, 0.0, 5.0), (-21.0, 26.0, 24.0, 13.0, 0.95, -1.2, 0.0, 4.0), (21.5, 27.0, 19.0, 12.0, 1.2, 3.2, -0.4, 3.0),
-         (0.0, 32.0, 14.0, 20.0, 1.0, 0.0, 0.0, 6.0), (-9.5, 19.5, 17.0, 7.5, 0.95, 0.0, 0.0, 3.0), (10.0, 20.0, 13.5, 7.0, 1.0, 0.0, 0.0, 3.0),
-         (-29.0, 29.0, 13.0, 9.0, 0.9, 0.0, 0.0, 3.0), (30.0, 30.0, 10.5, 8.0, 1.0, 0.0, 0.0, 3.0))
-# The same as peakTop in the shader.
-PEAK_TOPS = (0.36, 0.42, 0.44, 0.3, 0.12, 0.12, 0.12, 0.12)
+MTN_S, MTN_Z = 0.85, 8.6
+MOUNTAIN_Z = MTN_Z + (30.0 - MTN_Z)*MTN_S
+TREES = Path("experiments/lobby/scale/shared/grove_trees.json")
+
+
+def fall_z(y):
+    """The same as groveFallZ in the shader."""
+    return MTN_Z + (30.0 - 0.94*22.5*(1.0 - min(max((y/MTN_S + 0.8)/39.0, 0.0), 1.0)**(1.0/1.3)) - MTN_Z)*MTN_S
 FRONT = 1.5*math.pi
 
 
 def smoothstep(a, b, x):
     t = min(max((x - a)/(b - a), 0.0), 1.0)
     return t*t*(3 - 2*t)
-
-
-def peak_r(y, height, radius, profile):
-    return radius*max(1.0 - y/height, 0.0)**profile
-
-
-def inside(x, y, z):
-    """The same shape as peakRad and peakWander in the shader."""
-    x, y, z = x/MTN_S, y/MTN_S, MTN_Z + (z - MTN_Z)/MTN_S
-    for index, (cx, cz, height, radius, profile, lx, lz, ridges) in enumerate(PEAKS):
-        if y >= height:
-            continue
-        t = min(max(y/height, 0.0), 1.0)
-        seed = index*1.7 + 0.6
-        if index == 0:
-            wx, wz = 0.05*radius*t*math.sin(t*4.7 + seed), 0.0
-        else:
-            wx, wz = 0.1*radius*t*math.sin(t*4.7 + seed), 0.1*radius*t*math.cos(t*3.9 + seed*1.6)
-        qx, qz = x - cx - lx*t*t - wx, z - cz - lz*t*t - wz
-        a = math.atan2(qz, qx) % (2*math.pi)
-        gully = smoothstep(0.2, 0.8, abs(math.atan2(math.sin(a - 4.71239), math.cos(a - 4.71239)))) if index in (0, 3) else 1.0
-        brk = (0.05*math.sin(t*17.0 + a*1.5 + seed) + 0.03*math.sin(t*31.0 - a*2.2 + seed*1.3))*gully
-        top = PEAK_TOPS[index]
-        body = radius*(top + (1.0 - top)*max(1.0 - min(max(t + brk, 0.0), 1.0), 0.0)**profile)
-        bulge = 0.28*math.sin(t*math.pi*(1.0 + 0.35*math.sin(a + seed)))*gully
-        ridge = (1.0 - abs(math.sin((a + 0.12*math.sin(t*5.0 + seed) - 4.71239)*ridges*0.5 + 1.5708)))**1.6
-        lump = 0.18*math.sin(a*2.0 + seed*1.7) + 0.12*math.sin(a*3.0 + t*4.0 + seed*2.9) + 0.08*math.sin(t*13.0 + a*2.0 + seed)
-        if math.hypot(qx, qz) < body*(1.0 + bulge)*(0.92 + 0.36*ridge*(1.0 - 0.35*t) + lump*gully):
-            return True
-    return False
 
 
 def read_glb(path):
@@ -133,6 +103,7 @@ GROUND_GRID = ground_grid()
 
 def surface_radius(a, y):
     """Coming in from outside at this angle and height, where the rock's mass is first met."""
+    assert MOUNTAIN_TRIS is not None, "build hub-grove-mountain first"
     if MOUNTAIN_TRIS is not None:
         ys = MOUNTAIN_TRIS[:, :, 1]
         near = MOUNTAIN_TRIS[(ys.min(axis=1) <= y) & (ys.max(axis=1) >= y)]
@@ -150,12 +121,6 @@ def surface_radius(a, y):
         t = (e2*q).sum(axis=1)/det
         hits = t[(u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)]
         return float(hits.max()) if hits.size else 0.0
-    r = 56.0
-    while r > 0.0:
-        if inside(r*math.cos(a), y, MOUNTAIN_Z + r*math.sin(a)):
-            return r
-        r -= 0.1
-    return 0.0
 
 
 def on_mountain(a, y, inset=0.2):
@@ -259,7 +224,7 @@ def boulders(rnd):
     for x, z, size in ((-3.6, 2.2, 0.85), (-1.8, 3.9, 0.6), (2.6, 3.0, 0.95), (4.2, 0.8, 0.6), (-4.6, -0.8, 0.7), (1.0, -2.4, 0.55), (-1.6, -3.6, 0.45)):
         rows.append((x, -0.2, z, size))
     # Rough rock round the two basins the falls land in.
-    for x, y, z, size in ((-1.5, 11.13, 14.55, 0.75), (2.0, 11.06, 14.55, 0.85), (-2.0, 5.53, 11.61, 1.0), (2.6, 5.46, 11.61, 0.95)):
+    for x, y, z, size in ((-1.5, 12.72, fall_z(12.75), 0.75), (2.0, 12.65, fall_z(12.75), 0.85), (-2.0, 6.33, fall_z(6.35), 1.0), (2.6, 6.26, fall_z(6.35), 0.95)):
         rows.append((x, y, z, size))
     for _ in range(9):
         a = rnd.uniform(0, 2*math.pi)
@@ -313,7 +278,7 @@ def flora(rnd, stones):
     for a, far in ((3.3, 6.5), (3.9, 7.5), (5.6, 6.0), (6.05, 7.0), (0.5, 5.0), (2.5, 5.5), (2.0, 3.2), (1.15, 3.0), (4.3, 9.0), (5.15, 9.5)):
         r = pond_radius(a) + far
         x, z = r*math.cos(a), r*math.sin(a)
-        ferns.append((x, rest(x, z, 0.3) - 0.1, z, rnd.uniform(0.75, 1.1)))
+        ferns.append((x, rest(x, z, 0.5) - 0.42, z, rnd.uniform(0.75, 1.1)))
     return flowers, ferns
 
 
@@ -407,6 +372,9 @@ def main():
     sites = [{"x": round(x*5, 2), "y": round(y*5, 2) if index < 9 else round(ground(x, z)*5, 2), "z": round(z*5, 2), "heading": round(h, 3)}
              for index, (x, y, z, h) in enumerate(slug_rows)]
     SITES.write_text(json.dumps(sites, indent=1) + "\n", encoding="utf-8")
+    # The big mushrooms round the lake are the approved giant mushroom asset, placed by the game.
+    TREES.write_text(json.dumps([{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": int(c[3])}
+                                 for t, c in zip(top[:6], more[:6])], indent=1) + "\n", encoding="utf-8")
     # For the check build: where everything baked into a piece should touch its surface.
     studs = lambda rows: [[round(r[0]*5, 2), round(r[1]*5, 2), round(r[2]*5, 2)] for r in rows]
     FEET.write_text(json.dumps({"ground": studs(flowers + ferns + [t for t in top if t[1] < 1.6]), "mountain": studs([t for t in top if t[1] >= 1.6] + bush_rows + [g for g in gems if g[1] > 1.6]),

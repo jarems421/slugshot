@@ -69,8 +69,10 @@ The owner chose an automatic estimate after each lobby or map change, with real 
 
 **Implemented, owner's verdict pending.** Nine `hub-grove-*` pieces from asset 9 in the library (`tools/lobby/hub_mesh.py`), placed by `buildGrove` in `HubArt.server.luau`: concept origin at the pond (radius 155 at 90 degrees), +z toward the wall. Mountain, ground, stones, rune stones and mushrooms are solid as drawn; water, falls, plants and crystals are not.
 
-- **Mountain:** three peaks with three, two and one wide sharp tips, 137 studs tall and about 293 across (70% of the concept's authored size; owner: too close to the ceiling). The solid mesh is the smooth `mountainShell`, with cracks filled and at most a few studs of relief; the jagged `mountainD` is baked onto it as colour and normals, so it looks jagged but can be run on (owner). Its back passes through the wall, so the wall is hidden from 55 to 125 degrees and has no collision from 62 to 118, so players can climb over.
+- **Mountain:** one form of flat triangular faces and hard ridges after the owner's references: `mountainHeight` gives the ridges and each triangle's corners sample it, so the surface is flat faces with no cracks or overhangs. About 151 studs tall and 340 across. Its back passes through the wall, so the wall is hidden from 52 to 128 degrees and has no collision from 58 to 122.
 - **Ground:** replaces the flat block-out from 40 to 135 degrees, with a basin for the pond.
 - **Slugs:** 30 real Floppies at 1.3 studs from `experiments/lobby/scale/shared/grove_slugs.json`, moved by `GroveSlugs.client.luau`: hops, a drowsy idle up close, and one in four glancing at a player within 15 studs. Ten carry `InfernoLater`, to swap once Inferno has a Roblox model.
+- **Trees:** the six big ones are the approved giant mushroom v2, as `mushroom-13`, `-12`, `-5` and `-3`, at 30% glow because they blew out at this size. Only stems are solid, as caps made collision take 146 s.
+- **Volcano and gate:** Titan's Arch and the volcano stand at 85% height through `PLAZA_HEIGHT`, keeping their width (owner).
 - **Plants:** baked from the concept's versions of Codex's designs, because Codex's own models are 7,000 to 14,400 triangles each.
 - **Cost:** a Floppy is the heavy part, so slugs beyond 130 studs (60 at low detail) aren't drawn. A lighter slug model is the likely fix if phones struggle.

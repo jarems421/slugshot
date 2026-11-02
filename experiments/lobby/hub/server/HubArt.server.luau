@@ -13,6 +13,8 @@ local ServerStorage = game:GetService("ServerStorage")
 local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
 local rimShape =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
+local groveTrees =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_trees")) :: any
 local groveSlugs =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_slugs")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
@@ -472,9 +474,9 @@ local function hideBlockOut()
 		for _, item in cavern:GetChildren() do
 			if item:IsA("BasePart") and item.Name == "Wall" then
 				local angle = zoneAngle(item.Position)
-				if angle > 55 and angle < 125 then
+				if angle > 52 and angle < 128 then
 					item.Transparency = 1
-					item.CanCollide = angle <= 62 or angle >= 118
+					item.CanCollide = angle <= 58 or angle >= 122
 					item.CanQuery = false
 				end
 			end
@@ -1068,6 +1070,18 @@ end
 local PLAZA = CFrame.new(0, 0, -157) * CFrame.Angles(0, math.pi, 0)
 local VOLCANO_Z = 111 -- studs behind the plaza's origin
 local VOLCANO_SCALE = 1.15
+local PLAZA_HEIGHT = 0.85 -- the volcano and the gate stand this share of their modelled height (owner: too near the ceiling)
+
+-- Squashes a piece toward the ground, keeping its width.
+local function shorten(model: Model)
+	for _, part in model:GetDescendants() do
+		if part:IsA("MeshPart") then
+			local at = part.Position
+			part.Size = Vector3.new(part.Size.X, part.Size.Y * PLAZA_HEIGHT, part.Size.Z)
+			part.Position = Vector3.new(at.X, at.Y * PLAZA_HEIGHT, at.Z)
+		end
+	end
+end
 
 local function placeInPlaza(key: string): Model?
 	local model = place(key)
@@ -1105,7 +1119,7 @@ local function volcWall(a: number, y: number, offset: number): Vector3
 	return PLAZA
 		* Vector3.new(
 			(cx + math.cos(a) * r) * VOLCANO_SCALE,
-			y * VOLCANO_SCALE,
+			y * VOLCANO_SCALE * PLAZA_HEIGHT,
 			(cz + math.sin(a) * r) * VOLCANO_SCALE + VOLCANO_Z
 		)
 end
@@ -1113,6 +1127,7 @@ end
 local function buildVolcano()
 	local volcano = placeInPlaza("hub-volcano")
 	if volcano then
+		shorten(volcano)
 		-- The lava breathes, slowly.
 		for _, part in volcano:GetDescendants() do
 			if part:IsA("MeshPart") and (part.Name == "Flows" or part.Name == "Pool") then
@@ -1208,7 +1223,8 @@ local function buildVolcano()
 	end
 	-- The crater: what erupts is run by HubMotion.client.
 	local cx, cz = volcCentre(130)
-	local top = PLAZA * Vector3.new(cx * VOLCANO_SCALE, 147, cz * VOLCANO_SCALE + VOLCANO_Z)
+	local top = PLAZA
+		* Vector3.new(cx * VOLCANO_SCALE, 147 * PLAZA_HEIGHT, cz * VOLCANO_SCALE + VOLCANO_Z)
 	local crater = holder("Crater", top, Vector3.new(26, 1, 26))
 	CollectionService:AddTag(crater, "HubCrater")
 	local function emitter(name: string): ParticleEmitter
@@ -1348,13 +1364,14 @@ local function buildArch()
 	end
 	local arch = placeInPlaza("hub-arch")
 	if arch then
+		shorten(arch)
 		setMotion(arch, "ArchBits", 0, 1.3, 0.55, 0)
 	end
 	-- Fires on the pylons.
 	for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
 		for _, side in { -1, 1 } do
 			local position = PLAZA
-				* Vector3.new(side * spot[1] * 5, (spot[3] + 0.42) * 5, spot[2] * 5)
+				* Vector3.new(side * spot[1] * 5, (spot[3] + 0.42) * 5 * PLAZA_HEIGHT, spot[2] * 5)
 			local source = holder("PylonFire", position, Vector3.new(4, 1, 4))
 			local flames = Instance.new("ParticleEmitter")
 			flames.Texture = fxTexture("flame")
@@ -1411,9 +1428,9 @@ local GROVE_KEYS = {
 	"hub-grove-gems",
 }
 local GROVE_FALL_TIERS = {
-	{ y0 = 16.8, y1 = 11.2, x = 0.5, w0 = 0.35, w1 = 0.6 },
-	{ y0 = 11.15, y1 = 5.6, x = 0.1, w0 = 0.7, w1 = 1.15 },
-	{ y0 = 5.55, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
+	{ y0 = 19.2, y1 = 12.8, x = 0.5, w0 = 0.35, w1 = 0.6 },
+	{ y0 = 12.75, y1 = 6.4, x = 0.1, w0 = 0.7, w1 = 1.15 },
+	{ y0 = 6.35, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
 }
 local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
 local GROVE_TINT = Color3.fromRGB(150, 245, 225)
@@ -1430,8 +1447,8 @@ end
 
 -- The falls' face, as groveFallZ in the concept.
 local function groveFallZ(y: number): number
-	local authored = 26 - 0.94 * 18.5 * (0.36 + 0.64 * math.max(1 - y / 0.7 / 31, 0) ^ 1.05)
-	return 8.6 + (authored - 8.6) * 0.7
+	local up = math.clamp((y / 0.85 + 0.8) / 39, 0, 1) ^ (1 / 1.3)
+	return 8.6 + (30 - 0.94 * 22.5 * (1 - up) - 8.6) * 0.85
 end
 
 local function groveFlow(
@@ -1593,6 +1610,78 @@ local function groveSlugModels()
 	template:Destroy()
 end
 
+-- The big trees are the approved giant mushroom, with its roots, mound and sprouts, in the colours nearest the concept's.
+local TREE_COLOURS =
+	{ [0] = "mushroom-13", [1] = "mushroom-12", [2] = "mushroom-5", [3] = "mushroom-3" }
+local TREE_GLOW = 0.3 -- their caps are far bigger on screen here than in the look test, and blew out to white
+local function groveTreeModels()
+	local lobby = require(ServerStorage:WaitForChild("LobbyAssets")) :: any
+	local materials = ServerStorage:WaitForChild("LobbyMaterials")
+	local cache: { [string]: Model } = {}
+	local function template(key: string): Model?
+		if cache[key] then
+			return cache[key]
+		end
+		local info = lobby.assets[key]
+		local ok, container = pcall(function()
+			return InsertService:LoadAsset(info.model)
+		end)
+		if not ok then
+			warn(`HubArt: {key} failed to load: {container}`)
+			workspace:SetAttribute(
+				"HubArtFailed",
+				(workspace:GetAttribute("HubArtFailed") or 0) + 1
+			)
+			return nil
+		end
+		local model = Instance.new("Model")
+		model.Name = key
+		for _, child in (container :: Instance):GetDescendants() do
+			if child:IsA("MeshPart") then
+				child.Parent = model
+			end
+		end
+		(container :: Instance):Destroy()
+		LookPack.styleModel(model, key, info.groups, materials, TREE_GLOW)
+		for _, part in model:GetDescendants() do
+			if part:IsA("MeshPart") then
+				part.Anchored = true
+				part.CanCollide, part.CanQuery, part.CanTouch = false, false, false
+				part.CastShadow = false
+			end
+		end
+		-- Its foot, in the middle of its roots at the ground.
+		local lo, hi = paintedBounds(model)
+		model.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
+		cache[key] = model
+		return model
+	end
+	local group = Instance.new("Model")
+	group.Name = "GroveTrees"
+	group.Parent = art
+	for index, site in groveTrees do
+		local source = template(TREE_COLOURS[site.colour])
+		if source then
+			local tree = source:Clone()
+			local lo, hi = paintedBounds(tree)
+			tree:ScaleTo(tree:GetScale() * site.height / (hi.Y - lo.Y))
+			tree:PivotTo(
+				CFrame.new(GROVE * Vector3.new(site.x, site.y, site.z))
+					* CFrame.Angles(0, index * 1.9, 0)
+			)
+			tree.Parent = group
+			for _, part in tree:GetDescendants() do
+				if part:IsA("MeshPart") and part.Name == "Stem" then
+					table.insert(solidQueue, part)
+				end
+			end
+		end
+	end
+	for _, model in cache do
+		model:Destroy()
+	end
+end
+
 local function buildGrove()
 	for _, key in GROVE_KEYS do
 		local model = place(key)
@@ -1600,6 +1689,7 @@ local function buildGrove()
 			model:PivotTo(GROVE * model:GetPivot())
 		end
 	end
+	groveTreeModels()
 	groveWater()
 	groveSlugModels()
 end
