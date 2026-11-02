@@ -36,6 +36,20 @@ Tuning.values = {
 	-- Third-person arm reaching across the body.
 	aimTwist = 45,
 	aimInward = 40,
+	-- Being hit (owner, 2026-11-02): severity is hitBase + damage / hitFull, so at 40 damage the values below play in full.
+	hitBase = 0.12,
+	hitFull = 40,
+	hitMax = 1.5,
+	hitRecovery = 1, -- speed of the whole reaction
+	hitLean = 34, -- chest (deg)
+	hitHead = 26, -- head, on top of the chest (deg)
+	hitArms = 60, -- arms left behind (deg)
+	hitShove = 0.6, -- hips pushed along the hit (studs); the body only, not the player's position
+	hitClip = 0.5, -- share of the flinch clip at a full reaction, standing only
+	hitActionShare = 0.6, -- share kept in slides, flips and wall runs, so the move stays readable
+	hitViewRoll = 7, -- deg
+	hitViewShove = 0.4, -- studs
+	hitViewLens = 5, -- field of view (deg)
 	-- Shot and movement reactions.
 	kickBase = 22,
 	kickCharge = 10,
@@ -155,6 +169,19 @@ Tuning.Entries = {
 	entry("recoveryTime", "Total time (s)", "Floppy burrow", 1, 3, 0.05),
 	entry("skidLength", "Belly skid", "Floppy burrow", 0, 2, 0.05),
 	entry("wiggle", "Wiggle", "Floppy burrow", 0, 2, 0.05),
+	entry("hitFull", "Damage for a full reaction", "Getting hit", 10, 100, 1),
+	entry("hitBase", "Base for any hit", "Getting hit", 0, 0.5, 0.01),
+	entry("hitMax", "Biggest reaction", "Getting hit", 0.5, 2, 0.05),
+	entry("hitRecovery", "Speed", "Getting hit", 0.1, 2, 0.05),
+	entry("hitLean", "Chest (deg)", "Getting hit", 0, 60, 1),
+	entry("hitHead", "Head (deg)", "Getting hit", 0, 50, 1),
+	entry("hitArms", "Arms (deg)", "Getting hit", 0, 110, 1),
+	entry("hitShove", "Hips pushed (studs)", "Getting hit", 0, 1.5, 0.01),
+	entry("hitClip", "Flinch clip share", "Getting hit", 0, 1, 0.01),
+	entry("hitActionShare", "Share in slides and flips", "Getting hit", 0, 1, 0.01),
+	entry("hitViewRoll", "View roll (deg)", "Getting hit", 0, 20, 0.5),
+	entry("hitViewShove", "View shove (studs)", "Getting hit", 0, 1.5, 0.01),
+	entry("hitViewLens", "View widen (deg)", "Getting hit", 0, 15, 0.5),
 } :: { Entry }
 
 return Tuning

@@ -1553,3 +1553,9 @@
 
 - Owner asked for all uncommitted UI work to be committed and pushed to main with no conflicts, and docs updated. Merged main's 64 newer commits first; only `AdsSight` and notes conflicted. See [PvP UI](pvp-ui.md).
 - Later owner notes this round: slime must stay behind the slider knob; lost health flashes red; drips stop when their goo is gone; five slots; inventory on E, small and expanding; ADS kicks must be felt without hurting aim.
+
+## 2026-11-02 - Hit reactions and clone test
+
+- Owner asked for reactions proportional to damage ("the more damage that's done, the more you should move. And be more hurt") and queried the lack of one while sliding and jumping. Built as a spring layered over every state; see [combat](combat.md#damage-scaled-hit-reaction-2026-11-02).
+- Owner asked whether UI textures and Floppy stay on their account. A clone test confirmed the assets do, and that private places need `private-assets/` or a re-upload. Found the GitHub repository is public and told the owner.
+- Owner tested hit reactions and asked to remove the low-health slump: it looks poor, could distract players and hides hit reactions. Removed.
