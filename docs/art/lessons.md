@@ -268,3 +268,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Build a surface from the approved parts:** a noisy cone painted like rock never read as Slugterra; rebuilding from the lining's actual block shape did in one pass. Square tops still read as a ruined castle until the slants and height differences were strong.
 - **Give hero objects their own random stream in generators:** changing the mountain's placements moved every Floppy away from the camera and the arrival side.
 - **Check file times after a batch render:** one silently failed render left an old mountain in a sheet that looked plausible.
+- **Upright blocks read as a castle, slope-following plates as a mountain:** the same rock works once it's sheared along the slope, with ridges and an uneven outline. Too regular a profile just turns it into cones or a tiled pyramid.
+- **Keep concept renders gentle:** `--gentle` splits each frame into five times as many bands and rests between them, about doubling the time but leaving the PC usable.

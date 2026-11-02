@@ -9,7 +9,10 @@
 - **Owner feedback on v1:** the rest is fine but the mountain looks bad and not Slugterra. Its surface should use the volcano's and whirlpool lining's rock, wider and taller, with three peaks of different heights and looks, the middle tallest.
 - **Implemented, rendered offline and inspected (v2):** the mountain is built from rings of angular rock columns with dark joints, in the rock wall's stone with plate tints and fractures. Middle peak about 170 studs with a crown of spires, a heavy broken left peak at 120, a thin leaning right peak at 95, about 250 across, under the ceiling at 225. Each waterfall tier runs in a gorge cut through the columns.
 - **Known flaw:** one small flower sits buried in a boulder near the close-up. The silhouette's middle crown can read slightly castle-like. The new rock takes about three times as long to render, and has no Roblox cost measured yet.
-- **Unresolved:** the owner's verdict on v2, footprint fit against neighbouring zones.
+- **Owner feedback on v2:** it looks like a castle and should look like a mountain again; once that's done, it's good to go into Roblox.
+- **Implemented, rendered offline and inspected (v3):** the same rock laid along the slopes as broken plates, with ridges from each summit. Middle peak about 170 studs, left about 125, right about 100; footprint about 320 by 290 studs measured from the placement shape, against 130 in the block-out. Renders now take `--gentle` in `tools/lobby/render_plaza.py`, after the owner's PC lagged during earlier runs.
+- **Known flaw:** a small flower head still pokes out of one boulder.
+- **Unresolved:** where such a large footprint fits in the slug zone, which the Roblox build must settle.
 
 ## 2026-11-02 - Automatic mobile check
 
