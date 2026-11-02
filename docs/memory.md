@@ -1,5 +1,13 @@
 # Project memory
 
+## 2026-11-02 - Commit and push the completed work onto main
+
+- **Confirmed:** owner explicitly requested committing/pushing this conversation's ADS/movement fixes and generated assets onto `main`, including the volcano already used by Claude.
+- **Implemented:** isolated delivery merges tested `ec34137`, committed lobby `c62124e` and concept checkpoint `fc8b14a`. Latest controller/ADS source retained during old lobby conflicts; current game implementation of the volcano retained. Full browser viewer and portable fern/flower GLBs now have a local, licensed, hashed source backup.
+- **Verified:** combat/movement/foundation checks; normal/check lobby builds; full creature verification with the audited existing Blender; browser JS syntax and 168 snapshot hashes; no restricted paths, credentials or hard-coded numeric Roblox asset-ID literals in changed text. [Review](reviews/2026-11-02-main-delivery.md).
+- **Preserved:** Claude's active uncommitted PvP UI work. No experience publication; existing art approval, device/multiplayer and unchanged vault-test limits remain recorded. GitHub Actions provides the remote foundation/movement result.
+
+
 ## 2026-11-02 - Seated ADS mechanism and clear aiming frame
 
 - **Confirmed (owner):** screenshots show parts poking through the opening frame and a mechanism hovering too far backward. Retain the clean Valorant-style open-frame direction; move/seat the mechanism forward and flat on the gun.
