@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-02",
+  "branch": "fix/wallrun-space",
+  "base": "d61bc52",
+  "offline": "tools/verify_combat.py passes: foundation/movement/combat format, lint, strict types and public/private builds",
+  "native": {
+    "environment": "Studio 0.745.0.7451137, one client/server, original clips, disposable 900 x 100 wall",
+    "holdSeconds": 6,
+    "holdSamples": 362,
+    "riseStuds": 54.44080829620361,
+    "editorFocusResets": 0,
+    "passed": [
+      "four tap lengths remain attached",
+      "reversal remains attached",
+      "along-wall fresh press at lip does not mantle",
+      "same-frame outward diagonal at lip reaches WallHop",
+      "launch follows requested outward direction",
+      "held wall kick is not stolen by automatic mantle",
+      "both forward and reverse outward diagonals jump immediately",
+      "respawn/re-attach between cases",
+      "deliberate into-wall fresh press at lip reaches Mantle"
+    ],
+    "otherFailure": "Unchanged Clips.spec:95 kong-vault end-pose assertion remains outside this fix"
+  },
+  "limits": [
+    "Physical keyboard/controller/touch not driven; probe invokes actual bound jump handler with a world-input override",
+    "Actual curved-corner outward strafe not driven: numeric intent and existing native corner-raycast tests pass",
+    "No multiplayer or owner feel approval"
+  ],
+  "testFixtureNotes": [
+    "Regression generator now copies the driver to .client.luau and asserts LocalScript class; a plain .luau path had silently mapped ModuleScript",
+    "Respawn cases respect the existing three-second cooldown",
+    "Scripted hold recovery can handle editor focus loss; final pass recorded zero focus resets"
+  ],
+  "range": "build/SlugshotWallJumpDiagonalRange.rbxlx overlays only movement client/shared from this worktree onto current private PvP UI project; no concurrent files edited"
+}

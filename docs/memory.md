@@ -1,5 +1,14 @@
 # Project memory
 
+## 2026-11-02 - Responsive wall-run diagonals and mantle priority
+
+- **Confirmed (owner):** outward W+A/W+D/A+S/D+S combinations should jump off responsively. Mantle should occur less often specifically when trying to leave a wall run; retain deliberate mantle elsewhere.
+- **Implemented:** removed the outward-predominance test, sampled current bindings before smoothing, and passed that direction into the launch. Explicit outward lateral input overrides corner-following protection. Near-top wall-run mantle requires deliberate inward input (0.65); an outward Jump is prioritized and its held press cannot subsequently auto-mantle. Ground ledge rules, climb holds and release-height taps remain.
+- **Verified:** complete offline combat/movement/foundation checks; one native Studio driver pass with 362 hold samples, 54.44-stud six-second rise, taps/reversal, immediate forward/reverse outward diagonals, lip jump priority, no automatic mantle takeover, repeated respawn/re-attachment, and deliberate into-wall mantle. [Evidence](evidence/2026-11-02-walljump-diagonals.json). Unchanged vault end-pose assertion remains separate.
+- **Handoff:** `build/SlugshotWallJumpDiagonalRange.rbxlx` in this worktree overlays movement only onto the latest concurrent PvP UI project, preserving uncommitted UI/asset mappings without editing its files. Prior committed UI changes were fast-forwarded into the isolated fix branch.
+- **Unresolved:** owner feel, physical controls, curved-corner outward strafe and peer/network checks. Nothing merged into main or published.
+
+
 ## 2026-11-02 - Wall-run Space height controls
 
 - **Confirmed (owner):** holding Space gradually descends after a few seconds; short height adjustments sometimes jump off, especially near corners/floor. Fix both.
