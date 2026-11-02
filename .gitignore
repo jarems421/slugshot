@@ -1,4 +1,6 @@
 /build/
+/site-volcano/
+/volcano-site*.tar.gz
 /sourcemap.json
 /roblox.yml
 /.tools/

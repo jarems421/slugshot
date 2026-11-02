@@ -13,6 +13,8 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Movement lab and playtest plan](movement.md)
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Asset register and conventions](assets.md)
+- [Complete local environment preview](art/environment-preview/README.md)
+- [General shop concept](art/general-shop.md), [shop reference research](research/slugterra-shops.md) and [reusable curled cave fern](art/curled-cave-fern.md)
 - [Slug asset pipeline](slugs/pipeline.md), [rig contract](slugs/rig-specification.md), [species guide](slugs/species-guide.md), [transformation API](slugs/transformation-system.md), [Studio import](slugs/studio-import.md) and [evidence](slugs/verification.md)
 - [Slug design catalogue and records](slugs/catalog/index.md)
 - [Visual style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md) [Slugterra environment research](research/slugterra-environment.md), [art lessons](art/lessons.md), [look pack](art/look-pack.md) and the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr)

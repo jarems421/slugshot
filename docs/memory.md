@@ -1,5 +1,14 @@
 # Project memory
 
+## 2026-11-02 - Pod-house shop and mist chasm
+
+- **Confirmed (owner):** rejected brown/conventional architecture; supplied screenshots `Screenshot 2026-11-02 064726.png` and `064735.png` showing clustered round pods around a tree, portholes and a giant blue fungal canopy. References guide categories; all authored geometry remains original.
+- **Confirmed (owner):** suspend the shop over an apparently endless pit with rising mist, cool exotic flowers, mushrooms and an ordinary safe bridge. Every new flower must also be a separate reusable asset.
+- **Implemented in concept:** pale mint/blue/lavender pods, canopy/trunk, chasm depth/mist, 12-stud-clear bridge with continuous guards, Tidefan Bloom, Mistbell and Coil Orchid GLB/source downloads. [Record/evidence](art/general-shop.md).
+- **Confirmed requested interaction direction:** jumping into shop chasm gradually fades the screen to black then respawns at the spawn point; owner says the whirlpool has the same behavior with a white fade. This is recorded intent, not verified game behavior; no concurrent gameplay code changed.
+- **Unresolved:** owner approval of new shape/flowers, final lobby fit, NPC, production meshes, Roblox collision, fade/respawn implementation and device performance.
+
+
 ## 2026-11-01 - Hub designs in Roblox, owner review rounds
 
 - **Owner request:** put the final designs in the lobby now at high quality, playable on a phone, and build the rest around them.
@@ -892,3 +901,23 @@
 - **Confirmed:** owner liked the sores and asked for brighter, really glowing antenna bulbs, then made this the final Floppy design.
 - **Implemented/verified offline:** luminous bulb cores (Roblox emission follows surface colour), head-bone PointLight, repaint, export, private re-upload (Approved), test place rebuilt and reopened; page updated. luau-lsp and Selene clean.
 - **Unresolved:** owner Studio check.
+
+## 2026-11-01 - Remaining lobby concepts
+
+**Implemented/verified:** first original general shop concept deployed privately with orbit/interior/roof-off views. Door animation, live and no-WebGL view controls, mobile layout, and existing volcano/fern routes checked. [Shop evidence](art/general-shop.md). Working name is *The Burrow Exchange*. **Unresolved:** owner art/name/layout approval and game implementation.
+
+**Confirmed:** owner approved the volcano and requested the general shop next: closer to medium size, future interactive shopping hub, researched from Slugterra's real shop-style buildings. **Implemented:** [research](research/slugterra-shops.md), using Barton and Spinks, official *The Trade* thumbnails and a production layout as references; an original [Burrow Exchange concept](art/general-shop.md) is being reviewed offline. **Unresolved:** owner shop verdict, name and game implementation.
+
+**Confirmed:** owner wants the last volcano adjustments: curled cave ferns near its foot, a stronger/smoother eruption, and the fern as a separately reusable asset. **Implemented/verified offline/browser:** shared fern generator, standalone preview and GLB/source downloads; continuous eruption jets and cheaper interpolated fallback drawing. Live/fallback controls, downloads, mobile layout, timing and GLB structure pass. [Study 05](art/remaining-concepts.md#volcano-study-05-and-reusable-fern-2026-11-01), [fern asset](art/curled-cave-fern.md). **Unresolved:** final owner verdict, layout fitting and Studio.
+
+**Confirmed:** owner likes volcano study 03; requests existing red/gold/orange crystal designs mixed with mushrooms and more visible lava flow/spurts. **Implemented/verified in browser:** study 04 reuses six library layouts, with 12 scatter sites, faster liquid motion and smoother droplets/trails; animated effects also work in the no-WebGL turntable. [Record/evidence](art/remaining-concepts.md#volcano-study-04-2026-11-01). **Unresolved:** final owner verdict, layout fitting and Studio.
+
+**Confirmed:** owner rejected the volcano as bland/generic and requested the approved island/Maelstrom treatment. **Implemented/verified in browser:** study 03 has painted/inked fracture plates, richer molten channels, lit crater, diffuse smoke, arcing bursts and grouped fantasy accents; 36 angles inspected, fallback controls and mobile fit checked. [Evidence and limits](art/remaining-concepts.md#volcano-study-03-2026-11-01). **Unresolved:** owner art verdict, the broader footprint, walking route and Studio.
+
+**Confirmed:** Owner provided volcano references and requested integral jagged rock, lava in creases, diffuse fading smoke, periodic lava spurts, distinctive fantasy glow and a base accent. The specific greenery or other accent is undecided; retain the Slugterra-inspired art direction.
+
+**Implemented/verified:** private volcano concept site deployed with pre-rendered turntable fallback; Chrome screenshot checked with WebGL disabled. **Unresolved:** owner-device interaction and art review.
+
+**Implemented:** first interactive [volcano blockout](art/volcano-concept/index.html); inspected Chrome screenshot. **Unresolved:** owner art review and Studio validation. The blockout uses a separate procedural browser mesh rather than the existing shader-to-Blender route.
+
+**Confirmed:** Owner requested rotatable concepts for the combined mountain/waterfall/pond, volcano, general shop and its NPC. **Implemented:** isolated experiment/lobby-concepts worktree and concept brief, using the current lobby layout. **Unresolved:** concepts and owner art approval.

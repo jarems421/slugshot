@@ -1,5 +1,30 @@
 # Art direction and asset library lessons
 
+### Pod-house shop feedback (2026-11-02)
+
+- **Confirmed:** "like the houses" referred to clustered rounded pods around an organic tree/fungal silhouette, not another arched retailer or a palette swap. Owner-provided screenshots resolved the ambiguity.
+- **Implemented:** replace the primary masses before dressing them. Keep dominant shells pale/cool, luminous details selective, and retain a readable general-shop entrance.
+- **Verified during browser review:** full-width horizontal mist cards protruded below the terrain as a stacked skirt. Constrain mist within the chasm, use inward-facing pit walls and extend surrounding ground beyond the framing. The concept is not evidence for Roblox VFX or collision.
+
+
+## General shop research and first concept, 2026-11-01
+
+**Confirmed:** owner approved the volcano and requested a researched Slugterra-inspired general shopping hub, closer to medium size. The shopkeeper and gameplay remain future work.
+
+**Implemented/verified:** [research](../research/slugterra-shops.md) found Barton and Spinks and inspected official episode storyboard thumbnails rather than relying on generic Western storefronts. The original concept combines rounded industrial architecture, muted teal/slate, warm energy accents, varied supplies and the existing fern. First browser review caught a plain side wall, an interior camera obstructed by a door, and an unfilled rear gable. A real round side window, revised camera and closed rear gable fix those issues. Full orbit views matter: front-only checks would have missed the roof gap. Exterior and roof-off turntables allow review on devices without WebGL. See [concept/evidence](general-shop.md); owner art verdict and Studio remain unresolved.
+
+## Volcano study, 2026-11-01
+
+**Confirmed, study 05:** owner called the lava spitting underwhelming and choppy, requested curled cave ferns at the base, then requested the fern separately for reuse. Whole-segment trail reveal introduced visible stepping; study 05 evaluates jet head/tail continuously and interpolates fallback path endpoints. Per-segment blurred strokes and resetting canvas dimensions on every frame also wasted fallback drawing work; filled ribbons and resize-on-change replace them. A 60 Hz timing check and phase sheet cover the movement, while owner-device smoothness still needs review. One shared fern generator now serves the dressing, isolated preview and GLB export; see [fern record](curled-cave-fern.md).
+
+**Confirmed follow-up:** owner likes study 03, but wants the already-authored crystal family instead of simple cones at the foot, in red/gold/orange with varied designs and mushrooms. Reuse the library's layout parameters and hexagonal prism/tip forms; keep provenance explicit when the browser reconstructs source definitions rather than loading exported GLBs. For browser devices without WebGL, a static turntable plus smoke does not show downhill lava motion: study 04 uses projected ribbon/fountain paths for animated fallback effects. Final appearance is pending owner review.
+
+**Confirmed owner feedback:** the early volcano was bland, generic, without vibrancy or liveliness. It must belong with the approved spawn island and Maelstrom, with jagged rock forming the walls, molten creases, diffuse smoke and occasional lava spurts. Source images guide shape and behaviour; the project's illustrated cavern treatment guides the finish.
+
+**Implemented/verified in browser review:** plain grey material and a generic cone do not reproduce the library's painted variation, dark ink, coloured shadows and surface glow. The revised study adds those explicitly and is documented in [remaining concepts](remaining-concepts.md#volcano-study-03-2026-11-01). Visually inspecting the first revision caught overly smooth walls and fine speckled lava; broader fracture planes and larger crust patterns replaced them. Two inward-facing surfaces (crater bowl and top of the bedrock foot) were corrected after they rendered as dark voids. Broken, locally staggered joints replaced continuous ring-like seams; the earlier rejection of uniform horizontal strata remains relevant.
+
+**Unresolved:** owner art verdict and Studio. Browser improvements are concept evidence, not proof of final Roblox appearance. A wider visual silhouette must be fitted to the approved lobby before placement.
+
 What was hard during the lobby art-direction and concept rounds of 2026-10-31 to 2026-11-01, and how each problem was solved. Read this before the next environment or prop concept task so the same ground is not covered twice. Owner phrasing that took several rounds to decode is in [owner design language](../slugs/owner-design-language.md#environment-and-art-direction-2026-10-31-to-11-01).
 
 ## Final state

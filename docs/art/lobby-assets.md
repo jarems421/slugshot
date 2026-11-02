@@ -1,5 +1,9 @@
 # Lobby asset plan
 
+**Implemented as a browser concept, 2026-11-01:** original [general shop](general-shop.md), with exterior, walk-in interior and roof-off review views, informed by [actual Slugterra shop research](../research/slugterra-shops.md). Name, art, layout and production remain subject to owner review. The shopkeeper and game purchases are not implemented.
+
+**Implemented as a reusable browser concept, 2026-11-01:** [curled cave fern](curled-cave-fern.md), with an isolated 3D preview, editable generator and portable GLB download. Shared by the volcano dressing and the individual asset. Owner art approval and Studio import/performance remain unresolved.
+
 The props and kits the lobby needs, to be authored in Blender so the space looks deliberately designed and hand-made, not assembled from generated or free models. Every asset follows the [style guide](style-guide.md); the order of work follows the [lobby roadmap](lobby-roadmap.md).
 
 Research basis: [Slugterra environment research](../research/slugterra-environment.md).
