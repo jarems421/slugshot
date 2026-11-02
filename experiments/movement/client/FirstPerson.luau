@@ -7,6 +7,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Config = require(ReplicatedStorage:WaitForChild("MovementExperiment"):WaitForChild("Config"))
+local Keybinds = require(script.Parent.Keybinds)
 
 local FirstPerson = {}
 local FIRST = 0.5 -- Roblox's first-person zoom distance
@@ -38,11 +39,21 @@ local function enter()
 	player.CameraMaxZoomDistance = FIRST
 end
 
+-- A wheel bound to an action must not also zoom, so third person holds its distance.
+local function thirdPersonLimits()
+	local closest, furthest = THIRD_MIN, THIRD_MAX
+	if Keybinds.wheelTaken() then
+		closest = math.clamp(zoom(), THIRD_MIN, THIRD_MAX)
+		furthest = closest
+	end
+	player.CameraMaxZoomDistance = furthest
+	player.CameraMinZoomDistance = closest
+end
+
 local function exit()
 	wanted = false
 	player.CameraMode = Enum.CameraMode.Classic
-	player.CameraMaxZoomDistance = THIRD_MAX
-	player.CameraMinZoomDistance = THIRD_MIN
+	thirdPersonLimits()
 end
 
 -- Share the same mode switch between scroll input and programmatic callers.
@@ -66,13 +77,27 @@ function FirstPerson.start()
 	end
 	started = true
 	UserInputService.InputChanged:Connect(function(input, processed)
-		if processed or input.UserInputType ~= Enum.UserInputType.MouseWheel then
+		if
+			processed
+			or input.UserInputType ~= Enum.UserInputType.MouseWheel
+			or Keybinds.wheelTaken()
+		then
 			return
 		end
 		if not wanted and input.Position.Z > 0 and zoom() <= THIRD_MIN + 1 then
 			FirstPerson.setActive(true)
 		elseif wanted and input.Position.Z < 0 then
 			FirstPerson.setActive(false)
+		end
+	end)
+	Keybinds.on("firstPerson", function(pressed)
+		if pressed then
+			FirstPerson.setActive(not wanted)
+		end
+	end)
+	Keybinds.onChanged(function()
+		if not wanted then
+			thirdPersonLimits()
 		end
 	end)
 	-- A new character starts in third person (the movement client sets its limits).

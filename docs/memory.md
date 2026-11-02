@@ -1183,3 +1183,9 @@
 
 - **Running cadence request, 2026-10-31:** owner again asks for less smooth/more robust hands like third person; calls “glitchy” the closest word. Contextual interpretation is crisper stroke beats/holds/reversals, not literal stutter, random shake or lower FPS. Still awaiting owner confirmation.
 - **Implemented/verified:** remove additional steady free-run pose rounding after the entry blend; apply a bounded four-degree source-angle accent around the Run midpoint (20 degrees). No new clock; pointing/idle/actions retain their filters, shortened length and forward/down lean remain. Full combat checks pass. Native ~60 FPS samples show rendered/source angular peaks ~1745/1946 before and ~2247/1993 deg/s after, zero induced camera pitch and no missing visual rig; arm copies stay 1.5685488 studs and source arms 2. Idle/run tap, run charge and flip tap accepted. These are sampled traces, not proof of better subjective feel. [Evidence](evidence/2026-10-31-running-stroke-accent.json). Owner running approval remains open; pre-change source is checkpointed under ignored build storage.
+
+## 2026-11-02 - PvP UI build
+
+- Owner chose version 1 of the refined comic direction, with version 2's softer slug bar, slightly smaller slugs in slots and the neutral Moonlight accent, because it suits every slug's colours. Four slots, 13 slugs in total, sprint Toggle by default.
+- Owner dislikes spinning slot icons (wants small animations and a smile) and the crosshair drawing under menus (fixed with a higher display order).
+- Roblox exposes no usable side mouse buttons; the F13/F14 route is untested. Hover cannot show health in play because the cursor is locked. Status and limits: [status](status.md).

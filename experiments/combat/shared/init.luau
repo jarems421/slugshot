@@ -16,6 +16,7 @@ export type Slug = {
 	Tumble: number, -- end-over-end turns per second in flight
 	Size: number, -- visual height outside the barrel (studs); used through flight and recovery
 	Transforms: boolean, -- Floppy is the one slug that never transforms
+	Blurb: string, -- one line for the inventory
 }
 
 Combat.MaxHealth = 100
@@ -50,6 +51,8 @@ Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 
 -- Slot order; switching between slots comes with the second slug.
 Combat.Loadout = { "Floppy" }
+Combat.SlotCount = 4 -- owner, 2026-11-01: four carried slugs for now
+Combat.SlugTotal = 13 -- owner, 2026-11-01: Floppy plus twelve planned models
 
 Combat.Slugs = {
 	-- Weakest slug: a droopy, tumbling flop that lands short of other slugs. 7 damage, no
@@ -64,6 +67,7 @@ Combat.Slugs = {
 		Tumble = 2,
 		Size = 1, -- owner, 2026-11-01: permanent Floppy size outside the gun
 		Transforms = false,
+		Blurb = "A drowsy, soft little slug.",
 	},
 } :: { [string]: Slug }
 

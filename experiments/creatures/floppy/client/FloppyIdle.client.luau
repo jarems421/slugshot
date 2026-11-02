@@ -6,6 +6,7 @@
 -- loaded in the equipped blaster. Each Floppy's own frame comes from its bones
 -- (eye to eye is sideways, root to head is up), so a Floppy lying in the gun
 -- moves the same way relative to himself.
+local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
 local TAU = 2 * math.pi
@@ -113,12 +114,21 @@ for _, d in workspace:GetDescendants() do
 	consider(d)
 end
 workspace.DescendantAdded:Connect(consider)
+-- Inventory and slot icons live in viewports, outside the workspace.
+for _, icon in CollectionService:GetTagged("SlugIcon") do
+	task.defer(setup, icon :: Model)
+end
+CollectionService:GetInstanceAddedSignal("SlugIcon"):Connect(function(icon: Instance)
+	task.defer(setup, icon :: Model)
+end)
 
 local start = os.clock()
 RunService.RenderStepped:Connect(function()
 	local t = (os.clock() - start) % LOOP
 	for model, motion in floppies do
-		if not model:IsDescendantOf(workspace) then
+		if
+			not model:IsDescendantOf(workspace) and not CollectionService:HasTag(model, "SlugIcon")
+		then
 			floppies[model] = nil
 			continue
 		end

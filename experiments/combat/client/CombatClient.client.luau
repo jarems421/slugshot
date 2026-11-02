@@ -2,17 +2,17 @@
 -- Firing slugs: hold LMB (or R2) with the blaster out to charge, release to fire. A
 -- tap still fires at a decent speed; a full charge is faster and droops less. The
 -- shot flies on this screen at once and is sent to the server, which judges it.
--- One slot for now (Floppy); the ammo HUD shows its cooldown.
+-- One slug for now (Floppy); the slug bar shows its cooldown.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local ContextActionService = game:GetService("ContextActionService")
 local HapticService = game:GetService("HapticService")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local Visuals = require(script.Parent:WaitForChild("SlugVisuals"))
 local Viewmodel = require(script.Parent:WaitForChild("Viewmodel"))
+local Hud = require(script.Parent:WaitForChild("PvpHud"))
 Viewmodel.start()
 
 local player = Players.LocalPlayer
@@ -23,6 +23,7 @@ local Recoil = (require :: any)(movement:WaitForChild("BlasterRecoil"))
 local Ads = (require :: any)(movement:WaitForChild("Ads"))
 local FirstPerson = (require :: any)(movement:WaitForChild("FirstPerson"))
 local Reticle = (require :: any)(movement:WaitForChild("Reticle"))
+local Keybinds = (require :: any)(movement:WaitForChild("Keybinds"))
 local remote = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
 local SLOT = 1
 local slugId = Combat.Loadout[SLOT]
@@ -39,68 +40,13 @@ local lastAccepted, lastRejected = 0, ""
 local lastRejectedId = 0
 
 -- HUD -------------------------------------------------------------------------------
-local gui = Instance.new("ScreenGui")
-gui.Name = "CombatHUD"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-
-local function corner(parent: Instance, radius: number)
-	local round = Instance.new("UICorner")
-	round.CornerRadius = UDim.new(0, radius)
-	round.Parent = parent
-end
-
-local slotFrame = Instance.new("Frame")
-slotFrame.Name = "Slot1"
-slotFrame.AnchorPoint = Vector2.new(1, 1)
-slotFrame.Position = UDim2.new(1, -24, 1, -24)
-slotFrame.Size = UDim2.fromOffset(96, 112)
-slotFrame.BackgroundColor3 = Color3.fromRGB(20, 26, 34)
-slotFrame.BackgroundTransparency = 0.2
-slotFrame.Parent = gui
-corner(slotFrame, 10)
-local view = Instance.new("ViewportFrame")
-view.Size = UDim2.fromOffset(96, 88)
-view.BackgroundTransparency = 1
-view.Ambient = Color3.fromRGB(200, 200, 200)
-view.LightColor = Color3.fromRGB(255, 250, 240)
-view.Parent = slotFrame
-local slotName = Instance.new("TextLabel")
-slotName.Position = UDim2.fromOffset(0, 86)
-slotName.Size = UDim2.fromOffset(96, 22)
-slotName.BackgroundTransparency = 1
-slotName.Font = Enum.Font.GothamBold
-slotName.TextSize = 14
-slotName.TextColor3 = Color3.fromRGB(229, 239, 248)
-slotName.Text = `1  {string.upper(slug.Label)}`
-slotName.Parent = slotFrame
-local slotScale = Instance.new("UIScale")
-slotScale.Parent = slotFrame
-local slotFlash = Instance.new("Frame") -- blinks when the slug returns
-slotFlash.Size = UDim2.fromScale(1, 1)
-slotFlash.BackgroundColor3 = Color3.fromRGB(215, 240, 160)
-slotFlash.BackgroundTransparency = 1
-slotFlash.ZIndex = 4
-slotFlash.Parent = slotFrame
-corner(slotFlash, 10)
-local RETURN_TWEEN = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-local wasCooling = false
-local shade = Instance.new("Frame") -- drains downward as the cooldown runs out
-shade.Size = UDim2.fromScale(1, 0)
-shade.BackgroundColor3 = Color3.new(0, 0, 0)
-shade.BackgroundTransparency = 0.35
-shade.ZIndex = 3
-shade.Parent = slotFrame
-corner(shade, 10)
-local countdown = Instance.new("TextLabel")
-countdown.Size = UDim2.fromScale(1, 0.8)
-countdown.BackgroundTransparency = 1
-countdown.Font = Enum.Font.GothamBlack
-countdown.TextSize = 30
-countdown.TextColor3 = Color3.new(1, 1, 1)
-countdown.TextStrokeTransparency = 0.4
-countdown.ZIndex = 4
-countdown.Parent = slotFrame
+Hud.create()
+local markerLayer = Instance.new("ScreenGui") -- above the menus, like the crosshair it marks
+markerLayer.Name = "HitMarker"
+markerLayer.ResetOnSpawn = false
+markerLayer.IgnoreGuiInset = true
+markerLayer.DisplayOrder = 100
+markerLayer.Parent = player:WaitForChild("PlayerGui")
 
 local marker = Instance.new("TextLabel") -- hit marker over the crosshair
 marker.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -112,32 +58,7 @@ marker.TextSize = 30
 marker.Text = "×"
 marker.TextColor3 = Color3.fromRGB(255, 214, 92)
 marker.TextTransparency = 1
-marker.Parent = gui
-gui.Parent = player:WaitForChild("PlayerGui")
-
--- The slot icon: the in-flight model, turning slowly.
-task.spawn(function()
-	local assets = ReplicatedStorage:WaitForChild("CombatAssets", 30)
-	if not assets then
-		return
-	end
-	local icon = Visuals.model(slugId)
-	local world = Instance.new("WorldModel")
-	icon.Parent = world
-	world.Parent = view
-	local camera = Instance.new("Camera")
-	camera.FieldOfView = 30
-	view.CurrentCamera = camera
-	camera.Parent = view
-	local centre = icon:GetPivot().Position
-	camera.CFrame =
-		CFrame.lookAt(centre + Vector3.new(0.35, 0.45, -1.35) * (slug.Size / 0.55), centre)
-	local turn = 0
-	RunService.RenderStepped:Connect(function(dt: number)
-		turn += dt * 0.8
-		icon:PivotTo(CFrame.new(centre) * CFrame.Angles(0, turn, 0))
-	end)
-end)
+marker.Parent = markerLayer
 
 -- Aim and fire -----------------------------------------------------------------------
 local function blaster(): Tool?
@@ -325,11 +246,6 @@ local function stepSpiral(tool: Tool, charge: number?, dt: number)
 	end
 end
 
-local function pressed(input: InputObject): boolean
-	return input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.KeyCode == Enum.KeyCode.ButtonR2
-end
-
 local function beginCharge(): boolean
 	if not AimCursor.menuOpen() and blaster() and os.clock() >= readyAt then
 		charging, chargeStart = true, os.clock()
@@ -345,34 +261,41 @@ local function releaseCharge()
 end
 
 -- Hold to aim down sights, first person only. Otherwise the button keeps its camera use.
-ContextActionService:BindActionAtPriority(
-	"SlugshotADS",
-	function(_, state)
-		if state == Enum.UserInputState.Begin then
-			if blaster() and FirstPerson.active() and not AimCursor.menuOpen() then
-				Ads.set(true)
-				return Enum.ContextActionResult.Sink
-			end
-		elseif state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel then
-			Ads.set(false)
+local function aimPressed(held: boolean)
+	if held then
+		if blaster() and FirstPerson.active() and not AimCursor.menuOpen() then
+			Ads.set(true)
 		end
-		return Enum.ContextActionResult.Pass
-	end,
-	false,
-	Enum.ContextActionPriority.High.Value,
-	Enum.UserInputType.MouseButton2,
-	Enum.KeyCode.ButtonL2
-)
+	else
+		Ads.set(false)
+	end
+end
+Keybinds.on("aim", aimPressed)
 
+Keybinds.on("fire", function(held: boolean)
+	if held then
+		beginCharge()
+	else
+		releaseCharge()
+	end
+end)
+
+-- Controllers keep their triggers; they are not rebindable yet.
 UserInputService.InputBegan:Connect(function(input, processed)
-	if processed or not pressed(input) then
+	if processed then
 		return
 	end
-	beginCharge()
+	if input.KeyCode == Enum.KeyCode.ButtonR2 then
+		beginCharge()
+	elseif input.KeyCode == Enum.KeyCode.ButtonL2 then
+		aimPressed(true)
+	end
 end)
 UserInputService.InputEnded:Connect(function(input)
-	if pressed(input) then
+	if input.KeyCode == Enum.KeyCode.ButtonR2 then
 		releaseCharge()
+	elseif input.KeyCode == Enum.KeyCode.ButtonL2 then
+		aimPressed(false)
 	end
 end)
 
@@ -560,16 +483,5 @@ RunService.RenderStepped:Connect(function()
 			end
 		end
 	end
-	local remaining = math.max(readyAt - now, 0)
-	if remaining <= 0 and wasCooling then
-		-- The slug is back in the gun: mark it on the slot. The canister glows from setCanister.
-		slotScale.Scale = 1.14
-		slotFlash.BackgroundTransparency = 0.45
-		TweenService:Create(slotScale, RETURN_TWEEN, { Scale = 1 }):Play()
-		TweenService:Create(slotFlash, RETURN_TWEEN, { BackgroundTransparency = 1 }):Play()
-	end
-	wasCooling = remaining > 0
-	shade.Size = UDim2.fromScale(1, remaining / Combat.Cooldown)
-	countdown.Text = if remaining > 0 then string.format("%.1f", remaining) else ""
-	slotFrame.BackgroundTransparency = if tool then 0.2 else 0.5
+	Hud.step(math.max(readyAt - now, 0), tool ~= nil)
 end)

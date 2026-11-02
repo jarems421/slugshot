@@ -19,6 +19,7 @@ local AimCursor = require(script.AimCursor)
 local Reticle = require(script.Reticle)
 local FirstPersonFlip = require(script.FirstPersonFlip)
 local AcrobaticCamera = require(script.AcrobaticCamera)
+local Keybinds = require(script.Keybinds)
 FirstPerson.start()
 local request = shared:WaitForChild("MovementRequest") :: RemoteEvent
 -- Roblox's own PlayerModule only exists at run time, so it is required untyped.
@@ -35,6 +36,7 @@ local character: Model? = nil
 local humanoid: Humanoid? = nil
 local root: BasePart? = nil
 local sprinting, aiming = false, false
+local sprintTapped, sprintLatched, sprintKeyHeld = false, false, false
 local speed, move = 0, Vector3.zero
 local sequence, pendingAction = 0, 0
 local airUsed = false
@@ -101,6 +103,7 @@ local aimGui = Instance.new("ScreenGui")
 aimGui.Name = "AimHUD"
 aimGui.ResetOnSpawn = false
 aimGui.IgnoreGuiInset = true
+aimGui.DisplayOrder = 100 -- the crosshair stays on top of every menu and button (owner)
 aimGui.Parent = gui.Parent
 local crosshair = Reticle.create(aimGui)
 
@@ -148,6 +151,7 @@ local function attach(newCharacter: Model)
 	FirstPerson.setLanding(0)
 	bouncing = false
 	sprinting, aiming, testMove = false, false, nil
+	sprintTapped = false
 	testUntil, testJumpUntil, pendingAction = 0, 0, 0
 	rays, overlap = Traversal.params(newCharacter)
 	hops, lastHop, lastMantle, lastGrounded = 0, -math.huge, -math.huge, os.clock()
@@ -925,10 +929,9 @@ local function bind(name: string, callback: any, title: string, ...: EnumItem)
 	ContextActionService:BindAction(name, callback, true, ...)
 	ContextActionService:SetTitle(name, title)
 end
--- Owner (2026-10-29): Shift slides (again stands up), double-tap W sprints until W is
--- released (gamepad: L3 until the stick is released). There is no ground roll.
-bind("ExperimentSlide", function(_, state)
-	if state == Enum.UserInputState.Begin then
+-- Owner (2026-10-29): Shift slides (again stands up). There is no ground roll.
+local function slidePressed(pressed: boolean)
+	if pressed then
 		slideHeld = true
 		if acro and acro.kind == "Slide" then
 			endSlide()
@@ -941,11 +944,19 @@ bind("ExperimentSlide", function(_, state)
 			-- the ground is simply refused.
 			slideBuffer = os.clock() + Acro.Slide.Buffer
 		end
-	elseif state == Enum.UserInputState.End then
+	else
 		slideHeld = false
 	end
+end
+Keybinds.on("slide", slidePressed)
+bind("ExperimentSlide", function(_, state)
+	if state == Enum.UserInputState.Begin then
+		slidePressed(true)
+	elseif state == Enum.UserInputState.End then
+		slidePressed(false)
+	end
 	return Enum.ContextActionResult.Sink
-end, "Slide", Enum.KeyCode.LeftShift, Enum.KeyCode.ButtonB)
+end, "Slide", Enum.KeyCode.ButtonB)
 local function setShiftLock(locked: boolean)
 	shiftLocked = locked
 	AimCursor.setShiftLocked(locked)
@@ -953,12 +964,11 @@ local function setShiftLock(locked: boolean)
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	end
 end
-bind("ExperimentShiftLock", function(_, state)
-	if state == Enum.UserInputState.Begin then
+Keybinds.on("shiftLock", function(pressed)
+	if pressed then
 		setShiftLock(not shiftLocked)
 	end
-	return Enum.ContextActionResult.Sink
-end, "Shift lock", Enum.KeyCode.LeftControl, Enum.KeyCode.RightControl)
+end)
 RunService:BindToRenderStep("SlugshotActionViewUndo", Enum.RenderPriority.First.Value, function()
 	local camera = appliedCamera
 	if camera and appliedView then
@@ -1029,27 +1039,35 @@ RunService:BindToRenderStep("SlugshotAimCursor", Enum.RenderPriority.Last.Value 
 		UserInputService.MouseIconEnabled = true
 	end
 end)
+-- Sprint (owner, 2026-11-01): the SprintMode setting is Toggle (default), Hold or Always. Double-tapping
+-- any direction also sprints until movement stops, as does L3 on a gamepad.
 bind("ExperimentSprint", function(_, state)
 	if state == Enum.UserInputState.Begin then
-		sprinting = true
+		sprintTapped = true
 	end
 	return Enum.ContextActionResult.Sink
 end, "Sprint", Enum.KeyCode.ButtonL3)
-local lastForwardTap = -math.huge
-UserInputService.InputBegan:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.W and not UserInputService:GetFocusedTextBox() then
-		local clock = os.clock()
-		if clock - lastForwardTap < Config.Lab.SprintDoubleTap then
-			sprinting = true
+Keybinds.on("sprint", function(pressed)
+	sprintKeyHeld = pressed
+	if pressed then
+		sprintLatched = not sprintLatched
+	end
+end)
+for _, direction in { "forward", "left", "back", "right" } do
+	local lastTap = -math.huge
+	Keybinds.on(direction, function(pressed)
+		if pressed then
+			local clock = os.clock()
+			if
+				clock - lastTap < Config.Lab.SprintDoubleTap
+				and player:GetAttribute("SprintDoubleTap") ~= false
+			then
+				sprintTapped = true
+			end
+			lastTap = clock
 		end
-		lastForwardTap = clock
-	end
-end)
-UserInputService.InputEnded:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.W then
-		sprinting = false
-	end
-end)
+	end)
+end
 if Config.Lab.Aim then
 	bind("ExperimentAim", function(_, state)
 		if state == Enum.UserInputState.Begin then
@@ -1096,31 +1114,37 @@ UserInputService.JumpRequest:Connect(function()
 	end
 	lastJumpRequest = clock
 end)
-UserInputService.InputBegan:Connect(function(input, processed)
-	if
-		not processed
-		and (input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA)
-	then
-		jumpHeld = true
+local function jumpKey(pressed: boolean)
+	jumpHeld = pressed
+	if pressed then
+		-- Roblox's controls do not see a jump key the player has moved.
+		if Keybinds.customMovement() then
+			testJumpUntil = os.clock() + 0.12
+		end
 		jumpPressed(true)
+	elseif
+		acro
+		and acro.kind == "WallRun"
+		and acro.pressedAt
+		and os.clock() - acro.pressedAt < Trav.WallRun.TapTime
+	then
+		endWallRun(workspace:GetServerTimeNow(), true)
+	end
+end
+Keybinds.on("jump", jumpKey)
+UserInputService.InputBegan:Connect(function(input, processed)
+	if not processed and input.KeyCode == Enum.KeyCode.ButtonA then
+		jumpKey(true)
 	end
 end)
 UserInputService.InputEnded:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
-		jumpHeld = false
-		if
-			acro
-			and acro.kind == "WallRun"
-			and acro.pressedAt
-			and os.clock() - acro.pressedAt < Trav.WallRun.TapTime
-		then
-			endWallRun(workspace:GetServerTimeNow(), true)
-		end
+	if input.KeyCode == Enum.KeyCode.ButtonA then
+		jumpKey(false)
 	end
 end)
 UserInputService.WindowFocusReleased:Connect(function()
 	jumpHeld = false
-	sprinting = false
+	sprintTapped = false
 	if aiming then
 		setAim(false)
 	end
@@ -1136,6 +1160,13 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		return
 	end
 	local raw = controls:GetMoveVector()
+	if Keybinds.customMovement() then
+		local function axis(action: string): number
+			return if Keybinds.held(action) then 1 else 0
+		end
+		raw += Vector3.new(axis("right") - axis("left"), 0, axis("back") - axis("forward"))
+		raw = if raw.Magnitude > 1 then raw.Unit else raw
+	end
 	local forward = Vector3.new(camera.CFrame.LookVector.X, 0, camera.CFrame.LookVector.Z)
 	forward = if forward.Magnitude > 0.01 then forward.Unit else Vector3.new(0, 0, -1)
 	local right = forward:Cross(Vector3.yAxis)
@@ -1148,8 +1179,15 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	desired = if desired.Magnitude > 1 then desired.Unit else desired
 	local settings = profile()
 	move = move:Lerp(desired, Math.alpha(settings.TurnRate, dt))
-	if sprinting and raw.Magnitude < 0.1 then
-		sprinting = false -- a gamepad sprint ends when the stick is released
+	if sprintTapped and raw.Magnitude < 0.1 then
+		sprintTapped = false -- a double-tap or gamepad sprint ends when movement stops
+	end
+	local sprintMode = player:GetAttribute("SprintMode")
+	sprinting = sprintTapped
+		or sprintMode == "Always"
+		or (if sprintMode == "Hold" then sprintKeyHeld else sprintLatched)
+	if player:GetAttribute("SprintActive") ~= sprinting then
+		player:SetAttribute("SprintActive", sprinting)
 	end
 	local target = if sprinting then settings.SprintSpeed else settings.RunSpeed
 	if bouncing and not acro and not airUsed and hops == 0 then
@@ -1507,13 +1545,16 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	-- ADS zoom narrows the view by a true magnification, and turning slows to match it.
 	local zoom = 1 + (Tuning.values.adsZoom - 1) * Ads.weight()
 	fov = 2 * math.deg(math.atan(math.tan(math.rad(fov / 2)) / zoom))
-	UserInputService.MouseDeltaSensitivity = 1 / zoom
+	local sensitivity =
+		player:GetAttribute(if Ads.wanted() then "AimSensitivity" else "LookSensitivity")
+	UserInputService.MouseDeltaSensitivity = ((sensitivity :: number?) or 50) / 50 / zoom
 	camera.FieldOfView += (fov - camera.FieldOfView) * Math.alpha(
 		if Ads.weight() > 0 or Ads.wanted() then 30 else Config.Camera.BlendRate,
 		dt
 	)
+	label.Visible = player:GetAttribute("PvpHud") ~= true
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  double-tap W sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
+		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  C or double-tap sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold Space: up, tap: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		if Config.Lab.Aim then "RMB aim Â· Click marker Â· " else "",
@@ -1661,7 +1702,7 @@ if RunService:IsStudio() then
 		if command == "Move" then
 			testMove, testUntil = value.direction, os.clock() + (value.duration or 1)
 		elseif command == "Sprint" then
-			sprinting = value
+			sprintTapped = value
 		elseif command == "Hurt" then
 			send("Hurt")
 		elseif command == "Jump" and humanoid then

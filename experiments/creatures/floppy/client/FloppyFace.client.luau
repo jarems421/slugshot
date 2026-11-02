@@ -3,6 +3,7 @@
 -- cycling automatically with smooth transitions, plus blinks, wandering eyes and small
 -- mouth movements. Runs on every Floppy in the workspace, including fired ones. Amounts are
 -- authored at source size and scaled by eye spacing, like FloppyIdle.
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -147,18 +148,30 @@ for _, item in workspace:GetDescendants() do
 	consider(item)
 end
 workspace.DescendantAdded:Connect(consider)
+-- Inventory and slot icons live in viewports, outside the workspace.
+for _, icon in CollectionService:GetTagged("SlugIcon") do
+	task.defer(setup, icon :: Model)
+end
+CollectionService:GetInstanceAddedSignal("SlugIcon"):Connect(function(icon: Instance)
+	task.defer(setup, icon :: Model)
+end)
 
 local function step(face: Face, dt: number, camera: Vector3)
 	face.clock += dt
 	local clock = face.clock
-	local want = EXPRESSIONS[math.floor(clock / HOLD) % #EXPRESSIONS + 1]
+	-- An icon chooses its own expression through this attribute.
+	local chosen = face.model:GetAttribute("FaceExpression")
+	local want = EXPRESSIONS[if typeof(chosen) == "number"
+		then chosen
+		else math.floor(clock / HOLD) % #EXPRESSIONS + 1]
 	local blend = 1 - math.exp(-BLEND_RATE * dt)
 	face.low += (want.low - face.low) * blend
 	face.high += (want.high - face.high) * blend
 	face.wide += (want.wide - face.wide) * blend
 	face.jaw += (want.jaw - face.jaw) * blend
 	face.lid += (want.lid - face.lid) * blend
-	if (face.head.WorldPosition - camera).Magnitude > FAR then
+	local icon = CollectionService:HasTag(face.model, "SlugIcon")
+	if not icon and (face.head.WorldPosition - camera).Magnitude > FAR then
 		return
 	end
 	-- Eyes dart to a new spot, then rest there.
@@ -225,7 +238,7 @@ RunService.RenderStepped:Connect(function(dt: number)
 	end
 	local eye = camera.CFrame.Position
 	for model, face in faces do
-		if model:IsDescendantOf(workspace) then
+		if model:IsDescendantOf(workspace) or CollectionService:HasTag(model, "SlugIcon") then
 			step(face, dt, eye)
 		else
 			faces[model] = nil
