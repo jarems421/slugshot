@@ -24,7 +24,7 @@ Roblox snaps UI to whole pixels, so slow `Position` and `Size` changes step visi
 
 ## Controls
 
-`Keybinds` holds every action, with a main and second binding, for the session. **Roblox exposes Left, Right, Middle and the wheel, but no usable side mouse buttons** (no forward code, `MouseBackButton` deprecated, staff call MB4/MB5 low priority). Players map side buttons to keys in the mouse's own software, and F13 to F15 are labelled Side 1 to 3; the owner has not confirmed F13/F14 on their mouse. Recheck the API before keybind work. Settings do not yet save between sessions.
+`Keybinds` holds every action, with a main and second binding, with saved preferences restored asynchronously. **Roblox exposes Left, Right, Middle and the wheel, but no usable side mouse buttons** (no forward code, `MouseBackButton` deprecated, staff call MB4/MB5 low priority). Players map side buttons to keys in the mouse's own software, and F13 to F15 are labelled Side 1 to 3; the owner has not confirmed F13/F14 on their mouse. Recheck the API before keybind work. Settings persistence is implemented; the real cloud-backed rejoin remains unverified. See below.
 
 ## ADS charge kicks
 
@@ -37,3 +37,15 @@ Every kick used to scale to zero while aiming, leaving a slow zoom that the owne
 ## Taste rules from the owner's feedback
 
 No halftone dot backgrounds ("never do that"). No thin glowing lines passed off as cracks. Hover grows by a few pixels with its shadow and never covers a neighbour. No whole-row highlights. Slot and menu slugs perform (wiggle, hop, smile) and never spin. See [lessons](art/lessons.md) and [owner design language](slugs/owner-design-language.md).
+
+## Saved settings (2026-11-02)
+
+**Confirmed:** the owner requested saving every setting, safe handling of missing/old/invalid data, and actual Roblox test records. `docs/MVP-UI.md` was not present; this is the existing UI specification.
+
+**Implemented:** all twelve preferences (field of view, look/aim sensitivity, recoil, holster, health number, sprint mode/double tap, crosshair style/custom colour/size, flip camera), plus both keybind slots for every action, now use server-owned versioned DataStore saves. Cleared slots and Reset to defaults persist. Defaults repair missing or invalid fields; unversioned saves migrate; future versions are preserved without writes. Failed loads never replace saved preferences with defaults. Saves retry and flush on leave/shutdown; session leases prevent stale overwrites. Menu status shows whether settings are saved or unavailable. [Architecture](decisions/0021-player-settings-persistence.md).
+
+**Implemented/verified offline:** `python tools/verify_combat.py` includes foundation and movement checks; formatting, lint, strict types and both combat place builds passed.
+
+**Implemented/verified in Roblox Studio:** `python tools/build_settings_check.py`, then `powershell -NoProfile -File tools/studio/settings_check.ps1 -OutDir build/settings-evidence`. Dedicated test place only: real client/server load, early edits retained, custom colour and flip camera restored, bindings/clears/reset, save status and production PlayerRemoving flush/release. Real schema/store code passes JSON-backed simulated session reopen, all twelve values and both slots, defaults, legacy/corrupt data, duplicate inputs, future-version preservation, injected storage failures/retry, expired leases and stale-session rejection. Tests use injected storage, not Roblox cloud data. [Recorded evidence](evidence/2026-11-02-settings-persistence.json).
+
+**Unresolved:** real cloud-backed rejoin; Studio MCP returned no sessions, and the owner allowed skipping this check for now. No publishing or Studio API/security changes. To finish acceptance in an existing authorized published test experience: change every preference, set a custom colour, change main/second bindings and clear one slot, wait for ?Settings saved?, leave/rejoin and verify UI plus actual controls/camera/crosshair. Repeat after Reset to defaults. In Studio, an authorized published test place with API access uses the separate Studio store; unpublished local files cannot demonstrate cloud saving.

@@ -127,6 +127,15 @@
         "CombatSelfTest": {
           "$path": "experiments/combat/range/CombatSelfTest.server.luau"
         }
+      },
+      "SettingsPersistence": {
+        "$className": "Folder",
+        "SettingsPersistence": {
+          "$path": "experiments/combat/server/SettingsPersistence.server.luau"
+        },
+        "SettingsStore": {
+          "$path": "experiments/combat/server/SettingsStore.luau"
+        }
       }
     },
     "StarterPlayer": {

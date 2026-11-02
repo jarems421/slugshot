@@ -4,7 +4,7 @@
 -- them to F13-F15 in their mouse's software and those keys are labelled Side 1-3.
 -- Keys go through one high-priority action so Roblox's own uses of them (I and O zoom) give way;
 -- default movement keys still pass through to Roblox's controls and touch and gamepad keep their
--- own bindings. Bindings last for the session.
+-- own bindings. Combat settings restore saved bindings through apply().
 local ContextActionService = game:GetService("ContextActionService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -14,48 +14,11 @@ local Keybinds = {}
 export type Row = { id: string, label: string, main: string?, second: string? }
 export type Group = { name: string, rows: { Row } }
 
-Keybinds.Groups = {
-	{
-		name = "Moving",
-		rows = {
-			{ id = "forward", label = "Forward", main = "W" },
-			{ id = "left", label = "Left", main = "A" },
-			{ id = "back", label = "Back", main = "S" },
-			{ id = "right", label = "Right", main = "D" },
-			{ id = "jump", label = "Jump", main = "Space" },
-			{ id = "sprint", label = "Sprint", main = "C" },
-			{ id = "slide", label = "Slide", main = "LeftShift" },
-			{
-				id = "shiftLock",
-				label = "Shift lock",
-				main = "LeftControl",
-				second = "RightControl",
-			},
-		},
-	},
-	{
-		name = "Shooting",
-		rows = {
-			{ id = "fire", label = "Fire", main = "MouseButton1" },
-			{ id = "aim", label = "Aim", main = "MouseButton2" },
-			{ id = "nextSlug", label = "Next slug" },
-			{ id = "previousSlug", label = "Previous slug" },
-			{ id = "slug1", label = "Slug 1", main = "One" },
-			{ id = "slug2", label = "Slug 2", main = "Two" },
-			{ id = "slug3", label = "Slug 3", main = "Three" },
-			{ id = "slug4", label = "Slug 4", main = "Four" },
-			{ id = "slug5", label = "Slug 5", main = "Five" },
-		},
-	},
-	{
-		name = "Other",
-		rows = {
-			{ id = "inventory", label = "Inventory", main = "E" },
-			{ id = "settings", label = "Settings", main = "M" },
-			{ id = "firstPerson", label = "First person" },
-		},
-	},
-} :: { Group }
+Keybinds.Groups = require(
+	game:GetService("ReplicatedStorage")
+		:WaitForChild("MovementExperiment")
+		:WaitForChild("KeybindDefinitions")
+) :: { Group }
 
 local NAMES: { [string]: string } = {
 	MouseButton1 = "Left Click",
@@ -261,6 +224,27 @@ end
 
 function Keybinds.reset()
 	defaults()
+	refresh()
+end
+
+-- False explicitly means unbound; sparse arrays cannot survive data-store serialization.
+function Keybinds.snapshot(): { [string]: { any } }
+	local result = {}
+	for action, pair in binds do
+		result[action] = { pair[1] or false, pair[2] or false }
+	end
+	return result
+end
+
+-- Called with the validated, complete settings snapshot, then rebuild input ownership once.
+function Keybinds.apply(saved: { [string]: { any } })
+	releaseAll()
+	for action in rows do
+		local pair = saved[action]
+		if pair then
+			binds[action] = { if pair[1] then pair[1] else nil, if pair[2] then pair[2] else nil }
+		end
+	end
 	refresh()
 end
 

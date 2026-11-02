@@ -1571,3 +1571,11 @@
 - **Confirmed:** owner explicitly requested pushing the shooting/white ADS iteration and updating documentation.
 - **Implemented/verified:** implementation `064f7ed` and its documentation delivered from `fix/shooting-feel` to main. Main was clean and matched `origin/main` at `caa6b02`, allowing a fast-forward with no conflicts. Existing combat/movement/foundation checks and native evidence remain applicable; delivery changes documentation only. No restricted assets or ignored builds are included; concurrent lobby sources remain untouched.
 - **Unresolved:** owner feel/art verdict and the runtime coverage limits recorded in [combat notes](combat.md#charge-accuracy-gentler-drop-and-white-ads-2026-11-02).
+
+## 2026-11-02 - Settings persistence
+
+**Confirmed:** owner requested saving all settings between sessions and safe missing/old/invalid-save handling, with actual Roblox test evidence. The referenced MVP-UI note is absent; read `docs/pvp-ui.md`. Owner allowed skipping the real rejoin if Studio MCP could not connect.
+
+**Implemented/verified:** isolated `fix/settings-persistence` worktree from integrated main; twelve validated preferences and all primary/secondary/cleared bindings; JSON-safe colour, asynchronous client hydration preserving early edits, status text, server batching/retries/leave and shutdown saves, expiring session leases and future-schema preservation. Full offline combat/movement/foundation checks and isolated Studio real-client/server and PlayerRemoving flush/release tests with injected storage passed. [ADR 0021](decisions/0021-player-settings-persistence.md), [evidence](evidence/2026-11-02-settings-persistence.json).
+
+**Unresolved:** actual Roblox cloud-backed leave/rejoin; the direct Studio MCP proxy returned empty instance lists. No experience published, API access enabled or concurrent work edited. No claim of cloud persistence from injected-store tests.

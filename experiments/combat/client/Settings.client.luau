@@ -2,14 +2,13 @@
 -- The settings menu (owner, 2026-11-01): Controls with every key and mouse button rebindable and the
 -- sprint options, Gameplay, and Crosshair. Owner, 2026-11-02: it must "pop way more" and feel dimensional,
 -- so each tab has its own colour and everything responds; see PvpFx. Values are local player attributes
--- read by the camera, movement client, viewmodel and holster; they last for the session.
+-- read by the camera, movement client, viewmodel and holster, and persisted by SettingsSync.
 local GuiService = game:GetService("GuiService")
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local Config = require(ReplicatedStorage:WaitForChild("MovementExperiment"):WaitForChild("Config"))
 local Theme = require(script.Parent.PvpTheme)
 local Fx = require(script.Parent.PvpFx)
 local Goo = require(script.Parent.Goo)
@@ -44,24 +43,19 @@ local BAND_TENSION, BAND_RESTORE, BAND_DAMPING = 0.3, 0.003, 0.99
 local BAND_POKE = 0.9 -- how hard choosing a tab shakes it
 local GOO_DRIPS = { 0.04, 0.17, 0.24, 0.38, 0.47, 0.6, 0.68, 0.83, 0.93 }
 
-local DEFAULTS: { [string]: any } = {
-	FieldOfView = Config.Camera.Fov,
-	LookSensitivity = 50,
-	AimSensitivity = 50,
-	RecoilAnimation = recoil.Default,
-	HolsterMode = "Hip",
-	HealthNumber = "Always",
-	SprintMode = "Toggle",
-	SprintDoubleTap = true,
-	CrosshairStyle = crosshairs.DefaultStyle,
-	CrosshairColor = crosshairs.Colors[1].color,
-	CrosshairSize = 1,
-}
+local Schema = require(ReplicatedStorage:WaitForChild("Combat").SettingsSchema)
+local DEFAULTS = table.clone(Schema.Defaults)
+DEFAULTS.CrosshairColor = Color3.fromHex(DEFAULTS.CrosshairColor)
 for name, value in DEFAULTS do
 	if player:GetAttribute(name) == nil then
 		player:SetAttribute(name, value)
 	end
 end
+player:GetAttributeChangedSignal("FlipCamera"):Connect(function()
+	flipCamera.select(player:GetAttribute("FlipCamera"))
+end)
+flipCamera.select(player:GetAttribute("FlipCamera"))
+require(script.Parent.SettingsSync).start(Keybinds)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "Settings"
@@ -295,7 +289,7 @@ local title = Theme.label(head, "Settings", Theme.TitleBold, 32, {
 	ZIndex = 6,
 })
 -- Modal frees the cursor while the menu is open (first person locks it).
-local close = Theme.button(head, "×", Theme.Body, 28, {
+local close = Theme.button(head, "Ã—", Theme.Body, 28, {
 	Name = "Close",
 	Modal = true,
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -316,6 +310,27 @@ close.MouseLeave:Connect(function()
 	Fx.tween(close, 0.25, { Rotation = 0, BackgroundColor3 = Fx.Button }, Enum.EasingStyle.Back)
 	Fx.tween(closeScale, 0.2, { Scale = 1 }, Enum.EasingStyle.Back)
 end)
+
+local saveStatus = Theme.label(head, "", Theme.Body, 13, {
+	Name = "SaveStatus",
+	Position = UDim2.fromOffset(320, 8),
+	Size = UDim2.fromOffset(650, 28),
+	TextColor3 = Theme.Soft,
+	ZIndex = 6,
+})
+local function refreshSaveStatus()
+	local messages = {
+		Loading = "Loading saved settings...",
+		Saved = "Settings saved",
+		Pending = "Saving settings...",
+		LoadFailed = "Saved settings unavailable; retrying. Changes stay in this session.",
+		SaveFailed = "Could not save settings; retrying...",
+		NewerVersion = "Saved settings need a newer game version. Changes stay in this session.",
+	}
+	saveStatus.Text = messages[player:GetAttribute("SettingsSaveStatus")] or ""
+end
+player:GetAttributeChangedSignal("SettingsSaveStatus"):Connect(refreshSaveStatus)
+refreshSaveStatus()
 
 local side = Theme.new("Frame", {
 	Name = "Tabs",
@@ -980,7 +995,7 @@ local function refreshSprint()
 	local mode = (player:GetAttribute("SprintMode") :: string?) or "Toggle"
 	sprintText.Text = SPRINT_TEXT[mode] or ""
 	local on = player:GetAttribute("SprintDoubleTap") ~= false
-	doubleMark.Text = if on then "✓" else ""
+	doubleMark.Text = if on then "âœ“" else ""
 	Fx.tween(doubleMark, 0.12, { BackgroundColor3 = if on then TEAL else Fx.Blank })
 	if on ~= doubleOn then
 		doubleOn = on
@@ -1279,7 +1294,7 @@ local refreshFlipChoice = choice(rightColumn, LIME, 0, 138, COLUMN, 44, flipOpti
 	local _, requested = flipCamera.status()
 	return requested
 end, function(index)
-	flipCamera.select(index)
+	player:SetAttribute("FlipCamera", index)
 end)
 local function refreshFlip()
 	local selected, requested = flipCamera.status()
@@ -1527,7 +1542,7 @@ reset.Activated:Connect(function()
 	for name, value in DEFAULTS do
 		player:SetAttribute(name, value)
 	end
-	flipCamera.select(Config.Camera.FirstPerson.FlipCameraDefault)
+	player:SetAttribute("FlipCamera", DEFAULTS.FlipCamera)
 	say("Everything is back to its default.")
 	Fx.sound("select")
 	Fx.sparkle(gui, reset, Fx.Coral, 10)

@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified offline and in isolated Studio Play, 2026-11-02 (`fix/settings-persistence`):** every menu preference and both keybind slots now use validated, versioned server saves with safe defaults/migration, retries, session leases and leave/shutdown flushes. Real client/server hydration, early edits, save acknowledgement, reset and real PlayerRemoving flush/release passed with injected storage; JSON-backed simulated session reopen passed for all twelve preferences and cleared/secondary bindings. **Unresolved:** real cloud-backed rejoin. Studio MCP returned no sessions; the owner allowed skipping that check. No publishing or security changes. [Details and evidence](pvp-ui.md#saved-settings-2026-11-02).
+
 **Implemented, 2026-11-02 (pushed to `main` at the owner's request; owner played it and accepted it):** hit reactions scale with damage and play in every state, including slides and jumps; the low-health slump is removed at the owner's request. See [combat](combat.md#damage-scaled-hit-reaction-2026-11-02). Evidence: real Play joint measurements at 7, 15 and 40 damage. **Unresolved:** the owner's feel verdict; real slug hits between two players; whether stronger slugs get physical knockback.
 
 **Confirmed by test, 2026-11-02:** a fresh clone builds the public places, but the private combat range needs ignored `private-assets/`; with that folder copied in it builds. Uploaded models and UI textures stay on the owner's Roblox account. The GitHub repository is public; visibility is the owner's decision.
