@@ -1620,3 +1620,11 @@
 - **Implemented/verified:** merged main `9e7a41c` into shooting work as `020c60c`, preserving damage-scaled hit reactions alongside loadout controls, latest inspect, owner pose/camera defaults and `6d3253d` shooting consistency. Documentation conflicts retain both current sections.
 - **Evidence:** post-merge `verify_combat.py` and `verify_slugs.py` pass. Fresh native one-client Studio regression passes shared flight, continuous distance sweeps, nine moving shots, two cover shots and missing-muzzle fallback. Sanitized delivery metrics are appended to the shooting evidence.
 - **Unresolved:** owner feel/art verdict, exact physical-input replay and multi-client/latency coverage. Ignored assets and generated places remain local.
+
+## 2026-11-02 - Training arena asset before gameplay
+
+- **Confirmed:** owner wants a 2?3x simple spawn island in a huge enclosed empty room, no tree roots, top cracks or lower spiral, more debris below, movement practice, dummies and future access to all slugs regardless of ownership.
+- **Confirmed, latest steering:** finish a complete 3D asset first; the agent owns design decisions, the drained owner only reviews final tweaks. Gameplay integration waits for this asset review.
+- **Implemented/verified offline:** isolated `feature/training-arena` from main `cb8b432`; read-only snapshot of the original island/rubble/four wall variants, full Blender/GLB assembly, packed painted materials, loopback rotatable viewer with five views. Source hashes, geometry QA, roundtrip and browser evidence in [record](art/training-arena.md). No source worktree or running Blender scene edited.
+- **Lesson:** runtime lobby GLBs omit materials; reconstruct from each build report rather than accepting default grey. Rim sampling uses shader z=-cos(angle), hence Blender y=+cos(angle); the opposite sign mirrors the cap and leaves rim gaps. Both corrected before handoff.
+- **Unresolved:** owner visual approval, Roblox appearance/collisions/performance and functional training systems. No main merge, upload or publication.

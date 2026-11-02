@@ -1,0 +1,22 @@
+{
+  "three.module.js": {
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r158/build/three.module.js",
+    "sha256": "313203957197800a1dfa954cfde84103be12bcd8e33aeee07be04216002b2e6d"
+  },
+  "GLTFLoader.js": {
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r158/examples/jsm/loaders/GLTFLoader.js",
+    "sha256": "b85db4109434f8eb1d1d51c5d46ce3fa2df01819f141ad395f7be5cc44529151"
+  },
+  "OrbitControls.js": {
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r158/examples/jsm/controls/OrbitControls.js",
+    "sha256": "eff65e67c005396706b7c32492dd2022d696288797e96a1fb51f8f0973f1c62a"
+  },
+  "utils/BufferGeometryUtils.js": {
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r158/examples/jsm/utils/BufferGeometryUtils.js",
+    "sha256": "9be041e96308775d00e2695cc607645b9a9b64fd7c0e759dd8f7c00a8d92becb"
+  },
+  "THREE-LICENSE.txt": {
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r158/LICENSE",
+    "sha256": "852e0e8699169bf9f6fdc6bda3e682d078dcbc738b5d33e74df594721bff271d"
+  }
+}

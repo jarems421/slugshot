@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "status": "Owner review draft; asset only",
+  "island_scale": 2.25,
+  "island_width_studs": 180,
+  "room_radius_studs": 310,
+  "ceiling_height_studs": 205,
+  "firing_line": [24, 52],
+  "target_distances": [20, 35, 55, 75, 100, 120],
+  "debris_copies": 8,
+  "excluded": ["Roots", "Flora", "Cracks", "Top", "Maelstrom", "Spiral"],
+  "source_assets": ["hub-rock", "hub-rock-debris", "rock-wall-4", "rock-wall-5", "rock-wall-6", "rock-wall-7"]
+}

@@ -287,3 +287,11 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Trace symbols from the real model:** hand-drawn silhouettes read as an older design; `tools/lobby/blaster_rune.py` regenerates the rune from the current mesh.
 - **Surfaces that must blend need one paint function and no moving parts at the join:** a spinning pool and separately painted streams could never line up.
 - **In `cut`-style patches, don't stop at a marker the same patch moves:** it silently ate the start of `volcanoFlow`; the shader compile caught it.
+
+## 2026-11-02 - Training asset reuse and review
+
+- **Confirmed:** reuse the spawn rock without roots, cracked top or lower spiral; enlarge it and add underside debris. Build a full asset for owner inspection before gameplay.
+- **Implemented/verified:** source lobby GLBs carry geometry only. Restoring each report's color/normal/emissive maps and inverse ink materials prevents a misleading grey review. Packed images survive the GLB reimport. Keep the original assets as a read-only, hashed snapshot.
+- **Implemented/verified:** the measured rim uses x=sin(angle), shader z=-cos(angle). Blender maps y=-z, so y must be +cos(angle). Mirroring that sign produced cap overhangs; material renders exposed the error, and the corrected cap tracks the rock.
+- **QA lesson:** the generic wire review scales thickness to total asset bounds, producing enormous miter spikes on thin range marks. The training-only verification adapts that invocation to 0.015-stud wires without even-offset miters; the installed skill remains unchanged. Random-color and thin-wire sheets plus actual materials are complementary checks.
+- **Limits:** deliberate detached rubble, split source shells and arena-relative offsets are documented exceptions. Offline export consistency and a desktop/mobile-width browser check do not prove Roblox collision or runtime performance. [Asset and evidence](training-arena.md).
