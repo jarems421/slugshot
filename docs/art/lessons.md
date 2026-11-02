@@ -251,3 +251,6 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **A flat glowing surface exposes its mesh:** decimated triangles showed as hairline cracks and shading fans, which read as shards. Author it as a simple sheet with shared corners; a low triangle count isn't what matters, flatness is.
 - **Measure authored meshes from the art they replace:** design constants missed the gate's real scale by about 40%.
 - **Don't queue a Studio run alongside a patch that can fail:** it silently tests the previous build. Run it only after the build step has succeeded.
+- **Trace symbols from the real model:** hand-drawn silhouettes read as an older design; `tools/lobby/blaster_rune.py` regenerates the rune from the current mesh.
+- **Surfaces that must blend need one paint function and no moving parts at the join:** a spinning pool and separately painted streams could never line up.
+- **In `cut`-style patches, don't stop at a marker the same patch moves:** it silently ate the start of `volcanoFlow`; the shader compile caught it.

@@ -1,5 +1,7 @@
 # Lobby roadmap
 
+> **Superseded, owner 2026-11-02:** the spiral route and the cave entrance described below are removed from the lobby; something else is planned there.
+
 How the Slugshot lobby goes from plan to finished space. Each phase ends with an owner review, and the next phase does not start until the owner is happy. The look follows the [style guide](style-guide.md); the props come from the [lobby asset plan](lobby-assets.md).
 
 Source: owner's pasted art-direction chat and requests, 2026-10-31. **Status: Confirmed** that the lobby should be planned, assets authored in Blender, and the look tested before the full build. The gate, spawn and entrance arrangement is **Confirmed**. Exact dimensions and the extra areas are **Considering**. Environmental research: [Slugterra environment research](../research/slugterra-environment.md).

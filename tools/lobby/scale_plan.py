@@ -52,15 +52,7 @@ def top_down():
     ravine = L["ravine"]
     s.append(sector(ravine["from"], ravine["to"], ravine["innerRadius"], ravine["outerRadius"], rgb([214, 96, 34])))
     ledge = ravine["ledge"]
-    s.append(sector(ravine["from"], ravine["to"], ravine["innerRadius"], ravine["innerRadius"] + ledge["width"], rgb(L["route"]["color"])))
-    # The spiral route, shaded by height, drawn under the peaks it joins.
-    route = L["route"]
-    points = route["points"]
-    tunnel = route["tunnel"]
-    r2 = wall
-    r1 = wall - route["width"]
-    s.append(sector(points[0]["angle"], points[-1]["angle"], r1, r2, rgb(route["color"])))
-    s.append(sector(tunnel["from"], tunnel["to"], r1, r2, "var(--tunnel)"))
+    s.append(sector(ravine["from"], ravine["to"], ravine["innerRadius"], ravine["innerRadius"] + ledge["width"], rgb([172, 152, 96])))
     for peak, label in ((L["volcano"], "rimRadius"), (L["mountain"], "topRadius")):
         center = polar(peak["angle"], peak["radius"])
         s.append(circle(center, peak["baseRadius"], rgb(peak["color"])))
@@ -99,9 +91,6 @@ def top_down():
             f'<rect x="{p[0] - half:.1f}" y="{p[1] - 2:.1f}" width="{half * 2:.1f}" height="4" fill="{rgb(portal["color"])}" '
             f'transform="rotate({portal["angle"]} {p[0]:.1f} {p[1]:.1f})"/>'
         )
-    entrance = L["entrance"]
-    p = polar(entrance["angle"], entrance["radius"])
-    half = entrance["width"] / 2
     s.append(f'<rect x="{p[0] - half:.1f}" y="{p[1] - 3:.1f}" width="{half * 2}" height="6" fill="var(--ink)"/>')
     board = polar(L["bountyBoard"]["angle"], L["bountyBoard"]["radius"])
     s.append(circle(board, 3, "rgb(150,108,66)", 'stroke="var(--ink)"'))
@@ -121,9 +110,7 @@ def top_down():
     s.append(text(polar(-42.5, 245), "Lava ravine", "label on"))
     s.append(text(c, "Gun shop", "small dark", dy=4))
     s.append(text(polar(37, 240), "Overgrowth", "small on"))
-    s.append(text(polar(180, 250), "Entrance", "label on"))
     s.append(text(polar(215, 262), "Caverns", "small on"))
-    s.append(text(polar(-112, 268), "Spiral route", "small on"))
     s.append(text((52, 44), "Maelstrom", "small on"))
     s.append(text((52, 57), "170 across", "small on"))
     s.append('<g transform="translate(-300,322)"><rect width="100" height="4" fill="var(--ink)"/>'
@@ -132,7 +119,7 @@ def top_down():
 
 
 def side_section():
-    # A straight cut from the Entrance wall to the wall behind the volcano; depth is cut off at -120.
+    # A straight cut from the far wall to the wall behind the volcano; depth is cut off at -120.
     wall = L["shore"]["wallRadius"]
     ceiling = L["cavern"]["ceilingY"]
     well = L["skyWell"]["openingRadius"]
@@ -161,16 +148,13 @@ def side_section():
     for sign in (1, -1):
         mid = sign * (rock["radius"] + inner) / 2
         s.append(f'<path d="M{sign * rock["radius"]} 0 Q{mid} {bridges["sag"] * 2} {sign * inner} 0" fill="none" stroke="rgb(150,108,66)" stroke-width="3"/>')
-    entrance = L["entrance"]
-    s.append(f'<rect x="{-entrance["radius"] - 4}" y="{z(entrance["height"] + entrance["post"])}" width="8" height="{entrance["height"] + entrance["post"]}" fill="var(--ink)"/>')
     s.append(text((0, z(ceiling) - 8), "Sky Well, 250 up", "small"))
     s.append(text((0, 58), "Maelstrom water", "small on"))
     s.append(text((0, 104), "falls on to -500, then respawn", "small on"))
     s.append(text((c, z(volcano["height"]) - 8), "Volcano rim, 135", "small"))
     s.append(text((portal["radius"] - 10, z(portal["height"]) - 12), "PvP", "small"))
     s.append(text((-(rock["radius"] + inner) / 2, -14), "Bridge", "small"))
-    s.append(text((-entrance["radius"] + 14, z(entrance["height"]) - 14), "Entrance", "small"))
-    return f'<svg viewBox="-315 -270 630 395" role="img" aria-label="Side section from the Entrance to the volcano" class="section">{"".join(s)}</svg>'
+    return f'<svg viewBox="-315 -270 630 395" role="img" aria-label="Side section from the far side to the volcano" class="section">{"".join(s)}</svg>'
 
 
 def seconds(distance, speed):
@@ -188,8 +172,7 @@ def rows():
         ("Maelstrom", f"{L['shore']['innerRadius'] * 2} across. No barriers, a low hop-over lip, fall to {L['fall']['respawnY']} and respawn"),
         ("Cavern", f"{L['shore']['wallRadius'] * 2} across, ceiling {L['cavern']['ceilingY']} up"),
         ("Portals", "Curved arc about 50 apart, PvP raised 4 and largest"),
-        ("Volcano and mountain", f"{L['volcano']['height']} high, reached from the spiral route"),
-        ("Spiral route", f"{L['route']['width']} wide, about {math.radians(250) * 293:.0f} long ({math.radians(250) * 293 / run:.0f} s running), rising from 0 to {L['route']['points'][-1]['y']}"),
+        ("Volcano and mountain", f"{L['volcano']['height']} high"),
         ("Slug pond", f"{L['pond']['diameter']} across, wadeable, slugs all around it"),
         ("Gun shop", f"Walk-in building, {L['gunShop']['width']} by {L['gunShop']['depth']}"),
     ]
@@ -224,7 +207,7 @@ th {{ font-weight:600; width:34%; padding-right:12px; }}
 <main>
 <header><h1>Lobby Scale Map</h1><p>V1 for judging distance and layout only. All sizes are in studs, seen from above with PvP at the top.</p></header>
 <section>{plan}</section>
-<section><h2>Side view, Entrance to volcano</h2>{section}</section>
+<section><h2>Side view, far side to volcano</h2>{section}</section>
 <section><h2>Key sizes</h2><table>{rows}</table></section>
 </main>
 """

@@ -19,11 +19,11 @@ local Arena = {}
 
 local SECTOR = 360 / layout.sectors
 local shore = layout.shore
-local route = layout.route
 local GROUND = Color3.fromRGB(82, 84, 98)
 local WALL = Color3.fromRGB(58, 62, 76)
 local CEILING = Color3.fromRGB(46, 50, 62)
 local LIP = Color3.fromRGB(112, 116, 132)
+local LEDGE = Color3.fromRGB(172, 152, 96)
 local ROCK = Color3.fromRGB(142, 146, 162)
 local PLANK = Color3.fromRGB(150, 108, 66)
 local ROPE = Color3.fromRGB(205, 186, 138)
@@ -34,7 +34,6 @@ local CAP = Color3.fromRGB(90, 220, 170)
 local SLUG = Color3.fromRGB(226, 226, 96)
 local LIGHT = Color3.fromRGB(235, 240, 225)
 local IRON = Color3.fromRGB(70, 72, 84)
-local MOUTH = Color3.fromRGB(126, 130, 158)
 
 local function rgb(values: { number }): Color3
 	return Color3.fromRGB(values[1], values[2], values[3])
@@ -263,17 +262,6 @@ end
 local function mushroom(parent: Instance, base: Vector3, height: number)
 	disc(parent, "Stem", height, height * 0.16, base + Vector3.new(0, height / 2, 0), STEM)
 	disc(parent, "Cap", height * 0.14, height * 0.75, base + Vector3.new(0, height, 0), CAP)
-end
-
-local function routeY(angle: number): number
-	local points = route.points
-	for index = 1, #points - 1 do
-		local p, q = points[index], points[index + 1]
-		if angle <= q.angle then
-			return p.y + (q.y - p.y) * (angle - p.angle) / (q.angle - p.angle)
-		end
-	end
-	return points[#points].y
 end
 
 local function zoneColor(angle: number, radius: number): Color3?
@@ -689,51 +677,6 @@ local function buildPond(root: Instance)
 end
 
 -- A ledge winding up a cone from fromY to toY at a fixed slope, starting on the side facing startAngle.
-local function climb(
-	parent: Instance,
-	center: Vector3,
-	radiusAt: (number) -> number,
-	fromY: number,
-	toY: number,
-	startAngle: number
-)
-	local width = route.climbWidth
-	local length = (toY - fromY) / math.tan(math.rad(route.climbSlope))
-	local meanRadius = radiusAt((fromY + toY) / 2) + width / 2
-	local turn = math.deg(length / meanRadius)
-	local steps = math.ceil(turn / 12)
-	local function ring(step: number): (number, number, number)
-		local t = step / steps
-		local y = fromY + (toY - fromY) * t
-		return startAngle + turn * t, radiusAt(y), y
-	end
-	for step = 0, steps - 1 do
-		local a1, r1, y1 = ring(step)
-		local a2, r2, y2 = ring(step + 1)
-		quad(
-			parent,
-			center + polar(a1, r1 - 1, y1),
-			center + polar(a2, r2 - 1, y2),
-			center + polar(a2, r2 + width, y2),
-			center + polar(a1, r1 + width, y1),
-			rgb(route.color),
-			3
-		)
-	end
-end
-
-local function shoulder(parent: Instance, angle: number, fromRadius: number, y: number)
-	beam(
-		parent,
-		"Shoulder",
-		polar(angle, fromRadius, y),
-		polar(angle, shore.wallRadius - route.width + 1, y),
-		route.width,
-		3,
-		rgb(route.color)
-	)
-end
-
 local function buildVolcano(root: Instance)
 	local volcano = layout.volcano
 	local parent = folder(root, "Volcano")
@@ -755,13 +698,7 @@ local function buildVolcano(root: Instance)
 		LAVA,
 		{ ghost = true, neon = true }
 	)
-	local function radiusAt(y: number): number
-		return volcano.baseRadius + (volcano.rimRadius - volcano.baseRadius) * y / h
-	end
-	local joinY = routeY(360)
-	shoulder(parent, volcano.angle, volcano.radius + radiusAt(joinY) - 1, joinY)
-	climb(parent, center, radiusAt, joinY, h, volcano.angle)
-	label(parent, "VOLCANO  135 high, climb to the rim", center + Vector3.new(0, h + 8, 0))
+	label(parent, "VOLCANO  135 high", center + Vector3.new(0, h + 8, 0))
 end
 
 local function buildMountain(root: Instance)
@@ -777,9 +714,6 @@ local function buildMountain(root: Instance)
 	local function radiusAt(y: number): number
 		return mountain.baseRadius + (mountain.topRadius - mountain.baseRadius) * y / h
 	end
-	local joinY = routeY(430)
-	shoulder(parent, mountain.angle, mountain.radius + radiusAt(joinY) - 1, joinY)
-	climb(parent, center, radiusAt, joinY, h, mountain.angle)
 	-- The waterfall runs down the face looking at the pond, then along the ground into it.
 	local fall = layout.waterfall
 	local pond = polar(layout.pond.angle, layout.pond.radius, 0)
@@ -836,7 +770,7 @@ local function buildRavine(root: Instance)
 			polar(a2, inner, ledgeY(a2)),
 			polar(a2, inner + ledge.width, ledgeY(a2)),
 			polar(a1, inner + ledge.width, ledgeY(a1)),
-			rgb(route.color),
+			LEDGE,
 			2
 		)
 		angle = a2
@@ -875,92 +809,6 @@ local function buildOvergrowth(root: Instance)
 	)
 end
 
-local function buildEntrance(root: Instance)
-	local entrance = layout.entrance
-	local parent = folder(root, "Entrance")
-	local base = polar(entrance.angle, entrance.radius, 0)
-	local frame = CFrame.lookAt(base, Vector3.zero)
-	for _, sign in { 1, -1 } do
-		block(
-			parent,
-			"MouthSide",
-			Vector3.new(entrance.post, entrance.height, entrance.post),
-			frame * CFrame.new(sign * entrance.width / 2, entrance.height / 2, 0),
-			MOUTH
-		)
-	end
-	block(
-		parent,
-		"MouthTop",
-		Vector3.new(entrance.width + entrance.post, entrance.post, entrance.post),
-		frame * CFrame.new(0, entrance.height + entrance.post / 2, 0),
-		MOUTH
-	)
-	label(parent, "ENTRANCE  scenic cave mouth", base + Vector3.new(0, entrance.height + 12, 0))
-end
-
-local function buildRoute(root: Instance)
-	local parent = folder(root, "SpiralRoute")
-	local tunnel = route.tunnel
-	local color = rgb(route.color)
-	local inner = shore.wallRadius - route.width
-	local first, last = route.points[1].angle, route.points[#route.points].angle
-	local angle, sector = first, 0
-	while angle < last do
-		local a1, a2 = angle, angle + SECTOR
-		local y1, y2 = routeY(a1), routeY(a2)
-		quad(
-			parent,
-			polar(a1, inner, y1),
-			polar(a2, inner, y2),
-			polar(a2, shore.wallRadius, y2),
-			polar(a1, shore.wallRadius, y1),
-			color,
-			2
-		)
-		-- The rock bank under the deck's inner edge, which also doubles as a long run wall.
-		if y1 > 0.5 then
-			quad(
-				parent,
-				polar(a1, inner, y1 - 0.5),
-				polar(a2, inner, y2 - 0.5),
-				polar(a2, inner, 0),
-				polar(a1, inner, 0),
-				GROUND,
-				2
-			)
-		end
-		if a1 >= tunnel.from and a2 <= tunnel.to then
-			sector += 1
-			local roof = tunnel.clearance
-			quad(
-				parent,
-				polar(a1, inner, y1 + roof),
-				polar(a2, inner, y2 + roof),
-				polar(a2, shore.wallRadius, y2 + roof),
-				polar(a1, shore.wallRadius, y1 + roof),
-				WALL,
-				2
-			)
-			if sector % tunnel.windowEvery ~= 0 then
-				quad(
-					parent,
-					polar(a1, inner, y1),
-					polar(a2, inner, y2),
-					polar(a2, inner, y2 + roof),
-					polar(a1, inner, y1 + roof),
-					WALL,
-					2
-				)
-			end
-		end
-		angle = a2
-	end
-	label(parent, "SPIRAL ROUTE START", polar(first + 4, inner + 7, 10))
-	label(parent, "CAVERNS  tunnel section", polar(215, inner - 6, routeY(215) + 30))
-	label(parent, "SPIRAL ROUTE  14 wide", polar(305, inner - 6, routeY(305) + 8))
-end
-
 function Arena.create(): Model
 	local model = Instance.new("Model")
 	model.Name = "LobbyScale"
@@ -976,8 +824,6 @@ function Arena.create(): Model
 	buildMountain(model)
 	buildRavine(model)
 	buildOvergrowth(model)
-	buildEntrance(model)
-	buildRoute(model)
 	model.Parent = workspace
 	return model
 end

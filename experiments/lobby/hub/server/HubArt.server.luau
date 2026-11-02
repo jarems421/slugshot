@@ -240,7 +240,7 @@ local SOLID: { [string]: { string } } = {
 	["hub-portal-veylume"] = PORTAL,
 	["hub-arch"] = { "Pylons", "ArchL", "ArchR", "Pillars", "Base" },
 	["hub-plaza-floor"] = { "Floor" },
-	["hub-volcano"] = { "Flows", "VolcanoFront", "VolcanoBack" },
+	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -1033,11 +1033,6 @@ local function buildVolcano()
 			end
 		end
 	end
-	local pool = volcano and volcano:FindFirstChild("Pool", true)
-	if pool then
-		pool:SetAttribute("LocalSpin", ORBIT * 1.2)
-		CollectionService:AddTag(pool, "HubMover")
-	end
 	-- Molten rivers, flowing, over the painted ones on the side facing the hub.
 	local rivers = {
 		{ -1.18, 8, 4.8, 0 },
@@ -1065,7 +1060,7 @@ local function buildVolcano()
 				return volcWall(a, y, over + 5.5 - volcRadius(a, y)), w * 1.5 * VOLCANO_SCALE
 			end
 			-- Overlapping, each fading out at both ends, so none of them stops in a straight line.
-			local from, w0 = at(s - 0.35)
+			local from, w0 = at(math.max(s - 0.35, 0))
 			local to, w1 = at(s + 1.35)
 			beam(
 				"LavaRiver",
@@ -1095,6 +1090,32 @@ local function buildVolcano()
 			halo:SetAttribute("Phase", k * 1.7 - s * 0.8)
 			CollectionService:AddTag(halo, "HubLavaGlow")
 		end
+	end
+	-- Glints crossing the pool to every spill, flat on the lava, at the same pace as the ones running down the streams.
+	for k = 0, 6 do
+		local angle = -1.18 + k * 0.897598
+		local from = volcWall(angle, 128.6, 5 - volcRadius(angle, 128))
+		local to = volcWall(angle, 128.6, 0)
+		local direction = (to - from).Unit
+		local tangent = direction:Cross(Vector3.yAxis).Unit
+		local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+		local turn = CFrame.fromMatrix(Vector3.zero, direction, tangent, direction:Cross(tangent))
+		a0.CFrame, a1.CFrame = turn, turn
+		a0.Parent = holder("PoolGlint", from, Vector3.one)
+		a1.Parent = holder("PoolGlint", to, Vector3.one)
+		local glint = Instance.new("Beam")
+		glint.Attachment0, glint.Attachment1 = a0, a1
+		glint.FaceCamera = false
+		glint.Segments = 1
+		glint.Width0, glint.Width1 = 6, 13 * VOLCANO_SCALE
+		glint.Texture = fxTexture("lavaflow")
+		glint.TextureLength = 1
+		glint.TextureMode = Enum.TextureMode.Stretch
+		glint.TextureSpeed = 0.11
+		glint.LightEmission = 1
+		glint.LightInfluence = 0
+		glint.Transparency = fade({ { 0, 1 }, { 0.4, 0.3 }, { 0.85, 0.3 }, { 1, 1 } })
+		glint.Parent = a0.Parent
 	end
 	-- The crater: what erupts is run by HubMotion.client.
 	local cx, cz = volcCentre(130)

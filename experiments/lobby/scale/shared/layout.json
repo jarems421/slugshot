@@ -23,7 +23,7 @@
   "zones": [
     { "name": "Portals", "from": -40, "to": 40, "color": [122, 104, 92] },
     { "name": "Slug side", "from": 40, "to": 135, "color": [92, 124, 108] },
-    { "name": "Entrance", "from": 135, "to": 225, "color": [96, 100, 124] },
+    { "name": "Far side", "from": 135, "to": 225, "color": [96, 100, 124] },
     { "name": "Gun side", "from": 225, "to": 320, "color": [128, 108, 84] }
   ],
   "floorRadii": [85, 190, 205, 270, 275, 300],
@@ -44,14 +44,5 @@
   },
   "mountain": { "angle": 70, "radius": 240, "baseRadius": 65, "topRadius": 30, "height": 135, "color": [70, 102, 86] },
   "waterfall": { "width": 12, "topY": 92 },
-  "overgrowth": { "from": 25, "to": 50, "innerRadius": 190, "outerRadius": 270, "color": [104, 88, 130], "mushrooms": 5 },
-  "entrance": { "angle": 180, "radius": 280, "width": 60, "height": 44, "post": 8 },
-  "route": {
-    "width": 14,
-    "points": [ { "angle": 180, "y": 0 }, { "angle": 360, "y": 90 }, { "angle": 430, "y": 100 } ],
-    "tunnel": { "from": 190, "to": 240, "clearance": 24, "windowEvery": 3 },
-    "climbWidth": 12,
-    "climbSlope": 14,
-    "color": [172, 152, 96]
-  }
+  "overgrowth": { "from": 25, "to": 50, "innerRadius": 190, "outerRadius": 270, "color": [104, 88, 130], "mushrooms": 5 }
 }

@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Volcano top, real blaster rune, route and entrance removed
+
+- **Owner request:** make the gun symbol the current blaster's silhouette, raise the crater pool to the rim with streams and animation blending into it, stop players falling in, and remove the spiral route and cave entrance.
+- **Implemented, seen in Studio by camera captures:** all of it ([lobby hub](art/lobby-hub.md)). Of four blocks dropped on the pool, three settled on the lava; the fourth tumbled out over a rim spill and rested lower down the outside. None fell in.
+- **Not verified:** a real character walking on the pool; the scale check place, whose route walks were removed but which wasn't run; how the glints look in motion.
+- **Unresolved:** what replaces the route and entrance.
+
 ## 2026-11-02 - Living lava and portals, rune-style gateway symbols
 
 - **Owner request:** a slow glow on the volcano's lava, livelier portals that must not look blocky, and cave and gun symbols that glow like the other runes.

@@ -81,48 +81,6 @@ local function walkPath(name: string, path: { Vector3 }, expectFromY: number?)
 	report(name, expectFromY == nil or ground > expectFromY, detail)
 end
 
-local function routeY(angle: number): number
-	local points = layout.route.points
-	for index = 1, #points - 1 do
-		local p, q = points[index], points[index + 1]
-		if angle <= q.angle then
-			return p.y + (q.y - p.y) * (angle - p.angle) / (q.angle - p.angle)
-		end
-	end
-	return points[#points].y
-end
-
-local function routePath(from: number, to: number): { Vector3 }
-	local radius = layout.shore.wallRadius - layout.route.width / 2
-	local path = {}
-	for angle = from, to, 10 do
-		table.insert(path, polar(angle, radius, routeY(angle)))
-	end
-	return path
-end
-
-local function climbPath(peak: any, topRadius: number, joinY: number): { Vector3 }
-	local center = polar(peak.angle, peak.radius, 0)
-	local route = layout.route
-	local function radiusAt(y: number): number
-		return peak.baseRadius + (topRadius - peak.baseRadius) * y / peak.height
-	end
-	local path = {}
-	table.insert(path, polar(peak.angle, layout.shore.wallRadius - route.width / 2, joinY))
-	local length = (peak.height - joinY) / math.tan(math.rad(route.climbSlope))
-	local turn = math.deg(length / (radiusAt((joinY + peak.height) / 2) + route.climbWidth / 2))
-	local steps = math.ceil(turn / 25)
-	for step = 0, steps do
-		local t = step / steps
-		local y = joinY + (peak.height - joinY) * t
-		table.insert(
-			path,
-			center + polar(peak.angle + turn * t, radiusAt(y) + route.climbWidth / 2, y)
-		)
-	end
-	return path
-end
-
 local function lipAndFall()
 	place(polar(30, 100, 0))
 	local inside = polar(30, 60, 0)
@@ -241,17 +199,5 @@ walkPath("ravine ledge", {
 	polar(ravine.ledge.levelAt, ravine.innerRadius + 4, ravine.ledge.y),
 	polar(ravine.from + 3, ravine.innerRadius + 4, ravine.ledge.y),
 }, ravine.ledge.y - 2)
-walkPath("spiral route: Entrance to volcano", routePath(180, 360), routeY(360) - 3)
-walkPath(
-	"volcano climb to the rim",
-	climbPath(layout.volcano, layout.volcano.rimRadius, routeY(360)),
-	layout.volcano.height - 3
-)
-walkPath("spiral route: volcano to mountain", routePath(360, 430), routeY(430) - 3)
-walkPath(
-	"mountain climb to the overlook",
-	climbPath(layout.mountain, layout.mountain.topRadius, routeY(430)),
-	layout.mountain.height - 3
-)
 walker:Destroy()
 print("[LobbyScaleCheck] DONE")

@@ -93,8 +93,8 @@ void main() {
   if (id > 2.3 && id < 2.5) { crease = smoothstep(0.2, 0.7, -lap)*0.85; idEdge *= 0.6; }
   if (id > 18.9 && id < 20.0) { crease = 0.0; idEdge = 0.0; }  // far smaller than the ink's sampling reach
   if (id > 1.15 && id < 1.2) { crease = 0.0; idEdge = 0.0; }
-  if (id > 29.5 && id < 31.5) { crease = 0.0; idEdge *= 0.6; }
-  if (id > 37.5) { crease = 0.0; idEdge *= 0.6; }
+  if (id > 29.5 && id < 31.5) { crease = 0.0; idEdge = 0.0; }
+  if (id > 37.5) { crease = 0.0; idEdge = 0.0; }  // lava meets lava with no line between
   if (abs(id - 12.0) < 0.5) crease = 0.0;
   float ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(id)), idEdge)*(1.0 - inkClear);
   alb = mix(alb, INK(id), ink);
@@ -635,7 +635,7 @@ PIECES = {
         "item": "portal-plaza-7", "map": VOLCANO, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
         "lo": (-25.0, -1.2, -3.0), "hi": (25.0, 32.5, 48.0), "step": 0.08, "normalH": 0.012,
         "parts": [
-            part("Pool", by_id((30.5, 31.5)), 300, 512, cage=0.06),
+            part("Pool", by_id((30.5, 31.5)), 700, 1024, cage=0.06),
             part("Flows", by_id((37.5, 38.5)), 4800, 1024, FINE_INK*1.5, 1.0, cage=0.06),
             part("VolcanoFront", volcano_front, 6000, 1024, ROCK_INK*1.2, 1.0, cage=0.15),
             part("VolcanoBack", everything, 1400, 512, cage=0.2),
