@@ -161,22 +161,13 @@ return table.freeze({
 			-- it off the floor), keeping more of the jump's rise.
 			GroundDelay = 0.03,
 			Rise = { Min = 4, Max = 20, Carry = 0.55 }, -- upward speed on attach: Carry of the jump's, clamped
-			-- Jump on a wall run: a press climbs at once and a release within TapTime is a tap
-			-- that kicks off (0.3 s covers ordinary taps; the old 0.2 s needed double taps).
-			-- Held, it climbs at Climb for ClimbTime of holding (owner: the old 2 s taper
-			-- stopped the climb after about a second), then eases over ClimbFade into a
-			-- HeldSlide.
-			TapTime = 0.3,
-			-- A press while holding away from the wall (move input dot the wall normal over
-			-- this) kicks off at once, without waiting for the release.
+			-- Jump holds and taps adjust height without a climb timeout or release kick.
+			-- To kick off, press Jump while steering mostly away from the wall.
 			KickAway = 0.35,
 			-- Studs above the root that must still be beside the wall to keep climbing; above
 			-- this the run holds its height along the top edge.
 			TopMargin = 1,
 			Climb = 11,
-			ClimbTime = 3,
-			ClimbFade = 1,
-			HeldSlide = 2, -- downward speed reached while still holding Jump
 			Slide = 1.5, -- downward speed once Jump is released, growing by SlideGrow per second since
 			SlideGrow = 5,
 			SlideMax = 20,

@@ -54,7 +54,8 @@ def movement_limits():
     mantle = config_number(text, r"MinHeight = 0\.7.*?MaxHeight = ([\d.]+)")
     wall = text[text.index("WallRun = {"):]
     climb = config_number(wall, r"Climb = ([\d.]+)")
-    climb_time = config_number(wall, r"ClimbTime = ([\d.]+)")
+    # Held climbing now lasts while the wall remains connected; geometry still gates it.
+    climb_time = math.inf
     height = jump * jump / (2 * GRAVITY)
     air = 2 * jump / GRAVITY
     return {"jump_height": height, "double_height": height + double * double / (2 * GRAVITY),

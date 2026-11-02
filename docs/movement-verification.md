@@ -1,5 +1,20 @@
 # Movement prototype verification
 
+## Wall-run Space height controls (2026-11-02)
+
+**Confirmed:** owner reported upward input fading into descent after a few seconds and short height taps unexpectedly jumping away from the wall. Both were explicit legacy rules: `ClimbTime`/`ClimbFade`/`HeldSlide`, and `TapTime` on key release.
+
+**Implemented:** climb target stays at 11 studs/s while running along the wall with Jump held. Releasing resumes the slide without a kick; no hold/tap timing threshold remains. A fresh press kicks only when steering predominantly outward. Reversing is steering, and input following an active convex corner is protected from the kick classifier. Existing stopped-cling drag, top-edge height cap, wall-loss/ground detach and fresh-press mantle are preserved. No new input binding was added; the Studio probe invokes the same `jumpKey` handler as keyboard/gamepad.
+
+**Verified offline:** `python tools/verify_combat.py` (includes complete foundation/movement checks), Python syntax and disposable fixture build; route-limit checks from `verify_rocklock_v2.verify_layout()` pass. The route model no longer assumes a timed climb budget; real support/continuity remains an engine question. Numerical regression tests exercise 12-second holds at 30/60/144 Hz, release/re-press, short height adjustments, slide cap, top hold, stopped drag and kick/corner intent. Tests remain outside playable projects.
+
+**Verified in Studio:** one client/server in a disposable 900-stud-long, 180-stud-tall wall fixture. Six-second hold stayed in WallRun with every sampled Y velocity positive: 362 samples, 54.41-stud rise. Releases plus 0.05/0.15/0.3/0.8-second taps stayed attached; a reversal plus tap stayed attached; outward steering plus Jump reached WallHop. Native wall-support/bump/inside/outside-corner/gap tests also passed. The final log also contains one failure in the unchanged `Clips.spec:95` kong-vault end-pose assertion. That clip/test source is byte-identical to the starting commit; it is outside this wall-run change and is not counted as passing. [Structured evidence](evidence/2026-11-02-wallrun-space.json).
+
+**Reproduction:** `python tools/build_wallrun_space_test.py`, open `build/SlugshotWallRunSpaceRegression.rbxlx`, Play, inspect `[WallRunSpace]` and `[Movement tests]` output. The fixture is disposable and contains no private assets. Early fixture attempts omitted the native takeoff Jump or waited too little for input smoothing; those setup failures are recorded in the evidence, not counted as passing runs. The final test session was stopped before opening the normal refreshed range.
+
+**Limits:** numerical timesteps are not rendered frame-rate tests. Physical input, owner feel, actual corner traversal while tapping, top-edge/respawn regression and peer/network behavior remain unverified. Existing Studio plugin connection/update warnings are unrelated to this fixture; no network emulation or security setting changed. The refreshed private range includes current PvP UI and accepted combat; unrelated open places are preserved.
+
+
 Date: 2026-10-28. Studio 0.745.0.7451137, Rojo 7.7.1. Experimental branch only; no Roblox experience or animation published. This records technical progress, not a claim that movement feels excellent.
 
 ## v7.37 drag limb spacing (2026-10-30)

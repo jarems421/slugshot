@@ -1,5 +1,14 @@
 # Project memory
 
+## 2026-11-02 - Wall-run Space height controls
+
+- **Confirmed (owner):** holding Space gradually descends after a few seconds; short height adjustments sometimes jump off, especially near corners/floor. Fix both.
+- **Implemented:** sustained climb while running plus Jump; no release-duration kick. Deliberate mostly-outward steering plus a fresh Jump still kicks; reversing and following the active corner do not. Removed obsolete climb-budget/tap settings, updated HUD/control notes and map route-budget check. Latest PvP UI/accepted combat preserved by basing isolated `fix/wallrun-space` on `a166adb`.
+- **Verified:** full movement/foundation/combat offline checks and builds; numerical 12-second climbs at 30/60/144 Hz; native corner-raycast regressions; one Studio controller run with a six-second hold (54.41 studs, 362 positive-velocity samples), releases, four tap lengths, reversal and outward kick. [Evidence](evidence/2026-11-02-wallrun-space.json).
+- **Observed unrelated runtime failure:** unchanged `Clips.spec:95` kong-vault end-pose assertion; not included among passing wall-run checks.
+- **Unresolved:** owner's playtest, actual corner height-tap traversal, physical input, respawn and multiplayer. No main merge/publication or concurrent worktree edits. Refreshed range is in the fix worktree; older windows are preserved.
+
+
 ## 2026-11-01 — Three distinct kicks
 
 - **Confirmed:** owner wanted "bam, bam, bam" in every state, not "drawing back a bow", then "too much like your screen's just zooming in". Sharp gun kicks plus a view roll and eye shove, with little zoom, were accepted: "perfect, that's good now". Slide gun, ADS on the move, arc look and running vibration also approved. See [status](status.md).
