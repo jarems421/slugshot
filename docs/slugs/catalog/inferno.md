@@ -480,7 +480,29 @@ The owner pasted an outside critique: the features are good but don't read as on
 
 **Rights check (Unresolved):** the silhouette is its own, with no arms or feet, a slim leaning body, spines and different ear-antennae. But an orange body, glowing antenna tips and a head emblem share a layout with the franchise reference, even though each one differs. The belly no longer uses a flame. A proper side-by-side and the name and IP check are needed before any publication.
 
-**Transformed form:** not updated. It is still an earlier round, with the old brow and snout, and gets redone once the base form is agreed.
+## Confirmed — transformed form direction, 2026-11-02
+
+The owner rejected the bullet form because it looks like a missile. It should be a cool transformation that mixes a slug with a dragon, keeping the character's DNA.
+
+**Revision, 2026-11-02:** keep the base form's wide grin, make the eyes larger, and give him real wings, not spikes or small arms.
+
+**Revision 2, 2026-11-02:** shorten the tail by a noticeable amount, put the wings down at his sides, and replace the trailing fire with a small animated fire on the tail tip: noticeable and medium-sized, in the style of the flame images the owner supplied. Those are stock images, so the flame was drawn fresh and not traced.
+
+**Revision 3, 2026-11-02:** spread the wings out instead of tucking them in, make them bigger, and join them along a longer stretch of the body, not at one point. Make the flame less cartoon-like next to the body and point it backwards in line with the tail. Shorten the transformed body.
+
+**Revision 4, 2026-11-02:** remove the yellow triangle above the mouth, move the emblem down so it shows from the front, and blend the fire into the tail so it looks part of it.
+
+**Revision 5, 2026-11-02:** the smile's high corner touched the eye, so it was lowered with a shorter hook.
+
+## Confirmed — final transformed design, 2026-11-02
+
+The owner: "okay its perfect, make this the finalised design". Both forms are now final as concepts. Next: Blender, Roblox Studio, then shooting.
+
+## Implemented — final slug-dragon concept
+
+A bigger form with a compact curving body, an arched neck, a short soft snout, a short tail and four spines. Big solid leathery wings spread out and slightly up from a long join along the body, with a strong front arm, ribs and a scalloped back edge, running from deep red to orange with a thin gold edge. It carries Inferno's own ear-antennae, base-size burning eyes, the base form's grin, ember crest, freckles and stripes. The ember crest sits on the front of the forehead. The last part of the tail heats up and glows, running with no outline into a medium-sized 3D flame that streams straight back, shading from yellow through orange to red, with calm one-second looping motion. The franchise form's flame limbs, burning wings and horned crown are deliberately not used.
+
+**Rights check (Unresolved):** an orange winged creature with a yellow underside and a flame on its tail tip also resembles a very well-known character from another franchise, so the check before publication should cover that as well as the slug reference.
 
 ## Considering — not approved
 
@@ -507,4 +529,4 @@ The Kindle mark-and-ignite idea in the report is dropped from the recommendation
 
 ## Unresolved
 
-The transformed form, which is still an early round with the old brow and snout; the small step in the antenna tips seen from the side; the shot numbers and ability; the Blender build, ink shell, rig, Roblox export and Studio check; and a side-by-side and name/IP check before any publication. "Inferno" sounds like the franchise's Infurnus.
+The small step in the antenna tips seen from the side; the shot numbers and ability; the Blender build, ink shell, rig, Roblox export and Studio check; and a side-by-side and name/IP check before any publication. "Inferno" sounds like the franchise's Infurnus.

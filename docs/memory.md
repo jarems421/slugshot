@@ -18,7 +18,7 @@
 - **Confirmed:** sixth critique: bigger, rounder eyes with soft lids and no creases, and the belly diamonds cleared. A multi-tongued belly flame was again not used.
 - **Confirmed:** plain belly, a heavier lid on one eye, and more depth because the face looked flat from the front.
 - **Confirmed:** the forward face masses looked wrong and were removed. Wider cute-fierce eyes, a deeper smile and more marking detail were requested.
-- **Confirmed:** the base form is final and the name is Inferno. The transformed form is next.
+- **Confirmed:** the base form is final and the name is Inferno. The bullet transformed form was rejected as a missile; owner wants a slug mixed with a dragon, keeping his DNA. The slug-dragon concept was then confirmed as final ("okay its perfect"), with Blender, Studio and shooting next.
 - **Implemented:** final original concept of the base form ([record](slugs/catalog/inferno.md)), plus the research report in `reports/`.
 - **Unresolved:** owner verdict, shot numbers, the ability, and a name and IP check, since Inferno sounds like the franchise's Infurnus.
 
