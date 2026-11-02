@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-02 (`experiment/lobby`):** Slug Grove is in the hub place: mountain, falls, pond, mushrooms, plants and 30 Floppies at 1.3 studs. **Verified:** Studio check run with no errors or floor holes. **Unresolved:** owner's verdict, slug motion and phone cost; see [lobby hub](art/lobby-hub.md).
+
 **Implemented, 2026-11-02 (concept only, not in Roblox):** Slug Grove v5: broad mountain summits with jagged crowns, about 185 studs tall in the middle. **Unresolved:** owner's verdict; size change for slugs is on `fix/slug-size`, not in this branch.
 
 **Implemented, 2026-11-02 (`experiment/lobby`), concept only, owner verdict pending:** slug grove v4 (uneven three-peak mountain, waterfall landing in a richer pond, mushrooms, Floppies; about 10 to become Inferno once its model exists) as shader asset 9 in the asset library. Device testing waits until the lobby is built.

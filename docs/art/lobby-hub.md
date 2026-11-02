@@ -64,3 +64,13 @@ The owner chose an automatic estimate after each lobby or map change, with real 
 - **Don't trust it for:** real frame rate, heat or memory crashes. The budgets (200k triangles, 150 draw calls, 100 MB of textures) are starting guesses until a real device run calibrates them. Touch controls aren't shown, and the level numbers are stand-ins for what a real device picks.
 - **First results:** textures 135 to 168 MB over the guess everywhere. Spawn about 171k triangles and 130 draw calls at Low detail; Across and Falling are heaviest, about 277k and 226. At level 1 steam and flames mostly go, portals flatten, and the volcano vanishes from across the map. The desktop help panel would cover about half a phone screen, so it must be hidden on touch before the real test.
 - **Real device test, later:** `python tools/lobby/build_hub.py --phone` builds the self-running private copy, without the owner's private clips. Publishing it is a manual step in Studio.
+
+## Slug Grove (slug side, built 2026-11-02)
+
+**Implemented, owner's verdict pending.** Nine `hub-grove-*` pieces from asset 9 in the library (`tools/lobby/hub_mesh.py`), placed by `buildGrove` in `HubArt.server.luau`: concept origin at the pond (radius 155 at 90 degrees), +z toward the wall. Mountain, ground, stones, rune stones and mushrooms are solid as drawn; water, falls, plants and crystals are not.
+
+- **Mountain:** three peaks with three, two and one wide sharp tips, about 390 studs across. Its back passes through the wall, so the wall is hidden from 55 to 125 degrees and has no collision from 62 to 118, so players can climb over.
+- **Ground:** replaces the flat block-out from 40 to 135 degrees, with a basin for the pond.
+- **Slugs:** 30 real Floppies at 1.3 studs from `experiments/lobby/scale/shared/grove_slugs.json`, moved by `GroveSlugs.client.luau`: hops, a drowsy idle up close, and one in four glancing at a player within 15 studs. Ten carry `InfernoLater`, to swap once Inferno has a Roblox model.
+- **Plants:** baked from the concept's versions of Codex's designs, because Codex's own models are 7,000 to 14,400 triangles each.
+- **Cost:** a Floppy is the heavy part, so slugs beyond 130 studs (60 at low detail) aren't drawn. A lighter slug model is the likely fix if phones struggle.

@@ -13,7 +13,10 @@ local ServerStorage = game:GetService("ServerStorage")
 local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
 local rimShape =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
+local groveSlugs =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_slugs")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
+local FloppyAppearance = require(script.Parent:WaitForChild("FloppyAppearance")) :: any
 
 type PartInfo = { ink: string?, emissive: number, min: Vector3, max: Vector3 }
 type PieceInfo = {
@@ -59,6 +62,12 @@ local DISTANT = {
 	"hub-ceiling-vines",
 	"hub-arch",
 	"hub-volcano",
+	"hub-grove-mountain",
+	"hub-grove-rocks",
+	"hub-grove-shrooms",
+	"hub-grove-dress",
+	"hub-grove-flora",
+	"hub-grove-gems",
 	"hub-well-isles",
 	"hub-well-bits",
 	"hub-rock-debris",
@@ -243,6 +252,10 @@ local SOLID: { [string]: { string } } = {
 	["hub-arch"] = { "Pylons", "ArchL", "ArchR", "Pillars", "Base" },
 	["hub-plaza-floor"] = { "Floor" },
 	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
+	["hub-grove-mountain"] = { "MountainM", "MountainA", "MountainB", "MountainBack" },
+	["hub-grove-ground"] = { "Ground", "Bed" },
+	["hub-grove-rocks"] = { "Stones", "Runes" },
+	["hub-grove-shrooms"] = { "Stems", "Caps" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -385,6 +398,16 @@ local function beam(
 end
 
 -- The block-out's stand-ins for these designs turn invisible. Their collision stays, except what would snag a fall.
+-- Where a point stands round the hub, in the layout's degrees: 0 is PvP and 90 the slug side.
+local function zoneAngle(at: Vector3): number
+	return math.deg(math.atan2(at.X, -at.Z))
+end
+
+local function onSlugSide(at: Vector3): boolean
+	local angle = zoneAngle(at)
+	return angle >= 40 and angle <= 135
+end
+
 local function hideBlockOut()
 	local root = workspace:WaitForChild("LobbyScale", 30) :: Model
 	local function hide(container: Instance?)
@@ -413,6 +436,13 @@ local function hideBlockOut()
 	if oldVolcano then
 		oldVolcano:Destroy()
 	end
+	-- So do the grove's pond and mountain.
+	for _, name in { "SlugPond", "WaterfallMountain" } do
+		local old = root:FindFirstChild(name)
+		if old then
+			old:Destroy()
+		end
+	end
 	-- The real gates stand where the block-out's did.
 	local portals = root:FindFirstChild("Portals")
 	if portals then
@@ -438,6 +468,17 @@ local function hideBlockOut()
 	end
 	local cavern = root:FindFirstChild("Cavern")
 	if cavern then
+		-- The mountain's back passes through the wall here. The dark beyond it is the backdrop, and players can climb over.
+		for _, item in cavern:GetChildren() do
+			if item:IsA("BasePart") and item.Name == "Wall" then
+				local angle = zoneAngle(item.Position)
+				if angle > 55 and angle < 125 then
+					item.Transparency = 1
+					item.CanCollide = angle <= 62 or angle >= 118
+					item.CanQuery = false
+				end
+			end
+		end
 		hide(cavern:FindFirstChild("Ceiling"))
 		local sky = cavern:FindFirstChild("SkyWell")
 		if sky then
@@ -466,7 +507,11 @@ local function hideBlockOut()
 			if item:IsA("BasePart") and item.Name == "Surface" then
 				local at = item.Position
 				local angle = math.abs(math.deg(math.atan2(at.X, -at.Z)))
-				if item.Color == portalGround or (item.Color == growthGround and angle < 39) then
+				if
+					item.Color == portalGround
+					or (item.Color == growthGround and angle < 39)
+					or onSlugSide(at)
+				then
 					item.Transparency = 1
 				end
 			end
@@ -1351,6 +1396,213 @@ end
 
 -- What players bump into: the arch's feet, the pylons, the columns and the volcano itself, all invisible and simple.
 -- The hidden block-out shapes the solid art replaces, so nothing invisible stands proud of it.
+-- The slug side: Slug Grove (docs/art/lobby-hub.md). Its concept's space is shader units, with the pond at the origin, +Z
+-- toward the wall and the hub behind -Z.
+local GROVE = CFrame.new(layout.pond.radius, 0, 0) * CFrame.Angles(0, math.pi / 2, 0)
+local GROVE_KEYS = {
+	"hub-grove-ground",
+	"hub-grove-mountain",
+	"hub-grove-water",
+	"hub-grove-falls",
+	"hub-grove-rocks",
+	"hub-grove-shrooms",
+	"hub-grove-flora",
+	"hub-grove-dress",
+	"hub-grove-gems",
+}
+local GROVE_FALL_TIERS = {
+	{ y0 = 24, y1 = 16, x = 0.5, w0 = 0.35, w1 = 0.6 },
+	{ y0 = 15.9, y1 = 8, x = 0.1, w0 = 0.7, w1 = 1.15 },
+	{ y0 = 7.9, y1 = -0.1, x = 0.4, w0 = 1.15, w1 = 2.1 },
+}
+local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
+local GROVE_TINT = Color3.fromRGB(150, 245, 225)
+-- Every slug is this tall outside the gun (owner, 2026-11-02).
+local SLUG_STUDS = 1.3
+-- The source Floppy's length between root and antenna, as in the combat flight model.
+local SLUG_SOURCE = 2.72
+local GLANCE_EVERY = 4 -- about one slug in this many looks at a passing player
+local INFERNO_EVERY = 3 -- these become Inferno when its Roblox model exists; Floppies stand in until then
+
+local function groveAt(x: number, y: number, z: number): Vector3
+	return GROVE * Vector3.new(x * UNIT, y * UNIT, z * UNIT)
+end
+
+-- The falls' face, as groveFallZ in the concept.
+local function groveFallZ(y: number): number
+	return 26 - 0.94 * 18.5 * (0.3 + 0.7 * math.max(1 - y / 31, 0) ^ 1.05)
+end
+
+local function groveFlow(
+	tier: { y0: number, y1: number, x: number, w0: number, w1: number },
+	offset: number,
+	texture: string,
+	color: Color3,
+	transparency: NumberSequence,
+	speed: number,
+	emission: number
+)
+	local from = groveAt(tier.x, tier.y0, groveFallZ(tier.y0) - offset)
+	local to = groveAt(tier.x, tier.y1, groveFallZ(tier.y1) - offset)
+	local top, bottom = holder("FallFlow", from, Vector3.one), holder("FallFlow", to, Vector3.one)
+	local along = (to - from).Unit
+	local across = GROVE.XVector
+	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+	-- The width runs along each attachment's Y.
+	local axes = CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
+	a0.CFrame, a1.CFrame = axes, axes
+	a0.Parent, a1.Parent = top, bottom
+	local b = Instance.new("Beam")
+	b.Attachment0, b.Attachment1 = a0, a1
+	b.Width0, b.Width1 = tier.w0 * 2 * UNIT, tier.w1 * 2 * UNIT
+	b.FaceCamera = false
+	b.Segments = 1
+	b.Texture = texture
+	b.TextureMode = Enum.TextureMode.Wrap
+	b.TextureLength = 30
+	b.TextureSpeed = speed
+	b.LightEmission = emission
+	b.LightInfluence = 0
+	b.Color = ColorSequence.new(color)
+	b.Transparency = transparency
+	b.Parent = top
+end
+
+local function groveWater()
+	local melt = fade({ { 0, 0.25 }, { 0.85, 0.25 }, { 1, 1 } })
+	for _, tier in GROVE_FALL_TIERS do
+		groveFlow(tier, 0.28, fxTexture("flow"), Color3.new(1, 1, 1), melt, 0.7, 0.2)
+		groveFlow(
+			tier,
+			0.31,
+			fxTexture("streak"),
+			GROVE_TINT,
+			fade({ { 0, 1 }, { 0.1, 0.55 }, { 0.85, 0.5 }, { 1, 1 } }),
+			1.3,
+			0.5
+		)
+	end
+	local foot = groveAt(GROVE_FOOT.X, GROVE_FOOT.Y, GROVE_FOOT.Z)
+	local landing = holder("GroveFoot", foot, Vector3.new(26, 0.5, 14))
+	local ripples = Instance.new("ParticleEmitter")
+	ripples.Name = "Ripples"
+	ripples.Texture = fxTexture("ripple")
+	ripples.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+	ripples.EmissionDirection = Enum.NormalId.Top
+	ripples.Speed = NumberRange.new(0.05)
+	ripples.Color = ColorSequence.new(GROVE_TINT)
+	ripples.LightEmission = 0.5
+	ripples.LightInfluence = 0
+	ripples.Size = NumberSequence.new(5, 26)
+	ripples.Transparency = fade({ { 0, 0.5 }, { 0.15, 0.2 }, { 1, 1 } })
+	ripples.Lifetime = NumberRange.new(2.2, 3)
+	ripples.Rate = 1.4
+	ripples.Parent = landing
+	local mist = Instance.new("ParticleEmitter")
+	mist.Name = "Mist"
+	mist.Texture = fxTexture("mist")
+	mist.EmissionDirection = Enum.NormalId.Top
+	mist.Speed = NumberRange.new(2, 5)
+	mist.SpreadAngle = Vector2.new(30, 30)
+	mist.Color = ColorSequence.new(Color3.fromRGB(215, 245, 240))
+	mist.LightEmission = 0.25
+	mist.LightInfluence = 0
+	mist.Size = NumberSequence.new(9, 26)
+	mist.Transparency = fade({ { 0, 1 }, { 0.2, 0.72 }, { 1, 1 } })
+	mist.Lifetime = NumberRange.new(3, 5)
+	mist.Rotation = NumberRange.new(0, 360)
+	mist.RotSpeed = NumberRange.new(-12, 12)
+	mist.Rate = 4
+	mist.Parent = landing
+	pointLight(foot + Vector3.new(0, 8, 0), GROVE_TINT, 1.3, 42)
+	-- Rings spreading across the pond now and then, and spores drifting through the clearing.
+	local pond = holder("GrovePond", groveAt(0, -0.05, 0), Vector3.new(58, 0.5, 58))
+	local rings = ripples:Clone()
+	rings.Size = NumberSequence.new(2, 11)
+	rings.Rate = 0.9
+	rings.Parent = pond
+	local air = holder("GroveAir", groveAt(0, 3, -2), Vector3.new(190, 26, 190))
+	local spores = Instance.new("ParticleEmitter")
+	spores.Name = "Spores"
+	spores.Texture = fxTexture("spore")
+	spores.EmissionDirection = Enum.NormalId.Top
+	spores.Speed = NumberRange.new(0.3, 1.1)
+	spores.SpreadAngle = Vector2.new(180, 180)
+	spores.Color = ColorSequence.new(Color3.fromRGB(190, 255, 220))
+	spores.LightEmission = 1
+	spores.LightInfluence = 0
+	spores.Size = NumberSequence.new(0.5, 0.25)
+	spores.Transparency = fade({ { 0, 1 }, { 0.2, 0.15 }, { 0.8, 0.15 }, { 1, 1 } })
+	spores.Lifetime = NumberRange.new(7, 12)
+	spores.Rate = 10
+	spores.Parent = air
+end
+
+local function groveSlugModels()
+	local asset = require(ServerStorage:WaitForChild("FloppyAsset")) :: any
+	local ok, container = pcall(function()
+		return InsertService:LoadAsset(asset.model)
+	end)
+	if not ok then
+		warn(`HubArt: the grove's Floppy failed to load: {container}`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
+		return
+	end
+	local template = Instance.new("Model")
+	template.Name = "GroveSlug"
+	for _, child in (container :: Instance):GetChildren() do
+		child.Parent = template
+	end
+	(container :: Instance):Destroy()
+	FloppyAppearance.apply(template, 0.08)
+	for _, item in template:GetDescendants() do
+		if item:IsA("BasePart") then
+			item.Anchored = true
+			item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+			item.CastShadow = false
+		elseif item:IsA("Bone") then
+			item.Transform = CFrame.identity
+		end
+	end
+	local eyeL = template:FindFirstChild("eye_L", true) :: Bone
+	local eyeR = template:FindFirstChild("eye_R", true) :: Bone
+	local root = template:FindFirstChild("root", true) :: Bone
+	local head = template:FindFirstChild("head", true) :: Bone
+	local sourceScale = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / 0.74
+	template:ScaleTo(template:GetScale() * SLUG_STUDS / (SLUG_SOURCE * sourceScale))
+	local up = (head.WorldPosition - root.WorldPosition).Unit
+	local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
+	local front = (face - up * face:Dot(up)).Unit
+	-- Slug space: its root on the ground, +Y up out of its back, -Z the way its face points.
+	template.WorldPivot = CFrame.fromMatrix(root.WorldPosition, up:Cross(-front), up, -front)
+	local group = Instance.new("Folder")
+	group.Name = "GroveSlugs"
+	group.Parent = art
+	for index, site in groveSlugs do
+		local slug = template:Clone()
+		slug.Name = `GroveSlug{index}`
+		slug:SetAttribute("GroveGlances", index % GLANCE_EVERY == 1)
+		slug:SetAttribute("InfernoLater", index % INFERNO_EVERY == 0)
+		slug:PivotTo(
+			CFrame.new(GROVE * Vector3.new(site.x, site.y, site.z))
+				* CFrame.Angles(0, site.heading, 0)
+		)
+		slug.Parent = group
+	end
+	template:Destroy()
+end
+
+local function buildGrove()
+	for _, key in GROVE_KEYS do
+		local model = place(key)
+		if model then
+			model:PivotTo(GROVE * model:GetPivot())
+		end
+	end
+	groveWater()
+	groveSlugModels()
+end
+
 local function retireBlockOut()
 	local root = workspace:WaitForChild("LobbyScale") :: Model
 	local function retire(container: Instance?)
@@ -1368,6 +1620,12 @@ local function retireBlockOut()
 	if shore then
 		for _, item in shore:GetDescendants() do
 			if item.Name == "Lip" and item:IsA("BasePart") then
+				item:Destroy()
+			end
+		end
+		-- The grove's ground is solid as drawn, with a basin for the pond, so the flat one can't stay.
+		for _, item in shore:GetChildren() do
+			if item:IsA("BasePart") and item.Name == "Surface" and onSlugSide(item.Position) then
 				item:Destroy()
 			end
 		end
@@ -1393,6 +1651,7 @@ buildSkyWell()
 buildPortals()
 buildVolcano()
 buildArch()
+buildGrove()
 buildCollision(function()
 	retireBlockOut()
 	workspace:SetAttribute("HubSolid", true)

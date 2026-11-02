@@ -987,3 +987,9 @@
 - **Confirmed:** owner wants thick summits with several jagged spikes per peak, not small shrunken tips, and slugs at 1.3 studs outside the gun.
 - **Implemented:** summits keep 34-44% of their base width and end in crowns of three, four and three jagged masses. Heights are about 185, 130 and 110 studs; the foot stays about 390 across. Three stills were re-rendered and inspected.
 - **Unresolved:** owner's verdict; the two closer page views still show the previous summits; the two side crowns read a little flat; the footprint against the wall and Veylume needs checking in Roblox.
+
+## 2026-11-02 - Slug Grove built in Roblox
+
+- **Confirmed:** owner approved building straight into Studio without another concept page, with wide sharp tips, one to three per big peak.
+- **Implemented/verified in Studio:** nine private pieces and 30 Floppies at 1.3 studs. Evidence from a check run: no errors in the filtered log, 182 floor raycasts with 0 holes, 30 slugs, 51 solid parts built in 18.5 s, and captures inspected. About 650-700k triangles on desktop with the grove in view.
+- **Unresolved:** owner's verdict; hopping and glancing weren't watched running; walking and climbing untested; mobile check not re-run; Inferno still uses Floppy stand-ins; plants are the concept's versions, not Codex's models; the size of the mountain against Veylume's overgrowth at 40-50 degrees.

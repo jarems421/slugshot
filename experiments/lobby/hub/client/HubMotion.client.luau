@@ -276,6 +276,7 @@ local chosen = false
 local button: TextButton? = nil
 
 local function setDetail(value: boolean)
+	workspace:SetAttribute("HubDetailLow", value)
 	low = value
 	for _, tag in { "HubDistantInk", "HubSpareCloud" } do
 		for _, part in CollectionService:GetTagged(tag) do

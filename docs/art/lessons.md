@@ -276,3 +276,7 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 ## Mountain summits (2026-11-02)
 
 A slope that narrows to zero always ends in a small, shrunken tip, however broken its rocks are. Keep a share of the width at the top and split it into separate tapered masses with notches between them (owner: "too thin at the top"). In the grove's views the camera faces +z, so a peak at negative x appears on screen right.
+
+## Grove in Roblox (2026-11-02)
+
+Scattered props sharing one mesh need a budget per prop, not per part: 200 triangles per mushroom cap read as faceted up close. Small emissive spots such as lily buds blow out to white at the strength that suits larger glowing shapes. Crowds of full-detail skinned models cost far more than the scenery around them, so check triangles with them in and out of view.

@@ -4,6 +4,11 @@ local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
+	{ name = "grovePath", from = Vector3.new(75, 9, 0), at = Vector3.new(285, 70, 0) },
+	{ name = "grovePond", from = Vector3.new(112, 7, -24), at = Vector3.new(190, 14, 6) },
+	{ name = "grovePeaks", from = Vector3.new(60, 34, 60), at = Vector3.new(285, 120, 0) },
+	{ name = "groveTips", from = Vector3.new(100, 55, -80), at = Vector3.new(290, 150, 10) },
+	{ name = "groveSlugs", from = Vector3.new(170, 3.4, -43), at = Vector3.new(174, 1, -46) },
 	{ name = "crack", from = Vector3.new(-34, 9, -103), at = Vector3.new(-40, 0, -112) },
 	{ name = "stormUp", from = Vector3.new(0, 9, 12), at = Vector3.new(0, 200, -10) },
 	{ name = "ring", from = Vector3.new(-105, 12, -105), at = Vector3.new(-10, 200, -10) },
@@ -26,6 +31,20 @@ task.spawn(function()
 		task.wait(0.5)
 	end
 	print("HUBCHECK solid ready")
+	-- The slug side has no flat ground under its art, so it must be solid all over.
+	local holes, tested = {}, 0
+	for angle = 42, 133, 7 do
+		for radius = 92, 296, 17 do
+			local x, z = math.sin(math.rad(angle)) * radius, -math.cos(math.rad(angle)) * radius
+			tested += 1
+			if not workspace:Raycast(Vector3.new(x, 215, z), Vector3.new(0, -240, 0)) then
+				table.insert(holes, string.format("%d/%d", angle, radius))
+			end
+		end
+	end
+	print(`HUBCHECK groveFloor tested={tested} holes={#holes} {table.concat(holes, " ")}`)
+	local slugs = workspace:WaitForChild("HubArt"):FindFirstChild("GroveSlugs")
+	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	print("HUBCHECK tour starts")
 	local camera = workspace.CurrentCamera
