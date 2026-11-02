@@ -37,3 +37,9 @@ Decision: [ADR 0021](decisions/0021-loadout-controls-and-inspect.md).
 ## Current inspect correction (2026-11-02)
 
 **Confirmed/implemented:** the owner clarified a toss, end-over-end flip, catch, then outward wrist reveal. Floppy stays in the chamber and springs into his turn; his bum shake articulates the hips and upper body without added jiggles. The gesture is now 6.8 seconds; controls and interruption rules stay as previously verified. Earlier barrel-twirl/visibility-offset candidates are superseded. [Revision and evidence](slugs/inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current). Owner art/feel approval remains unresolved.
+
+## Owner-selected resting pose and wider camera (2026-11-02)
+
+**Confirmed:** owner selected Idle arms (first person): Gun tips down = -20 degrees, Arms up = -0.35 in the live P panel, and requested a noticeably wider base third-person view. **Implemented:** baked `idleGunDown = -20` and `idleLift = -0.35` into Tuning defaults; increased fixed third-person distance from 7 to 10 studs (about 43% farther). V still toggles first person; the wheel still selects slugs. The two numeric arm values are owner-selected; 10 studs is the implementation choice for the requested camera change, with owner feel verdict unresolved. Combat/foundation/movement formatting, lint, strict types and place builds pass. Fresh normal preview: `build/SlugshotInspectTuned.rbxlx`.
+
+**Implemented/verified in Studio:** the fresh P panel shows -0.35 and -20.00 as unchanged defaults, and the base third-person view is visibly wider. Captures: `build/studio-cleanup/tuned-first-person-panel.png` and `tuned-third-person.png`. Checked both camera modes with the normal playable place; this is not a new multiplayer/device test.

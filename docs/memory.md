@@ -1593,3 +1593,9 @@
 - **Implemented:** isolated `feature/loadout-controls`; shared 6.8-second timing, wider toss arc and corrected FP carry depth, chamber-centred turn with conservative radial/axial fit, compression/extension, hip/upper/head counterrotation and staged face. Cold-launch Handle/weld replication race now retries before setup registers the loaded driver. No Blender source, published assets, main or concurrent lobby/SFX/Inferno work changed.
 - **Implemented/verified:** offline combat/creature checks, final 36-pose Studio review, real-time sequences and native loadout regression pass (including grip, chamber envelope, independent hip motion and holster cleanup); see [current revision/evidence](slugs/inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current). Preserve rejected sheets and distinguish native/offline checks from subjective art approval.
 - **Unresolved:** owner timing/feel verdict, multiplayer/latency and broader devices.
+
+## 2026-11-02 - Bake owner resting pose and widen third person
+
+- **Confirmed:** owner wants the live P-panel Idle arms values Gun tips down = -20 and Arms up = -0.35 as defaults, plus a noticeably farther base third-person camera.
+- **Implemented/verified offline and in Studio:** Tuning defaults updated; fixed third-person distance is 10 rather than 7 studs. Combat/foundation/movement checks pass; fresh P panel shows both requested values as defaults, and native third-person view is visibly wider. New normal place is `build/SlugshotInspectTuned.rbxlx`; previous inspect preview saved before replacement, creature-design window preserved.
+- **Unresolved:** owner verdict on the chosen 10-stud camera distance. No other live panel values were requested or copied.

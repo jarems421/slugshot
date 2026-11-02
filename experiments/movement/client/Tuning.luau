@@ -17,10 +17,10 @@ Tuning.values = {
 	-- Arms and grip below were set by the owner on this panel (2026-11-01).
 	-- First-person arms at rest: by the sides, hands and gun in the lower view.
 	idleDepth = -0.7,
-	idleLift = -0.15,
+	idleLift = -0.35, -- owner-selected default, 2026-11-02
 	idlePitch = 36,
 	idleOut = 0.17,
-	idleGunDown = -5,
+	idleGunDown = -20, -- owner-selected default, 2026-11-02
 	idleLean = 0.4,
 	idleDrop = 0.1,
 	-- First-person arms while running.

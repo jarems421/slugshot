@@ -216,7 +216,7 @@ return table.freeze({
 		-- Steps: footfalls per second; Rate: how fast it fades in and out.
 		RunShake = { Bounce = 0.018, Steps = 3.2, Rate = 6 },
 		SprintShake = { Bounce = 0.035, Steps = 3.7, Rate = 6 },
-		MinZoom = 7,
+		MinZoom = 10, -- owner requested a noticeably wider third-person base view, 2026-11-02
 		MaxZoom = 18,
 		Shoulder = Vector3.new(1.5, 0.45, 0),
 		-- First person: the camera follows the animated head (per axis, root space) after
