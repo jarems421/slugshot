@@ -1,5 +1,27 @@
 # Project memory
 
+## 2026-11-02 — Inferno and the ability rule
+
+- **Confirmed:** one versatile ability per slug, rewarding creative use ([rule](slugs/catalog/index.md#ability-rule)). Inferno is the working name for the Burpy-inspired fire slug: shorter flight time, harder hits, exact aim from the second kick, no arms or feet, and a small tail.
+- **Confirmed:** owner rejected the first concept. Inferno is a predator: fox-ear antennae, orange, red and yellow with no black, and a predator head from the front.
+- **Confirmed:** owner rejected the second concept as a bird with a beak and a strong brow. "Predator" mainly means the eyes, and snake eyes are out because they look like a dragon. Ear-antennae should be slightly shorter, droopier and flexible.
+- **Confirmed:** owner chose the Burning eyes, a bit bigger. He should look like a predator among slugs, not scary, with a friendly, expressive cartoon smile.
+- **Confirmed:** owner said the direction is right, and asked for bigger, rounder eyes and a cocky, arrogant cartoon cheese grin with teeth.
+- **Confirmed:** the grin was too cocky and tooth lines are out. Owner wants a happy, slightly cocky solid cartoon smile (reference supplied) and real eyelids, because lidless eyes looked uncanny.
+- **Confirmed:** owner passed on a critique: the features must read as one expressive face, with lids, framing around the eyes, facial planes and one clear expression.
+- **Confirmed:** second critique: aim between cute mascot and little menace, with softer eyes, subtler cheeks, a longer smile and more space between features.
+- **Confirmed:** third critique: remove cheek projection, slim the body, a compact taller smile, taller eyes and a flat forehead flame. The eyes make him cute; the rest makes him powerful.
+- **Confirmed:** owner finds it "pretty nice": remove the extra head markings and the head bulb, keep the spines and stripes, and make the forehead mark a symmetrical diamond flame running further down.
+- **Confirmed:** owner chose a small ember crest on the forehead, and a soft golden belly patch that widens towards the base.
+- **Confirmed:** fourth critique: lower the emblem, tone the lids down to natural ones, and make the belly an intentional flame motif.
+- **Confirmed:** fifth critique: a bigger emblem and no creases at the eye corners. Its three-point flame belly was not followed, because that is the franchise slug's signature marking; three rising embers were used instead.
+- **Confirmed:** sixth critique: bigger, rounder eyes with soft lids and no creases, and the belly diamonds cleared. A multi-tongued belly flame was again not used.
+- **Confirmed:** plain belly, a heavier lid on one eye, and more depth because the face looked flat from the front.
+- **Confirmed:** the forward face masses looked wrong and were removed. Wider cute-fierce eyes, a deeper smile and more marking detail were requested.
+- **Confirmed:** the base form is final and the name is Inferno. The transformed form is next.
+- **Implemented:** final original concept of the base form ([record](slugs/catalog/inferno.md)), plus the research report in `reports/`.
+- **Unresolved:** owner verdict, shot numbers, the ability, and a name and IP check, since Inferno sounds like the franchise's Infurnus.
+
 ## 2026-10-31 — Bridge style leaning
 
 - **Considering:** owner is not fully decided but thinks droopy wooden suspension bridges would look best. Recorded in the [roadmap](art/lobby-roadmap.md#layout) and [asset plan](art/lobby-assets.md).

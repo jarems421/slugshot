@@ -7,6 +7,13 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 | Design | Status | Design and sources |
 | --- | --- | --- |
 | Floppy (first slug) | Final design confirmed as a 3D concept; Blender game model and Studio import pending | [Design and reference notes](flopper-inspired.md) |
+| Inferno (fire slug) | Base form final as a 3D concept; transformed form, Blender model and Studio import pending | [Design and reference notes](inferno.md) |
+
+## Ability rule
+
+**Confirmed, owner, 2026-11-02:** each slug has **one ability**, with no choosing between abilities before a shot. Each ability should be **versatile**, rewarding how creatively it's used rather than doing one fixed thing. The owner's example, an illustration and not a strict template: an electric slug electrocutes a player it hits, but fired into a pool of water it electrifies the water, slowing players over a larger area for slightly less damage. Abilities are made in-house and inspired by Slugterra's elements, not copied from its named moves.
+
+## New slug records
 
 Copy the [new slug record template](template.md) for each future creature. Record:
 

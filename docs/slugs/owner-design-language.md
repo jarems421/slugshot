@@ -79,6 +79,19 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | "Slugterra-esque" (animation) | Original acrobatic gun flourish: a short toss and forward flip, quick but readable. | Copying a show's specific choreography (avoid); a backflip that reads as flipping downward from the third-person camera. |
 | "acrobatic but not disruptive" | Short flourishes (~0.5 s) with no input locks, readable from behind while running, arm visibly carrying the motion. | A static arm with only the gun moving; flourishes hidden low in front of the hip. |
 
+## What phrases have meant (Inferno concept, 2026-11-02)
+
+| The owner says | What satisfied it (recorded) | What failed or was rejected |
+| --- | --- | --- |
+| "predator" | Mainly the eyes, and only "a predator amongst slugs": cute but fierce, wide glowing eyes with a slight lift. | A strong brow and snout ("angry bird"); slit pupils (dragon); anything properly scary. |
+| "creepy" (mouth) | A solid cartoon smile from his own reference: no tooth lines, set into the face, teeth falling into shadow at the corners. | A thin line; fine tooth lines; visible lips. |
+| "uncanny" (eyes) | Soft upper lids that stop before both corners. | Lidless discs; lids all the way round (glasses); fold lines and creases (crow's feet). |
+| "too flat", "too 2D" (face) | Very soft sockets, a mild form shadow and a shadow under the smile, on the sleek head. | Forward masses around the mouth and forehead ("looks like a chud"), which also looked wrong from the side. |
+| "antennas", fox ears | A crossover: broad at the root, slicked back, drooping and flexible, with soft glowing tips. | Thin antennae; stubby cat ears; pale claw-like tips. |
+| "the blackness" | Orange, red and yellow only, with maroon outlines. | A charred black crust with molten cracks, however original. |
+
+He often pastes outside critiques; address each point, but they can drift towards the franchise character. A multi-tongued flame on the belly was declined twice for that reason, with him told each time.
+
 ## Misreadings and how they were resolved (Floppy design chat, 2026-10-31)
 
 | He said | I first took it as | What he meant, and how it became clear |
