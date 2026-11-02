@@ -2,6 +2,8 @@
 
 ## Charge accuracy, gentler drop and white ADS (2026-11-02)
 
+**Delivery:** owner explicitly requested committing/pushing this iteration and updating documentation. Implementation `064f7ed`, developed on `fix/shooting-feel`, is delivered to `main`. Existing native evidence and the playable range remain available; delivery does not imply owner feel/art approval.
+
 **Confirmed:** owner wants useful, mildly weaker first/second kicks, precise third-kick aim, and no random lateral spread. Floppy retains its weak identity. Approved animations stay; the dark ADS frame needs contrast and its green charge flash must become a white, Borderlands-inspired glow.
 
 **Implemented:** removed the fixed 62-stud aim cutoff, which switched valid distant targets to a 45-stud zero. A reachable surface now gets a muzzle-to-target ballistic solution using shared server drag/gravity. The third visible kick guarantees full charge and full correction, independent of tuning sliders. Shoulder-origin fallback uses the same policy. Per-frame gun presentation reads the crosshair ray; ballistic solves happen on release. Unreachable/background surfaces retain a stable 45-stud zero. A weaker shot beyond its range retains a nearer reachable arc instead of abruptly firing flat.
