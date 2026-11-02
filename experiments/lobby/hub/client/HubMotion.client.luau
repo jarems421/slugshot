@@ -335,6 +335,7 @@ if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
 	end)
 end
 workspace:GetAttributeChangedSignal("HubReduceDetail"):Connect(function()
+	chosen = true
 	setDetail(workspace:GetAttribute("HubReduceDetail") == true)
 end)
 

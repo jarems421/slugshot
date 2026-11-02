@@ -131,6 +131,7 @@ local function loadPiece(key: string): Model?
 	local info = private.assets[key]
 	if not info then
 		warn(`HubArt: {key} is not uploaded`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
 		return nil
 	end
 	local ok, container = pcall(function()
@@ -138,6 +139,7 @@ local function loadPiece(key: string): Model?
 	end)
 	if not ok then
 		warn(`HubArt: {key} failed to load: {container}`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
 		return nil
 	end
 	local loaded = container :: Instance
@@ -290,6 +292,12 @@ local function buildCollision(whenDone: () -> ())
 							failed,
 							os.clock() - started
 						)
+					)
+					workspace:SetAttribute("HubSolidParts", #solidQueue)
+					workspace:SetAttribute("HubSolidFailed", failed)
+					workspace:SetAttribute(
+						"HubArtFailed",
+						workspace:GetAttribute("HubArtFailed") or 0
 					)
 					whenDone()
 				end

@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-02 - Phone test build
+
+- **Owner request:** publish a private copy to test on a phone and report the results.
+- **Implemented:** `python tools/lobby/build_hub.py --phone` builds `build/SlugshotLobbyPhoneTest.rbxlx`: a self-running test of 8 views at both detail levels with a results card, using only the original movement clips, so the owner's private clips stay off Roblox. Run once in Studio on the PC to prove the test and card work.
+- **Not done:** nothing is published yet, and there are no phone results. No test experience exists, Open Cloud can't create one, and publishing through Studio's dialog needs focus and clicks. An attempt at Alt+P landed in another Studio window because the machine was in use; it opened no dialog and published nothing, but may have toggled a panel in that session. The agent stopped and handed the publish step to the owner.
+- **Measured on the PC:** high-detail triangles reach about 429k looking across the map and 408k from under the rock, above the 373k previously reported as heaviest. The frame rates from that run aren't valid: Studio throttles to 15 fps when it loses focus.
+
 ## 2026-11-02 - Ceiling redesign, one-piece storm, crisp floor lava
 
 - **Owner request:** crisper floor lava with a slight glow, a more interesting ceiling border, replace the black ring and its glowing lines (rune slabs suggested), fill the empty perimeter round the storm with small rocks and crystals, and make the storm one entity.

@@ -258,3 +258,5 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **A repeating map beats a bigger one for large surfaces:** the floor lava went from a few blurry pixels per stud to about 34, with world-space UVs and one 1024 tile. Mesh UVs outside 0 to 1 do repeat on a SurfaceAppearance.
 - **Stacked sheets read as separate pieces:** different speeds and hard alpha edges make layers look like loose chunks. Make the main body one opaque surface that reaches behind whatever frames it, and keep any overlay soft.
 - **A patch script should write its files together at the end:** one that stops midway leaves some files changed and others not.
+- **Never send global keystrokes to Studio on a shared machine:** `SetForegroundWindow` can silently fail, and the keys go to whatever has focus, which may be someone else's session or a place that must not be published. Check the foreground window first, and hand outward-facing steps to the owner.
+- **Studio frame rates only count while focused:** an unfocused window is throttled to 15 fps, which looks like a performance problem.
