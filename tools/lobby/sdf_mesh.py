@@ -106,15 +106,15 @@ VS = "#version 330\nin vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0
 
 
 class Gpu:
-    def __init__(self, page: str, item: dict, bank: list[float]):
+    def __init__(self, page: str, item: dict, bank: list[float], asset_map: str = ASSET_MAP, mains: dict | None = None):
         fs = extract(page, r'<script id="fs" type="x-shader/x-fragment">(.*?)</script>')
         prefix = fs[:fs.rindex("\nvoid main() {")]
         prefix = prefix.replace("precision highp float;", f"precision highp float;\n#define ASSET {item['shader']}", 1)
         self.ctx = moderngl.create_standalone_context()
         self.vbo = self.ctx.buffer(np.array([-1, -1, 3, -1, -1, 3], dtype="f4").tobytes())
         self.progs = {}
-        for name, main in (("grid", GRID_MAIN), ("paint", PAINT_MAIN)):
-            prog = self.ctx.program(vertex_shader=VS, fragment_shader="#version 330\n" + prefix + ASSET_MAP + main)
+        for name, main in (mains or {"grid": GRID_MAIN, "paint": PAINT_MAIN}).items():
+            prog = self.ctx.program(vertex_shader=VS, fragment_shader="#version 330\n" + prefix + asset_map + main)
             for uname, value in item["frames"][0].items():
                 if uname in prog:
                     prog[uname].value = value[0] if len(value) == 1 else tuple(value)
@@ -140,8 +140,8 @@ class Gpu:
         fbo.release(); tex.release()
         return out.transpose(2, 1, 0, 3)  # -> x, y, z
 
-    def paint(self, verts: np.ndarray):
-        prog, vao = self.progs["paint"]
+    def paint(self, verts: np.ndarray, program: str = "paint"):
+        prog, vao = self.progs[program]
         w = 2048
         h = (len(verts) + w - 1)//w
         pos = np.zeros((h*w, 4), dtype="f4")

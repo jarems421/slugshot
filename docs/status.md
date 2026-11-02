@@ -69,9 +69,27 @@
 
 **Confirmed, 2026-11-01 (`feature/slug-asset-pipeline`):** owner made the current Floppy the **final design**: glowing yellow-green antenna bulbs with a head light, sage sores matching the upper lids, ink outline. In Roblox in `SlugshotFloppyTest-SlugshotLook` with the final blaster. [Final design](slugs/catalog/flopper-inspired.md#final-design-2026-11-01). **Unresolved:** Studio check.
 
-**Implemented, 2026-11-01 (`feature/slug-asset-pipeline`):** Floppy design agreed by the owner (sage glowing sores matching the upper lids, glowing bulbs) and put into Roblox: skinned ink shell, real emissive mask and glow tint, privately uploaded (Approved), in `SlugshotFloppyTest-SlugshotLook` with the final blaster. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** Studio check.
+**Implemented, 2026-11-01 (`experiment/lobby`):** **Confirmed:** the owner approved as final the spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Implemented:** all are built for Roblox on the block-out ([lobby hub](art/lobby-hub.md)), in owner review. **Unresolved:** owner verdict and phone performance.
 
-**Implemented, 2026-11-01 (`feature/slug-asset-pipeline`), revised twice:** sores now read sick not dirty (lighter bilious centre, bruised rim, sallow halo; face spot removed). owner could not see the first spots; now 22 sickly two-tone blotches, glow limited to the bulbs, and the packed-texture bug that kept spots off the game model is fixed. Earlier: Floppy gets softly glowing antenna bulbs and sixteen medium greenish-brown spore spots on the plain skin (concept, build port, repaired source texture and export glow mask). Rendered in the Slugshot look on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** owner verdict, upload and Studio.
+**Confirmed, 2026-11-01 (`experiment/lobby`):** floating spawn rock design final (v10), confirmed by the owner, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). Next: Sky Well, owner's choice. Not yet built for Roblox.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v8 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): carved glowing cracks with depth, mushrooms along their edges. **Unresolved:** owner confirmation.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v7 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): glowing fissures, crack mushrooms and four bridge markers on top. **Unresolved:** owner review.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v6 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): about 40 studs deep, 15 vines. **Unresolved:** owner review.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v5 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): base rebuilt to the owner's reference, a wedge of cliff columns, with floating debris. **Unresolved:** owner review.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v4 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): random sharp rocks mixed with rounded masses, spores on the vines, small crystals instead of mushrooms, roots attached to the rock. **Unresolved:** owner review.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v3 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr): rock first, in the approved rock wall's language, with far less dressing. **Unresolved:** owner review.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** spawn rock concept v2 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) after owner feedback on spikes, crystals, roots, vines and moss. Offline renders inspected. **Unresolved:** owner review; Sky Well and Maelstrom reviews have not started, as the owner chose to do the island first.
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** concept v1 of the floating spawn rock, Sky Well and Maelstrom in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), following the owner's design choices ([roadmap](art/lobby-roadmap.md#hub-centrepiece-sky-well-and-maelstrom)). The agent inspected rendered frames over three rounds. The library was republished at this new link because the earlier one could not be read from this account. **Unresolved:** owner review of the three concepts; whether to raise the Maelstrom water to 50 studs below the shore in the block-out (still 70).
+
+**Implemented, 2026-11-01 (`experiment/lobby`):** lobby [scale map V1](art/lobby-roadmap.md#scale-map-v1-2026-11-01): owner-confirmed sizes and placements, one `layout.json` driving a [top-down plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) and a walkable colour-coded block-out with current movement, no barriers and fall-to-respawn. Final Floppy merged in. **Verified in Studio by a self-test place:** routes, timings, lip, spawn and fall. **Confirmed:** owner walked it and approved the organisation; spawn rock enlarged from 50 to 70 across, bridges 50 long. Sky Well opening set to 200 across. **Confirmed:** owner approved the sketch as the baseline; a bigger oasis pond and bigger waterfall are recorded for the asset stage. **Unresolved:** the look-test verdict.
 
 
 
@@ -100,6 +118,13 @@
 **Confirmed, 2026-11-01 (`experiment/lobby`):** the owner approved all library designs as final: rock wall v6, 14 crystal designs, giant mushroom v2 with a 14-colour bank, PvP/Training/Veylume gates v3, rendered with the Slugshot mix treatment ([asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr)). Lessons and owner-language decoding recorded in [art lessons](art/lessons.md) and [owner design language](slugs/owner-design-language.md#environment-and-art-direction-2026-10-31-to-11-01). **Next:** agree the next step (likely Blender builds of the final concepts, then the Studio proof and greybox).
 
 **Implemented, 2026-10-31 (`experiment/lobby`):** [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) with four rotatable concept assets and treatments A/B/C. **Unresolved:** owner review; Blender build waits for concept approval.
+
+
+**Confirmed, 2026-11-01 (`feature/slug-asset-pipeline`):** owner made the current Floppy the **final design**: glowing yellow-green antenna bulbs with a head light, sage sores matching the upper lids, ink outline. In Roblox in `SlugshotFloppyTest-SlugshotLook` with the final blaster. [Final design](slugs/catalog/flopper-inspired.md#final-design-2026-11-01). **Unresolved:** Studio check.
+
+**Implemented, 2026-11-01 (`feature/slug-asset-pipeline`):** Floppy design agreed by the owner (sage glowing sores matching the upper lids, glowing bulbs) and put into Roblox: skinned ink shell, real emissive mask and glow tint, privately uploaded (Approved), in `SlugshotFloppyTest-SlugshotLook` with the final blaster. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** Studio check.
+
+**Implemented, 2026-11-01 (`feature/slug-asset-pipeline`), revised twice:** sores now read sick not dirty (lighter bilious centre, bruised rim, sallow halo; face spot removed). owner could not see the first spots; now 22 sickly two-tone blotches, glow limited to the bulbs, and the packed-texture bug that kept spots off the game model is fixed. Earlier: Floppy gets softly glowing antenna bulbs and sixteen medium greenish-brown spore spots on the plain skin (concept, build port, repaired source texture and export glow mask). Rendered in the Slugshot look on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvzfds8GS5RcW8iSRGkoD) page. [Record](slugs/catalog/flopper-inspired.md#glowing-bulbs-and-spore-spots-2026-11-01). **Unresolved:** owner verdict, upload and Studio.
 
 
 **Confirmed, 2026-10-31:** spawn is a floating rock between the Sky Well and Maelstrom, with four bridges to solid mainland (portals, entrance, gun side, slug side) and invisible bridge barriers ([layout](art/lobby-roadmap.md#layout)).

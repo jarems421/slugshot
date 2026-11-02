@@ -498,7 +498,246 @@
 - **Implemented:** five original Blender designs, 16 formations, visible crystal-hosted point lights and a cool native Roblox post-processing look, in separately named `-crystals` place builds.
 - **Verified, limited:** Blender FBX roundtrip and automated movement, foundation and map checks passed. **Unresolved:** subjective visual review and Studio/device performance. See [research](research/rocklock-crystals.md) and [Rocklock](rocklock.md).
 
+## 2026-11-02 - Volcano top, real blaster rune, route and entrance removed
 
+- **Owner request:** make the gun symbol the current blaster's silhouette, raise the crater pool to the rim with streams and animation blending into it, stop players falling in, and remove the spiral route and cave entrance.
+- **Implemented, seen in Studio by camera captures:** all of it ([lobby hub](art/lobby-hub.md)). Of four blocks dropped on the pool, three settled on the lava; the fourth tumbled out over a rim spill and rested lower down the outside. None fell in.
+- **Not verified:** a real character walking on the pool; the scale check place, whose route walks were removed but which wasn't run; how the glints look in motion.
+- **Unresolved:** what replaces the route and entrance.
+
+## 2026-11-02 - Living lava and portals, rune-style gateway symbols
+
+- **Owner request:** a slow glow on the volcano's lava, livelier portals that must not look blocky, and cave and gun symbols that glow like the other runes.
+- **Implemented, seen in Studio by camera captures:** all three ([lobby hub](art/lobby-hub.md)). Motion was only sampled in stills.
+- **Owner feedback during the round:** blocky portals, blinding centres, then too dim with "broken shards" and a "little explosion"; animation should be noticeably slower.
+- **Follow-up, seen in Studio by camera captures:** steam is light grey only. Portal surfaces were rebuilt as hand-built sheets with solid maps, which removed the shards that showed before the swirl. The base is brighter, and the swirl is fainter and covers the whole surface. Neon was tried and rejected: it could not show a swirl.
+- **Unresolved:** owner verdict on the final portal brightness and speed, walking and wall-running on the solid art, phone performance, the spiral route.
+
+## 2026-11-02 - Solid lobby art, blocky arch breaks, more steam
+
+- **Owner request:** stop the third-person camera going under the ground, make structures solid and skin-tight so they can be wall-run, make the arch breaks blocky, add light and dark steam, and turn the lava spitting off.
+- **Implemented, measured in Studio:** 40 parts get precise collision in about 6 s with no failures. Character-sized blocks pushed at 24 studs/s stopped at the pillar foot and shaft, pylon, plinth steps, runestone, stumps and volcano, and passed the open gate and open ground. A subset at 60 studs/s did not tunnel. A low pitch test held the camera at ground level. Forced bone movement still moves the bridge deck.
+- **Not verified:** real walking and wall-running, because the movement controller ignores scripted `MoveTo`; running this in a live server; phone physics cost. Open-ground checks were spot samples, so an invisible edge elsewhere is possible.
+- **Note to owner:** the eruption was particles, so switching it off saves little in triangles. Triangle counts are unchanged.
+
+## 2026-11-02 - Portal side, round 2
+
+- **Owner request:** fix the floor where the whirlpool meets the volcano area, break the arch so the volcano shows, remove the arch's lava falls, match the crater lava to the rivers, make the rivers thick with goopy ends, and replace the arch's big sides with big pillars.
+- **Implemented, seen in Studio by camera captures:** all six ([lobby hub](art/lobby-hub.md)). The floor gap had two causes: pieces were sized from their height, which shrank the thin floor about 6%, and grey ground was hidden by part centre, which also hid neighbouring wedges. Pieces now size from their longest side.
+- **Side effect of the sizing fix:** `hub-juice` is about 6% smaller and `hub-bridge` about 1% smaller than the owner last saw them. No gaps seen in the capture views.
+- **Unresolved:** owner verdict, walking the new pillar colliders, whether the slow lava glints read as motion, phone performance, the rim climb and spiral route. `MovementTests/Clips.spec` line 95 reported an error in one check run; no movement files changed in this work.
+
+## 2026-11-01 - Portal plaza options
+
+- **Owner request:** make the portal area very grand and volcanic, with a few options to pick from in an artifact.
+- **Implemented/verified offline:** four concepts in the library's shader (asset `portal-plaza`, shader 8) using the approved gates: A Caldera Steps, B Forge Avenue, C Molten Crown, D Titan's Arch. Rendered with `tools/lobby/render_plaza.py`; frames inspected.
+- **Proposed, not approved:** all four move the volcano about 60 studs back at about 160 tall, draw the cavern wall beyond 300, and enlarge the gates. The agent recommended D.
+- **Confirmed:** the owner picked D, Titan's Arch, with Codex's volcano at about 115%, no greenery at its foot and a better eruption.
+- **Implemented, seen in Studio by camera captures:** arch, volcano, cracked lava ground, lava falls, flowing rivers, pylon fires and eruption, on the block-out ([lobby hub](art/lobby-hub.md)). Busiest view about 305k triangles and 188 draw calls on an RTX 3070.
+- **Unresolved:** owner verdict, walking checks of the new colliders, the rim climb and spiral route around the moved volcano, phone performance.
+
+## 2026-11-01 - Hub designs in Roblox, owner review rounds
+
+- **Owner request:** put the final designs in the lobby now at high quality, playable on a phone, and build the rest around them.
+- **Implemented:** spawn rock, gateways, bridges, Maelstrom, Sky Well and portal gates on the block-out ([lobby hub](art/lobby-hub.md)), uploaded privately.
+- **Verified in Studio by camera check, earlier round only:** all pieces load; about 145k to 195k triangles and 80 to 125 draw calls on an RTX 3070. Nothing measured on a phone.
+- **Owner feedback fixed, not yet seen running:** bridges still at rest; tiny mushrooms; real glowing cracks; crystal tips and all mushroom colours glowing, with twinkles; game blaster on the gate; flowing falls with ripples and foam; visible mist; better rope; a Detail button; storm texture seams.
+- **Later round, not yet seen running:** fall mouths, side streams removed, bridge landings, movement-driven bridge motion, real crack holes, rim bushes. Owner: "literally the last changes".
+- **Latest round, not yet seen running:** falls placed from GPU-measured mouth angles and melting into the juice, ground measured from the art, solid lanterns, debris cleared from bridges, juice highlight no longer washes out.
+- **Basin round, not yet seen running:** stone basins with turning pools and spill notches, chutes cleared below them, debris cleared from the falls, redrawn blaster and cave symbols.
+- **Overflow round, verified in Studio by camera captures of all four basins:** basins, pools and falls line up, and water covers the front of each basin. Stills only; flow not watched in motion.
+- **Owner feedback:** handing over unseen work oversold it. The check place works again when Studio is brought to the front to press Play.
+- **Cracks, verified in Studio by camera captures:** the owner approved the waterfalls ("the waterfall's good"). The crack shape and paint came from a hash that compiled differently in each shader program, which caused the long-running "drawings with no depth". Now six spaced cracks at fixed coordinates: every deep point of the crack surface is teal (11,783 of 11,783, up from 2,593 of 5,991).
+- **Crack crystals, seen in Studio by camera captures:** cracks about a quarter thinner, glowing indigo floors, and 24 mini copies of the standard cyan cluster alternating cyan and indigo, rooted into the crack walls, spaced at least 4 studs apart and checked clear of the opposite wall.
+- **Ceiling round, seen in Studio by camera captures:** carved rune crown round the eye, broken energy seam, dark moat, then a natural cave ceiling with spires, multicoloured crystals, veins and fungus. Cracks and their second crystal colour changed from indigo to electric azure. Spawn rock mushroom caps a lot smaller, in the finely sampled piece. Busiest view measured about 234k triangles, 131 draw calls and 107 MB of textures on an RTX 3070.
+- **Ceiling, second pass, seen in Studio by camera captures:** the owner liked the ceiling but not the coloured fungus dots, which are gone. 45 vines and soft moss patches now spread across the whole cave, with a little on the crown and the rocks round the eye; the moat stays bare. Freshly uploaded textures can show flat grey for a few minutes while Roblox processes them.
+- **Unresolved:** owner verdict on the cracks and ceiling, walking checks of the new colliders, phone performance. The asset library page was not republished after the concept's mushroom and blaster changes.
+
+## 2026-11-01 - Hub centrepieces and bridges final
+
+- **Confirmed (owner):** spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2 are final designs ("It looks perfect... Finalize all of these"). The owner asked what is left and whether to bring these into Roblox now and build the rest around them.
+- **Evidence:** owner review of the published library; offline renders only. Nothing is built in Roblox yet.
+
+## 2026-11-01 - Runestone gateways replace the bridge markers
+
+- **Owner feedback:** the hook-up looked wrong (two screenshots). Move the runes closer to the edge, make the rope really wrap around something instead of looking half inside it, and use two full runestones per bridge: a little Stonehenge entrance with a glowing stone showing the destination.
+- **Cause of the rope problem:** the old ring wasn't aligned with the turned, tapered, noisy stone, so it sank in and out of it, and the rail ended inside the block.
+- **Implemented/verified offline:** four gateways at the island's edge (two runestones, lintel, glowing keystone, carved runes, footings and a threshold slab). Rope wraps follow each stone's exact outline in worn grooves, with knots and tails; rail and carrying ropes end at the knots. New Rope tie and Runestone gateway views. Renders inspected, including a straight-down view of all four gates.
+- **Unresolved:** owner review. The designs are not marked final until they approve.
+
+## 2026-11-01 - Bridge planks fixed; sway and weight
+
+- **Owner feedback:** planks poke out like stairs (screenshot), asked whether the character caused it; add very slight sway and weight logic, with the bridge drooping and moving when someone runs on it.
+- **Cause:** agent's bug. Planks were tilted against the deck's slope; not caused by the character. Fixed.
+- **Implemented/verified offline:** sway on all bridges, a dip and bouncing, rocking planks under a runner on the concept (owner: noticeable but not too much), and an In motion view. Renders inspected.
+- **Confirmed for the Roblox build, not implemented:** slight sway and weight dip driven by player positions, visual only. Hook-up awaiting owner review.
+
+## 2026-11-01 - Bridges hooked to the markers
+
+- **Owner feedback:** loves the bridges, but they must hook up to the rune markers on the spawn rock or the markers are useless. Wants to see the hook-up before calling the designs done.
+- **Implemented/verified offline:** real bridges in the Maelstrom scene, decks running onto the island through each marker, rail ropes lashed to pillar and stump, shore lip opened at each landing; new Bridge hook-up view. Renders inspected.
+- **Unresolved:** owner review of the hook-up.
+
+## 2026-11-01 - Bridge concept v1
+
+- **Confirmed (owner's choices):** rickety frontier rope bridge; thick wooden posts lashed with rope; hip-height rope rails; a few vines and moss; hanging lanterns.
+- **Implemented/verified offline:** concept v1 in the asset library. Renders inspected. Collision and any sway are planned as visual only.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Maelstrom approved
+
+- **Confirmed:** owner asked for a little more juice texture and the mushrooms lower and clear of the bridges, then said "this is good". Maelstrom v4 stands. Bridges are next.
+- **Implemented/verified offline:** both, with bridge clearance calculated. Renders inspected.
+
+## 2026-11-01 - Maelstrom v3
+
+- **Owner feedback on v2:** more vines down the sides, quite a few but not an insane amount; about five large tree mushrooms sprouting from the cliff edge and curving upward, attached and not weird; the "slug juice" should look thick and viscous.
+- **Implemented/verified offline:** those, with up to 24 vines kept clear of the falls, flared roots on the mushrooms, glossy folds and bubbles, gloopy falls with drips and heaps. Renders inspected.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Maelstrom v2
+
+- **Confirmed (owner's choices):** glowing energy rather than water; broken cliff walls like the island; rising mist, waterfalls and added greenery; water 50 studs below the shore.
+- **Implemented/verified offline:** all of those, with an In motion view. Falls use the same glowing energy as the swirl, which was the agent's reading. Renders inspected.
+- **Unresolved:** owner review; block-out still has the water at 70.
+
+## 2026-11-01 - Sky Well approved for now
+
+- **Confirmed:** owner: "I think it's good for now", moving on to the next design, and noted that 10 or 11 iterations per structure is a lot. Sky Well v10 stands, and can be revisited in-game. Maelstrom is next, starting with decisions before any build.
+
+## 2026-11-01 - Sky Well v10
+
+- **Owner feedback on v9:** lightning better, but the storm looks out of place and no longer looks like it is coming out. It should be a greyish purple storm cloud.
+- **Tried and dropped:** solid inked billows read as popcorn, then as a cratered ball and a clay asteroid.
+- **Implemented/verified offline:** the soft vortex kept, recoloured to grey-purple close to the stone, with light and shadow on the billows and larger tongues bulging out of the mouth inside the rim. Renders inspected.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Sky Well v9
+
+- **Owner feedback on v8:** the lightning looks bad, fully horizontal, rather than hidden by the clouds.
+- **Implemented/verified offline:** zaps run mostly vertically and are blocked by the cloud in front of them, with only glimpses through gaps; the cloud lighting up from inside is now the main effect. Renders inspected.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Sky Well v8
+
+- **Owner feedback on v7:** better, but the storm overlaps the rocks and crystals and must be a lot more contained, as if trying to escape while being sucked back into the sky. Lightning goes outward; it should be short zaps of light in the clouds, not long bolts striking down.
+- **Implemented/verified offline:** cloud held inside the opening, short tongues curling back in, texture flowing up and in; six short forked zaps that light the cloud around them. Renders inspected.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Sky Well v7
+
+- **Owner feedback on v6:** the storm reads as coming through from the side but not looking straight up, and the lightning "does not look like lightning". Asked for Slugterra and fantasy game lightning references.
+- **Research:** only wiki text was found for Slugterra (Tazerling's arcs and strikes, no usable visual). Lightning follows general stylised technique: fine jagged detail, tapering trunk to branches to twigs, layered core, colour band and glow.
+- **Implemented/verified offline:** spiral vortex with a hollow lit eye, cloud spilling past the rim, tornado tail; rebuilt lightning. Renders inspected; motion loop frames checked, not watched playing.
+- **Unresolved:** owner review. Roblox: bolts from Beam or Neon segments (a community Lightning Beams module exists and would need source and licence review before use); the vortex needs layered rotating textures.
+
+## 2026-11-01 - Library link restored
+
+- **Observed:** publishing Sky Well v6 to the temporary library failed as not found, and the artifact list changed to one containing the original library. The likely cause is the session changing Claude account; not confirmed. The current library was published to the original link as version 21, after checking the live copy was older than this branch.
+
+## 2026-11-01 - Sky Well v6
+
+- **Owner feedback on v5:** the inside looks like a hole going into a storm, but it should look like the storm is coming through the hole, for example with lightning coming through.
+- **Implemented/verified offline:** swirling cloud pouring down the shaft and hanging below the mouth, jagged bolts down through the opening, flashes lighting the shaft, and broken rock lining it. Renders inspected.
+- **Unresolved:** owner review; all of this needs a Roblox technique, as Roblox has no volumetric cloud.
+
+## 2026-11-01 - Sky Well v5
+
+- **Owner feedback on v4:** debris should bob more; some chunks are still too big; the light is too cylindrical and not diffused, which would look horrible on the map.
+- **Implemented/verified offline:** soft light that spreads as it falls with no hard edge and faint shafts; largest debris about half the size; bob more than doubled. Renders inspected.
+- **Unresolved:** owner review. The diffused light must be proven in Roblox, which has no real volumetric light.
+
+## 2026-11-01 - Sky Well v4
+
+- **Owner feedback on v3:** debris slightly too scattered, so pull it in a little so it feels drawn into the storm, not floating randomly. Add slow bobbing on everything, and all the debris circling the well, a tornado effect. Crystals point too much inward, are too similar in size, and there is too much cyan.
+- **Implemented/verified offline:** debris and small islands form a tighter funnel, orbit and bob; storm turns with them; crystals vary widely in size and direction in a cool colour mix. New looping In motion view on the library page, sped up about 9 times. `render_library.py` now takes per-view render time. Renders inspected.
+- **Unresolved:** owner review; whether the spawn island itself should bob, which is not assumed because players stand on it.
+
+## 2026-11-01 - Sky Well v3
+
+- **Owner feedback on v2:** the rock icicles are too uniform and basic, with annoying thin needle points, and need a complete redesign; floating islands far too big; a lot more loose debris in varied sizes, around the storm and not just around the islands.
+- **Implemented/verified offline:** irregular hanging crags from clusters of broken blocks; islands about 10 to 20 studs across; 80 pieces of debris through the space and up the shaft. Renders inspected.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Sky Well v2
+
+- **Confirmed (owner's choices):** keep the idea and improve it; mostly cyan crystals with a few accents; storm dramatic but distant; drifting rocks are mini islands with debris.
+- **Implemented/verified offline:** those choices, a mouth built from the island's angular blocks, and speckled stone cleaned from the far surfaces, including the Maelstrom's shore. Renders inspected.
+- **Unresolved:** owner review. No reference images were supplied this round.
+
+## 2026-11-01 - Spawn island design final
+
+- **Confirmed:** owner: "Yes, perfect, finalize that design. That's the spawn island design." Version 10 in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) is the final design. Sky Well is next.
+- **Unresolved for the Roblox build:** symbols and colours other than PvP's, the forward marker for three portals, low-angle glow, mesh budget, and whether the pillars block views or movement.
+
+## 2026-11-01 - Spawn rock v10, final
+
+- **Confirmed:** owner noticed the mushrooms concentrated in one area and asked for a third fewer. Now eight singles, spread around the island along crack edges and kept out of the middle. Renders inspected.
+
+## 2026-11-01 - Spawn rock v9, final
+
+- **Confirmed:** owner asked for far fewer mushrooms, only a few per crack, and cracks slightly thinner and longer, then said "once that's done, yes, we've got it sorted". The island is marked final on that basis.
+- **Implemented/verified offline:** cracks longer and slightly thinner; single mushrooms along their edges, at most two per crack sector. Renders inspected.
+- **Unresolved:** the symbols and colours other than PvP's, the forward marker for three portals, the low-angle glow, and proving it all in Roblox.
+
+## 2026-11-01 - Spawn rock v8, cracks with depth
+
+- **Confirmed:** owner said the cracks had no depth, just coloured in, and wanted teal glow coming out of them, with mushrooms scattered on the crack edges. Owner said they are good once this is done.
+- **Implemented/verified offline:** real V-shaped grooves with dark walls and light from the bottom, plus soft light rising into the air; mushrooms moved onto the stone along the crack edges. Renders inspected.
+- **Unresolved:** owner's confirmation; proving the depth and rising glow in Roblox, where the grooves must be real mesh and the rising light needs a separate effect.
+
+## 2026-11-01 - Spawn rock v7, the top
+
+- **Confirmed:** owner called v6 "perfect" apart from the plain top, which players see 90% of the time. From five ideas, they chose glowing fissures, small mushrooms sprouting through the cracks, and the four bridge markers.
+- **Implemented/verified offline:** teal-lit carved fissures that stop short of the middle; tiny mushrooms and small crystals placed in the cracks by `tools/lobby/rock_sites.py`; broken pillar, half-arch and stump at each bridge mouth with flush glowing symbols. New On top and From spawn views. Renders inspected.
+- **Considering (agent's choices):** symbol subjects and colours other than PvP's orange swords: gold blaster, mint slug, pale blue cave mouth.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Spawn rock v6
+
+- **Owner feedback on v5:** too tall; stop about three levels of rock higher; add more vines, including lower down. In the map, the rocks should float with a floating animation.
+- **Implemented/verified offline:** depth reduced from about 60 to about 40 studs; 15 vines, 6 of them growing from lower on the rock; dressing re-measured. Renders inspected.
+- **Confirmed for the build, not implemented:** floating animation on the rocks. Kept visual only, per the roadmap's rule that motion never moves players. Unresolved whether the owner also means the spawn island itself.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Spawn rock v5
+
+- **Owner direction:** two reference images. The base shape should look like the second: an inverted wedge of angular cliff columns under a flat top ("literally exactly how I want it"), keeping the extra features. Add floating debris like the first, natural and scattered.
+- **Implemented/verified offline:** base rebuilt as a wedge of tall tapered, turned blocks with uneven lengths and slanted breaks, narrowing to a low off-centre point; 40 pieces of slowly drifting debris; roots, vines, spores and crystals re-measured onto the new surface. Round masses and separate spikes removed. The first attempt read as a brick wall; irregular lengths and slanted ends fixed that. Renders inspected. Reference images are not stored in the repo.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Spawn rock v4
+
+- **Owner feedback on v3:** preferred the earlier sharp rocks, which looked random and started high up; the bottom spikes looked organised; likes mixing rounder and sharper rocks. Likes the roots and vines. Wants small glowing jungle spores attached all along the vines, no mushrooms on this rock, many small crystals in their place, and roots attached to the rock with only a small tip poking out.
+- **Implemented/verified offline:** 16 sharp rocks at random positions, leans and lengths, starting high among jittered rounded masses; spores set into the stems; 38 small crystals in mixed colours replacing the mushrooms; roots measured on the rock at nine heights, ending in short tips. Close-up and turntable frames inspected. Larger crystal positions moved as a side effect.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Spawn rock v3
+
+- **Owner feedback on v2:** too far from the Slugterra feel, too much going on underneath, cramped, leafy and green; it should still look rocky. They do like the individual designs.
+- **Implemented/verified offline:** underside rebuilt from rounded rock masses with the approved rock wall's stone colours, surface grain, worn edges, crevice hatching and Slugterra-style cracks. Dressing cut from 20 crystal clusters, 7 roots and 14 vines to 8 clusters, 4 roots and 5 sparse vines, with 15 small mushrooms in five little clusters. Moss is the wall's soft sage. Renders inspected; Sky Well and Maelstrom re-rendered with the new rock.
+- **Unresolved:** owner review. "Slugterra vibe" was read as the approved rock wall language; that reading is unconfirmed.
+
+## 2026-11-01 - Spawn rock v2
+
+- **Owner feedback:** the stone spikes look like they hang by a thread at the tips, so keep only the spike; scatter more colours using the crystal designs across the bottom; roots look basic, just curved pokes, and can't be told from the vines, so make them look like real, mythical tree roots; vines look like dangling green ropes, so make them look like real vines; add a lot more moss, especially underneath.
+- **Implemented/verified offline:** spike tips no longer eroded by surface noise; 20 crystal clusters using all 14 designs' colours and shapes; 7 roots with forks following the real rock surface, with furrowed bark and faint glowing sap; 14 leafy twisted vines with blossoms, tendrils and pods; moss patches across the sides and underside. `tools/lobby/rock_sites.py` measures every placement on the rock surface. Inspected over three rounds. Live 3D is switched off for the three big concepts, because their shaders are heavy and a heavy shader froze Chrome before.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Hub centrepiece concepts
+
+- **Confirmed:** the block-out is layout only; the owner wants the real designs in the Slugterra-style look, reviewed through the same asset library workflow as past designs. Sky Well: crystal-lined opening going off to a distant storm. Maelstrom: teal glow with a deep blue centre. Spawn rock: a chunk ripped out of the ground, sharp and cracked underneath, with roots, moss, vines, drips and some crystals, a bit ancient.
+- **Implemented/verified offline:** concept v1 of all three in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), rendered and inspected over three rounds; page scripts syntax-checked and the page opened locally. Live 3D was not opened in a browser. The earlier library link could not be read from this account, so the whole library was republished at this new link.
+- **Considering:** Maelstrom water at 50 studs below the shore in the concept, against 70 in the block-out, so it can be seen from the edge.
+- **Unresolved:** owner review.
+
+## 2026-11-01 - Lobby scale map V1
+
+- **Confirmed:** owner agreed the order (scale map, then Sky Well, Maelstrom and spawn rock, then bridges, then terrain) and answered a full round of layout questions, recorded in the [roadmap](art/lobby-roadmap.md#scale-map-v1-2026-11-01). Changes from earlier decisions: no barriers, falling is a long plunge then respawn; the gun exhibition becomes a physical shop/armoury; slugs sit openly around the pond.
+- **Implemented/verified in Studio:** block-out and plan from one `layout.json`; movement copied unchanged from `experiment/rocklock-unified`, with spawn and fall height patched in a generated copy. Self-test passed after raising the lip from 2 to 3 studs. Studio MCP was unavailable, so the self-test ran through a posted F5 and the Studio log ([art lessons](art/lessons.md)).
+- **Confirmed after the owner's walk:** organisation approved, spawn rock too small for 20 players. Rock now 70 across (agent's recommendation), sinkhole and shore unchanged, bridges 50 long with 5 droop. Owner also found the Sky Well underwhelming: 120 across still fell short, and they set 200 so it reads as a main centrepiece. Light column 150, floating rocks spread and enlarged. Owner asked to skip the full walk-through self-test during the sketch stage; this size is build-checked only.
+- **Confirmed:** owner approved the sketch as the general layout to build from. They want a bigger pond that feels like a little oasis and a bigger waterfall and stream, as fine-tuning when the assets are made, so the block-out was not changed for these.
+- **Unresolved:** longer plunge in the Maelstrom design; explicit look-test verdict.
 
 ## 2026-11-01 — Look test round 3
 
@@ -1172,6 +1411,8 @@
 - **Implemented/verified offline:** latched first-person mode/native LockFirstPerson; quieter damped head follow with action rebasing; short view-space arm smoothing and continuity across tool rebuilds; narrower rounded upper arm sections while retaining spacing/hand reach. Full `verify_combat.py` passes.
 - **Verified limited Studio:** additional vertical offset range run 0.300 to 0.064, flip 0.639 to 0.117, wall-run/kick 0.791 to 0.099 studs. Serialized regression passed ten forced camera-distance excursions, visible re-equip x3 and mode/rig cleanup. Both movement captures ran near 15 FPS; actual movement feel/high-FPS, shoulder approval and input/aim/multiplayer remain unresolved. [Full evidence and test limits](evidence/2026-10-31-first-person-smoothing.json).
 
+## 2026-11-01 - Look test round 4: inside-out pieces, boundary ink, import axes
+
 - **Follow-up, confirmed:** owner says smoothness is much better; wants an ever-so-slight running shake and rejects rounded shoulders, requesting smaller square geometry. **Implemented/verified offline:** removed sphere/proximal sections; restored one square block per arm at 0.64 width/depth (previous 0.76), preserving reach/spacing/smoothing; smooth vertical gait pulse amplitude 0.006 studs. Full `verify_combat.py` passes. **Unresolved:** owner's shape/pulse verdict.
 
 - **Follow-up, confirmed:** owner calls first person basically perfect but shake is imperceptible; asks for a more obvious shake first, then flips later. **Implemented/verified offline:** RunBounce 0.006 to 0.018 studs only; full `verify_combat.py` passes. **Unresolved:** owner amplitude verdict; flip work deferred.
@@ -1221,3 +1462,48 @@
 
 - Owner: the mouth is blurry; wants it crisp on the big range Floppy with clean smile movement, keeping the drool. Wiggle smoother and more noticeable; hop should look like a gelatinous thing hopping, with a greater landing reaction, then look up and smile. Replace the happy hop ("too much hopping"). Overall: "more transitional. Alive. Emotional. And smooth", not "choppy animations cutting to each other".
 - Done: mouth texture strip, jelly bones, new private upload, spring-driven `SlugIcon` performance, and rising out of the floor instead of the happy hop. Owner verdict pending. See [lessons](slugs/blender-lessons.md).
+
+- **Confirmed:** owner picked the bladed ridge; asked to remove the dip before the blade, shorten about 15%, then make it the Roblox model.
+- **Implemented/verified offline:** revised tip from a clean cut with slope lead and a ridge that only lowers; export with ink shells (orange part decimated to 7k), private upload Approved, mapping updated, Floppy test place rebuilt and opened.
+- **Unresolved:** Studio check and owner verdict.
+
+## 2026-11-01 - Documentation checkpoint for this chat
+
+- **Confirmed:** owner asked to update all documentation from this chat (design, wording, lessons) and push as a checkpoint; Codex is doing the same for its own chat.
+- **Implemented:** style guide gains the Roblox lighting rules and the character look; lobby assets records what is built; owner design language gains this chat's phrases and dictation slips. Detailed rounds remain in `docs/art/lessons.md`, `docs/art/look-pack.md`, `docs/slugs/blaster-refinement.md` and the Floppy catalogue entry (slug pipeline branch).
+
+## 2026-11-01 - Floppy: glowing bulbs and spore spots
+
+- **Confirmed:** owner liked Floppy in the look and asked for slightly luminous antenna bulbs and a few medium, diffuse greenish-brown spots on the plain body only.
+- **Implemented/verified offline:** concept and build rules, in-place paint of the repaired source (checkpointed), export glow mask; concept and look renders inspected.
+- **Unresolved:** owner verdict; Roblox upload and Studio check.
+
+## 2026-11-01 - Floppy spots revised; blaster final in the Floppy test place
+
+- **Confirmed:** owner saw no spots and a glow on the skin by a bulb; wants noticeable, sickly, blended spots. Blaster: bladed ridge chosen; remove the dip before the blade, shorten about 15%, then make it the Roblox model.
+- **Implemented/verified offline:** two-tone blotches and bulb-only glow; packed-image bug fixed (game texture changes verified). Blaster export with ink shells privately uploaded (moderation Approved), private mapping updated with backup, `build/SlugshotFloppyTest-SlugshotBlaster.rbxlx` opened. Rocklock's blaster mapping left unchanged.
+- **Unresolved:** owner's Floppy verdict and Studio check of the blaster.
+
+## 2026-11-01 - Floppy sores: sick, not dirty
+
+- **Confirmed:** owner loves the blaster; Floppy spots looked dirty rather than sick, mainly the colour and the spot above the mouth.
+- **Implemented/verified offline:** brief research on sick versus dirty palettes; sores inverted to a lighter bilious centre with a bruised rim and sallow halo, face spot removed; concept and game-model renders inspected; page updated.
+- **Unresolved:** owner verdict; then Floppy's Roblox outline and glow.
+
+## 2026-11-01 - Floppy in the Slugshot look, in Roblox
+
+- **Confirmed:** owner asked for sore centres in the top-eyelid colour, keeping the glow, then said they like the design a lot and to put it in Roblox.
+- **Implemented/verified offline:** sage sore centres with own-colour glow; export adds a skinned ink shell (reimport checks pass); real emissive mask and strength scaling; appearance styles the shell; private uploads Approved; Floppy test place rebuilt and opened with the final blaster. luau-lsp clean.
+- **Unresolved:** Studio check by the owner.
+
+## 2026-11-01 - Floppy sore glow toned down
+
+- **Confirmed:** owner said the glow made the sores look much lighter than the eyelids; keep a light glow.
+- **Implemented/verified offline:** sore glow 0.45 to 0.15 (concept 0.9 to 0.3); repainted, re-exported, emissive mask re-uploaded (Approved), Floppy test place rebuilt and reopened; page updated.
+- **Unresolved:** owner Studio check.
+
+## 2026-11-01 - Floppy final design
+
+- **Confirmed:** owner liked the sores and asked for brighter, really glowing antenna bulbs, then made this the final Floppy design.
+- **Implemented/verified offline:** luminous bulb cores (Roblox emission follows surface colour), head-bone PointLight, repaint, export, private re-upload (Approved), test place rebuilt and reopened; page updated. luau-lsp and Selene clean.
+- **Unresolved:** owner Studio check.

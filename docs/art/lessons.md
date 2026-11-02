@@ -167,3 +167,90 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 
 - Until offline rendering existed, the agent could not see the page and shipped shader bugs blind. Render and inspect at least one contact sheet before telling the owner a change is done.
 - GLSL ES 1.0 has no shader compiler on this machine. Check brace and parenthesis balance and JS syntax with Node, and avoid names like `cross` that shadow built-ins.
+
+### Studio MCP listed no Studio windows
+
+- **What happened (2026-11-01):** `list_roblox_studios` stayed empty with several Studios open, and Windows refused to bring Studio to the foreground for keystrokes.
+- **What worked:** a check build (`tools/lobby/build_scale.py --check`) whose scripts measure themselves and print to the output, started by posting F5 directly to that window's handle. Results come from the newest `%LOCALAPPDATA%/Roblox/logs/*Studio*_last.log`, and `PrintWindow` captures the window without focus. A true-speed test character found a lip height bug that reading the numbers would not have.
+- **Testing falls:** teleporting the player trips the movement anti-cheat, which snaps them back. Move them at a legal speed instead.
+
+### Very large concepts (spawn rock, Sky Well, Maelstrom, 2026-11-01)
+
+- **Scale:** ink, ambient occlusion and fades in the library shader are tuned for prop-sized assets. Build huge assets in scaled units (1 unit = 5 or 10 studs) and scale the figure, so they keep the same look.
+- **What the first render showed:** rounded moss lumps read as green balls or lily pads, because ink outlines every raised shape; paint moss onto the rock instead. Long curved roots read as tentacles or tusks; keep them short, thin and close to the rock. Floating rocks with one thick trail read as mushrooms; give them a pointed underside and thin vines. Crystals seen end on read as flat white plates; angle them to show their sides and use a colour gradient so they don't blow out.
+- **Shore and backdrops:** the rock wall's moss noise turns into camouflage at this scale. Keep surrounding ground dark and fade it out so the eye stays on the asset.
+
+### Spawn rock v2 (2026-11-01)
+
+- **Threads on spike tips:** surface noise ate away the thin ends of tapered spikes. Fade the noise toward the tips instead of fattening the spikes; fat spikes lost the shape the owner liked.
+- **Telling roots and vines apart:** give them different forms, not just colours. Roots are thick, forked, barked and follow the rock; vines are thin, leafy and hang free.
+- **Roots need to stand off the surface.** A root centred on the surface is half buried and shows only as lumps. Thick roots crossing an edge become knobs, so keep them slim there.
+- **"More moss" still means patches.** Covering everything hid the rock and fangs. Keep moss a muted colour, distinct from leaf green, with rock showing through.
+- **Heavy shaders:** the three big concepts have Live 3D switched off (`noLive`), since a heavy shader froze Chrome before.
+
+### Spawn rock v3: the approved language beats new detail (2026-11-01)
+
+- **What happened:** v2 did everything asked for, one request at a time, and the sum drifted off style. The owner still liked the individual designs but said it was no longer Slugterra, too cramped and too green.
+- **What fixed it:** comparing against a render of the approved rock wall, then building from that wall's masses, colours, cracks and moss, with far fewer accents.
+- **Rule:** after a round of "add more" feedback, compare the result side by side with an approved asset before publishing, and judge the base-to-accent balance from the [readability check](style-guide.md#readability-check-ask-of-every-scene).
+- **Ink:** large dressed assets need the surface-measured material boundaries the rock wall uses, or buried parts draw black splotches.
+
+### Spawn rock v5: ask for a reference sooner (2026-11-01)
+
+- **What happened:** four rounds of words about the rock's shape didn't land; two reference images settled it at once. When shape feedback keeps circling, ask the owner for an image early.
+- **Blocks on a grid read as brick walls:** vary lengths widely, slant the ends, turn and lean each block, and thin the ink on joints, so no two line up into courses.
+
+### Sky Well lightning and vortex (2026-11-01)
+
+- **Lightning that reads as cracks:** a thin white line with a few long straight segments. It needs fine jagged detail, tapering, a trunk-branch-twig hierarchy, and layers from white core to colour band to wide glow.
+- **Looking up a shaft:** a volume that stops at the rim reads as a flat disc. A spiral converging on a hollow, bright eye gives depth, and cloud crossing the rim breaks the circle.
+- **Tone mapping lifts dark values a lot:** cloud colours that look dark in code came out pale lavender. Test dark storm values low.
+
+
+### Bridge hook-up: rope that looks attached (2026-11-01)
+
+- **A wrap must share the shape it wraps:** a ring built from a plain box sank in and out of a turned, tapered, noisy stone and read as neither inside nor outside it. Build the ring from the stone's own frame and outline, smooth the stone under it, and cut a shallow groove.
+- **Show the load path:** a rope reads as tied when it ends in a visible knot sitting proud of the wraps, with a loose tail. Thicken it near the tie so it reads from a distance.
+- **Check a repeated stray shape by colour:** painting each part a flat colour showed that a line at all four gates was the first plank, tilted up by the deck's slope and poking through the slab.
+
+### Hub designs into Roblox (2026-11-01)
+
+- **Decimation erases what makes a shape:** cracks flattened into painted lines, thin stems became spikes, and a folded liquid became hard facets. Give important detail its own part and budget. Keep a surface smooth and put its folds in the maps.
+- **An outline must match its part exactly:** a lighter shell sinks inside in places and pokes out in others.
+- **Normalise glow per colour:** against the part's brightest colour, only cyan glowed.
+- **A frozen mesh can't read as liquid, however it wobbles:** scrolling sheets with wavering edges do, and they stay cheap.
+- **Grey-map stand-ins can stand in front of the art:** look for them when you see "gaps".
+- **Replication order:** a tag can arrive before the descendants it refers to, so wait for them.
+- **Cut flat surfaces, don't decimate them:** a decimated top lay over its own grooves and showed their paint. Triangulating it from the groove outlines gave real holes in 324 triangles.
+- **Check motion triggers against what the owner said:** "when walking" means moving, not merely standing on the bridge.
+- **Shader hash values differ between Python and the GPU:** a recomputed value put two falls 19 studs from their mouths. Measure from the GPU that made the art.
+- **Generate collision from the art:** hand-made rim shapes were up to 8 studs off, so players sank into the lip and fell through the rock's edge.
+- **The shader's hash isn't a stable number:** the same call gives different values depending on how it's compiled, so anything two systems must agree on needs a plain constant.
+- **A non-camera-facing Beam's width runs along its attachments' Y axis.**
+- **Look before handing over:** a short camera check caught edge-on strips and water passing behind the rim, neither of which any offline check could show.
+- **Never let two shader programs share a hash-derived layout:** the sampling and painting programs compiled the hash differently, so crack paint and crack holes landed in different places for many rounds. If repainting never fixes something, compare what each program actually computes.
+- **Camera-facing sprites and flat transparent layers don't mix:** where a sprite crosses a layer it is cut in a straight line. Switching effects off one at a time found this in one run after a round of guessing.
+- **Tiny detail needs its own fine sampling:** mini crystals melted into blobs at the dressing's grid, and read as real faceted clusters once they had their own piece at a third of that step.
+- **Regenerating a call whose signature changed:** clear the old generated lines first, because the generator compiles the page they sit in.
+- **A clean glowing circle reads as sci-fi, not a cavern:** the first ring around the Sky Well was a neon hoop. A thinner, wandering, broken seam in deeper colours separated the zones just as clearly, helped by the dark moat beside it.
+- **Even scatters read as polka dots:** glowing fungus looks natural in tight colonies of small, unevenly sized lights.
+- **Moss on a big surface goes camo fast:** noise patches covering half the Sky Well's ceiling read as flat green blobs. Keep it under about a fifth, small, soft and darker than the rock's lit tone.
+- **A part showing flat grey right after an upload is probably still processing:** look again a few minutes later before changing anything.
+- **Check sightlines before scaling a backdrop:** from the spawn rock the arch's keystone hid the crater, whatever the volcano's size. Widening the opening fixed it.
+- **Glowing surfaces washed out when their glow was baked into the colour map:** keep the colour in the map and let the mask carry the glow.
+- **Size imported pieces from their longest side:** on a thin piece, a tiny height error scaled the whole floor by 6% and opened gaps at its edges.
+- **Hide block-out parts by what they are, not by where their centre is:** a long wedge's centre can sit in the neighbouring sector.
+- **Thick liquid needs its own smooth surface:** riding on ribbed rock made it faceted or half buried, and noise running along one diagonal turned into ladder rungs.
+- **Roblox's camera ignores invisible colliders:** it only stops at parts under 25% transparent, so hidden block-out ground let it pass under the map. Making the visible art solid fixes both the camera and phasing.
+- **Test collision with a pushed block, not `MoveTo`:** the movement controller ignores `MoveTo`, so a character that never moved looked like a blocked one. Include cases that must pass, so that a block that stops everywhere can't look like success.
+- **Don't stretch a gradient across a big surface map:** Roblox's compression turned the portal's into visible square blocks. Keep the map a flat colour and put gradients in large alpha-only particle textures.
+- **Continuous rotation from particles:** give an N-armed texture fixed rotation, and emit a new particle each time the last has turned one arm, with lifetime twice that and a triangular fade. Copies line up exactly, so it reads as one steady swirl with no popping. Random rotations read as broken shards.
+- **Adding light stacks with overlap:** several additive layers blow out to white long before any one looks bright. Count the overlaps when setting strength; a deeper base shows a swirl better than more brightness.
+- **Symbol polygons must be convex and anticlockwise:** `poly3`, `poly4` and `poly5` silently draw nothing otherwise. Check 2D previews against the same rule, because a general-purpose preview hides this.
+- **Neon can't carry detail:** it renders far past full brightness and its response to colour is very steep, so overlays barely show and small colour changes swing the hue. Use a solid map with `EmissiveStrength` and a real light when something must be drawn on top.
+- **A flat glowing surface exposes its mesh:** decimated triangles showed as hairline cracks and shading fans, which read as shards. Author it as a simple sheet with shared corners; a low triangle count isn't what matters, flatness is.
+- **Measure authored meshes from the art they replace:** design constants missed the gate's real scale by about 40%.
+- **Don't queue a Studio run alongside a patch that can fail:** it silently tests the previous build. Run it only after the build step has succeeded.
+- **Trace symbols from the real model:** hand-drawn silhouettes read as an older design; `tools/lobby/blaster_rune.py` regenerates the rune from the current mesh.
+- **Surfaces that must blend need one paint function and no moving parts at the join:** a spinning pool and separately painted streams could never line up.
+- **In `cut`-style patches, don't stop at a marker the same patch moves:** it silently ate the start of `volcanoFlow`; the shader compile caught it.

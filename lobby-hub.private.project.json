@@ -1,0 +1,87 @@
+{
+  "name": "SlugshotLobbyHub",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34879,
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FallenPartsDestroyHeight": -2000
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "GlobalShadows": false
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "MovementExperiment": {
+        "$path": "experiments/movement/shared"
+      },
+      "MovementPrivateClips": {
+        "$path": "private-assets/generated/MovementClips.luau"
+      },
+      "LobbyScale": {
+        "$path": "experiments/lobby/scale/shared"
+      },
+      "LookPack": {
+        "$path": "experiments/lobby/shared/LookPack.luau"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      },
+      "MovementSandbox": {
+        "$path": "build/lobby-scale/generated/server",
+        "Arena": {
+          "$path": "experiments/lobby/scale/server/Arena.luau"
+        },
+        "LobbySpawns": {
+          "$path": "experiments/lobby/scale/server/LobbySpawns.luau"
+        }
+      },
+      "HubArt": {
+        "$path": "experiments/lobby/hub/server/HubArt.server.luau"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "EnableMouseLockOption": false
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        },
+        "MovementSandbox": {
+          "$path": "experiments/movement/client"
+        },
+        "LobbyScale": {
+          "$path": "experiments/lobby/scale/client"
+        },
+        "HubMotion": {
+          "$path": "experiments/lobby/hub/client/HubMotion.client.luau"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "HubAssets": {
+        "$path": "private-assets/lobby/HubAssets.luau"
+      },
+      "HubMaterials": {
+        "$path": "private-assets/lobby/hub_materials.rbxmx"
+      }
+    }
+  }
+}
