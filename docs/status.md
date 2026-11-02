@@ -1,6 +1,6 @@
 # Current status
 
-**Implemented, 2026-11-02 (`experiment/lobby`), concept only, owner verdict pending:** slug grove v1 (waterfall mountain, pond, mushrooms, Floppies) as shader asset 9 in the asset library. Device testing waits until the lobby is built.
+**Implemented, 2026-11-02 (`experiment/lobby`), concept only, owner verdict pending:** slug grove v2 (three-peak mountain of rock columns, waterfall, pond, mushrooms, Floppies) as shader asset 9 in the asset library. Device testing waits until the lobby is built.
 
 **Implemented, 2026-11-02 (`experiment/lobby`):** automatic mobile estimate, `python tools/lobby/mobile_check.py`, run twice in Studio. **Confirmed:** real phone and iPad tests wait until the lobby is complete; nothing is published.
 

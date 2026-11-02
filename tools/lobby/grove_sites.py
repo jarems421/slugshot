@@ -13,7 +13,9 @@ import re
 from pathlib import Path
 
 PAGE = Path("docs/art/asset-library.html")
-MOUNTAIN_Z, MOUNTAIN_H = 22.0, 27.0
+MOUNTAIN_Z = 26.0
+# The same as peakInfo in the shader: centre x, centre z, height, radius, profile, lean x, lean z.
+PEAKS = ((0.0, 26.0, 34.0, 19.5, 1.0, 0.0, 0.0), (-15.0, 27.0, 24.0, 11.0, 0.72, -1.0, 0.0), (15.5, 28.0, 19.0, 10.0, 1.3, 2.6, -0.6), (0.0, 31.0, 8.0, 24.5, 0.9, 0.0, 0.0))
 FRONT = 1.5*math.pi
 
 
@@ -22,35 +24,23 @@ def smoothstep(a, b, x):
     return t*t*(3 - 2*t)
 
 
-def base_radius(y):
-    return 17.0*(1 - min(max(y/MOUNTAIN_H, 0.0), 1.0))**0.85
+def peak_r(y, height, radius, profile):
+    return radius*max(1.0 - y/height, 0.0)**profile
 
 
-def mountain_radius(a, y):
-    """The same shape as mtnR in the shader."""
-    t = min(max(y/MOUNTAIN_H, 0.0), 1.0)
-    phase = a*7.0 + 0.4*math.sin(a*3.0 + 1.0) + 0.2*math.sin(t*8.0 + a*2.0)
-    ridge = (1.0 - abs(math.sin(phase*0.5)))**1.6
-    return base_radius(y) + (ridge - 0.4)*(4.6 - 3.4*t) + 1.2*math.sin(a*4.0 + t*6.0 + 1.0)*(1.0 - t)
-
-
-def shoulder_radius(x, y, z, cx, cz, height, r0, seed):
-    """How far inside a side peak this point is; positive means inside. The same shape as groveShoulder in the shader."""
-    if y > height:
-        return -1.0
-    qx, qz = x - cx, z - cz
-    a = math.atan2(qz, qx)
-    t = min(max(y/height, 0.0), 1.0)
-    ridge = (1.0 - abs(math.sin((a*6.0 + seed)*0.5)))**1.6
-    return r0*(1.0 - t)**0.85 + (ridge - 0.4)*(2.4 - 1.8*t) + 0.6*math.sin(a*3.0 + t*5.0 + seed) - math.hypot(qx, qz)
+def inside(x, y, z):
+    for cx, cz, height, radius, profile, lx, lz in PEAKS:
+        t = min(max(y/height, 0.0), 1.0)
+        if y < height and math.hypot(x - cx - lx*t*t, z - cz - lz*t*t) < peak_r(y, height, radius, profile):
+            return True
+    return False
 
 
 def surface_radius(a, y):
-    """Coming in from outside at this angle and height, where the mountain or a side peak is first met."""
-    r = 34.0
+    """Coming in from outside at this angle and height, where the rock's mass is first met."""
+    r = 46.0
     while r > 0.0:
-        x, z = r*math.cos(a), MOUNTAIN_Z + r*math.sin(a)
-        if r < mountain_radius(a, y) or shoulder_radius(x, y, z, -9.0, 21.0, 17.0, 9.5, 1.1) > 0 or shoulder_radius(x, y, z, 8.5, 24.5, 13.0, 9.0, 3.7) > 0:
+        if inside(r*math.cos(a), y, MOUNTAIN_Z + r*math.sin(a)):
             return r
         r -= 0.1
     return 0.0
@@ -75,7 +65,7 @@ def ground(x, z):
 
 
 def clear_of_falls(x, y):
-    return abs(x - 0.3) > 2.6 + 0.09*(14 - y)
+    return abs(x - 0.3) > 3.0 + 0.09*(14 - y)
 
 
 def vec4s(name, rows):
@@ -94,8 +84,8 @@ def shrooms(rnd):
         top.append((x, ground(x, z) - 0.2, z, height))
         more.append((cap, -0.08*height*math.cos(a), -0.08*height*math.sin(a), colour))
     # Standing out from the mountain's ledges.
-    for a, y, height, cap, colour in ((3.75, 5.0, 3.6, 1.8, 1), (4.15, 9.5, 2.8, 1.4, 2), (5.3, 6.0, 3.8, 1.9, 0), (5.75, 11.0, 2.6, 1.3, 3), (3.45, 11.5, 2.5, 1.3, 3),
-                                          (5.0, 13.5, 2.3, 1.2, 1), (4.4, 16.5, 2.0, 1.0, 0), (0.15, 7.0, 3.0, 1.5, 2), (3.0, 6.5, 3.0, 1.5, 1)):
+    for a, y, height, cap, colour in ((3.75, 5.0, 3.6, 1.8, 1), (4.0, 10.5, 2.8, 1.4, 2), (5.4, 6.0, 3.8, 1.9, 0), (5.75, 12.0, 2.6, 1.3, 3), (3.4, 13.5, 2.5, 1.3, 3),
+                                          (5.05, 16.0, 2.3, 1.2, 1), (4.35, 20.0, 2.0, 1.0, 0), (0.1, 7.0, 3.0, 1.5, 2), (3.05, 7.0, 3.0, 1.5, 1)):
         x, y0, z = on_mountain(a, y, 0.5)
         top.append((x, y0, z, height))
         more.append((cap, 0.35*height*math.cos(a), 0.35*height*math.sin(a), colour))
@@ -112,42 +102,17 @@ def shrooms(rnd):
     return top, more
 
 
-def cliffs(rnd):
-    """Angular blocks of uneven length breaking the slope, the same language as the spawn rock's cliffs."""
-    first, second = [], []
-    for level, y in enumerate((2.5, 6.0, 9.5, 13.0, 16.5, 20.0, 23.0)):
-        count = 13 - level
-        for k in range(count):
-            a = (k + rnd.uniform(-0.25, 0.25))*2*math.pi/count + level*0.4
-            a %= 2*math.pi
-            length = rnd.uniform(1.8, 3.8)*(1.1 - y/40)
-            hw, hd = rnd.uniform(1.0, 1.9)*(1.1 - y/36), rnd.uniform(1.1, 2.4)*(1.1 - y/36)
-            # Well bedded in, standing out as a crag.
-            r = surface_radius(a, y) - hw*0.55
-            x, z = r*math.cos(a), MOUNTAIN_Z + r*math.sin(a)
-            if not clear_of_falls(x, y) and z < MOUNTAIN_Z:
-                continue
-            first.append((x, z, a + rnd.uniform(-0.3, 0.3), hw))
-            second.append((hd, y + length*0.45, y - length*1.9, rnd.uniform(-0.45, 0.45)))
-    return first, second
-
-
-def bushes(rnd, first, second):
+def bushes(rnd):
+    """Clumps sitting on the ledges, more of them low down, leaving plenty of the rock showing."""
     rows = []
-    # Greenery spilling off the tops of the cliffs, and in low mats between them.
-    for (x, z, yaw, hw), (hd, top, bottom, slant) in zip(first, second):
-        for _ in range(2):
-            if rnd.random() < 0.8:
-                ox, oz = rnd.uniform(-1, 1)*hd*0.7, rnd.uniform(-1, 1)*hd*0.7
-                rows.append((x + ox, top + 0.05, z + oz, rnd.uniform(0.5, 1.15)*(1.2 - top/34)))
     tries = 0
-    while len(rows) < 150 and tries < 4000:
+    while len(rows) < 100 and tries < 4000:
         tries += 1
-        a, y = rnd.uniform(2.4, 7.0) % (2*math.pi), 20.0*rnd.random()**1.3 + 0.3
-        x, y0, z = on_mountain(a, y, -0.05)
-        if not clear_of_falls(x, y) and z < MOUNTAIN_Z:
+        a, y = rnd.uniform(2.3, 7.1) % (2*math.pi), 26.0*rnd.random()**1.5 + 0.4
+        x, y0, z = on_mountain(a, y, 0.15)
+        if (not clear_of_falls(x, y) and z < MOUNTAIN_Z) or any(math.dist((x, y0, z), row[:3]) < 1.5 for row in rows):
             continue
-        rows.append((x, y0 + 0.1, z, rnd.uniform(0.55, 1.35)*(1.15 - y/28)))
+        rows.append((x, y0, z, rnd.uniform(0.55, 1.25)*(1.15 - y/36)))
     return rows
 
 
@@ -157,7 +122,7 @@ def boulders(rnd):
     for x, z, size in ((-3.6, 2.2, 0.85), (-1.8, 3.9, 0.6), (2.6, 3.0, 0.95), (4.2, 0.8, 0.6), (-4.6, -0.8, 0.7), (1.0, -2.4, 0.55), (-1.6, -3.6, 0.45)):
         rows.append((x, -0.2, z, size))
     # Rough rock round the two basins the falls land in.
-    for x, y, z, size in ((-1.2, 13.8, 13.5, 0.75), (1.9, 13.7, 13.5, 0.85), (-1.9, 7.2, 10.2, 1.0), (2.4, 7.1, 10.2, 0.95)):
+    for x, y, z, size in ((-1.5, 16.9, 16.0, 0.75), (2.0, 16.8, 16.0, 0.85), (-2.0, 8.4, 11.1, 1.0), (2.6, 8.3, 11.1, 0.95)):
         rows.append((x, y, z, size))
     for _ in range(9):
         a = rnd.uniform(0, 2*math.pi)
@@ -188,7 +153,7 @@ def flora(rnd):
 
 def crystals():
     rows, more = [], []
-    for a, y, colour, scale in ((3.55, 3.0, 0, 1.3), (4.0, 7.0, 1, 1.1), (5.45, 3.5, 1, 1.4), (5.9, 8.5, 0, 1.0), (4.55, 11.5, 2, 0.9), (5.1, 17.0, 1, 0.75), (4.3, 19.5, 2, 0.7), (3.15, 12.0, 0, 0.9)):
+    for a, y, colour, scale in ((3.55, 3.0, 0, 1.3), (4.05, 8.0, 1, 1.1), (5.45, 3.5, 1, 1.4), (5.9, 9.5, 0, 1.0), (4.45, 14.0, 2, 0.9), (5.0, 21.0, 1, 0.75), (4.3, 24.5, 2, 0.7), (3.2, 14.0, 0, 0.9)):
         x, y0, z = on_mountain(a, y, 0.1)
         rows.append((x, y0, z, colour))
         more.append((0.55*math.cos(a), 0.65, 0.55*math.sin(a), scale))
@@ -201,29 +166,39 @@ def crystals():
 def vines(rnd):
     rows = []
     while len(rows) < 16:
-        a, y = rnd.uniform(3.3, 6.1), rnd.uniform(5.0, 20.0)
+        a, y = rnd.uniform(3.3, 6.1), rnd.uniform(6.0, 25.0)
         x, y0, z = on_mountain(a, y, -0.15)
         if clear_of_falls(x, y):
             rows.append((x, y0, z, rnd.uniform(2.0, 5.5)))
     return rows
 
 
-def slugs(rnd, stones):
+def slugs(stones):
+    """On the stones and the banks, in small groups, mostly on the side players arrive from. Their own random stream, so changes
+    to anything else can't move them."""
+    rnd = random.Random(41)
     rows = []
     for index in (0, 1, 2, 3, 4, 5, 6, 12, 15):
         x, y, z, size = stones[index]
         rows.append((x + rnd.uniform(-0.2, 0.2)*size, y + 0.72*size, z + rnd.uniform(-0.2, 0.2)*size, rnd.uniform(0, 6.28)))
+    # The group the close-up looks at.
+    for x, z, heading in ((-1.62, -8.37, 0.4), (-1.78, -7.44, -0.5), (-0.67, -8.21, 2.6)):
+        rows.append((x, ground(x, z), z, heading))
     tries = 0
-    while len(rows) < 30 and tries < 500:
+    while len(rows) < 30 and tries < 800:
         tries += 1
-        a = rnd.uniform(0, 2*math.pi)
+        a = rnd.uniform(math.pi, 2*math.pi) if rnd.random() < 0.72 else rnd.uniform(0, math.pi)
         r = pond_radius(a) + rnd.uniform(0.15, 4.5)
         x, z = r*math.cos(a), r*math.sin(a)
-        if any(math.hypot(x - row[0], z - row[2]) < 0.8 for row in rows):
-            continue
-        # A few in mid hop.
-        hop = rnd.uniform(0.18, 0.4) if len(rows) % 6 == 0 else 0.0
-        rows.append((x, ground(x, z) + hop, z, rnd.uniform(0, 6.28)))
+        for step in range(rnd.choice((1, 2, 2, 3))):
+            sx, sz = x + rnd.uniform(-1.1, 1.1)*min(step, 1), z + rnd.uniform(-1.1, 1.1)*min(step, 1)
+            if len(rows) >= 30 or any(math.hypot(sx - row[0], sz - row[2]) < 0.8 for row in rows):
+                continue
+            if math.hypot(sx, sz) < pond_radius(math.atan2(sz, sx)) + 0.15:
+                continue
+            # A few in mid hop.
+            hop = rnd.uniform(0.18, 0.4) if len(rows) % 6 == 0 else 0.0
+            rows.append((sx, ground(sx, sz) + hop, sz, rnd.uniform(0, 6.28)))
     return rows
 
 
@@ -231,14 +206,12 @@ def main():
     rnd = random.Random(29)
     top, more = shrooms(rnd)
     stones = boulders(rnd)
-    cliff_a, cliff_b = cliffs(rnd)
     flowers, ferns = flora(rnd)
     gems, gem_more = crystals()
     block = "// @grove-begin\n// Generated by tools/lobby/grove_sites.py. See there before editing.\n"
-    block += vec4s("GROVE_SHROOM", top) + vec4s("GROVE_CAP", more) + vec4s("GROVE_BUSH", bushes(rnd, cliff_a, cliff_b)) + vec4s("GROVE_STONE", stones)
-    block += vec4s("GROVE_CLIFF_A", cliff_a) + vec4s("GROVE_CLIFF_B", cliff_b)
+    block += vec4s("GROVE_SHROOM", top) + vec4s("GROVE_CAP", more) + vec4s("GROVE_BUSH", bushes(rnd)) + vec4s("GROVE_STONE", stones)
     block += vec4s("GROVE_FLOWER", flowers) + vec4s("GROVE_FERN", ferns) + vec4s("GROVE_GEM", gems) + vec4s("GROVE_GEM_DIR", gem_more)
-    block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_SLUG", slugs(rnd, stones)) + "// @grove-end\n"
+    block += vec4s("GROVE_VINE", vines(rnd)) + vec4s("GROVE_SLUG", slugs(stones)) + "// @grove-end\n"
     text = PAGE.read_text(encoding="utf-8")
     text, count = re.subn(r"// @grove-begin\n.*?// @grove-end\n", lambda _: block, text, flags=re.S)
     assert count == 1, "the page needs its generated block"

@@ -265,3 +265,6 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Texture memory builds up during a run:** report its peak per device, not per view.
 - **Start a green scene dark:** bright moss and glowing water at full strength flattened the first grove render into a toy. Dark ground and stone first, then saturation only on mushrooms, water and crystals.
 - **The ink's reach is fixed in world units:** at true scale it swallowed Floppy's face, so anything that small must draw its own lines.
+- **Build a surface from the approved parts:** a noisy cone painted like rock never read as Slugterra; rebuilding from the lining's actual block shape did in one pass. Square tops still read as a ruined castle until the slants and height differences were strong.
+- **Give hero objects their own random stream in generators:** changing the mountain's placements moved every Floppy away from the camera and the arrival side.
+- **Check file times after a batch render:** one silently failed render left an old mountain in a sheet that looked plausible.
