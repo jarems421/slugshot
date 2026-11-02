@@ -333,6 +333,26 @@ def in_rim_bushes(ids, c):
     return (np.abs(ids - 12.0) < 0.5) & (np.hypot(c[:, 0], c[:, 2]) > 18.0) & (c[:, 1] > -0.4)
 
 
+def energy_sheet(points):
+    """The portal's surface: one flat arch per side, sharing every corner, with its edges tucked into the stone. Decimating
+    the sampled surface left streaks and hairline cracks that read as shards (owner)."""
+    lo, hi = points.min(axis=0), points.max(axis=0)
+    inner = (hi[0] - lo[0])/2
+    spring, foot, half = hi[1] - inner, lo[1] - 0.15, 0.04
+    radius = inner + 0.2
+    arc = [(radius*np.cos(a), spring + radius*np.sin(a)) for a in np.linspace(0, np.pi, 33)]
+    rim = [(radius, foot)] + arc + [(-radius, foot)]
+    verts, faces = [], []
+    for side in (1, -1):
+        centre = len(verts)
+        verts.append((0.0, spring*0.6, side*half))
+        verts.extend((x, y, side*half) for x, y in rim)
+        for i in range(len(rim)):
+            a, b = centre + 1 + i, centre + 1 + (i + 1) % len(rim)
+            faces.append((centre, a, b) if side > 0 else (centre, b, a))
+    return np.array(verts, "f4"), np.array(faces, "i4")
+
+
 def juice_funnel():
     """The juice's smooth funnel. Decimating its folds left hard facets (owner: "a spiral of choppiness"), so the
     shape stays smooth and the folds live in the normal and colour maps, which rotate with it."""
@@ -495,7 +515,7 @@ def portal_piece(item, scale):
             part("Stone", by_id((5.5, 6.5)), 3600, 1024, ROCK_INK, 0.4, hard=True, cage=0.06),
             part("Iron", by_id((6.5, 7.5)), 1400, 512, PROP_INK, 0.5, cage=0.04),
             part("Gem", by_id((7.5, 8.5)), 500, 256, PROP_INK, 1.0, hard=True, cage=0.04),
-            part("Energy", everything, 500, 512, cage=0.05),
+            part("Energy", everything, 136, 512, cage=0.05),
         ],
     }
 
@@ -883,15 +903,14 @@ def fx_textures():
     for name, a in (("spore", np.clip(np.exp(-(r/0.32)**2) + 0.35*np.exp(-(r/0.75)**2), 0, 1)),):
         save(name, a)
     y_full, x_full = np.mgrid[-1:1:n*1j, -1:1:n*1j]
-    # The portals' layers, large and soft, all in alpha. The swirl is a gentle bending of a glow rather than separate arms,
-    # which read as broken shards (owner), and holds back at the centre, which blinded.
+    # The portal's swirl: a gentle bending of light, even from the middle out to a soft edge, so it covers the whole surface
+    # (owner) rather than gathering at the centre.
     sy, sx = np.mgrid[-1:1:512j, -1:1:512j]
     sr, sa = np.hypot(sx, sy), np.arctan2(sy, sx)
-    soft_edge = np.cos(np.clip(sr, 0, 1)*np.pi/2)**2
-    arms = 0.5 + 0.5*np.cos(3*sa + 4.2*np.log(sr + 0.12))
-    wisps = 0.5 + 0.5*np.sin(21*sr + 2.2*np.sin(3*sa) + sa)
-    save("swirl", (0.3 + 0.7*arms)*(0.82 + 0.18*wisps)*soft_edge*(1 - 0.55*np.exp(-(sr/0.3)**2)))
-    save("portalcore", np.exp(-(sr/0.5)**2)*soft_edge)
+    edge = np.clip((0.86 - sr)/0.34, 0, 1)
+    # Arms fade out toward the middle, or they pinch into a point there.
+    arms = 0.5 + 0.5*np.cos(3*sa + 3.2*np.log(sr + 0.15))*np.clip(sr/0.3, 0, 1)
+    save("swirl", (0.25 + 0.75*arms)*edge*edge*(3 - 2*edge))
     h, w = 512, 256
     def tile(sigma_y, sigma_x, seed):
         noise = blur(blur(np.random.default_rng(seed).random((h, w)), 0, sigma_y), 1, sigma_x)
@@ -1018,13 +1037,16 @@ def mesh(key):
         extra = {}
         if "smooth" in piece:
             extra = dict(zip(("lowVerts", "lowFaces"), piece["smooth"]()))
+        upright = spec["name"] == "Energy"
+        if upright:
+            extra = dict(zip(("lowVerts", "lowFaces"), energy_sheet(verts[used])))
         plate = key == "hub-rock" and spec["name"] == "Top"
         if plate:
             extra = top_plate(gpu)
         np.savez_compressed(out/f"{spec['name']}.npz", verts=verts[used], faces=remap.reshape(-1, 3).astype("i4"), **extra)
         groups.append({"name": spec["name"], "faces": int(len(sel)), "tris": spec["tris"], "tex": spec["tex"],
                        "ink": spec["ink"]/piece["scale"], "inkRatio": spec["inkRatio"], "hard": spec["hard"],
-                       "cage": spec["cage"], "authored": bool(extra) and not plate, "plate": plate})
+                       "cage": spec["cage"], "authored": bool(extra) and not plate, "plate": plate, "upright": upright})
         print(f"  {spec['name']:10s} {len(sel):9d} dense faces -> {spec['tris']} tris", flush=True)
     if "sparkle" in piece:
         sparkle_points(gpu, key, out)
@@ -1095,6 +1117,16 @@ def paint(key):
             over = base.max(axis=2)[valid & (mask > 0.5)]
             g["emit"] = f"textures/{g['name']}-emit.png"
             g["emissiveStrength"] = EMIT_STRENGTH.get(g["name"], round(min(4.0, peak/max(float(np.median(over)), 0.05)), 2))
+        if g["name"] == "Energy":
+            # Solid maps with no gaps or surface detail: islands, seams and facets read as shards on a plain glow (owner).
+            # The glow's hue, because the unlit colour is muted. Dark, with the glow strength making it up in the game: any
+            # light landing on a brighter map picks out the mesh's triangles as streaks.
+            glow = np.median(emit[valid], axis=0)
+            flat = tuple(int(v) for v in to_srgb(glow/glow.max()*0.25)*255 + 0.5)
+            Image.new("RGB", (64, 64), flat).save(out/"textures"/"Energy-color.png")
+            Image.new("L", (64, 64), 255).save(out/"textures"/"Energy-emit.png")
+            Image.new("RGB", (64, 64), (128, 128, 255)).save(out/"textures"/"Energy-normal.png")
+            g["emit"] = "textures/Energy-emit.png"
         print(f"{g['name']}: {int(valid.sum())} texels" + (f", glow x{g['emissiveStrength']}" if "emit" in g else ""), flush=True)
     (out/"build.json").write_text(json.dumps(report, indent=1))
 

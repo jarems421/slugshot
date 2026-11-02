@@ -5,6 +5,7 @@
 - **Owner request:** a slow glow on the volcano's lava, livelier portals that must not look blocky, and cave and gun symbols that glow like the other runes.
 - **Implemented, seen in Studio by camera captures:** all three ([lobby hub](art/lobby-hub.md)). Motion was only sampled in stills.
 - **Owner feedback during the round:** blocky portals, blinding centres, then too dim with "broken shards" and a "little explosion"; animation should be noticeably slower.
+- **Follow-up, seen in Studio by camera captures:** steam is light grey only. Portal surfaces were rebuilt as hand-built sheets with solid maps, which removed the shards that showed before the swirl. The base is brighter, and the swirl is fainter and covers the whole surface. Neon was tried and rejected: it could not show a swirl.
 - **Unresolved:** owner verdict on the final portal brightness and speed, walking and wall-running on the solid art, phone performance, the spiral route.
 
 ## 2026-11-02 - Solid lobby art, blocky arch breaks, more steam

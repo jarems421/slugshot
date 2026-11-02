@@ -91,13 +91,13 @@ def build_plate(name, data):
     return low
 
 
-def planar_uv(obj, half):
-    """Straight down, so a round surface has no seams in its maps."""
+def planar_uv(obj, half, upright=False):
+    """Straight down (or straight on, for an upright sheet), so a round surface has no seams in its maps."""
     mesh = obj.data
     layer = mesh.uv_layers.new(name="UVMap")
     for loop in mesh.loops:
         co = mesh.vertices[loop.vertex_index].co
-        layer.data[loop.index].uv = (0.5 + 0.5*co.x/half, 0.5 + 0.5*co.y/half)
+        layer.data[loop.index].uv = (0.5 + 0.5*co.x/half, 0.5 + 0.5*(co.z if upright else co.y)/half)
     for p in mesh.polygons:
         p.use_smooth = True
 
@@ -165,7 +165,7 @@ def main():
         if g.get("authored"):
             low = base.build_dense(name, {"verts": data["lowVerts"], "faces": data["lowFaces"]})
             low.name = low.data.name = name
-            planar_uv(low, 19.0)
+            planar_uv(low, 19.0, g.get("upright"))
         elif g.get("plate"):
             low = build_plate(name, data)
             planar_uv(low, 8.8)

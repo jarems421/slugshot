@@ -889,18 +889,26 @@ local function buildPortals()
 				Vector3.new(entry.radius * math.sin(rad), entry.rise, -entry.radius * math.cos(rad))
 			local frame = CFrame.lookAt(base, Vector3.new(0, base.Y, 0))
 			model:PivotTo(frame * model:GetPivot())
-			pointLight(base + frame.LookVector * 5 + Vector3.new(0, 8, 0), spec.color, 0.5, 14)
-			-- The opening's true width, so nothing spills past the stones.
+			pointLight(
+				base + frame.LookVector * 4 + Vector3.new(0, 5 * spec.scale, 0),
+				spec.color,
+				1.4,
+				11 * spec.scale
+			)
+			-- The opening's true width: the middle one of the sheet's thickness, width and height.
 			local energy = model:FindFirstChild("Energy", true) :: MeshPart
-			local across = 10.4 * spec.scale
+			local sizes = { energy.Size.X, energy.Size.Y, energy.Size.Z }
+			table.sort(sizes)
+			local across = sizes[2]
 			local middle = energy.Position
-			-- A deep, plain field; everything brighter is added by the layers below.
+			-- A solid colour with an exact glow. Neon glowed by itself, but it renders so far past full brightness that
+			-- nothing drawn over it shows, so it couldn't carry a swirl.
 			local field = energy:FindFirstChildOfClass("SurfaceAppearance")
 			if field then
-				field.EmissiveStrength = 0.85
+				field.EmissiveStrength = 2.4
 			end
 			energy:SetAttribute("PulseRate", 0.35)
-			energy:SetAttribute("PulseDepth", 0.12)
+			energy:SetAttribute("PulseDepth", 0.08)
 			energy:SetAttribute("Phase", entry.angle)
 			CollectionService:AddTag(energy, "HubPulse")
 			local bright = spec.color:Lerp(Color3.new(1, 1, 1), 0.3)
@@ -939,9 +947,8 @@ local function buildPortals()
 						CollectionService:AddTag(e, "HubSpareTwinkle")
 					end
 				end
-				layer("Core", "portalcore", 0.95, 0.2, 0)
-				layer("SwirlWide", "swirl", 0.95, 0.8, 12)
-				layer("SwirlTight", "swirl", 0.58, 0.5, 16)
+				layer("SwirlWide", "swirl", 1.05, 0.22, 12)
+				layer("SwirlDrift", "swirl", 0.9, 0.12, 16)
 			end
 			-- Sparks flying off the energy and floating up.
 			local source =
@@ -1155,7 +1162,7 @@ local function buildVolcano()
 	-- The plume that's always rising.
 	local plume = emitter("Plume")
 	plume.Texture = fxTexture("mist")
-	plume.Color = ColorSequence.new(Color3.fromRGB(150, 98, 84), Color3.fromRGB(46, 40, 54))
+	plume.Color = ColorSequence.new(Color3.fromRGB(205, 205, 208), Color3.fromRGB(165, 165, 170))
 	plume.LightEmission = 0.1
 	plume.Size = fade({ { 0, 16 }, { 1, 58 } })
 	plume.Transparency = fade({ { 0, 1 }, { 0.2, 0.62 }, { 1, 1 } })
@@ -1167,20 +1174,20 @@ local function buildVolcano()
 	-- Slow and wide, so it hangs around the crater: rising straight up, the ceiling hid it from the spawn rock.
 	local steam = emitter("SteamLight")
 	steam.Texture = fxTexture("mist")
-	steam.Color = ColorSequence.new(Color3.fromRGB(226, 214, 210), Color3.fromRGB(126, 120, 132))
+	steam.Color = ColorSequence.new(Color3.fromRGB(232, 232, 235), Color3.fromRGB(178, 178, 184))
 	steam.LightEmission = 0.05
 	steam.Size = fade({ { 0, 20 }, { 1, 85 } })
-	steam.Transparency = fade({ { 0, 1 }, { 0.12, 1 }, { 0.3, 0.45 }, { 1, 1 } })
+	steam.Transparency = fade({ { 0, 1 }, { 0.12, 1 }, { 0.3, 0.68 }, { 1, 1 } })
 	steam.Lifetime = NumberRange.new(12, 18)
 	steam.Rate = 3
 	steam.Speed = NumberRange.new(4, 8)
 	steam.SpreadAngle = Vector2.new(38, 38)
 	CollectionService:AddTag(steam, "HubMist")
-	local smoke = emitter("SteamDark")
+	local smoke = emitter("SteamGrey")
 	smoke.Texture = fxTexture("mist")
-	smoke.Color = ColorSequence.new(Color3.fromRGB(58, 50, 60), Color3.fromRGB(22, 20, 28))
+	smoke.Color = ColorSequence.new(Color3.fromRGB(198, 198, 203), Color3.fromRGB(150, 150, 156))
 	smoke.Size = fade({ { 0, 24 }, { 1, 95 } })
-	smoke.Transparency = fade({ { 0, 1 }, { 0.3, 1 }, { 0.5, 0.45 }, { 1, 1 } })
+	smoke.Transparency = fade({ { 0, 1 }, { 0.3, 1 }, { 0.5, 0.72 }, { 1, 1 } })
 	smoke.Lifetime = NumberRange.new(12, 18)
 	smoke.Rate = 2.5
 	smoke.Speed = NumberRange.new(3, 6)

@@ -4,16 +4,16 @@ local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
-	{ name = "gun", from = Vector3.new(-8, 9, 0), at = Vector3.new(-31, 12.6, 0) },
+	{ name = "pvp0", from = Vector3.new(0, 14, -118), at = Vector3.new(0, 24, -161) },
+	{ name = "training0", from = Vector3.new(-45, 12, -122), at = Vector3.new(-63, 14, -153) },
+	{ name = "veylume0", from = Vector3.new(45, 12, -122), at = Vector3.new(63, 14, -153) },
+	{ name = "close", from = Vector3.new(0, 12, -134), at = Vector3.new(0, 22, -161) },
 	{ name = "spawn", from = Vector3.new(0, 9, -12), at = Vector3.new(0, 90, -240) },
+	{ name = "steamSide", from = Vector3.new(-95, 75, -55), at = Vector3.new(0, 150, -265) },
+	{ name = "crater", from = Vector3.new(14, 190, -190), at = Vector3.new(0, 140, -265) },
 	{ name = "pvp", from = Vector3.new(0, 14, -118), at = Vector3.new(0, 24, -161) },
 	{ name = "training", from = Vector3.new(-45, 12, -122), at = Vector3.new(-63, 14, -153) },
 	{ name = "veylume", from = Vector3.new(45, 12, -122), at = Vector3.new(63, 14, -153) },
-	{ name = "pvp2", from = Vector3.new(0, 14, -118), at = Vector3.new(0, 24, -161) },
-	{ name = "pvp3", from = Vector3.new(0, 14, -118), at = Vector3.new(0, 24, -161) },
-	{ name = "side", from = Vector3.new(-85, 14, -125), at = Vector3.new(-63, 14, -153) },
-	{ name = "lavaC", from = Vector3.new(-70, 45, -135), at = Vector3.new(-20, 60, -215) },
-	{ name = "crater", from = Vector3.new(14, 190, -190), at = Vector3.new(0, 140, -265) },
 }
 
 local function read(name: string): number
@@ -32,7 +32,7 @@ task.spawn(function()
 		task.wait(0.5)
 	end
 	print("HUBCHECK solid ready")
-	task.wait(24)
+	task.wait(3)
 	print("HUBCHECK tour starts")
 	local camera = workspace.CurrentCamera
 	camera.CameraType = Enum.CameraType.Scriptable
