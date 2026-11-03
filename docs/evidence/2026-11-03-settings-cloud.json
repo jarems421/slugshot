@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified with real Roblox cloud storage",
+  "authorization": "Owner confirmed local Studio error and approved private test publication plus Studio API access only.",
+  "scope": {
+    "experience": "Slugshot Settings Storage Test",
+    "audience": "Only owner and authorized collaborators; no invites added.",
+    "mainExperiencePublished": false,
+    "privateModelsOrAnimationIdsInTest": false,
+    "studioApiAccessEnabled": true,
+    "allowHttpRequests": false,
+    "thirdPartySalesOrTeleports": false,
+    "teamCreate": false,
+    "dataSharing": false
+  },
+  "runtime": {
+    "engine": "Roblox Studio 0.745.0.7451137",
+    "clients": 1,
+    "storage": "Real DataStoreService, SlugshotSettings_Studio in isolated private test universe; not injected storage.",
+    "account": "One owner account; identifiers retained only in ignored private metadata.",
+    "saveObservedUtc": "2026-11-03T09:16:41.886Z",
+    "rejoinObservedUtc": "2026-11-03T09:19:18.010Z",
+    "protocol": "Save acknowledged, stop Play normally to release/flush, start a fresh server/client Play session, compare all fields and both binding slots.",
+    "result": "PASS: all 12 preferences and all action binding slots restored, including a cleared primary binding and custom secondary binding."
+  },
+  "testPreferences": {
+    "FieldOfView": 91,
+    "LookSensitivity": 37,
+    "AimSensitivity": 63,
+    "RecoilAnimation": "Flip",
+    "HolsterMode": "Vanish",
+    "HealthNumber": "On change",
+    "SprintMode": "Hold",
+    "SprintDoubleTap": false,
+    "CrosshairStyle": "Ring",
+    "CrosshairColor": "18A4C7",
+    "CrosshairSize": 1.25,
+    "FlipCamera": 3
+  },
+  "keybindWitness": {
+    "inventory": [
+      "F13",
+      "MouseButton3"
+    ],
+    "shiftLock": [
+      false,
+      "RightControl"
+    ]
+  },
+  "fixes": [
+    "Wait for replicated schema and keybind/sync modules on cold startup.",
+    "Minimal cloud project matches production Folder/Script/SettingsStore sibling layout; build asserts the instance contract."
+  ],
+  "verification": [
+    "verify_combat.py exit 0",
+    "cloud fixture StyLua, Selene and strict Luau analysis exit 0",
+    "actual cloud save/stop/rejoin pass"
+  ],
+  "localEvidence": [
+    "build/settings-cloud/full-first-save.png",
+    "build/settings-cloud/cloud-rejoin-pass.png",
+    "build/settings-cloud/audience.png",
+    "build/settings-cloud/security-enabled.png"
+  ],
+  "privateIdentityFile": "private-assets/settings-cloud/experience.json (ignored)",
+  "limits": [
+    "No second physical device/account login or multiplayer session was performed.",
+    "Unpublished local .rbxlx previews remain session-only; this test does not give local files cloud identity.",
+    "Studio and live runtime use separate store names by design."
+  ]
+}

@@ -1,7 +1,7 @@
 --!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Schema = require(ReplicatedStorage:WaitForChild("Combat").SettingsSchema)
+local Schema = require(ReplicatedStorage:WaitForChild("Combat"):WaitForChild("SettingsSchema"))
 local Sync = {}
 
 function Sync.start(keys: any)

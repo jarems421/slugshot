@@ -59,3 +59,6 @@ No halftone dot backgrounds ("never do that"). No thin glowing lines passed off 
 **Implemented/verified:** close X and double-tap checkmark are built with `utf8.char`, fixing corrupted UTF-8 text. Unpublished Studio previews show an honest session-only storage message, preserving early edits through retry/recovery. Settings lease acquisition handles conflicting UpdateAsync retries and checks actual token ownership. Native account isolation, failed-load recovery, all menu values/bindings and leave flush pass using injected storage. [Evidence](evidence/2026-11-03-settings-and-final-review.json).
 
 **Unresolved:** actual cloud-backed leave/rejoin. A minimal private test place is prepared, but publishing a test experience and enabling Studio API access need owner permission. Local preview status does not mean preferences are saved across sessions.
+
+
+**Implemented/verified, 2026-11-03 - real persistence:** owner-approved private settings-only experience passed actual cloud save, normal leave/release and fresh Play rejoin for all twelve preferences and both binding slots. Cold-start requires now wait for replicated children. [Evidence and scope](evidence/2026-11-03-settings-cloud.json). This supersedes the unresolved cloud test above; local unpublished previews remain explicitly session-only.

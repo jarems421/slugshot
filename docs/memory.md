@@ -1881,3 +1881,12 @@
 - **Implemented/verified:** corrected icon/checkmark encoding, conflicting settings lease retries and retained honest unavailable-store UI status. Native injected-store tests pass all preferences, bindings, recovery, account isolation and production leave flush.
 - **Implemented/verified:** caught and corrected downward head-axis signs; native transformed-head check now measures positive upward gaze for both species. Focused 1,562-frame run averages 60 FPS; both landing peaks, 524 rest contacts and boundaries pass. Fresh 16-case actual shooting recovery/open-space suite also passes.
 - **Prepared/unresolved:** real cloud persistence requires a published test experience and Studio API access. Minimal production-code acceptance file is built and typed, without private assets/animation IDs. Owner permission requested; do not publish or claim real cloud rejoin success until granted and tested.
+
+
+## 2026-11-03 - Approved private cloud settings test completed
+
+- **Confirmed:** error was in local Studio; owner approved only private settings test publication and Studio API access there.
+- **Implemented/verified:** created private `Slugshot Settings Storage Test`, no private models/animation IDs, Team Create/data sharing off, only Studio API access enabled. No main-game publication. Identity stays in ignored private metadata.
+- **Implemented/verified:** real DataStoreService acknowledged all twelve preferences and both binding slots; normal Stop flushed/released, fresh server/client Play restored every preference/binding, including false/unbound, colour and custom second slot. This resolves the prior cloud acceptance gate.
+- **Implemented/verified:** fixed cold-start replicated-child waits and the minimal cloud fixture's sibling-module layout; added build contract check. Full combat checks and cloud fixture lint/types pass.
+- **Limits:** owner account in native Studio with real cloud storage; no second-device/account login. Unpublished local previews remain session-only. [Evidence](evidence/2026-11-03-settings-cloud.json).

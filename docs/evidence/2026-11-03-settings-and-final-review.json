@@ -1,6 +1,6 @@
 {
   "date": "2026-11-03",
-  "status": "Implemented/verified offline and local Studio; real cloud rejoin pending authorization",
+  "status": "Implemented/verified locally and real-cloud save/rejoin in an approved private test",
   "settings": {
     "passes": [
       "missing/old/invalid/duplicate data",
@@ -16,7 +16,8 @@
     "lease": "Reset status on every UpdateAsync callback retry and verify the returned lease token.",
     "unpublishedStudio": "Explicit session-only status; retries preserve edits and never claim a successful save.",
     "preparedCloudArtifact": "build/SlugshotSettingsCloudCheck.rbxlx; no private assets/animations; production SettingsStore/SettingsPersistence/SettingsSync and Keybinds.",
-    "remaining": "Publish private test and enable Studio API access only with owner approval; then real cloud save/leave/rejoin."
+    "remaining": "Cloud acceptance is now complete; see 2026-11-03-settings-cloud.json. Real-device and second-account logins remain untested.",
+    "cloudEvidence": "2026-11-03-settings-cloud.json"
   },
   "grove": {
     "meanDt": 0.016666406123432665,
@@ -53,7 +54,7 @@
     "maxVisibleSurfaceError": 0.0006056312704458833
   },
   "limits": [
-    "Cloud persistence is not verified and cannot run from an unpublished local place.",
+    "Unpublished previews remain session-only; isolated private published test passed actual cloud save/rejoin.",
     "Focused desktop one-client grove timing is not a device-wide or multiplayer guarantee."
   ]
 }

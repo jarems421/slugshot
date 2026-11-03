@@ -43,7 +43,7 @@ local BAND_TENSION, BAND_RESTORE, BAND_DAMPING = 0.3, 0.003, 0.99
 local BAND_POKE = 0.9 -- how hard choosing a tab shakes it
 local GOO_DRIPS = { 0.04, 0.17, 0.24, 0.38, 0.47, 0.6, 0.68, 0.83, 0.93 }
 
-local Schema = require(ReplicatedStorage:WaitForChild("Combat").SettingsSchema)
+local Schema = require(ReplicatedStorage:WaitForChild("Combat"):WaitForChild("SettingsSchema"))
 local DEFAULTS = table.clone(Schema.Defaults)
 DEFAULTS.CrosshairColor = Color3.fromHex(DEFAULTS.CrosshairColor)
 for name, value in DEFAULTS do

@@ -32,3 +32,16 @@ Reset the open status on every `UpdateAsync` transform retry and verify the retu
 **Implemented/verified:** real client/server schema/store/UI tests pass all preferences, cleared bindings, early edits, recovery, save acknowledgement and production leave flush with injected JSON storage. [Current evidence](../evidence/2026-11-03-settings-and-final-review.json).
 
 **Prepared, not performed:** `python tools/build_settings_cloud_check.py` builds a small production-storage acceptance place without private assets or animation IDs. First visit confirms a cloud save; after stopping/leaving normally, the next visit checks restoration. It is intentionally separate from live preferences in Studio. Roblox requires a published experience and Studio API access; [official documentation](https://create.roblox.com/docs/cloud-services/data-stores). Publishing/enabling access requires owner approval under AGENTS.md. Real cloud rejoin remains unresolved until that approval and test.
+
+
+## 2026-11-03 real cloud acceptance - gate satisfied
+
+**Confirmed:** owner located the error in the local Studio preview and explicitly approved publishing only the prepared private settings test and enabling Studio API access there.
+
+**Implemented/verified with Roblox cloud storage:** published `Slugshot Settings Storage Test` with owner-only audience, Team Create/data sharing off; enabled only Studio API access. HTTP/third-party sales/teleports stay off. The test contains no private game models or animation IDs. Its actual universe/place identity stays ignored under `private-assets/settings-cloud`. No main-game publication.
+
+The real production Store/SettingsPersistence/SettingsSync saved all twelve settings and both binding slots through `DataStoreService`. After a normal Stop/flush/release and a fresh server/client Play session, every target preference and action binding matched, including colour, false/unbound and a custom second slot. The cloud check passed, superseding the unresolved cloud gate above. [Sanitized evidence](../evidence/2026-11-03-settings-cloud.json).
+
+The first minimal test exposed a fixture parent-layout defect and client replication ordering. The cloud builder now asserts the production Folder/Script/module sibling contract; schema/keybind/sync requires wait for children. Cloud fixture formatting/lint/strict analysis and full combat verification pass.
+
+**Limits:** one owner account in native Studio using real cloud storage; no second device/account login or standalone-player acceptance. Studio deliberately uses `SlugshotSettings_Studio`, with live runtime using `SlugshotSettings`. Unpublished local files still cannot retain preferences through Roblox storage; use a published private development experience for that acceptance flow.
