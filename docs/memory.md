@@ -1865,3 +1865,11 @@
 - **Implemented/verified:** shooting fix `69629a4` reached main; GitHub foundation CI completed successfully. The owner-private training preview and editable downloads remain available.
 
 - **Implemented/verified ? final grove review:** focused native run: 1,471 display frames and animation updates, mean 17.70 ms/frame, 521 rest contacts and player reactions pass. Final authored list omits site 6, leaving 14 (nine Floppies, five Infernos). A 764 ms hitch and texture-service throttling remain recorded; no steady frame-rate claim.
+
+
+## 2026-11-03 - Stronger body-only splat and permanent flat Floppy sole
+
+- **Confirmed:** owner wants anticipation and visible body squash on landing, explicitly no floor slime/wet effects. Floppy should share Inferno's bottom with a couple of Floppy spores underneath.
+- **Implemented/verified:** stronger compression/extension and cushioned recovery; flat shallow-folded Floppy export with two sage patches. Baseline source/export/private config retained. FBX/idle roundtrip, installed Blender QA and native privately staged asset review pass; both species reach the landing peak and all 14 residents pass contact/boundary/notice checks. All 12 private assets Approved before canonical ignored config update.
+- **Implemented/verified:** full `verify_slugs.py --blender` passes on Blender 4.5.14, plus lobby strict analysis/lint. No floor effects, experience or Marketplace publication.
+- **Unresolved:** owner verdict, real-device and multiplayer observer review. Detailed measurements and accepted baseline QA warnings are in the flat-sole evidence.

@@ -17,3 +17,8 @@ One shared `Combat.WorldSlugSize = 2` supplies world flight/recovery and grove p
 ## Evidence and limits
 
 [Runtime implementation and native/offline evidence](../art/lobby-hub.md#springing-exhibition-residents--2026-11-03). Presentation is local to each client; no synchronized NPC simulation or new gameplay remote is introduced. Ground probes validate Roblox collision surfaces, not every rendered skinned vertex. Owner appearance/feel, observers and real-device performance remain separate checks.
+
+
+## 2026-11-03 owner clarification
+
+Splat is body-only squash/recovery, with no floor effect. Increase landing deformation and retain a brief takeoff tension hold. Floppy's permanent export sole now matches Inferno's flat folded support, with two sage spore patches. Source/rig review and actual private staged-model Studio evidence are linked in the lobby record.

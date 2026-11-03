@@ -33,6 +33,8 @@ from build_floppy import DROOL, EYE_DIM, MOUTH, belly_folds, eye_basis, eye_loca
 
 SOURCE = ROOT/"assets/source/slugs/models/floppy/floppy-repaired.blend"
 OUT = ROOT/"build/slugs/floppy/roblox"
+if "--out" in sys.argv:
+    OUT = Path(sys.argv[sys.argv.index("--out") + 1]).resolve()
 BODY_TRIANGLES = 8000
 EYE_TRIANGLES = 400
 TEXTURE = 1024
@@ -51,10 +53,9 @@ SKIN_ROUGHNESS_LOW = 0.10
 TORSO_STRETCH = 0.25
 STRETCH_TOP = 1.25
 SKIN_ROUGHNESS = 0.22
-# Rolled or diving, the flat base read as a "sawn off disc" (owner, 2026-11-01). Dome it below the
-# ground plane, where it stays hidden while standing. Body colour with folds running straight across
-# it like a slug's foot: anything radial or dark converges on the middle and reads as a hole. Source units.
-UNDERSIDE_DEPTH = 0.3
+# Owner, 2026-11-03: match Inferno's flat, softly folded sole. The previous
+# domed underside is superseded. Root contact and the standing silhouette stay fixed.
+SOLE_FOLD_DEPTH = 0.012
 FACE_DETAIL_GROUP = "face_detail"
 FACE_DETAIL_WEIGHT = 0.85
 MOUTH_DETAIL_WEIGHT = 0.5  # the mouth keeps the most triangles, so a smile bends smoothly
@@ -84,9 +85,8 @@ LID_CONTOUR_STRENGTH = 0.0  # the ring beside the rim read as two layers of eyel
 UNDERSIDE_FLAT_Z = 0.012
 UNDERSIDE_RINGS = 28
 UNDERSIDE_ROW_SPACING = 0.04
-UNDERSIDE_BLEND_TOP = 0.03
+UNDERSIDE_BLEND_TOP = 0.08
 UNDERSIDE_FOLD_SPACING = 0.2
-UNDERSIDE_FOLD_DEPTH = 0.03
 EYE_ROUGHNESS = 0.08
 FPS = 24
 LOOP_SECONDS = 12.0
@@ -326,9 +326,8 @@ def underside_fold(x, y):
     return np.abs(np.sin((y + wander)*np.pi/UNDERSIDE_FOLD_SPACING))**0.6
 
 
-def round_underside(high):
-    """Replace the flat base with a soft domed belly. The flat faces have almost no interior vertices, so the
-    cap is rebuilt as rings from the rim; the rim keeps its place, so the standing silhouette is unchanged."""
+def rebuild_sole(high):
+    """A supported sole with the same shallow rolls as Inferno; keep the existing rim and source UVs."""
     bm = bmesh.new()
     bm.from_mesh(high.data)
     bm.normal_update()
@@ -380,14 +379,14 @@ def round_underside(high):
             vert = rim[int(k*len(rim)/count)]
             x = centre.x + (vert.co.x - centre.x)*math.cos(angle)
             y = centre.y + (vert.co.y - centre.y)*math.cos(angle)
-            fold = float(underside_fold(x, y))*UNDERSIDE_FOLD_DEPTH*math.sin(angle)**2
-            new = bm.verts.new(Vector((x, y, vert.co.z - UNDERSIDE_DEPTH*math.sin(angle) - fold)), vert)
+            fold = SOLE_FOLD_DEPTH*(1.0 - float(underside_fold(x, y)))*math.sin(angle)**2
+            new = bm.verts.new(Vector((x, y, centre.z + fold)), vert)
             source[new] = vert
             current.append(new)
         stitch(previous, current)
         previous = current
-    fold = float(underside_fold(centre.x, centre.y))*UNDERSIDE_FOLD_DEPTH
-    apex = bm.verts.new(Vector((centre.x, centre.y, centre.z - UNDERSIDE_DEPTH - fold)), rim[0])
+    fold = SOLE_FOLD_DEPTH*(1.0 - float(underside_fold(centre.x, centre.y)))
+    apex = bm.verts.new(Vector((centre.x, centre.y, centre.z + fold)), rim[0])
     source[apex] = rim[0]
     faces += [bm.faces.new((previous[i], previous[(i + 1) % len(previous)], apex)) for i in range(len(previous))]
     # Each new vertex inherits its rim vertex's colour coordinates, weights and material, so the dome joins cleanly.
@@ -403,17 +402,16 @@ def round_underside(high):
     bm.free()
     high.data.update()
     print("underside", {"rimVerts": len(rim), "extraLoops": len(loops) - 1, "removedFlatFaces": len(flat),
-                        "depth": UNDERSIDE_DEPTH}, flush=True)
+                        "soleFoldDepth": SOLE_FOLD_DEPTH}, flush=True)
 
 
 def paint_underside(body, colour, normal):
-    """Fade the dome to the body's own colour with painted folds. Its rings only stretch rim texture, which
-    would streak, so the colour is drawn per texel from baked positions rather than kept."""
+    """Paint the flat sole with soft rolls and two of Floppy's sage spore patches."""
     co = np.empty(len(body.data.vertices)*3)
     body.data.vertices.foreach_get("co", co)
     co = co.reshape(-1, 3)
     z = co[:, 2]
-    t = np.clip((UNDERSIDE_BLEND_TOP - z)/(UNDERSIDE_BLEND_TOP + UNDERSIDE_DEPTH*0.3), 0.0, 1.0)
+    t = np.clip((UNDERSIDE_BLEND_TOP - z)/(UNDERSIDE_BLEND_TOP - 0.02), 0.0, 1.0)
     baked = bake_vertex_values(body, "floppy-underside-coords",
                                np.column_stack([(co[:, 0] + 1.2)/2.4, (co[:, 1] + 1.2)/2.4, t*t*(3 - 2*t)]), precise=True)
     wall = ((z > 0.06) & (z < 0.4)).astype(float)
@@ -434,6 +432,16 @@ def paint_underside(body, colour, normal):
     # The median of the lower walls is the plain skin: spots and the cream belly panel are the minority.
     skin = np.median(pixels[side][:, :3], axis=0)
     painted = skin[None, None, :]*(0.8 + 0.25*underside_fold(x, y))[:, :, None]
+    spores = np.zeros_like(x)
+    for cx, cy, rx, ry in ((-0.25, -0.20, 0.13, 0.10), (0.22, 0.27, 0.11, 0.14)):
+        radius = np.sqrt(((x-cx)/rx)**2 + ((y-cy)/ry)**2)
+        radius *= 1 + 0.08*np.sin(x*41 + y*29) + 0.045*np.sin(y*63)
+        halo = 0.35*(1-smoothstep(0.7, 1.45, radius))
+        core = 0.75*(1-smoothstep(0.38, 0.85, radius))
+        painted += halo[:, :, None]*(np.array([0.42,0.43,0.24])-painted)
+        painted += core[:, :, None]*(np.array([0.25,0.28,0.14])-painted)
+        spores = np.maximum(spores, core)
+
     pixels[:, :, :3] += amount[:, :, None]*(painted - pixels[:, :, :3])
     colour.pixels.foreach_set(pixels.ravel())
     colour.update()
@@ -442,13 +450,14 @@ def paint_underside(body, colour, normal):
     normal.pixels.foreach_get(bent)
     bent = bent.reshape(TEXTURE, TEXTURE, 4)
     bad = (amount > 0.01) & ((np.abs(bent[:, :, 0] - 0.5) > 0.3) | (np.abs(bent[:, :, 1] - 0.5) > 0.3) | (bent[:, :, 2] < 0.75))
-    bent[bad, :3] = (0.5, 0.5, 1.0)
+    bent[bad | (amount > 0.95), :3] = (0.5, 0.5, 1.0)
     normal.pixels.foreach_set(bent.ravel())
     normal.update()
     print("underside seam texels fixed", int(bad.sum()), flush=True)
     bpy.data.images.remove(baked)
     bpy.data.images.remove(band)
     print("underside skin", [round(float(v), 3) for v in skin], flush=True)
+    return (amount*spores*0.18).astype(np.float32), amount.astype(np.float32)
 
 
 def paint_lid_lines(body, colour, normal):
@@ -925,11 +934,11 @@ def verify(model, idle, expected_bones):
     report["boundsBlender"] = {"min": [round(v, 3) for v in lo], "max": [round(v, 3) for v in hi]}
     face = [c for m in meshes if m.name.startswith("Eye") for c in [m.matrix_world @ v.co for v in m.data.vertices]]
     report["facesPlusY"] = sum(c.y for c in face)/len(face) > 0
-    # Standing height sits above the ground plane; the domed underside below it stays hidden on the floor.
+    # The flat sole stays at the root plane; the ink hull can extend a few millimetres below it.
     report["heightStuds"] = round(hi[2], 3)
     report["undersideDepthStuds"] = round(-lo[2], 3)
     assert 0.88 <= report["heightStuds"] <= 0.97, f"Floppy should be about 0.93 studs tall: {report['heightStuds']}"
-    assert 0.05 <= report["undersideDepthStuds"] <= 0.14, f"unexpected underside depth: {report['undersideDepthStuds']}"
+    assert -0.01 <= report["undersideDepthStuds"] <= 0.015, f"unexpected underside depth: {report['undersideDepthStuds']}"
     report["sizeStuds"] = [round(hi[i] - lo[i], 3) for i in range(3)]
     assert report["facesPlusY"], "eyes are not on the +Y side"
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -965,7 +974,7 @@ def main():
     high = bpy.data.objects["FloppyBody"]
     high.name = "FloppyBody_Source"
     skin = high.data.materials[0]
-    round_underside(high)
+    rebuild_sole(high)
 
     body = low_copy(high, "FloppyBody", BODY_TRIANGLES, face_detail_group(high))
     select_only([body])
@@ -978,7 +987,7 @@ def main():
     normal = image("floppy-body-normal", "Non-Color")
     bake_to(body, high, "EMIT", colour, emission_of(skin))
     bake_to(body, high, "NORMAL", normal)
-    paint_underside(body, colour, normal)
+    sole_glow, sole_mask = paint_underside(body, colour, normal)
     paint_lid_lines(body, colour, normal)
     paint_mouth(body, colour)
     paths = [save(colour, "floppy-body-color.png"), save(normal, "floppy-body-normal.png")]
@@ -986,6 +995,13 @@ def main():
     if glow_texture(skin):
         glow = image("floppy-body-glow", "Non-Color")
         bake_to(body, high, "EMIT", glow, emission_of(skin, glow_texture(skin)))
+        pixels = np.empty(TEXTURE*TEXTURE*4, np.float32)
+        glow.pixels.foreach_get(pixels)
+        pixels = pixels.reshape(TEXTURE,TEXTURE,4)
+        pixels[:,:,:3] *= (1 - sole_mask[:,:,None])
+        pixels[:,:,:3] = np.maximum(pixels[:,:,:3], sole_glow[:,:,None])
+        glow.pixels.foreach_set(pixels.ravel())
+        glow.update()
         paths.append(save(glow, "floppy-body-glow.png"))
     body.data.materials.append(game_skin_material(colour, normal, body_roughness_map(body), glow))
 
@@ -1040,6 +1056,7 @@ def main():
     report = {"source": str(SOURCE.relative_to(ROOT)), "sourceSha256": digest(SOURCE), "tool": bpy.app.version_string,
               "units": "1 Blender unit = 1 stud", "axes": {"blender": "+Y forward, +Z up", "fbx": "-Z forward, +Y up"},
               "budget": {"bodyTriangles": BODY_TRIANGLES, "eyeTriangles": EYE_TRIANGLES, "texture": TEXTURE, "maxInfluences": 4},
+              "soleFoldDepthSource": SOLE_FOLD_DEPTH, "soleSporePatches": 2,
               "gameScale": GAME_SCALE, "torsoStretch": TORSO_STRETCH, "roughness": {"skinBase": SKIN_ROUGHNESS_LOW, "skinHead": SKIN_ROUGHNESS, "eyes": EYE_ROUGHNESS},
               "files": {p.relative_to(OUT).as_posix(): digest(p) for p in [model, idle_path, glb] + paths},
               "studioImportVerified": False}

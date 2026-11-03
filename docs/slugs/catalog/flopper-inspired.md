@@ -155,3 +155,14 @@ The whole-game [sound audit](../../audio/sound-plan.md) proposes very soft damp 
 
 
 **Confirmed/implemented, 2026-11-03 ? world scale and exhibition:** owner set the outside-gun visual size to approximately two studs for all species; shared combat and grove scales now use that value. Loaded scale stays independent. Exhibition residents spring through compression/hold/flight/landing, remain on supported ground in their habitat and briefly react to nearby players through existing facial controls. [Runtime record and limits](../../art/lobby-hub.md#springing-exhibition-residents--2026-11-03).
+
+
+## Flat sole and body-only landing squash (2026-11-03)
+
+**Confirmed:** permanent owner revision: match Inferno's flat underside, with a couple of Floppy's existing spore patches underneath. On landing the body itself squashes; no slime, wetness or floor effects.
+
+**Implemented/verified:** replaced the export-only dome with Inferno's shallow 0.012-source-unit folded sole. Added two sage spore patches with the existing faint glow. Root, face, body rig, 8k body-triangle budget and 12-second idle remain compatible. The approved repaired source is retained; this reproducible export revision is permanent in `export_floppy_roblox.py`. Baseline `.blend`, GLB and private config backups are local under `build/slugs/floppy/flat-sole/checkpoint`.
+
+Native Studio loaded the privately staged revised model and maps, exercised both species' stronger landing squash, and passed 14-resident ground/contact/notice/boundary checks. Only after this check were canonical ignored private configs updated. All 12 private assets returned Approved. No experience or Marketplace publication. [Sanitized evidence](../../evidence/2026-11-03-floppy-flat-sole.json).
+
+Review: `build/slugs/floppy/flat-sole/comparison.png`, `pose-sheet.png`, `qa-wire.png` and editable `floppy-roblox.blend`. Rebuild: Blender 4.5.14, `--python tools/slugs/export_floppy_roblox.py -- --out build/slugs/floppy/flat-sole`. Current source skin/eye assets and private material configs are still required. Owner verdict on the new revision is unresolved.

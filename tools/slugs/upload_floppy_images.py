@@ -19,6 +19,11 @@ PRIVATE = ROOT / "private-assets/floppy"
 TEXTURES = ROOT / "build/slugs/floppy/roblox/textures"
 # Emissive mask value on plain skin. FloppyAppearance divides its visibility floor by this, so plain skin keeps the
 # same faint emission while the antenna bulbs and sore centres (mask up to 1) glow (owner, 2026-11-01).
+if "--private-dir" in sys.argv:
+    PRIVATE = Path(sys.argv[sys.argv.index("--private-dir") + 1]).resolve()
+if "--textures-dir" in sys.argv:
+    TEXTURES = Path(sys.argv[sys.argv.index("--textures-dir") + 1]).resolve()
+
 EMISSIVE_FLOOR = 0.05
 
 

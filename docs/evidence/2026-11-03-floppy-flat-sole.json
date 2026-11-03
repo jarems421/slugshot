@@ -1,0 +1,117 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified offline and native one-client Studio",
+  "ownerBrief": "Body squash on landing; no slime or wet floor effects. Floppy sole matches Inferno with a couple of spore patches.",
+  "export": {
+    "heightStuds": 0.935,
+    "undersideDepthStuds": 0.009,
+    "sizeStuds": [
+      0.69,
+      0.615,
+      0.944
+    ],
+    "meshes": {
+      "FloppyBody": {
+        "triangles": 8000,
+        "maxInfluences": 4
+      },
+      "EyeL": {
+        "triangles": 400,
+        "maxInfluences": 1
+      },
+      "EyeR": {
+        "triangles": 400,
+        "maxInfluences": 1
+      },
+      "FloppyBody_Ink": {
+        "triangles": 1399,
+        "maxInfluences": 4
+      }
+    },
+    "bones": [
+      "antenna_L",
+      "antenna_R",
+      "body_lower",
+      "body_upper",
+      "eye_L",
+      "eye_R",
+      "gaze_L",
+      "gaze_R",
+      "head",
+      "jelly_B",
+      "jelly_F",
+      "jelly_L",
+      "jelly_R",
+      "lid_L",
+      "lid_R",
+      "mouth_L",
+      "mouth_R",
+      "mouth_low",
+      "root"
+    ],
+    "idle": {
+      "seconds": 12.0,
+      "loopSeam": 0.0,
+      "maxBoneScaleChange": 0.0,
+      "maxBoneTravel": 0.0162
+    },
+    "soleFoldDepthSource": 0.012,
+    "soleSporePatches": 2
+  },
+  "sourceSha256": "b5c4c453f06f9da06dda355e1a6f04573187b95b0a3d6516fe7ef6fd259eb413",
+  "modelSha256": "8ccff81d0a11b15fea6ff11a42b641e42a5a9064614a3fb76b954fbf57957efe",
+  "qaPass": true,
+  "acceptedWarnings": {
+    "eye UV overlap": "Existing deliberate eye atlas stacking; no changes to the accepted eye surfaces.",
+    "body-eye back-to-back contacts": "Existing socket/eye mating surfaces are intentionally retained.",
+    "lowest skin point 0.0024": "Rest skin sits a few millimetres above the root; the intentional ink hull reaches 0.009 below it."
+  },
+  "poseBoundsOffline": {
+    "rest": {
+      "height": 0.9216618586797267,
+      "width": 0.6687062978744507
+    },
+    "takeoff": {
+      "height": 0.7319418240804225,
+      "width": 0.6687062978744507
+    },
+    "stretch": {
+      "height": 1.0165219355840236,
+      "width": 0.6687062978744507
+    },
+    "landing": {
+      "height": 0.6581618238706142,
+      "width": 0.6687062978744507
+    }
+  },
+  "native": {
+    "meanDt": 0.02049984648426062,
+    "maxDt": 0.23037369549274445,
+    "residents": {
+      "Inferno": 5,
+      "Floppy": 9
+    },
+    "supportSamples": 414,
+    "renderFrames": 1274,
+    "press": [
+      -0.17986029098561138,
+      0.49999971559970585
+    ],
+    "landingPeak": {
+      "Inferno": 0.49999971559970585,
+      "Floppy": 0.4999974267880295
+    },
+    "changedFrames": 452,
+    "lookSeen": true,
+    "animationFrames": 1274
+  },
+  "privateModeration": {
+    "allApproved": true,
+    "assetCount": 12
+  },
+  "limits": [
+    "Offline pose bounds are not per-vertex native skin measurements.",
+    "Native contact probes test root support; subjective owner motion/face approval and mobile/multiplayer remain open.",
+    "Actual per-run frame times include loading/capture hitches."
+  ]
+}

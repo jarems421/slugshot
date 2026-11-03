@@ -4,7 +4,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local random = Random.new()
-local WINDUP, HOLD, AIR, LAND = 0.24, 0.07, 0.58, 0.24
+local WINDUP, HOLD, AIR, LAND = 0.30, 0.10, 0.58, 0.38
 local HOME_REACH = 7
 local NOTICE = 14
 local SHOW_NEAR = 140
@@ -41,6 +41,7 @@ type Slug = {
 	lastLook: number,
 	squash: { Driven },
 	head: { Driven },
+	spread: { Driven },
 }
 local slugs: { Slug } = {}
 local group: Instance
@@ -137,7 +138,17 @@ local function prepare(model: Model): Slug?
 	local squash: { Driven } = {}
 	local heads: { Driven } = {}
 	local parts: { BasePart } = {}
+	local spread: { Driven } = {}
+	local outward =
+		{ jelly_L = -side, jelly_R = side, jelly_F = pivot.LookVector, jelly_B = -pivot.LookVector }
 	for _, item in model:GetDescendants() do
+		if item:IsA("Bone") and outward[item.Name] then
+			table.insert(spread, {
+				bone = item,
+				up = item.WorldCFrame:VectorToObjectSpace(outward[item.Name]),
+				side = Vector3.zero,
+			})
+		end
 		if item:IsA("Bone") and (item.Name == "head" or item.Name == "body_upper") then
 			local driven = {
 				bone = item,
@@ -178,6 +189,7 @@ local function prepare(model: Model): Slug?
 		lastLook = math.huge,
 		squash = squash,
 		head = heads,
+		spread = spread,
 	}
 	local point, normal = landing(slug, true)
 	if not point or not normal then
@@ -286,24 +298,32 @@ local function step(dt: number)
 		local position = slug.position
 		local up = slug.up
 		local press, lean = 0, 0
+		local stage = "rest"
 		if slug.hopAt then
 			local elapsed = now - slug.hopAt
 			if elapsed < WINDUP then
-				press = 0.24 * ease(elapsed / WINDUP)
+				stage = "windup"
+				press = 0.36 * ease(elapsed / WINDUP)
 			elseif elapsed < WINDUP + HOLD then
-				press = 0.24
+				stage = "tension"
+				press = 0.36
 			elseif elapsed < WINDUP + HOLD + AIR then
+				stage = "flight"
 				local t = (elapsed - WINDUP - HOLD) / AIR
 				position = slug.from:Lerp(slug.to, t)
 					+ Vector3.yAxis * (if slug.inferno then 2.5 else 1.9) * 4 * t * (1 - t)
 				up = slug.fromUp:Lerp(slug.toUp, ease(t)).Unit
-				press = 0.24 * (1 - ease(t / 0.12))
-					- 0.15 * math.sin(math.pi * math.min(t / 0.5, 1))
+				press = 0.36 * (1 - ease(t / 0.14))
+					- 0.18 * math.sin(math.pi * math.min(t / 0.5, 1))
+					+ 0.05 * ease((t - 0.88) / 0.12)
 				lean = math.rad(9) * math.sin(math.pi * t)
 			elseif elapsed < WINDUP + HOLD + AIR + LAND then
+				stage = "landing"
 				local t = (elapsed - WINDUP - HOLD - AIR) / LAND
 				position, up = slug.to, slug.toUp
-				press = 0.18 * math.sin(math.pi * t) * (1 - t)
+				press = if t < 0.18
+					then 0.05 + 0.45 * ease(t / 0.18)
+					else 0.5 * (1 - ease((t - 0.18) / 0.82))
 			else
 				slug.position, slug.up = slug.to, slug.toUp
 				position, up = slug.position, slug.up
@@ -340,9 +360,13 @@ local function step(dt: number)
 			for _, item in slug.squash do
 				item.bone.Transform = CFrame.new(item.up * -press * slug.size / 2.72)
 			end
+			for _, item in slug.spread do
+				item.bone.Transform = CFrame.new(item.up * press * slug.size * 0.10)
+			end
 			slug.lastPress, slug.lastLook = press, slug.lookBlend
 		end
 		if RunService:IsStudio() then
+			slug.model:SetAttribute("GroveStage", stage)
 			slug.model:SetAttribute(
 				"GrovePhase",
 				if slug.hopAt then "hop" elseif looking then "look" else "rest"

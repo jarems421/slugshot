@@ -187,3 +187,12 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 ## 2026-11-03 ? Grove runtime cadence and ground support
 
 **Confirmed problem:** choppy hopping and residents partially perched on rocks. **Cause:** the client discarded accumulated Heartbeat time after a 30 Hz gate; landing queries checked only the pivot. **Implemented:** render-frame poses with separately throttled decisions; compression/hold/flight/landing phases; nine support contacts over a circular footprint and slope alignment. Unsafe homes relocate or omit the resident. Reuse existing facial bones/morphs through a resident-specific path. No Blender meshes, rig weights or exports were changed. **Evidence:** native integration covers cadence, spring excursion, bounded movement, rest contact and notice; subjective owner approval remains open. Avoid redundant whole-model writes while idle and cull unreadable facial work.
+
+
+## 2026-11-03 - Flat Floppy sole and readable landing compression
+
+**Confirmed feedback:** smooth hopping still lacked a visible landing squash; Floppy's rounded underside looked inconsistent with Inferno. **Cause:** landing compression was much smaller than takeoff, while a historical export-only dome extended below the root. **Implemented:** 0.36 takeoff compression, a 0.10-second tension hold, 0.50 landing compression with a 0.38-second recovery and existing lower-body spread bones. Body-only deformation; no floor effects. Offline rig bounds show the landing body about 29% shorter; native per-species peak and contact checks pass.
+
+**Asset repair:** rebuild the sole at the existing rim with Inferno's shallow folded plane. Its inherited rim UVs initially stretched old body spores/emission into streaks. Paint a full sole mask, clear inherited emission there, add two controlled sage patches, and neutralize bad seam normals. Material and wire views were inspected; QA passes. Existing deliberate eye UV stacking/socket contacts and the millimetric skin/root gap are documented in evidence. The inverted ink hull must use back-face culling in Blender review, matching the engine: drawing both sides blacked out the body and concealed the sole.
+
+**Verified/limits:** FBX model and idle reimport, 19 bones, body 8k triangles, <=4 influences, 12-second seamless idle; private staged import and native motion/grounding pass. Owner appearance approval and real-device/observer checks remain separate. Baselines are preserved locally; no accepted authored mesh was overwritten.

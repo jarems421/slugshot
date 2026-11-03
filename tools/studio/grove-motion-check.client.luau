@@ -43,6 +43,7 @@ local ok, problem = pcall(function()
 	local phases: { [string]: boolean } = {}
 	local lookSeen = false
 	local minPress, maxPress = 0, 0
+	local landingPeak = { Floppy = 0, Inferno = 0 }
 	local supportSamples = 0
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
@@ -73,6 +74,10 @@ local ok, problem = pcall(function()
 			end
 			local press = (model:GetAttribute("GrovePress") or 0) :: number
 			minPress, maxPress = math.min(minPress, press), math.max(maxPress, press)
+			if model:GetAttribute("GroveStage") == "landing" then
+				local species = model:GetAttribute("Slug") :: string
+				landingPeak[species] = math.max(landingPeak[species] or 0, press)
+			end
 			lookSeen = lookSeen or ((model:GetAttribute("GroveLook") or 0) :: number) > 0.5
 			assert(
 				((model:GetAttribute("GroveHomeDistance") or 0) :: number) < 7.7,
@@ -92,6 +97,10 @@ local ok, problem = pcall(function()
 	local renders = (workspace:GetAttribute("GroveRenderedFrames") :: number) - before
 	assert(renders >= frames - 2, "motion skipped display frames")
 	assert(minPress < -0.04 and maxPress > 0.2, "takeoff has no squash/stretch")
+	assert(
+		landingPeak.Floppy > 0.44 and landingPeak.Inferno > 0.44,
+		"landing did not visibly compress both species"
+	)
 	assert(lookSeen, "no passing-player reaction")
 	assert(supportSamples > 0, "no ground contact samples")
 	print("GROVECHECK result " .. HttpService:JSONEncode({
@@ -103,6 +112,7 @@ local ok, problem = pcall(function()
 		maxDt = maxDt,
 		press = { minPress, maxPress },
 		lookSeen = lookSeen,
+		landingPeak = landingPeak,
 		supportSamples = supportSamples,
 	}))
 	RunService:UnbindFromRenderStep("GroveCheckCamera")

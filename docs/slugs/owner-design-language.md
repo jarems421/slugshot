@@ -289,3 +289,6 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 ## Exhibition hopping and size (2026-11-03)
 
 **Confirmed:** "spring up" means visible compression, a short tension hold, fast extension into forward flight and a cushioned landing. "Low frame rate" includes a presentation timer skipping rendered frames; keep decision frequency separate from drawing. "Not fully on" requires support under the whole belly, not only the centre. Slugs outside the gun should be about two studs; the chamber has its own loaded scale. Nearby residents may briefly pause, look up and react, without the whole population staring.
+
+
+**Owner correction, 2026-11-03:** "splat" is a visible body deformation: shrink/compress and spread slightly when landing, then recover. It explicitly excludes slime, wetness and new effects on the floor. "Same bottom as Inferno" supersedes the earlier request for Floppy's domed underside: use a flat supported sole with shallow soft folds, retaining a couple of existing spore spots underneath.
