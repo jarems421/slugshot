@@ -287,6 +287,7 @@ GROVE_MOUNTAIN = "vec2 assetMap(vec3 p) { return vec2(mountainD(p), 43.0); }\n"
 # The ground stops at the cliff, the zone's edges and the wall, and settles to the level next door as it gets there.
 GROVE_SOLID = "vec2 assetMap(vec3 p) { return vec2(mountainShell(p) + 0.06, 43.0); }\n"
 GROVE_SHELL = "vec2 assetMap(vec3 p) { return vec2(mountainShell(p), 43.0); }\n"
+GROVE_FLORA_MAP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 53.0); floraKind(p, KIND, res); return res; }\n"
 GROVE_GROUND = """vec2 assetMap(vec3 p) {
   vec2 h = vec2(31.0 + p.z, p.x);
   float hr = length(h), a = atan(h.x, h.y);
@@ -304,16 +305,7 @@ GROVE_WATER = """vec2 assetMap(vec3 p) {
 """
 GROVE_FALLS = "vec2 assetMap(vec3 p) { float along, tier; return vec2(groveFalls(p, along, tier), 44.0); }\n"
 GROVE_ROCKS = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 61.0); groveStones(p, res); groveRunes(p, res); return res; }\n"
-GROVE_SHROOMS = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 46.0); groveShroomsFrom(p, res, 6); return res; }\n"
-GROVE_FLORA = """vec2 assetMap(vec3 p) {
-  vec2 res = vec2(1e3, 53.0);
-  for (int i = 0; i < GROVE_FLOWER.length(); i++) groveFlower(p, GROVE_FLOWER[i], res);
-  for (int i = 0; i < GROVE_FERN.length(); i++) groveFern(p, GROVE_FERN[i], res);
-  return res;
-}
-"""
 GROVE_DRESS = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 59.0); grovePads(p, res); groveBushes(p, res); groveVines(p, res); return res; }\n"
-GROVE_GEMS = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 48.0); groveGems(p, res); return res; }\n"
 # The ground of the portal side: stops at the pit, the wall and the zone's edges, and leaves the ravine open.
 PLAZA_FLOOR = """vec2 assetMap(vec3 p) {
   float hr = length(p.xz + vec2(0.0, PZ_HUB)), a = atan(p.x, p.z + PZ_HUB), ch = plazaChannels(p.xz);
@@ -723,7 +715,7 @@ PIECES = {
     },
     "hub-grove-ground": {
         "item": GROVE_ITEM, "map": GROVE_GROUND, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.2, "bakeEmit": True,
-        "lo": (-48.0, -1.0, -20.0), "hi": (48.0, 3.0, 31.0), "step": 0.06, "normalH": 0.006,
+        "lo": (-48.0, -1.6, -20.0), "hi": (48.0, 3.0, 31.0), "step": 0.06, "normalH": 0.006,
         "parts": [
             part("Bed", by_id((40.5, 41.5)), 1200, 1024, cage=0.05),
             part("Ground", everything, 7000, 2048, cage=0.08),
@@ -747,22 +739,6 @@ PIECES = {
             part("Stones", everything, 4500, 1024, ROCK_INK, 0.7, cage=0.04),
         ],
     },
-    "hub-grove-shrooms": {
-        "item": GROVE_ITEM, "map": GROVE_SHROOMS, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.3,
-        "lo": (-34.0, -0.6, -20.0), "hi": (34.0, 34.0, 34.0), "step": 0.035, "normalH": 0.006,
-        "parts": [
-            part("Stems", by_id((45.5, 46.5)), 3200, 1024, PROP_INK, 0.6, cage=0.03),
-            part("Caps", everything, 11000, 2048, PROP_INK*1.1, 0.5, cage=0.03),
-        ],
-    },
-    "hub-grove-flora": {
-        "item": GROVE_ITEM, "map": GROVE_FLORA, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.4,
-        "lo": (-30.0, -1.0, -26.0), "hi": (30.0, 4.5, 26.0), "step": 0.012, "normalH": 0.003,
-        "parts": [
-            part("Ferns", by_id((54.5, 55.5)), 2000, 512, FINE_INK, 1.0, cage=0.012),
-            part("Flowers", everything, 5000, 1024, FINE_INK, 1.0, cage=0.012),
-        ],
-    },
     "hub-grove-dress": {
         "item": GROVE_ITEM, "map": GROVE_DRESS, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.5,
         "lo": (-34.0, -0.6, -20.0), "hi": (34.0, 30.0, 34.0), "step": 0.025, "normalH": 0.005,
@@ -772,10 +748,30 @@ PIECES = {
             part("Pads", everything, 600, 512, FINE_INK, 1.0, cage=0.015),
         ],
     },
-    "hub-grove-gems": {
-        "item": GROVE_ITEM, "map": GROVE_GEMS, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.2,
-        "lo": (-34.0, -0.8, -20.0), "hi": (34.0, 30.0, 34.0), "step": 0.018, "normalH": 0.004,
-        "parts": [part("GroveGems", everything, 2400, 512, PROP_INK, 1.0, cage=0.015)],
+    "hub-flora-star": {
+        "item": GROVE_ITEM, "map": GROVE_FLORA_MAP.replace("KIND", "0.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.25,
+        "lo": (-1.0, -0.3, -1.0), "hi": (1.0, 1.25, 1.0), "step": 0.006, "normalH": 0.002,
+        "parts": [part("Plant", everything, 1400, 512, FINE_INK*0.9, 1.0, cage=0.012)],
+    },
+    "hub-flora-bell": {
+        "item": GROVE_ITEM, "map": GROVE_FLORA_MAP.replace("KIND", "1.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.25,
+        "lo": (-1.0, -0.3, -1.0), "hi": (1.0, 1.25, 1.0), "step": 0.006, "normalH": 0.002,
+        "parts": [part("Plant", everything, 1500, 512, FINE_INK*0.9, 1.0, cage=0.012)],
+    },
+    "hub-flora-lantern": {
+        "item": GROVE_ITEM, "map": GROVE_FLORA_MAP.replace("KIND", "2.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.25,
+        "lo": (-1.0, -0.3, -1.0), "hi": (1.0, 1.25, 1.0), "step": 0.006, "normalH": 0.002,
+        "parts": [part("Plant", everything, 1500, 512, FINE_INK*0.9, 1.0, cage=0.012)],
+    },
+    "hub-flora-plant": {
+        "item": GROVE_ITEM, "map": GROVE_FLORA_MAP.replace("KIND", "3.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.25,
+        "lo": (-1.0, -0.3, -1.0), "hi": (1.0, 1.25, 1.0), "step": 0.006, "normalH": 0.002,
+        "parts": [part("Plant", everything, 1300, 512, FINE_INK*0.9, 1.0, cage=0.012)],
+    },
+    "hub-flora-grass": {
+        "item": GROVE_ITEM, "map": GROVE_FLORA_MAP.replace("KIND", "4.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.25,
+        "lo": (-1.0, -0.3, -1.0), "hi": (1.0, 1.25, 1.0), "step": 0.005, "normalH": 0.002,
+        "parts": [part("Plant", everything, 520, 256, FINE_INK*0.9, 1.0, cage=0.012)],
     },
     "hub-plaza-floor": {
         "item": "portal-plaza-7", "map": PLAZA_FLOOR, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 2.4,
@@ -1228,9 +1224,9 @@ def mesh(key):
     (out/"meta.json").write_text(json.dumps(meta, indent=1))
 
 
-EVEN_GLOW = {"GroveGems", "Glow", "Sprouts", "Caps", "WellGlow", "CeilGems", "CollarGems", "BorderGems"}
+EVEN_GLOW = {"Plant", "Glow", "Sprouts", "Caps", "WellGlow", "CeilGems", "CollarGems", "BorderGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Pads": 0.55, "Flowers": 0.6, "GroveGems": 1.8, "CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Pads": 0.55, "Plant": 1.1, "CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def magma_maps(out, g):

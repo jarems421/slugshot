@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-03 (`experiment/lobby`):** Slug Grove environment: faceted mountain with black lines, stream from a shallow cave, deeper animated pond with player splashes, approved mushrooms throughout, new flora and crystals. **Unresolved:** owner's verdict; phone cost is well over budget; Inferno still uses Floppy stand-ins.
+
 **Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain at 165 studs with black lining and layered rock over a smooth runnable surface; volcano walls raised between the lava streams. **Next (owner):** waterfall, pond, surroundings and Floppies. **Unresolved:** owner's verdict; phone cost.
 
 **Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain rebuilt to the owner's references (151 studs), approved giant mushrooms as its trees, and the volcano and gate at 85% height. **Unresolved:** owner's verdict, pond redesign, phone cost.

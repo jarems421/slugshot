@@ -15,6 +15,10 @@ local rimShape =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
 local groveStream =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_stream")) :: any
+local groveFlora =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_flora")) :: any
+local groveCrystals =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_crystals")) :: any
 local groveTrees =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_trees")) :: any
 local groveSlugs =
@@ -53,6 +57,15 @@ local GLOW: { [string]: number } = {
 	["hub-portal-training"] = 0.75,
 	["hub-portal-veylume"] = 0.75,
 	["hub-storm"] = 0.7,
+	-- Mushroom caps in the whirlpool and on the spawn rock glow more (owner).
+	["hub-pit-flora"] = 1.8,
+	-- Their colour goes pale at any more.
+	["hub-flora-star"] = 0.4,
+	["hub-flora-bell"] = 0.4,
+	["hub-flora-lantern"] = 0.5,
+	["hub-flora-plant"] = 0.5,
+	["hub-flora-grass"] = 0.5,
+	["hub-rock-dress"] = 1.4,
 }
 
 -- Pieces whose ink a phone can skip: far away or small on screen (HubMotion.client decides).
@@ -68,10 +81,7 @@ local DISTANT = {
 	"hub-volcano",
 	"hub-grove-mountain",
 	"hub-grove-rocks",
-	"hub-grove-shrooms",
 	"hub-grove-dress",
-	"hub-grove-flora",
-	"hub-grove-gems",
 	"hub-well-isles",
 	"hub-well-bits",
 	"hub-rock-debris",
@@ -258,7 +268,6 @@ local SOLID: { [string]: { string } } = {
 	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
 	["hub-grove-ground"] = { "Ground", "Bed" },
 	["hub-grove-rocks"] = { "Stones", "Runes" },
-	["hub-grove-shrooms"] = { "Stems", "Caps" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -801,20 +810,6 @@ local function buildMaelstrom()
 			if pool then
 				pool:SetAttribute("LocalSpin", ORBIT * 2.5)
 				CollectionService:AddTag(pool, "HubMover")
-				local rings = Instance.new("ParticleEmitter")
-				rings.Texture = fxTexture("ripple")
-				rings.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
-				rings.EmissionDirection = Enum.NormalId.Top
-				rings.Speed = NumberRange.new(0.05)
-				rings.Color = ColorSequence.new(Color3.fromRGB(190, 255, 245))
-				rings.LightEmission = 0.4
-				rings.LightInfluence = 0
-				rings.Size = NumberSequence.new(1.5, 8)
-				rings.Transparency = fade({ { 0, 0.6 }, { 0.2, 0.3 }, { 1, 1 } })
-				rings.Lifetime = NumberRange.new(1.6, 2.4)
-				rings.Rate = 1
-				rings.Shape = Enum.ParticleEmitterShape.Disc
-				rings.Parent = pool
 			end
 		end
 	end
@@ -1427,10 +1422,7 @@ local GROVE_KEYS = {
 	"hub-grove-water",
 	"hub-grove-falls",
 	"hub-grove-rocks",
-	"hub-grove-shrooms",
-	"hub-grove-flora",
 	"hub-grove-dress",
-	"hub-grove-gems",
 }
 local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
 local GROVE_TINT = Color3.fromRGB(150, 245, 225)
@@ -1495,6 +1487,132 @@ local function groveFlow(
 		b.Transparency = NumberSequence.new(from, to)
 		b.Parent = nodes[index]
 	end
+end
+
+-- A band of water drifting flat across the pond, from where the falls land, fading out before the banks.
+local function pondCurrent(
+	fromX: number,
+	fromZ: number,
+	toX: number,
+	toZ: number,
+	width: number,
+	speed: number
+)
+	local from, to = groveAt(fromX, -0.07, fromZ), groveAt(toX, -0.07, toZ)
+	local along = (to - from).Unit
+	local across = along:Cross(Vector3.yAxis).Unit
+	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+	local axes = CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
+	a0.CFrame, a1.CFrame = axes, axes
+	a0.Parent = holder("PondCurrent", from, Vector3.one)
+	a1.Parent = holder("PondCurrent", to, Vector3.one)
+	local b = Instance.new("Beam")
+	b.Attachment0, b.Attachment1 = a0, a1
+	b.Width0, b.Width1 = width * 0.45, width
+	b.FaceCamera = false
+	b.Segments = 1
+	b.Texture = fxTexture("streak")
+	b.TextureMode = Enum.TextureMode.Wrap
+	b.TextureLength = 26
+	b.TextureSpeed = speed
+	b.LightEmission = 0.7
+	b.LightInfluence = 0
+	b.Color = ColorSequence.new(Color3.fromRGB(160, 250, 235))
+	b.Transparency = fade({ { 0, 1 }, { 0.2, 0.62 }, { 0.75, 0.68 }, { 1, 1 } })
+	b.Parent = a0.Parent
+end
+
+-- The pond moving by itself: currents from the falls, rings, glints, slow light under the surface, and pads on the swell.
+local function pondLife()
+	local water = art:FindFirstChild("hub-grove-water")
+	local pond = water and water:FindFirstChild("Pond", true)
+	if pond and pond:IsA("MeshPart") then
+		-- See-through, so the deeper bed shows.
+		pond.Transparency = 0.2
+		pond:SetAttribute("PulseRate", 0.45)
+		pond:SetAttribute("PulseDepth", 0.16)
+		CollectionService:AddTag(pond, "HubPulse")
+	end
+	local dress = art:FindFirstChild("hub-grove-dress")
+	if dress then
+		setMotion(dress :: Model, "Pads", 0, 0.14, 0.5, 0)
+	end
+	for _, band in
+		{
+			{ -4.2, -1.6, 0.42 },
+			{ -1.6, -4.6, 0.3 },
+			{ 1.4, -5.0, 0.36 },
+			{ 4.4, -2.6, 0.48 },
+			{ -5.0, 2.2, 0.34 },
+			{ 5.2, 2.0, 0.4 },
+		}
+	do
+		pondCurrent(0.4, 6.6, band[1], band[2], 34, band[3])
+	end
+	local surface = holder("GroveSurface", groveAt(0, -0.09, 0.4), Vector3.new(64, 0.2, 66))
+	local rings = Instance.new("ParticleEmitter")
+	rings.Name = "Rings"
+	rings.Texture = fxTexture("ripple")
+	rings.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+	rings.EmissionDirection = Enum.NormalId.Top
+	rings.Speed = NumberRange.new(0.05)
+	rings.Color = ColorSequence.new(GROVE_TINT)
+	rings.LightEmission = 0.5
+	rings.LightInfluence = 0
+	rings.Size = NumberSequence.new(1.5, 13)
+	rings.Transparency = fade({ { 0, 0.7 }, { 0.15, 0.35 }, { 1, 1 } })
+	rings.Lifetime = NumberRange.new(2, 3.4)
+	rings.Rate = 2.4
+	rings.Parent = surface
+	local glints = Instance.new("ParticleEmitter")
+	glints.Name = "Glints"
+	glints.Texture = fxTexture("twinkle")
+	glints.EmissionDirection = Enum.NormalId.Top
+	glints.Speed = NumberRange.new(0.05, 0.2)
+	glints.Color = ColorSequence.new(Color3.fromRGB(205, 255, 245))
+	glints.LightEmission = 1
+	glints.LightInfluence = 0
+	glints.Size = fade({ { 0, 0 }, { 0.4, 1.3 }, { 1, 0 } })
+	glints.Lifetime = NumberRange.new(0.8, 1.6)
+	glints.Rate = 14
+	CollectionService:AddTag(glints, "HubSpareTwinkle")
+	glints.Parent = surface
+	-- What players' steps use (GroveWater.client).
+	local splash = holder("GroveSplash", groveAt(0, -0.07, 0), Vector3.one)
+	local stepRings = rings:Clone()
+	stepRings.Rate = 0
+	stepRings.Size = NumberSequence.new(1.5, 11)
+	stepRings.Lifetime = NumberRange.new(1, 1.7)
+	stepRings.Transparency = fade({ { 0, 0.15 }, { 1, 1 } })
+	stepRings.Parent = splash
+	local drops = Instance.new("ParticleEmitter")
+	drops.Name = "Drops"
+	drops.Texture = fxTexture("droplet")
+	drops.EmissionDirection = Enum.NormalId.Top
+	drops.Speed = NumberRange.new(9, 19)
+	drops.SpreadAngle = Vector2.new(34, 34)
+	drops.Acceleration = Vector3.new(0, -62, 0)
+	drops.Color = ColorSequence.new(Color3.fromRGB(205, 255, 245))
+	drops.LightEmission = 0.5
+	drops.LightInfluence = 0
+	drops.Size = fade({ { 0, 0.7 }, { 1, 0.25 } })
+	drops.Lifetime = NumberRange.new(0.4, 0.75)
+	drops.Rate = 0
+	drops.Parent = splash
+	local foam = Instance.new("ParticleEmitter")
+	foam.Name = "Foam"
+	foam.Texture = fxTexture("mist")
+	foam.EmissionDirection = Enum.NormalId.Top
+	foam.Speed = NumberRange.new(2, 5)
+	foam.SpreadAngle = Vector2.new(50, 50)
+	foam.Color = ColorSequence.new(Color3.fromRGB(215, 250, 245))
+	foam.LightEmission = 0.3
+	foam.LightInfluence = 0
+	foam.Size = NumberSequence.new(2.5, 8)
+	foam.Transparency = fade({ { 0, 0.55 }, { 1, 1 } })
+	foam.Lifetime = NumberRange.new(0.5, 0.9)
+	foam.Rate = 0
+	foam.Parent = splash
 end
 
 local function groveWater()
@@ -1612,15 +1730,31 @@ local function groveSlugModels()
 	template:Destroy()
 end
 
--- The big trees are the approved giant mushroom, with its roots, mound and sprouts, in the colours nearest the concept's.
+-- The mushrooms are the approved giant mushroom at every size, with its roots, mound and sprouts, in the colours nearest the concept's.
+-- Under 20 studs tall they use a much lighter copy, as a small one is only a little of the screen.
 local TREE_COLOURS =
 	{ [0] = "mushroom-13", [1] = "mushroom-12", [2] = "mushroom-5", [3] = "mushroom-3" }
-local TREE_GLOW = 0.3 -- their caps are far bigger on screen here than in the look test, and blew out to white
-local function groveTreeModels()
+local TREE_LIGHTS = {
+	[0] = Color3.fromRGB(90, 240, 225),
+	[1] = Color3.fromRGB(110, 245, 150),
+	[2] = Color3.fromRGB(190, 120, 255),
+	[3] = Color3.fromRGB(110, 165, 255),
+}
+local TREE_GLOW = 0.3 -- caps are far bigger on screen here than in the look test, and blow out to white at full strength
+local SMALL_TREE = 20
+local FLORA_KEYS: { [number]: string } = {
+	[0] = "hub-flora-star",
+	[1] = "hub-flora-bell",
+	[2] = "hub-flora-lantern",
+	[3] = "hub-flora-plant",
+	[4] = "hub-flora-grass",
+}
+
+local function groveProps()
 	local lobby = require(ServerStorage:WaitForChild("LobbyAssets")) :: any
 	local materials = ServerStorage:WaitForChild("LobbyMaterials")
 	local cache: { [string]: Model } = {}
-	local function template(key: string): Model?
+	local function template(key: string, glow: number): Model?
 		if cache[key] then
 			return cache[key]
 		end
@@ -1644,7 +1778,7 @@ local function groveTreeModels()
 			end
 		end
 		(container :: Instance):Destroy()
-		LookPack.styleModel(model, key, info.groups, materials, TREE_GLOW)
+		LookPack.styleModel(model, key, info.groups, materials, glow)
 		for _, part in model:GetDescendants() do
 			if part:IsA("MeshPart") then
 				part.Anchored = true
@@ -1652,34 +1786,96 @@ local function groveTreeModels()
 				part.CastShadow = false
 			end
 		end
-		-- Its foot, in the middle of its roots at the ground.
+		-- Its foot, at the middle of its base on the ground.
 		local lo, hi = paintedBounds(model)
 		model.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
 		cache[key] = model
 		return model
 	end
-	local group = Instance.new("Model")
-	group.Name = "GroveTrees"
-	group.Parent = art
+	local function plant(
+		source: Model,
+		parent: Instance,
+		x: number,
+		y: number,
+		z: number,
+		turn: number,
+		tall: number
+	): Model
+		local copy = source:Clone()
+		local lo, hi = paintedBounds(copy)
+		copy:ScaleTo(copy:GetScale() * tall / (hi.Y - lo.Y))
+		copy:PivotTo(CFrame.new(GROVE * Vector3.new(x, y, z)) * CFrame.Angles(0, turn, 0))
+		copy.Parent = parent
+		return copy
+	end
+	local trees = Instance.new("Model")
+	trees.Name = "GroveTrees"
+	trees.Parent = art
 	for index, site in groveTrees do
-		local source = template(TREE_COLOURS[site.colour])
+		local small = site.height < SMALL_TREE
+		local source =
+			template(TREE_COLOURS[site.colour] .. (if small then "-s" else ""), TREE_GLOW)
 		if source then
-			local tree = source:Clone()
-			local lo, hi = paintedBounds(tree)
-			tree:ScaleTo(tree:GetScale() * site.height / (hi.Y - lo.Y))
-			tree:PivotTo(
-				CFrame.new(GROVE * Vector3.new(site.x, site.y, site.z))
-					* CFrame.Angles(0, index * 1.9, 0)
-			)
-			tree.Parent = group
-			for _, part in tree:GetDescendants() do
-				if part:IsA("MeshPart") and part.Name == "Stem" then
-					table.insert(solidQueue, part)
+			local tree = plant(source, trees, site.x, site.y, site.z, index * 1.9, site.height)
+			if not small then
+				for _, part in tree:GetDescendants() do
+					if part:IsA("MeshPart") and part.Name == "Stem" then
+						table.insert(solidQueue, part)
+					end
+				end
+				if site.height > 20 then
+					pointLight(
+						GROVE * Vector3.new(site.x, site.y + site.height * 0.62, site.z),
+						TREE_LIGHTS[site.colour],
+						0.22,
+						site.height * 0.8
+					)
 				end
 			end
 		end
 	end
+	local crystals = Instance.new("Model")
+	crystals.Name = "GroveCrystals"
+	crystals.Parent = art
+	for index, site in groveCrystals do
+		local source = template(site.key, 1)
+		if source then
+			plant(source, crystals, site.x, site.y, site.z, index * 2.3, site.height)
+		end
+	end
 	for _, model in cache do
+		model:Destroy()
+	end
+	-- The plants: one of each loaded, then copies. Each is modelled round its root at the ground.
+	local flora = Instance.new("Model")
+	flora.Name = "GroveFlora"
+	flora.Parent = art
+	local plants: { [number]: Model } = {}
+	for kind, key in FLORA_KEYS do
+		local model = loadPiece(key)
+		if model then
+			model.WorldPivot = CFrame.identity
+			plants[kind] = model
+		end
+	end
+	for _, site in groveFlora do
+		local source = plants[site[1]]
+		if source then
+			local copy = source:Clone()
+			copy:ScaleTo(copy:GetScale() * site[5])
+			copy:PivotTo(
+				CFrame.new(GROVE * Vector3.new(site[2], site[3], site[4]))
+					* CFrame.Angles(0, site[6], 0)
+			)
+			copy.Parent = flora
+			for _, part in copy:GetDescendants() do
+				if part:IsA("MeshPart") and isInk(part) then
+					CollectionService:AddTag(part, "HubDistantInk")
+				end
+			end
+		end
+	end
+	for _, model in plants do
 		model:Destroy()
 	end
 end
@@ -1691,8 +1887,9 @@ local function buildGrove()
 			model:PivotTo(GROVE * model:GetPivot())
 		end
 	end
-	groveTreeModels()
+	groveProps()
 	groveWater()
+	pondLife()
 	groveSlugModels()
 end
 

@@ -296,3 +296,7 @@ Rounds of designing tips on a body failed because a peak isn't a part: in the ow
 ## Shader size and collision on large meshes (2026-11-02)
 
 Adding many samples of a heavy shape to one paint branch made the driver run the wrong branch for other materials: mushrooms and crystals came out in the ground's colours, and unrelated code changes made the fault come and go. Keep heavy paint out of pieces that don't use it (`@mountain-paint` markers), and compare painted colours per piece after any shader growth. Precise collision on one huge mesh can stand tens of studs above a concave surface, so measure it against the drawn surface and split it into chunks. The owner reads raised rims as "the wall between the lava streams": tie such changes to where the streams actually are.
+
+## Replacing shader blocks (2026-11-03)
+
+Cutting between two markers removed code living between them that others needed, and because the batch kept going, a 13-minute rebuild left the old mountain in place with no plants. Print failures loudly in long batches and stop at the first one. Raising glow on many props at once bleaches them: check colour before brightness.

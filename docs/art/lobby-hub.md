@@ -72,11 +72,16 @@ The owner chose an automatic estimate after each lobby or map change, with real 
 - **Mountain:** one form of flat triangular faces and hard ridges after the owner's references: `mountainHeight` gives the ridges and each triangle's corners sample it, so the surface is flat faces with no cracks or overhangs. About 165 studs tall and 370 across. Black lines and tilted rock layers are baked onto the flat faces, with cut-out shading. Players touch `hub-grove-solid`, 24 chunks hidden 0.3 studs under the surface, because one collision shape over the whole mountain bridged its valleys with invisible walls. Its back passes through the wall, so the wall is hidden from 52 to 128 degrees and has no collision from 58 to 122.
 - **Ground:** replaces the flat block-out from 40 to 135 degrees, with a basin for the pond.
 - **Slugs:** 30 real Floppies at 1.3 studs from `experiments/lobby/scale/shared/grove_slugs.json`, moved by `GroveSlugs.client.luau`: hops, a drowsy idle up close, and one in four glancing at a player within 15 studs. Ten carry `InfernoLater`, to swap once Inferno has a Roblox model.
-- **Trees:** the six big ones are the approved giant mushroom v2, as `mushroom-13`, `-12`, `-5` and `-3`, at 30% glow because they blew out at this size. Only stems are solid, as caps made collision take 146 s.
+- **Trees:** all 41 mushrooms are the approved giant mushroom v2, in teal, green, purple and azure, at 30% glow. Those under 20 studs tall use lighter `mushroom-N-s` copies of about 1,800 triangles; only large stems are solid.
 - **Volcano and gate:** Titan's Arch and the volcano stand at 85% height through `PLAZA_HEIGHT`, keeping their width (owner). The volcano's walls between its lava streams rise above the lava, slightly pointed, and its steam is about 25% denser (owner).
-- **Plants:** baked from the concept's versions of Codex's designs, because Codex's own models are 7,000 to 14,400 triangles each.
+- **Plants:** five designs the owner approved (grass, broad plant, lanterns, moonbells, star lily; artifact 5HPDn2SiYnPcvKJyGs58KX), `hub-flora-*`, each a separate prop placed from `grove_flora.json`, 78 in all.
+- **Crystals:** nine of the crystal assets in cyan, emerald and jade, from `grove_crystals.json`.
 - **Cost:** a Floppy is the heavy part, so slugs beyond 130 studs (60 at low detail) aren't drawn. A lighter slug model is the likely fix if phones struggle.
 
 ### Grove stream (owner, 2026-11-02)
 
 Unlike the Maelstrom's falls, the grove's waterfall is a thick stream hugging the mountain. `stream_path` in `tools/lobby/grove_sites.py` traces it down the exported mountain mesh, taking the furthest-out rock across its whole width, then pushes nodes out until nothing comes through; rebuild `hub-grove-mountain` before running it. It writes `GROVE_STREAM` and `grove_stream.json`. Motion is two chains of beams node to node in `groveFlow`, each segment one texture repeat, so the pattern runs across joins. It starts inside a rough cave, `groveHole`, and the old gorge cut is gone.
+
+### Grove pond (owner, 2026-11-03)
+
+About 2.5 studs deeper, see-through, with currents spreading from the falls, rings, glints and pads on a swell (`pondLife` in `HubArt`). `GroveWater.client.luau` splashes for each character in the water: a ripple, drops and foam with each step, more at speed, a big splash on landing, and small ripples when standing still. It's look-only. It takes its outline from `pondEdge`, so change both together.

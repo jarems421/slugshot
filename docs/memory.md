@@ -1023,3 +1023,9 @@
 - **Confirmed:** owner: the waterfall should stick to the mountain like a thick animated stream, flow over the rocks with none poking through, and come out of a rough hole that's neither big nor tight.
 - **Implemented/verified in Studio:** 14 segments, 141 studs long; the trace's last push was 0.00 studs, so no rock is above it at the sampled points. Captures of the mouth and stream inspected, and successive captures show the pattern moving. Check run: 77 solid parts with 0 failed, 182 floor raycasts with 0 holes.
 - **Unresolved:** owner's verdict on the motion and speed, which stills can't show; the pond is still to do; the mountain's four framing boulders moved aside from the stream.
+
+## 2026-11-03 - Grove environment finished
+
+- **Confirmed:** owner: remove the mountain's contour look and add black lines; shallower, lighter cave; no splash in the whirlpool basins; deeper, livelier pond with splashes when running; the approved mushrooms everywhere, mainly small; grass, flowers and a few crystals in the area's colours; approved five new flora designs; mushroom tops should glow.
+- **Implemented/verified in Studio:** check run: 78 solid parts with 0 failed, 41 mushrooms, 78 plants, 9 crystals, 30 slugs, 0 floor holes, 67 ground feet all sunk in, 6 splashes from a character moved across the pond by script. Captures inspected.
+- **Unresolved:** owner's verdict. Splashes weren't seen at real running speed. About 1.1M triangles and 290 MB of textures with the grove in view, over double the phone guesses, and the mobile check wasn't re-run. The whirlpool's and spawn rock's mushrooms got a code glow increase, not checked up close. `Failed to upload TexturePack` still recurs, untraced.

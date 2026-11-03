@@ -24,7 +24,9 @@ MTN_S, MTN_Z = 0.93, 8.6
 MOUNTAIN_Z = MTN_Z + (30.0 - MTN_Z)*MTN_S
 TREES = Path("experiments/lobby/scale/shared/grove_trees.json")
 STREAM = Path("experiments/lobby/scale/shared/grove_stream.json")
-HOLE = (0.4, 21.0, 23.0)  # GROVE_HOLE in the shader
+HOLE = (0.4, 21.0, 22.6)  # GROVE_HOLE in the shader
+FLORA = Path("experiments/lobby/scale/shared/grove_flora.json")
+CRYSTALS = Path("experiments/lobby/scale/shared/grove_crystals.json")
 
 
 FRONT = 1.5*math.pi
@@ -171,16 +173,16 @@ def stream_path():
     while y > 0.0:
         z = span_z(stream_x(y), y, stream_width(1.0 - y/hy))
         # Only what's outside the cave; rays inside its mouth pass in to the back.
-        if z is not None and z < hz - 1.2:
+        if z is not None and z < hz + 0.5:
             rough.append([stream_x(y), y, z - STREAM_LIFT])
         y -= 0.25
     lip_x, lip_y, lip_z = rough[0]
     cave = []
-    z = hz + 1.6
+    z = hz + 0.7
     while z > lip_z + 0.5:
         hits = mountain_hits((hx, hy - 0.2, z), (0.0, -1.0, 0.0))
         if hits.size:
-            cave.append([hx + (lip_x - hx)*(hz + 1.6 - z)/(hz + 1.6 - lip_z), hy - 0.2 - float(hits[0]) + STREAM_LIFT, z])
+            cave.append([hx + (lip_x - hx)*(hz + 0.7 - z)/(hz + 0.7 - lip_z), hy - 0.2 - float(hits[0]) + STREAM_LIFT, z])
         z -= 0.4
     # On into the pond.
     points = np.array(cave + rough + [[0.4, 0.05, 8.9], [0.4, -0.08, 8.1]])
@@ -199,7 +201,7 @@ def stream_path():
         for i in range(count):
             for t in (0.0, 0.25, 0.5, 0.75, 1.0):
                 p = nodes[i]*(1 - t) + nodes[i + 1]*t
-                if p[1] < 0.4 or p[1] > nodes[0][1] - 0.5 or p[2] > hz - 1.2:
+                if p[1] < 0.4 or p[1] > nodes[0][1] - 0.5 or p[2] > hz + 0.5:
                     continue
                 face = span_z(p[0], p[1], widths[i]*(1 - t) + widths[i + 1]*t)
                 if face is not None and p[2] > face - STREAM_LIFT*0.8:
@@ -253,7 +255,7 @@ def ground_shape(x, z):
     edge = pond_edge(x, z)
     h = 0.25*math.sin(x*0.31 + 1.0)*math.sin(z*0.27) + 0.12*math.sin(x*0.9 + z*0.7)
     bank = smoothstep(0.0, 3.0, edge)
-    return h*bank + 0.35*bank - 0.55*(1.0 - smoothstep(-1.6, 0.0, edge)) + 0.8*smoothstep(10.0, 16.0, z)
+    return h*bank + 0.35*bank - 1.05*(1.0 - smoothstep(-2.6, 0.0, edge)) + 0.8*smoothstep(10.0, 16.0, z)
 
 
 def clear_of_falls(x, y):
@@ -265,11 +267,42 @@ def vec4s(name, rows):
     return f"const vec4 {name}[{len(rows)}] = vec4[{len(rows)}]({body});\n"
 
 
+def inside_mountain_foot(x, z):
+    hits = mountain_hits((x, 6.0, z), (0.0, -1.0, 0.0))
+    return bool(hits.size) and 6.0 - float(hits[0]) > 1.2
+
+
+def grass(rnd, stones):
+    """Tufts in drifts over the clearing, in studs-free concept units: x, y, z, size."""
+    rows = []
+    for _ in range(11):
+        a0 = rnd.uniform(0, 2*math.pi)
+        r0 = pond_radius(a0) + rnd.uniform(0.8, 14.0)
+        cx, cz = r0*math.cos(a0), r0*math.sin(a0)
+        for _ in range(rnd.randint(3, 6)):
+            x, z = cx + rnd.gauss(0, 1.1), cz + rnd.gauss(0, 1.1)
+            if pond_edge(x, z) < 0.25 or inside_mountain_foot(x, z) or any(math.hypot(x - s[0], z - s[2]) < s[3] + 0.2 for s in stones):
+                continue
+            rows.append((x, rest(x, z, 0.12), z, rnd.uniform(0.85, 1.5)))
+    return rows
+
+
+def crystal_sites():
+    """A few of the crystal assets in the area's colours, not too many (owner)."""
+    rows = []
+    for x, z, key, height in ((-9.7, -3.9, "crystals-1", 8.0), (9.9, -1.4, "crystals-5", 7.0), (8.6, 5.3, "crystals-10", 10.0), (-8.6, 6.0, "crystals-5", 9.0), (-14.5, -9.0, "crystals-10", 7.0), (14.8, -7.5, "crystals-1", 6.5)):
+        rows.append({"x": round(x*5, 2), "y": round(rest(x, z, 0.5)*5 - 0.4, 2), "z": round(z*5, 2), "height": height, "key": key})
+    for a, y, key, height in ((3.55, 3.0, "crystals-5", 10.0), (5.45, 5.5, "crystals-10", 11.0), (4.0, 11.0, "crystals-1", 8.0)):
+        x, y0, z = on_mountain(a, y, 0.35)
+        rows.append({"x": round(x*5, 2), "y": round(y0*5, 2), "z": round(z*5, 2), "height": height, "key": key})
+    return rows
+
+
 def shrooms(rnd):
     top, more = [], []
     # Round the lake, with the side facing the hub left open so the mountain and the slugs can be seen.
     for degrees, far, height, cap, colour in ((200, 3.0, 8.0, 3.6, 0), (232, 5.0, 5.5, 2.4, 2), (312, 4.5, 6.0, 2.7, 1), (345, 3.0, 8.8, 4.0, 3),
-                                              (22, 4.0, 6.6, 2.9, 2), (158, 3.6, 7.2, 3.2, 1)):
+                                              (22, 4.0, 6.6, 2.9, 2), (158, 3.6, 7.2, 3.2, 1), (58, 7.5, 7.6, 3.0, 0), (122, 7.0, 6.2, 2.8, 3), (178, 8.5, 5.4, 2.4, 2)):
         a = math.radians(degrees)
         r = pond_radius(a) + far
         x, z = r*math.cos(a), r*math.sin(a)
@@ -282,15 +315,22 @@ def shrooms(rnd):
         top.append((x, y0, z, height))
         more.append((cap, 0.35*height*math.cos(a), 0.35*height*math.sin(a), colour))
     # Little ones on the banks.
-    for _ in range(14):
-        a = rnd.uniform(0, 2*math.pi)
-        if abs(a - FRONT) < 0.5:
+    # In small groups, so they read as patches rather than an even scatter, mainly small with the odd medium one.
+    placed = []
+    for _ in range(9):
+        a0 = rnd.uniform(0, 2*math.pi)
+        if abs(a0 - FRONT) < 0.45:
             continue
-        r = pond_radius(a) + rnd.uniform(0.6, 6.0)
-        x, z = r*math.cos(a), r*math.sin(a)
-        height = rnd.uniform(0.5, 1.2)
-        top.append((x, rest(x, z, 0.2*height) - 0.06, z, height))
-        more.append((height*rnd.uniform(0.45, 0.65), rnd.uniform(-0.1, 0.1), rnd.uniform(-0.1, 0.1), rnd.choice((0, 1, 2, 3))))
+        r0 = pond_radius(a0) + rnd.uniform(1.0, 11.0)
+        cx, cz = r0*math.cos(a0), r0*math.sin(a0)
+        for k in range(rnd.randint(3, 6)):
+            x, z = cx + rnd.gauss(0, 0.8), cz + rnd.gauss(0, 0.8)
+            if pond_edge(x, z) < 0.5 or any(math.hypot(x - p[0], z - p[1]) < 0.55 for p in placed) or inside_mountain_foot(x, z):
+                continue
+            placed.append((x, z))
+            height = rnd.uniform(1.6, 2.5) if k == 0 and rnd.random() < 0.35 else rnd.uniform(0.55, 1.15)
+            top.append((x, rest(x, z, 0.2*height) - 0.06, z, height))
+            more.append((height*0.5, 0.0, 0.0, rnd.choice((0, 1, 2, 3))))
     return top, more
 
 
@@ -312,7 +352,7 @@ def boulders(rnd):
     rows = []
     # Stepping out across the pond, near the falls, for the slugs to sit on.
     for x, z, size in ((-3.6, 2.2, 0.85), (-1.8, 3.9, 0.6), (2.6, 3.0, 0.95), (4.2, 0.8, 0.6), (-4.6, -0.8, 0.7), (1.0, -2.4, 0.55), (-1.6, -3.6, 0.45)):
-        rows.append((x, -0.2, z, size))
+        rows.append((x, -0.32, z, size))
     # Rough rock round the two basins the falls land in.
     for x, y, z, size in ((-4.6, 13.9, front_z(-4.6, 13.9) or 18.0, 0.75), (5.2, 13.9, front_z(5.2, 13.9) or 18.0, 0.85), (-5.0, 7.0, front_z(-5.0, 7.0) or 14.0, 1.0), (5.6, 7.0, front_z(5.6, 7.0) or 14.0, 0.95)):
         rows.append((x, y, z, size))
@@ -485,10 +525,17 @@ def main():
     SITES.write_text(json.dumps(sites, indent=1) + "\n", encoding="utf-8")
     # The big mushrooms round the lake are the approved giant mushroom asset, placed by the game.
     TREES.write_text(json.dumps([{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": int(c[3])}
-                                 for t, c in zip(top[:6], more[:6])], indent=1) + "\n", encoding="utf-8")
+                                 for t, c in zip(top, more)], indent=1) + "\n", encoding="utf-8")
+    # The plants are props the game places: kind, x, y, z, size, turn.
+    kinds = [[int(f[3]), f[0]*5, f[1]*5 + 0.45, f[2]*5, rnd.uniform(0.9, 1.35), rnd.uniform(0, 6.28)] for f in flowers]
+    kinds += [[3, f[0]*5, f[1]*5 + 0.55, f[2]*5, 1.1 + 0.6*f[3], rnd.uniform(0, 6.28)] for f in ferns]
+    kinds += [[4, f[0]*5, f[1]*5, f[2]*5, f[3], rnd.uniform(0, 6.28)] for f in grass(rnd, stones)]
+    FLORA.write_text(json.dumps([[round(v, 2) for v in row] for row in kinds]) + "\n", encoding="utf-8")
+    CRYSTALS.write_text(json.dumps(crystal_sites(), indent=1) + "\n", encoding="utf-8")
+    print(f"grove props: {len(top)} mushrooms ({sum(1 for t in top if t[3] >= 2.6)} large or medium), {len(kinds)} plants")
     # For the check build: where everything baked into a piece should touch its surface.
     studs = lambda rows: [[round(r[0]*5, 2), round(r[1]*5, 2), round(r[2]*5, 2)] for r in rows]
-    FEET.write_text(json.dumps({"ground": studs(flowers + ferns + [t for t in top if t[1] < 1.6]), "mountain": studs([t for t in top if t[1] >= 1.6] + bush_rows + [g for g in gems if g[1] > 1.6]),
+    FEET.write_text(json.dumps({"ground": studs(flowers + ferns + [t for t in top if t[1] < 1.6]), "mountain": studs([t for t in top if t[1] >= 1.6] + bush_rows),
                                 "axisZ": MOUNTAIN_Z*5, "heights": mesh_heights()}) + "\n", encoding="utf-8")
     if GROUND_GRID is not None:
         off = [abs(ground(f[0], f[2]) - ground_shape(f[0], f[2]))*5 for f in flowers]

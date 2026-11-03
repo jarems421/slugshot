@@ -14,6 +14,8 @@ local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "streamHoleGo", from = Vector3.new(205, 95, -22), at = Vector3.new(258, 101, -2) },
 	{ name = "streamHole", from = Vector3.new(205, 95, -22), at = Vector3.new(258, 101, -2) },
 	{ name = "streamMid", from = Vector3.new(170, 45, -30), at = Vector3.new(235, 42, -2) },
+	{ name = "pondClose", from = Vector3.new(118, 9, -30), at = Vector3.new(165, 0, 0) },
+	{ name = "plantsClose", from = Vector3.new(108, 6, 58), at = Vector3.new(135, 2, 44) },
 	{ name = "streamFoot", from = Vector3.new(148, 8, -14), at = Vector3.new(200, 14, -2) },
 	{ name = "plaza", from = Vector3.new(0, 14, -95), at = Vector3.new(0, 70, -250) },
 	{ name = "groveSlugs", from = Vector3.new(170, 3.4, -43), at = Vector3.new(174, 1, -46) },
@@ -147,6 +149,23 @@ task.spawn(function()
 		)
 	)
 	print(`HUBCHECK groveTrees count={#(art:WaitForChild("GroveTrees", 5) or art):GetChildren()}`)
+	print(
+		`HUBCHECK groveProps flora={#(art:FindFirstChild("GroveFlora") or art):GetChildren()} crystals={#(
+			art:FindFirstChild("GroveCrystals") or art
+		):GetChildren()}`
+	)
+	-- Running through the pond: moved by hand, since only the movement controller moves a character properly.
+	local root = (player.Character :: Model):WaitForChild("HumanoidRootPart") :: BasePart
+	local home = root.CFrame
+	task.wait(2)
+	local before = workspace:GetAttribute("GrovePondSplashes") or 0
+	for frame = 1, 60 do
+		root.CFrame = CFrame.new(148 + frame * 0.32, -1, -6)
+		root.AssemblyLinearVelocity = Vector3.zero
+		task.wait()
+	end
+	print(`HUBCHECK pondSplashes {(workspace:GetAttribute("GrovePondSplashes") or 0) - before}`)
+	root.CFrame = home
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	print("HUBCHECK tour starts")
