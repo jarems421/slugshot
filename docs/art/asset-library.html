@@ -5394,8 +5394,11 @@ vec3 knollPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 // ---------- 11 and 12: life on the canopy hole's walls. 1 unit = 5 studs. Owner, 2026-11-03: the hole needs mushrooms
 // stuck to its walls and vines everywhere. Each is its own asset with options (uPlaza), shown on a rock pillar cut from
 // the hole's wall, capped with the chosen spore velvet so the colours are judged in place.
-// 11 wall mushrooms: 0 bracket tiers, 1 hanging lanterns, 2 fan rosettes. 12 vines: 0 moss curtains, 1 bead vines,
-// 2 air roots, each with the knoll's plum roots draping over the rim (owner: roots down the walls). Ids: 80 rock, 81 velvet cap, 82 the asset's body, 83 its glowing part.
+// Round 2 (owner): the wall mushrooms are flattened upside-down caps, joined to the rock and to each other, not loose
+// stacks: 11 is 0 funnel caps, 1 cupped shelves, 2 trumpet cups. The roots wind and curve instead of dropping straight,
+// with bead vines looped between them so they hang from something, and two giant mushrooms grow out of the wall and
+// curve up, vines draped round their stems: 12 is 0 meander, 1 braided pairs, 2 spreading net.
+// Ids: 80 rock, 81 velvet cap, 82 the asset's body, 83 its glow, 85 plum root, 86 tree stem, 87 tree cap, 88 cap gills.
 const float WALL_R = 4.2, WALL_TOP = 0.0, WALL_FOOT = -11.0;
 // Nearest feature distance and the gap to the second, for the velvet cushions (as knollCells in asset 10).
 vec2 knollCellsW(vec2 x, out vec2 cellId) {
@@ -5428,155 +5431,183 @@ float wallVelvet(vec3 p) {
   float d = max(p.y - h, length(p.xz) - wallRadius(a, 0.0) - 0.05);
   return max(d*0.6, WALL_TOP - 0.25 - p.y);
 }
+float sdSeg(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+vec3 quadAt(vec3 a, vec3 b, vec3 c, float t) { return a*(1.0 - t)*(1.0 - t) + b*2.0*t*(1.0 - t) + c*t*t; }
+// A vine looped from a to c, sagging below them, with beads strung along it.
+void beadLoop(vec3 p, vec3 a, vec3 c, float sag, float seed, inout vec2 res) {
+  vec3 m0 = (a + c)*0.5;
+  vec3 m = m0 + vec3(0.0, -sag, 0.0) + normalize(vec3(m0.x, 0.0, m0.z) + 1e-4)*0.25;
+  vec2 fq = sdBezier(p, a, m, c);
+  float vine = fq.x - 0.05;
+  if (vine < res.x) res = vec2(vine, 82.0);
+  float slot = floor(fq.y*6.0 + 0.5)/6.0;
+  if (slot > 0.05 && slot < 0.95) {
+    vec3 bead = quadAt(a, m, c, slot);
+    float bd = length(p - bead - vec3(0.0, -0.07, 0.0)) - 0.13*(0.8 + 0.4*hash1(seed + slot*9.0));
+    if (bd < res.x) res = vec2(bd, 83.0);
+  }
+}
 
 #if ASSET == 11
-// A site on the wall: angle, height, size.
-vec3 shroomSite(int i) {
-  // Clusters of four round six spots on the wall, each member a little off its cluster's centre.
-  float cl = floor(float(i)/4.0), m = mod(float(i), 4.0);
-  float a = cl*1.05 + 0.3*sin(cl*2.0) + (m - 1.5)*0.16*(1.0 + hash1(cl));
-  float y = -1.4 - mod(cl*3.1, 6.5) - m*0.75 + 0.4*hash1(cl*7.0 + m);
-  return vec3(a, y, 0.75 + 0.6*hash1(cl*5.3 + m*1.7));
+// A cluster on the wall: angle, height, size. Ten clusters of three caps.
+vec3 shroomCluster(int i) {
+  float fi = float(i);
+  return vec3(fi*2.2 + 0.3*sin(fi*2.0), -1.6 - mod(fi*2.3, 7.5), 0.8 + 0.4*hash1(fi*5.3));
+}
+// An upside-down cap: a shallow bowl open to the sky with a thick rolled rim, gills on its underside.
+float bowlCap(vec3 c, float r, float depth, out float under) {
+  float rr = length(c.xz);
+  float wave = 0.05*r*sin(atan(c.z, c.x)*6.0);
+  float surf = depth*(rr/r)*(rr/r) + wave*(rr/r);
+  float shell = abs(c.y - surf) - 0.06*r - 0.07*r*(1.0 - rr/r);
+  float bowl = max(shell, rr - r);
+  float rim = length(vec2(rr - r*0.97, c.y - surf - 0.05*r)) - 0.12*r;
+  under = c.y - surf;
+  return smin(bowl, rim, 0.05*r);
 }
 void wallShroom(vec3 p, inout vec2 res) {
   float option = uPlaza;
-  for (int i = 0; i < 24; i++) {
-    vec3 s = shroomSite(i);
-    vec3 base = wallPoint(s.x, s.y, -0.15);
-    if (length(p - base) > 2.6*s.z + 0.8) continue;
-    // Local frame: x along the wall, y up, z out of the wall.
+  for (int i = 0; i < 10; i++) {
+    vec3 s = shroomCluster(i);
+    vec3 base = wallPoint(s.x, s.y, -0.2);
+    if (length(p - base) > 3.2*s.z + 1.0) continue;
     vec3 outv = vec3(cos(s.x), 0.0, sin(s.x)), side = vec3(-outv.z, 0.0, outv.x);
+    // Local frame: x along the wall, y up, z out of the wall.
     vec3 q = vec3(dot(p - base, side), p.y - base.y, dot(p - base, outv));
-    if (option < 0.5) {
-      // Bracket tiers: two or three shelves, each a thick half-disc with a rolled lip, stepping down the rock.
-      // One thick shelf per site: a wedge that thins to a rounded lip, domed on top, flat and glowing beneath.
-      float r = s.z*1.1;
-      vec3 b = q - vec3(0.0, 0.0, -0.1);
-      float rad = length(b.xz*vec2(1.0, 1.0/0.8));
-      float thick = r*0.32*(1.0 - 0.75*smoothstep(0.0, r, rad));
-      float shelf = max(rad - r, max(b.y - thick*(1.0 - 0.3*rad/r), -b.y - r*0.06));
-      shelf = max(shelf, -b.z);
-      if (shelf*0.8 < res.x) res = vec2(shelf*0.8, b.y < -r*0.03 ? 83.0 : 82.0);
-    } else if (option < 1.5) {
-      // Hanging lanterns: a stem leaves the rock, arcs out and hangs a bell cap open to the ground.
-      vec3 tip = vec3(0.0, -0.4*s.z - 0.6*s.z*hash1(float(i)*3.3), 1.0*s.z);
-      vec2 st = sdBezier(q, vec3(0.0), vec3(0.0, 0.6*s.z, 1.0*s.z), tip + vec3(0.0, 0.45*s.z, 0.0));
-      float stem = st.x - 0.1*s.z*(1.0 - 0.4*st.y);
-      if (stem < res.x) res = vec2(stem, 82.0);
-      vec3 c = q - tip;
-      // A wide bell cap, flaring at the rim, open underneath.
-      float bell = sdEll(c, vec3(0.72, 0.5, 0.72)*s.z);
-      bell = max(bell, -sdEll(c + vec3(0.0, 0.2*s.z, 0.0), vec3(0.62, 0.44, 0.62)*s.z));
-      bell = max(bell, -c.y - 0.16*s.z);
-      if (bell < res.x) res = vec2(bell, 82.0);
-      float core = length(c + vec3(0.0, 0.02*s.z, 0.0)) - 0.2*s.z;
-      if (core < res.x) res = vec2(core, 83.0);
-    } else {
-      // Fan rosettes: five thin wavy fans opening out of one root on the rock.
-      for (int k = 0; k < 5; k++) {
-        float fk = float(k);
-        vec3 b = q;
-        b.xz = rot(-0.9 + fk*0.45)*b.xz;
-        b.yz = rot(0.35 + 0.18*sin(fk*2.0))*b.yz;
-        float r = s.z*(1.2 + 0.4*hash1(fk + float(i)*3.0));
-        float ang = atan(b.x, b.z);
-        float wave = 0.06*s.z*sin(ang*7.0 + fk);
-        float fan = max(abs(b.y - wave*smoothstep(0.2, 1.0, length(b.xz)/r)) - 0.035*s.z, length(b.xz) - r);
-        fan = max(fan, abs(ang) - 0.9);
-        fan = max(fan, -b.z);
-        float edge = length(b.xz) - r*0.86;
-        if (fan*0.8 < res.x) res = vec2(fan*0.8, edge > 0.0 ? 83.0 : 82.0);
+    // The cluster's shared knot of flesh, gripping the rock.
+    float body = sdEll(q - vec3(0.0, 0.0, 0.15*s.z), vec3(0.45, 0.35, 0.3)*s.z);
+    float glow = 1e3;
+    for (int k = 0; k < 3; k++) {
+      float fk = float(k);
+      float r = s.z*(k == 0 ? 0.95 : 0.7 - 0.08*fk);
+      vec3 top;
+      float stemR;
+      if (option < 0.5) {
+        // Funnel caps: short curved stems rising out of the knot, caps tilted up and out.
+        top = vec3((fk - 1.0)*0.75*s.z, (0.55 + 0.35*fk*(2.0 - fk))*s.z, (0.75 + 0.15*fk)*s.z);
+        stemR = 0.13*s.z;
+      } else if (option < 1.5) {
+        // Cupped shelves: no stems, caps growing straight off the knot and overlapping like plates.
+        top = vec3((fk - 1.0)*0.55*s.z, (0.15 - 0.35*fk)*s.z, (0.55 + 0.1*fk)*s.z);
+        stemR = 0.0;
+      } else {
+        // Trumpet cups: long slender stems arching out and up into deep cups.
+        top = vec3((fk - 1.0)*0.9*s.z, (1.0 + 0.45*fk*(2.0 - fk))*s.z, (1.1 + 0.2*fk)*s.z);
+        stemR = 0.09*s.z;
+        r *= 0.8;
       }
+      if (stemR > 0.0) {
+        vec2 st = sdBezier(q, vec3(0.0, 0.0, 0.2*s.z), vec3(top.x*0.5, top.y*0.2, top.z*0.9), top - vec3(0.0, 0.1*s.z, 0.0));
+        body = smin(body, st.x - stemR*(1.0 - 0.3*st.y), 0.12*s.z);
+      }
+      vec3 c = q - top;
+      c.yz = rot(-0.45)*c.yz;
+      float under;
+      float cap = bowlCap(c, r, option > 1.5 ? 0.8*r : option > 0.5 ? 0.38*r : 0.5*r, under);
+      if (option > 1.5) cap = smin(cap, max(length(c.xz) - 0.25*r, abs(c.y + 0.2*r) - 0.25*r), 0.06*r);
+      if (under < -0.04*r) glow = min(glow, cap); else body = smin(body, cap, 0.04*r);
     }
+    if (body*0.8 < res.x) res = vec2(body*0.8, 82.0);
+    if (glow*0.8 < res.x) res = vec2(glow*0.8, 83.0);
   }
 }
 #endif
 
 #if ASSET == 12
-void wallVines(vec3 p, inout vec2 res) {
-  float option = uPlaza;
-  float a = atan(p.z, p.x), r = length(p.xz);
+// One plum root's path down the wall, by height: its angle round the pillar and how far it stands off the rock.
+vec2 rootPath(int i, float y, float option, float strand) {
+  float fi = float(i);
+  float a0 = fi*0.785 + 0.3*sin(fi*2.0);
+  float t = WALL_TOP - y;
+  float a, off;
   if (option < 0.5) {
-    // Moss curtains: clumps of fine strands hanging from the rim, long and short, swaying a little.
-    float count = 34.0;
-    float cell = floor(a/6.28318*count + 0.5);
-    for (int k = -1; k <= 1; k++) {
-      float c = cell + float(k);
-      float ca = c/count*6.28318;
-      float len = 3.5 + 6.0*hash1(c*1.7);
-      if (hash1(c*4.1) < 0.15) continue;
-      for (int j = 0; j < 4; j++) {
-        float fj = float(j);
-        float sa = ca + (fj - 1.5)*0.035;
-        float sl = len*(0.65 + 0.35*hash1(c*7.0 + fj));
-        float sway = 0.12*sin(p.y*0.9 + c + fj);
-        vec3 top = wallPoint(sa, WALL_TOP, 0.05);
-        vec3 axis = vec3(top.x, 0.0, top.z) + normalize(vec3(top.x, 0.0, top.z))*(0.12 + 0.05*fj - 0.03*(p.y - WALL_TOP)) + vec3(-sin(sa), 0.0, cos(sa))*sway;
-        float d = length(p.xz - axis.xz) - 0.06*(1.0 + 0.6*smoothstep(-sl, 0.0, p.y - WALL_TOP));
-        d = max(d, max(p.y - WALL_TOP - 0.05, WALL_TOP - sl - p.y));
-        if (d < res.x) res = vec2(d, p.y < WALL_TOP - sl + 0.35 ? 83.0 : 82.0);
-      }
-    }
+    // Meander: wide, lazy S-curves.
+    a = a0 + 0.28*sin(t*0.55 + fi*1.7) + 0.1*sin(t*1.3 + fi);
+    off = 0.2 + 0.12*sin(t*0.9 + fi*2.3);
   } else if (option < 1.5) {
-    // Bead vines: fewer, thicker vines with glowing pods strung along them.
-    float count = 14.0;
-    float cell = floor(a/6.28318*count + 0.5);
-    for (int k = -1; k <= 1; k++) {
-      float c = cell + float(k);
-      float ca = c/count*6.28318 + 0.1*sin(c);
-      float len = 3.0 + 6.0*hash1(c*3.3);
-      vec3 top = wallPoint(ca, WALL_TOP, 0.05);
-      vec3 outv = normalize(vec3(top.x, 0.0, top.z));
-      vec2 axis = top.xz + outv.xz*(0.22 + 0.04*(WALL_TOP - p.y)) + vec2(-outv.z, outv.x)*0.25*sin(p.y*0.7 + c);
-      float d = length(p.xz - axis) - 0.09;
-      d = max(d, max(p.y - WALL_TOP, WALL_TOP - len - p.y));
-      if (d < res.x) res = vec2(d, 82.0);
-      float yy = p.y - WALL_TOP;
-      float slot = floor(yy/0.75 + 0.5);
-      if (slot*0.75 > -len + 0.3 && slot < -0.5) {
-        float by = WALL_TOP + slot*0.75;
-        vec2 baxis = top.xz + outv.xz*(0.22 + 0.04*(WALL_TOP - by)) + vec2(-outv.z, outv.x)*0.25*sin(by*0.7 + c);
-        float bead = sdEll(vec3(p.x - baxis.x, p.y - by, p.z - baxis.y), vec3(0.17, 0.24, 0.17)*(0.7 + 0.5*hash1(c + slot)));
-        if (bead < res.x) res = vec2(bead, 83.0);
+    // Braided pairs: two roots twisting round each other as they go down.
+    a = a0 + 0.18*sin(t*0.45 + fi) + strand*0.07*cos(t*2.2 + fi);
+    off = 0.28 + strand*0.18*sin(t*2.2 + fi);
+  } else {
+    // Spreading net: each root drifts sideways and branches cross to its neighbour.
+    a = a0 + 0.03*t*(mod(fi, 2.0) < 0.5 ? 1.0 : -1.0) + 0.15*sin(t*0.8 + fi);
+    off = 0.18 + 0.08*sin(t*1.7 + fi);
+  }
+  return vec2(a, off);
+}
+void wallRoots(vec3 p, inout vec2 res) {
+  float option = uPlaza;
+  bool braid = option > 0.5 && option < 1.5;
+  for (int i = 0; i < 8; i++) {
+    float fi = float(i);
+    float len = 9.5 - 3.0*hash1(fi*3.3);
+    for (int sIdx = 0; sIdx < 2; sIdx++) {
+      if (sIdx == 1 && !braid) break;
+      float strand = sIdx == 0 ? 1.0 : -1.0;
+      vec2 ap0 = rootPath(i, WALL_TOP, option, strand);
+      vec3 prev = wallPoint(ap0.x, WALL_TOP + 0.05, -0.5);
+      float r0 = braid ? 0.28 : 0.4;
+      for (int k = 1; k <= 10; k++) {
+        float fk = float(k);
+        float y = WALL_TOP - len*fk/10.0;
+        vec2 ap = rootPath(i, y, option, strand);
+        vec3 cur = wallPoint(ap.x, y, ap.y);
+        float d = sdSeg(p, prev, cur, r0*(1.0 - 0.06*(fk - 1.0)), r0*(1.0 - 0.06*fk));
+        if (d < res.x) res = vec2(d, 85.0);
+        // Bead vines looped from this root across to its neighbour, so they hang from something.
+        if (sIdx == 0 && mod(fk, 3.0) < 0.5 && k < 10) {
+          float y2 = y - 0.6;
+          vec2 bp = rootPath(i + 1, y2, option, 1.0);
+          beadLoop(p, cur, wallPoint(bp.x, y2, bp.y + 0.1), 0.9, fi + fk, res);
+        }
+        prev = cur;
       }
     }
-  } else {
-    // Air roots: pale, thin roots hanging straight down from the rim in loose bunches, with glowing tips.
-    float count = 20.0;
-    float cell = floor(a/6.28318*count + 0.5);
-    for (int k = -1; k <= 1; k++) {
-      float c = cell + float(k);
-      for (int j = 0; j < 3; j++) {
-        float fj = float(j);
-        float sa = c/count*6.28318 + (fj - 1.0)*0.05 + 0.04*sin(c*3.0);
-        float len = 2.5 + 6.5*hash1(c*2.3 + fj*5.0);
-        vec3 top = wallPoint(sa, WALL_TOP, 0.0);
-        vec3 outv = normalize(vec3(top.x, 0.0, top.z));
-        vec2 axis = top.xz + outv.xz*(0.35 + 0.06*fj) + vec2(-outv.z, outv.x)*0.08*sin(p.y*1.3 + c + fj);
-        float d = length(p.xz - axis) - 0.045*(1.0 + 0.8*smoothstep(-len, 0.0, p.y - WALL_TOP));
-        d = max(d, max(p.y - WALL_TOP, WALL_TOP - len - p.y));
-        if (d < res.x) res = vec2(d, 84.0);
-        float tip = length(vec3(p.x - axis.x, p.y - (WALL_TOP - len), p.z - axis.y)) - 0.09;
-        if (tip < res.x) res = vec2(tip, 83.0);
+    if (option > 1.5) {
+      // Net branches: two diagonal branches to the neighbouring root.
+      for (int b = 0; b < 2; b++) {
+        float yb = WALL_TOP - 2.5 - float(b)*3.0 - hash1(fi + float(b));
+        vec2 a1 = rootPath(i, yb, option, 1.0), a2 = rootPath(i + 1, yb - 1.8, option, 1.0);
+        vec3 s1 = wallPoint(a1.x, yb, a1.y), s2 = wallPoint(a2.x, yb - 1.8, a2.y);
+        vec3 sm = wallPoint((a1.x + a2.x)*0.5, yb - 0.6, 0.35);
+        vec2 bq = sdBezier(p, s1, sm, s2);
+        float br = bq.x - 0.2*(1.0 - 0.4*bq.y);
+        if (br < res.x) res = vec2(br, 85.0);
       }
     }
   }
-  {
-    // The knoll's plum roots pour over the rim, cling to the rock and split as they go down.
-    for (int i = 0; i < 8; i++) {
-      float fi = float(i);
-      float ra = fi*0.785 + 0.3*sin(fi*2.0);
-      vec3 a0 = wallPoint(ra, WALL_TOP - 0.05, -0.9);
-      vec3 a1 = wallPoint(ra + 0.05, WALL_TOP - 0.6, 0.35);
-      vec3 a2 = wallPoint(ra + 0.3*sin(fi*3.0), WALL_TOP - 6.0 - 3.0*hash1(fi), 0.08);
-      vec2 q = sdBezier(p, a0, a1, a2);
-      float rr = 0.45*(1.0 - 0.6*q.y);
-      float d = q.x - rr;
-      if (d < res.x) res = vec2(d, 85.0);
-      vec3 b1 = wallPoint(ra - 0.35, WALL_TOP - 8.0 - 2.0*hash1(fi + 4.0), 0.05);
-      vec2 q2 = sdBezier(p, a2, mix(a2, b1, 0.5) + vec3(0.0, 0.0, 0.0), b1);
-      float d2 = q2.x - 0.2*(1.0 - 0.7*q2.y);
-      if (d2 < res.x) res = vec2(d2, 85.0);
+}
+// Two giant mushrooms grow sideways out of the wall and curve up, like the ones round the Maelstrom, with bead vines
+// looped round their stems.
+void wallTrees(vec3 p, inout vec2 res) {
+  for (int i = 0; i < 2; i++) {
+    float fi = float(i);
+    float a = i == 0 ? 0.6 : 3.6;
+    float y = i == 0 ? -4.5 : -7.0;
+    vec3 outv = vec3(cos(a), 0.0, sin(a));
+    vec3 s0 = wallPoint(a, y, -0.4);
+    vec3 s1 = s0 + outv*3.0 + vec3(0.0, -0.2, 0.0);
+    vec3 s2 = s0 + outv*3.4 + vec3(0.0, 3.2, 0.0);
+    float capR = i == 0 ? 1.9 : 1.6;
+    if (length(p - (s0 + s2)*0.5) > 5.5 + capR) continue;
+    vec2 bz = sdBezier(p, s0, s1, s2);
+    float stem = bz.x - mix(0.55, 0.3, smoothstep(0.0, 0.7, bz.y)) - 0.02*sin(bz.y*40.0);
+    if (stem*0.85 < res.x) res = vec2(stem*0.85, 86.0);
+    vec3 q = p - s2 - vec3(0.0, 0.15, 0.0);
+    float ang = atan(q.z, q.x), rr = length(q.xz);
+    float wave = 1.0 + 0.07*sin(5.0*ang + fi) + 0.04*sin(9.0*ang);
+    q.y += 0.14*capR*pow(clamp(rr/capR, 0.0, 1.3), 3.0);
+    vec3 qs = vec3(q.x/wave, q.y, q.z/wave);
+    float cap = smax(sdEll(qs, vec3(1.0, 0.5, 1.0)*capR), -sdEll(qs + vec3(0.0, 0.22*capR, 0.0), vec3(0.9, 0.34, 0.9)*capR), 0.08);
+    if (cap*0.75 < res.x) res = vec2(cap*0.75, q.y < -0.02*capR ? 88.0 : 87.0);
+    for (int k = 0; k < 3; k++) {
+      float fk = float(k);
+      float t0 = 0.12 + 0.22*fk;
+      beadLoop(p, quadAt(s0, s1, s2, t0), quadAt(s0, s1, s2, t0 + 0.2), 1.0 + 0.4*fk, fi*5.0 + fk, res);
     }
   }
 }
@@ -5586,18 +5617,20 @@ vec2 wallLife(vec3 p) {
   vec2 res = vec2(wallRock(p), 80.0);
   float v = wallVelvet(p);
   if (v < res.x) res = vec2(v, 81.0);
-  if (length(p.xz) < WALL_R + 3.5 && p.y < 1.0 && p.y > WALL_FOOT - 1.0) {
+  if (length(p.xz) < WALL_R + 3.0 && p.y < 1.0 && p.y > WALL_FOOT - 1.0) {
 #if ASSET == 11
     wallShroom(p, res);
 #else
-    wallVines(p, res);
+    wallRoots(p, res);
 #endif
   }
+#if ASSET == 12
+  if (length(p.xz) < WALL_R + 8.0 && p.y < 2.0) wallTrees(p, res);
+#endif
   return res;
 }
 
 vec3 wallLifePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
-  float option = uPlaza;
   emit = vec3(0.0);
   spec = 0.05;
   float g = noise3(p*1.7) + 0.5*noise3(p*5.0);
@@ -5615,74 +5648,51 @@ vec3 wallLifePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 c = mix(vec3(0.012, 0.008, 0.03), top, smoothstep(0.0, 0.25, cells.y));
     return c*(0.8 + 0.35*g);
   }
+  if (id > 84.5 && id < 85.5) {
+    // Plum bark with long grain.
+    float grain = smoothstep(0.35, 0.65, noise3(vec3(p.x*5.0, p.y*1.2, p.z*5.0)));
+    vec3 c = mix(vec3(0.05, 0.022, 0.04), vec3(0.15, 0.07, 0.1), grain*0.5 + 0.3*g);
+    return c*(0.6 + 0.4*deep);
+  }
+  if (id > 85.5 && id < 86.5) {
+    // Giant mushroom stem: pale and faintly ribbed, like the approved giant mushroom.
+    vec3 c = mix(vec3(0.42, 0.4, 0.46), vec3(0.62, 0.6, 0.66), 0.4 + 0.4*g);
+    emit = c*0.06;
+    return c*(0.55 + 0.45*deep);
+  }
+  if (id > 86.5 && id < 87.5) {
+    // Cap top: the canopy's azure and teal, darker at the crown.
+    vec3 c = mix(vec3(0.05, 0.16, 0.36), vec3(0.1, 0.42, 0.62), smoothstep(0.2, 1.0, g));
+    emit = c*0.2;
+    return c*(0.6 + 0.4*deep);
+  }
+  if (id > 87.5) {
+    float lines = 0.5 + 0.5*sin(atan(p.z, p.x)*90.0);
+    vec3 c = mix(vec3(0.25, 0.75, 1.0), vec3(0.6, 0.95, 1.0), lines);
+    emit = c*1.1;
+    return c*0.5;
+  }
 #if ASSET == 11
-  if (option < 0.5) {
-    if (id > 82.5) {
-      // Gills under each shelf: fine radial lines glowing azure.
-      float lines = 0.5 + 0.5*sin(atan(p.z, p.x)*140.0);
-      vec3 c = mix(vec3(0.2, 0.5, 1.0), vec3(0.6, 0.9, 1.0), lines);
-      emit = c*1.1*deep;
-      return c*0.6;
-    }
-    // Shelf tops: violet velvet in growth rings, pale at the rolled lip.
-    float ring = 0.5 + 0.5*sin(length(p.xz)*30.0 + p.y*20.0);
-    vec3 c = mix(vec3(0.08, 0.035, 0.15), vec3(0.17, 0.08, 0.28), ring*0.6 + 0.2*g);
-    emit = c*0.12;
-    return c*(0.6 + 0.4*deep);
-  }
-  if (option < 1.5) {
-    if (id > 82.5) {
-      vec3 c = vec3(1.0, 0.38, 0.85);
-      emit = c*1.5*(0.6 + 0.4*deep);
-      return c;
-    }
-    vec3 c = mix(vec3(0.1, 0.04, 0.18), vec3(0.2, 0.09, 0.32), 0.4 + 0.4*g);
-    emit = vec3(0.5, 0.15, 0.4)*0.25;
-    return c*(0.6 + 0.4*deep);
-  }
   if (id > 82.5) {
-    vec3 c = vec3(0.42, 0.5, 0.95);
-    emit = c*0.7*(0.6 + 0.4*deep);
-    return c*0.7;
+    // Gills under each cap and the cup's glowing heart.
+    float lines = 0.5 + 0.5*sin(atan(p.z, p.x)*120.0 + p.y*30.0);
+    vec3 c = mix(vec3(0.35, 0.45, 1.0), vec3(0.65, 0.75, 1.0), lines);
+    emit = c*0.85*(0.6 + 0.4*deep);
+    return c*0.6;
   }
-  vec3 c = mix(vec3(0.1, 0.07, 0.2), vec3(0.2, 0.15, 0.34), 0.4 + 0.4*g);
-  emit = c*0.12;
+  // Caps: violet velvet.
+  vec3 c = mix(vec3(0.08, 0.04, 0.17), vec3(0.2, 0.12, 0.34), 0.35 + 0.35*g);
+  emit = c*0.14;
   return c*(0.6 + 0.4*deep);
 #else
-  if (id > 84.5) {
-    float grain = smoothstep(0.35, 0.65, noise3(vec3(p.x*5.0, p.y*1.2, p.z*5.0)));
-    vec3 c = mix(vec3(0.05, 0.022, 0.04), vec3(0.14, 0.065, 0.095), grain*0.5 + 0.3*g);
-    return c*(0.6 + 0.4*deep);
-  }
-  if (id > 83.5) {
-    vec3 c = mix(vec3(0.3, 0.27, 0.36), vec3(0.5, 0.46, 0.58), 0.4 + 0.4*g);
-    emit = c*0.1;
-    return c*(0.5 + 0.5*deep);
-  }
-  if (option < 0.5) {
-    if (id > 82.5) {
-      vec3 c = vec3(0.75, 0.35, 1.0);
-      emit = c*1.1*deep;
-      return c;
-    }
-    // Moss strands: blue-black at the root, violet towards the tips.
-    float t = smoothstep(0.0, -6.0, p.y - WALL_TOP);
-    vec3 c = mix(vec3(0.03, 0.05, 0.07), vec3(0.14, 0.07, 0.24), t);
-    emit = c*0.15;
+  if (id > 82.5) {
+    vec3 c = vec3(1.0, 0.4, 0.85);
+    emit = c*1.3*(0.5 + 0.5*deep);
     return c;
   }
-  if (option < 1.5) {
-    if (id > 82.5) {
-      vec3 c = vec3(1.0, 0.4, 0.85);
-      emit = c*1.4*(0.5 + 0.5*deep);
-      return c;
-    }
-    vec3 c = mix(vec3(0.04, 0.06, 0.08), vec3(0.09, 0.07, 0.14), 0.5 + 0.4*g);
-    return c;
-  }
-  vec3 c = vec3(0.75, 0.4, 1.0);
-  emit = c*1.2*(0.5 + 0.5*deep);
-  return c;
+  // Vine: blue-black green.
+  vec3 c = mix(vec3(0.03, 0.06, 0.07), vec3(0.06, 0.1, 0.12), 0.5 + 0.4*g);
+  return c*(0.6 + 0.4*deep);
 #endif
 }
 #endif
@@ -5761,7 +5771,7 @@ bool emissive(float id) {
   if (id >= 70.0) return id < 70.5 ? uPlaza > 1.5 : abs(id - 72.0) < 0.5;
 #endif
 #if ASSET == 11 || ASSET == 12
-  if (id >= 80.0) return abs(id - 83.0) < 0.5;
+  if (id >= 80.0) return abs(id - 83.0) < 0.5 || id > 87.5;
 #endif
 #if ASSET == 9
   if (id >= 40.0) return abs(id - 42.0) < 0.5 || abs(id - 44.0) < 0.5 || (id > 47.9 && id < 48.9) || abs(id - 54.0) < 0.5 || abs(id - 58.0) < 0.5;
@@ -6898,22 +6908,22 @@ void main() {
     notes: [["Status", "Ground study v1, 3 Nov 2026: three options for the gun side's own ground, to choose from."]]
   });
   ASSETS.push({
-    id: "wall-shrooms", name: "Hole-wall mushrooms", kind: "New asset · canopy hole", size: "shelves about 4 to 8 studs across, on a 40-stud pillar of hole wall", version: "v1", concept: true, noLive: true, shader: 11,
+    id: "wall-shrooms", name: "Hole-wall mushrooms", kind: "New asset · canopy hole", size: "shelves about 4 to 8 studs across, on a 40-stud pillar of hole wall", version: "v2", concept: true, noLive: true, shader: 11,
     variantLabel: "Option",
     variants: [
-      { name: "A · Bracket tiers", option: 0, bright: [0.3, 0.55, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.1 } },
-      { name: "B · Hanging lanterns", option: 1, bright: [1.0, 0.38, 0.85], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.1 } },
-      { name: "C · Fan rosettes", option: 2, bright: [0.45, 0.8, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.1 } }
+      { name: "A · Funnel caps", option: 0, bright: [0.4, 0.5, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.38 } },
+      { name: "B · Cupped shelves", option: 1, bright: [0.4, 0.5, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.38 } },
+      { name: "C · Trumpet cups", option: 2, bright: [0.4, 0.5, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.38 } }
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -3.5, 0], dist: 19, figure: [0, -100, 0], glow: [0, -3, -5], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "New asset study v1, 3 Nov 2026: mushrooms growing out of the canopy hole's walls."]]
   }, {
-    id: "hole-vines", name: "Hole-wall roots and vines", kind: "New asset · canopy hole", size: "strands 10 to 45 studs long, on a 40-stud pillar of hole wall", version: "v1", concept: true, noLive: true, shader: 12,
+    id: "hole-vines", name: "Hole-wall roots and vines", kind: "New asset · canopy hole", size: "strands 10 to 45 studs long, on a 40-stud pillar of hole wall", version: "v2", concept: true, noLive: true, shader: 12,
     variantLabel: "Option",
     variants: [
-      { name: "A · Roots and moss curtains", option: 0, bright: [0.75, 0.35, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.1 } },
-      { name: "B · Roots and bead vines", option: 1, bright: [1.0, 0.4, 0.85], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.1 } },
-      { name: "C · Roots and air roots", option: 2, bright: [0.75, 0.4, 1.0], camera: { target: [0, -4.0, 0], dist: 13, pitch: 0.1 } }
+      { name: "A · Meander", option: 0, bright: [0.75, 0.35, 1.0], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } },
+      { name: "B · Braided pairs", option: 1, bright: [1.0, 0.4, 0.85], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } },
+      { name: "C · Spreading net", option: 2, bright: [0.75, 0.4, 1.0], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } }
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -3.5, 0], dist: 19, figure: [0, -100, 0], glow: [0, -3, -5], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "New asset study v1, 3 Nov 2026: the knoll's plum roots down the hole's walls, each with a second kind of hanging growth."]]
