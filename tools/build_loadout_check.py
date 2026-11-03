@@ -22,7 +22,7 @@ def main():
     shared = out / 'shared'
     shutil.copytree(ROOT / 'experiments/combat/shared', shared, dirs_exist_ok=True)
     module = shared / 'init.luau'
-    module.write_text(module.read_text().replace('Combat.Loadout = { "Floppy" }',
+    module.write_text(module.read_text().replace('Combat.Loadout = { "Floppy", "Inferno" }',
         'Combat.Loadout = { [1] = "Floppy", [2] = "Floppy", [5] = "Floppy" }'))
     project = json.loads((ROOT / 'combat-range.private.project.json').read_text())
 

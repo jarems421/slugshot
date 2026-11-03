@@ -1686,3 +1686,8 @@
 - **Implemented:** the display places gained `SlugInspect`, because the merged `FloppyFace` waits for it and would otherwise stall.
 - **Unresolved:** no Studio Play run of the merged combat place, because Studio hung opening it. Owner to check the final Floppy in the real game. Inferno is not in the game yet.
 
+## 2026-11-03 - Inferno in the game
+
+- **Implemented/verified:** slot 2 in the range with proposed numbers, fire scaled with the model. Checks pass; Studio Play loads with his icon. Firing not yet exercised.
+- **Unresolved:** owner playtest of shots and numbers; the merged Floppy check. Next: transformation animation.
+
