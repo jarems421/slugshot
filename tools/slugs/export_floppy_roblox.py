@@ -65,18 +65,22 @@ BODY_UV_SCALE = 0.74
 MOUTH_PATCH = ((-0.30, 0.36), (0.86, 1.30))
 MOUTH_PATCH_FRONT = 0.3
 # Crisp edge of the painted mouth, in the same normalised distance the concept's soft edge used.
-MOUTH_EDGE, MOUTH_EDGE_SOFT, MOUTH_LINE = 1.2, 0.03, 0.09
+MOUTH_EDGE, MOUTH_EDGE_SOFT, MOUTH_LINE = 1.2, 0.03, 0.035
 # Gelatinous squash: Roblox bones only move, so bones on the lower flanks push the body out as it flattens.
 JELLY_BONES = {"jelly_L": (-1.0, 0.0), "jelly_R": (1.0, 0.0), "jelly_F": (0.0, 1.0), "jelly_B": (0.0, -1.0)}
 JELLY_HEIGHT, JELLY_REACH, JELLY_RADIUS = 0.34, 0.42, 0.45
 JELLY_WEIGHT = 0.8
-EYE_INK_CLEAR = 1.3  # in eye radii: no hull at all this close to an eye
-EYE_INK_FRONT = 1.6  # and none on front-facing skin out to here; the head's outer outline stays
-LID_LINE = 0.014  # painted eyelid rim, source units
-LID_LINE_COLOUR = (0.045, 0.045, 0.05)
+EYE_INK_CLEAR = 1.7  # in eye radii: no hull at all this close to an eye
+EYE_INK_FRONT = 2.4  # and none on front-facing skin out to here; the head's outer outline stays
+LID_LINE = 0.009  # painted eyelid rim, source units
+LID_LINE_COLOUR = (0.30, 0.28, 0.15)  # muddy moss: black lines read as a second lid (owner, 2026-11-02)
 LID_LINE_FACING = 0.55
+# The lids' own colours (#888F68, #5A5934). Sampling them from the bake picked up its near-black hollows, which read as
+# a second, darker lid (owner, 2026-11-02).
+UPPER_LID_COLOUR = (0.533, 0.561, 0.408)
+LOWER_LID_COLOUR = (0.353, 0.349, 0.204)
 LID_CONTOUR_COLOUR = (0.27, 0.29, 0.14)  # the rest of each lid: a soft contour, not an ink ring
-LID_CONTOUR_STRENGTH = 0.7
+LID_CONTOUR_STRENGTH = 0.0  # the ring beside the rim read as two layers of eyelid (owner, 2026-11-02)
 UNDERSIDE_FLAT_Z = 0.012
 UNDERSIDE_RINGS = 28
 UNDERSIDE_ROW_SPACING = 0.04
@@ -486,27 +490,63 @@ def paint_lid_lines(body, colour, normal):
         radius = np.linalg.norm(l[:, :2]/(EYE_DIM[:2] + 0.03), axis=1)
         upper = height + 0.24*side*l[:, 0]
         lower = -0.15 - 0.05*side*l[:, 0]
-        inside = (1.0 - smoothstep(0.97, 1.03, radius))*(l[:, 2] > -0.2)
+        inside = (1.0 - smoothstep(1.02, 1.1, radius))*(l[:, 2] > -0.2)
         # The upper zone reaches under the rim: that dark inner face stretches into view mid-blink, so it must be lid.
-        for zone, away in ((l[:, 1] > upper - 0.07, l[:, 1] - upper), (l[:, 1] < lower, lower - l[:, 1])):
+        # Everything else in the socket counts as lower lid: its walls beside the eye kept a pale, glossy bake (owner, 2026-11-02).
+        for zone, away, lid_colour in ((l[:, 1] > upper - 0.07, l[:, 1] - upper, UPPER_LID_COLOUR), (l[:, 1] <= upper - 0.07, lower - l[:, 1], LOWER_LID_COLOUR)):
             fill = inside*zone
-            solid = (fill > 0.9) & front & (away > 0.03)
-            if solid.any():
-                base = np.median(pixels[solid][:, :3], axis=0)
-                heavy = base[None, :]*(0.8 + 0.2*smoothstep(0.0, 0.13, np.maximum(away, 0.0)))[:, None]
-                pixels[:, :3] += fill[:, None]*(heavy - pixels[:, :3])
-                bent[:, :3] += fill[:, None]*(np.array((0.5, 0.5, 1.0), dtype=np.float32) - bent[:, :3])
+            heavy = np.array(lid_colour, dtype=np.float32)[None, :]*(0.86 + 0.14*smoothstep(0.0, 0.13, np.maximum(away, 0.0)))[:, None]
+            pixels[:, :3] += fill[:, None]*(heavy - pixels[:, :3])
+            bent[:, :3] += fill[:, None]*(np.array((0.5, 0.5, 1.0), dtype=np.float32) - bent[:, :3])
         contour = (1.0 - smoothstep(0.012, 0.045, np.abs(radius - 1.01)))*front*((l[:, 1] > upper) | (l[:, 1] < lower))
         pixels[:, :3] += (contour*LID_CONTOUR_STRENGTH)[:, None]*(np.array(LID_CONTOUR_COLOUR, dtype=np.float32) - pixels[:, :3])
         # Each rim line lies on the lid's visible face, where it does not stretch.
-        for centre in (upper + LID_LINE*0.6, lower - LID_LINE*0.6):
-            rim = (1.0 - smoothstep(LID_LINE*0.4, LID_LINE*0.8, np.abs(l[:, 1] - centre)))*front*visible*(radius < 1.04)
+        # Rims are off: the lid sheet stretches as it closes, which pulled any painted line into hairs (owner, 2026-11-02).
+        for centre in ():
+            rim = (1.0 - smoothstep(LID_LINE*0.4, LID_LINE*0.8, np.abs(l[:, 1] - centre)))*front*smoothstep(LID_LINE_FACING - 0.2, LID_LINE_FACING + 0.1, facing[:, index])*(radius < 1.04)
             pixels[:, :3] += rim[:, None]*(np.array(LID_LINE_COLOUR, dtype=np.float32) - pixels[:, :3])
     colour.pixels.foreach_set(pixels.ravel())
     colour.update()
     normal.pixels.foreach_set(bent.ravel())
     normal.update()
     bpy.data.images.remove(baked)
+
+
+def paint_rings(tex):
+    """The same rings, richer (owner, 2026-11-02): a bright lime core running to deep emerald, a fine dark ink edge and
+    warm shaded whites, and the rings themselves glow. Only colour changes; the pattern comes from the source texture."""
+    size = tex.size[0]
+    px = np.empty(size*size*4, dtype=np.float32)
+    tex.pixels.foreach_get(px)
+    px = px.reshape(size, size, 4)
+    # Recover the ring mask from white versus green: green has far less red.
+    white, green = px[:, :, 0].max(), px[:, :, 0].min()
+    ring = np.clip((white - px[:, :, 0])/max(white - green, 1e-3), 0.0, 1.0)
+
+    def blur(a, n):
+        for _ in range(n):
+            a = (a + np.roll(a, 1, 0) + np.roll(a, -1, 0) + np.roll(a, 1, 1) + np.roll(a, -1, 1))/5.0
+        return a
+
+    # How deep inside a ring each texel is: 0 at its edge, towards 1 along its middle.
+    core = np.clip((blur(ring, size//64) - 0.5)*2.0, 0.0, 1.0)*ring
+    lin = np.linspace(-1.0, 1.0, size)
+    radius = np.hypot(*np.meshgrid(lin, lin))
+    sclera = np.array([1.0, 1.0, 0.94])[None, None]*(1.0 - 0.05*np.clip((radius - 0.45)/0.55, 0.0, 1.0)[..., None])
+    deep, bright = np.array([0.02, 0.42, 0.24]), np.array([0.50, 0.97, 0.30])
+    rings = deep[None, None] + (bright - deep)[None, None]*(core[..., None]**0.8)
+    colour = sclera*(1.0 - ring[..., None]) + rings*ring[..., None]
+    ink = np.clip(1.0 - np.abs(ring - 0.5)*2.0, 0.0, 1.0)
+    ink = np.clip(blur(ink, 1)*1.8, 0.0, 1.0)
+    colour = colour*(1.0 - ink[..., None]) + np.array([0.02, 0.12, 0.08])[None, None]*ink[..., None]
+    px[:, :, :3] = colour
+    tex.pixels.foreach_set(px.ravel())
+    tex.update()
+    mask = bpy.data.images.new(tex.name + "-glow", size, size, alpha=False)
+    mask.colorspace_settings.name = "Non-Color"
+    value = 0.15 + 0.6*core*ring
+    mask.pixels.foreach_set(np.dstack([value, value, value, np.ones_like(value)]).astype(np.float32).ravel())
+    return mask
 
 
 def add_gloss(mat, img):
@@ -680,12 +720,12 @@ def paint_mouth(body, colour):
     fill = 1.0 - smoothstep(MOUTH_EDGE - MOUTH_EDGE_SOFT, MOUTH_EDGE + MOUTH_EDGE_SOFT, distance)
     # A thin ink line around the lips, in the same comic language as the lid rims.
     line = (1.0 - smoothstep(MOUTH_EDGE + MOUTH_LINE - MOUTH_EDGE_SOFT, MOUTH_EDGE + MOUTH_LINE + MOUTH_EDGE_SOFT, distance))
-    painted = clean*(1.0 - line[..., None]) + (mouth_colour*0.55)*line[..., None]
+    painted = clean*(1.0 - line[..., None]) + (mouth_colour*0.8 + clean*0.2)*line[..., None]
     painted = painted*(1.0 - fill[..., None]) + mouth_colour*fill[..., None]
     # Where the strand meets the mouth the outline stops, so it simply hangs from the lip.
     outline = (1.0 - smoothstep(0.004, 0.006, drool))*(1.0 - fill)
     core = (1.0 - smoothstep(-0.007, -0.005, drool))*(1.0 - fill)
-    painted = painted*(1.0 - outline[..., None]) + (mouth_colour*0.55)*outline[..., None]
+    painted = painted*(1.0 - outline[..., None]) + (mouth_colour*0.8)*outline[..., None]
     painted = painted*(1.0 - core[..., None]) + drool_colour*core[..., None]
     rgb[strip] = painted[strip]
     pixels[top:, :, :3] = rgb
@@ -806,7 +846,9 @@ def add_face_rig(rig, body):
     # The belly folds are hollows too: a hull drew black dashes along them.
     near = (radii[0] < EYE_INK_CLEAR) | (radii[1] < EYE_INK_CLEAR)
     wide = (radii[0] < EYE_INK_FRONT) | (radii[1] < EYE_INK_FRONT)
-    ink_open = near | (wide & (facing > 0.05)) | ((belly_folds(p) > 0.15) & (facing > 0.2))
+    # The mouth is a hollow too.
+    around_mouth = np.linalg.norm(mouth_local(p)[:, :2]/np.array([0.34, 0.20]), axis=1) < 1.0
+    ink_open = near | (wide & (facing > 0.05)) | ((belly_folds(p) > 0.15) & (facing > 0.2)) | (around_mouth & (facing > 0.05))
     print("face ink cleared verts", int(ink_open.sum()), flush=True)
     print("face rig", {name: int((values > 0.05).sum()) for name, values in weights.items()}, flush=True)
     return ink_open
@@ -954,7 +996,9 @@ def main():
         eye = low_copy(src, "Eye" + tag, EYE_TRIANGLES)
         eye.data.materials[0] = eye.data.materials[0].copy()
         tex = next(n for n in eye.data.materials[0].node_tree.nodes if n.type == "TEX_IMAGE").image
+        glow_mask = paint_rings(tex)
         paths.append(save(tex, tex.name + ".png"))
+        paths.append(save(glow_mask, tex.name + "-glow.png"))
         add_gloss(eye.data.materials[0], roughness_map("floppy-eye-roughness-" + tag, EYE_ROUGHNESS))
         eyes.append(eye)
     for name in ("FloppyBody_Source", "EyeL_Source", "EyeR_Source"):

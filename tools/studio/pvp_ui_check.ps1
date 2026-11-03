@@ -70,6 +70,7 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
                     $seen[$key] = $true
                     if ($line -match "UICHECK") { $running = $true }
                     if ($line -match "UICHECK shot (\S+)") { Capture $Matches[1] }
+                    elseif ($line -match "UICHECK reaction (.+)") { Write-Output "reaction $($Matches[1].Trim())" }
                     elseif ($line -match "UICHECK key result (.+)") { Write-Output "key result: $($Matches[1].Trim())" }
                     elseif ($line -match "UICHECK key E") {
                         [Win]::SetForegroundWindow($hwnd) | Out-Null

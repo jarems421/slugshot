@@ -93,9 +93,9 @@ for _, distance in { 25, 45, 65, 85 } do
 	if first and second and full then
 		local dropOne, dropTwo = target.Y - first.Y, target.Y - second.Y
 		check(
-			dropOne > dropTwo and dropTwo > 0 and dropOne < 4.1,
+			dropOne > dropTwo and dropTwo > 0,
 			string.format(
-				"predictable modest drop at %d: %.3f/%.3f/%.3f",
+				"progressive level-dependent drop at %d: %.3f/%.3f/%.3f",
 				distance,
 				dropOne,
 				dropTwo,

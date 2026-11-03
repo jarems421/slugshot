@@ -1,5 +1,31 @@
 # Project memory
 
+## 2026-11-02 — Inferno in Blender and Studio
+
+- **Implemented, final since 2026-11-03:** both forms built and shown with Floppy in a private display place; faces cleaned of black lines, Floppy's blink improved, Inferno given an underside and active motion. Floppy's fixes are only on this branch.
+
+## 2026-11-02 — Inferno and the ability rule
+
+- **Confirmed:** one versatile ability per slug, rewarding creative use ([rule](slugs/catalog/index.md#ability-rule)). Inferno is the working name for the Burpy-inspired fire slug: shorter flight time, harder hits, exact aim from the second kick, no arms or feet, and a small tail.
+- **Confirmed:** owner rejected the first concept. Inferno is a predator: fox-ear antennae, orange, red and yellow with no black, and a predator head from the front.
+- **Confirmed:** owner rejected the second concept as a bird with a beak and a strong brow. "Predator" mainly means the eyes, and snake eyes are out because they look like a dragon. Ear-antennae should be slightly shorter, droopier and flexible.
+- **Confirmed:** owner chose the Burning eyes, a bit bigger. He should look like a predator among slugs, not scary, with a friendly, expressive cartoon smile.
+- **Confirmed:** owner said the direction is right, and asked for bigger, rounder eyes and a cocky, arrogant cartoon cheese grin with teeth.
+- **Confirmed:** the grin was too cocky and tooth lines are out. Owner wants a happy, slightly cocky solid cartoon smile (reference supplied) and real eyelids, because lidless eyes looked uncanny.
+- **Confirmed:** owner passed on a critique: the features must read as one expressive face, with lids, framing around the eyes, facial planes and one clear expression.
+- **Confirmed:** second critique: aim between cute mascot and little menace, with softer eyes, subtler cheeks, a longer smile and more space between features.
+- **Confirmed:** third critique: remove cheek projection, slim the body, a compact taller smile, taller eyes and a flat forehead flame. The eyes make him cute; the rest makes him powerful.
+- **Confirmed:** owner finds it "pretty nice": remove the extra head markings and the head bulb, keep the spines and stripes, and make the forehead mark a symmetrical diamond flame running further down.
+- **Confirmed:** owner chose a small ember crest on the forehead, and a soft golden belly patch that widens towards the base.
+- **Confirmed:** fourth critique: lower the emblem, tone the lids down to natural ones, and make the belly an intentional flame motif.
+- **Confirmed:** fifth critique: a bigger emblem and no creases at the eye corners. Its three-point flame belly was not followed, because that is the franchise slug's signature marking; three rising embers were used instead.
+- **Confirmed:** sixth critique: bigger, rounder eyes with soft lids and no creases, and the belly diamonds cleared. A multi-tongued belly flame was again not used.
+- **Confirmed:** plain belly, a heavier lid on one eye, and more depth because the face looked flat from the front.
+- **Confirmed:** the forward face masses looked wrong and were removed. Wider cute-fierce eyes, a deeper smile and more marking detail were requested.
+- **Confirmed:** the base form is final and the name is Inferno. The bullet transformed form was rejected as a missile; owner wants a slug mixed with a dragon, keeping his DNA. The slug-dragon concept was then confirmed as final ("okay its perfect"), with Blender, Studio and shooting next.
+- **Implemented:** final original concept of the base form ([record](slugs/catalog/inferno.md)), plus the research report in `reports/`.
+- **Implemented/verified:** owner called the faces "perfect", then asked for Inferno to match Floppy's size (confirmed cause: same display multiplier, smaller game model), lower transformed eyes, a thinner top-lip band, belly texture on the transformed form and a tail flame that blends in and moves fluidly. All built; the flame is now part of the body mesh, using the approved concept formula. Evidence is export sizes and Studio Play captures; owner verdict on the final flame is pending.
+- **Unresolved:** owner verdict, shot numbers, the ability, and a name and IP check, since Inferno sounds like the franchise's Infurnus.
 ## 2026-11-02 - Commit and push the completed work onto main
 
 - **Confirmed:** owner explicitly requested committing/pushing this conversation's ADS/movement fixes and generated assets onto `main`, including the volcano already used by Claude.
@@ -1554,6 +1580,12 @@
 - Owner asked for all uncommitted UI work to be committed and pushed to main with no conflicts, and docs updated. Merged main's 64 newer commits first; only `AdsSight` and notes conflicted. See [PvP UI](pvp-ui.md).
 - Later owner notes this round: slime must stay behind the slider knob; lost health flashes red; drips stop when their goo is gone; five slots; inventory on E, small and expanding; ADS kicks must be felt without hurting aim.
 
+## 2026-11-02 - Hit reactions and clone test
+
+- Owner asked for reactions proportional to damage ("the more damage that's done, the more you should move. And be more hurt") and queried the lack of one while sliding and jumping. Built as a spring layered over every state; see [combat](combat.md#damage-scaled-hit-reaction-2026-11-02).
+- Owner asked whether UI textures and Floppy stay on their account. A clone test confirmed the assets do, and that private places need `private-assets/` or a re-upload. Found the GitHub repository is public and told the owner.
+- Owner tested hit reactions and asked to remove the low-health slump: it looks poor, could distract players and hides hit reactions. Removed.
+
 ## 2026-11-02 - Shooting feel and white sight
 
 - **Confirmed:** owner wants modest first/second kick speed loss/drop, precise third kick, Floppy to remain weak, and visible white ADS frame/charge flash. Animations were approved.
@@ -1603,31 +1635,54 @@
 ## 2026-11-02 - Inspect gun motion rework
 
 - **Confirmed:** owner wants a quick, dramatic thrown backflip, a small animated arm-swing catch, an outward tilt showing the slug, and a quicker plain lower with no flip. Perfect the gun and third-person look first; slug acting comes after.
-- **Implemented/verified:** on `feature/inspect-polish` (uncommitted), separate from Codex's uncommitted `fix/shot-consistency` work. 54-pose review, native loadout regression and movement/combat checks pass; see [revision](slugs/inspect-revision.md#quick-backflip-arm-swing-catch-and-plain-drop-2026-11-02-current).
+- **Implemented/verified:** on `feature/inspect-polish` (later merged to `main`), separate from Codex's uncommitted `fix/shot-consistency` work. 54-pose review, native loadout regression and movement/combat checks pass; see [revision](slugs/inspect-revision.md#quick-backflip-arm-swing-catch-and-plain-drop-2026-11-02-current).
 - **Unresolved:** owner feel verdict, multi-client/latency and devices.
 - **Confirmed/implemented, later that day:** owner said the upright hold looked too frozen. Added a small moving hold of slow, unrelated wrist turns that keeps the gun in place for the slug; checks pass, owner verdict open.
 
 ## 2026-11-02 - Clear canister and spring-driven slug act
 
 - **Confirmed:** gun inspect is "perfect". Owner wants the canister clear, springy hops round, a bum shake that is not a body wiggle, a slow return, smooth stages and a less frozen chamber idle.
-- **Implemented/verified:** on `feature/inspect-polish` (uncommitted). Removed the canister's inverted ink hull; loaded Floppy uses SlugIcon's spring approach; review, native regression and offline checks pass; see [revision](slugs/inspect-revision.md#clear-canister-and-spring-driven-slug-act-2026-11-02-current).
+- **Implemented/verified:** on `feature/inspect-polish` (later merged to `main`). Removed the canister's inverted ink hull; loaded Floppy uses SlugIcon's spring approach; review, native regression and offline checks pass; see [revision](slugs/inspect-revision.md#clear-canister-and-spring-driven-slug-act-2026-11-02-current).
 - **Unresolved:** owner verdict on the act, multi-client/latency and devices.
 
 ## 2026-11-02 - Floppy inspect reduced to smile and HUD wiggle
 
 - **Confirmed:** owner rejected the hop and bum-shake act as "horrible". Faster flip, shorter inspect, a little smile, then the wiggle already in the HUD.
-- **Implemented/verified:** on `feature/inspect-polish` (uncommitted). Review, native regression and offline checks pass; see [revision](slugs/inspect-revision.md#smile-then-the-hud-wiggle-2026-11-02-current).
+- **Implemented/verified:** on `feature/inspect-polish` (later merged to `main`). Review, native regression and offline checks pass; see [revision](slugs/inspect-revision.md#smile-then-the-hud-wiggle-2026-11-02-current).
 - **Unresolved:** owner verdict, multi-client/latency and devices.
 
 ## 2026-11-03 - Floppy wiggle: base stuck, body fluid
 
 - **Confirmed:** owner: wiggle "too stiff"; slug "stuck to the bottom of the barrel", only the top moving, body "more fluid".
-- **Implemented/verified:** on `feature/inspect-polish` (uncommitted), a spine bend with trailing joints replaces the whole-body lean; base drift 0.0000 studs. Checks pass; see [revision](slugs/inspect-revision.md#base-stuck-body-fluid-2026-11-03-current).
+- **Implemented/verified:** on `feature/inspect-polish` (later merged to `main`), a spine bend with trailing joints replaces the whole-body lean; base drift 0.0000 studs. Checks pass; see [revision](slugs/inspect-revision.md#base-stuck-body-fluid-2026-11-03-current).
 - **Unresolved:** owner verdict, multi-client/latency and devices.
 
 ## 2026-11-03 - First-person slug mesh fix
 
 - **Confirmed:** owner saw Floppy still in the inspect; wants smile, soft wiggle with base stuck, small hop home, snug wiggle while lowering, soft antennae.
-- **Implemented/verified:** on `feature/inspect-polish` (uncommitted). The first-person copy destroyed the Motor6Ds its skinned mesh needs; restored. Earlier close-up evidence was third-person only. Checks pass; see [revision](slugs/inspect-revision.md#first-person-mesh-fix-and-smile-wiggle-hop-2026-11-03-current).
+- **Implemented/verified:** on `feature/inspect-polish` (later merged to `main`). The first-person copy destroyed the Motor6Ds its skinned mesh needs; restored. Earlier close-up evidence was third-person only. Checks pass; see [revision](slugs/inspect-revision.md#first-person-mesh-fix-and-smile-wiggle-hop-2026-11-03-current).
 - **Unresolved:** owner verdict, multi-client/latency and devices.
 - **Confirmed, later:** owner approved it as "perfect" and asked to commit and merge to `main`.
+
+## 2026-11-02 - Gun consistency and weak Floppy levels
+
+- **Confirmed:** owner wants occasional diagonal sprint/quick-scope distant misses fixed, no backward-distance drop cliff, slower/drop-prone first two kicks, and unchanged third-kick speed with precise reachable aim.
+- **Implemented/verified:** isolated `fix/shot-consistency` from `c2922fe`; shared continuous low-arc/range saturation replaces the 45-stud and 10% fallbacks, rendered firing samples stay coherent, nearby cover stops rather than bypasses the shot, and curved collision substeps plus server-impact confirmation prevent visuals from continuing through a missed hit. Speeds are 85/100/115; gravity/drag/damage and owner pose/camera defaults stay.
+- **Evidence:** baseline angle jump 29.19 degrees; separate near-cover miss about 22 studs. New mathematical/live distance sweeps, nine actual moving first/third-person shots, in-frame camera stress and two close-cover shots plus a forced shoulder-fallback shot pass; collision witness survives 1/240 through 0.4-second intervals. Full offline combat/movement/foundation checks pass. [Current details and sanitized results](combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current).
+- **Test lesson:** perform prediction checks after committing release, not while the charge clock is still running. A slow diagnostic itself advanced a requested second kick to the third; that fixture error was corrected without changing the gameplay thresholds.
+- **Unresolved:** owner feel, exact physical-input replay, multiplayer observers/latency and moving targets. No merge/push/publication or unrelated source edits.
+
+## 2026-11-02 - Authorized main delivery
+
+- **Confirmed:** owner explicitly requested pushing this work to main with documentation. This supersedes the earlier task-local no-merge/push notes.
+- **Implemented/verified:** merged main `9e7a41c` into shooting work as `020c60c`, preserving damage-scaled hit reactions alongside loadout controls, latest inspect, owner pose/camera defaults and `6d3253d` shooting consistency. Documentation conflicts retain both current sections.
+- **Evidence:** post-merge `verify_combat.py` and `verify_slugs.py` pass. Fresh native one-client Studio regression passes shared flight, continuous distance sweeps, nine moving shots, two cover shots and missing-muzzle fallback. Sanitized delivery metrics are appended to the shooting evidence.
+- **Unresolved:** owner feel/art verdict, exact physical-input replay and multi-client/latency coverage. Ignored assets and generated places remain local.
+
+## 2026-11-03 - Final Inferno and Floppy, main delivery
+
+- **Confirmed:** owner: "Make them the final designs" for Inferno and Floppy, and asked to push everything to main without conflicts, keeping the earlier shooting work.
+- **Implemented/verified:** merged `origin/main` into the slug work. Seven files conflicted. Floppy's look (lids, blink shape, mouth, rings) comes from the slug branch; inspect acting and render-step ordering come from main; docs keep both sides. `verify_movement.py`, `verify_combat.py` and `verify_slugs.py` pass.
+- **Implemented:** the display places gained `SlugInspect`, because the merged `FloppyFace` waits for it and would otherwise stall.
+- **Unresolved:** no Studio Play run of the merged combat place, because Studio hung opening it. Owner to check the final Floppy in the real game. Inferno is not in the game yet.
+

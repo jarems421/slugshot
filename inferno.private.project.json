@@ -1,0 +1,128 @@
+{
+  "name": "SlugshotInfernoDisplay",
+  "servePort": 34877,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "FloppyAsset": {
+        "$path": "private-assets/floppy/FloppyAsset.luau"
+      },
+      "InfernoAsset": {
+        "$path": "private-assets/inferno/InfernoAsset.luau"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "FloppyMaterials": {
+        "$path": "private-assets/floppy/materials.rbxmx"
+      },
+      "InfernoMaterials": {
+        "$path": "private-assets/inferno/materials.rbxmx"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "InfernoDisplay": {
+        "$className": "Folder",
+        "Display": {
+          "$path": "experiments/creatures/inferno/server/InfernoDisplay.server.luau"
+        },
+        "FloppyAppearance": {
+          "$path": "experiments/creatures/floppy/server/FloppyAppearance.luau"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "MovementSandbox": {
+          "$className": "Folder",
+          "Tuning": {
+            "$path": "experiments/creatures/inferno/client/Tuning.luau"
+          },
+          "SlugInspect": {
+            "$path": "experiments/movement/client/SlugInspect.luau"
+          }
+        },
+        "InfernoMotion": {
+          "$path": "experiments/creatures/inferno/client/InfernoMotion.client.luau"
+        },
+        "FloppyIdle": {
+          "$path": "experiments/creatures/floppy/client/FloppyIdle.client.luau"
+        },
+        "FloppyFace": {
+          "$path": "experiments/creatures/floppy/client/FloppyFace.client.luau"
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": {
+          "Enum": 4
+        },
+        "ClockTime": 14,
+        "Brightness": 2,
+        "Ambient": [
+          0.3,
+          0.3,
+          0.33
+        ],
+        "OutdoorAmbient": [
+          0.36,
+          0.36,
+          0.4
+        ]
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Floor": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            120,
+            1,
+            120
+          ],
+          "Position": [
+            0,
+            -0.5,
+            0
+          ],
+          "Color": [
+            0.32,
+            0.33,
+            0.36
+          ]
+        }
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Size": [
+            4,
+            1,
+            4
+          ],
+          "Position": [
+            0,
+            0.01,
+            -22
+          ],
+          "Orientation": [
+            0,
+            180,
+            0
+          ],
+          "Transparency": 1,
+          "CanCollide": false
+        }
+      }
+    }
+  }
+}

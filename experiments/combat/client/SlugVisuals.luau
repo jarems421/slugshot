@@ -216,6 +216,44 @@ function Visuals.cancel(shooter: Player, id: number)
 	end
 end
 
+-- A predicted flight must never visibly continue past an authoritative impact
+-- during a render stall or a collision that only the server has observed yet.
+function Visuals.confirmImpact(
+	shooter: Player,
+	id: number,
+	position: Vector3,
+	normal: Vector3,
+	victim: Model?
+)
+	for _, flight in flights do
+		if flight.launch.shooter == shooter and flight.launch.id == id then
+			if not flight.recovery then
+				local now = os.clock()
+				local _, velocity = Combat.at(
+					flight.launch.origin,
+					flight.launch.velocity,
+					flight.slug,
+					math.min(now - flight.start, Combat.MaxFlight)
+				)
+				splat(position, normal)
+				local recovery = Recovery.new(
+					flight.model,
+					flight.slug.Size,
+					position,
+					normal,
+					velocity,
+					flight.params,
+					victim,
+					now
+				)
+				flight.recovery = recovery
+				Recovery.step(recovery, now)
+			end
+			return
+		end
+	end
+end
+
 -- Floating damage number with the shot distance, rising and fading.
 function Visuals.popup(position: Vector3, damage: number, distance: number)
 	local anchor = Instance.new("Attachment")

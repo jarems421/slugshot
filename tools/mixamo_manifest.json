@@ -1,7 +1,6 @@
 {
   "comment": "Maps privately downloaded Mixamo FBX files (private-assets/mixamo) to runtime clip names. Name.2, Name.3 are variants of Name. trim is [startSeconds, endSeconds|null]. traversal clips start at the foot of the obstacle and end on top; vault clips go over and land beyond. alignEnd faces the clip's end direction (turns). Loops may travel (not In Place): the drift is removed. mirrored flips a clip left/right in place. flattenYaw cancels the chest's turn frame by frame. upright keeps that fraction of the chest's forward lean. planar lists swing groups made pure forward/back; limit softly caps their swing (degrees); armsFromLegs swings the arms opposite the legs (gain). splay holds the arms out from the body, more on the back swing. amplitude scales the hip (legs) and shoulder (arms) swing about the clip's mean pose; elbows and knees scale the bend (0 = straight; the hips rise to keep the planted foot on the floor).",
   "clips": {
-    "IdleInjured": { "file": "Injured Idle.fbx", "loop": true, "idle": true },
     "NeckStretch": { "file": "Neck Stretching.fbx" },
     "AimSettle": { "file": "Action Idle To Standing Idle.fbx" },
     "Jump": { "file": "Running Jump.fbx", "air": true, "mirrored": true, "amplitude": {"legs": 0.45, "arms": 0.7} },

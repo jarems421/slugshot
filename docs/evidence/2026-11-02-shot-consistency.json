@@ -1,0 +1,584 @@
+{
+  "date": "2026-11-02",
+  "branch": "fix/shot-consistency",
+  "baseline_commit": "c2922fe",
+  "request": "Fix occasional distant diagonal sprint/quick-scope misses, discontinuous drop with distance, slower/drop-prone weak Floppy shots; retain full-kick speed and reachable accuracy.",
+  "baseline": {
+    "distance_sweep": {
+      "atDistance": [
+        126.5,
+        126.5,
+        126.5
+      ],
+      "maxStepDegrees": [
+        12.482284021346407,
+        18.29705569649517,
+        29.19069712965563
+      ]
+    },
+    "initial_moving_shots": [
+      {
+        "originOffset": 15.946639060974121,
+        "error": [
+          0,
+          -2.192159652709961,
+          0
+        ],
+        "sign": -1,
+        "level": 1,
+        "delay": 0,
+        "speed": 95.00000762939453
+      },
+      {
+        "originOffset": 16.09288787841797,
+        "error": [
+          -3.814697265625e-06,
+          -2.19781231880188,
+          0
+        ],
+        "sign": -1,
+        "level": 1,
+        "delay": 0.04,
+        "speed": 95.00000762939453
+      },
+      {
+        "originOffset": 14.802534103393555,
+        "error": [
+          -1.1444091796875e-05,
+          -2.2784059047698975,
+          0
+        ],
+        "sign": -1,
+        "level": 1,
+        "delay": 0.12,
+        "speed": 95.00000762939453
+      },
+      {
+        "originOffset": 13.98462963104248,
+        "error": [
+          -3.814697265625e-06,
+          -2.193657875061035,
+          0
+        ],
+        "sign": 1,
+        "level": 1,
+        "delay": 0,
+        "speed": 95
+      },
+      {
+        "originOffset": 14.00866985321045,
+        "error": [
+          -3.814697265625e-06,
+          -2.202352523803711,
+          9.5367431640625e-07
+        ],
+        "sign": 1,
+        "level": 1,
+        "delay": 0.04,
+        "speed": 95.00000762939453
+      },
+      {
+        "originOffset": 12.746763229370117,
+        "error": [
+          -3.814697265625e-06,
+          -2.322279453277588,
+          0
+        ],
+        "sign": 1,
+        "level": 1,
+        "delay": 0.12,
+        "speed": 95.00000762939453
+      }
+    ],
+    "initial_movement_limit": "Six onset shots did not reproduce a random sideways launch; a separate close-surface bypass was reproduced afterward."
+  },
+  "reproduced_close_surface_miss_before_cover_fix": [
+    {
+      "view": "fp",
+      "serverAgreement": 2.86102294921875e-05,
+      "originOffset": 5.017038822174072,
+      "visibleError": 0,
+      "error": [
+        21.798524856567383,
+        -4.499893665313721,
+        1.6900787353515625
+      ],
+      "speed": 85,
+      "ads": true,
+      "sign": 1,
+      "level": 1,
+      "delay": 0.04,
+      "perturb": false
+    }
+  ],
+  "implementation": [
+    "One completed rendered camera/ray/muzzle/shoulder sample for firing",
+    "Continuously saturate unreachable low arcs; remove 45-stud and 10% range switches",
+    "Floppy speeds 85/100/115, keeping gravity 70, drag .35, damage 7 and partial correction .86/.95",
+    "Real muzzle and shoulder fallback both stop at intervening/close cover",
+    "Shared curved sweeps in <=1/120-second segments",
+    "Authoritative impacts stop visuals still in flight"
+  ],
+  "validation": {
+    "physics": {
+      "oldChordMissed": true,
+      "samplesPerLevel": 641,
+      "contacts": [
+        [
+          0.004166666666666667,
+          809.92626953125,
+          1002.3533325195312,
+          787.5771484375
+        ],
+        [
+          0.016666666666666666,
+          809.92626953125,
+          1002.3528442382812,
+          787.5771484375
+        ],
+        [
+          0.03333333333333333,
+          809.92626953125,
+          1002.3528442382812,
+          787.5771484375
+        ],
+        [
+          0.06666666666666667,
+          809.92626953125,
+          1002.3528442382812,
+          787.5771484375
+        ],
+        [
+          0.4,
+          809.92626953125,
+          1002.3528442382812,
+          787.5771484375
+        ]
+      ],
+      "maxDownDegrees": [
+        0.0034915243812052616,
+        0.01486375885970962,
+        0.008660408221394295
+      ],
+      "maxStepDegrees": [
+        1.7811416920090632,
+        1.264858503226101,
+        1.7406881305160211
+      ]
+    },
+    "live_distance_sweep": {
+      "atDistance": [
+        77.5,
+        100.5,
+        126.5
+      ],
+      "maxStepDegrees": [
+        2.1365250163763347,
+        1.8378146037171226,
+        1.6787639042026308
+      ]
+    },
+    "moving_shots": [
+      {
+        "view": "fp",
+        "serverAgreement": 7.200241088867188e-05,
+        "originOffset": 2.89019513130188,
+        "visibleError": 0,
+        "error": [
+          0,
+          -1.3633170127868652,
+          0
+        ],
+        "obstructed": false,
+        "speed": 85,
+        "ads": true,
+        "sign": -1,
+        "level": 1,
+        "delay": 0,
+        "perturb": false
+      },
+      {
+        "view": "fp",
+        "serverAgreement": 7.271766662597656e-05,
+        "originOffset": 3.486337661743164,
+        "visibleError": 0,
+        "error": [
+          -0.358950138092041,
+          -0.9557249546051025,
+          0.6580791473388672
+        ],
+        "obstructed": false,
+        "speed": 85,
+        "ads": true,
+        "sign": 1,
+        "level": 1,
+        "delay": 0.04,
+        "perturb": false
+      },
+      {
+        "view": "fp",
+        "serverAgreement": 8.58306884765625e-06,
+        "originOffset": 4.004762649536133,
+        "visibleError": 0,
+        "error": [
+          -3.814697265625e-06,
+          -0.3319411277770996,
+          0
+        ],
+        "obstructed": false,
+        "speed": 100.00000762939453,
+        "ads": true,
+        "sign": -1,
+        "level": 2,
+        "delay": 0.12,
+        "perturb": false
+      },
+      {
+        "view": "fp",
+        "serverAgreement": 5.6743621826171875e-05,
+        "originOffset": 3.75494384765625,
+        "visibleError": 0,
+        "error": [
+          0,
+          -0.00033855438232421875,
+          0
+        ],
+        "obstructed": false,
+        "speed": 115,
+        "ads": true,
+        "sign": 1,
+        "level": 3,
+        "delay": 0.02,
+        "perturb": false
+      },
+      {
+        "view": "fp",
+        "serverAgreement": 3.6716461181640625e-05,
+        "originOffset": 3.710132598876953,
+        "visibleError": 0,
+        "error": [
+          7.152557373046875e-07,
+          -0.0005626678466796875,
+          0
+        ],
+        "obstructed": false,
+        "speed": 115.00001525878906,
+        "ads": false,
+        "sign": -1,
+        "level": 3,
+        "delay": 0,
+        "perturb": false
+      },
+      {
+        "view": "fp",
+        "serverAgreement": 1.8596649169921875e-05,
+        "originOffset": 3.890333652496338,
+        "visibleError": 0,
+        "error": [
+          9.5367431640625e-07,
+          -1.5253300666809082,
+          0
+        ],
+        "obstructed": false,
+        "speed": 84.99999237060547,
+        "ads": false,
+        "sign": 1,
+        "level": 1,
+        "delay": 0.4,
+        "perturb": false
+      },
+      {
+        "view": "third",
+        "serverAgreement": 1.5735626220703125e-05,
+        "originOffset": 3.1448283195495605,
+        "visibleError": 0,
+        "error": [
+          0,
+          -1.3754329681396484,
+          0
+        ],
+        "obstructed": false,
+        "speed": 85.00000762939453,
+        "ads": false,
+        "sign": -1,
+        "level": 1,
+        "delay": 0,
+        "perturb": false
+      },
+      {
+        "view": "third",
+        "serverAgreement": 4.469060877454467e-05,
+        "originOffset": 3.8300211429595947,
+        "visibleError": 0,
+        "error": [
+          0,
+          -7.05718994140625e-05,
+          -5.91278076171875e-05
+        ],
+        "obstructed": false,
+        "speed": 115.00000762939453,
+        "ads": false,
+        "sign": 1,
+        "level": 3,
+        "delay": 0.12,
+        "perturb": false
+      },
+      {
+        "view": "fp",
+        "serverAgreement": 4.5299530029296875e-05,
+        "originOffset": 3.64314866065979,
+        "visibleError": 0,
+        "error": [
+          0,
+          -0.00040531158447265625,
+          0
+        ],
+        "obstructed": false,
+        "speed": 115.00001525878906,
+        "ads": true,
+        "sign": -1,
+        "level": 3,
+        "delay": 0,
+        "perturb": true
+      }
+    ],
+    "cover_shots": [
+      {
+        "level": 1,
+        "range": 0.30999755859375,
+        "depth": 0.05999755859375
+      },
+      {
+        "level": 3,
+        "range": 0.30999755859375,
+        "depth": 0.05999755859375
+      }
+    ],
+    "shoulder_fallback": [
+      {
+        "depth": 0.05999755859375
+      }
+    ],
+    "timing": {
+      "meanDt": 0.01709672522116344,
+      "maxDt": 0.4973072111606598,
+      "frames": 2748,
+      "arc": [
+        0.86,
+        0.95
+      ]
+    },
+    "long_range_shots": [
+      {
+        "charge": 0.37678872179099937,
+        "speed": 85,
+        "distance": 25,
+        "error": [
+          0,
+          -0.3134770393371582,
+          0
+        ],
+        "level": 1
+      },
+      {
+        "charge": 0.7018109774339552,
+        "speed": 100,
+        "distance": 25,
+        "error": [
+          0,
+          -0.0806279182434082,
+          0
+        ],
+        "level": 2
+      },
+      {
+        "charge": 1,
+        "speed": 115.00000762939453,
+        "distance": 25,
+        "error": [
+          0,
+          -0.0006003379821777344,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 0.37644947366964043,
+        "speed": 85,
+        "distance": 65,
+        "error": [
+          0,
+          -2.6684093475341797,
+          0
+        ],
+        "level": 1
+      },
+      {
+        "charge": 0.7003959398314048,
+        "speed": 100.00000762939453,
+        "distance": 65,
+        "error": [
+          0,
+          -0.726938009262085,
+          0
+        ],
+        "level": 2
+      },
+      {
+        "charge": 1,
+        "speed": 114.99999237060547,
+        "distance": 65,
+        "error": [
+          0,
+          -0.0003895759582519531,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 1,
+        "speed": 115.00000762939453,
+        "distance": 85,
+        "error": [
+          0,
+          -0.0006008148193359375,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 1,
+        "speed": 115,
+        "distance": 100,
+        "error": [
+          0,
+          -0.0001659393310546875,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 1,
+        "speed": 115.00001525878906,
+        "distance": 120,
+        "error": [
+          0,
+          -0.00021457672119140625,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 0.37715353384172834,
+        "speed": 85.00000762939453,
+        "distance": 65,
+        "error": [
+          0,
+          -2.6593434810638428,
+          0
+        ],
+        "level": 1
+      },
+      {
+        "charge": 1,
+        "speed": 115.00000762939453,
+        "distance": 65,
+        "error": [
+          0,
+          -0.0005345344543457031,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 1,
+        "speed": 115.00000762939453,
+        "distance": 85,
+        "error": [
+          0,
+          -0.0005433559417724609,
+          0
+        ],
+        "level": 3
+      },
+      {
+        "charge": 1,
+        "speed": 115,
+        "distance": 85,
+        "error": [
+          0,
+          -0.00048351287841796875,
+          0
+        ],
+        "level": 3
+      }
+    ],
+    "maximum_full_kick_target_error_studs": 0.0006008148193359375,
+    "maximum_moving_server_prediction_disagreement_studs": 7.271766662597656e-05,
+    "fixture_isolation": true
+  },
+  "offline": [
+    "python tools/verify_combat.py: PASS foundation, movement, combat formatting/lint/strict types and builds",
+    "Private fixture formatting, lint and strict Roblox Luau analysis: PASS"
+  ],
+  "source_sha256": {
+    "experiments/combat/client/CombatClient.client.luau": "329bccfc167d8bceddcc8880870b09741cfb530b6b87c1f4c3eb54cc988d2917",
+    "experiments/combat/client/SlugVisuals.luau": "2ed7dde0558051299089588b5282e2226b8b9d9e8a5fffc570312133bcacdf76",
+    "experiments/combat/shared/init.luau": "683fbf71b9c3f00924d78aef3dc575a80161995dc26a3c489956918416acb01f",
+    "experiments/combat/range/CombatSelfTest.server.luau": "c6e07eb90f3bb4834883694470d636d9bf733b4cc4c7aeafe5d10f2e6d298c0c"
+  },
+  "artifacts": {
+    "baseline": "build/shot-consistency/baseline",
+    "final_movement_and_cover": "build/shot-consistency/final",
+    "long_range": "build/shot-consistency/long-range",
+    "normal_place": "build/SlugshotShootingConsistent.rbxlx"
+  },
+  "limits": [
+    "One desktop Studio client/local server; ordinary local network, no injected latency/jitter/loss",
+    "Frame timing includes heavyweight disposable sweep/asset setup; not a production frame-rate benchmark",
+    "Camera perturbation is artificial input-phase stress, not a claim that the owner observed a 45-degree camera turn",
+    "No multi-client observers, network latency, moving-target or exhaustive physical-input coverage",
+    "Owner feel verdict on 85/100/115 remains open; third-kick accuracy is bounded by physical reach",
+    "Earlier diagnostic computed collision prediction before committing release and advanced its own charge clock; fixture corrected, gameplay thresholds unchanged"
+  ],
+  "environment": {
+    "os": "Windows desktop",
+    "studio_version": "0.745.0.7451137",
+    "clients": 1,
+    "server": "local Studio",
+    "network_simulation": "none"
+  },
+  "source_hash_normalization": "UTF-8 with LF newlines",
+  "main_delivery": {
+    "date": "2026-11-02",
+    "source_revision": "020c60c",
+    "main_integrated": "9e7a41c",
+    "authorization": "Owner explicitly requested push to main plus documentation.",
+    "offline_checks": [
+      "python tools/verify_combat.py: PASS",
+      "python tools/verify_slugs.py: PASS (without Blender; no authored asset edits)"
+    ],
+    "native": {
+      "studio_version": "0.745.0.7451137",
+      "clients": 1,
+      "network": "local server; no injected latency",
+      "fixture": "tools/build_shot_consistency_check.py",
+      "artifacts": "build/shot-consistency/main-delivery (ignored)",
+      "result": "SHOOTCHECK PASS shot consistency; CombatSelfTest ALL PASS",
+      "moving_shots": 9,
+      "max_visible_error": 0,
+      "max_moving_contact_disagreement_studs": 0.000208,
+      "max_full_power_error_studs": 0.000614,
+      "distance_max_step_degrees": [
+        1.991249577216513,
+        1.7133790297619775,
+        2.302057816366273
+      ],
+      "cover_shots": 2,
+      "shoulder_fallback_pass": true,
+      "mean_frame_seconds": 0.018996002567479374,
+      "max_frame_seconds": 0.9519317746162415
+    },
+    "limits": "Single client, setup/sweep included in frame timing; not a performance benchmark or multiplayer/latency/owner-feel approval. Earlier source hashes describe the earlier test revision."
+  }
+}

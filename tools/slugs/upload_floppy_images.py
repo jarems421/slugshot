@@ -42,6 +42,10 @@ def main():
         with Image.open(glow_path) as glow:
             glow.convert("L").point(lambda v: max(v, floor)).save(TEXTURES / "floppy-body-emissive.png")
         maps["bodyEmissive"] = "floppy-body-emissive.png"
+    for tag, stem in (("eyeLEmissive", "floppy-eye-left"), ("eyeREmissive", "floppy-eye-right")):
+        with Image.open(TEXTURES / (stem + "-glow.png")) as glow:
+            glow.convert("L").point(lambda v: max(v, floor)).save(TEXTURES / (stem + "-emissive.png"))
+        maps[tag] = stem + "-emissive.png"
     for tag, filename in (("body", "floppy-body-roughness.png"),
                           ("eyeL", "floppy-eye-roughness-L.png"),
                           ("eyeR", "floppy-eye-roughness-R.png")):
@@ -106,7 +110,8 @@ def main():
             ET.SubElement(content, "url").text = "rbxassetid://" + str(value)
         # Small albedo-modulated emission provides a stable visibility floor;
         # it does not replace the real, broader lighting on surrounding objects.
-        mask = cache["bodyEmissive"]["id"] if name == "FloppyBody" and "bodyEmissive" in cache else cache["visibilityMask"]["id"]
+        mask = {"EyeL": cache["eyeLEmissive"]["id"], "EyeR": cache["eyeREmissive"]["id"]}.get(name) or (
+            cache["bodyEmissive"]["id"] if name == "FloppyBody" and "bodyEmissive" in cache else cache["visibilityMask"]["id"])
         content = ET.SubElement(properties, "Content", name="EmissiveMaskContent")
         ET.SubElement(content, "uri").text = "rbxassetid://" + str(mask)
     ET.ElementTree(document).write(PRIVATE / "materials.rbxmx", encoding="utf-8", xml_declaration=True)

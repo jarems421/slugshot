@@ -292,6 +292,9 @@ local function impact(shot: Shot, hit: RaycastResult)
 	local distance = (hit.Position - shot.origin).Magnitude
 	if victim and humanoid and victim ~= shot.shooter.Character and humanoid.Health > 0 then
 		damage = shot.slug.Damage
+		-- For the hit reaction (movement Presentation): which way the shot was travelling.
+		victim:SetAttribute("HitDirection", shot.velocity.Unit)
+		victim:SetAttribute("HitTime", workspace:GetServerTimeNow())
 		humanoid:TakeDamage(damage)
 		hitFeed:Fire(shot.shooter, victim, damage, distance)
 	end

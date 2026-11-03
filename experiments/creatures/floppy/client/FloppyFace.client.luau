@@ -17,6 +17,10 @@ local BLEND_RATE = 7 -- 1/s; how quickly a new expression eases in
 local GAZE_RATE = 2.5 -- a lazy drift, not a dart
 -- Eyes slide within the socket (they are too flat to rotate), easing back so they clear the lids.
 local GAZE_SIDE, GAZE_UP, GAZE_BACK = 0.018, 0.008, 0.03
+-- Closed, each rim lies along its lower lid. Upper rims sit at +0.03 (L) and -0.03 (R) and slope 0.24; lower rims sit at
+-- -0.15 and slope -0.05 the other way. So each eye travels its own distance and turns by the difference in slope.
+local CLOSED_DEPTH = { [1] = 0.172, [-1] = 0.112 }
+local CLOSED_TURN = math.atan(0.29)
 local FAR = 90 -- studs; no face work on a Floppy too far away to read
 
 -- Lid amounts are relative to the tired resting lids in Tuning (faceLid).
@@ -218,26 +222,34 @@ local function step(face: Face, dt: number, camera: Vector3)
 	-- Heavy, slow blinks: the lids sink, rest a moment and drag back up.
 	if clock >= face.nextBlink then
 		face.blinkAt = clock
-		face.nextBlink = clock + random:NextNumber(3, 7)
+		-- Now and then a second blink follows straight after, so the rhythm isn't mechanical.
+		face.nextBlink = clock
+			+ if random:NextNumber() < 0.2 then T.faceBlinkTime * 1.15 else random:NextNumber(3, 7)
 	end
 	local blink = 0
 	local since = (clock - face.blinkAt) / T.faceBlinkTime
 	if since < 1 then
-		blink = if since < 0.38
-			then since / 0.38
+		-- Sinks over 40%, rests briefly and lifts more slowly; a cosine has no corners, so the lid never jerks.
+		local amount = if since < 0.4
+			then since / 0.4
 			elseif since < 0.5 then 1
 			else 1 - (since - 0.5) / 0.5
-		blink = blink * blink * (3 - 2 * blink)
+		blink = 0.5 - 0.5 * math.cos(amount * math.pi)
+	end
+	local chosenBlink = face.model:GetAttribute("FaceBlink")
+	if typeof(chosenBlink) == "number" then
+		blink = chosenBlink
 	end
 	-- A small, slow mouthing so the face is never fully still.
 	local mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)
 	local jaw = face.jaw + (if inspecting then 0 else 0.014 * mouthing)
 	local lift = if inspecting then 0 else 0.006 * math.sin(clock * 1.7)
 	local open = face.lid + face.squint
-	local lid = T.faceLid + open + (T.faceBlinkClose - T.faceLid - open) * blink
+	local rest = T.faceLid + open
 	-- The rims slope down toward the nose, which reads as anger: turn them so the outer corners
 	-- droop instead. Opening wide (surprise) relaxes this.
 	local droop = math.rad(T.faceTilt) * math.clamp(1 + face.lid / 0.09, 0, 1)
+	droop += (CLOSED_TURN - droop) * blink
 	local s = face.scale
 	for _, item in face.gaze do
 		item.bone.Transform = CFrame.new(
@@ -249,6 +261,7 @@ local function step(face: Face, dt: number, camera: Vector3)
 		)
 	end
 	for _, item in face.lids do
+		local lid = rest + (CLOSED_DEPTH[item.sign] - rest) * blink
 		item.bone.Transform = CFrame.new(
 			(item.up * -lid + item.front * math.max(lid, 0) * 0.15) * s
 		) * CFrame.fromAxisAngle(item.front, droop * item.sign)

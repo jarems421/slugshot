@@ -15,6 +15,7 @@ local FirstPerson = require(script.FirstPerson)
 local Tuning = require(script.Tuning)
 local Ads = require(script.Ads)
 local Recoil = require(script.BlasterRecoil)
+local HitReaction = require(script.HitReaction)
 local AimCursor = require(script.AimCursor)
 local Reticle = require(script.Reticle)
 local FirstPersonFlip = require(script.FirstPersonFlip)
@@ -1021,10 +1022,13 @@ RunService:BindToRenderStep("SlugshotActionView", Enum.RenderPriority.Camera.Val
 		local view = camera.CFrame
 		AcrobaticCamera.setBase(view)
 		local experiment, lens = AcrobaticCamera.step(dt, character, FirstPerson.active())
-		local tilt = CFrame.Angles(viewPitch, 0, viewRoll) * experiment * Recoil.viewKick()
+		local tilt = CFrame.Angles(viewPitch, 0, viewRoll)
+			* experiment
+			* Recoil.viewKick()
+			* HitReaction.viewKick(view)
 		-- Apply the running eye position after native follow. Adding this through
 		-- CameraOffset loses much of the advance to native follow/physics timing.
-		lens += Recoil.viewPunch()
+		lens += Recoil.viewPunch() + HitReaction.viewPunch()
 		local effect = CFrame.new(view:VectorToObjectSpace(runLeanOffset)) * tilt
 		camera.CFrame = view * effect
 		-- Native first-person character facing also uses the eye/focus relationship.

@@ -1,5 +1,43 @@
 # Slug shooting (experiment)
 
+## Shot consistency and distinct Floppy powers (2026-11-02, current)
+
+**Delivery:** owner authorized delivery to `main` with documentation. Shooting implementation `6d3253d` and the preceding loadout/inspect/pose work are integrated with main hit reactions (`9e7a41c`) in `020c60c`. Post-merge combat/movement/foundation and creature checks pass; a fresh one-client Studio run passes the distance sweep, nine moving shots, two cover shots, shoulder fallback and shared flight/collision regressions. Owner feel and multiplayer limits below remain open.
+
+**Confirmed:** owner reports occasional distant/inaccurate shots around diagonal sprint starts and quick-scoping, plus a disproportionate range/drop change after stepping backward. First/second kicks should be slower and drop a little more; the third kick keeps its current speed and lands on the crosshair within physical reach. Latest first-person resting pose and 10-stud third-person camera preferences remain in place.
+
+**Implemented:** Floppy launch speeds are **85 / 100 / 115 studs/s** (previously 95/105/115). Gravity 70, drag 0.35, damage 7 and partial correction 0.86/0.95 stay. Shared solver now finds the earliest feasible low arc and continuously saturates at reachable distance. Removed the client full-reach-to-45-stud switch and the solver's 10% substitute-target search. The former caused a measured 29.19-degree angle jump between adjacent half-stud samples. Stronger drop is gradual, with natural physical range limits.
+
+Firing uses a camera/ray/muzzle sample from one completed rendered frame, after viewmodel placement, rather than mixing an input-phase camera with the previous gun pose. A shoulder-to-muzzle check stops shots at close cover. The former near-hit path could start beyond the surface under the crosshair: a native reproduction went 21.8 studs past it. Both real close-cover shots now hit the surface. Shared curved sweeps use at most 1/120-second segments, and an authoritative impact stops any still-flying local visual. The old per-render-frame chord missed a controlled arc collider during a 0.4-second stall; the revised sweep catches it across all tested intervals.
+
+**Implemented/verified:** full combat/movement/foundation formatting, lint, strict types and builds pass. New private native regressions pass a 641-point-per-level mathematical sweep, a 281-point live camera/muzzle distance sweep, nine actual moving shots across first-person ADS/hip fire and third person, an artificial in-frame camera perturbation, two close-cover shots plus a forced shoulder-fallback shot, and collision intervals from 1/240 second through a 0.4-second stall. Client/server contact disagreement is below 0.001 studs in the tested moving shots. The initial six onset shots did not reproduce a random sideways miss; close-cover overshoot and the distance threshold were separately reproduced and corrected. This does not claim every possible cause of the owner's intermittent symptom was observed.
+
+Reproduce with `python tools/build_shot_consistency_check.py`, then `powershell -ExecutionPolicy Bypass -File tools/studio/shooting_feel_check.ps1 -OutDir build/shot-consistency/review -Timeout 260`. Fixtures are not in the normal place. [ADR 0022](decisions/0022-shot-frame-and-flight-consistency.md), [sanitized evidence](evidence/2026-11-02-shot-consistency.json).
+
+**Implemented/verified long-range follow-up:** 13 actual shots pass across ADS/hip fire and elevated/downhill targets, including third kick at 120 studs. Maximum third-kick contact error is below 0.001 studs; first/second ADS drop at 65 studs is about 2.67/0.73 studs. A forced missing-muzzle test confirms the shoulder fallback also stops at close cover.
+
+**Current playable handoff:** `build/SlugshotShootingConsistent.rbxlx`; previous tuned preview saved/closed before reopening. The private regression fixtures are absent from this normal place.
+
+**Considering/unresolved:** owner's feel verdict on 85/100/115, live mouse/keyboard reproduction of the exact initial report, multi-client observers, latency and moving-target coverage. The authority model, accepted animations, authored assets and concurrent SFX/lobby/Inferno work are preserved. Earlier tuning entries below are historical; this section governs current projectile logic and speeds.
+
+## Damage-scaled hit reaction (2026-11-02)
+
+**Confirmed (owner):** the reaction must scale with damage: more damage, more movement and more visibly hurt. The owner was unsure about reactions while sliding and jumping; **proposed, for their verdict:** react in every state, at a reduced share in slides, flips and wall runs (`hitActionShare`). Physical knockback is **not** added: this is the body and view only, and the player's position does not change (owner, earlier: Floppy has no knockback). **Unresolved:** whether stronger slugs should physically shove.
+
+**Confirmed (owner):** the low-health slump is removed: it looked poor, could distract players and hid hit reactions. Below 35% health the character now idles normally, and `tools/mixamo_manifest.json` no longer maps the clip. Earlier notes mentioning an injured idle are historical.
+
+**Implemented:** `experiments/movement/client/HitReaction.luau`, a spring layered onto the pose in every state, for every character, so observers see it too. Severity is `hitBase + damage / hitFull`; heavier hits also recover more slowly and bring in more of the Mixamo flinch clip (grounded only). The combat server sets `HitDirection` and `HitTime` on the victim, so the body is pushed along the shot; other damage pushes it backward. The victim's first-person view rolls about the crosshair, moves along its line and widens, none of which moves the aim. Values are under "Getting hit" in the tuning panel (P). H now cycles 7, 15, 40 self-damage to compare hits alone.
+
+**Verified, real Play (`tools/studio/pvp_ui_check.ps1`), H self-damage, rendered joint peaks:**
+
+| Damage | Spring | Chest | Head | Arm |
+|---|---|---|---|---|
+| 7 | 0.26 | 9° | 10° | 22° |
+| 15 | 0.45 | 18° | 18° | 38° |
+| 40 | 1.04 | 50° | 61° | 100° |
+
+Against unhit controls of the same moves, a jump hit for 7 and a slide hit for 15 each add about 10° at the chest. A running crossfade was found to swallow the snap, so hits now cut it to 0.05 s. **Not verified:** feel, the view kick's feel, a real slug hit (the direction attribute was not exercised; the check has no second player), and flips or wall runs.
+
 ## Charge accuracy, gentler drop and white ADS (2026-11-02)
 
 **Delivery:** owner explicitly requested committing/pushing this iteration and updating documentation. Implementation `064f7ed`, developed on `fix/shooting-feel`, is delivered to `main`. Existing native evidence and the playable range remain available; delivery does not imply owner feel/art approval.

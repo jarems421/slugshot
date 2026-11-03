@@ -15,6 +15,9 @@ local Inspect = require(script.Parent.SlugInspect)
 local FirstPerson = require(script.Parent.FirstPerson)
 local Recoil = require(script.Parent.BlasterRecoil)
 local Tuning = require(script.Parent.Tuning)
+local HitReaction = require(script.Parent.HitReaction)
+
+local HIT_FADE = 0.05
 local Presentation = {}
 -- A small third-person fit adjustment in the grip frame: out of the palm, up
 -- toward the trigger, and muzzle-down. The local viewmodel keeps
@@ -278,6 +281,7 @@ function Presentation.start(clips: Clips.Library)
 			jumpClip = nil,
 			move = nil,
 			health = humanoid.Health,
+			hurt = HitReaction.new(),
 			aiming = false,
 			fidgetAt = workspace:GetServerTimeNow() + A.Moves.Fidget.After,
 			fidgets = 0,
@@ -317,6 +321,9 @@ function Presentation.start(clips: Clips.Library)
 		}
 		scan(rig)
 		rigs[character] = rig
+		if character == Players.LocalPlayer.Character then
+			HitReaction.setMine(rig.hurt)
+		end
 		character:SetAttribute("PresentationMode", "Clips")
 		refreshFilter()
 		local pending = false
@@ -509,9 +516,7 @@ function Presentation.start(clips: Clips.Library)
 			floor += Clips.floor(clip, time) * entry[2]
 		end
 		local moving = Clips.blend(poses, weights, scratch(rig, 10))
-		local humanoid = rig.humanoid
-		local injured = humanoid.Health < humanoid.MaxHealth * A.Moves.InjuredBelow
-		local idle = if injured and clips.IdleInjured then clips.IdleInjured else clips.Stand
+		local idle = clips.Stand
 		-- Braking reaches zero in a fraction of a second, so the idle mix eases
 		-- toward its speed-based target instead of snapping with it.
 		local target = smoothstep(speed / A.IdleBlendSpeed)
@@ -613,20 +618,25 @@ function Presentation.start(clips: Clips.Library)
 		local aiming = character:GetAttribute("Aiming") == true
 		local seed = now * 13
 		local health = humanoid.Health
-		local hurt = health < rig.health - 0.5
+		local damage = rig.health - health
+		local hurt = damage > 0.5
+		local severity = 0
+		if hurt then
+			-- Combat says which way the shot travelled; anything else pushes the body back.
+			local direction = character:GetAttribute("HitDirection")
+			local at = character:GetAttribute("HitTime")
+			if typeof(direction) ~= "Vector3" or typeof(at) ~= "number" or now - at > 1 then
+				direction = -rig.root.CFrame.LookVector
+			end
+			severity = HitReaction.hit(rig.hurt, damage, direction)
+			-- A crossfade already running would smooth the snap away, so it is cut short.
+			startFade(rig, HIT_FADE, now)
+		end
 		rig.health = health
 		local wasAiming = rig.aiming
 		rig.aiming = aiming
 		local fidget = Moves.Fidget
-		local injured = health < humanoid.MaxHealth * Moves.InjuredBelow
-		if
-			speed > 1
-			or aiming
-			or injured
-			or not grounded
-			or rig.action
-			or Inspect.elapsed(character)
-		then
+		if speed > 1 or aiming or not grounded or rig.action or Inspect.elapsed(character) then
 			rig.fidgetAt = now + fidget.After + math.random() * fidget.Spread
 		end
 		if not grounded or rig.action then
@@ -634,7 +644,17 @@ function Presentation.start(clips: Clips.Library)
 			return
 		end
 		if hurt then
-			startMove(rig, "Flinch", Clips.pick(clips, "Flinch", seed), now)
+			local current = rig.move
+			if current and current.kind == "Flinch" then
+				current.strength = math.max(current.strength, severity)
+			else
+				startMove(rig, "Flinch", Clips.pick(clips, "Flinch", seed), now)
+				if rig.move ~= current then
+					rig.move.strength = severity
+					rig.move.fadeIn = 0.08
+				end
+				startFade(rig, HIT_FADE, now)
+			end
 		elseif wasAiming and not aiming and speed < 1 then
 			startMove(rig, "Settle", clips.AimSettle, now)
 		elseif speed < 0.5 and not rig.move and now > rig.fidgetAt then
@@ -680,7 +700,12 @@ function Presentation.start(clips: Clips.Library)
 			)
 		local weight = 1
 		if kind == "Flinch" then
-			weight = 1 - 0.5 * smoothstep(speed / A.IdleBlendSpeed)
+			-- The clip is strong for its weight, so it comes in late: a light hit is almost all spring.
+			local share = math.min(move.strength, 1)
+			weight = (1 - 0.5 * smoothstep(speed / A.IdleBlendSpeed))
+				* Tuning.values.hitClip
+				* share
+				* share
 		end
 		if move.fadeIn then
 			weight *= smoothstep(elapsed / move.fadeIn)
@@ -1328,6 +1353,16 @@ function Presentation.start(clips: Clips.Library)
 		-- Ground contact: keep the feet (or, for a slide, the whole body) at the clip's
 		-- intended clearance using the real rig's proportions.
 		pose.Root = rootPose
+		-- Your own body is out of view in first person, where the view takes the hit instead.
+		if not (character == Players.LocalPlayer.Character and FirstPerson.active()) then
+			HitReaction.pose(
+				rig.hurt,
+				pose,
+				root.CFrame,
+				if rig.action then Tuning.values.hitActionShare else 1,
+				1 - 0.75 * rig.pointWeight
+			)
+		end
 		local rigPose = if rig.r6 then toR6(pose, scratch(rig, 24)) else pose
 		-- Limb folding above keeps rotation only. Apply shoulder clearance afterwards,
 		-- using the rendered block's bounds rather than an offset that folding erases.
@@ -1447,6 +1482,7 @@ function Presentation.start(clips: Clips.Library)
 				refreshFilter()
 				continue
 			end
+			HitReaction.step(rig.hurt, dt)
 			if rig.humanoid.Health > 0 then
 				evaluate(rig, dt, now)
 			end
