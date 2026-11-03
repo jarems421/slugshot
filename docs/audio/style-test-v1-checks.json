@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-02",
+  "branch": "design/sound-direction",
+  "baseline": "c919351",
+  "lobby_read_only_reference": "7bda6a0",
+  "state": "Considering: stop for owner approval",
+  "event_groups": 70,
+  "priorities": {
+    "P0_combat": 17,
+    "P1_movement": 22,
+    "P2_slug_world": 19,
+    "P3_interface": 12
+  },
+  "unique_sketches": 5,
+  "review_reel": "Concatenation of the same five; no additional unique sounds",
+  "offline_checks": [
+    "PASS: Python compilation",
+    "PASS: reproducible identical manifest and WAV hashes on rerun",
+    "PASS: mono PCM16 48 kHz; finite audio/no sample clipping/zero endpoints",
+    "PASS: all audio page and plan local-file references exist",
+    "PASS: all 70 event group IDs unique"
+  ],
+  "runtime_changes": false,
+  "uploads": false,
+  "auditory_review": "Unverified; owner approval requested",
+  "roblox_playback": "Not tested; preview assets only",
+  "private_asset_ids": "None",
+  "remaining_library_generated": false
+}

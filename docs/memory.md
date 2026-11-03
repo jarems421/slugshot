@@ -1798,3 +1798,28 @@
 - **Confirmed:** owner marked the mountain and slug exhibition complete and asked for a checkpoint, delivery to `main`, and the shop next in a new chat.
 - **Implemented:** [checkpoint](art/lobby-checkpoint.md) written with state, decisions, rebuild steps, traps and open items; roadmap tracker, hub notes, asset plan, index and status updated.
 - **Unresolved:** see the checkpoint's Open list. The phone estimate wasn't re-run; the owner stopped that run to go straight to delivery.
+## 2026-11-02 - Settings persistence
+
+**Confirmed:** owner requested saving all settings between sessions and safe missing/old/invalid-save handling, with actual Roblox test evidence. The referenced MVP-UI note is absent; read `docs/pvp-ui.md`. Owner allowed skipping the real rejoin if Studio MCP could not connect.
+
+**Implemented/verified:** isolated `fix/settings-persistence` worktree from integrated main; twelve validated preferences and all primary/secondary/cleared bindings; JSON-safe colour, asynchronous client hydration preserving early edits, status text, server batching/retries/leave and shutdown saves, expiring session leases and future-schema preservation. Full offline combat/movement/foundation checks and isolated Studio real-client/server and PlayerRemoving flush/release tests with injected storage passed. [ADR 0021](decisions/0021-player-settings-persistence.md), [evidence](evidence/2026-11-02-settings-persistence.json).
+
+**Unresolved:** actual Roblox cloud-backed leave/rejoin; the direct Studio MCP proxy returned empty instance lists. No experience published, API access enabled or concurrent work edited. No claim of cloud persistence from injected-store tests.
+
+## 2026-11-02 - Whole-game sound audit and five-sound direction test
+
+**Confirmed:** owner requested Step 1 event inventory/code hooks/hearing policies, shooting/damage/movement before menus, then Step 2 proposed style and about five sounds. Explicit stop for owner approval before the rest.
+
+**Considering:** tactile cavern fantasy, derived from the art guide; positional physical actions and private interface/confirmation layers. Full [event list and style proposal](audio/sound-plan.md) covers implemented systems and distinguishes future/unimplemented triggers, duplicate-sound risks and optional silence.
+
+**Implemented/verified offline:** five original deterministic authored sketches (shot, three-stage charge phrase, taking damage, stone footstep, menu click), PCM16 mono 48 kHz, no clipping/nonfinite samples, zero endpoints, per-file hashes/peaks/RMS and concatenated review reel. [Listening page](audio/style-test-v1.html). Baseline c919351 in isolated `design/sound-direction`; concurrent lobby 7bda6a0 inspected read-only. No runtime changes, external samples/service, uploads or purchases.
+
+**Unresolved:** owner list/style/sample approval, auditory judgement and Roblox integration/playback/spatial/permissions tests. Numeric integrity does not prove sound quality. Work stops at the requested checkpoint; no additional unique sounds or variations generated.
+
+## 2026-11-02 - Private sound review website
+
+**Confirmed:** owner requested a simple organized website opened for easy listening, with purposes/reasons, a missing-sound list and original-versus-internet provenance. This does not approve generating the rest of the sound library.
+
+**Implemented/verified:** private [Slugshot Sound Library](https://slugshot-sound-library.jarems421.chatgpt.site) deployed successfully using Sites. Source checkout is ignored `build/sites/sound-library`; its dedicated Sites source repository is separate from the game repository (source commit `1a0e9d3addc9daa6c8b639059a42495ac9776535`). Play All/Next/Stop, per-sound controls/downloads, search/categories, five original rationale cards, 65 unfinished event groups and provenance sections. No internet audio selections; two Roblox built-in placeholder sources listed without redistributing them. No new sounds generated.
+
+**Verified offline/local:** JS syntax, served page/data/five WAVs, count/ordering, UI render/search/empty-state/source logic with a lightweight DOM mock. Hosted deployment reports succeeded. **Unresolved:** automatic approval review blocked browser-launch command; return the direct link. Manual browser/audio-output review remains pending; browser automation was unavailable, so no interactive browser pass claimed. Owner approval of the sound list/style is still pending.

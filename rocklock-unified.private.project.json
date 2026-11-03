@@ -146,6 +146,15 @@
       },
       "Combat": {
         "$path": "experiments/combat/server/CombatServer.server.luau"
+      },
+      "SettingsPersistence": {
+        "$className": "Folder",
+        "SettingsPersistence": {
+          "$path": "experiments/combat/server/SettingsPersistence.server.luau"
+        },
+        "SettingsStore": {
+          "$path": "experiments/combat/server/SettingsStore.luau"
+        }
       }
     },
     "StarterPlayer": {

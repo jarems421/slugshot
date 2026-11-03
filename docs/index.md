@@ -15,6 +15,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Movement lab and playtest plan](movement.md)
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Loadout selection and inspect](loadout-controls.md), [ADR 0021](decisions/0021-loadout-controls-and-inspect.md)
+- [Sound event audit, proposed direction and five-sound approval batch](audio/sound-plan.md)
 - [PvP UI: HUD, inventory, settings, keybinds and goo](pvp-ui.md), [ADR 0020](decisions/0020-ui-goo-and-keybinds.md)
 - [Combat / temporary target range](combat.md), [shot consistency](combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current), [ADR 0022](decisions/0022-shot-frame-and-flight-consistency.md), [first-person camera research and comparison](research/first-person-acrobatics.md) and [reversible camera experiment](decisions/0014-acrobatic-camera-comparison.md)
 - [First-person owner wording and recurring regression fixes](combat.md#owner-language-contextual-interpretations-to-carry-forward)
