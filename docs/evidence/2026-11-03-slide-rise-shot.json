@@ -462,5 +462,14 @@
     "webglMeshes": 369,
     "webglTriangles": 784786,
     "browserReview": "five views, dummy controls, rotation/reset and 390px layout passed without JS errors"
+  },
+  "broaderRegression": {
+    "pass": true,
+    "movingShots": 9,
+    "coverShots": 2,
+    "shoulderFallback": true,
+    "meanFrameSeconds": 0.017136058398755268,
+    "maxFrameSeconds": 0.2816554009914398,
+    "note": "Second-kick fixture releases immediately on reaching stage two; prior extra 0.12-second wait advanced into stage three on a slow frame."
   }
 }
