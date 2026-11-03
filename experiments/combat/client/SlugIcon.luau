@@ -298,7 +298,7 @@ local function pose(icon: Icon)
 end
 
 local function place(icon: Icon, slugId: string, fill: number, gap: number)
-	local model = Visuals.model(slugId)
+	local model = Visuals.iconModel(slugId)
 	local world = Instance.new("WorldModel")
 	model.Parent = world
 	world.Parent = icon.frame
@@ -334,7 +334,10 @@ local function place(icon: Icon, slugId: string, fill: number, gap: number)
 	icon.height = height
 	icon.nextMove = icon.clock + FIRST_MOVE
 	model:SetAttribute("FaceExpression", DROWSY)
-	CollectionService:AddTag(model, "SlugIcon")
+	-- FloppyFace and FloppyIdle drive tagged icons; other slugs have neither his eyes nor his rings.
+	if slugId == "Floppy" then
+		CollectionService:AddTag(model, "SlugIcon")
+	end
 end
 
 -- fill is the share of the slot's height the slug takes up, and floorGap the share left under it.

@@ -19,6 +19,9 @@ local hitFeed = Instance.new("BindableEvent")
 hitFeed.Name = "SlugshotCombatHit"
 hitFeed.Parent = ServerStorage
 
+local combatAssets = Instance.new("Folder")
+combatAssets.Name = "CombatAssets"
+
 -- The in-flight Floppy every client clones: the shared model at Size, pivoted on its
 -- body centre with +Y its back and -Z its face, so clients can orient it directly.
 local function buildFlightModel()
@@ -59,15 +62,88 @@ local function buildFlightModel()
 	local centre = root.WorldPosition + up * (Combat.Slugs.Floppy.Size / 2)
 	-- Slug space: +Y up out of its back, -Z the way its face points.
 	model.WorldPivot = CFrame.fromMatrix(centre, up:Cross(-front), up, -front)
-	local folder = Instance.new("Folder")
-	folder.Name = "CombatAssets"
-	model.Parent = folder
-	folder.Parent = ReplicatedStorage
+	model.Parent = combatAssets
 end
 local ok, problem = pcall(buildFlightModel :: () -> any)
 if not ok then
 	warn(`[Combat] Floppy flight model unavailable, shots draw a stand-in: {problem}`)
 end
+
+-- Inferno flies in his transformed form, and his icon shows the base form. Both are exported at the same height as
+-- Floppy (0.34 x 2.72 source units is Floppy's reference length), so they take his scale. Pivots match Floppy's.
+local function buildInfernoModels()
+	local assetModule = ReplicatedStorage:FindFirstChild("InfernoAsset")
+	local appearance = ServerScriptService:WaitForChild("FloppyIntegration")
+		:FindFirstChild("InfernoAppearance")
+	local materials = ServerStorage:FindFirstChild("InfernoMaterials")
+	if not (assetModule and appearance and materials) then
+		return
+	end
+	local asset = (require :: any)(assetModule)
+	local Appearance = (require :: any)(appearance)
+	local scale = Combat.Slugs.Inferno.Size / (0.34 * 2.72)
+	local function build(id: number, name: string): (Model, Vector3)
+		local container = InsertService:LoadAsset(id)
+		local model = Instance.new("Model")
+		model.Name = name
+		for _, child in container:GetChildren() do
+			child.Parent = model
+		end
+		container:Destroy()
+		Appearance.dress(model, materials, Combat.Slugs.Inferno.Size)
+		for _, item in model:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Anchored = true
+				item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+				item.CastShadow = false
+				if not item:IsA("MeshPart") then
+					item.Transparency = 1
+				end
+			elseif item:IsA("Bone") then
+				item.Transform = CFrame.identity
+			end
+		end
+		model:ScaleTo(model:GetScale() * scale)
+		local left = model:FindFirstChild("antenna_L", true) :: Bone
+		local right = model:FindFirstChild("antenna_R", true) :: Bone
+		assert(left and right, `{name} antenna bones missing`)
+		return model, right.WorldPosition - left.WorldPosition
+	end
+	local function pivot(model: Model, centre: Vector3, up: Vector3, front: Vector3)
+		model.WorldPivot = CFrame.fromMatrix(centre, up:Cross(-front), up, -front)
+		model.Parent = combatAssets
+	end
+
+	local dragon, dragonSide = build(asset.dragon.model, "InfernoFlight")
+	local dragonRoot = dragon:FindFirstChild("root", true) :: Bone
+	local dragonHead = dragon:FindFirstChild("head", true) :: Bone
+	local tail = dragon:FindFirstChild("tail_1", true) :: Bone
+	local forward = (dragonHead.WorldPosition - tail.WorldPosition).Unit
+	local dragonUp = forward:Cross(dragonSide).Unit
+	Appearance.outline(dragon)
+	pivot(
+		dragon,
+		(dragonRoot.WorldPosition + dragonHead.WorldPosition) / 2,
+		dragonUp,
+		dragonSide:Cross(dragonUp).Unit
+	)
+
+	local base, baseSide = build(asset.base.model, "InfernoIcon")
+	local baseRoot = base:FindFirstChild("root", true) :: Bone
+	local baseHead = base:FindFirstChild("head", true) :: Bone
+	local baseUp = (baseHead.WorldPosition - baseRoot.WorldPosition).Unit
+	pivot(
+		base,
+		baseRoot.WorldPosition + baseUp * (Combat.Slugs.Inferno.Size / 2),
+		baseUp,
+		baseSide:Cross(baseUp).Unit
+	)
+end
+local infernoOk, infernoProblem = pcall(buildInfernoModels :: () -> any)
+if not infernoOk then
+	warn(`[Combat] Inferno models unavailable, shots draw a stand-in: {infernoProblem}`)
+end
+combatAssets.Parent = ReplicatedStorage
 
 type Shot = {
 	shooter: Player,

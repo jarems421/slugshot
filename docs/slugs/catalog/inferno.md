@@ -11,6 +11,8 @@
 
 **Implemented/verified:** offline export sizes, `verify_slugs.py` and Studio Play captures of the display place. **Unresolved:** Inferno is not in the game yet; shot numbers and the ability; the glow can look square for a moment when the tail points almost straight at the camera; the outline's Highlight limit in a crowded scene; game-size tuning of the fire; and a side-by-side and name/IP check before publication, because "Inferno" sounds like the franchise's Infurnus.
 
+**In the game, 2026-11-03 (proposal numbers, owner playtest pending):** slot 2 of the loadout. Damage 25, speed 300/420/500, gravity 20, drag 0.05, exact aim from the second kick. He flies in the transformed form and shows the base form in icons and the canister. The fire sizes itself from his bones, so it scales down with the model. Verified: combat and creature checks pass, and the merged range loads in Studio Play with his icon in slot 2. Not verified: firing him, the canister view, recovery on landing, multiplayer. Landing reuses Floppy's recovery. The transformation animation is next.
+
 The sections below are the design history, oldest first. Where they differ, this section wins.
 
 ## Confirmed — owner direction, 2026-11-02

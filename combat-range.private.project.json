@@ -91,6 +91,9 @@
       },
       "Combat": {
         "$path": "experiments/combat/shared"
+      },
+      "InfernoAsset": {
+        "$path": "private-assets/inferno/InfernoAsset.luau"
       }
     },
     "ServerScriptService": {
@@ -114,6 +117,9 @@
         },
         "ReadyBlaster": {
           "$path": "experiments/integration/rocklock/ReadyBlaster.server.luau"
+        },
+        "InfernoAppearance": {
+          "$path": "experiments/creatures/inferno/server/InfernoAppearance.luau"
         }
       },
       "Combat": {
@@ -156,6 +162,9 @@
         },
         "FloppyFace": {
           "$path": "experiments/creatures/floppy/client/FloppyFace.client.luau"
+        },
+        "InfernoMotion": {
+          "$path": "experiments/creatures/inferno/client/InfernoMotion.client.luau"
         }
       }
     },
@@ -166,6 +175,9 @@
       },
       "FloppyMaterials": {
         "$path": "private-assets/floppy/materials.rbxmx"
+      },
+      "InfernoMaterials": {
+        "$path": "private-assets/inferno/materials.rbxmx"
       }
     }
   }

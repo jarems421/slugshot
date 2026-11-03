@@ -83,7 +83,11 @@ local function gunPoint(where: () -> Vector3): Vector3?
 		for _, part in tool:GetDescendants() do
 			if part:IsA("BasePart") and part ~= handle then
 				local offset = handle.CFrame:ToObjectSpace(part.CFrame)
-				if part.Transparency < 1 and not part:FindFirstAncestor("Floppy") then
+				if
+					part.Transparency < 1
+					and not part:FindFirstAncestor("Floppy")
+					and not part:FindFirstAncestor("InfernoLoaded")
+				then
 					local half = part.Size / 2
 					local reach = math.abs(offset.XVector.Z) * half.X
 						+ math.abs(offset.YVector.Z) * half.Y

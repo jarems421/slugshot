@@ -33,6 +33,7 @@ type FireGlow = {
 type Rig = {
 	model: Model,
 	dragon: boolean,
+	flight: boolean,
 	scale: number,
 	sideways: Vector3,
 	up: Vector3,
@@ -58,6 +59,10 @@ type Rig = {
 	glow: FireGlow?,
 }
 local rigs: { [Model]: Rig } = {}
+-- Ready before the first shot, so the first flame shows.
+task.spawn(function()
+	ContentProvider:PreloadAsync({ `rbxassetid://{asset.flame}` })
+end)
 -- The soft flame behind the tail flame: widths of its layers, and where it starts and ends along the flame from the
 -- tail tip, all in concept units.
 local FIRE_GLOW_WIDTHS = { 2.1, 1.6 }
@@ -119,7 +124,8 @@ local function spring(
 end
 
 -- The soft flame behind the mesh flame. A beam attached to an animated bone does not follow it, so its ends are free
--- attachments that are placed from the moved bones every frame, curved to leave and arrive the way the bones point.
+-- attachments placed from the moved bones every frame, curved to leave and arrive the way the bones point. They live on
+-- the part the bones hang from, so the fire rides on the model at any speed, scales with it and goes when it goes.
 -- It starts on the tail bone, since the flame bones pivot at the tail tip and would swing that end the wrong way.
 local function addFireGlow(rig: Rig)
 	local first = (rig.bones.flame_1 or {})[1]
@@ -132,15 +138,20 @@ local function addFireGlow(rig: Rig)
 	end
 	local a, b, c = first.bone :: Bone, second.bone :: Bone, last.bone :: Bone
 	local tail = root.bone :: Bone
+	local part = a:FindFirstAncestorWhichIsA("BasePart")
+	if not part then
+		warn(`{rig.model.Name}: flame bones have no part`)
+		return
+	end
 	-- Bones flame_1 and flame_2 are 0.6 concept units apart, which gives the flame's axis and its scale in studs.
 	local along = (b.WorldPosition - a.WorldPosition).Unit
 	local unit = (b.WorldPosition - a.WorldPosition).Magnitude / 0.6
 	local start = Instance.new("Attachment")
-	start.Parent = workspace.Terrain
+	start.Parent = part
 	local layers: { FireGlowLayer } = {}
 	for _, width in FIRE_GLOW_WIDTHS do
 		local finish = Instance.new("Attachment")
-		finish.Parent = workspace.Terrain
+		finish.Parent = part
 		local beam = Instance.new("Beam")
 		beam.Name = "FireGlow"
 		beam.Enabled = false
@@ -156,7 +167,7 @@ local function addFireGlow(rig: Rig)
 		beam.Transparency = NumberSequence.new(0)
 		beam.LightEmission = 0.25
 		beam.LightInfluence = 0
-		beam.Parent = workspace.Terrain
+		beam.Parent = part
 		table.insert(layers, { beam = beam, finish = finish, width = width * unit })
 		-- An unloaded beam image draws as a white strip.
 		task.spawn(function()
@@ -181,15 +192,20 @@ local function addFireGlow(rig: Rig)
 	}
 end
 
+-- Any direction square to `way`, in the part's axes, which can point anywhere after import.
+local function sideOf(way: Vector3): Vector3
+	return way:Cross(if math.abs(way.Y) > 0.9 then Vector3.xAxis else Vector3.yAxis).Unit
+end
+
 -- An attachment at a point, its X axis along the way the beam travels there.
 local function beamEnd(position: Vector3, way: Vector3): CFrame
-	local side = way:Cross(Vector3.yAxis).Unit
+	local side = sideOf(way)
 	local up = side:Cross(way)
 	return CFrame.fromMatrix(position, way, up, way:Cross(up))
 end
 
--- A bone's frame with this frame's motion already in it. Bone.TransformedWorldCFrame only catches up a frame later,
--- which left the fire trailing the tail.
+-- A bone's frame against its part, with this frame's motion already in it. Bone.TransformedWorldCFrame only catches up
+-- a frame later, which left the fire trailing the tail.
 local function movedFrame(bone: Instance): CFrame
 	local parent = bone.Parent
 	if bone:IsA("Bone") then
@@ -197,7 +213,7 @@ local function movedFrame(bone: Instance): CFrame
 			* bone.CFrame
 			* bone.Transform
 	end
-	return if bone:IsA("BasePart") then bone.CFrame else CFrame.identity
+	return CFrame.identity
 end
 
 local function stepFireGlow(rig: Rig, t: number)
@@ -209,9 +225,9 @@ local function stepFireGlow(rig: Rig, t: number)
 	local lastFrame = movedFrame(glow.last)
 	local from = firstFrame * glow.startAt
 	local leaving = firstFrame:VectorToWorldSpace(glow.startWay)
-	glow.start.WorldCFrame = beamEnd(from, leaving)
+	glow.start.CFrame = beamEnd(from, leaving)
 	local arriving = lastFrame:VectorToWorldSpace(glow.finishWay)
-	local side = arriving:Cross(Vector3.yAxis).Unit
+	local side = sideOf(arriving)
 	local up = side:Cross(arriving)
 	for i, layer in glow.layers do
 		-- The layers move together, so the fire stays one shape stuck to the tail. Each stretches a little on its own, and
@@ -222,7 +238,7 @@ local function stepFireGlow(rig: Rig, t: number)
 			+ arriving
 				* (0.07 * math.sin(t * 5.7) + 0.03 * math.sin(t * 9.7 + i * 2))
 				* glow.unit
-		layer.finish.WorldCFrame = beamEnd(to, arriving)
+		layer.finish.CFrame = beamEnd(to, arriving)
 		local reach = (to - from).Magnitude / 3
 		layer.beam.CurveSize0 = reach
 		layer.beam.CurveSize1 = -reach
@@ -237,7 +253,8 @@ local function setup(model: Model)
 	if rigs[model] then
 		return
 	end
-	local dragon = model.Name == "InfernoDragon"
+	local flight = model.Name == "InfernoFlight"
+	local dragon = flight or model.Name == "InfernoDragon"
 	local spec = if dragon then asset.dragon else asset.base
 	local antennaL, antennaR
 	for _, d in model:GetDescendants() do
@@ -297,6 +314,7 @@ local function setup(model: Model)
 		mouthLine = mouthLine,
 		mouth = spec.mouth,
 		dragon = dragon,
+		flight = flight,
 		scale = scale,
 		sideways = sideways,
 		up = up,
@@ -328,6 +346,9 @@ local function consider(instance: Instance)
 		instance:IsA("Model") and (instance.Name == "Inferno" or instance.Name == "InfernoDragon")
 	then
 		task.delay(0.5, setup, instance)
+	elseif instance:IsA("Model") and instance.Name == "InfernoFlight" then
+		-- A shot is over in moments, so this can't wait.
+		task.defer(setup, instance)
 	end
 end
 for _, item in workspace:GetDescendants() do
@@ -602,9 +623,13 @@ end
 
 local function stepDragon(rig: Rig, dt: number)
 	local t = rig.clock
+	if rig.flight and rig.model:GetAttribute("Landed") then
+		stepFireGlow(rig, t)
+		return
+	end
 	local hold = rig.model:GetAttribute("ReviewHold") == true
 	local move, since = pickMove(rig, DRAGON_MOVES, DRAGON_ORDER)
-	if hold then
+	if hold or rig.flight then
 		move, since = "", 0
 	end
 	local beatRate, beatSize, fold = 5.5, 0.42, 0
@@ -639,6 +664,8 @@ local function stepDragon(rig: Rig, dt: number)
 	end
 	if hold then
 		rise, side, bank, beatSize = 0, 0, 0, 0
+	elseif rig.flight then
+		rise, side, bank = 0, 0, 0
 	end
 	if move ~= "roll" then
 		wrapTurn(rig, "roll")
@@ -717,7 +744,12 @@ local function stepDragon(rig: Rig, dt: number)
 				)
 		)
 	end
-	local angry = stepFace(rig, dt, (workspace.CurrentCamera :: Camera).CFrame.Position, look)
+	local angry = stepFace(
+		rig,
+		dt,
+		(workspace.CurrentCamera :: Camera).CFrame.Position,
+		if rig.flight then 0 else look
+	)
 	local cSnap = spring(rig, "snap", snap, 18, 0.65, dt)
 	local headLag = spring(rig, "headLag", rollSpeed * 0.03, 12, 0.7, dt)
 	for _, item in (rig.bones.head or {}) :: { Item } do
