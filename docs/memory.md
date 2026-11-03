@@ -1925,3 +1925,10 @@
 - **Confirmed:** lava should look like the mountain waterfall slowed down, rather than sparse glints; storm flashes need longer gaps and fades.
 - **Implemented/verified locally:** full waterfall streak texture reused in orange, surface-aligned Wrap ribbons at speed 0.4 with lower-emission colour contrast. Cloud flashes every 5-9 seconds with a 0.2-second rise/1.2-second release; bloom lifetime 1.2-1.6 seconds. Native live cadence/flow and static checks pass.
 - **Implemented:** saved/checkpointed old preview, rebuilt the canonical review, added authored effect-source freshness hashes. No upload/publish. [Evidence](evidence/2026-11-03-viscous-lava-and-slow-storm.json); owner motion approval open.
+
+## 2026-11-03 - Lava animation was invisible, not merely too subtle
+
+- **Confirmed:** owner wants a very slow waterfall-like surface gloop, without moving the lava mesh.
+- **Confirmed cause:** one beam segment plus transparent fade endpoints hid the entire animated layer. Earlier speed-only checks missed this.
+- **Implemented/verified locally:** twelve fade segments, actual waterfall body texture, all seven streams/full widths and lower lobes, speed 0.22. Native preload/reference/fade/stream checks and close-up sampled sequence pass; owner motion verdict remains open.
+- **Preserved:** fixed mesh, slower diffuse storm timing, other active worktrees. No new asset upload or experience publication. [Evidence](evidence/2026-11-03-visible-lava-gloop.json).

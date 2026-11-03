@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified locally; owner gloop verdict pending",
+  "ownerBrief": "Animate lava like the mountain waterfall, very slowly, with fixed geometry. Screenshots show the earlier lava remaining static.",
+  "confirmedRootCause": "Lava beams had one segment and a transparency sequence with both endpoints fully transparent. No interior sample rendered the opaque middle, so the animated layer disappeared. Prior nonzero-speed tests did not establish visibility.",
+  "changes": [
+    "Set 12 segments for the four-keypoint lava fade, and assert segment count covers transparency keypoints.",
+    "Use the actual waterfall body texture (flow), rather than its streak highlight; preload for native review and compare actual texture references.",
+    "Animate all seven streams with 35 full-width, surface-aligned ribbons. Match the authored wider lower lobes and full stream length.",
+    "Slow texture scrolling to 0.22 cycles/sec, versus waterfall body 1.5. Warm orange tint; fixed mesh and endpoints.",
+    "Preserve the previously accepted slower diffuse storm timing."
+  ],
+  "verification": {
+    "native": "PASS: texture preload, same waterfall body reference, seven stream identities, 35 downhill ribbons, fade segment coverage, close-up time sequence and storm cadence.",
+    "static": "PASS: StyLua, Selene (zero warnings), strict Luau analysis and private normal/review builds.",
+    "diagnostic": "Opaque cyan diagnostic proved ribbon placement; image gallery confirmed successful texture loading. Corrected review lookup: waterfall beams are children of attachments, not directly of FallFlow parts."
+  },
+  "review": "build/lobby-fx-review/gloop-visible-native/lava-gloop.gif",
+  "sourceReference": "https://create.roblox.com/docs/reference/engine/classes/Beam",
+  "limits": [
+    "Desktop Studio review; no mobile validation.",
+    "Native image sequence is a sampled review capture, not a frame-rate benchmark or owner art approval.",
+    "No mesh deformation, asset upload or experience publication."
+  ]
+}

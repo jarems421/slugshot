@@ -1122,31 +1122,37 @@ local function buildVolcano()
 			end
 		end
 	end
-	-- Molten rivers, flowing, over the painted ones on the side facing the hub.
+	-- All seven poured streams, including their full visible width and rounded foot.
 	local rivers = {
 		{ -1.18, 8, 4.8, 0 },
-		{ -0.28, 25, 3.6, 1 },
-		{ 3.3106, 10, 4.5, 5 },
-		{ 4.2081, 21, 3.8, 6 },
+		{ -1.18 + 0.897598, 25, 3.6, 1 },
+		{ -1.18 + 0.897598 * 2, 13, 4.2, 2 },
+		{ -1.18 + 0.897598 * 3, 10, 5.2, 3 },
+		{ -1.18 + 0.897598 * 4, 38, 3.4, 4 },
+		{ -1.18 + 0.897598 * 5, 10, 4.5, 5 },
+		{ -1.18 + 0.897598 * 6, 21, 3.8, 6 },
 	}
 	for _, river in rivers do
 		local a0, lo, wide, k = river[1], river[2], river[3], river[4]
 		local segments = 5
 		for s = 0, segments - 1 do
 			local function at(f: number): (Vector3, number)
-				local t = f / segments * 0.8
+				local t = math.clamp(f / segments, 0, 1)
 				local y = 129 + (lo - 129) * t
 				local a = a0 + 0.08 * math.sin(y / 130 * 5 + k * 2)
+				local foot = math.clamp((t - 0.78) / 0.22, 0, 1)
 				local w = wide
 					* (0.74 + 0.2 * math.sin(t * 15 + k * 2))
 					* (0.62 + 0.38 * math.sin(math.pi * t * 0.7 + 0.35))
+					* (1 + 0.55 * foot * foot * (3 - 2 * foot))
 				-- On the thick flow's smooth surface, not the ribbed rock under it.
 				local height = y / 130
 				local over = 84
 					- 54 * height ^ 0.72
 					+ 0.45 * (15 - 5 * height)
 					+ 2 * math.sin(a * 3 + 0.5) * (1 - height)
-				return volcWall(a, y, over + 5.5 - volcRadius(a, y)), w * 1.5 * VOLCANO_SCALE
+				over = math.max(over, 96 - y * 1.5)
+				return volcWall(a, y, over + 4.9 - volcRadius(a, y)), w * 3.3 * VOLCANO_SCALE
 			end
 			-- Overlapping, each fading out at both ends, so none of them stops in a straight line.
 			local from, w0 = at(math.max(s - 0.35, 0))
@@ -1157,19 +1163,24 @@ local function buildVolcano()
 				to,
 				w0,
 				w1,
-				fxTexture("streak"),
-				Color3.fromRGB(240, 75, 10),
-				fade({ { 0, 1 }, { 0.2, 0.2 }, { 0.8, 0.2 }, { 1, 1 } }),
-				0.4,
+				fxTexture("flow"),
+				Color3.fromRGB(255, 38, 3),
+				fade({ { 0, 1 }, { 0.15, 0.08 }, { 0.85, 0.08 }, { 1, 1 } }),
+				0.22,
 				1
 			)
-			-- The waterfall's full flowing streak layer, not sparse specular glints.
+			-- Use the waterfall's opaque flowing body, not just its highlight layer.
 			-- Keep its width tangent to the volcano rather than billboarding at the viewer.
 			flow.FaceCamera = false
+			-- With one segment, both sampled ends were transparent: the whole flow vanished.
+			-- Interior samples are required to render the opaque middle of this fade.
+			flow.Segments = 12
 			flow.TextureMode = Enum.TextureMode.Wrap
 			flow.TextureLength = (to - from).Magnitude
 			-- An opaque-colour component keeps moving bands readable over emissive lava.
-			flow.LightEmission = 0.1
+			flow.LightEmission = 0.3
+			flow.Brightness = 3
+			flow:SetAttribute("LavaStream", k)
 			local along = (to - from).Unit
 			for _, node in { flow.Attachment0, flow.Attachment1 } do
 				if node then

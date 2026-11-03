@@ -6,6 +6,8 @@ local Stats = game:GetService("Stats")
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "lavaFlowA", from = Vector3.new(-115, 80, -205), at = Vector3.new(0, 85, -268) },
 	{ name = "lavaFlowB", from = Vector3.new(-115, 80, -205), at = Vector3.new(0, 85, -268) },
+	{ name = "lavaCloseA", from = Vector3.new(-40, 85, -188), at = Vector3.new(-25, 78, -214) },
+	{ name = "lavaCloseB", from = Vector3.new(-40, 85, -188), at = Vector3.new(-25, 78, -214) },
 	{ name = "grovePath", from = Vector3.new(75, 9, 0), at = Vector3.new(285, 70, 0) },
 	{ name = "grovePond", from = Vector3.new(112, 7, -24), at = Vector3.new(190, 14, 6) },
 	{ name = "groveFront", from = Vector3.new(100, 14, 0), at = Vector3.new(230, 60, 0) },
@@ -187,6 +189,13 @@ task.spawn(function()
 	)
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
+	game:GetService("ContentProvider")
+		:PreloadAsync(
+			game:GetService("CollectionService"):GetTagged("HubLavaFlow"),
+			function(_, status)
+				assert(status == Enum.AssetFetchStatus.Success, "lava body texture failed to load")
+			end
+		)
 	print("HUBCHECK tour starts")
 	local camera = workspace.CurrentCamera
 	camera.CameraType = Enum.CameraType.Scriptable
@@ -213,11 +222,34 @@ task.spawn(function()
 	local holder = workspace:WaitForChild("HubArt"):WaitForChild("StormFlash") :: BasePart
 	local bloom = holder:WaitForChild("Bloom") :: ParticleEmitter
 	assert(holder:FindFirstChild("Zap") == nil, "solid storm bolt emitter still exists")
+	local waterfallBody: Beam? = nil
+	for _, item in art:GetDescendants() do
+		if
+			item:IsA("Beam")
+			and item.Parent
+			and item.Parent:IsA("Attachment")
+			and item.Parent.Parent
+			and item.Parent.Parent.Name == "FallFlow"
+			and math.abs(item.TextureSpeed - 1.5) < 0.001
+		then
+			waterfallBody = item
+			break
+		end
+	end
+	assert(waterfallBody, "waterfall body layer missing from comparison")
 	local flowCount = 0
 	for _, flow in game:GetService("CollectionService"):GetTagged("HubLavaFlow") do
 		assert(flow:IsA("Beam"), "lava flow is not a scrolling ribbon")
 		assert(
-			math.abs(flow.TextureSpeed - 0.4) < 0.001,
+			flow.Segments >= #flow.Transparency.Keypoints - 1,
+			"flow fade has no visible interior samples"
+		)
+		assert(
+			flow.Texture == (waterfallBody :: Beam).Texture,
+			"lava uses a highlight instead of the waterfall body texture"
+		)
+		assert(
+			math.abs(flow.TextureSpeed - 0.22) < 0.001,
 			"lava flow speed differs from the slow-flow brief"
 		)
 		assert(flow.Attachment0 and flow.Attachment1, "lava flow has no endpoints")
@@ -231,9 +263,16 @@ task.spawn(function()
 		)
 		flowCount += 1
 	end
-	assert(flowCount == 20, "missing lava flow ribbons")
+	assert(flowCount == 35, "missing lava flow ribbons")
+	local streams: { [number]: boolean } = {}
+	for _, flow in game:GetService("CollectionService"):GetTagged("HubLavaFlow") do
+		streams[flow:GetAttribute("LavaStream") :: number] = true
+	end
+	for index = 0, 6 do
+		assert(streams[index], "a lava stream is still static")
+	end
 	print(
-		`HUBCHECK lava flow ribbons={flowCount} speed=0.4 surface-aligned; storm bolts=0 diffuse bloom retained`
+		`HUBCHECK lava flow ribbons={flowCount} streams=7 speed=0.22 surface-aligned; storm bolts=0 diffuse bloom retained`
 	)
 	-- Observe rendered cloud illumination before manually emitting review blooms.
 	local cloud =
