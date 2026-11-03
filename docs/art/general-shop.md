@@ -2,6 +2,8 @@
 
 ## Lobby build direction (2026-11-03)
 
+**Confirmed by the owner, later the same day (supersedes the pit-and-bridge study 03, which was rejected):** see the [gun side plan](gun-side-plan.html) ([live](https://claude.ai/artifact/DEmM21QCY21ykLjvw93HUr)). Remove the lava ravine. The gun-side rope bridge lands on a mushroom knoll that fills the whole gun side (-135 to -40 degrees, radius 85 to the wall) and wraps round an uneven, non-circular hole. A substantial bridge crosses the hole to the shop at its centre. The hole is full of canopy built from existing assets (giant mushroom v2 in the grove colours; orange and red only on small mushrooms) and cannot be entered: invisible walls along the bridge and round the rim. No fall respawn needed.
+
 **Confirmed by the owner:** study 02's exterior (rounded pods, portholes, trunk) is the direction. "Shop bar" means a shop counter. Keep the pit and the bridge; the pit is fairly deep but has a visible floor. The canopy becomes a jungle of mushroom canopies with hanging vines, as in the owner's two re-shared house pictures (stored privately in `private-assets/reference/shop`, not redistributed).
 
 **Considering (agent recommendation, owner agreed):** shrink the building to fit a slightly enlarged gun-side envelope, and redesign the interior around the counter, a blaster wall and slug displays. Budget it for phones from the start.
