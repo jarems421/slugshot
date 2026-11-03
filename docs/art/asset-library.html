@@ -5397,7 +5397,8 @@ vec3 knollPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 // Round 2 (owner): the wall mushrooms are flattened upside-down caps, joined to the rock and to each other, not loose
 // stacks: 11 is 0 funnel caps, 1 cupped shelves, 2 trumpet cups. The roots wind and curve instead of dropping straight,
 // with bead vines looped between them so they hang from something, and two giant mushrooms grow out of the wall and
-// curve up, vines draped round their stems: 12 is 0 meander, 1 braided pairs, 2 spreading net.
+// curve up, vines draped round their stems: 12 is 0 meander, 1 braided pairs, 2 spreading net, 3 the owner's mix of
+// meander and braided roots (chosen 2026-11-03), with bead vines wound round the mushroom stems in a clean spiral.
 // Ids: 80 rock, 81 velvet cap, 82 the asset's body, 83 its glow, 85 plum root, 86 tree stem, 87 tree cap, 88 cap gills.
 const float WALL_R = 4.2, WALL_TOP = 0.0, WALL_FOOT = -11.0;
 // Nearest feature distance and the gap to the second, for the velvet cushions (as knollCells in asset 10).
@@ -5524,6 +5525,8 @@ vec2 rootPath(int i, float y, float option, float strand) {
   float a0 = fi*0.785 + 0.3*sin(fi*2.0);
   float t = WALL_TOP - y;
   float a, off;
+  // The mix: every other root is a braided pair, the rest meander alone.
+  if (option > 2.5) option = mod(fi, 2.0) < 0.5 ? 0.0 : 1.0;
   if (option < 0.5) {
     // Meander: wide, lazy S-curves.
     a = a0 + 0.28*sin(t*0.55 + fi*1.7) + 0.1*sin(t*1.3 + fi);
@@ -5541,9 +5544,9 @@ vec2 rootPath(int i, float y, float option, float strand) {
 }
 void wallRoots(vec3 p, inout vec2 res) {
   float option = uPlaza;
-  bool braid = option > 0.5 && option < 1.5;
   for (int i = 0; i < 8; i++) {
     float fi = float(i);
+    bool braid = (option > 0.5 && option < 1.5) || (option > 2.5 && mod(fi, 2.0) > 0.5);
     float len = 9.5 - 3.0*hash1(fi*3.3);
     for (int sIdx = 0; sIdx < 2; sIdx++) {
       if (sIdx == 1 && !braid) break;
@@ -5567,7 +5570,7 @@ void wallRoots(vec3 p, inout vec2 res) {
         prev = cur;
       }
     }
-    if (option > 1.5) {
+    if (option > 1.5 && option < 2.5) {
       // Net branches: two diagonal branches to the neighbouring root.
       for (int b = 0; b < 2; b++) {
         float yb = WALL_TOP - 2.5 - float(b)*3.0 - hash1(fi + float(b));
@@ -5604,10 +5607,34 @@ void wallTrees(vec3 p, inout vec2 res) {
     vec3 qs = vec3(q.x/wave, q.y, q.z/wave);
     float cap = smax(sdEll(qs, vec3(1.0, 0.5, 1.0)*capR), -sdEll(qs + vec3(0.0, 0.22*capR, 0.0), vec3(0.9, 0.34, 0.9)*capR), 0.08);
     if (cap*0.75 < res.x) res = vec2(cap*0.75, q.y < -0.02*capR ? 88.0 : 87.0);
-    for (int k = 0; k < 3; k++) {
-      float fk = float(k);
-      float t0 = 0.12 + 0.22*fk;
-      beadLoop(p, quadAt(s0, s1, s2, t0), quadAt(s0, s1, s2, t0 + 0.2), 1.0 + 0.4*fk, fi*5.0 + fk, res);
+    if (uPlaza > 2.5) {
+      // A bead vine wound round the stem in a clean spiral, three turns from the rock to under the cap.
+      vec3 side = vec3(-outv.z, 0.0, outv.x);
+      vec3 prev = vec3(0.0);
+      for (int k = 0; k <= 30; k++) {
+        float t = 0.04 + 0.86*float(k)/30.0;
+        vec3 c = quadAt(s0, s1, s2, t);
+        vec3 tg = normalize(2.0*(1.0 - t)*(s1 - s0) + 2.0*t*(s2 - s1));
+        vec3 n2 = cross(tg, side);
+        float th = t*3.0*6.28318 + fi*1.3;
+        float rad = mix(0.55, 0.3, smoothstep(0.0, 0.7, t)) + 0.07;
+        vec3 h = c + (side*cos(th) + n2*sin(th))*rad;
+        if (k > 0) {
+          float d = sdSeg(p, prev, h, 0.06, 0.06);
+          if (d < res.x) res = vec2(d, 82.0);
+          if (mod(float(k), 3.0) < 0.5) {
+            float bd = length(p - h - (side*cos(th) + n2*sin(th))*0.05) - 0.12;
+            if (bd < res.x) res = vec2(bd, 83.0);
+          }
+        }
+        prev = h;
+      }
+    } else {
+      for (int k = 0; k < 3; k++) {
+        float fk = float(k);
+        float t0 = 0.12 + 0.22*fk;
+        beadLoop(p, quadAt(s0, s1, s2, t0), quadAt(s0, s1, s2, t0 + 0.2), 1.0 + 0.4*fk, fi*5.0 + fk, res);
+      }
     }
   }
 }
@@ -6923,7 +6950,8 @@ void main() {
     variants: [
       { name: "A · Meander", option: 0, bright: [0.75, 0.35, 1.0], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } },
       { name: "B · Braided pairs", option: 1, bright: [1.0, 0.4, 0.85], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } },
-      { name: "C · Spreading net", option: 2, bright: [0.75, 0.4, 1.0], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } }
+      { name: "C · Spreading net", option: 2, bright: [0.75, 0.4, 1.0], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } },
+      { name: "D · Meander and braided (chosen)", option: 3, bright: [0.75, 0.4, 1.0], camera: { target: [0, -3.5, 0], dist: 16, pitch: 0.15 } }
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -3.5, 0], dist: 19, figure: [0, -100, 0], glow: [0, -3, -5], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "New asset study v1, 3 Nov 2026: the knoll's plum roots down the hole's walls, each with a second kind of hanging growth."]]

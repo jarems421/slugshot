@@ -33,9 +33,9 @@ ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 
 
 <main>
   <header>
-    <p class="eyebrow">Gun side · canopy hole · roots and vines · round 2</p>
+    <p class="eyebrow">Gun side · canopy hole · roots and vines · round 3</p>
     <h1>Roots and vines down the hole walls</h1>
-    <p class="lede">Only the big plum roots, as you asked, now winding down the wall instead of dropping straight. Bead vines hang in loops from one root to the next and round the stems of two giant mushrooms that grow out of the wall and curve up, like the ones round the Maelstrom. Drag a picture to turn it.</p>
+    <p class="lede">Your pick, D: a mix of meander and braided roots, with the bead vine now wound round each mushroom stem in a clean spiral, three turns from the rock to under the cap. A and B stay beside it for comparison. Drag a picture to turn it.</p>
   </header>
 
   <section class="grid" id="grid"></section>
@@ -47,15 +47,25 @@ ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 
 (() => {
   const OPTIONS = [
   {
+    "key": "hole-vines-4",
+    "tag": "--a",
+    "letter": "D",
+    "name": "Meander and braided",
+    "lead": "Every other root is a braided pair; the rest wind down alone in S-curves.",
+    "points": [
+      "Bead vines looped from root to root",
+      "Bead vine spiralling round each mushroom stem",
+      "Your choice of A and B together"
+    ]
+  },
+  {
     "key": "hole-vines-1",
     "tag": "--a",
     "letter": "A",
     "name": "Meander",
     "lead": "Each root winds down in wide, lazy S-curves.",
     "points": [
-      "Bead vines looped between roots",
-      "Simplest and most readable",
-      "Leaves the most rock showing for mushrooms and crystals"
+      "For comparison"
     ]
   },
   {
@@ -65,21 +75,7 @@ ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 
     "name": "Braided pairs",
     "lead": "Roots go down in pairs, twisting round each other like rope.",
     "points": [
-      "Most detail per root",
-      "Strong, deliberate look",
-      "Bead loops strung across the braids"
-    ]
-  },
-  {
-    "key": "hole-vines-3",
-    "tag": "--a",
-    "letter": "C",
-    "name": "Spreading net",
-    "lead": "Roots drift sideways and send branches across to their neighbours.",
-    "points": [
-      "Covers the wall like a web",
-      "Most overgrown and wild",
-      "Branches give the bead vines more to hang from"
+      "For comparison"
     ]
   }
 ];
