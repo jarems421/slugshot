@@ -346,9 +346,6 @@ local function consider(instance: Instance)
 		instance:IsA("Model") and (instance.Name == "Inferno" or instance.Name == "InfernoDragon")
 	then
 		task.delay(0.5, setup, instance)
-	elseif instance:IsA("Model") and instance.Name == "InfernoFlight" then
-		-- A shot is over in moments, so this can't wait.
-		task.defer(setup, instance)
 	end
 end
 for _, item in workspace:GetDescendants() do

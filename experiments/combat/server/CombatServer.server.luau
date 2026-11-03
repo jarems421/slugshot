@@ -69,7 +69,7 @@ if not ok then
 	warn(`[Combat] Floppy flight model unavailable, shots draw a stand-in: {problem}`)
 end
 
--- Inferno flies in his transformed form, and his icon shows the base form. Both are exported at the same height as
+-- Inferno flies in his base form until the transformation is built, and his icon shows it too. Both are exported at the same height as
 -- Floppy (0.34 x 2.72 source units is Floppy's reference length), so they take his scale. Pivots match Floppy's.
 local function buildInfernoModels()
 	local assetModule = ReplicatedStorage:FindFirstChild("InfernoAsset")
@@ -114,20 +114,6 @@ local function buildInfernoModels()
 		model.Parent = combatAssets
 	end
 
-	local dragon, dragonSide = build(asset.dragon.model, "InfernoFlight")
-	local dragonRoot = dragon:FindFirstChild("root", true) :: Bone
-	local dragonHead = dragon:FindFirstChild("head", true) :: Bone
-	local tail = dragon:FindFirstChild("tail_1", true) :: Bone
-	local forward = (dragonHead.WorldPosition - tail.WorldPosition).Unit
-	local dragonUp = forward:Cross(dragonSide).Unit
-	Appearance.outline(dragon)
-	pivot(
-		dragon,
-		(dragonRoot.WorldPosition + dragonHead.WorldPosition) / 2,
-		dragonUp,
-		dragonSide:Cross(dragonUp).Unit
-	)
-
 	local base, baseSide = build(asset.base.model, "InfernoIcon")
 	local baseRoot = base:FindFirstChild("root", true) :: Bone
 	local baseHead = base:FindFirstChild("head", true) :: Bone
@@ -138,6 +124,10 @@ local function buildInfernoModels()
 		baseUp,
 		baseSide:Cross(baseUp).Unit
 	)
+	local flight = base:Clone()
+	flight.Name = "InfernoFlight"
+	Appearance.outline(flight)
+	flight.Parent = combatAssets
 end
 local infernoOk, infernoProblem = pcall(buildInfernoModels :: () -> any)
 if not infernoOk then
