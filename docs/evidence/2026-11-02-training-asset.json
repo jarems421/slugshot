@@ -1,0 +1,180 @@
+{
+  "date": "2026-11-02",
+  "status": "Implemented offline; owner asset review pending",
+  "branch": "feature/training-arena",
+  "base_revision": "cb8b432",
+  "scope": "Inspectable static 3D asset only. Owner requested design work be completed before gameplay integration.",
+  "source": "Original Slugshot lobby meshes, read-only snapshot from slugshot-lobby/build/lobby/export; separate painted maps restored.",
+  "source_sha256": {
+    "hub-rock": "073005bdef42eb2744b13876afb75631d2c813851b7f9049ecbfbae44376eb73",
+    "hub-rock-debris": "108a90ae9d1a6f02710c7b6e4d86293c978891fc57fd1665ba31bc4302cb86dc",
+    "rock-wall-4": "da4da4e436f9e6c728d617e747bcc58d4936c43bf0c3e7c36214be7899f61f45",
+    "rock-wall-5": "8df2a0ee2ff6f6646e09a902a6d312a4a2eaf21f5e83420cc85331bdfaa7d675",
+    "rock-wall-6": "1499c74b8d6acd2e2fb4adf3856992b68916330f63d8ba16f22fa7ad23c809a4",
+    "rock-wall-7": "99798d08da9ecc03595b10d42e049ca562e306fcf3a3aff984c23664c4dbd328"
+  },
+  "blender": "5.2.3 LTS",
+  "units": "1 scene unit = 1 Roblox stud",
+  "mesh_objects": 247,
+  "triangles": 808204,
+  "new_components_qa": {
+    "components": 136,
+    "errors": [],
+    "accepted_warnings": [
+      "Planar stacked UVs are intentional for shared tiling stone and uniform prop materials; not used for a unique lightmap bake.",
+      "Objects use arena-relative coordinates: props rest on the island, rubble intentionally floats, enclosure is offset.",
+      "Imported art retains source split boundaries and inverted ink shells; tested visually, not declared watertight.",
+      "Wall tile/backing overlaps are intentional; no claim of runtime collision or occlusion efficiency."
+    ]
+  },
+  "roundtrip": {
+    "pass": true,
+    "before": {
+      "objects": 247,
+      "triangles": 808204,
+      "min": [
+        -469.87066650390625,
+        -469.8705749511719,
+        -235.0
+      ],
+      "max": [
+        469.8707275390625,
+        469.87066650390625,
+        277.4232482910156
+      ],
+      "room_parts": 68,
+      "missing_materials": []
+    },
+    "after": {
+      "objects": 247,
+      "triangles": 808204,
+      "min": [
+        -469.87066650390625,
+        -469.8705749511719,
+        -235.0
+      ],
+      "max": [
+        469.8707275390625,
+        469.87066650390625,
+        277.4232482910156
+      ],
+      "room_parts": 68,
+      "missing_materials": []
+    },
+    "max_bounds_error_studs": 0.0,
+    "limits": "Offline Blender-to-GLB roundtrip only. Not Studio playback, collisions, performance or owner approval."
+  },
+  "browser": {
+    "pass": true,
+    "mode": "webgl",
+    "stats": {
+      "objects": 247,
+      "triangles": 808204
+    },
+    "views": 5,
+    "mobileWidth": 390,
+    "rotation": true,
+    "reset": true,
+    "errors": []
+  },
+  "artifact_sha256": "b969403e552f3339becb81e72831cf425866fb41f77027260feffaae85c4e81e",
+  "glb_bytes": 40140300,
+  "artifacts": "build/training (ignored): .blend, .glb, 4 rendered angles, wire/random sheets, detailed QA, roundtrip and browser captures",
+  "unresolved": [
+    "Owner art/scale verdict",
+    "Roblox import/collisions/lighting and performance",
+    "Gameplay dummies, movement checks, fall recovery and all-slug loadout selector"
+  ],
+  "revision_2": {
+    "owner_feedback": "First design liked. Plain normal rock floor without plants; running/target runes instead of lettering; remove training wording; adjust moving dummy speed or keep stationary; spread rubble, add smaller rim pieces, raise some while keeping majority low. Show enclosure in Studio.",
+    "base_draft": "10ba7cb",
+    "geometry": {
+      "mesh_objects": 369,
+      "triangles": 784786,
+      "floor_stones": 66,
+      "additional_rim_rocks": 48,
+      "new_component_qa": 267,
+      "qa_failures": 0,
+      "glb_bytes": 40508740
+    },
+    "glb_sha256": "3e4b5dea14e364ba952ba5ddc83dfaf5d280dfc7eecd8291415f9ccd40926a9d",
+    "roundtrip": {
+      "pass": true,
+      "before": {
+        "objects": 369,
+        "triangles": 784786,
+        "min": [
+          -469.87066650390625,
+          -469.8705749511719,
+          -235.0
+        ],
+        "max": [
+          469.8707275390625,
+          469.87066650390625,
+          277.4232482910156
+        ],
+        "room_parts": 68,
+        "missing_materials": []
+      },
+      "after": {
+        "objects": 369,
+        "triangles": 784786,
+        "min": [
+          -469.87066650390625,
+          -469.8705749511719,
+          -235.0
+        ],
+        "max": [
+          469.8707275390625,
+          469.87066650390625,
+          277.4232482910156
+        ],
+        "room_parts": 68,
+        "missing_materials": []
+      },
+      "max_bounds_error_studs": 0.0,
+      "limits": "Offline Blender-to-GLB roundtrip only. Not Studio playback, collisions, performance or owner approval."
+    },
+    "browser": {
+      "pass": true,
+      "mode": "webgl",
+      "stats": {
+        "objects": 369,
+        "triangles": 784786
+      },
+      "dummyControls": true,
+      "views": 5,
+      "mobileWidth": 390,
+      "rotation": true,
+      "reset": true,
+      "errors": []
+    },
+    "studio": {
+      "version": "0.745.0.7451137",
+      "clients": 1,
+      "device": "Windows desktop; local server; no injected network simulation",
+      "fixture": "tools/training/build_studio.py --check; tools/training/studio_review.ps1 -Check",
+      "results": [
+        "[TRAININGCHECK] server PASS: 66 floor stones, 48 rim rocks, 68 enclosure parts; motion, pause, resume, invalid input",
+        "[TRAININGCHECK] client PASS: replicated 0/4/16 speed, pause, movement, forged speed rejection and controls",
+        "[TRAININGCHECK] view room",
+        "[TRAININGCHECK] view west",
+        "[TRAININGCHECK] view ceiling",
+        "[TRAININGCHECK] view edge",
+        "[TRAININGCHECK] view runes",
+        "[TRAININGCHECK] view overview",
+        "[TRAININGCHECK] ALL PASS"
+      ],
+      "observed": "Native material views inspected at room, west wall, ceiling, rim at eye height, running rune and overview. Eye-height rim image shows a higher rock beyond the edge. Original private rubble imports required independent group bounds restoration. Sealed cavern needed stable art-review illumination; final preview disables global roof shadows, removes the excessive island point fills, and retains restrained wall fills with a neutral 13:30 preview key (the shared cavern preset starts at midnight). Waiting for mesh/texture preload prevented misleading partial/white review frames.",
+      "normal_place": "build/SlugshotTrainingReview.rbxlx",
+      "controls": "F opens controls; speed 0-20 studs/s; Stationary; Reset 7. Speed is peak sinusoidal speed; same path and phase on pause/resume. Other dummies remain stationary.",
+      "private_imports": "Only authored draft model (under 2 MB) and one stone texture privately imported for requested Studio review; existing island/rubble/wall IDs reused; no marketplace listing or experience publication.",
+      "limits": [
+        "One local client only. Server/client speed and rejection tested; no multiplayer latency or device-performance claim.",
+        "Scripted eye-height camera review is not an owner walk-through or final art approval.",
+        "This review has movement and adjustable target motion; shooting damage and the all-species selector are not integrated here."
+      ]
+    },
+    "validation_completed": "2026-11-03"
+  }
+}

@@ -333,3 +333,19 @@ Adding many samples of a heavy shape to one paint branch made the driver run the
 ## Replacing shader blocks (2026-11-03)
 
 Cutting between two markers removed code living between them that others needed, and because the batch kept going, a 13-minute rebuild left the old mountain in place with no plants. Print failures loudly in long batches and stop at the first one. Raising glow on many props at once bleaches them: check colour before brightness.
+
+## 2026-11-02 - Training asset reuse and review
+
+- **Confirmed:** reuse the spawn rock without roots, cracked top or lower spiral; enlarge it and add underside debris. Build a full asset for owner inspection before gameplay.
+- **Implemented/verified:** source lobby GLBs carry geometry only. Restoring each report's color/normal/emissive maps and inverse ink materials prevents a misleading grey review. Packed images survive the GLB reimport. Keep the original assets as a read-only, hashed snapshot.
+- **Implemented/verified:** the measured rim uses x=sin(angle), shader z=-cos(angle). Blender maps y=-z, so y must be +cos(angle). Mirroring that sign produced cap overhangs; material renders exposed the error, and the corrected cap tracks the rock.
+- **QA lesson:** the generic wire review scales thickness to total asset bounds, producing enormous miter spikes on thin range marks. The training-only verification adapts that invocation to 0.015-stud wires without even-offset miters; the installed skill remains unchanged. Random-color and thin-wire sheets plus actual materials are complementary checks.
+- **Limits:** deliberate detached rubble, split source shells and arena-relative offsets are documented exceptions. Offline export consistency and a desktop/mobile-width browser check do not prove Roblox collision or runtime performance. [Asset and evidence](training-arena.md).
+
+## 2026-11-02 - Plain rock training floor and native review
+
+- **Confirmed:** the owner liked the first layout; flooring should use the normal stone language without fungi, with action pictograms rather than words. Some rubble should be visible from eye height at the rim; most stays below.
+- **Implemented/verified:** low, closed painted stones cover the support cap, original running/target runestones replace all lettering, and 48 additional closed rocks span the rim. Geometry QA catches degenerate clip intersections and inconsistent winding: weld duplicate vertices, remove degenerates, and use convex boundary stones before exporting.
+- **Rejected internally:** taking arbitrary loose components from the existing debris group produced thin flakes that read as cards near eye height. Closed faceted stones give the higher pieces volume; original debris groups remain below.
+- **Native evidence:** sealed roofs block the sun; ambient alone made the first Studio review too dark. Local shadow-free fills restore readability. Mesh/texture loading initially made screenshots show missing or white pieces: preload the review art before acceptance captures. Source rubble imports can recenter groups separately; restore each group's bounds. Eye-height rim, rune, room and ceiling captures were inspected after these fixes.
+- **Limits:** offline QA and a one-client native review do not prove mobile performance, route collision quality or final owner approval. [Current review](training-arena.md).
