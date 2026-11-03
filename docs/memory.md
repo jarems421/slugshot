@@ -1913,3 +1913,9 @@
 - **Confirmed:** make lobby Floppy look up clearly like Burpy; always a smile with a little jaw drop, then resume hopping.
 - **Implemented/verified locally:** height-tracking head lift, reliable near/watched greetings, shorter cooldown and independent reaction slots; native actual-bone smile/jaw/upward-head and subsequent-hop assertions pass, alongside contact/cadence and full creature/combat checks.
 - **Limits:** runtime-only pose change; no upload/publish. Owner feel verdict remains open. [Evidence](evidence/2026-11-03-floppy-greeting.json).
+
+## 2026-11-03 - Volcano flow and soft storm flashes
+
+- **Confirmed:** gentle flowing lava, much slower than the mountain waterfall; remove solid lightning bolts, keep diffuse storm flashes.
+- **Implemented/verified locally:** existing lava texture scroll increased to 0.28; twenty downward ribbons verified. Zap creation/emission removed; softer larger bloom and cloud glow retained. Normal/check builds, formatting/lint/types and native tour pass. Corrected an obstructed lava review camera.
+- **Limits:** owner final motion verdict pending; no mesh changes, new upload or experience publication. [Evidence](evidence/2026-11-03-lobby-lava-storm.json).

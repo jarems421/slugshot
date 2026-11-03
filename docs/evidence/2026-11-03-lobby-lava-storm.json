@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified locally; owner motion verdict pending",
+  "ownerBrief": "Gentle downhill lava movement, slower than the mountain waterfall; remove solid storm lightning bolts and retain diffuse light flashes.",
+  "lava": {
+    "method": "Existing downhill Beam texture scroll, same rendering method as the waterfall",
+    "previousTextureSpeed": 0.07,
+    "textureSpeed": 0.28,
+    "mountainWaterfallTextureSpeeds": [
+      1.5,
+      2.3
+    ],
+    "ribbons": 20,
+    "geometryUnchanged": true
+  },
+  "storm": {
+    "boltEmitterRemoved": true,
+    "clientBoltEmissionRemoved": true,
+    "cloudEmissiveFlashesPreserved": true,
+    "bloomSize": [
+      80,
+      100
+    ],
+    "bloomInitialTransparency": 0.62,
+    "bloomLifetime": [
+      0.35,
+      0.55
+    ],
+    "placement": "Lowered 12 studs to keep the larger bloom clear of the cloud surface."
+  },
+  "checks": {
+    "native": "PASS: full HubCheck tour completed; 20 downward ribbons at speed 0.28; no Zap emitter; Bloom retained.",
+    "static": "PASS: StyLua, Selene (zero warnings), strict luau-lsp analysis and normal/check/private review builds.",
+    "focusedVisual": "PASS: corrected fixed-camera pair inspected; lava highlights shift across time while the underlying painted flow remains stable. Diffuse storm views inspected; no bolt emitter."
+  },
+  "reviewPaths": [
+    "build/lobby-fx-review/native",
+    "build/lobby-fx-review/focused-native"
+  ],
+  "reviewCorrection": "First fixed volcano view was blocked by the portal arch; moved the authored camera to the side and repeated the focused visual review.",
+  "limits": [
+    "Focused desktop Studio only; owner decides final subtlety/speed.",
+    "No mesh rebuild, new asset upload or experience publication."
+  ]
+}

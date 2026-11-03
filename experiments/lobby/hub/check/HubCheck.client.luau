@@ -4,6 +4,8 @@ local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 
 local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
+	{ name = "lavaFlowA", from = Vector3.new(-115, 80, -205), at = Vector3.new(0, 85, -268) },
+	{ name = "lavaFlowB", from = Vector3.new(-115, 80, -205), at = Vector3.new(0, 85, -268) },
 	{ name = "grovePath", from = Vector3.new(75, 9, 0), at = Vector3.new(285, 70, 0) },
 	{ name = "grovePond", from = Vector3.new(112, 7, -24), at = Vector3.new(190, 14, 6) },
 	{ name = "groveFront", from = Vector3.new(100, 14, 0), at = Vector3.new(230, 60, 0) },
@@ -205,21 +207,35 @@ task.spawn(function()
 		task.wait(1)
 	end
 	camera.CameraType = Enum.CameraType.Custom
-	-- The lightning, held long enough to see, at both ends of where it can strike.
+	-- The diffuse storm flashes at both ends of their range; no bolt emitter remains.
 	camera.CameraType = Enum.CameraType.Scriptable
 	camera.CFrame = CFrame.lookAt(Vector3.new(-30, 20, -30), Vector3.new(0, 280, 0))
 	local holder = workspace:WaitForChild("HubArt"):WaitForChild("StormFlash") :: BasePart
 	local bloom = holder:WaitForChild("Bloom") :: ParticleEmitter
-	local zap = holder:WaitForChild("Zap") :: ParticleEmitter
-	bloom.Lifetime, zap.Lifetime = NumberRange.new(4), NumberRange.new(4)
+	assert(holder:FindFirstChild("Zap") == nil, "solid storm bolt emitter still exists")
+	local flowCount = 0
+	for _, flow in game:GetService("CollectionService"):GetTagged("HubLavaFlow") do
+		assert(flow:IsA("Beam"), "lava flow is not a scrolling ribbon")
+		assert(
+			math.abs(flow.TextureSpeed - 0.28) < 0.001,
+			"lava flow speed differs from the slow-flow brief"
+		)
+		assert(flow.Attachment0 and flow.Attachment1, "lava flow has no endpoints")
+		assert(
+			flow.Attachment0.WorldPosition.Y > flow.Attachment1.WorldPosition.Y,
+			"lava flows uphill"
+		)
+		flowCount += 1
+	end
+	assert(flowCount == 20, "missing lava flow ribbons")
+	print(`HUBCHECK lava flow ribbons={flowCount} speed=0.28; storm bolts=0 diffuse bloom retained`)
 	for index, radius in { 30, 72 } do
 		local base = holder:GetAttribute("VeilY") :: number
-		holder.Position = Vector3.new(radius, base - 25 + 90 * (1 - radius / 96) ^ 1.7 - 40, 0)
+		holder.Position = Vector3.new(radius, base - 25 + 90 * (1 - radius / 96) ^ 1.7 - 52, 0)
 		bloom:Emit(1)
-		zap:Emit(1)
-		task.wait(1)
+		task.wait(0.08)
 		print(`HUBCHECK shot flash{index}`)
-		task.wait(3.5)
+		task.wait(2)
 	end
 	camera.CameraType = Enum.CameraType.Custom
 	print("HUBCHECK tour ends")

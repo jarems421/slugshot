@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified locally, 2026-11-03 - lava/storm motion:** gentle downward lava scroll at 0.28, much slower than the mountain waterfall; solid storm bolt emitter removed, diffuse blooms/cloud flashes retained. Native tour and formatting/lint/types/build checks pass. [Evidence](evidence/2026-11-03-lobby-lava-storm.json); owner motion verdict open.
+
 **Implemented/verified locally, 2026-11-03 - Floppy lobby greetings:** stronger player-height head tracking, reliable near/watched notice, independent reaction slots, a happy smile and small jaw drop, then hopping resumes. Native actual-bone/recovery checks and full creature/combat checks pass. [Evidence](evidence/2026-11-03-floppy-greeting.json); owner feel verdict open.
 
 **Implemented, 2026-11-03 - happier sleepy Floppy:** softer resting lids, three lifted-corner smiles, gentler eye wandering and less jaw motion. Flat sole/import preserved. Repaired missed facial registration after resident rig replication. Native smile/blink checks, before/after renders, asset QA and full combat/creature checks pass; owner art verdict remains open. [Evidence](evidence/2026-11-03-floppy-happy-tired.json).

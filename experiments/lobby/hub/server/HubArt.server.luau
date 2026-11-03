@@ -927,35 +927,22 @@ local function buildSkyWell()
 	haze.Rate = 0.35
 	haze.Speed = NumberRange.new(0)
 	haze.Parent = mouth
-	-- Lightning: the client moves this holder inside the storm and fires its two emitters.
+	-- Diffuse lightning inside the storm: cloud illumination and a soft bloom only.
 	local flash = holder("StormFlash", Vector3.new(0, 300 - CEILING_DROP, 0), Vector3.one)
-	local zap = Instance.new("ParticleEmitter")
-	zap.Name = "Zap"
-	zap.Texture = fxTexture("zap")
-	zap.Color = ColorSequence.new(Color3.fromRGB(235, 235, 255))
-	zap.LightEmission = 1
-	zap.LightInfluence = 0
-	zap.Size = NumberSequence.new(26, 26)
-	zap.Transparency = fade({ { 0, 0 }, { 0.6, 0.1 }, { 1, 1 } })
-	zap.Lifetime = NumberRange.new(0.12, 0.22)
-	zap.Rate = 0
-	zap.Speed = NumberRange.new(0)
-	zap.Rotation = NumberRange.new(0, 360)
-	zap.Parent = flash
-	-- The cloud round the bolt lighting up.
+	-- A wide, faint glow dissipates without drawing a solid bolt silhouette.
 	local bloom = Instance.new("ParticleEmitter")
 	bloom.Name = "Bloom"
 	bloom.Texture = fxTexture("flash")
 	bloom.Color = ColorSequence.new(Color3.fromRGB(190, 180, 255))
 	bloom.LightEmission = 1
 	bloom.LightInfluence = 0
-	bloom.Size = NumberSequence.new(70, 80)
-	bloom.Transparency = fade({ { 0, 0.45 }, { 1, 1 } })
-	bloom.Lifetime = NumberRange.new(0.25, 0.4)
+	bloom.Size = NumberSequence.new(80, 100)
+	bloom.Transparency = fade({ { 0, 0.62 }, { 1, 1 } })
+	bloom.Lifetime = NumberRange.new(0.35, 0.55)
 	bloom.Rate = 0
 	bloom.Speed = NumberRange.new(0)
 	bloom.Parent = flash
-	-- The veil's height at the middle of the storm, for placing the bolts just under it.
+	-- The veil's height at the middle of the storm, for placing blooms below it.
 	flash:SetAttribute("VeilY", 256 - CEILING_DROP)
 end
 
@@ -1164,7 +1151,7 @@ local function buildVolcano()
 			-- Overlapping, each fading out at both ends, so none of them stops in a straight line.
 			local from, w0 = at(math.max(s - 0.35, 0))
 			local to, w1 = at(s + 1.35)
-			beam(
+			local flow = beam(
 				"LavaRiver",
 				from,
 				to,
@@ -1173,9 +1160,11 @@ local function buildVolcano()
 				fxTexture("lavaflow"),
 				Color3.new(1, 1, 1),
 				fade({ { 0, 1 }, { 0.3, 0.25 }, { 0.7, 0.25 }, { 1, 1 } }),
-				0.07,
+				0.28,
 				1
 			)
+			-- Same scrolling texture method as the mountain falls, at a much slower pace.
+			CollectionService:AddTag(flow, "HubLavaFlow")
 			-- A soft halo, standing off the flow. HubMotion brightens these in a slow wave running downhill.
 			local halo = beam(
 				"LavaHalo",

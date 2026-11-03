@@ -224,7 +224,7 @@ local function inView(camera: Camera, centre: Vector3): boolean
 	return to.Magnitude < 60 or to.Unit:Dot(camera.CFrame.LookVector) > 0.25
 end
 
--- Lightning: the storm lights up from inside, with short bolts and a local bloom just under its surface.
+-- Lightning: diffuse cloud illumination and a soft bloom, without solid bolt sprites.
 local STORM_GLOW = 0.7
 local STORM_FLASH = 1.5
 local nextFlash = 3
@@ -255,16 +255,12 @@ local function flash(t: number, dt: number)
 	local base = holder:GetAttribute("VeilY") :: number
 	holder.Position = Vector3.new(
 		radius * math.cos(angle),
-		base - 25 + 90 * (1 - radius / 96) ^ 1.7 - 40,
+		base - 25 + 90 * (1 - radius / 96) ^ 1.7 - 52,
 		radius * math.sin(angle)
 	)
 	local bloom = holder:FindFirstChild("Bloom")
 	if bloom and bloom:IsA("ParticleEmitter") then
 		bloom:Emit(1)
-	end
-	local zap = holder:FindFirstChild("Zap")
-	if zap and zap:IsA("ParticleEmitter") and math.random() < 0.7 then
-		zap:Emit(1)
 	end
 end
 

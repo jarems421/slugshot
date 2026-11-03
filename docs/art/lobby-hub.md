@@ -124,3 +124,7 @@ A nine-contact circular support test checks the whole belly footprint against a 
 ### Floppy look-up greeting revision - 2026-11-03
 
 **Implemented/verified locally:** Floppy reactions now have their own two slots, reliable nearby notice, shorter cooldown and a stronger height-tracking head tilt. Watching a nearby resident also qualifies. Floppies always smile and lower the jaw a little, then return to hopping. Native head/mouth/boundary/contact/cadence checks pass; owner feel approval remains open. [Evidence](../evidence/2026-11-03-floppy-greeting.json).
+
+### Slow lava and diffuse storm flashes - 2026-11-03
+
+**Confirmed:** owner wants slight downhill lava motion like a slower mountain waterfall, and storm light flashes without solid lightning bolts. **Implemented/verified locally:** increased the existing twenty lava ribbons from 0.07 to 0.28 texture speed (waterfall 1.5/2.3). Removed the Zap emitter and its client emission; retained cloud emissive flashes and a wider, fainter, slightly longer-lived bloom. Its placement is lower to prevent surface clipping. Full native tour checks downward flow and no bolt emitter. [Evidence](../evidence/2026-11-03-lobby-lava-storm.json). Owner motion verdict remains open; no asset upload/publication.

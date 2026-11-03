@@ -349,3 +349,7 @@ Cutting between two markers removed code living between them that others needed,
 - **Rejected internally:** taking arbitrary loose components from the existing debris group produced thin flakes that read as cards near eye height. Closed faceted stones give the higher pieces volume; original debris groups remain below.
 - **Native evidence:** sealed roofs block the sun; ambient alone made the first Studio review too dark. Local shadow-free fills restore readability. Mesh/texture loading initially made screenshots show missing or white pieces: preload the review art before acceptance captures. Source rubble imports can recenter groups separately; restore each group's bounds. Eye-height rim, rune, room and ceiling captures were inspected after these fixes.
 - **Limits:** offline QA and a one-client native review do not prove mobile performance, route collision quality or final owner approval. [Current review](training-arena.md).
+
+## 2026-11-03 - Check movement from an unobstructed view
+
+The first fixed lava-camera view sat inside the portal arch and could not show the volcano. Technical scrolling checks alone were insufficient visual evidence. Move the authored review view beside the arch, then capture the same view at different times. The storm review must not wait for or emit a deleted Zap effect; keep only normal-lifetime diffuse blooms and cloud flashes.
