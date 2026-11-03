@@ -5724,6 +5724,230 @@ vec3 wallLifePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 #endif
 }
 #endif
+#if ASSET == 13 || ASSET == 14
+// ---------- 13 and 14: the canopy hole's inner wall and floor. 1 unit = 5 studs. Owner, 2026-11-03: besides the outer
+// wall, the hole has the spire under the shop's platform (13) and a floor far below (14). Options by uPlaza.
+// 13: 0 root-bound spire, 1 giant stalk, 2 root-ball island. 14: 0 mist lake, 1 spore meadow, 2 root tangle.
+// Ids: 90 rock, 91 velvet, 92 plum root, 93 pale stalk, 94 glow, 95 violet cap or shelf, 96 mist, 97 vine.
+vec2 cellsIF(vec2 x, out vec2 cellId) {
+  vec2 i = floor(x), f = fract(x);
+  float d1 = 8.0, d2 = 8.0;
+  cellId = i;
+  for (int y = -1; y <= 1; y++) for (int xx = -1; xx <= 1; xx++) {
+    vec2 g = vec2(float(xx), float(y));
+    vec2 o = 0.15 + 0.7*fract(sin(vec2(dot(i + g, vec2(127.1, 311.7)), dot(i + g, vec2(269.5, 183.3))))*43758.5453);
+    float d = length(g + o - f);
+    if (d < d1) { d2 = d1; d1 = d; cellId = i + g; } else if (d < d2) d2 = d;
+  }
+  return vec2(d1, d2 - d1);
+}
+float segIF(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+// A cupped shelf growing off a surface at point b, facing out along o.
+float shelfIF(vec3 p, vec3 b, vec3 o, float r) {
+  vec3 side = normalize(vec3(-o.z, 0.0, o.x));
+  vec3 q = vec3(dot(p - b, side), p.y - b.y, dot(p - b, o));
+  q.yz = rot(-0.45)*q.yz;
+  float rr = length(q.xz - vec2(0.0, 0.55*r));
+  float surf = 0.38*r*(rr/r)*(rr/r);
+  float shell = max(abs(q.y - surf) - 0.07*r, rr - r);
+  float rim = length(vec2(rr - r*0.97, q.y - surf - 0.05*r)) - 0.11*r;
+  return max(smin(shell, rim, 0.05*r), -q.z);
+}
+
+#if ASSET == 13
+const float PLAT_R = 5.2;
+float spireR(float y, float option) {
+  if (option > 1.5) return mix(PLAT_R, 3.6, smoothstep(0.0, -6.0, y));
+  return mix(PLAT_R, 3.0, smoothstep(0.0, -9.0, y)) + 0.25*sin(y*0.9);
+}
+vec2 innerWall(vec3 p) {
+  float option = uPlaza;
+  float a = atan(p.z, p.x);
+  // The platform's top: velvet, like the knoll, where the shop will stand.
+  vec2 cid;
+  vec2 cells = cellsIF(p.xz*1.5, cid);
+  float top = 0.05 + 0.12*smoothstep(0.0, 0.3, cells.y)*(1.0 - cells.x*cells.x);
+  float r0 = spireR(p.y, option) + 0.3*noise3(vec3(cos(a)*2.0, p.y*0.5, sin(a)*2.0)) + 0.12*noise3(p*2.0);
+  float body = (length(p.xz) - r0)*0.7;
+  float floorY = option > 1.5 ? -6.0 : option > 0.5 ? -1.4 : -16.0;
+  float solid = max(body, p.y - top);
+  solid = max(solid, floorY - p.y + (option > 1.5 ? 2.5*smoothstep(0.0, 3.5, length(p.xz)) : 0.0));
+  vec2 res = vec2(solid, p.y > -0.3 && length(p.xz) < PLAT_R - 0.1 ? 91.0 : 90.0);
+  if (option < 0.5) {
+    // Root-bound spire: thick plum roots spiral down round the rock, gripping it.
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      vec3 prev = vec3(0.0);
+      for (int k = 0; k <= 14; k++) {
+        float y = 0.1 - float(k)*1.0;
+        float aa = fi*0.8976 + float(k)*0.32 + 0.15*sin(float(k)*0.8 + fi);
+        vec3 cur = vec3(cos(aa), 0.0, sin(aa))*(spireR(y, option) + 0.15) + vec3(0.0, y, 0.0);
+        if (k > 0) {
+          float d = segIF(p, prev, cur, 0.45 - 0.015*float(k), 0.45 - 0.015*float(k + 1));
+          if (d < res.x) res = vec2(d, 92.0);
+        }
+        prev = cur;
+      }
+    }
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float aa = fi*2.4, y = -1.5 - mod(fi*2.7, 9.0);
+      vec3 o = vec3(cos(aa), 0.0, sin(aa));
+      float sh = shelfIF(p, o*(spireR(y, option) + 0.2) + vec3(0.0, y, 0.0), o, 0.75 + 0.25*hash1(fi));
+      if (sh*0.8 < res.x) res = vec2(sh*0.8, 95.0);
+    }
+  } else if (option < 1.5) {
+    // Giant stalk: the spire is a huge pale mushroom stem, ribbed, with a drooping skirt under the platform.
+    float rib = 0.08*sin(a*24.0);
+    float stalk = (length(p.xz) - spireR(p.y, option) + 1.0 - rib)*0.7;
+    stalk = max(max(stalk, p.y + 1.0), -16.0 - p.y);
+    if (stalk < res.x) res = vec2(stalk, 93.0);
+    res.x = min(res.x, solid);
+    float sr = length(p.xz);
+    float skirtY = -1.4 - 0.9*smoothstep(PLAT_R - 1.0, PLAT_R + 1.6, sr) + 0.15*sin(a*9.0);
+    float skirt = max(abs(p.y - skirtY) - 0.09, max(sr - PLAT_R - 1.6, PLAT_R - 1.6 - sr));
+    if (skirt*0.8 < res.x) res = vec2(skirt*0.8, 93.0);
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float aa = fi*2.4, y = -3.5 - mod(fi*2.7, 9.0);
+      vec3 o = vec3(cos(aa), 0.0, sin(aa));
+      float sh = shelfIF(p, o*(spireR(y, option) - 0.5) + vec3(0.0, y, 0.0), o, 0.7 + 0.25*hash1(fi));
+      if (sh*0.8 < res.x) res = vec2(sh*0.8, 95.0);
+    }
+  } else {
+    // Root-ball island: the rock ends and breaks into roots hanging down into the canopy, so the shop seems to float.
+    for (int i = 0; i < 24; i++) {
+      float fi = float(i);
+      float aa = fi*2.399, rr = 0.6 + 2.6*sqrt(hash1(fi*3.1));
+      vec3 prev = vec3(cos(aa)*rr, -6.0 + 2.5*smoothstep(0.0, 3.5, rr) + 0.3, sin(aa)*rr);
+      float len = 5.0 + 7.0*hash1(fi*1.7);
+      for (int k = 1; k <= 8; k++) {
+        float t = float(k)/8.0;
+        float y = prev.y - len/8.0;
+        vec3 cur = vec3(cos(aa + 0.25*sin(t*4.0 + fi))*rr*(1.0 - 0.3*t), y, sin(aa + 0.25*sin(t*4.0 + fi))*rr*(1.0 - 0.3*t));
+        float d = segIF(p, prev, cur, 0.48*(1.0 - 0.8*(t - 0.125)), 0.48*(1.0 - 0.8*t));
+        if (d < res.x) res = vec2(d, 92.0);
+        if (k == 8) {
+          float tip = length(p - cur) - 0.14;
+          if (tip < res.x) res = vec2(tip, 94.0);
+        }
+        prev = cur;
+      }
+    }
+  }
+  return res;
+}
+#endif
+
+#if ASSET == 14
+// Three canopy stems rise out of the floor, out of sight.
+vec3 stemAt(int i) { float fi = float(i); return vec3(cos(fi*2.1 + 0.5)*4.5, 0.0, sin(fi*2.1 + 0.5)*4.5); }
+vec2 holeFloor(vec3 p) {
+  float option = uPlaza;
+  vec2 cid;
+  vec2 cells = cellsIF(p.xz*1.2, cid);
+  float h = 0.25*noise3(vec3(p.xz*0.3, 1.0));
+  if (option > 0.5 && option < 1.5) h += 0.18*smoothstep(0.0, 0.3, cells.y)*(1.0 - cells.x*cells.x);
+  float ground = (p.y - h)*0.6;
+  ground = max(ground, length(p.xz) - 12.0);
+  vec2 res = vec2(ground, option > 0.5 && option < 1.5 ? 91.0 : 90.0);
+  for (int i = 0; i < 3; i++) {
+    vec3 s = stemAt(i);
+    float st = length(p.xz - s.xz + vec2(0.15*sin(p.y*0.4 + float(i)), 0.0)) - (0.9 - 0.04*p.y + 0.5*exp(-p.y*1.5));
+    st = max(st, -p.y - 0.5);
+    if (st*0.8 < res.x) res = vec2(st*0.8, 93.0);
+  }
+  if (option < 0.5) {
+    // Mist lake: a glowing violet surface of mist lying over the floor, swirling slowly.
+    float mist = abs(p.y - 0.9 - 0.12*noise3(vec3(p.xz*0.5, uT*0.1))) - 0.05;
+    mist = max(mist, length(p.xz) - 11.5);
+    if (mist < res.x) res = vec2(mist, 96.0);
+  } else if (option < 1.5) {
+    // Spore meadow: giant puffballs, the source of the spores that drift up the hole.
+    vec2 rnd = fract(sin(vec2(dot(cid, vec2(41.0, 289.0)), dot(cid, vec2(97.0, 13.0))))*43758.5);
+    if (rnd.x > 0.82) {
+      vec2 c = (cid + 0.15 + 0.7*fract(sin(vec2(dot(cid, vec2(127.1, 311.7)), dot(cid, vec2(269.5, 183.3))))*43758.5453))/1.2;
+      float s = 0.25 + 0.45*rnd.y;
+      float puff = sdEll(p - vec3(c.x, s*0.6, c.y), vec3(s, s*0.8, s));
+      puff = max(puff, length(p.xz) - 10.0);
+      if (puff < res.x) res = vec2(puff, 94.0);
+    }
+  } else {
+    // Root tangle: roots crossing the floor, with glowing pools in the hollows between them.
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float a0 = fi*2.17 + 0.4*sin(fi*5.0), span = 1.0 + 0.9*hash1(fi*4.0);
+      vec3 a = vec3(cos(a0)*11.0, 0.0, sin(a0)*11.0);
+      vec3 c = vec3(cos(a0 + span)*11.0, 0.0, sin(a0 + span)*11.0);
+      vec3 b = (a + c)*0.5*(0.3 + 0.5*hash1(fi*7.0)) + vec3(sin(fi*3.0), 0.0, cos(fi*2.0))*1.5;
+      vec2 q = sdBezier(vec3(p.x, 0.0, p.z), a, b, c);
+      float d = length(vec2(q.x, p.y - h - 0.05 - 0.15*sin(q.y*9.0 + fi))) - 0.4;
+      d = max(d, length(p.xz) - 11.5);
+      if (d*0.8 < res.x) res = vec2(d*0.8, 92.0);
+    }
+    float pool = max(abs(p.y - 0.08) - 0.02, 0.35 - noise3(vec3(p.xz*0.35, 4.0)));
+    pool = max(pool, length(p.xz) - 10.5);
+    if (pool < res.x) res = vec2(pool, 96.0);
+  }
+  return res;
+}
+#endif
+
+vec3 innerFloorPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
+  emit = vec3(0.0);
+  spec = 0.05;
+  float g = noise3(p*1.7) + 0.5*noise3(p*5.0);
+#if ASSET == 13
+  float deep = mix(1.0, 0.25, smoothstep(-1.0, -14.0, p.y));
+#else
+  float deep = 0.8;
+#endif
+  if (id < 90.5) {
+    vec3 c = mix(vec3(0.025, 0.025, 0.045), vec3(0.06, 0.06, 0.09), smoothstep(0.4, 1.2, g));
+    c *= 0.7 + 0.6*smoothstep(0.3, 0.7, noise3(vec3(p.x*0.8, p.y*3.0, p.z*0.8)));
+    return c*deep;
+  }
+  if (id < 91.5) {
+    vec2 cid;
+    vec2 cells = cellsIF(p.xz*1.5, cid);
+    vec3 top = mix(vec3(0.045, 0.022, 0.1), vec3(0.085, 0.04, 0.16), hash1(cid.x*3.0 + cid.y*7.0));
+    vec3 c = mix(vec3(0.012, 0.008, 0.03), top, smoothstep(0.0, 0.25, cells.y));
+    float speck = smoothstep(0.95, 0.97, noise3(p*30.0));
+    emit = c*0.1 + vec3(1.0, 0.4, 0.85)*speck*0.6;
+    return c*(0.8 + 0.35*g);
+  }
+  if (id < 92.5) {
+    float grain = smoothstep(0.35, 0.65, noise3(vec3(p.x*5.0, p.y*1.2, p.z*5.0)));
+    vec3 c = mix(vec3(0.05, 0.022, 0.04), vec3(0.15, 0.07, 0.1), grain*0.5 + 0.3*g);
+    return c*(0.6 + 0.4*deep);
+  }
+  if (id < 93.5) {
+    vec3 c = mix(vec3(0.26, 0.24, 0.3), vec3(0.4, 0.38, 0.44), 0.4 + 0.4*g);
+    emit = c*0.04;
+    return c*(0.55 + 0.45*deep);
+  }
+  if (id < 94.5) {
+    vec3 c = vec3(0.85, 0.28, 0.72);
+    emit = c*0.55;
+    return c*0.6;
+  }
+  if (id < 95.5) {
+    vec3 c = mix(vec3(0.08, 0.04, 0.17), vec3(0.2, 0.12, 0.34), 0.35 + 0.35*g);
+    emit = c*0.14 + vec3(0.3, 0.4, 1.0)*0.15*step(n.y, -0.2);
+    return c*(0.6 + 0.4*deep);
+  }
+  // Mist and pools: soft glowing violet, brighter where it thickens.
+  float m = noise3(vec3(p.xz*0.6, uT*0.08)) + 0.5*noise3(vec3(p.xz*1.7, 3.0));
+  float wisp = smoothstep(0.85, 1.25, m);
+  vec3 c = mix(vec3(0.05, 0.025, 0.1), vec3(0.45, 0.28, 0.85), wisp);
+  emit = c*0.6;
+  return c*0.3;
+}
+#endif
 vec2 map(vec3 p) {
   vec2 r;
 #if ASSET == 0
@@ -5748,6 +5972,10 @@ vec2 map(vec3 p) {
   r = knoll(p);
 #elif ASSET == 11 || ASSET == 12
   r = wallLife(p);
+#elif ASSET == 13
+  r = innerWall(p);
+#elif ASSET == 14
+  r = holeFloor(p);
 #else
   r = portal(p/GS); r.x *= GS;
 #endif
@@ -5776,7 +6004,7 @@ vec2 map(vec3 p) {
 // Living Comic's light inner lines so the ink doesn't swallow them.
 float group(float id) {
   if (uMode < 2.5) return uMode;
-  if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5 || abs(id - 43.0) < 0.5 || abs(id - 61.0) < 0.5 || abs(id - 73.0) < 0.5 || abs(id - 80.0) < 0.5) return 0.0;
+  if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5 || abs(id - 43.0) < 0.5 || abs(id - 61.0) < 0.5 || abs(id - 73.0) < 0.5 || abs(id - 80.0) < 0.5 || abs(id - 90.0) < 0.5) return 0.0;
   return 1.0;
 }
 bool metalDetail(float id) { return uMode > 2.5 && (abs(id - 7.0) < 0.5 || abs(id - 8.0) < 0.5 || abs(id - 13.0) < 0.5); }
@@ -5800,6 +6028,9 @@ bool emissive(float id) {
 #endif
 #if ASSET == 11 || ASSET == 12
   if (id >= 80.0) return abs(id - 83.0) < 0.5 || id > 87.5;
+#endif
+#if ASSET == 13 || ASSET == 14
+  if (id >= 90.0) return abs(id - 94.0) < 0.5 || id > 95.5;
 #endif
 #if ASSET == 9
   if (id >= 40.0) return abs(id - 42.0) < 0.5 || abs(id - 44.0) < 0.5 || (id > 47.9 && id < 48.9) || abs(id - 54.0) < 0.5 || abs(id - 58.0) < 0.5;
@@ -5826,7 +6057,7 @@ float inkWidth(float id) {
     if (id > 17.5) w = 0.035;
     if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 15.69)) w = 0.01;
     if (id >= 40.0) {
-      w = id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
+      w = id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : 0.0) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
     }
   }
   return w*TR(id).x;
@@ -5963,6 +6194,9 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 #endif
 #if ASSET == 11 || ASSET == 12
   if (id >= 80.0) return wallLifePaint(id, p, n, emit, spec);
+#endif
+#if ASSET == 13 || ASSET == 14
+  if (id >= 90.0) return innerFloorPaint(id, p, n, emit, spec);
 #endif
 #if ASSET == 8
   if (id >= 30.0) return plazaPaint(id, p, n, emit, spec);
@@ -6432,7 +6666,7 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 
 void main() {
   vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
-#if ASSET >= 8 && ASSET <= 12
+#if ASSET >= 8 && ASSET <= 14
   vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 1.3*uFwd);
 #else
   vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.0*uFwd);
@@ -6445,7 +6679,7 @@ void main() {
 #if ASSET == 9
   bg = mix(vec3(0.006, 0.03, 0.03), vec3(0.004, 0.012, 0.02), smoothstep(-0.05, 0.5, rd.y));
 #endif
-#if ASSET >= 10 && ASSET <= 12
+#if ASSET >= 10 && ASSET <= 14
   bg = mix(vec3(0.012, 0.012, 0.03), vec3(0.004, 0.006, 0.016), smoothstep(-0.05, 0.5, rd.y));
 #endif
   float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
@@ -6496,7 +6730,7 @@ void main() {
 #if ASSET == 9
     key *= vec3(0.95, 1.15, 0.85)*0.8;   // soft green daylight from the opening
 #endif
-#if ASSET >= 10 && ASSET <= 12
+#if ASSET >= 10 && ASSET <= 14
     key *= vec3(0.8, 0.88, 1.15)*0.55;   // cool light: the gun side is bluer and colder than the grove
 #endif
     vec3 warm = vec3(1.0, 0.6, 0.3)*0.42*max(dot(n, lw), 0.0);
@@ -6956,6 +7190,27 @@ void main() {
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -3.5, 0], dist: 19, figure: [0, -100, 0], glow: [0, -3, -5], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "New asset study v1, 3 Nov 2026: the knoll's plum roots down the hole's walls, each with a second kind of hanging growth."]]
+  });
+  ASSETS.push({
+    id: "hole-inner", name: "Hole inner wall", kind: "New asset · canopy hole", size: "the spire under the shop's platform, 52 studs across at the top", version: "v1", concept: true, noLive: true, shader: 13,
+    variantLabel: "Option",
+    variants: [
+      { name: "A · Root-bound spire", option: 0, bright: [0.6, 0.3, 0.9], camera: { target: [0, -5.0, 0], dist: 20, pitch: 0.12 } },
+      { name: "B · Giant stalk", option: 1, bright: [0.6, 0.3, 0.9], camera: { target: [0, -5.0, 0], dist: 20, pitch: 0.12 } },
+      { name: "C · Root-ball island", option: 2, bright: [1.0, 0.38, 0.82], camera: { target: [0, -5.5, 0], dist: 17, pitch: 0.08 } }
+    ],
+    core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -5, 0], dist: 20, figure: [0, -100, 0], glow: [0, -4, -6], glowCol: [0.06, 0.05, 0.12],
+    notes: [["Status", "New asset study v1, 3 Nov 2026: the spire carrying the shop's platform down into the hole."]]
+  }, {
+    id: "hole-floor", name: "Hole floor", kind: "New asset · canopy hole", size: "a patch of the floor about 110 studs across, 120 below the rim", version: "v1", concept: true, noLive: true, shader: 14,
+    variantLabel: "Option",
+    variants: [
+      { name: "A · Mist lake", option: 0, bright: [0.6, 0.4, 0.95], camera: { target: [0, 1.0, 0], dist: 17, pitch: 0.42 } },
+      { name: "B · Spore meadow", option: 1, bright: [1.0, 0.38, 0.82], camera: { target: [0, 1.0, 0], dist: 17, pitch: 0.42 } },
+      { name: "C · Root tangle", option: 2, bright: [0.6, 0.4, 0.95], camera: { target: [0, 1.0, 0], dist: 17, pitch: 0.42 } }
+    ],
+    core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, 1, 0], dist: 17, figure: [0, -100, 0], glow: [0, 4, 0], glowCol: [0.06, 0.05, 0.12],
+    notes: [["Status", "New asset study v1, 3 Nov 2026: what lies at the bottom of the canopy hole, seen down through the caps and mist."]]
   });
   const PLANNED = ["Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
   const TREAT = [
