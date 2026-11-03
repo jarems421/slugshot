@@ -201,3 +201,10 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 ## 2026-11-03 - Verify actual head direction, not an intent flag
 
 **Problem:** the resident look blend rose, but head-axis signs could tilt the face down. The previous notice check only proved entry into the look state. **Implemented/verified:** use the resident pivot's basis consistently for Inferno; correct yaw/pitch signs and Floppy head pitch. Native acceptance now projects the actual transformed head-facing vector onto local up and requires positive lift in both species while grounded. It measures 12.6/23.3 degrees in this run, with 60 FPS mean focused cadence. No mesh/export changes. See final settings/review evidence for limits.
+
+
+## 2026-11-03 - A correct export does not update an already-open lobby
+
+**Problem:** owner still saw the old rounded Floppy bottom after the flat-sole delivery. **Cause:** the open canonical GroveReview had an old embedded private model reference; a separately named SplatReview had the new one. Updating private files alone does not alter a compiled/open place. **Implemented/verified:** preserve/checkpoint the old review, rebuild the exact review filename from current config, assert compiled-source equality, and inspect actual imported mesh bounds at runtime. Nine residents show a flat body bound about +0.0051 studs relative to root. Same-scale Floppy/Inferno side and sole renders were inspected; no geometry was changed again unnecessarily.
+
+**Audit pitfall:** Studio saves module Source as `string`; Rojo emits `ProtectedString`. Reading only one tag falsely classified the training place as stale. Handle either Source property type, then compare reference values privately. Correct audit: only the old GroveReview was stale; current training was already correct. Keep asset ids and saved review checkpoints ignored.

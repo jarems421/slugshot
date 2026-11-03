@@ -117,3 +117,6 @@ A nine-contact circular support test checks the whole belly footprint against a 
 
 
 **Implemented/verified, 2026-11-03 - actual upward gaze:** corrected resident head-axis signs (and Inferno's resident basis) so both heads physically tilt upward rather than merely entering a look state. The new native check reads each head bone's transformed facing, visits both species, and measures about 12.6 degrees Floppy / 23.3 degrees Inferno upward. Focused run: 1,562 animation/display frames, mean 16.67 ms, maximum 31.72 ms; 524 rest contacts and both landing peaks pass. [Current evidence](../evidence/2026-11-03-settings-and-final-review.json).
+
+
+**Implemented/verified, 2026-11-03 - canonical flat-sole review refresh:** the open old GroveReview referenced the rounded asset even though the SplatReview/canonical config had the flat sole. `python tools/lobby/build_grove_review.py` now rebuilds the single canonical review, checks embedded config source freshness and includes review-only imported-body bounds validation. All nine Floppies pass at roughly +0.0051 studs above their root. Existing texture folds/spores remain; no added curling or new geometry. Current training's saved asset reference was already correct and was preserved. [Evidence](../evidence/2026-11-03-floppy-lobby-refresh.json).

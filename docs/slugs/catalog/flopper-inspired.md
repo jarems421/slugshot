@@ -166,3 +166,12 @@ The whole-game [sound audit](../../audio/sound-plan.md) proposes very soft damp 
 Native Studio loaded the privately staged revised model and maps, exercised both species' stronger landing squash, and passed 14-resident ground/contact/notice/boundary checks. Only after this check were canonical ignored private configs updated. All 12 private assets returned Approved. No experience or Marketplace publication. [Sanitized evidence](../../evidence/2026-11-03-floppy-flat-sole.json).
 
 Review: `build/slugs/floppy/flat-sole/comparison.png`, `pose-sheet.png`, `qa-wire.png` and editable `floppy-roblox.blend`. Rebuild: Blender 4.5.14, `--python tools/slugs/export_floppy_roblox.py -- --out build/slugs/floppy/flat-sole`. Current source skin/eye assets and private material configs are still required. Owner verdict on the new revision is unresolved.
+
+
+## Lobby review reference refresh (2026-11-03)
+
+**Confirmed:** owner still saw a rounded underside in the lobby, reiterated Inferno/Burpy's flat folded sole, and withdrew the corner-curl idea. **Confirmed cause:** the open `SlugshotGroveReview.rbxlx` contained an older model reference; the canonical config and separate Splat review had the flat asset. The saved training place already had the flat reference and was left alone.
+
+**Implemented/verified:** preserved the old/saved review, rebuilt the same review filename using current private configs, and opened it in Studio. All nine Floppy residents pass an imported-body bound check: lowest body bounds are about 0.0051 studs above the root, rather than an old below-root dome. Same-scale side/bottom material renders compare Floppy directly to Inferno. Existing folds and two sage underside patches remain; no mesh change, new asset upload or curled corners this turn. [Evidence](../../evidence/2026-11-03-floppy-lobby-refresh.json).
+
+Rebuild this review with `python tools/lobby/build_grove_review.py`. The builder verifies compiled module sources against current private configs and emits `build/grove/review-manifest.json`. Review-only spawn/sole checks stay out of normal builds. Owner art approval remains separate.

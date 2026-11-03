@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified in the refreshed local lobby review",
+  "ownerBrief": "Match Inferno/Burpy flat bottom, keep folded texture; corner-curl idea withdrawn.",
+  "cause": "Open SlugshotGroveReview.rbxlx embedded an older rounded-model reference. Canonical private config and SlugshotGroveSplatReview already referenced the flat-sole asset.",
+  "auditCorrection": "Studio-saved XML uses string Source, while Rojo uses ProtectedString Source. Auditing both shows the saved training place already references the flat asset; it was not changed.",
+  "change": "Preserved old/saved review checkpoint, rebuilt the same canonical review filename from current configs, and added build-time source equality plus native imported-body bound checks.",
+  "meshChangedThisTurn": false,
+  "modelsUploadedThisTurn": false,
+  "newCornerCurl": false,
+  "foldsAndTwoSagePatchesPreserved": true,
+  "nativeWitness": [
+    {
+      "name": "GroveSlug3",
+      "lowestBodyBoundFromRoot": 0.0050972700119018555
+    },
+    {
+      "name": "GroveSlug10",
+      "lowestBodyBoundFromRoot": 0.00509721040725708
+    },
+    {
+      "name": "GroveSlug12",
+      "lowestBodyBoundFromRoot": 0.005097150802612305
+    },
+    {
+      "name": "GroveSlug15",
+      "lowestBodyBoundFromRoot": 0.00509721040725708
+    },
+    {
+      "name": "GroveSlug16",
+      "lowestBodyBoundFromRoot": 0.00509721040725708
+    },
+    {
+      "name": "GroveSlug23",
+      "lowestBodyBoundFromRoot": 0.005097150802612305
+    },
+    {
+      "name": "GroveSlug25",
+      "lowestBodyBoundFromRoot": 0.00509721040725708
+    },
+    {
+      "name": "GroveSlug27",
+      "lowestBodyBoundFromRoot": 0.0050972700119018555
+    },
+    {
+      "name": "GroveSlug30",
+      "lowestBodyBoundFromRoot": 0.005097150802612305
+    }
+  ],
+  "compiledAssetReferencesCurrent": true,
+  "comparison": "build/slugs/floppy/flat-sole/floppy-inferno-bottoms.png",
+  "limits": [
+    "Model bound/root check verifies removal of the old below-root dome, not every animated skinned vertex.",
+    "Side/bottom renders were inspected at matching relative scale; owner art verdict remains open."
+  ]
+}

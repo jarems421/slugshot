@@ -1890,3 +1890,11 @@
 - **Implemented/verified:** real DataStoreService acknowledged all twelve preferences and both binding slots; normal Stop flushed/released, fresh server/client Play restored every preference/binding, including false/unbound, colour and custom second slot. This resolves the prior cloud acceptance gate.
 - **Implemented/verified:** fixed cold-start replicated-child waits and the minimal cloud fixture's sibling-module layout; added build contract check. Full combat checks and cloud fixture lint/types pass.
 - **Limits:** owner account in native Studio with real cloud storage; no second-device/account login. Unpublished local previews remain session-only. [Evidence](evidence/2026-11-03-settings-cloud.json).
+
+
+## 2026-11-03 - Floppy still rounded in the old lobby review
+
+- **Confirmed:** owner wants Inferno/Burpy's flat folded underside; corner curling was withdrawn.
+- **Confirmed:** open GroveReview had an old rounded model reference, whereas canonical config/SplatReview were flat. A first XML audit missed Studio's string Source property; corrected audit confirms saved training references were already current.
+- **Implemented/verified:** preserved old/saved review, rebuilt/opened the canonical GroveReview, added private-config freshness assertions and actual imported-body bounds check. Nine Floppies pass with body minimum about +0.0051 studs from root. Same-scale material comparison with Inferno inspected.
+- **Implemented:** no new geometry/upload, no curling, original folded texture/two sage patches retained; no concurrent training/creature work changed. Owner art verdict remains unresolved.

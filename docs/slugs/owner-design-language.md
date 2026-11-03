@@ -292,3 +292,6 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 
 
 **Owner correction, 2026-11-03:** "splat" is a visible body deformation: shrink/compress and spread slightly when landing, then recover. It explicitly excludes slime, wetness and new effects on the floor. "Same bottom as Inferno" supersedes the earlier request for Floppy's domed underside: use a flat supported sole with shallow soft folds, retaining a couple of existing spore spots underneath.
+
+
+**Confirmed clarification, 2026-11-03:** the suggested curled corners were immediately withdrawn: "Just make it look like burpy's bottom." Match the flat folded sole and preserve the textured lines. Do not interpret the abandoned sentence as authorization for extra curling.
