@@ -1,0 +1,104 @@
+<title>Shop Exterior Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: option tabs over one large view with a strip of the other views; facts beside it on wide screens. */
+:root {
+  --bg: #0c1016; --card: #141a22; --line: #26313d; --fg: #e8eef2; --muted: #9aa8b4; --accent: #c49bff;
+  --display: "Baloo 2", "Trebuchet MS", sans-serif; --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+main { max-width: 1280px; margin: 0 auto; padding-block: 28px 44px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1 { font-family: var(--display); font-weight: 800; font-size: 36px; line-height: 1.05; margin: 2px 0 6px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 0; }
+.lede { margin: 0; color: var(--muted); max-width: 72ch; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: #160b26; border-color: var(--accent); }
+.tabs button:focus-visible, .thumbs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stage { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
+.view { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.big { width: 100%; max-width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; background: #05070a; }
+.thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.thumbs button { padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: none; cursor: pointer; display: flex; flex-direction: column; }
+.thumbs img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; display: block; }
+.thumbs span { font-size: 12px; color: var(--muted); padding: 4px 6px; text-align: left; background: var(--card); }
+.thumbs button[aria-pressed="true"] { border-color: var(--accent); }
+.facts { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.facts p { margin: 0; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 14px; font-variant-numeric: tabular-nums; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Gun side · the shop · outside</p>
+    <h1>The Burrow Exchange, outside</h1>
+    <p class="lede">Your answers: pale pods filling the spire's platform, about 45 studs across and up to 30 tall; the spire's plum roots climbing on up as a twisted trunk; one huge glowing blue cap over it, its top level with the tallest rim trees. Portholes with glowing cyan glass, an arched doorway facing the rock path, lit warm inside, and a lantern each side. Pick a shape; the inside comes next as its own study.</p>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <section class="stage">
+    <div class="view">
+      <img class="big" id="big" alt="">
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+    <aside class="facts">
+      <h2 id="optName"></h2>
+      <p id="optLead"></p>
+      <ul id="optPoints"></ul>
+      <dl>
+        <dt>Pods</dt><dd>about 45 studs across, up to 30 tall</dd>
+        <dt>Cap</dt><dd>about 70 studs across, glowing azure</dd>
+        <dt>Trunk</dt><dd>the spire's plum roots, twisted</dd>
+        <dt>Door</dt><dd>about 8 by 12 studs, facing the path</dd>
+        <dt>Inside</dt><dd>its own study next: counter, blaster wall, slug displays</dd>
+      </dl>
+    </aside>
+  </section>
+</main>
+
+<script>
+(() => {
+  const OPTIONS = [
+    { key: "a", name: "A · Clustered pods", lead: "A big main pod in front with smaller pods heaped round the trunk, as in your picture.", points: ["Closest to your reference", "The main pod holds the shop room", "Smaller pods read as alcoves and storerooms"] },
+    { key: "b", name: "B · Stacked pods", lead: "Smaller pods climb round the trunk in a rising spiral above the main pod.", points: ["Taller and slimmer", "The trunk shows most between the pods", "Most playful silhouette"] },
+    { key: "c", name: "C · Ring of pods", lead: "A tall central dome ringed by small pods at its base, with one pod on top.", points: ["Wider and lower", "The door stays clear in front", "Neatest, most symmetrical"] }
+  ];
+  const VIEWS = [["front", "From the last stone"], ["three", "From the side"], ["far", "From the clearing"]];
+  const tabs = document.getElementById("tabs"), big = document.getElementById("big"), thumbs = document.getElementById("thumbs");
+  let current = 0, view = "front";
+  function src(o, v) { return `${v}-${OPTIONS[o].key}.jpg`; }
+  function render() {
+    const o = OPTIONS[current];
+    [...tabs.children].forEach((b, i) => b.setAttribute("aria-selected", String(i === current)));
+    big.src = src(current, view);
+    big.alt = `${o.name}, ${VIEWS.find(v => v[0] === view)[1].toLowerCase()}`;
+    document.getElementById("optName").textContent = o.name;
+    document.getElementById("optLead").textContent = o.lead;
+    document.getElementById("optPoints").innerHTML = o.points.map(p => `<li>${p}</li>`).join("");
+    thumbs.innerHTML = "";
+    VIEWS.forEach(([v, label]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(v === view));
+      b.innerHTML = `<img src="${src(current, v)}" alt=""><span>${label}</span>`;
+      b.onclick = () => { view = v; render(); };
+      thumbs.appendChild(b);
+    });
+  }
+  OPTIONS.forEach((o, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "tab"); b.id = "tab-" + o.key; b.textContent = o.name;
+    b.onclick = () => { current = i; render(); };
+    tabs.appendChild(b);
+  });
+  render();
+})();
+</script>

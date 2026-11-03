@@ -6403,6 +6403,123 @@ void chRubble(vec3 p, inout vec2 res) {
     chDebris(p, vec3(xz.x, y + 0.09*sin(uT*0.3 + fi*1.7), xz.y), 0.04 + 0.07*hash1(fi + 305.0), fi, res);
   }
 }
+// ---- The shop. The door faces -z, where the rock path arrives. Pods are ellipsoids: centre and radii.
+void chPod(int i, out vec3 c, out vec3 r) {
+  c = vec3(0.0, -10.0, 0.0); r = vec3(0.1);
+  if (uPlaza < 0.5) {
+    // Clustered pods, as in the owner's picture: a big main pod in front, smaller ones heaped round the trunk.
+    if (i == 0) { c = vec3(0.0, 1.5, 0.4); r = vec3(3.5, 2.8, 3.2); }
+    else if (i == 1) { c = vec3(-3.1, 2.3, 1.8); r = vec3(1.9, 1.7, 1.9); }
+    else if (i == 2) { c = vec3(3.0, 1.9, 2.1); r = vec3(2.0, 1.8, 2.0); }
+    else if (i == 3) { c = vec3(0.5, 4.2, 2.0); r = vec3(2.4, 1.9, 2.2); }
+    else if (i == 4) { c = vec3(-1.9, 4.7, 2.9); r = vec3(1.4, 1.2, 1.4); }
+    else if (i == 5) { c = vec3(2.4, 4.6, 3.0); r = vec3(1.3, 1.15, 1.3); }
+  } else if (uPlaza < 1.5) {
+    // Stacked pods climbing round the trunk in a rising spiral.
+    if (i == 0) { c = vec3(0.0, 1.4, 0.3); r = vec3(3.3, 2.6, 3.0); }
+    else if (i == 1) { c = vec3(2.5, 3.4, 1.9); r = vec3(1.9, 1.6, 1.9); }
+    else if (i == 2) { c = vec3(-1.5, 4.4, 2.5); r = vec3(1.8, 1.5, 1.8); }
+    else if (i == 3) { c = vec3(1.0, 5.4, 3.1); r = vec3(1.2, 1.0, 1.2); }
+    else if (i == 4) { c = vec3(-2.9, 2.0, 2.4); r = vec3(1.5, 1.4, 1.5); }
+    else if (i == 5) { c = vec3(3.0, 1.0, -0.7); r = vec3(1.1, 1.0, 1.1); }
+  } else {
+    // Ring of pods: a tall central dome ringed by small pods at its base, one on top.
+    if (i == 0) { c = vec3(0.0, 1.7, 0.8); r = vec3(3.0, 3.1, 3.0); }
+    else if (i == 5) { c = vec3(0.0, 4.9, 1.0); r = vec3(1.6, 1.3, 1.6); }
+    else {
+      // Round the sides and back, keeping the door at -z clear.
+      float a = i == 1 ? 1.15 : i == 2 ? 2.2 : i == 3 ? 4.08 : 5.13;
+      c = vec3(sin(a)*3.4, 0.9 + 0.25*float(i), 0.8 - cos(a)*3.0);
+      r = vec3(1.45, 1.3, 1.45);
+    }
+  }
+}
+const vec3 CH_CAP = vec3(0.3, 6.6, 1.5);
+const float CH_CAP_R = 6.8;
+// The shop's one huge cap: the giant mushroom's cap, flattened so its top sits level with the tallest rim trees.
+void chBigCap(vec3 p, vec3 top, float capR, inout vec2 res) {
+  vec3 q = p - top;
+  float rr = length(q.xz);
+  if (rr > capR*1.25 + 0.3 || q.y > capR*0.35 || q.y < -capR*0.3) return;
+  float ang = atan(q.z, q.x);
+  float wave = 1.0 + 0.06*sin(5.0*ang + 1.0) + 0.035*sin(9.0*ang);
+  q.y += 0.1*capR*pow(clamp(rr/capR, 0.0, 1.3), 3.0);
+  vec3 qs = vec3(q.x/wave, q.y, q.z/wave);
+  float cap = smax(sdEll(qs, vec3(1.0, 0.27, 1.0)*capR), -sdEll(qs + vec3(0.0, 0.1*capR, 0.0), vec3(0.9, 0.18, 0.9)*capR), 0.1);
+  chKeep(cap*0.7, q.y < -0.015*capR ? 107.0 : 109.3, res);
+}
+void chPorthole(vec3 p, vec3 pos, vec3 n, float rad, inout vec2 res) {
+  vec3 q = p - pos;
+  if (length(q) > rad + 0.3) return;
+  float h = dot(q, n);
+  float radial = length(q - n*h);
+  chKeep(length(vec2(radial - rad, h - 0.04)) - 0.1, 118.0, res);
+  chKeep(max(abs(h + 0.03) - 0.03, radial - rad), 119.0, res);
+}
+void chShop(vec3 p, inout vec2 res) {
+  if (length(p.xz) > 7.5 || p.y < -0.6 || p.y > 8.5) return;
+  float pods = 1e3;
+  for (int i = 0; i < 6; i++) {
+    vec3 c, r;
+    chPod(i, c, r);
+    if (c.y < -5.0) continue;
+    float wave = 0.02*sin(atan(p.z - c.z, p.x - c.x)*7.0);
+    pods = smin(pods, sdEll(p - c, r) + wave, 0.25);
+  }
+  // Seams round each pod are painted; the base sits into the platform.
+  pods = max(pods, -p.y - 0.05);
+  // The arched doorway in the main pod's front, recessed and lit warm from inside.
+  vec3 c0, r0;
+  chPod(0, c0, r0);
+  vec3 dq = p - vec3(0.0, 0.0, c0.z - r0.z);
+  float arch = max(max(abs(dq.x) - 0.85, -dq.y), length(vec2(dq.x, max(dq.y - 1.5, 0.0))) - 0.85);
+  float door = max(arch, abs(dq.z) - 0.6);
+  float shell = max(pods, -door);
+  chKeep(shell*0.9, 117.0, res);
+  chKeep(max(max(arch, abs(dq.z - 0.45) - 0.1), -p.y), 120.0, res);
+  // A frame round the doorway.
+  float frame = max(abs(arch + 0.08) - 0.1, abs(dq.z - 0.05) - 0.18);
+  chKeep(max(frame, -p.y), 118.0, res);
+  // Lanterns either side of the door.
+  for (int k = 0; k < 2; k++) {
+    float sx = k == 0 ? -1.25 : 1.25;
+    vec3 lp = vec3(sx, 2.0, c0.z - r0.z + 0.35);
+    chKeep(length(p - lp) - 0.2, 120.0, res);
+    chKeep(chSeg(p, lp + vec3(0.0, 0.2, 0.0), lp + vec3(0.0, 0.5, 0.15), 0.035, 0.035), 118.0, res);
+  }
+  // Portholes facing out round each pod.
+  for (int i = 0; i < 6; i++) {
+    vec3 c, r;
+    chPod(i, c, r);
+    if (c.y < -5.0 || length(p - c) > max(r.x, r.y) + 0.6) continue;
+    for (int k = 0; k < 3; k++) {
+      float fk = float(k);
+      float a = (i == 0 ? (k == 1 ? 1.15 : -1.15 + fk*0.0) : -0.6 + fk*1.1 + float(i)) + (i == 0 && k == 2 ? 2.6 : 0.0);
+      vec3 d = normalize(vec3(sin(a), 0.18 + 0.1*fk, -cos(a)));
+      vec3 sp = c + d*r;
+      vec3 n = normalize(d/r);
+      float rad = i == 0 ? 0.7 : 0.42 + 0.08*hash1(float(i) + fk);
+      if (i == 3 && k == 0) rad = 0.95;
+      chPorthole(p, sp - n*0.05, n, rad, res);
+    }
+  }
+  // The trunk: the spire's plum roots climbing on up through the pods to the cap.
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    vec3 prev = vec3(0.0);
+    // A thick twisted trunk under the cap's centre, rising clear of the pods into the cap's underside.
+    for (int k = 0; k <= 12; k++) {
+      float fk = float(k);
+      float y = -0.2 + fk*0.62;
+      float spread = 1.0 + 1.6*smoothstep(5.6, 7.2, y);
+      float a = fi*1.2566 + fk*0.5;
+      vec3 cur = vec3(CH_CAP.x, y, CH_CAP.z + 0.4) + vec3(cos(a), 0.0, sin(a))*0.5*spread;
+      if (k > 0) chKeep(chSeg(p, prev, cur, 0.5 - 0.015*fk, 0.5 - 0.015*(fk + 1.0)), 102.0, res);
+      prev = cur;
+    }
+  }
+  chBigCap(p, CH_CAP, CH_CAP_R, res);
+}
 // The clearing from the rope bridge: a lane of flat path stones set into the velvet, kept clear of plants.
 bool chInClearing(vec2 xz) { return abs(xz.x) < 3.2 && xz.y < -chHoleR(0.0) + 1.0 && xz.y > -27.0; }
 bool chInPath(vec2 xz) { return abs(xz.x) < 1.75 && xz.y < -chHoleR(0.0) + 0.3 && xz.y > -27.0; }
@@ -6645,6 +6762,7 @@ vec2 canopyHole(vec3 p) {
   }
   chPathway(p, res);
   chRubble(p, res);
+  chShop(p, res);
   chPathSlabs(p, res);
   // The giant mushroom canopy rising from the floor.
   if (p.y < CH_FLOOR + 19.0 && r < 21.0) {
@@ -6722,7 +6840,7 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return c*(0.6 + 0.4*deep);
   }
   if (id < 107.5) {
-    float lines = 0.5 + 0.5*sin(atan(p.z, p.x)*120.0 + p.y*30.0);
+    float lines = 0.5 + 0.5*sin(atan(p.z - 1.5, p.x - 0.3)*60.0);
     vec3 c = mix(vec3(0.25, 0.4, 0.8), vec3(0.4, 0.6, 0.95), lines);
     emit = c*0.25;
     return c*0.35;
@@ -6755,6 +6873,23 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     emit = c*0.05;
     return c;
   }
+  if (id > 116.5 && id < 117.5) {
+    // Pod shells: pale cream, smooth, with a soft seam band round each pod and a cool tint from the cap's glow above.
+    vec3 c = mix(vec3(0.82, 0.84, 0.78), vec3(0.95, 0.96, 0.9), 0.4 + 0.4*g);
+    float seam = 1.0 - smoothstep(0.0, 0.03, abs(fract(p.y*0.9 + 0.3) - 0.5) - 0.46);
+    c *= 1.0 - 0.25*seam;
+    c = mix(c, vec3(0.5, 0.7, 0.85), 0.18*smoothstep(0.2, 1.0, n.y));
+    emit = c*0.16;
+    return c;
+  }
+  if (id > 117.5 && id < 118.5) {
+    // Rims and frames: dark teal metal.
+    vec3 c = mix(vec3(0.1, 0.2, 0.22), vec3(0.18, 0.32, 0.34), 0.5 + 0.4*g);
+    emit = c*0.06;
+    return c;
+  }
+  if (id > 118.5 && id < 119.5) { vec3 c = vec3(0.45, 0.95, 1.0); emit = c*1.2; return c*0.6; }
+  if (id > 119.5 && id < 120.5) { vec3 c = vec3(1.0, 0.72, 0.4); emit = c*1.3; return c*0.6; }
   if (id > 112.5 && id < 113.5) {
     // Cobbles: worn grey-violet, each its own shade, dark in the joints.
     vec2 cid;
@@ -6877,7 +7012,7 @@ bool emissive(float id) {
   if (id >= 90.0) return id > 95.5 && id < 98.95;
 #endif
 #if ASSET == 15
-  if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || id > 111.95;
+  if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || (id > 111.95 && id < 112.5) || (id > 118.5 && id < 120.5);
 #endif
 #if ASSET == 9
   if (id >= 40.0) return abs(id - 42.0) < 0.5 || abs(id - 44.0) < 0.5 || (id > 47.9 && id < 48.9) || abs(id - 54.0) < 0.5 || abs(id - 58.0) < 0.5;
@@ -6904,7 +7039,7 @@ float inkWidth(float id) {
     if (id > 17.5) w = 0.035;
     if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 15.69)) w = 0.01;
     if (id >= 40.0) {
-      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : 0.012) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
+      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : id < 116.5 ? 0.012 : id < 117.5 ? 0.024 : id < 118.5 ? 0.012 : 0.0) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
     }
   }
   return w*TR(id).x;
@@ -8098,11 +8233,11 @@ void main() {
   });
   ASSETS.push({
     id: "canopy-hole", name: "The canopy hole", kind: "Composite · gun side", size: "about 110 to 200 studs across and 120 deep, the lobby's own outline", version: "v1", concept: true, noLive: true, shader: 15,
-    variantLabel: "Bridge",
+    variantLabel: "Shop",
     variants: [
-      { name: "A · Stepping stones", option: 0, bright: [0.6, 0.4, 1.0], camera: { target: [0, -9.0, 0], dist: 50, pitch: 0.62 } },
-      { name: "B · Rising arc", option: 1, bright: [0.6, 0.4, 1.0], camera: { target: [0, -9.0, 0], dist: 50, pitch: 0.62 } },
-      { name: "C · Tethered stones", option: 2, bright: [0.6, 0.4, 1.0], camera: { target: [0, -9.0, 0], dist: 50, pitch: 0.62 } }
+      { name: "A · Clustered pods", option: 0, bright: [0.6, 0.4, 1.0], camera: { target: [0, -9.0, 0], dist: 50, pitch: 0.62 } },
+      { name: "B · Stacked pods", option: 1, bright: [0.6, 0.4, 1.0], camera: { target: [0, -9.0, 0], dist: 50, pitch: 0.62 } },
+      { name: "C · Ring of pods", option: 2, bright: [0.6, 0.4, 1.0], camera: { target: [0, -9.0, 0], dist: 50, pitch: 0.62 } }
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -9, 0], dist: 50, figure: [0, -100, 0], glow: [0, -10, 0], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "Composite v1, 3 Nov 2026: every chosen piece in the real hole's outline, without the bridge and shop."]]
