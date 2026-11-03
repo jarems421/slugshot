@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local movement = Players.LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
+local Inspect = (require :: any)(movement:WaitForChild("SlugInspect"))
 local T = ((require :: any)(movement:WaitForChild("Tuning"))).values
 
 local EYE_SPACING = 0.74
@@ -166,10 +167,30 @@ local function step(face: Face, dt: number, camera: Vector3)
 	face.clock += dt
 	local clock = face.clock
 	-- An icon chooses its own expression through this attribute.
-	local chosen = face.model:GetAttribute("FaceExpression")
+	local tool = face.model:FindFirstAncestorOfClass("Tool")
+	local character = tool and tool.Parent
+	local inspectTime = if character and character:IsA("Model")
+		then Inspect.elapsed(character)
+		else nil
+	local inspecting = inspectTime ~= nil
+	local chosen = if inspecting then 2 else face.model:GetAttribute("FaceExpression")
 	local want = EXPRESSIONS[if typeof(chosen) == "number"
 		then chosen
 		else math.floor(clock / HOLD) % #EXPRESSIONS + 1]
+	if inspectTime then
+		local squeeze = Inspect.compression(inspectTime)
+		local spring = Inspect.hop(inspectTime)
+		-- Sleepy recognition, a deliberate squint before the jump, then a
+		-- brighter cheeky smile on takeoff. No random mouth chatter in this act.
+		local awake = Inspect.stand(inspectTime)
+		want = {
+			low = 0.09 * awake,
+			high = 0.035 * awake,
+			wide = 0.03 * awake,
+			jaw = 0.015 + 0.035 * spring,
+			lid = -0.035 * awake + 0.07 * squeeze - 0.035 * spring,
+		}
+	end
 	local blend = 1 - math.exp(-BLEND_RATE * dt)
 	face.low += (want.low - face.low) * blend
 	face.high += (want.high - face.high) * blend
@@ -184,7 +205,12 @@ local function step(face: Face, dt: number, camera: Vector3)
 		return
 	end
 	-- Eyes dart to a new spot, then rest there.
-	local chosenLook = face.model:GetAttribute("FaceLook")
+	local chosenLook = if inspectTime
+		then Vector2.new(
+			-0.3 * Inspect.wiggle(inspectTime),
+			0.65 * Inspect.stand(inspectTime) - 0.6 * Inspect.compression(inspectTime)
+		)
+		else face.model:GetAttribute("FaceLook")
 	if typeof(chosenLook) == "Vector2" then
 		face.lookXTarget, face.lookYTarget = chosenLook.X, chosenLook.Y
 		face.nextLook = clock + random:NextNumber(0.5, 2)
@@ -217,10 +243,13 @@ local function step(face: Face, dt: number, camera: Vector3)
 	if typeof(chosenBlink) == "number" then
 		blink = chosenBlink
 	end
+	if inspecting then
+		blink = 0
+	end
 	-- A small, slow mouthing so the face is never fully still.
 	local mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)
-	local jaw = face.jaw + 0.014 * mouthing
-	local lift = 0.006 * math.sin(clock * 1.7)
+	local jaw = face.jaw + (if inspecting then 0 else 0.014 * mouthing)
+	local lift = if inspecting then 0 else 0.006 * math.sin(clock * 1.7)
 	local open = face.lid + face.squint
 	local rest = T.faceLid + open
 	-- The rims slope down toward the nose, which reads as anger: turn them so the outer corners
@@ -254,17 +283,21 @@ local function step(face: Face, dt: number, camera: Vector3)
 	end
 end
 
-RunService.RenderStepped:Connect(function(dt: number)
-	local camera = workspace.CurrentCamera
-	if not camera then
-		return
-	end
-	local eye = camera.CFrame.Position
-	for model, face in faces do
-		if model:IsDescendantOf(workspace) or CollectionService:HasTag(model, "SlugIcon") then
-			step(face, dt, eye)
-		else
-			faces[model] = nil
+RunService:BindToRenderStep(
+	"SlugshotFloppyFace",
+	Enum.RenderPriority.Character.Value + 3,
+	function(dt: number)
+		local camera = workspace.CurrentCamera
+		if not camera then
+			return
+		end
+		local eye = camera.CFrame.Position
+		for model, face in faces do
+			if model:IsDescendantOf(workspace) or CollectionService:HasTag(model, "SlugIcon") then
+				step(face, dt, eye)
+			else
+				faces[model] = nil
+			end
 		end
 	end
-end)
+)

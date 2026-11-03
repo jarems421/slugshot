@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-31",
+  "ownerFeedback": "Running hands still too smooth; wants more robust third-person-like motion, with glitchy the closest approximation of the feel.",
+  "interpretation": "Sharper stroke beats/turnovers and firmer dwell, not camera jitter or artificial frame skipping; owner interpretation/feel approval still open.",
+  "change": {
+    "steadyFreeRun": "Direct source-pose following as run entry blend settles; no extra steady-state rounding filter.",
+    "strokeAccentDegrees": 4,
+    "angleCenterDegrees": 20,
+    "accentTiming": "Source-angle-driven; no separate oscillator or animation clock.",
+    "preserved": "Shorter arms, forward/down lean, source clips, first-person camera, Spot default, pointing/idle/action filtering."
+  },
+  "offline": "verify_combat.py PASS (foundation/movement/combat format, lint, strict types and builds)",
+  "runtime": {
+    "context": "One native Studio Play client at approximately 60 FPS. Same short straight-running probe before/after; gait samples are not frame-matched.",
+    "before": {
+      "pitchRmsError": 3.477542879133764,
+      "maxPitch": 0,
+      "renderPeak": 1745.348967070765,
+      "sourcePeak": 1946.1571508702677,
+      "missing": 0,
+      "frames": 85,
+      "maxDt": 0.01849919930100441
+    },
+    "after": {
+      "pitchRmsError": 2.30477325654126,
+      "maxPitch": 0,
+      "renderPeak": 2247.0672672571736,
+      "sourcePeak": 1993.0555968979913,
+      "missing": 0,
+      "frames": 85,
+      "maxDt": 0.018543099984526634
+    },
+    "shots": {
+      "runCharge": {
+        "muzzleDistance": 4.144861698150635,
+        "accepted": true
+      },
+      "flipTap": {
+        "muzzleDistance": 4.082808017730713,
+        "accepted": true
+      },
+      "runTap": {
+        "muzzleDistance": 4.388988494873047,
+        "accepted": true
+      },
+      "idleTap": {
+        "muzzleDistance": 3.2698252201080322,
+        "accepted": true
+      }
+    }
+  },
+  "limits": [
+    "Angular peaks and pitch error describe this rendered sample, not a controlled perceptual/performance study. The intentional angle accent means zero source-pose error is not the design goal.",
+    "No new multiplayer, device, latency or exhaustive traversal coverage. Owner running feel remains unresolved."
+  ],
+  "sourceSha256": "8bc3e65cf7aef87ab93779e9a46e4a8846f2c5bd1dd0d110fdd4672df3940c18"
+}

@@ -1,0 +1,182 @@
+{
+  "date": "2026-11-01",
+  "ownerRequest": "Replace long charge bar with a ring; improve matching crosshair; choose colors. Customization settings may come later.",
+  "implementation": {
+    "renderer": "experiments/movement/client/Reticle.luau",
+    "crosshair": "Off-white central aiming dot, four small rounded ticks, dark contrast edges.",
+    "ring": {
+      "diameter": 48,
+      "radius": 22,
+      "thickness": 2.5,
+      "segments": 96,
+      "fill": "Clockwise from twelve oclock, actual combat charge fraction.",
+      "baseColor": [
+        151,
+        219,
+        212
+      ],
+      "fullColor": [
+        255,
+        193,
+        112
+      ],
+      "warmTransitionFrom": 0.75
+    },
+    "fullCue": {
+      "peakScale": 1.07,
+      "durationSeconds": 0.24,
+      "repeatsWhileHeld": false
+    },
+    "ownership": "Charge ring is a child of the existing shared reticle. No alternate aim point or image assets.",
+    "customization": "Palette/geometry centralized; settings variants are considering only."
+  },
+  "offline": "verify_combat.py PASS (foundation, movement, combat formatting/lint/types/builds)",
+  "runtime": {
+    "context": "One native Studio Play client, real combat press/release path and server acknowledgement. Existing first-person/shift-lock helpers; OS mouse positioned in free third person.",
+    "chargeStages": {
+      "idle": {
+        "visible": false,
+        "segments": 96,
+        "color": [
+          0.5921568870544434,
+          0.8588235378265381,
+          0.8313725590705872
+        ],
+        "scale": 1,
+        "reticleVisible": true,
+        "stage": "idle",
+        "fill": 0
+      },
+      "partial": {
+        "visible": true,
+        "segments": 96,
+        "color": [
+          0.5921568870544434,
+          0.8588235378265381,
+          0.8313725590705872
+        ],
+        "scale": 1,
+        "reticleVisible": true,
+        "stage": "partial",
+        "fill": 0.36414499999955297
+      },
+      "full": {
+        "visible": true,
+        "segments": 96,
+        "color": [
+          1,
+          0.7568627595901489,
+          0.43921568989753723
+        ],
+        "scale": 1.054189920425415,
+        "reticleVisible": true,
+        "stage": "full",
+        "fill": 1
+      },
+      "held": {
+        "visible": true,
+        "segments": 96,
+        "color": [
+          1,
+          0.7568627595901489,
+          0.43921568989753723
+        ],
+        "scale": 1,
+        "reticleVisible": true,
+        "stage": "held",
+        "fill": 1
+      },
+      "released": {
+        "visible": false,
+        "segments": 96,
+        "color": [
+          1,
+          0.7568627595901489,
+          0.43921568989753723
+        ],
+        "scale": 1,
+        "reticleVisible": true,
+        "stage": "released",
+        "fill": 1
+      },
+      "unequipped": {
+        "visible": false,
+        "segments": 96,
+        "color": [
+          0.5921568870544434,
+          0.8588235378265381,
+          0.8313725590705872
+        ],
+        "scale": 1,
+        "reticleVisible": true,
+        "stage": "unequipped",
+        "fill": 0.22952799995740256
+      }
+    },
+    "summary": {
+      "peakScale": 1.0699591636657715,
+      "chargedShotAccepted": true,
+      "maxDt": 0.5242356061935425
+    },
+    "modeAlignment": {
+      "thirdFree": {
+        "point": [
+          788,
+          538
+        ],
+        "serverLaunchMiss": 1.0925712103926344e-06,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0,
+        "centered": false,
+        "shotAccepted": true
+      },
+      "thirdLocked": {
+        "point": [
+          547,
+          489.5
+        ],
+        "serverLaunchMiss": 9.902266810968285e-07,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0.5,
+        "centered": true,
+        "shotAccepted": true
+      },
+      "firstPerson": {
+        "point": [
+          547,
+          489.5
+        ],
+        "serverLaunchMiss": 9.5367431640625e-07,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0.5,
+        "centered": true,
+        "shotAccepted": true
+      }
+    },
+    "visual": "Native full-charge window screenshot inspected; local ignored build/charge-ring-full.png.",
+    "frameRateQualification": "Capture-inclusive sample recorded a 0.524-second maximum render delta; no stable 60 FPS claim."
+  },
+  "fixtureNotes": [
+    "Another Studio workstream was open: selected the range log by its charge-probe output rather than whichever Studio log most recently wrote.",
+    "An initial free-cursor test failed after command-bar reflow changed viewport bounds. Retried after layout settled and repositioned the OS pointer; all three modes passed. No production coordinate change was required."
+  ],
+  "limits": [
+    "Owner crosshair/ring appearance verdict remains open.",
+    "No touch/gamepad, multiplayer or new latency testing.",
+    "One native full-charge frame is visual inspection, not exhaustive visual coverage or performance validation."
+  ],
+  "sourceHashes": {
+    "experiments/movement/client/Reticle.luau": "8c20b1543e0b65bcdfa2ad6b09ae5d8271609ffdf96d69de79b677c2f3f81349",
+    "experiments/movement/client/init.client.luau": "df67a20752992a82b8f86be75c64a2608a1b53cacadc31088e942d64553baf92",
+    "experiments/combat/client/CombatClient.client.luau": "4c84afe5ac0cd9d893917ddfab92050b71278551b58650b88bc9b65a0a7c1785"
+  }
+}

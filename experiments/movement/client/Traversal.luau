@@ -316,4 +316,73 @@ function Traversal.findWall(
 	return best
 end
 
+-- Continuation probes are deliberately narrower than initial attachment: only
+-- anchored, opted-in vertical faces near the current wall may carry the run.
+function Traversal.followWall(
+	position: Vector3,
+	away: Vector3,
+	direction: Vector3,
+	speed: number,
+	settings: any,
+	rays: RaycastParams
+): (RaycastResult?, string)
+	local surface = settings.Surface
+	local function probe(origin: Vector3, vector: Vector3): RaycastResult?
+		local hit = workspace:Raycast(origin, vector, rays)
+		if
+			hit
+			and solid(hit.Instance)
+			and math.abs(hit.Normal.Y) < 0.35
+			and not optedOut(hit.Instance, WALL_HOP_OPT_OUT)
+		then
+			return hit
+		end
+		return nil
+	end
+	local current: RaycastResult? = nil
+	for _, height in { 0, surface.ProbeHeight, -surface.ProbeHeight } do
+		local hit = probe(position + Vector3.yAxis * height, -away * settings.Reach)
+		if hit and horizontal(hit.Normal).Unit:Dot(away) > 0.7 then
+			current = hit
+			break
+		end
+	end
+	if speed >= settings.Cling.Below then
+		local ahead = math.min(surface.LookAhead, speed * 0.16)
+		-- A parallel raised face steers the body outward in advance. Deep offsets
+		-- are obstacles, rather than permission to snap onto arbitrary nearby walls.
+		local raised = probe(position + direction * ahead, -away * settings.Reach)
+		if current and raised and horizontal(raised.Normal).Unit:Dot(away) > 0.95 then
+			local step = (raised.Position - current.Position):Dot(away)
+			if step > 0.05 and step <= surface.MaxStep then
+				return raised, "step"
+			end
+		end
+		-- Inside corner: turn before colliding with the next wall, at body clearance.
+		local front = probe(position, direction * (settings.Hug + 0.7))
+		if
+			front
+			and horizontal(front.Normal).Unit:Dot(direction) < -0.7
+			and math.abs(horizontal(front.Normal).Unit:Dot(away)) < 0.72
+		then
+			return front, "inside"
+		end
+		-- Outside corner: once side support ends, reach just beyond the old face,
+		-- then cast backwards into its end face. The controller rounds the shared
+		-- edge at Hug radius instead of driving diagonally through the solid wall.
+		if not current then
+			local origin = position - away * (settings.Hug + 0.6) + direction * surface.CornerReach
+			local outer = probe(origin, -direction * (surface.CornerReach + 0.7))
+			if
+				outer
+				and horizontal(outer.Normal).Unit:Dot(direction) > 0.7
+				and math.abs(horizontal(outer.Normal).Unit:Dot(away)) < 0.72
+			then
+				return outer, "outside"
+			end
+		end
+	end
+	return current, "surface"
+end
+
 return table.freeze(Traversal)

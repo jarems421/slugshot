@@ -1,0 +1,7 @@
+# Rocklock crystal and cavern look
+
+2026-10-30. **Confirmed:** the owner requested crystal formations as the cavern's sources of local light and a Slugterra-inspired visual treatment. A [series cavern image](https://getwallpapers.com/collection/slugterra-wallpapers) and a [crystal still](https://www.csfd.sk/en/film/579761-slugterra-into-the-shadows/overview/) were visually inspected. Observed cues include cool blue-green cavern lighting and pointed, faceted, asymmetric crystal clusters. These are visual references only; no source meshes, textures or images are distributed with the build.
+
+**Implemented:** five original procedurally authored shard clusters, mostly blue and green with sparse violet and amber accents. Sixteen formations are attached to the cavern walls, central arch, roof and underpass. Their visible neon facets host all local point lights. Low ambient fill, cool color grading and subtle bloom use Roblox's built-in [light sources](https://create.roblox.com/docs/effects/light-sources) and [post-processing effects](https://create.roblox.com/docs/environment/post-processing-effects); they are not a custom programmable shader. Formations have no collision or query surfaces. Source, export, generator and build instructions are in [Rocklock](../rocklock.md).
+
+**Unresolved:** owner judgment of the final appearance, light distribution and combat visibility, and performance across devices. Blender FBX roundtrip does not verify Studio's mesh importer; the map uses original native facets without uploads.

@@ -1,14 +1,33 @@
 # Lobby asset plan
 
+**Implemented as a browser concept, 2026-11-01:** original [general shop](general-shop.md), with exterior, walk-in interior and roof-off review views, informed by [actual Slugterra shop research](../research/slugterra-shops.md). Name, art, layout and production remain subject to owner review. The shopkeeper and game purchases are not implemented.
+
+**Implemented as a reusable browser concept, 2026-11-01:** [curled cave fern](curled-cave-fern.md), with an isolated 3D preview, editable generator and portable GLB download. Shared by the volcano dressing and the individual asset. Owner art approval and Studio import/performance remain unresolved.
+
 The props and kits the lobby needs, to be authored in Blender so the space looks deliberately designed and hand-made, not assembled from generated or free models. Every asset follows the [style guide](style-guide.md); the order of work follows the [lobby roadmap](lobby-roadmap.md).
 
 Research basis: [Slugterra environment research](../research/slugterra-environment.md).
+
+**Final, 2026-11-01:** the owner approved every library design (rock wall v6, 14 crystals, giant mushroom v2 with 14-colour bank, three gates v3) as final. Also final, 2026-11-01: spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, built for Roblox and in owner review ([lobby hub](lobby-hub.md)). Lessons: [art lessons](lessons.md).
 
 Source: owner request, 2026-10-31 ("build some assets in Blender so that stuff just doesn't look like AI slop… plan out what different assets we're going to have around the lobby… stuff like the Slugterra mushrooms, which are very distinct"). **Status: the list is Considering.** The owner confirms, cuts or adds items before production. Each asset's own design is agreed at concept stage.
 
 ## Originality rule
 
 Slugterra is the reference for **categories and atmosphere**: giant glowing cave fungi, huge crystals, hideouts built into rock, slug habitats, glowing caverns. Every Slugshot asset is an **original design** in that category with its own silhouette, proportions and details. Never trace or copy a specific show prop. Each asset's note records its references and how ours differs.
+
+## Asset library (live 3D concepts)
+
+**Built for Roblox and in the look test (2026-11-01):** rock wall walls A-D (`rock-wall-4` to `rock-wall-7`, the base design: Slugterra-style carved cracks on five of twelve rocks picked per region, surface texture on every rock, and a crystal or mushroom cluster in each of six regions with tiny mushrooms between; layouts and moss differ per wall), crystals 1 and 11, the mint giant mushroom, and the PvP gate (v4 steps, bevelled bands). The original v6 wall (`rock-wall-1`) stays as the approved reference. Rejected rock textures: zigzag "squiggle" cracks, chipped facets, pockmarks, veins, lichen and fossil shells.
+
+**Library links, 2026-11-01:** [https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) is current. Artifacts belong to the Claude account signed in to the session, and this session changed account during the day, so a temporary copy and the [scale map plan](https://claude.ai/artifact/YL46qo1vayy4QVPo891j15) sit on the other account. If a publish reports an artifact as missing, list the artifacts first to check which account is active before making another copy.
+
+Owner request, 2026-10-31: every asset is first agreed as a rotatable 3D concept in the private [asset library page](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr), the same workflow that settled Floppy. Source: [asset-library.html](asset-library.html). Each concept is defined in that page as exact signed-distance maths, so the Blender build (`tools/lobby/build_vignette.py`, first pass, paused until concepts are agreed) reproduces the agreed forms. Republish to the same URL and add each new asset to it.
+
+**Rendered turntables (2026-10-31):** live WebGL froze Chrome on the owner's Windows machine and Chrome then disabled WebGL entirely, so the page now shows offline-rendered 36-frame turntables (10 degree steps, drawn on a 2D canvas) by default, with Live 3D as an opt-in button. After changing the page, re-render and publish:
+
+1. `python tools/lobby/render_library.py` (needs Node plus a Python with moderngl, numpy and Pillow; about 20 s on the owner's RTX 3070). It evaluates the page's own `lib` script and shader, so renders match the live view. Output goes to ignored `build/lobby/renders/`.
+2. Copy `docs/art/asset-library.html` and `build/lobby/renders/` into the session scratchpad and publish the page with `url` set to the library and `files` listing `renders/*.jpg` (the publish tool only accepts supporting files from the working directory or scratchpad).
 
 ## Production standard (every asset)
 
@@ -42,15 +61,15 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
-| Floating spawn rock | P2 | Rock island hovering above the Maelstrom in the Sky Well's light, flat walkable top facing the PvP gate, roots/moss/vines trailing beneath, chunky ink lines. |
-| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Owner's current preference (2026-10-31, not final): **droopy wooden suspension bridges**, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. Invisible barriers along both sides. |
+| Floating spawn rock (design final, v11, 2026-11-01) | P2 | Rock island hovering above the Maelstrom in the Sky Well's light, flat walkable top facing the PvP gate, roots/moss/vines trailing beneath, chunky ink lines. Concept v2 in the library. Reference categories, not designs: strangler fig roots flowing over stone at Ta Prohm for the roots; twisted stems, varied leaves, tendrils and flowers on vines for the vines. |
+| Four bridges | P2 | Forward (portals), back (entrance), left (gun side), right (slug side). Each widens onto solid mainland. Confirmed 2026-11-01: **droopy wooden suspension bridges**, 50 long and 10 wide, with sagging plank decks hung on rope or cable, chunky posts and ink-lined timber. No barriers (owner, 2026-11-01). At the spawn rock each one starts at a runestone gateway, with its ropes wound round the stones. Design final, v2, 2026-11-01. |
 | Mainland shoreline | P2 | The solid land wrapping around the sinkhole where every bridge lands and the terrain and biomes begin. |
 | Maelstrom | P2 | Sinkhole of glowing water spiralling down: layered spiral meshes with animated textures, rim rocks, rising mist. |
 | Sky Well | P2 | Ceiling opening far above, with a fake volumetric light column (layered meshes/Beams) and slowly drifting floating rocks trailing moss and vines. |
 | PvP gate | P2 | Straight ahead of spawn and the grandest gate. Warmer, more dramatic frame with orange energy. |
 | Training gate | P2 | Left of PvP. Cool, clean, practical frame. |
 | Veylume gate | P2 | Right of PvP; the exploration world. Mysterious: overgrown, sealed or dormant, hinting at the biomes beyond. Green/teal/violet glow. |
-| Portal frame | P1 | Base design that the three gates vary from: a shared frame language with a distinct crown and energy per mode. |
+| Portal frame | P1 | Base design that the three gates vary from. Confirmed 2026-10-31: each gate has a symbol on the keystone gem (PvP crossed swords, Training target, Veylume map; symbol in grey metal) and its own colour for the energy, gem and bolts: **PvP orange, Training green, Veylume purple**. |
 | Entrance | P2 | Behind spawn, on the far side of the round hub from PvP. |
 | Gate signage | P2 | A large painted sign over each gate, readable from spawn. |
 
@@ -63,15 +82,15 @@ Priority: **P1** = vignette, **P2** = needed for a complete lobby, **P3** = dres
 | Boulders and rock clusters (S/M/L) | P2 | Break up edges and frame paths. |
 | Stalactites and stalagmites | P2 | Sell the scale and the "ancient cavern". Exaggerated tapers. |
 | Ceiling and backdrop rock | P2 | Distant cavern shell, lightest ink, low detail. |
-| Crystal clusters (small, medium, giant) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
+| Crystals: fourteen designs in fourteen colours (owner, 2026-10-31) | P1→P2 | Main vibrant accent and light source. A few clear crystal varieties, each with its own glow family. |
 | Water feature: pool, drip or small waterfall | P3 | Calm movement and sound. Considering. |
 
 ### Fungi and flora (Slugterra-category, original designs)
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
-| Giant cave mushrooms (2–3 distinct silhouettes) | P1→P2 | Signature environment prop. Glowing caps, characterful stems. Some tall enough to canopy paths or act as platforms. |
-| Mushroom clusters (small) | P2 | Ground dressing around rocks and paths, glow in clumps. |
+| Giant cave mushrooms (2–3 distinct silhouettes; any colour from the 14-colour mushroom bank) | P1→P2 | Signature environment prop. Glowing caps, characterful stems. Some tall enough to canopy paths or act as platforms. |
+| Mushroom clusters (small; each mushroom a random colour from the 14-colour bank) | P2 | Ground dressing around rocks and paths, glow in clumps. |
 | Shelf fungi on walls | P3 | Bracket fungi on rock faces, small glow spots. |
 | Glowing moss and lichen patches | P2 | Soft colour on rock; may be texture/decal rather than mesh. |
 | Hanging vines and glow-bulb plants | P3 | Vertical life from the ceiling; gentle sway. |
@@ -102,12 +121,14 @@ Ties into the blaster's chunky orange/graphite/steel language.
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
 | Display habitats (terrariums) | P2 | Glass and chunky-metal enclosures, each a miniature biome (moss, crystal, water) with a slug inside. Floppy first; more as slugs are made. |
-| Glowing pond | P2 | Owner-confirmed. A shallow luminous pool where wild Floppies rest among giant mushrooms and glowing plants. |
+| Glowing pond | P2 | Owner-confirmed. A shallow luminous pool where wild Floppies rest among giant mushrooms and glowing plants. Owner, 2026-11-01, for the asset stage: make it bigger and more of a little oasis. The block-out still shows 70 across; about 86 across is the most that fits at its current spot before touching the mountain's foot, so going larger means moving it or letting the two meet. |
 | Plinths and info plaques | P2 | Name and short description per slug; painted wood/metal frontier style. |
 | Slug canister wall | P3 | Rows of glowing canisters, as if slugs are stored ready for slinging. |
 | Specimen jars and field-notes desk | P3 | A naturalist's corner: sketches, magnifier, jars. Original look. |
 
-### Gun exhibition (owner-requested)
+### Gun shop (owner-requested)
+
+Confirmed 2026-11-01: a physical walk-in shop/armoury that will be added to later, replacing the open exhibition. The items below move inside it.
 
 | Asset | Priority | Role and design notes |
 | --- | --- | --- |
@@ -130,7 +151,7 @@ Ties into the blaster's chunky orange/graphite/steel language.
 | Spiralling cavern kit | P2 | Passages, arches and ledges that spiral around and above the hub. Built from the rock kit plus large sweeping hero pieces. |
 | Little volcano | P2 | Stylised, chunky cone with ink fractures and a glowing crater. Faint smoke or embers (calm, slow). |
 | Lava ravine | P2 | Deep ravine with lava pouring down its walls into a glowing channel. Needs stylised flowing lava (animated texture or emissive mesh), cooled-crust edges and warm rim lighting. Cost check in Studio. |
-| Waterfall mountain | P2 | Small mountain with a stylised waterfall (animated texture), mist, and Slugterra-type greenery: giant mushrooms, vines, moss, glowing plants. |
+| Waterfall mountain | P2 | Owner, 2026-11-01, for the asset stage: the waterfall and its stream should look bigger than in the block-out. Small mountain with a stylised waterfall (animated texture), mist, and Slugterra-type greenery: giant mushrooms, vines, moss, glowing plants. |
 | Slug murals | P3 | Owner-confirmed. Original slug carvings or paintings on cavern walls, done as texture or relief. |
 
 ### Slug-energy technology
@@ -160,4 +181,3 @@ Ties into the blaster's chunky orange/graphite/steel language.
 
 - Which items to cut, add or promote, in particular further Slugterra-category props you have in mind.
 - Should the giant mushrooms be climbable or walkable, or purely visual? (Movement interaction would touch the separate movement work.)
-- Bridge style: leaning toward droopy wooden suspension bridges; confirm at the greybox/style test.

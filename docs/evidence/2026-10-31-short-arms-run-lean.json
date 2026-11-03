@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-31",
+  "ownerRequest": "Shorten first-person arms by 10% and convey the third-person forward running lean more convincingly.",
+  "implementation": {
+    "lengthRatio": 0.9,
+    "oldVisibleLength": 1.742832,
+    "newVisibleLength": 1.5685488,
+    "thirdPersonSourceLength": 2,
+    "cropAlsoScaled": true,
+    "maxRunLeanForward": 0.36,
+    "maxRunLeanDrop": 0.12,
+    "leanRate": 10,
+    "pointingLeanWeight": 0.35,
+    "leanDriver": "Actual torso pitch and horizontal velocity; grounded first person only; look rotation unchanged."
+  },
+  "offline": "verify_combat.py PASS (foundation, movement and combat formatting/lint/strict types/builds)",
+  "runtime": {
+    "place": "build/SlugshotTempRange.rbxlx",
+    "context": "One native Studio Play client, approximately 60 FPS, temporary LocalScript using the real movement/firing paths.",
+    "stages": [
+      {
+        "maxPitch": 0,
+        "meanForward": 0.00044311303958642786,
+        "frames": 36,
+        "maxDt": 0.01794690079987049,
+        "maxY": 0.001239546574652195,
+        "sourceArm": 2,
+        "maxArm": 1.5685487985610962,
+        "minArm": 1.5685487985610962,
+        "minY": -0.0005381752271205187,
+        "maxForward": 0.0010319886496290565,
+        "stage": "idle",
+        "minForward": -0.0006906624184921384
+      },
+      {
+        "maxPitch": 0,
+        "meanForward": 0.32175268521949424,
+        "frames": 67,
+        "maxDt": 0.0181731004267931,
+        "maxY": -0.0763956680893898,
+        "sourceArm": 2,
+        "maxArm": 1.5685487985610962,
+        "minArm": 1.5685487985610962,
+        "minY": -0.18320652842521667,
+        "maxForward": 0.3548029363155365,
+        "stage": "run",
+        "minForward": 0.29274705052375793
+      },
+      {
+        "maxPitch": 0,
+        "meanForward": -0.021903285704967048,
+        "frames": 36,
+        "maxDt": 0.018185200169682503,
+        "maxY": 0.026628460735082626,
+        "sourceArm": 2,
+        "maxArm": 1.5685487985610962,
+        "minArm": 1.5685487985610962,
+        "minY": 0.005821193102747202,
+        "maxForward": -0.010342739522457123,
+        "stage": "settled",
+        "minForward": -0.038008518517017365
+      }
+    ],
+    "result": {
+      "geometryRatio": 0.9,
+      "thirdPersonCleanup": true,
+      "pass": true,
+      "thirdPersonUnchanged": true
+    },
+    "shooting": {
+      "runCharge": {
+        "muzzleDistance": 4.689152717590332,
+        "accepted": true
+      },
+      "flipTap": {
+        "muzzleDistance": 4.11281156539917,
+        "accepted": true
+      },
+      "runTap": {
+        "muzzleDistance": 4.265501022338867,
+        "accepted": true
+      },
+      "idleTap": {
+        "muzzleDistance": 2.96815824508667,
+        "accepted": true
+      }
+    }
+  },
+  "limits": [
+    "2026-11-01 qualification: forward/down values here measure Humanoid.CameraOffset only, not final rendered eye placement relative to the body. See 2026-11-01-running-posture.json for the corrected final-view implementation and measurements.",
+    "Look pitch, geometry, forward/down offset, settling and third-person exit checked; owner naturalness/lean appearance verdict remains open.",
+    "Death/character reset cleanup is implemented but not separately exercised in this follow-up. No new multiplayer/device/latency coverage.",
+    "Gun attachment mapping remains the existing shortened-hand mapping; the firing check accepted idle/run tap, run charge and Spot flip tap."
+  ],
+  "sourceHashes": {
+    "experiments/combat/client/Viewmodel.luau": "796bc026f2d2d39ac7f2b4f2f08269f22bae1174a8cce85e065e200decd656dc",
+    "experiments/movement/client/init.client.luau": "2a33737f060ed000419308d9dcb0f9721adbb4f9de54d6689984e96956d876cf",
+    "experiments/movement/shared/Config.luau": "1f26175416c0df91ef08e978f4d945387f213ea658a8192c02afcdf2d5ccba40"
+  }
+}

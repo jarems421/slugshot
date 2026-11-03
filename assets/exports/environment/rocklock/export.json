@@ -1,0 +1,16 @@
+{
+  "creator": "Original Slugshot procedural geometry",
+  "third_party_art": false,
+  "tool": "4.5.14 LTS",
+  "seed": 27031,
+  "config_sha256": "21530fc22c7281513cb5fa8996975d854800af06bd0d1854afef2d605e6b3819",
+  "fbx_roundtrip": {
+    "objects": 83,
+    "dimensions_unchanged": true,
+    "axes": "Blender (X,-Z,Y), FBX -Z forward/Y up",
+    "units": "studs"
+  },
+  "uploaded": false,
+  "source_sha256": "194263391812146ad1c077d5a9cea4986a461e2419ae8ddfe1c53b46c5b53b39",
+  "export_sha256": "6046afa0597b1df9f444ae7e53774daa34333cdd1b1ad8e5dda9ee52d3bd9165"
+}

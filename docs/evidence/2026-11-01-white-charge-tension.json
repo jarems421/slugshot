@@ -1,0 +1,235 @@
+{
+  "date": "2026-11-01",
+  "ownerRequest": "Larger accepted crosshair (third +15%, first +22%); white ring, less blocky/fluid, loading friction and stronger readiness feedback.",
+  "implementation": {
+    "modeScales": {
+      "third": 1.15,
+      "first": 1.22
+    },
+    "curve": "Two clipped UIStroke circles with gradient hemisphere masks; native round caps. No rectangular segment chain or external image assets.",
+    "color": [
+      1,
+      1,
+      1
+    ],
+    "fill": "Actual angular charge fraction; no artificial timing curve.",
+    "loading": "Charge^1.6 drives up to 10% inward compression, 6% tick compression, thickness 2.4 to 3.2.",
+    "ready": "One damped spring from loaded radius and a fading 0.28-second outward ripple, then stable hold.",
+    "preserved": [
+      "aim point",
+      "source charge time",
+      "projectile velocity rules",
+      "camera",
+      "movement",
+      "crosshair design"
+    ]
+  },
+  "offline": "verify_combat.py PASS (foundation/movement/combat formatting, lint, strict types, builds)",
+  "runtime": {
+    "context": "One native Studio Play client in the temporary range. Real charge/release/server path. Existing first-person/shift-lock setters; native mouse positioning and M menu input.",
+    "stages": {
+      "thirdIdle": {
+        "visible": false,
+        "tension": 1,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": true,
+        "thickness": 2.4000000953674316,
+        "modeScale": 1.149999976158142,
+        "rightAngle": 0,
+        "echo": false,
+        "leftAngle": 0,
+        "stage": "thirdIdle",
+        "markWidth": 20.69999885559082
+      },
+      "firstIdle": {
+        "visible": false,
+        "tension": 1,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": true,
+        "thickness": 2.4000000953674316,
+        "modeScale": 1.2200000286102295,
+        "rightAngle": 0,
+        "echo": false,
+        "leftAngle": 0,
+        "stage": "firstIdle",
+        "markWidth": 21.96000099182129
+      },
+      "partialA": {
+        "visible": true,
+        "tension": 0.9891635179519653,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": false,
+        "thickness": 2.486692190170288,
+        "modeScale": 1.2200000286102295,
+        "rightAngle": 89.7652816772461,
+        "echo": false,
+        "leftAngle": 180,
+        "stage": "partialA",
+        "markWidth": 21.817218780517578
+      },
+      "partialB": {
+        "visible": true,
+        "tension": 0.9530254006385803,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": true,
+        "thickness": 2.77579665184021,
+        "modeScale": 1.2200000286102295,
+        "rightAngle": 180,
+        "echo": false,
+        "leftAngle": 224.50027465820312,
+        "stage": "partialB",
+        "markWidth": 21.341062545776367
+      },
+      "full": {
+        "visible": true,
+        "tension": 1.0335965156555176,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": true,
+        "thickness": 3.200000047683716,
+        "modeScale": 1.2200000286102295,
+        "rightAngle": 180,
+        "echo": true,
+        "leftAngle": 360,
+        "stage": "full",
+        "markWidth": 21.831544876098633
+      },
+      "held": {
+        "visible": true,
+        "tension": 0.9999990463256836,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": true,
+        "thickness": 3.200000047683716,
+        "modeScale": 1.2200000286102295,
+        "rightAngle": 180,
+        "echo": false,
+        "leftAngle": 360,
+        "stage": "held",
+        "markWidth": 21.96000099182129
+      },
+      "released": {
+        "visible": false,
+        "tension": 1,
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "leftVisible": true,
+        "thickness": 3.200000047683716,
+        "modeScale": 1.2200000286102295,
+        "rightAngle": 180,
+        "echo": false,
+        "leftAngle": 360,
+        "stage": "released",
+        "markWidth": 21.96000099182129
+      }
+    },
+    "summary": {
+      "chargedShotAccepted": true,
+      "echoSeen": true,
+      "minScale": 0.8999999761581421,
+      "maxDt": 0.052459098398685455,
+      "peak": 1.097255825996399,
+      "centerError": 0
+    },
+    "menuCleanup": {
+      "menuOpen": {
+        "echo": false,
+        "icon": true,
+        "tension": 1,
+        "root": false,
+        "charging": false,
+        "stage": "menuOpen",
+        "ring": false
+      },
+      "menuClosed": {
+        "echo": false,
+        "icon": false,
+        "tension": 1,
+        "root": true,
+        "charging": false,
+        "stage": "menuClosed",
+        "ring": false
+      }
+    },
+    "unequipAndRestart": true,
+    "modeAlignment": {
+      "thirdFree": {
+        "point": [
+          1713,
+          544
+        ],
+        "serverLaunchMiss": 3.0517578125e-05,
+        "viewport": [
+          2376,
+          988
+        ],
+        "reticleError": 0,
+        "centered": false,
+        "shotAccepted": true
+      },
+      "thirdLocked": {
+        "point": [
+          1188,
+          494
+        ],
+        "serverLaunchMiss": 1.52587890625e-05,
+        "viewport": [
+          2376,
+          988
+        ],
+        "reticleError": 0,
+        "centered": true,
+        "shotAccepted": true
+      },
+      "firstPerson": {
+        "point": [
+          1188,
+          494
+        ],
+        "serverLaunchMiss": 2.15791860682657e-05,
+        "viewport": [
+          2376,
+          988
+        ],
+        "reticleError": 0,
+        "centered": true,
+        "shotAccepted": true
+      }
+    },
+    "visual": "Native partial-charge frame inspected at build/white-ring-partial.png (ignored). White arc, clipping and rounded ends visible.",
+    "frameRate": "Capture-inclusive maximum delta 0.05246 seconds; not a stable-FPS benchmark."
+  },
+  "limits": [
+    "Owner perception of friction/readiness and size remains unapproved until playtest.",
+    "Still image inspection does not establish animation quality; runtime values establish behavior only.",
+    "No new touch/gamepad, multiplayer or latency coverage."
+  ],
+  "sourceHashes": {
+    "experiments/movement/client/Reticle.luau": "16aa7b842916682d857c90238525e116b4cd6fb2fe1d0d0a6d31450dc8c87557"
+  }
+}

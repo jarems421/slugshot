@@ -118,7 +118,99 @@ for mesh, part in parts do
 	end
 	attach(part, CFrame.new(mesh.centre * SCALE) * fix, tool)
 end
+-- The light inside the charger spiral. The spiral itself never moves: these thin bars sit
+-- just proud of the backplate and under the vane tops, so they show only through the gaps.
+-- The combat client sweeps them round while charging; the later bars form the trail.
+for mesh in parts do
+	if mesh.name == "ChargerBlack" then
+		local diameter = math.min(mesh.size.Y, mesh.size.Z) * SCALE.Y * 0.84
+		local depth = mesh.size.X * SCALE.X + 0.008
+		for index = 1, 4 do
+			local light = Instance.new("Part")
+			light.Name = `ChargerLight{index}`
+			light.Material = Enum.Material.Neon
+			light.Color = Color3.fromRGB(205, 232, 255)
+			light.Size = Vector3.new(depth, diameter, 0.035)
+			light.Transparency = 1
+			attach(light, CFrame.new(mesh.centre * SCALE), tool)
+		end
+		break
+	end
+end
 model:Destroy()
+
+-- The sight pod on top of the housing. Closed, it reads as part of the gun; the combat client
+-- opens it when aiming (AdsSight). Gun-space: X right, Y up, -Z toward the muzzle.
+-- Seated on the receiver roof over the charger, 0.45 studs forward of the old mount.
+-- The short saddle feet follow the two roof levels; the cover stays flat when shut.
+local POD = Vector3.new(0, 0.68, -0.6)
+local function sightPart(
+	name: string,
+	size: Vector3,
+	offset: Vector3,
+	color: Color3,
+	material: Enum.Material,
+	transparency: number?
+)
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = size
+	part.Color = color
+	part.Material = material
+	part.Transparency = transparency or 0
+	attach(part, CFrame.new(POD + offset), tool)
+end
+local GRAPHITE = Color3.fromRGB(37, 45, 52)
+local STEEL = Color3.fromRGB(162, 171, 177)
+local BURNT = Color3.fromRGB(150, 66, 32)
+sightPart("AdsBase", Vector3.new(0.19, 0.026, 0.22), Vector3.zero, GRAPHITE, Enum.Material.Metal)
+sightPart(
+	"AdsMountFront",
+	Vector3.new(0.16, 0.052, 0.055),
+	Vector3.new(0, -0.038, -0.09),
+	GRAPHITE,
+	Enum.Material.Metal
+)
+sightPart(
+	"AdsMountRear",
+	Vector3.new(0.16, 0.034, 0.055),
+	Vector3.new(0, -0.029, 0.09),
+	GRAPHITE,
+	Enum.Material.Metal
+)
+sightPart(
+	"AdsEmitter",
+	Vector3.new(0.09, 0.03, 0.12),
+	Vector3.new(0, 0.012, 0),
+	STEEL,
+	Enum.Material.Metal
+)
+sightPart(
+	"AdsLens",
+	Vector3.new(0.06, 0.008, 0.08),
+	Vector3.new(0, 0.03, 0),
+	Color3.fromRGB(235, 240, 237),
+	Enum.Material.Neon,
+	1
+)
+local SIDES: { [string]: number } = { L = -1, R = 1 }
+for tag, sign in SIDES do
+	sightPart(
+		"AdsDoor" .. tag,
+		Vector3.new(0.085, 0.016, 0.21),
+		Vector3.new(sign * 0.0425, 0.026, 0),
+		BURNT,
+		Enum.Material.Metal
+	)
+	sightPart(
+		"AdsProng" .. tag,
+		Vector3.new(0.012, 0.025, 0.03),
+		Vector3.new(sign * 0.028, 0.015, 0),
+		GRAPHITE,
+		Enum.Material.Metal,
+		1
+	)
+end
 
 -- Soft light-blue trim on the chamber: a ring at each end and a thin strip along
 -- the top and bottom edges, so the tube glows without covering the slug.
@@ -183,10 +275,27 @@ assert(current > 1e-5, "Floppy eye spacing is zero")
 local target = math.min(
 	canisterSize.X * 0.84 / SOURCE_SIZE.X,
 	canisterSize.Y * 0.82 / SOURCE_SIZE.Z,
-	canisterSize.Z * 0.86 / SOURCE_SIZE.Y
+	canisterSize.Z * 0.86 / SOURCE_SIZE.Y,
+	-- Turning sweeps the source rectangle's corners. Reserve a circular
+	-- envelope plus articulation margin, not just its front-facing width.
+	math.min(canisterSize.X, canisterSize.Y)
+		* 0.9
+		/ (Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude + 0.2)
 )
 local shrink = target / current
 floppy:ScaleTo(floppy:GetScale() * shrink)
+-- Numeric containment contract for the client-only inspect, derived from this fit.
+floppy:SetAttribute("ChamberCentre", canisterCentre)
+floppy:SetAttribute("ChamberHalfSize", canisterSize / 2)
+floppy:SetAttribute("LoadedHalfLength", (SOURCE_SIZE.Y / 2 + 0.12) * target)
+floppy:SetAttribute(
+	"LoadedRadius",
+	(Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude / 2 + 0.1) * target
+)
+floppy:SetAttribute(
+	"InspectHopHeight",
+	math.max(0, math.min(0.035, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008))
+)
 local up = (head.WorldPosition - rootBone.WorldPosition).Unit
 local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
 local front = (face - up * face:Dot(up)).Unit

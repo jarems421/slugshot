@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-01",
+  "method": "Temporary LocalScript in an ignored copy of the range; one native Studio client; character standing still",
+  "third_person_shot_spawn_vs_gun": [
+    {
+      "aim_yaw_degrees": 0,
+      "spawn_to_gun_tip_studs": 1.3,
+      "gun_vs_aim_degrees": 1
+    },
+    {
+      "aim_yaw_degrees": 50,
+      "spawn_to_gun_tip_studs": 1.3,
+      "gun_vs_aim_degrees": 3
+    },
+    {
+      "aim_yaw_degrees": 110,
+      "spawn_to_gun_tip_studs": 1.11,
+      "gun_vs_aim_degrees": 4
+    },
+    {
+      "aim_yaw_degrees": 180,
+      "spawn_to_gun_tip_studs": 1.32,
+      "gun_vs_aim_degrees": 5
+    },
+    {
+      "aim_yaw_degrees": -110,
+      "spawn_to_gun_tip_studs": 2.23,
+      "gun_vs_aim_degrees": 33
+    },
+    {
+      "aim_yaw_degrees": -90,
+      "spawn_to_gun_tip_studs": 3.16,
+      "gun_vs_aim_degrees": 47
+    },
+    {
+      "aim_yaw_degrees": -45,
+      "spawn_to_gun_tip_studs": 1.39,
+      "gun_vs_aim_degrees": 2
+    }
+  ],
+  "yaw_convention": "positive is the character's right (gun side); negative is across the body",
+  "recovery_lifetime_seconds": {
+    "target_shot": 2.72,
+    "floor_shot": 2.99,
+    "firing_cooldown": 1.5
+  },
+  "flight_to_recovery_rotation_step_degrees": {
+    "floor_shot": 11.1,
+    "note": "One sample; the target shot's boundary frame was not captured cleanly."
+  },
+  "first_person_idle_capture": "Looking slightly above the horizon, neither hand nor gun was in view.",
+  "limits": [
+    "Standing only. Running, recoil feel and flips were read from code and earlier evidence, not re-measured."
+  ]
+}

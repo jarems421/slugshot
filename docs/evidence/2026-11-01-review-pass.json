@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-01",
+  "request": "Owner's response to the combat review: gun-tip shots, return cue, tuning panel, stronger front/back flip tilt, first-person landing, rounded underside, belly skid inside 1.5 s, steep rock and ledges, left-aim fix, relaxed visible idle arms, livelier burrow",
+  "offline": "python tools/verify_combat.py passed; Floppy export reimport passed",
+  "native_studio_final_build": {
+    "clients": "one Studio client, character mostly standing",
+    "shot_spawn_to_gun_tip_studs": 0.0,
+    "gun_vs_aim_degrees": {
+      "yaw_0": 1,
+      "yaw_minus_90_before": 47,
+      "yaw_minus_90_after": 6,
+      "yaw_minus_110_before": 33,
+      "yaw_minus_110_after_one_earlier_run": 20
+    },
+    "impact_to_gone_seconds": [
+      1.5,
+      1.52
+    ],
+    "skid_studs": [
+      1.7,
+      1.8
+    ],
+    "worst_frame_ms": [
+      18,
+      19
+    ],
+    "worst_frame_note": "One 328 ms frame appeared in one separate longer probe run and did not recur; another Studio window was open; cause not established.",
+    "first_burrow_freeze": "One run before the material prewarm logged 715 ms on a session's first burrow, though an earlier run had not, so it was intermittent and the cause is inferred. After the prewarm: two fresh sessions, 10 shots including both first shots, burrow frame 16-19 ms, worst frame 18-19 ms, about 60 FPS.",
+    "return_cue": "crosshair pulse and canister glow both observed after one shot; slot flash is code-only",
+    "landing_dip_plain_jump_studs": 0.212,
+    "surfaces": {
+      "steep_face_normal_y_0_34": "slid down, landed on the floor and completed the burrow",
+      "skid_off_ledge": "land, fall, then a full recovery on the lower floor",
+      "debris_at_ledge": "9-11 of 31 pieces skipped over thin air",
+      "tight_crevice": "The slug bounced out both times, so the dig-into-rock fallback has not been exercised"
+    },
+    "impact_to_gone_note": "Range across 10 shots in the two fresh sessions; flat floor, tap-charged shots"
+  },
+  "model": {
+    "flat_base_cause": "The flat base had almost no interior vertices, so moving vertices could not dome it. Its faces were replaced by rings from the rim.",
+    "standing_height_studs": 0.935,
+    "underside_depth_below_ground_plane_studs": 0.112,
+    "triangles_body": 7998,
+    "max_influences": 3,
+    "upload": "New private model and body maps uploaded to the owner's account; IDs stay in ignored private storage",
+    "rollback": "private-assets/floppy/before-rounded-underside"
+  },
+  "limits": [
+    "Motion quality is judged from frozen poses here, so the owner must judge the wiggle in play.",
+    "Idle arm look is a first pass; adjust it live with the P panel.",
+    "Chamber fit of the deeper model was not separately inspected.",
+    "No multiplayer, device or Terrain floor test."
+  ]
+}

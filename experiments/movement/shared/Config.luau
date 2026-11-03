@@ -1,34 +1,18 @@
 --!strict
 -- Experimental profiles, not final game balance or controls.
 return table.freeze({
+	-- Owner (2026-10-31): one movement profile as the foundation; the Baseline and
+	-- Precise comparison profiles and the P switch were removed.
 	DefaultProfile = "Athletic",
 	Profiles = {
-		Baseline = {
-			RunSpeed = 16,
-			SprintSpeed = 16,
-			Acceleration = 180,
-			Braking = 220,
-			TurnRate = 30,
-			JumpPower = 51,
-			JumpGravity = 1, -- stock Roblox jump
-		},
 		Athletic = {
-			RunSpeed = 22, -- owner (2026-10-30): was 24; a clearer step up to the 30 sprint
-			SprintSpeed = 30,
+			RunSpeed = 18, -- owner speed retune (2026-10-31)
+			SprintSpeed = 24,
 			Acceleration = 100,
 			Braking = 145,
 			TurnRate = 18,
 			-- Slightly higher and a longer arc for more horizontal reach (owner, 2026-10-30).
 			JumpPower = 60.5,
-			JumpGravity = 1,
-		},
-		Precise = {
-			RunSpeed = 21,
-			SprintSpeed = 27,
-			Acceleration = 130,
-			Braking = 180,
-			TurnRate = 24,
-			JumpPower = 58.5,
 			JumpGravity = 1,
 		},
 	},
@@ -40,9 +24,10 @@ return table.freeze({
 		-- press is a ground jump while anything is under the body's footprint (radius,
 		-- studs; the server's touchdown check uses it too), or within Coyote seconds of
 		-- walking off without jumping.
-		Jump = { Footprint = 1, Coyote = 0.15, AirSpeedScale = 1.08 },
+		Jump = { Footprint = 1, Coyote = 0.15, AirSpeedScale = 1.04 },
 		Flip = {
-			MinRate = 0.85,
+			MinRate = 0.78,
+			PlaybackScale = 0.92, -- slightly slower flips, without changing the upward launch
 			MaxRate = 2.6,
 			-- Owner: a second Space press in the air is a double jump that flips toward
 			-- the keys held (eight ways, as seen on screen). Upward speed it launches with,
@@ -57,7 +42,7 @@ return table.freeze({
 		Slide = {
 			MinSpeed = 12, -- ground speed needed to start
 			Boost = 15, -- start speed: current (at least RunSpeed) plus this
-			MaxSpeed = 46,
+			MaxSpeed = 26,
 			EndSpeed = 20, -- speed it slows to by Duration
 			Duration = 0.8,
 			Steer = 1.2, -- radians per second it can turn toward the input
@@ -97,14 +82,14 @@ return table.freeze({
 		},
 		WallHop = {
 			Reach = 4.5, -- from the root: about 3.5 studs of gap beside the body
-			-- Owner (2026-10-30): kicks off a wall should go further, carrying the momentum.
-			AwaySpeed = 40,
+			-- Horizontal wall-kick reach reduced for the slower movement pace; height retained.
+			AwaySpeed = 34,
 			UpSpeed = 54,
 			TangentCarry = 0.8, -- fraction of along-wall speed kept
-			MaxTangent = 32,
+			MaxTangent = 26,
 			-- Horizontal speed kept once a kick hands back control (it then bleeds in the air
 			-- at Slide.AirDecay, as a slide-jump does), instead of dropping to sprint speed.
-			MaxCarry = 44,
+			MaxCarry = 36,
 			MaxHops = 8, -- per airtime (wall-run jumps count); enough to climb between two walls
 			Cooldown = 0.15,
 			-- Owner (2026-10-30): wall jumps were not responsive. No hop this soon after leaving
@@ -151,7 +136,7 @@ return table.freeze({
 			MaxInto = 0.8, -- travel more head-on than this (dot into the wall) does not attach
 			MinInput = 0.3, -- move input along the wall needed to attach
 			MinHeight = 2, -- feet above the ground needed to attach
-			Speed = 34, -- run speed on the wall with input along it (owner, 2026-10-30: was 26)
+			Speed = 24, -- owner speed retune (2026-10-31)
 			-- Steering (studs/s^2): toward the input's speed along the wall (Steer), or down to
 			-- it from a faster attach (Bleed); TurnRate turns the body when it reverses.
 			Steer = 120, -- toward the input's speed along the wall
@@ -163,37 +148,37 @@ return table.freeze({
 			Cling = { Into = 4, Below = 6, Drag = 4, Hug = 1.85, Accel = 200 },
 			Bleed = 12,
 			TurnRate = 14,
+			Surface = {
+				LookAhead = 5, -- anticipate small raised strips before the body reaches them
+				MaxStep = 0.85, -- maximum automatic outward surface offset, studs
+				ProbeHeight = 1.1, -- support above/below a thin horizontal seam
+				CornerReach = 3.2, -- only wrap onto an adjacent face near the old edge
+				CornerRate = 7, -- maximum convex turn speed, radians/s
+				Grace = 0.12, -- brief seam tolerance; does not search across large gaps
+			},
 			-- Owner (2026-10-30): attaching was delayed and stuck lower than the jump was
 			-- heading. It can attach this soon after leaving the ground (MinHeight still keeps
 			-- it off the floor), keeping more of the jump's rise.
 			GroundDelay = 0.03,
 			Rise = { Min = 4, Max = 20, Carry = 0.55 }, -- upward speed on attach: Carry of the jump's, clamped
-			-- Jump on a wall run: a press climbs at once and a release within TapTime is a tap
-			-- that kicks off (0.3 s covers ordinary taps; the old 0.2 s needed double taps).
-			-- Held, it climbs at Climb for ClimbTime of holding (owner: the old 2 s taper
-			-- stopped the climb after about a second), then eases over ClimbFade into a
-			-- HeldSlide.
-			TapTime = 0.3,
-			-- A press while holding away from the wall (move input dot the wall normal over
-			-- this) kicks off at once, without waiting for the release.
+			-- Jump holds and taps adjust height without a climb timeout or release kick.
+			-- To kick off, press Jump with an outward component, including a diagonal.
 			KickAway = 0.35,
+			MantleInto = 0.65, -- wall-run mantles require deliberate input into the wall
 			-- Studs above the root that must still be beside the wall to keep climbing; above
 			-- this the run holds its height along the top edge.
 			TopMargin = 1,
 			Climb = 11,
-			ClimbTime = 3,
-			ClimbFade = 1,
-			HeldSlide = 2, -- downward speed reached while still holding Jump
 			Slide = 1.5, -- downward speed once Jump is released, growing by SlideGrow per second since
 			SlideGrow = 5,
 			SlideMax = 20,
 			VerticalAccel = 40, -- studs/s^2 toward the climb or slide speed
-			Pull = { Rate = 8, Max = 14, Away = 6 }, -- speed holding the root at Hug distance
+			Pull = { Rate = 12, Max = 14, Away = 12 }, -- anticipate shallow protrusions without moving the root through them
 			Release = 8, -- push away from the wall when dropping off
 			Reattach = 0.45, -- seconds before the same wall can be run again
-			JumpAway = 38,
+			JumpAway = 32,
 			JumpUp = 46,
-			JumpCarry = 1, -- fraction of the run speed kept on the kick
+			JumpCarry = 0.9, -- fraction of the run speed kept on the kick
 			Tilt = 0.35, -- presentation: body roll away from the wall, radians
 			ArmForward = 0.5, -- presentation: wall hand's swing ahead of the shoulder, radians
 			HandGap = 0.1, -- presentation: hand stops this far from the wall surface
@@ -201,7 +186,7 @@ return table.freeze({
 		},
 	},
 	Lab = {
-		HurtAmount = 15, -- H: self-damage to preview hit reactions; no combat rules
+		HurtAmounts = { 7, 15, 40 }, -- H: self-damage to preview hit reactions, a step up each press; no combat rules
 		HurtCooldown = 0.5,
 		Aim = false, -- RMB aim pose and click marker; off until aiming is in scope (owner, 2026-10-29)
 		SprintDoubleTap = 0.3, -- seconds between W presses that start a sprint
@@ -226,17 +211,37 @@ return table.freeze({
 		ShiftLockTurnRate = 30, -- how fast the body turns to the camera under shift lock
 		AimFov = 68,
 		BlendRate = 10,
-		-- Owner (2026-10-30): make sprinting obvious, but the first shake (bounce, wobble and
-		-- roll) was far too much: only a very subtle bounce on each step (studs), no tilt.
+		-- Owner (2026-10-31): calmer bounce for running, slightly quicker for sprinting.
+		-- Keep both subtle, without wobble or camera roll.
 		-- Steps: footfalls per second; Rate: how fast it fades in and out.
-		SprintShake = { Bounce = 0.05, Steps = 4.6, Rate = 6 },
-		MinZoom = 7,
+		RunShake = { Bounce = 0.018, Steps = 3.2, Rate = 6 },
+		SprintShake = { Bounce = 0.035, Steps = 3.7, Rate = 6 },
+		MinZoom = 10, -- owner requested a noticeably wider third-person base view, 2026-11-02
 		MaxZoom = 18,
 		Shoulder = Vector3.new(1.5, 0.45, 0),
+		-- First person: the camera follows the animated head (per axis, root space) after
+		-- a slow baseline (rate, 1/s) removes steady offsets; Max caps each axis (studs).
+		-- Base head follow fades through acrobatics. AcrobaticCamera applies the selected
+		-- flip view after the native camera; wall/slide tilts ease at TiltRate.
+		FirstPerson = {
+			FlipCameraEnabled = true,
+			FlipCameraDefault = 2, -- Spot; owner-selected base, alternatives in Settings
+			RunBounce = 0.03, -- studs; heel compression follows the actual animated footfalls
+			RunLean = { Forward = 0.95, Drop = 0.24, Rate = 10 }, -- final-view eye advance over the hips; level look
+			Follow = Vector3.new(0.12, 0.2, 0.12),
+			Baseline = 2.5,
+			FollowRate = 8,
+			Max = 0.08,
+			FlipBlend = 18,
+			WallRoll = 10,
+			SlideRoll = 4,
+			SlidePitch = 3,
+			TiltRate = 10,
+		},
 	},
 	Animation = {
-		MaxCycleRate = 1.3, -- above this the feet slide instead of faster cadence (longer, calmer strides)
-		MinCycleRate = 0.85, -- high so braking blends to idle without a slow-motion run (owner: snappy)
+		MaxCycleRate = 1.15, -- calmer cadence at the new run/sprint speeds
+		MinCycleRate = 0.65, -- allow speed-matched slower limbs at 18/24 studs/s
 		IdleBlendSpeed = 5,
 		IdleBlendRate = 7, -- how fast the idle/moving mix follows speed (owner: no cut into idle)
 		-- Long falls sway gently about the jump clip's apex pose instead of playing a Fall
@@ -281,7 +286,6 @@ return table.freeze({
 				FadeIn = 0.5,
 				FadeOut = 0.6,
 			},
-			InjuredBelow = 0.35, -- health fraction for the injured idle
 		},
 		-- Small caps: a quick reversal spikes both, which read as a skid (owner: sharp turns).
 		Lean = { Bank = 0.0016, MaxBank = 0.1, Pitch = 0.0025, MaxPitch = 0.08, Rate = 9 },
@@ -301,6 +305,68 @@ return table.freeze({
 		},
 		AimWeightDuringAction = 0.25,
 		AimRate = 14,
+		-- One-handed pistol hold for a Tool with HoldStyle "Pistol" (Rocklock blaster,
+		-- owner 2026-10-30: smooth, clean, a large pistol, not "basic", and not stiff; styles
+		-- on G). The tool's grip tilts the barrel GripTilt above the arm's line and sets the
+		-- grip's centre GripInset studs inside the R6 hand block, so the fist closes round it.
+		-- Per style, in character (root) space:
+		--   Arm   = raise from hanging, inward yaw, roll (fromEulerAnglesYXZ order)
+		--   Wrist = extra barrel pitch about the hand (R6 has no wrist: the grip weld turns)
+		--   Waist / Neck = torso turn and head counter-turn, shown mostly when standing
+		--   Weight = scales the whole hold; TorsoFollow = how much a standing arm rides the
+		--   torso instead of being steadied (a moving arm always rides it); Sway = idle drift.
+		-- Carry layers the hold over the body's own motion the way action games layer a
+		-- weapon pose over full-body locomotion: full when standing, less when running,
+		-- sprinting and airborne, and little in actions so slides and flips keep their swing.
+		-- A spring adds follow-through: turning swings the gun behind (Lag per rad/s of turn),
+		-- take-offs kick it and landings dip it (Dip per stud/s change of vertical speed).
+		-- Taking it out spins the blaster DrawSpins times about the trigger finger.
+		Hold = {
+			GripTilt = 0.2,
+			GripInset = 0.14,
+			Rate = 10,
+			Default = "Relaxed",
+			Order = { "Relaxed" }, -- owner kept only Relaxed (2026-10-31)
+			-- Owner (2026-10-31): a light pistol should not restrict the arms; moving,
+			-- airborne or in an action the gun arm swings exactly as an empty one. The
+			-- hold only applies standing (fading out by RunSpeed).
+			Carry = {
+				Idle = 1,
+				Run = 0,
+				Sprint = 0,
+				Air = 0,
+				RunSpeed = 10,
+				SprintSpeed = 30,
+				Actions = { Slide = 0, WallRun = 0, WallHop = 0, Mantle = 0, Flip = 0 },
+				Spring = 90,
+				Damping = 0.35, -- fraction of critical damping: lower bounces more
+				Lag = 3,
+				Dip = 0.05,
+				MaxSway = 0.45,
+				-- During a draw/holster flourish: full hold out of the run swing, eased
+				-- in faster than a normal carry change.
+				Flourish = 1,
+				FlourishRate = 20,
+			},
+			Styles = {
+				-- Owner (2026-10-31): the set poses read goofy and basic. A light pistol
+				-- carried casually: the arm hangs naturally, a little forward, the barrel
+				-- angled down and ahead.
+				Relaxed = {
+					Arm = { 0.22, 0, 0.05 },
+					Wrist = 0.75,
+					Waist = { 0, 0, 0 },
+					Neck = { 0, 0, 0 },
+					Weight = 1,
+					TorsoFollow = 1,
+					Sway = 0.02,
+				},
+			},
+			PointRate = 28, -- how fast the gun arm comes up to point when shooting
+			DrawTime = 0.45,
+			DrawSpins = 1,
+			DrawLift = 0.35, -- extra arm raise at the middle of the spin
+		},
 	},
 	Validation = {
 		RequestsPerSecond = 12,

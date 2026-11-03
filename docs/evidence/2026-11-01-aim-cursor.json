@@ -1,0 +1,111 @@
+{
+  "date": "2026-11-01",
+  "ownerRequest": "Hide overlapping cursor in first person/shift lock; use cursor or moving custom reticle in unlocked third person.",
+  "choice": "One custom reticle: centered when locked, mouse-following when free. Normal pointer in menus/text entry.",
+  "implementation": {
+    "sharedModule": "experiments/movement/client/AimCursor.luau",
+    "aimSpace": "Viewport pixels; same point for reticle, aim ray and charge/hit UI.",
+    "gui": "Separate IgnoreGuiInset AimHUD; preserve movement debug HUD inset/layout.",
+    "menus": "Local CombatSettingsOpen, GuiService.MenuIsOpen and focused TextBox; normal native pointer, no gameplay reticle, no new charging."
+  },
+  "offline": "verify_combat.py PASS (foundation/movement/combat formatting, lint, strict types, builds)",
+  "runtime": {
+    "context": "One native Studio Play client in the temporary target range. Real firing path/server acknowledgement; programmatic existing first-person/shift-lock helpers. Off-center OS mouse position set through Win32. M/Esc menu input exercised natively.",
+    "modes": {
+      "thirdFree": {
+        "point": [
+          788,
+          636
+        ],
+        "serverLaunchMiss": 2.384185791015625e-07,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0,
+        "centered": false,
+        "shotAccepted": true
+      },
+      "thirdLocked": {
+        "point": [
+          547,
+          489.5
+        ],
+        "serverLaunchMiss": 1.969660615941393e-06,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0.5,
+        "centered": true,
+        "shotAccepted": true
+      },
+      "firstPerson": {
+        "point": [
+          547,
+          489.5
+        ],
+        "serverLaunchMiss": 9.610960205463925e-07,
+        "viewport": [
+          1094,
+          979
+        ],
+        "reticleError": 0.5,
+        "centered": true,
+        "shotAccepted": true
+      }
+    },
+    "menus": {
+      "settingsOpen": {
+        "mouseBehavior": "Default",
+        "menu": true,
+        "reticle": false,
+        "stage": "settingsOpen",
+        "icon": true
+      },
+      "settingsClosed": {
+        "mouseBehavior": "LockCenter",
+        "menu": false,
+        "reticle": true,
+        "stage": "settingsClosed",
+        "icon": false
+      },
+      "robloxOpen": {
+        "mouseBehavior": "LockCenter",
+        "menu": true,
+        "reticle": false,
+        "stage": "robloxOpen",
+        "icon": true
+      },
+      "robloxClosed": {
+        "mouseBehavior": "LockCenter",
+        "menu": false,
+        "reticle": true,
+        "stage": "robloxClosed",
+        "icon": false
+      }
+    },
+    "alignmentMetric": "Perpendicular distance in studs from the camera-selected target to the actual server-echoed launch line. Gravity still applies after launch.",
+    "selfTest": "CombatSelfTest ALL PASS"
+  },
+  "fixtureNotes": [
+    "Initial pixel checks compared GUI AbsolutePosition directly to viewport pixels; corrected by adding the current GuiInset. No gameplay coordinate change was needed.",
+    "UDim offset rounding permits half-pixel HUD error with odd viewport dimensions; the firing point remains exact viewport center."
+  ],
+  "limits": [
+    "No touch/gamepad, multiplayer or latency validation.",
+    "Owner custom-reticle appearance/feel verdict remains open.",
+    "Shift-lock modes used the real shared setter through the existing Studio-only movement probe; Ctrl physical key was not separately tested.",
+    "Menu pointer restoration and new-charge blocking verified; no exhaustive UI hover or same-frame charge/menu event ordering test."
+  ],
+  "references": [
+    "https://create.roblox.com/docs/reference/engine/classes/Camera",
+    "https://create.roblox.com/docs/tutorials/use-case-tutorials/scripting/intermediate-scripting/hit-detection-with-lasers"
+  ],
+  "sourceHashes": {
+    "experiments/movement/client/AimCursor.luau": "d682a695838ba45500b98fc13947c4c106f19ae3ee61d0d735d2256147542f6c",
+    "experiments/movement/client/init.client.luau": "994d023a81489c847e99b81afda1df9b23893a9766f2104de1d4475f060fc7b7",
+    "experiments/combat/client/CombatClient.client.luau": "723bb01120b5ee8c44d6227f93b0f8748c2037da49ec8a1d89cb49295e2c46fe",
+    "experiments/combat/client/Settings.client.luau": "75e5942ce65a14463726ccc3b4cd05dce37c7e1efd2d729d9d3b286d04e1f7e9"
+  }
+}

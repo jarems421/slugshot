@@ -1,5 +1,19 @@
 # First slug: Flopper-inspired creature
 
+**Final design, confirmed by the owner 2026-11-03:** "Make them the final designs". This is the model described under [Final in Roblox](#final-in-roblox-2026-11-02): clean lids, eased blink and glowing eye rings. On `main` it runs with the shooting work's inspect acting, render timing and blaster behaviour. The earlier notes below are history.
+
+**Confirmed permanent for Floppy (owner, 2026-11-01):** 1 stud tall outside the gun, about 18% up from 0.85, and the current design including its folded underside. This is Floppy's own value, not a rule for other slugs. Loaded size and hit radius are separate.
+
+**Face, expressions approved by the owner (2026-11-01):** 15 bones. Lid, gaze and mouth bones drive blinks, wandering eyes, small mouth movements and three expressions cycling every 3.5 s with smooth blends: drowsy, smiling, surprised. Owner approved the eyes. Character target at rest is tired, sick and lazy: low lids with drooping outer corners, slow heavy blinks and a low drifting gaze. The sculpted mouth and lids are skinned rather than replaced. Runtime is `experiments/creatures/floppy/client/FloppyFace.client.luau`. [Poses](../../evidence/2026-11-01-floppy-expressions.png).
+
+**Current model and burrow, implemented/verified:** the flat base is now a rounded underside in the body colour with soft folds across it, below the ground plane, with the standing look unchanged. Recovery lasts 1.5 s from impact with a belly skid, a much wigglier roll and a screwing dig, with ground swells and lumpy debris. Native shots and offline checks passed; owner approval pending. [Evidence](../../evidence/2026-11-01-review-pass.json), [underside](../../evidence/2026-11-01-floppy-underside.png).
+
+## Confirmed post-shot recovery (2026-11-01; implemented for owner testing)
+
+**Owner-directed refinement:** roll from the belly onto the back before diving. During burrowing, actively wriggle/dig into the ground and gather a small dirt-and-rock rim with smooth transitions. Implemented with the existing rig, ground-sampled colors and a gradually building rim. Native Studio roll/dig/rim checks passed; owner artistic approval remains pending. [Current recovery evidence](../../evidence/2026-11-01-floppy-roll-dig.json).
+
+Floppy lands on its belly, wriggles briefly, then makes a little upward hop and burrows into the ground where it landed. The burrow represents returning to inventory. This replaces the earlier hop-to-owner and puff exit design. Target impacts drop to the floor before recovery. The existing body/head/tail/antenna bones animate the wriggle and crouch; the hop turns head-first into a straight-down dive. Cooldown availability is independent of the recovery scene. Full combat checks and one native Studio shot passed, with four-view imported-rig pose evidence. The owner still needs to approve the animation. See the [shared recovery details and evidence](../recovery.md).
+
 ## Confirmed — owner brief, 2026-10-31
 
 Create a distinct original Slugshot creature inspired by Flopper. A soft, squishy and somewhat goofy personality; pale cream/light yellow-green body, olive facial accents, large expressive eyes, a broad head, narrower flexible middle, flared lower body and small flexible appendages. Squash/stretch and expressive motion are central. This species does not transform. This is the first creature design; the reference is not a mandate to import or reproduce someone else's model.
@@ -126,3 +140,12 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 
 **Implemented:** no hull around the eyes or mouth; lids painted from their known colours with no rim or ring; socket walls in the lower lid colour; each upper lid closes along its lower lid; rings keep their pattern with a lime-to-emerald colour, fine ink and glow. In the display place the outline is a `Highlight`. **Unresolved:** this is on `feature/slug-asset-pipeline` with new private assets, not yet in main's game; his hull is still exported, and a game-wide outline plan is needed because Highlights are limited.
 
+## Inspect gesture (2026-11-02)
+
+**Confirmed:** one-handed blaster raise; Floppy looks at the holder, smiles lazily, turns around and wiggles his bum. **Implemented:** runtime candidate on `feature/loadout-controls`, using existing bones and facial controls without changing the accepted source mesh. **Unresolved:** owner animation approval. See [briefs](inspect-profiles.md) and [checks](../../loadout-controls.md).
+
+**Owner correction, 2026-11-02:** rejected the first inspect. Barrel must point upward along the arm, diagonally toward the holder; Floppy nearly upright, with a smooth hop/look/turn/rear-wiggle before lowering. [Revised runtime candidate and checks](../inspect-revision.md). No accepted creature art was changed.
+
+**Confirmed/implemented, 2026-11-02 - inspect correction:** owner requires Floppy to remain in the chamber throughout the toss/catch and outward reveal. His turn now has compression, spring extension, airborne rotation and cushioned landing; the bum shake uses hips with upper-body/head counterrotation, without extra jiggles. Loaded fit reserves turn/hop space. [Current review](../inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current). Existing creature source/art stays intact; owner verdict remains unresolved.
+
+**Confirmed/implemented, 2026-11-02 - shooting consistency:** owner wants first/second kicks slower with a little more drop and third-kick speed unchanged. Current Floppy speeds are **85 / 100 / 115 studs/s**; gravity 70, drag 0.35, damage 7, tumbling and no transformation remain. The continuous ballistic policy removes the abrupt distance switch; owner feel verdict on these speeds remains unresolved. [Mechanics/evidence](../../combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current).

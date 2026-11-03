@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-01",
+  "subject": "First-person gun angle and shots during slides, by slide direction",
+  "method": "Injected LocalScript in a throwaway copy of the range in Studio, using the movement and combat probes for input. Gun angle is the barrel direction against the view direction, sampled per frame during FirstPersonAction == Slide.",
+  "before_fix_gun_off_view_degrees": {
+    "not_charging_mean": {
+      "forward": 32,
+      "left": 93,
+      "right": 87,
+      "back_left": 126,
+      "back_right": 125,
+      "back": 158
+    },
+    "charging_mean_worst": {
+      "forward": [
+        14,
+        27
+      ],
+      "right": [
+        16,
+        39
+      ],
+      "back_left": [
+        20,
+        67
+      ],
+      "back_right": [
+        21,
+        73
+      ]
+    }
+  },
+  "after_fix_gun_off_view_degrees": {
+    "not_charging_mean": {
+      "forward": 38,
+      "left": 37,
+      "right": 37,
+      "back_left": 36,
+      "back_right": 32,
+      "back": 30
+    },
+    "not_charging_peak_after_first_frames_all_directions": 43,
+    "charging_through_whole_slide_right_mean_worst": [
+      4,
+      7
+    ],
+    "full_charge_released_in_slide_mean_worst_all_directions": [
+      10,
+      42
+    ]
+  },
+  "shots_after_fix": {
+    "full_charge_released_in_slide": "left, right, forward, back-left, back-right and back: launch 0.00 studs from the visible gun, 0.00 studs to the side of the crosshair's line, speed 115",
+    "standing_control": "0.00 studs from the gun, 0.00 to the side",
+    "tap_in_right_slide": "0.48 studs to the side, speed 65, level 1 (only partly corrected by design)"
+  },
+  "limits": [
+    "Scripted input in one Studio session with the camera held level; no real mouse or controller play.",
+    "The full-charge worst of 42 degrees is sampled after release, so it probably includes the shot's kick; this was not separated.",
+    "The not-charging means include frame 0, still the running arm pump, up to about 120 degrees in every direction including forward.",
+    "The not-charging figures are from the build just before the final settle change, which only affects aiming.",
+    "A charge held past the slide's end was traced before that settle change: 10 degrees easing to 3 with no pop. The later run's after-slide worst of 39 degrees includes its shot.",
+    "First person only. Third-person slides were not changed or measured.",
+    "No owner verdict yet."
+  ]
+}

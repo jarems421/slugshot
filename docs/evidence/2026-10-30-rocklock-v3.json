@@ -1,0 +1,364 @@
+{
+  "date": "2026-10-30",
+  "branch": "experiment/rocklock-greybox",
+  "movement_base": "913f9e6",
+  "test": "Isolated two-client Studio test; existing movement probe; 1.33 horizontal scaling",
+  "studio_version": "0.745.0.7451137",
+  "incoming_replication_lag": 0,
+  "other_network_emulation": "not exhaustively audited; none changed",
+  "result": {
+    "mapVersion": "3",
+    "clients": {
+      "South": {
+        "ok": true,
+        "beforeRespawn": {
+          "renderedClip": "",
+          "hops": 0,
+          "velocity": "3.7086172103881836, 0.0048366510309278965, 5.878238198420149e-07",
+          "privateClips": 14,
+          "variant": "FlipRight",
+          "markers": 0,
+          "ready": true,
+          "rootUp": 1,
+          "airState": "ground",
+          "phase": 0.46347860546890707,
+          "profile": "Athletic",
+          "renderedMove": "",
+          "state": "Running",
+          "lastReject": "none",
+          "position": "2.965432643890381, 2.999889850616455, -82.75554656982422",
+          "acro": "",
+          "rendered": "",
+          "cameraUp": 0.9659258127212524,
+          "footOffset": 0.049071415673196894,
+          "rejects": []
+        },
+        "accepted": 6,
+        "frames": {
+          "p95Ms": 67.84120202064514,
+          "count": 604,
+          "meanMs": 67.3200028966989
+        },
+        "rig": "R6",
+        "final": {
+          "renderedClip": "",
+          "hops": 0,
+          "velocity": "0, 0.000006536807177326409, 0",
+          "privateClips": 14,
+          "markers": 0,
+          "ready": true,
+          "rootUp": 1,
+          "airState": "ground",
+          "phase": 0.6696429459178561,
+          "profile": "Athletic",
+          "renderedMove": "",
+          "state": "Running",
+          "lastReject": "none",
+          "position": "0, 2.999999761581421, 76.54888916015625",
+          "acro": "",
+          "rendered": "",
+          "cameraUp": 0.965925931930542,
+          "footOffset": 0.3320460751609533,
+          "rejects": []
+        },
+        "respawnStable": true,
+        "rejected": 0,
+        "corrections": 0,
+        "peers": {
+          "WallHop": true,
+          "Slide": true,
+          "WallRun": true,
+          "Flip": true
+        },
+        "points": {
+          "1": {
+            "seconds": 7.30486830000882,
+            "reached": true,
+            "label": "Spawn exit",
+            "distance": 0.18595567345619202,
+            "minRootY": 2.7900092601776123,
+            "maxRootY": 2.999999761581421
+          },
+          "2": {
+            "seconds": 2.799982899989118,
+            "reached": true,
+            "label": "Walk up flank",
+            "distance": 0.309846967458725,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 12.999999046325684
+          },
+          "3": {
+            "seconds": 3.2514088000025367,
+            "reached": true,
+            "label": "Flank crossing",
+            "distance": 0.17772483825683594,
+            "minRootY": 12.999999046325684,
+            "maxRootY": 12.999999046325684
+          },
+          "4": {
+            "seconds": 3.2983941999991657,
+            "reached": true,
+            "label": "Flank return",
+            "distance": 0.4304637908935547,
+            "minRootY": 12.999999046325684,
+            "maxRootY": 12.999999046325684
+          },
+          "5": {
+            "seconds": 1.0164618999988306,
+            "reached": true,
+            "label": "Run wall approach",
+            "distance": 0.38170453906059265,
+            "minRootY": 12.999999046325684,
+            "maxRootY": 12.999999046325684
+          },
+          "6": {
+            "seconds": 3.448242200000095,
+            "reached": true,
+            "label": "Underpass entrance",
+            "distance": 0.4288104474544525,
+            "minRootY": 2.102173328399658,
+            "maxRootY": 13.148513793945312
+          },
+          "7": {
+            "seconds": 4.366329399999813,
+            "reached": true,
+            "label": "Underpass crossing",
+            "distance": 0.2277488261461258,
+            "minRootY": -1.0359472036361694,
+            "maxRootY": 2.982944965362549
+          },
+          "8": {
+            "seconds": 2.000838699997985,
+            "reached": true,
+            "label": "Exit beside cover",
+            "distance": 0.13129326701164246,
+            "minRootY": 2.9409754276275635,
+            "maxRootY": 2.999999761581421
+          },
+          "9": {
+            "seconds": 2.5166702999995323,
+            "reached": true,
+            "label": "Open spawn strip",
+            "distance": 0.14367739856243134,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 2.999999761581421
+          },
+          "10": {
+            "seconds": 3.5158640000008745,
+            "reached": true,
+            "label": "Jump setup",
+            "distance": 0.3721703588962555,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 2.999999761581421
+          },
+          "11": {
+            "seconds": 2.717021600008593,
+            "reached": true,
+            "label": "Slide setup",
+            "distance": 0.34023284912109375,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 2.999999761581421
+          }
+        },
+        "actions": {
+          "firstJumpTravel": 15.640134811401367,
+          "flip": "Flip",
+          "slide": "Slide",
+          "firstJumpRise": 10.882001161575317,
+          "slideJumpRise": 42.874969482421875,
+          "kickRootY": 26.388416290283203,
+          "kick": "WallHop",
+          "wallRunRootY": 19.248180389404297,
+          "wallRun": "WallRun",
+          "wallSpeed": 34,
+          "slideSpeed": 36.81745910644531
+        },
+        "spawn": "South"
+      },
+      "North": {
+        "ok": true,
+        "beforeRespawn": {
+          "renderedClip": "",
+          "hops": 0,
+          "velocity": "0.29164671897888184, 0.03095877915620804, -4.007725351584668e-07",
+          "privateClips": 14,
+          "variant": "FlipLeft",
+          "markers": 0,
+          "ready": true,
+          "rootUp": 1,
+          "airState": "ground",
+          "phase": 0.8673624421817168,
+          "profile": "Athletic",
+          "renderedMove": "",
+          "state": "Running",
+          "lastReject": "none",
+          "position": "1.3492001295089722, 2.999295234680176, 82.7555160522461",
+          "acro": "",
+          "rendered": "",
+          "cameraUp": 0.9659258127212524,
+          "footOffset": 0.15578082631533602,
+          "rejects": []
+        },
+        "accepted": 6,
+        "frames": {
+          "p95Ms": 68.22489947080612,
+          "count": 605,
+          "meanMs": 67.79327361790602
+        },
+        "rig": "R6",
+        "final": {
+          "renderedClip": "",
+          "hops": 0,
+          "velocity": "0, 0.00000652503467790666, 0",
+          "privateClips": 14,
+          "markers": 0,
+          "ready": true,
+          "rootUp": 1,
+          "airState": "ground",
+          "phase": 0.6089286536443985,
+          "profile": "Athletic",
+          "renderedMove": "",
+          "state": "Running",
+          "lastReject": "none",
+          "position": "0, 2.999999761581421, -76.54888916015625",
+          "acro": "",
+          "rendered": "",
+          "cameraUp": 0.965925931930542,
+          "footOffset": 0.33254778034362165,
+          "rejects": []
+        },
+        "respawnStable": true,
+        "rejected": 0,
+        "corrections": 0,
+        "peers": {
+          "WallHop": true,
+          "Slide": true,
+          "WallRun": true,
+          "Flip": true
+        },
+        "points": {
+          "1": {
+            "seconds": 4.392880700004753,
+            "reached": true,
+            "label": "Spawn exit",
+            "distance": 0.25346067547798157,
+            "minRootY": 2.9998154640197754,
+            "maxRootY": 2.999999761581421
+          },
+          "2": {
+            "seconds": 2.8321412000077544,
+            "reached": true,
+            "label": "Walk up flank",
+            "distance": 0.26520076394081116,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 12.999999046325684
+          },
+          "3": {
+            "seconds": 3.219859600008931,
+            "reached": true,
+            "label": "Flank crossing",
+            "distance": 0.39822959899902344,
+            "minRootY": 12.999999046325684,
+            "maxRootY": 12.999999046325684
+          },
+          "4": {
+            "seconds": 3.3298203999875113,
+            "reached": true,
+            "label": "Flank return",
+            "distance": 0.4448280334472656,
+            "minRootY": 12.999999046325684,
+            "maxRootY": 12.999999046325684
+          },
+          "5": {
+            "seconds": 1.0667271999991499,
+            "reached": true,
+            "label": "Run wall approach",
+            "distance": 0.37187957763671875,
+            "minRootY": 12.999999046325684,
+            "maxRootY": 12.999999046325684
+          },
+          "6": {
+            "seconds": 3.4663703000114765,
+            "reached": true,
+            "label": "Underpass entrance",
+            "distance": 0.17767994105815887,
+            "minRootY": 2.0966782569885254,
+            "maxRootY": 12.999999046325684
+          },
+          "7": {
+            "seconds": 4.367180399989593,
+            "reached": true,
+            "label": "Underpass crossing",
+            "distance": 0.28647691011428833,
+            "minRootY": -1.0319201946258545,
+            "maxRootY": 2.998396635055542
+          },
+          "8": {
+            "seconds": 1.9662468000024091,
+            "reached": true,
+            "label": "Exit beside cover",
+            "distance": 0.16052798926830292,
+            "minRootY": 2.9321203231811523,
+            "maxRootY": 2.999999761581421
+          },
+          "9": {
+            "seconds": 2.483214699997916,
+            "reached": true,
+            "label": "Open spawn strip",
+            "distance": 0.3236103355884552,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 2.999999761581421
+          },
+          "10": {
+            "seconds": 3.484148899995489,
+            "reached": true,
+            "label": "Jump setup",
+            "distance": 0.39804530143737793,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 2.999999761581421
+          },
+          "11": {
+            "seconds": 2.749667500000214,
+            "reached": true,
+            "label": "Slide setup",
+            "distance": 0.12323380261659622,
+            "minRootY": 2.999999761581421,
+            "maxRootY": 2.999999761581421
+          }
+        },
+        "actions": {
+          "firstJumpTravel": 17.192581176757812,
+          "flip": "Flip",
+          "slide": "Slide",
+          "firstJumpRise": 10.866125345230103,
+          "slideJumpRise": 50.232479095458984,
+          "kickRootY": 26.216583251953125,
+          "kick": "WallHop",
+          "wallRunRootY": 19.248180389404297,
+          "wallRun": "WallRun",
+          "wallSpeed": 34,
+          "slideSpeed": 36.641746520996094
+        },
+        "spawn": "North"
+      }
+    },
+    "spawnSightBlockedBy": "NorthBaffle",
+    "spawnSeparation": 153.0977783203125,
+    "configHash": "21530fc22c7281513cb5fa8996975d854800af06bd0d1854afef2d605e6b3819",
+    "ok": true
+  },
+  "earlier_attempt": "South spawn-to-flank route exceeded the v2 harness's seven-second timeout under background throttling; North completed all waypoints but could not observe all peer actions. Rerun used twice the route timeout.",
+  "owner_session_observation": {
+    "movement_corrections": 1,
+    "suspect_air_boosts": 1,
+    "suspect_wall_passes": 0,
+    "rejected_requests": 0,
+    "accepted_requests": 42,
+    "interpretation": "Cause and whether this was a false positive are not established."
+  },
+  "limits": [
+    "Both background clients averaged about 68 ms per rendered frame while several Studio sessions were open. Window focus and throttling were uncontrolled; this is not a performance benchmark.",
+    "The owner session's correction was not reproduced during the two-client scripted paths; the paths do not cover every move or camera situation.",
+    "No combat timing, transformed slug size, latency simulation or exhaustive escape/stuck testing."
+  ]
+}

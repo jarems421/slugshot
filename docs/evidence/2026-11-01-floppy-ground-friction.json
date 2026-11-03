@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-01",
+  "request": "Ground should move during digging, with more dirt/rock gathering messily rather than appearing as a uniform particle ring",
+  "offline": "python tools/verify_combat.py passed",
+  "implementation": {
+    "burrow_seconds": 1,
+    "debris_pieces": 24,
+    "surface_patches": 7,
+    "surface_motion": "matching floor material/color; synchronized lift, tilt and outward shove on digging strokes",
+    "debris_motion": "staggered emergence, tumbling/outward movement, irregular clustered angles, varied sizes and heights; settle and fade",
+    "terrain": "cosmetic noncolliding patches; no persistent Terrain modification"
+  },
+  "native_studio": {
+    "accepted_target_shot": true,
+    "completed_recovery_after_cooldown": true,
+    "roll_back_face_dot_up": 1.0,
+    "dive_head_axis_dot_up": -1.0,
+    "hop_height_studs": 0.649,
+    "body_bone_rotation_radians": 0.227,
+    "debris_count": 24,
+    "surface_patch_count": 7,
+    "max_mound_size_y_studs": 0.221,
+    "max_surface_patch_center_y_on_floor_y_0": 0.09,
+    "max_surface_patch_tilt_radians": 0.279,
+    "cleanup_passed": true,
+    "completed_seconds_after_release": 3.316,
+    "four_pose_views": [
+      "front",
+      "side",
+      "back",
+      "three-quarter"
+    ]
+  },
+  "limits": [
+    "One Studio client and one grass-floor target shot.",
+    "No 16-player performance or device/frame-rate coverage.",
+    "Other material palettes implemented but not visually checked for every surface.",
+    "Owner friction, messiness and animation verdict remains pending.",
+    "Captures show static sample poses, not a continuous video."
+  ]
+}

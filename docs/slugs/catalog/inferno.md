@@ -1,5 +1,18 @@
 # Slug design record: Inferno
 
+## Final design — owner, 2026-11-03
+
+**Confirmed:** "Make them the final designs" for Inferno and Floppy. Both Inferno forms are final as they stand in `tools/slugs/build_inferno.py`.
+
+- **Size:** the base form matches Floppy's game size, 0.69 wide and 1.06 tall (`GAME_SCALE` 0.4218).
+- **Transformed form:** body behind the shoulders at 80% of the concept's length and tail at 50%; eyes lowered; thinner lip band; belly folds.
+- **Tail fire:** flame built into the body mesh from the concept's formula, moved by seven bones, with a soft two-layer glow behind it.
+- **Face:** skin lids, morphing mouth, furrowed brows when angry, and no blink in either form.
+
+**Implemented/verified:** offline export sizes, `verify_slugs.py` and Studio Play captures of the display place. **Unresolved:** Inferno is not in the game yet; shot numbers and the ability; the glow can look square for a moment when the tail points almost straight at the camera; the outline's Highlight limit in a crowded scene; game-size tuning of the fire; and a side-by-side and name/IP check before publication, because "Inferno" sounds like the franchise's Infurnus.
+
+The sections below are the design history, oldest first. Where they differ, this section wins.
+
 ## Confirmed — owner direction, 2026-11-02
 
 - **Role:** the second slug, and one of the more powerful ones. It is inspired by Burpy from Slugterra but must be its own design.

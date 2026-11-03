@@ -1,0 +1,75 @@
+{
+  "name": "SlugshotLobbyScale",
+  "serveAddress": "127.0.0.1",
+  "servePort": 34878,
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FallenPartsDestroyHeight": -2000
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "ShadowMap",
+        "GlobalShadows": false,
+        "Ambient": [0.78, 0.78, 0.78],
+        "OutdoorAmbient": [0.78, 0.78, 0.78],
+        "Brightness": 1,
+        "ClockTime": 12,
+        "EnvironmentDiffuseScale": 0,
+        "EnvironmentSpecularScale": 0
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "MovementExperiment": {
+        "$path": "experiments/movement/shared"
+      },
+      "MovementPrivateClips": {
+        "$path": "private-assets/generated/MovementClips.luau"
+      },
+      "LobbyScale": {
+        "$path": "experiments/lobby/scale/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      },
+      "MovementSandbox": {
+        "$path": "build/lobby-scale/generated/server",
+        "Arena": {
+          "$path": "experiments/lobby/scale/server/Arena.luau"
+        },
+        "LobbySpawns": {
+          "$path": "experiments/lobby/scale/server/LobbySpawns.luau"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "EnableMouseLockOption": false
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        },
+        "MovementSandbox": {
+          "$path": "experiments/movement/client"
+        },
+        "LobbyScale": {
+          "$path": "experiments/lobby/scale/client"
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,32 @@
 
 Updated 2026-10-31. This is a working record, not a redesign of the pipeline or approval of the creature. [Current design and verification](catalog/flopper-inspired.md). Preserve the owner’s feedback, the model source and the render that produced it; do not equate a passing script with a good design. For what the owner's phrases have meant in practice (e.g. "squishy", "stuck on", "muddy spots") and the draw/holster runtime lessons, see [owner design language](owner-design-language.md).
 
+## Runtime burrow friction (2026-11-01)
+
+**Confirmed:** the preceding roll/dig animation was almost perfect, but simply sinking with appearing dirt did not convey ground resistance. **Implemented/verified:** synchronize ground-matched cosmetic patches with each dig stroke: lift, tilt and shove outward while staggered debris tumbles into varied clusters. Seven patches and 24 debris pieces passed a real Studio target-shot motion/cleanup check and four-view review. Avoid an evenly spaced ring or a delayed burst of particles. [Evidence](../evidence/2026-11-01-floppy-ground-friction.json). No Blender source changed and no Terrain is modified. Owner artistic approval remains pending.
+
+## Facial rig (2026-11-01)
+
+**Failed first:** rotating lids and eyes about the eye centre. `EYE_DIM` is flat (0.23, 0.23, 0.085), so rotated lids barely closed and rotated eyes clipped through them. Moving the whole lid exposed the top of the eye. **Implemented/verified:** the lid rim moves fully and its sheet stretches from an anchored top, like a real lid. Eyes slide and ease back slightly. The mouth corners move separately: the low corner does most of a smile, because lifting the raised side reaches into the eyelid, as the owner flagged earlier. **Limits:** lid texture stretches visibly up close mid-blink. **Prevention:** render every expression extreme in Blender before uploading; that caught all of the above. Check a mesh's real proportions before choosing rotation over translation. [Poses](../evidence/2026-11-01-floppy-expressions.png). Owner verdict pending.
+
+## Ink shell in hollows (2026-11-01)
+
+**Problem:** owner: the eyes were "messed up because of the lining". An inverted-hull shell also shows inside carved hollows, drawing thick broken lines round the lids and dashes in the belly folds. **Implemented/verified:** `ink_shell` removes shell faces at front-facing skin around the eyes and in the belly folds, keeping the head's outer outline. **Prevention:** look for hull artefacts in every concave feature, not only the silhouette.
+
+**Follow-up:** trimming was not enough: owner: "the black outlines just kind of mess up and morph" depending on the angle. A hull's lines depend on the viewing angle, so an outline that must stay on a feature has to be painted. `paint_lid_lines` draws per texel from baked positions, so the line follows the lids through a blink. Checked from five angles in Studio. [Views](../evidence/2026-11-01-floppy-lid-lines.png).
+
+## Lids that read tired (2026-11-01)
+
+**Problems and causes:** one lid looked malformed: reduction to 8,000 triangles left too little mesh on thin rims, and the bake left pits. Painting a line round the whole lid read as goggles. Rims sloping toward the nose read as angry. A rim line chosen by height also coated the lid's steep underside, which became a thick black band, reflecting blue sky, as it moved. Quick blinks and darting eyes looked alert. **Fixes:** weight the Decimate modifier to protect the face. In its vertex group, higher means easier to collapse and zero means never collapse, which at first gave a 291,650-triangle body, so check the budget after any change. Paint each lid one clean colour; use ink on the rim only, limited by surface facing; turn the rims so the outer corners droop; slow everything down. **Prevention:** judge a face's mood against its brief as well as its geometry, and when a colour band appears, check which surface it landed on. [Views](../evidence/2026-11-01-floppy-tired-eyes.png).
+
+## Runtime debris shapes (2026-11-01)
+
+**Problem:** the burrow passed its piece-count and motion checks, yet close-ups showed near-black debris, marble-round clods and plank-like ground patches. **Causes:** Ground and Slate materials render much darker than their Color; `Part.Shape = Ball` forces a uniform size; thin rectangular slabs read as boards. **Implemented/verified:** lighter base colours, `SpecialMesh` sphere lumps, mixed wedge/corner-wedge/block rocks and half-buried soft swells. **Prevention:** view effects close up, at real scale, on several floors; counts do not establish appearance. [Evidence](../evidence/2026-11-01-floppy-earth-shapes.json). Owner approval pending.
+
+**Underside correction (2026-11-01):** owner rejected the dark dome: wrong colour, and "it looks like it has a butthole". Rings meeting at one point pinched the normals into a star, and the dark colour framed it. Now rows thin out toward the centre (`UNDERSIDE_ROW_SPACING`), colour is drawn per texel from the median lower-wall skin, and folds run straight across. Steep bake misses at UV seams are reset so they cannot sparkle. **Prevention:** look straight at the pole of any dome, and avoid radial detail on a creature's underside. [Render](../evidence/2026-11-01-floppy-underside.png), [in game](../evidence/2026-11-01-floppy-underside-in-game.png).
+
+**Rounded underside, first version (superseded colour and topology):** owner: "sawn off disc", and it makes the creature look stiff. Moving flat-base vertices did nothing, because the surface-net base has a dense rim and almost no interior vertices (first attempt: radius 0.049). `round_underside` deletes the flat faces and rebuilds rings from the rim; deleting with `FACES_ONLY` left wire edges that failed manifold checks, so use `FACES`. Rings stretch rim texture into streaks and seam dots, so `darken_underside` fades to one flat colour and flat normal, with the mask grown a few texels. The dome sits below the ground plane: standing height is unchanged at 0.935 studs. **Prevention:** inspect actual vertex distribution before planning a vertex edit. [Render](../evidence/2026-11-01-floppy-underside.png). Owner verdict pending.
+
 ## Artistic and visual lessons
 
 | Problem and known cause | Attempts and current response | Prevention and verification |
@@ -22,6 +48,18 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 
 ## Technical lessons
 
+### Floppy roll/dig and rim readability (2026-11-01)
+
+**Owner feedback:** roll belly-to-back, visibly wiggle/dig down and gather a small dirt/rock rim smoothly. **Implemented/verified in native Studio:** ease the roll about the body's long axis, retain the back pose through anticipation, interpolate into the head-first dive, and apply digging motion to every imported skeleton copy. Build the rim progressively from sampled ground colors and fade it after the creature has entered. The first rim radius was hidden under the exposed base; moving it just beyond the body silhouette made the ring visible in close-up. Four pose views, real-shot roll/dig and cleanup checks passed. [Current evidence](../evidence/2026-11-01-floppy-roll-dig.json). This is procedural Roblox animation; no Blender asset edit occurred. Owner timing/smoothness approval is still open.
+
+### Runtime recovery on the imported Floppy rig (2026-11-01)
+
+**Problem:** return hops were cut off by ammo readiness and ended with a puff; the owner instead approved a local belly-flop, wriggle, hop and head-first burrow.
+
+**Implemented/verified in one native Studio client:** separate the visual recovery lifecycle from the firing cooldown. Use the existing imported rig, resolve axes from the root/head/eye bones, and write transforms to every skeleton copy so the body, eyes and ink shell stay together. Raycast to ground after target impacts while excluding character models; do not assume the hit point is a floor. Only remove the model after sinking below the surface. The review captured four views and observed a complete real-shot phase sequence. [Evidence and limits](../evidence/2026-11-01-floppy-recovery.json).
+
+**Prevention:** keep runtime procedural motion owned by the recovery layer; the loaded/pedestal idle must not animate the fired clone. A model named `FloppyFlight` is distinct from the idle's `Floppy` selector. No Blender edit/export was needed; source asset QA is not evidence for runtime timing, and this review is not owner art approval.
+
 | Problem and cause | Attempts and current response | Prevention and verification |
 | --- | --- | --- |
 | The first headless preview failed because a generated empty scene had no World. | Added a preview World when absent. | Start preview setup by creating missing scene resources. **Verified:** repeated headless renders pass. |
@@ -37,7 +75,7 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 | Studio MCP was configured only for the main `slugshot` folder, so sessions in the slug worktree had no Studio tools. `claude mcp add … -- cmd.exe /c …` run from Git Bash rewrote `/c` into a path (`C:/`), and the server timed out. | Wrote the user-scope entry directly in `~/.claude.json` (`"command": "cmd.exe", "args": ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"]`); `claude mcp list` then showed it connected. It loads only after a session restart. | Register Studio MCP at user scope; don't pass `/c` style arguments through Git Bash. **Verified:** connection check passed; not used in-session. |
 | Rojo failed with "Failed to deserialize JSON" on a `SpawnLocation` whose `CFrame` was written as a position/orientation-matrix object. | Used `Position` and `Orientation` properties instead. | Prefer simple vector properties in project JSON. **Verified:** build succeeded. |
 
-## 2026-10-31 ? Accepted Floppy technical review
+## 2026-10-31 — Accepted Floppy technical review
 
 **Confirmed:** owner approved the final Floppy art and requested review/backup. Multi-angle and sampled idle views were inspected in the saved live Blender 5.2.3 scene; art was preserved. **Verified offline:** export hashes and FBX reimport pass, including 8.8k triangles, eight bones and a seamless 12-second scale-free idle. **Unresolved:** the generic Roblox mesh audit finds 18 inconsistent-winding edges and one degenerate skin face (plus nine non-manifold edges); passing the exporter's rig/budget/animation tests does not establish topology quality. Repair on a checkpoint/variant and compare silhouette/UVs before replacing the accepted asset. High-source meshes skip the generic overlap test at its default 300k cap; do not present that omission as a complete QA pass. A Highlight is unlit fill on the slug and cannot illuminate its chamber; keep that request unresolved. [Full review](../reviews/2026-10-31-work-review.md).
 
@@ -103,3 +141,36 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 - **Limit:** the concept's yellow core came from a see-through volume. A solid surface can't show that, so the core is suggested by yellow ridges and deeper grooves.
 - **Fire effect round it:** every particle version (licks, embers, streams, large and small) broke into separate blobs, which the owner rejected as "individual fireballs". What holds together is a single soft Beam layer shaped like the flame and drawn behind it, with `TextureSpeed` 0, and enabled by the client only after `ContentProvider:PreloadAsync`. Beams and particles parented to a client-animated bone appear not to follow it, which left them offset from the flame (owner: "the fire isnt tracking the tail"). Their ends need to be free attachments that the client places each frame, after all bones are driven, from the bone chain's own `CFrame * Transform`, because `TransformedWorldCFrame` lags a frame. Anchor each end to the bone it visually sits on: a bone that pivots at the tail tip swings points up the tail the wrong way.
 - **Verified:** Studio Play captures, side and underneath, two frames apart. Owner approval pending.
+## Crisp mouth in a shared texture (2026-11-02)
+
+**Problem:** the owner found the mouth "very low resolution... just looks like blurry mouth", so a smile could not be read. **Cause:** the mouth had a few dozen texels of a 1024 atlas shared with the whole body, baked from an already soft source with a deliberately soft edge. **Failed on the way:** filling the old mouth by diffusion let the black outside the UV island bleed in, leaving a dark halo; filling only from valid texels fixed it. Reading the mouth colour from the bake gave olive, because the bake's mouth is too thin to sample; the concept's own `MOUTH` is right. **Fix:** in `export_floppy_roblox.py`, the body takes 74% of the atlas and a flat-mapped face patch gets its own strip (559 texels per unit), with the mouth and drool repainted from the concept's shapes. It stays one mesh and material, so nothing can tear. **Prevention:** line detail on a small feature needs its own texels; do not rely on a bake. Roblox bones have no scale, so squash uses four `jelly_*` flank bones, and the torso takes the drop so the face keeps its shape. **Verified offline:** close-up renders at rest, smiling, squashed and stretched; export reimport passes. **Unresolved:** owner verdict in Roblox.
+
+## 2026-11-02 - Runtime inspect composition
+
+**Confirmed:** inspect must let the holder read Floppy's personality through the chamber. **Implemented/verified in Studio:** the first R6 wrist solve put the upper arm across the first-person camera; moving the whole gun away reduced readability. A cosmetic wrist pose keeps the palm on the grip and the upper arm below the camera. A startup-only optional module lookup could miss the movement folder; resolve it after startup. The demonstrated pose failure was render ordering, and the native fixture now samples the actual imported root bone after its writer runs. Keep a single writer per bone: the existing idle/face drivers compose the gesture and the first-person copy reads their results. **Unresolved:** owner art approval and multi-client playback. No Blender source or weights changed. See [review history and evidence](../loadout-controls.md).
+
+**Runtime ordering fix:** native animation can reset bone transforms between simulation and rendering. Unordered RenderStepped callbacks also let the first-person copy read a reset pose. Idle now runs at Character +2, face at +3, and the viewmodel copies them at +10. The native fixture samples the source at +30 rather than during Heartbeat; simulation-time identity is not evidence of a frozen rendered bone.
+
+## 2026-11-02 - Rejected inspect and upward-arm clarification
+
+**Confirmed:** owner called the previous gun inspect "horrible" because the grip/positioning was wrong in first and third person. After requesting pistol-inspect research, clarified that barrel and arm should point upward together, angled diagonally toward the player, letting Floppy stand nearly upright. Preserve the grip throughout; hop, look, turn, wiggle and lower smoothly.
+
+**Implemented:** first-person gun now derives from the same arm/grip transform instead of an independent final override; wrist articulation preserves the palm pivot and the gun seats into the block hand. Third-person shoulder stays attached. Whole-model hop/turn uses cosmetic attachment frames with rest-frame restoration; existing bones handle the face. **Lesson:** a passing non-identity bone assertion did not prove readable creature motion. Use native frozen-beat captures, verify barrel/arm alignment and actual model movement relative to the gun, and reject hidden subjects or displaced hands. The source eye labels were insufficient to infer facing: derive it from eye midpoint minus head, as the import placement already does. Preserve failed sheets and owner wording. **Unresolved:** owner art approval and multiplayer. [Revision](inspect-revision.md).
+
+## 2026-11-02 - Whole-turn inspect flourishes
+
+**Confirmed:** owner wanted a slightly stronger left lean and slow spins on both raise and down-flick. **Implemented:** sample an unwrapped scalar angle and apply the rotation after held-pose interpolation; CFrame/quaternion blending between endpoints a full turn apart loses the spin. Keep the arm carry target free of the flourish while retaining it in the gun mapping, and use the existing trigger-guard pivot with forearm clearance. The flourish returns to identity throughout Floppy's reaction. Existing creature poses and accepted mesh remain intact. [Timing and evidence](inspect-revision.md#final-lean-and-spin-follow-up-2026-11-02). Owner feel approval remains open.
+
+## 2026-11-02 - Toss/catch semantics and contained inspect acting
+
+**Confirmed problem:** owner rejected the barrel twirl, chamber escape and stiff turn/bum shake. **Cause:** spin-axis tuning had replaced the requested toss/catch; a deliberate sideways visibility offset violated the chamber constraint; one whole-model yaw could not articulate the hips. **Implemented fix:** separate toss/catch/reveal phases, widen the toss away from the forearm, reserve a circular loaded envelope, turn about chamber centre with a bounded axial hop, and layer compression/extension plus hip/upper/head counterrotation through the existing bone writer. Face acts through the same staged timing. No source mesh, weights, exported asset or jelly motion was added.
+
+**Native failure and prevention:** a cold launch registered idle before the Handle/weld references replicated, permanently skipping loaded inspect setup. Retry setup until those references exist; wait for the loaded pose in the review fixture. Scriptable camera review also needs to clear cached native FP torso/head transparency on a view change. Preserve these failed captures instead of interpreting them as gameplay or art success. **Verification/limits:** [current review and evidence](inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current); owner approval remains separate. Numeric envelope checks bound authored motion, not every skinned vertex.
+
+## 2026-11-03: Merging creature scripts into main
+
+- **Problem:** after merging, `FloppyFace` waits for `MovementSandbox.SlugInspect`. A display place without that module would have stalled with no error, leaving the face dead.
+- **Fix:** add `SlugInspect` to every private place that runs the Floppy client scripts.
+- **Prevention:** when a shared client script gains a `WaitForChild`, check each project file that includes it. `verify_slugs.py` does not catch this, because it doesn't run the place.
+- **Assets:** private ids are per worktree and ignored by git, so merging code does not deliver a new model. Sync `private-assets/floppy` separately, with a backup, and check the template names match.
+

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "coordinates": "Studs. Origin is the Maelstrom centre, main level is Y=0. Angles run clockwise seen from above with PvP at 0, so 0 is -Z and 90 is +X.",
+  "sectors": 72,
+  "walkSpeeds": { "default": 16, "run": 18, "sprint": 24 },
+  "spawnRock": { "radius": 35, "undersideDepth": 44, "spawnRadius": 25, "spawnY": 4, "sides": 32 },
+  "shore": { "innerRadius": 85, "wallRadius": 300, "thickness": 8, "lipHeight": 3, "lipWidth": 2 },
+  "bridges": { "angles": [0, 90, 180, -90], "width": 10, "sag": 5, "planks": 12, "railHeight": 3.5, "gates": { "0": 6.6, "1": 6.85, "2": 6.25, "3": 6.3 } },
+  "maelstrom": { "waterY": -50, "shaftBottomY": -520, "shaftBands": 6 },
+  "fall": { "fadeStartY": -280, "respawnY": -500 },
+  "cavern": { "ceilingY": 250, "ceilingThickness": 10 },
+  "skyWell": {
+    "openingRadius": 100,
+    "columnRadius": 75,
+    "rocks": [
+      { "angle": 30, "radius": 85, "y": 118, "size": 26 },
+      { "angle": 140, "radius": 75, "y": 146, "size": 34 },
+      { "angle": 215, "radius": 88, "y": 172, "size": 22 },
+      { "angle": 300, "radius": 65, "y": 198, "size": 30 },
+      { "angle": 85, "radius": 55, "y": 224, "size": 20 }
+    ]
+  },
+  "zones": [
+    { "name": "Portals", "from": -40, "to": 40, "color": [122, 104, 92] },
+    { "name": "Slug side", "from": 40, "to": 135, "color": [92, 124, 108] },
+    { "name": "Far side", "from": 135, "to": 225, "color": [96, 100, 124] },
+    { "name": "Gun side", "from": 225, "to": 320, "color": [128, 108, 84] }
+  ],
+  "floorRadii": [85, 190, 205, 270, 275, 300],
+  "portals": [
+    { "name": "Training", "angle": -22.3, "radius": 165, "rise": 1.5, "width": 20, "height": 29, "color": [86, 190, 110] },
+    { "name": "PvP", "angle": 0, "radius": 161, "rise": 6, "width": 30, "height": 44, "color": [240, 130, 50] },
+    { "name": "Veylume", "angle": 22.3, "radius": 165, "rise": 1.5, "width": 20, "height": 29, "color": [160, 100, 220] }
+  ],
+  "pvpRise": { "radius": 161, "topRadius": 22, "baseRadius": 32, "height": 6 },
+  "bountyBoard": { "angle": -10.5, "radius": 148, "width": 12, "height": 9 },
+  "gunShop": { "angle": -90, "radius": 190, "width": 50, "depth": 40, "height": 18, "door": 14, "color": [170, 122, 74] },
+  "pond": { "angle": 90, "radius": 155, "diameter": 70, "stones": 7, "mushrooms": 6, "slugs": 14 },
+  "volcano": { "angle": 0, "radius": 235, "baseRadius": 65, "rimRadius": 22, "craterRadius": 12, "craterFloorRadius": 8, "craterFloorY": 112, "height": 135, "color": [90, 66, 60] },
+  "ravine": {
+    "from": -60, "to": -25, "innerRadius": 205, "outerRadius": 275, "wallDepth": 40, "lavaY": -38, "color": [66, 54, 56],
+    "ledge": { "width": 8, "y": -14, "levelAt": -42 },
+    "crossing": { "angle": -42.5, "width": 10 }
+  },
+  "mountain": { "angle": 70, "radius": 240, "baseRadius": 65, "topRadius": 30, "height": 135, "color": [70, 102, 86] },
+  "waterfall": { "width": 12, "topY": 92 },
+  "overgrowth": { "from": 25, "to": 50, "innerRadius": 190, "outerRadius": 270, "color": [104, 88, 130], "mushrooms": 5 }
+}

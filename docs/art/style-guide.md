@@ -34,6 +34,19 @@ The outlines are the signature. They unify everything and make sure nothing goes
 - **Outline the silhouette and the key interior forms.** Borderlands-style inking includes interior lines (creases, panel seams, rock fractures), not just the outer edge.
 - **Roblox constraint:** no single effect outlines the whole world the way a custom shader would. Expect a combination of methods (see [technical approach](#7-roblox-technical-approach)).
 
+### Treatment rule: "Slugshot mix" (Confirmed, 2026-10-31)
+
+Ink treatment is chosen **per material**, not per scene. The owner said Inked Cavern looks "beautiful" and is the main treatment, but dark natural forms look better with Comic Cavern:
+
+| Material | Treatment |
+| --- | --- |
+| Glowing, clear and organic things (crystals, fungi, portal energy, moss) | **Inked Cavern**: Comic Cavern's thick near-black ink, clean surfaces with few interior lines, deep shadows with a crisp comic edge, full glow |
+| **Characters (slugs, players): always** | **Inked Cavern** |
+| Dark rock, stone, cave floor | **Comic Cavern**: heavy near-black ink, more interior crease lines |
+| Small metal details (bands, bolts, trim) | Thick outline but **Living Comic's light interior lines**, so heavy ink doesn't swallow small detail (owner: Comic Cavern "engulfs" the portal's grey bands and orange bolts) |
+
+The [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr) implements this as its default "Slugshot mix" mode. Enchanted was rejected; Comic Cavern, Inked Cavern and Living Comic remain available for comparison. For Roblox, this maps to per-asset hull widths, painted interior-line density and shadow treatment, to be proven in Studio.
+
 ## 2. Colour philosophy: calm base, vibrant accents
 
 The owner's formula: **calm base tones + selective vibrant accents + bold dark outlining.**
@@ -70,6 +83,15 @@ If too many things are bright, the scene stops feeling magical and starts feelin
 - **Warm pockets mark inhabited areas.** Amber and orange light spills from outposts, lamps and workshops.
 - **Bloom used selectively.** It should look magical without washing out the scene. (Floppy's lab already showed heavy bloom flattening the look.)
 - **Lighting gives each area an identity.** Neighbouring areas can differ in temperature and mood without clashing. See the zone moods in the [lobby roadmap](lobby-roadmap.md#zone-identities).
+
+### Lighting rules learned in Roblox (Confirmed by owner feedback, 2026-11-01)
+
+- **Ambient stays dark and near neutral.** Tinting the ambient to brighten walls turned the stone blue ("don't just make the rocks blue"). Light surfaces with placed lights instead.
+- **Overall brightness never depends on shadows.** Studio switches graphics quality automatically and drops light shadows at lower levels, so shadow-casting fill lights made walls flip between dark and bright. Wall and fill lights cast no shadows.
+- **Few, merged local lights.** Roblox renders a limited number of lights near the camera. Glows within about 4 studs share one light.
+- **Zone moods shift colour only.** Exposure, fog density, haze, contrast and brightness stay the same everywhere, so walking between zones never re-lights the cavern.
+- **Glow takes the surface's own colour.** Roblox emission is colour map x mask x strength, so a dark surface cannot glow brightly. Give glowing parts a luminous colour (Floppy's bulbs), and cap glow below white so colours survive.
+- **Ink shells are near-black Neon** (`14, 14, 18`): lamps never grey them and they never bloom.
 
 ## 5. Materials and texture
 
@@ -114,6 +136,12 @@ Rules:
 - **Verify every claim in Studio.** Record which methods worked, their cost and screenshots. Offline Blender renders are not evidence of the Roblox look.
 - **Prefer methods baked into assets** (hulls, painted lines) over runtime effects that vary by device.
 
+### Characters and props in the look (Confirmed, 2026-11-01)
+
+- **Floppy (final design):** an inked skinned shell that bends with him, sage sores matching the upper lids with a light glow, and luminous yellow-green antenna bulbs plus a soft head light, so slugs stand out in dark caverns.
+- **Blaster (final):** curved bladed-ridge pincer tips (top down, bottom up, no corner), 15% shorter for hip carry, ink shells on every part, colours unchanged.
+- **Sick reads lighter, dirty reads darker.** Dark brown blotches look like grime; sickness reads as sallow pallor, a faint bruised rim and a lit centre.
+
 ## 8. Asset quality bar ("not AI slop")
 
 Everything in a finished scene is deliberately designed and authored, mainly in Blender, so the world reads as one hand-made place.
@@ -127,6 +155,6 @@ Everything in a finished scene is deliberately designed and authored, mainly in 
 ## Open questions
 
 - **Unresolved:** outline colour (charcoal vs black) and weights, decided by the style test.
-- **Unresolved:** which treatment wins: A Comic Cavern, B Enchanted Cavern, or C Living Comic Fantasy (the proposal's and the direction's favourite).
+- **Superseded by the Slugshot mix rule above.** Earlier treatment history, 2026-10-31: the owner rejected B Enchanted outright and asked for a midpoint between A Comic Cavern and C Living Comic, closer to Comic Cavern but not as heavy. This became **Inked Cavern** (about two-thirds of the way from C toward A: bolder, darker ink than C, lighter than A's heavy black), the current lead in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Unresolved:** final confirmation, then Studio proof.
 - **Unresolved:** whether creatures use the same hull outlines as props or a stronger Highlight-based treatment.
 - **Unresolved:** the actual palette (owner said colours may change).

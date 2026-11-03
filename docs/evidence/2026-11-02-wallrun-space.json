@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-02",
+  "sourceBranch": "fix/wallrun-space",
+  "base": "a166adb",
+  "environment": "Studio 0.745.0.7451137, one local client/server, original clips, disposable tall-wall fixture",
+  "numericalTimesteps": [
+    30,
+    60,
+    144
+  ],
+  "longHold": {
+    "seconds": 6,
+    "samples": 362,
+    "riseStuds": 54.408852100372314,
+    "stayedWallRun": true,
+    "allSampledVerticalVelocitiesPositive": true
+  },
+  "controllerPassed": [
+    "release stays attached",
+    "height taps of 0.05, 0.15, 0.3 and 0.8 seconds stay attached",
+    "reversal with height tap stays attached",
+    "outward steering plus Jump still kicks off"
+  ],
+  "scriptErrorCount": 1,
+  "limits": [
+    "No owner feel verdict",
+    "No two-client/network test",
+    "No physical key/controller/touch test; Studio-only probe invokes actual bound-key handler",
+    "Corner geometry uses existing native raycast regressions plus numerical kick-intent checks; actual corner traversal with height taps not driven",
+    "Top hold and stopped cling covered numerically, not new live cases"
+  ],
+  "setupNotes": [
+    "First fixture attempt omitted native Jump before held-key injection, so did not attach; fixed fixture only",
+    "Outward-kick setup now allows 0.25 s for existing movement-input smoothing; two rendered frames had not turned input far enough"
+  ],
+  "otherRuntimeFailure": {
+    "test": "Clips.spec:95",
+    "message": "The kong vault ends past the wall, back down",
+    "scope": "Clips.spec, Clips and OriginalClips unchanged from starting commit a166adb; not repaired by this wall-run task"
+  }
+}

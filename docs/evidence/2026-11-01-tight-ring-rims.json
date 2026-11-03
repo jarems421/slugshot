@@ -1,0 +1,104 @@
+{
+  "date": "2026-11-01",
+  "originalRequest": "Tighten and soften the solid/blocky ring; replace broad resizing with fine vibration.",
+  "latestSteering": "Owner likes that base; keep black highlights outside, add them inside and suggest a slight spin/more life.",
+  "implementation": {
+    "radius": {
+      "before": 22,
+      "acceptedBase": 19
+    },
+    "baseThickness": 1.8,
+    "fullMeanThickness": 2.25,
+    "coreMeanTransparency": 0.26,
+    "geometry": "Constant scale; continuous unclipped full circle. Tiny ring-only position/feather shimmer; crosshair independent.",
+    "vibration": {
+      "frequency": 6,
+      "secondaryRatio": 1.42,
+      "maxLocalAxisOffsets": [
+        0.16,
+        0.12
+      ],
+      "onsetRamp": 0.15
+    },
+    "inkRims": {
+      "color": [
+        14,
+        14,
+        18
+      ],
+      "thickness": 0.65,
+      "transparency": 0.16,
+      "placement": "Both edges of the actual charged stroke, not separate corner decorations."
+    },
+    "sheen": {
+      "speedDegreesPerSecond": 110,
+      "opacity": "Low-contrast localized gradient reflection, fades in with readiness.",
+      "geometryRotation": false
+    },
+    "preserved": [
+      "accepted crosshair shape/size/ink",
+      "accepted translucent ring base",
+      "tap intake gate",
+      "source charge/firing rules",
+      "cursor policy",
+      "camera/movement"
+    ]
+  },
+  "offline": "verify_combat.py PASS (foundation/movement/combat format, lint, strict types, builds)",
+  "baselineRuntime": {
+    "sourceCheckpointSha256": "4df30ca3f4ab73f2c3ae830a29021b548e2f58cf9028cfb42297639cd414619c",
+    "metrics": {
+      "maxCenter": 0.5,
+      "maxTapOffset": 0,
+      "peaks": 8,
+      "minWidth": 46.36000061035156,
+      "frames": 140,
+      "maxWidth": 46.36000061035156,
+      "maxAlpha": 0.2835572063922882,
+      "minAlpha": 0.2357742041349411,
+      "fullAccepted": true,
+      "tapAccepted": true,
+      "maxDt": 0.025589199736714363,
+      "tapIntake": false,
+      "maxOffset": 0.1930253803730011,
+      "continuousHeldCircle": true
+    },
+    "context": "Real charge/shot test of tighter vibrating base before rim/sheen steering."
+  },
+  "runtime": {
+    "context": "One native Studio Play client in target range, actual press/release/server replies; end-of-render aiming/geometry audit.",
+    "metrics": {
+      "minAlpha": 0.23587259650230408,
+      "maxCenter": 0.5,
+      "maxTapOffset": 0,
+      "rimsDefined": true,
+      "peaks": 8,
+      "minWidth": 46.36000061035156,
+      "frames": 140,
+      "maxWidth": 46.36000061035156,
+      "maxAlpha": 0.28363698720932007,
+      "fullAccepted": true,
+      "tapAccepted": true,
+      "sheenTravel": 144.7664794921875,
+      "maxDt": 0.02852739952504635,
+      "tapIntake": false,
+      "maxOffset": 0.19362300634384155,
+      "continuousHeldCircle": true
+    },
+    "staticVisuals": [
+      "build/rims-sheen-loaded.png",
+      "build/rims-sheen-held.png"
+    ],
+    "visualFixture": "Native window-handle capture of temporary fixed charge poses; charge setter restored. Behavior established separately without override.",
+    "inspected": true
+  },
+  "limits": [
+    "Base look accepted by owner; new rim/sheen appearance still awaits owner review.",
+    "Static images do not establish subjective motion feel.",
+    "No new multi-client, device, latency or stable-FPS/performance validation.",
+    "Maximum 0.5-pixel aim error includes existing layout rounding; no crosshair animation was added."
+  ],
+  "sourceHashes": {
+    "experiments/movement/client/Reticle.luau": "e5d04bc4f74dd2936c54569b13994e9468f69d28241ba5f06ce5561d05e062c7"
+  }
+}

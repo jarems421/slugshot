@@ -1,0 +1,12 @@
+{
+  "creator": "Original procedural Slugshot crystal geometry",
+  "third_party_art": false,
+  "blender": "4.5.14 LTS",
+  "fbx_roundtrip": {
+    "objects": 13,
+    "dimensions_unchanged": true
+  },
+  "uploaded": false,
+  "source_sha256": "57651fddd32b6967b04f7038d72349dcff152d56638973cfe64830d043c9e206",
+  "export_sha256": "fdae4d8182d00fc8e2ede9e8b1fac57836ab152f609509c33c7a6d72c8681d18"
+}

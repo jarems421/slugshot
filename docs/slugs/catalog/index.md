@@ -6,8 +6,8 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 
 | Design | Status | Design and sources |
 | --- | --- | --- |
-| Floppy (first slug) | Final design confirmed as a 3D concept; Blender game model and Studio import pending | [Design and reference notes](flopper-inspired.md) |
-| Inferno (fire slug) | Both forms final as concepts, built in Blender and showing in a private Studio display; owner verdict pending; shooting not started | [Design and reference notes](inferno.md) |
+| Floppy (first slug) | **Final design** (owner, 2026-11-03); in Roblox on `main` |  [Design and reference notes](flopper-inspired.md) |
+| Inferno (fire slug) | **Final design, both forms** (owner, 2026-11-03); shown in a private display place, not yet in the game; shooting not started |  [Design and reference notes](inferno.md) |
 
 ## Ability rule
 
@@ -24,3 +24,5 @@ Copy the [new slug record template](template.md) for each future creature. Recor
 5. **Unresolved:** owner feedback, visual quality, import/runtime evidence, licensing or gameplay decisions.
 
 Keep draft source and generated exports separately, as described in the [species guide](../species-guide.md). Do not publish or upload an asset solely because it appears in this catalogue.
+
+[Per-species inspect briefs](inspect-profiles.md) record the owner-requested Floppy and Inferno personality gestures separately from their combat abilities.

@@ -2,6 +2,8 @@
 
 Status: Confirmed foundation layout; gameplay architecture remains unresolved.
 
+**Implemented experimental Floppy recovery, 2026-11-01:** slug availability follows the firing cooldown while local post-impact recovery finishes independently. `SlugVisuals` delegates recovery to `FloppyRecovery`; this lifecycle raycasts to the floor, animates the existing duplicate skeletons and removes the model after its dive below the surface. It does not read `launch.readyAt` or travel back to the shooter. See [ADR 0018](decisions/0018-local-slug-recovery.md) and [recovery specification/evidence](slugs/recovery.md).
+
 ```text
 src/shared  -> ReplicatedStorage.Shared
 src/server  -> ServerScriptService.Server (Script)
@@ -19,3 +21,10 @@ Shared code is readable by clients. Future authority and networking choices need
 See [ADR 0001](decisions/0001-foundation.md).
 
 The authorized movement study has separate `movement.project.json` / `movement.test.project.json` mappings under `experiments/movement`; neither is referenced by the foundation projects. See [ADR 0002](decisions/0002-movement-experiment.md). Private downloaded clips are excluded from every tracked mapping. The experimental server creates its functional arena/R15 avatars at runtime; native PlayerModule/Humanoid remain the input/physics substrate.
+
+The isolated [Rocklock map](rocklock.md) has dedicated public/private projects on port 34874. Blender art and simple Roblox collision share one seeded layout. Its generated server copy adapts only initial spawn selection; the controller and camera remain unchanged. See [ADR 0010](decisions/0010-rocklock-map.md).
+
+
+## Current first-person presentation (2026-10-31)
+
+The isolated movement experiment owns camera state and source animation; combat Settings exposes local Anchor/Spot/Ride preferences. The owner selected Spot as default. First-person cosmetic arms/gun follow the existing rig with perspective adaptations; third-person animation and the physics root are preserved. Camera presentation is undone before input and reapplied after the native camera. See [ADR 0012](decisions/0012-first-person-body-presentation.md), [ADR 0013](decisions/0013-combat-origin-replication-grace.md), [ADR 0014](decisions/0014-acrobatic-camera-comparison.md) and [owner feedback/regression guide](combat.md#current-owner-decision-and-acceptance). First-person running appearance remains open; this does not introduce gameplay into the foundation.

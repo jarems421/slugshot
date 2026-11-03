@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-02",
+  "branch": "feature/loadout-controls",
+  "baseline": "344fcf4",
+  "environment": "Roblox Studio, one client, native keyboard/wheel window messages",
+  "fixture": "Floppy copies in populated slots 1, 2, 5; 3 and 4 empty",
+  "results": [
+    "[CombatSelfTest] ALL PASS",
+    "LOADOUTCHECK key V",
+    "LOADOUTCHECK key 2",
+    "LOADOUTCHECK wheel down",
+    "LOADOUTCHECK wheel up",
+    "LOADOUTCHECK key R",
+    "LOADOUTCHECK shot first-person-look",
+    "LOADOUTCHECK shot first-person-wiggle",
+    "LOADOUTCHECK key V",
+    "LOADOUTCHECK wheel down",
+    "LOADOUTCHECK shot third-person-look",
+    "LOADOUTCHECK key Q",
+    "LOADOUTCHECK shot complete",
+    "LOADOUTCHECK PASS sparse slots, real keys/wheel, cooldowns, inspect, interruptions, rebinding, respawn, server rejection"
+  ],
+  "screenshots": {
+    "complete.png": "66708218ae8491f4e3b928aa9191b33e9def10119901127a2bd2ed5c360e4fd5",
+    "end.png": "fdb82463bc081e33c4cd9b075d33f732454a10e59f10c81fb37d8338d1c3d9d2",
+    "first-person-look.png": "ce592037d68eed158ad8f6a7ef966a59b266a94e6a9ffdb7b31513910458ac9a",
+    "first-person-wiggle.png": "8accd96d89fb997348345953c5a59a6b730d6bebcc32b56b1e1b50d4817ac898",
+    "third-person-look.png": "f6b22e86241caa4b5a2221929e0ea8c80fab32fbe2b0b5cbaea08009ead2b085"
+  },
+  "offline": [
+    "python tools/verify_combat.py: PASS",
+    "python tools/verify_slugs.py: PASS",
+    "python tools/verify_slugs.py --blender: PASS before final runtime-only refinements"
+  ],
+  "limits": [
+    "Owner art approval pending",
+    "Inferno runtime rig/face integration pending",
+    "No multi-client, latency or physical device coverage",
+    "Studio emitted service HTTP errors; an earlier passing run also logged an engine debug.profileEnd warning"
+  ]
+}

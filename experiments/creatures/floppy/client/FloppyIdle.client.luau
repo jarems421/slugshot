@@ -6,6 +6,8 @@
 -- loaded in the equipped blaster. Each Floppy's own frame comes from its bones
 -- (eye to eye is sideways, root to head is up), so a Floppy lying in the gun
 -- moves the same way relative to himself.
+local Players = game:GetService("Players")
+local Inspect: any = nil -- resolved after startup; standalone creature places have no movement folder
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
@@ -21,6 +23,7 @@ local TIP = Vector3.new(0.90, 1.44 + 0.25, 0.56)
 
 type Motion = { [Bone]: (number) -> CFrame }
 local floppies: { [Model]: Motion } = {}
+local inspectModels: { [Model]: () -> () } = {}
 
 local function setup(model: Model)
 	local bones: { [string]: Bone } = {}
@@ -34,6 +37,27 @@ local function setup(model: Model)
 	local root, head, eyeL, eyeR = bones.root, bones.head, bones.eye_L, bones.eye_R
 	if not (root and head and eyeL and eyeR) then
 		return
+	end
+	local tool = model:FindFirstAncestorOfClass("Tool")
+	local handle = tool and tool:FindFirstChild("Handle")
+	if tool then
+		local attached = false
+		for _, item in model:GetDescendants() do
+			if item:IsA("Weld") and item.Part0 == handle then
+				attached = true
+				break
+			end
+		end
+		-- Model, Handle and weld references can replicate in separate batches.
+		-- Do not permanently register an idle-only model before its grip arrives.
+		if not handle or not handle:IsA("BasePart") or not attached then
+			task.delay(0.1, function()
+				if model.Parent and not floppies[model] then
+					setup(model)
+				end
+			end)
+			return
+		end
 	end
 	for _, bone in allBones do
 		bone.Transform = CFrame.identity
@@ -88,6 +112,105 @@ local function setup(model: Model)
 			return CFrame.fromAxisAngle(axis, direction * EYE * t)
 		end
 	end
+	-- Add inspect to the existing driver, rather than racing a second bone writer.
+	local function inspectTime(): number?
+		local character = tool and tool.Parent
+		return if Inspect
+				and character
+				and character:IsA("Model")
+			then Inspect.elapsed(character)
+			else nil
+	end
+	if tool and handle and handle:IsA("BasePart") then
+		local faceVector = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
+		local facing = (faceVector - up * faceVector:Dot(up)).Unit
+		local sx = handle.CFrame:VectorToObjectSpace(up:Cross(-facing))
+		local uy = handle.CFrame:VectorToObjectSpace(up)
+		local fz = handle.CFrame:VectorToObjectSpace(facing)
+		local sourceBasis = CFrame.fromMatrix(sx, uy, -fz)
+		-- The raised barrel already stands Floppy upright. Turn his face toward
+		-- the holder while retaining that long axis instead of tipping him flat.
+		local upright = CFrame.fromMatrix(fz, uy, sx) * sourceBasis:Inverse()
+		local centre = model:GetAttribute("ChamberCentre")
+		local pivot = if typeof(centre) == "Vector3"
+			then centre
+			else handle.CFrame:PointToObjectSpace(
+				(root.WorldPosition + head.WorldPosition) / 2
+			)
+		local height = model:GetAttribute("InspectHopHeight")
+		local hopHeight = if typeof(height) == "number" then height else 0
+		local joints: { { joint: Weld, base: CFrame } } = {}
+		for _, item in model:GetDescendants() do
+			if item:IsA("Weld") and item.Part0 == handle then
+				local base = item:GetAttribute("InspectRestC0")
+				if typeof(base) ~= "CFrame" then
+					base = item.C0
+					item:SetAttribute("InspectRestC0", base)
+				end
+				table.insert(joints, { joint = item, base = base :: CFrame })
+			end
+		end
+		inspectModels[model] = function()
+			local t = inspectTime()
+			local pose = CFrame.identity
+			if t then
+				local stand = Inspect.stand(t)
+				local rotation = CFrame.fromAxisAngle(uy, Inspect.turn(t, "Floppy"))
+					* upright:Lerp(CFrame.identity, 1 - stand)
+				-- The barrel already stands him up. Keep the whole performance inside
+				-- the chamber; never slide him sideways through its glass to show him.
+				local lift = uy * hopHeight * Inspect.hop(t)
+				pose = CFrame.new(lift + pivot) * rotation * CFrame.new(-pivot)
+			end
+			model:SetAttribute("InspectPose", pose)
+			for _, entry in joints do
+				if entry.joint.Parent then
+					entry.joint.C0 = pose * entry.base
+				end
+			end
+		end
+	end
+	-- Anticipate, spring, land, then sweep the hips. The upper body counters
+	-- that sweep so this is an articulated gesture rather than a rigid swivel.
+	local lower = bones.body_lower
+	if lower then
+		local uy, sx = toLocal(lower, up), toLocal(lower, sideways)
+		motion[lower] = function(_clock: number): CFrame
+			local t = inspectTime()
+			local sway = if t then Inspect.wiggle(t) else 0
+			return CFrame.new(sx * SCALE * 0.09 * sway / math.rad(9))
+				* CFrame.fromAxisAngle(uy, sway)
+		end
+	end
+	if upper then
+		local idleUpper = motion[upper]
+		local uy, fz, sx = toLocal(upper, up), toLocal(upper, front), toLocal(upper, sideways)
+		motion[upper] = function(clock: number): CFrame
+			local t = inspectTime()
+			if not t then
+				return idleUpper(clock)
+			end
+			local squeeze, sway = Inspect.compression(t), Inspect.wiggle(t)
+			local pose = CFrame.new(
+				(uy * (-0.10 * squeeze + 0.035 * Inspect.hop(t)) - sx * (0.05 * sway / math.rad(9)))
+					* SCALE
+			) * CFrame.fromAxisAngle(uy, -0.55 * sway) * CFrame.fromAxisAngle(fz, -0.35 * sway)
+			return idleUpper(clock):Lerp(pose, Inspect.stand(t))
+		end
+	end
+	local idleHead = motion[head]
+	local headSide, headUp = toLocal(head, sideways), toLocal(head, up)
+	motion[head] = function(clock: number): CFrame
+		local t = inspectTime()
+		if not t then
+			return idleHead(clock)
+		end
+		local squeeze = Inspect.compression(t)
+		local pose = CFrame.new(headUp * SCALE * (-0.12 * squeeze + 0.06 * Inspect.hop(t)))
+			* CFrame.fromAxisAngle(headSide, math.rad(7) * Inspect.stand(t) - math.rad(9) * squeeze)
+			* CFrame.fromAxisAngle(headUp, -0.45 * Inspect.wiggle(t))
+		return idleHead(clock):Lerp(pose, Inspect.stand(t))
+	end
 	-- Roblox can create one skeleton per skinned mesh. Animate every copy;
 	-- a name-keyed dictionary alone silently leaves the other meshes at rest.
 	for _, bone in allBones do
@@ -131,17 +254,38 @@ CollectionService:GetInstanceAddedSignal("SlugIcon"):Connect(function(icon: Inst
 end)
 
 local start = os.clock()
-RunService.RenderStepped:Connect(function()
-	local t = (os.clock() - start) % LOOP
-	for model, motion in floppies do
-		if
-			not model:IsDescendantOf(workspace) and not CollectionService:HasTag(model, "SlugIcon")
-		then
-			floppies[model] = nil
-			continue
+RunService:BindToRenderStep(
+	"SlugshotFloppyIdle",
+	Enum.RenderPriority.Character.Value + 2,
+	function()
+		if not Inspect then
+			local movement = Players.LocalPlayer.PlayerScripts:FindFirstChild("MovementSandbox")
+			local module = movement and movement:FindFirstChild("SlugInspect")
+			if module then
+				Inspect = (require :: any)(module)
+			end
 		end
-		for bone, fn in motion do
-			bone.Transform = fn(t)
+		local t = (os.clock() - start) % LOOP
+		for model, motion in floppies do
+			if
+				not model:IsDescendantOf(workspace)
+				and not CollectionService:HasTag(model, "SlugIcon")
+			then
+				local restoreInspect = inspectModels[model]
+				if restoreInspect then
+					restoreInspect()
+				end
+				floppies[model] = nil
+				inspectModels[model] = nil
+				continue
+			end
+			local inspectModel = inspectModels[model]
+			if inspectModel then
+				inspectModel()
+			end
+			for bone, fn in motion do
+				bone.Transform = fn(t)
+			end
 		end
 	end
-end)
+)
