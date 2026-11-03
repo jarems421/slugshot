@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented; owner facial art approval pending",
+  "ownerBrief": "Content/happy and drowsy, rather than depressed/tired; chiefly eyelids and mouth.",
+  "geometryChanged": false,
+  "newModelUploaded": false,
+  "poses": {
+    "lidRest": 0.03,
+    "tilt": 16,
+    "poses": [
+      {
+        "low": 0.065,
+        "high": 0.025,
+        "wide": 0.015,
+        "jaw": 0.008,
+        "lid": -0.004
+      },
+      {
+        "low": 0.1,
+        "high": 0.04,
+        "wide": 0.025,
+        "jaw": 0.018,
+        "lid": -0.02
+      },
+      {
+        "low": 0.075,
+        "high": 0.03,
+        "wide": 0.018,
+        "jaw": 0.012,
+        "lid": 0.004
+      }
+    ]
+  },
+  "review": "build/slugs/floppy/happy-tired/face-comparison.png",
+  "checks": {
+    "combat": "PASS: formatting, lint, strict types, foundation/movement and place builds",
+    "creatures": "PASS: verify_slugs.py --blender (4.5.14)",
+    "posedAssetQa": "PASS: Blender 5.2.3, no errors; existing intentional eye UV stacking/socket contacts and 0.0024-unit ground gap warnings",
+    "nativeFixtureStatic": "PASS: StyLua, Selene (zero warnings), strict luau-lsp analysis.",
+    "nativeFace": "PASS: all nine resident rigs registered, all three smile poses lift both imported mouth corners, complete blink closure/reopening.",
+    "nativeMotionAndGaze": "PASS: 3602/3602 displayed frames animated; 14 residents; both species landing compression and actual upward head lift; 1213 support samples; 60 FPS mean focused desktop run."
+  },
+  "limits": [
+    "Rendered comparisons omit random gaze and blink so poses can be compared.",
+    "Native Studio checks are local desktop evidence, not mobile or observer validation.",
+    "Owner approval of the new facial design remains open."
+  ],
+  "trackedComparison": "docs/slugs/catalog/evidence/floppy/happy-tired.png",
+  "reviewAttempts": [
+    "Two 26-second stochastic resident runs missed the Inferno head-lift observation; actual Floppy lift was 0.2182 in the second. Extended species visits to span the 10-20 second notice cooldown and keep the test visitor near its moving subject. No production gaze code changed.",
+    "Facial readings were zero: the resident had no registered face groups. Sampling RenderStepped alone did not fix it. Added readiness/descendant registration repair; the isolated native face check then passed all three smile poses and blink closure/reopening.",
+    "Combined final native acceptance passed after the registration fix. Review-only visitor follows its selected resident; 30 seconds per species covers randomized notice cooldowns. Facial samples are taken after the render-step update."
+  ],
+  "registrationRepair": "A resident could reach the lobby without facial bone groups registered after partial rig replication. Refresh on Slug/GroveResident/GroveReady changes and on incoming skeleton copies, including enclosing models. Defer/coalesce refreshes. Native face tests require every Floppy resident to register.",
+  "nativeFaceMeasurements": {
+    "closedLid": -0.16227341330985318,
+    "smiles": [
+      [
+        0.06021158209595812,
+        0.020693442145086526
+      ],
+      [
+        0.09802978248610097,
+        0.03803317206911298
+      ],
+      [
+        0.07925184541649775,
+        0.035192139167084475
+      ]
+    ],
+    "openLid": -0.032243809446061214
+  },
+  "nativeResidentMeasurements": {
+    "meanDt": 0.016666043162457584,
+    "headLift": {
+      "Inferno": 0.43711915612220764,
+      "Floppy": 0.21821284294128418
+    },
+    "maxDt": 0.02329990081489086,
+    "residents": {
+      "Inferno": 5,
+      "Floppy": 9
+    },
+    "supportSamples": 1213,
+    "renderFrames": 3602,
+    "press": [
+      -0.17988151631014654,
+      0.49999999996972117
+    ],
+    "landingPeak": {
+      "Inferno": 0.4999996645823532,
+      "Floppy": 0.49999999996972117
+    },
+    "changedFrames": 1126,
+    "lookSeen": true,
+    "animationFrames": 3602
+  },
+  "canonicalPreview": "build/SlugshotGroveReview.rbxlx rebuilt with current private references and facial source."
+}

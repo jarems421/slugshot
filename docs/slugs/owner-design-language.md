@@ -295,3 +295,7 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 
 
 **Confirmed clarification, 2026-11-03:** the suggested curled corners were immediately withdrawn: "Just make it look like burpy's bottom." Match the flat folded sole and preserve the textured lines. Do not interpret the abandoned sentence as authorization for extra curling.
+
+## Happy, tired Floppy (2026-11-03)
+
+**Confirmed:** keep Floppy drowsy, but make him content/happy rather than depressed. The owner identifies eyelids and a smile that can read as sadness. Preserve sleepy blinks and asymmetry; soften the resting eyes and keep both mouth corners lifted across idle expressions. This is a facial design revision, not a request for a more energetic personality.

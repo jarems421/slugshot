@@ -175,3 +175,13 @@ Review: `build/slugs/floppy/flat-sole/comparison.png`, `pose-sheet.png`, `qa-wir
 **Implemented/verified:** preserved the old/saved review, rebuilt the same review filename using current private configs, and opened it in Studio. All nine Floppy residents pass an imported-body bound check: lowest body bounds are about 0.0051 studs above the root, rather than an old below-root dome. Same-scale side/bottom material renders compare Floppy directly to Inferno. Existing folds and two sage underside patches remain; no mesh change, new asset upload or curled corners this turn. [Evidence](../../evidence/2026-11-03-floppy-lobby-refresh.json).
 
 Rebuild this review with `python tools/lobby/build_grove_review.py`. The builder verifies compiled module sources against current private configs and emits `build/grove/review-manifest.json`. Review-only spawn/sole checks stay out of normal builds. Owner art approval remains separate.
+
+## Content, sleepy facial revision (2026-11-03)
+
+**Confirmed:** owner wants happier drowsiness rather than a depressed expression. **Implemented:** softer resting upper lids (0.03 depth, 16-degree rim rotation), three gentle asymmetric smiles with both corners lifted, less downcast wandering eyes and smaller idle mouthing. The third idle pose no longer drops a smile corner. The flat folded sole, textures, body rig, slow blinks and inspect gesture are preserved.
+
+[Before/after comparison](evidence/floppy/happy-tired.png). All three front/three-quarter poses and a checkpoint are in `build/slugs/floppy/happy-tired`. Facial transforms apply through the existing rig to lobby residents, world/flight slugs and icons. No new model export/upload is needed. [Evidence and runtime limits](../../evidence/2026-11-03-floppy-happy-tired.json). Owner art approval remains open.
+
+**Native integration fix:** facial bone groups could be missed while a resident rig replicated in pieces. Refresh after grove readiness/identity changes and when additional skeleton descendants arrive. The isolated Studio check now verifies actual upward mouth-corner transforms in all three expressions and complete blink closure/reopening; every resident must register. See the sanitized evidence for combined motion/gaze measurements and limits.
+
+**Implemented/verified, final combined native run:** all nine Floppy rigs registered; three smile poses and blink pass. Both species look upward and land with body squash; 3,602/3,602 rendered frames animate at 60 FPS mean, with 1,213 support samples. Owner art approval remains open.

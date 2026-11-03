@@ -1898,3 +1898,12 @@
 - **Confirmed:** open GroveReview had an old rounded model reference, whereas canonical config/SplatReview were flat. A first XML audit missed Studio's string Source property; corrected audit confirms saved training references were already current.
 - **Implemented/verified:** preserved old/saved review, rebuilt/opened the canonical GroveReview, added private-config freshness assertions and actual imported-body bounds check. Nine Floppies pass with body minimum about +0.0051 studs from root. Same-scale material comparison with Inferno inspected.
 - **Implemented:** no new geometry/upload, no curling, original folded texture/two sage patches retained; no concurrent training/creature work changed. Owner art verdict remains unresolved.
+
+## 2026-11-03 - Happier drowsy Floppy
+
+- **Confirmed:** owner wants Floppy content and sleepy, chiefly through eyes/mouth, while preserving the now-correct flat sole.
+- **Implemented:** gentler lids, upward corners in all three idle expressions, less downcast eye wandering and smaller idle mouth motion. Existing facial rig/import reused; no geometry/upload.
+- **Implemented/verified offline:** before/after front/three-quarter renders inspected; posed asset QA, full combat checks and full creature/Blender checks pass. See [evidence](evidence/2026-11-03-floppy-happy-tired.json) for native checks and remaining subjective limits.
+- **Implemented/verified in Studio:** repaired missed facial registration on partially replicated resident rigs; all three imported smiles and full blink pass native bone checks. Automatic checks distinguish rendered poses from intent flags.
+
+**Implemented/verified, final combined native run:** all nine Floppy rigs registered; three smile poses and blink pass. Both species look upward and land with body squash; 3,602/3,602 rendered frames animate at 60 FPS mean, with 1,213 support samples. Owner art approval remains open.

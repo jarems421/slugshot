@@ -10,6 +10,9 @@ local RunService = game:GetService("RunService")
 local movement = Players.LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("MovementSandbox")
 local Inspect = (require :: any)(movement:WaitForChild("SlugInspect"))
 local T = ((require :: any)(movement:WaitForChild("Tuning"))).values
+if RunService:IsStudio() then
+	workspace:SetAttribute("FloppyFaceControllerReady", true)
+end
 
 local EYE_SPACING = 0.74
 local HOLD = 3.5 -- seconds on each expression
@@ -34,9 +37,9 @@ type Expression = {
 	lid: number, -- upper lids down; negative opens them
 }
 local EXPRESSIONS: { Expression } = {
-	{ low = 0, high = 0, wide = 0, jaw = 0.012, lid = 0 }, -- drowsy
-	{ low = 0.09, high = 0.03, wide = 0.03, jaw = 0.02, lid = -0.025 }, -- smiling
-	{ low = 0.015, high = -0.06, wide = -0.045, jaw = 0.085, lid = -0.09 }, -- surprised
+	{ low = 0.065, high = 0.025, wide = 0.015, jaw = 0.008, lid = -0.004 }, -- content and drowsy
+	{ low = 0.10, high = 0.04, wide = 0.025, jaw = 0.018, lid = -0.02 }, -- lazy smile
+	{ low = 0.075, high = 0.03, wide = 0.018, jaw = 0.012, lid = 0.004 }, -- sleepy grin
 }
 
 type FaceBone = { bone: Bone, side: Vector3, up: Vector3, front: Vector3, sign: number }
@@ -75,6 +78,9 @@ local function setup(model: Model)
 	local eyeR = model:FindFirstChild("eye_R", true)
 	local root = model:FindFirstChild("root", true)
 	local head = model:FindFirstChild("head", true)
+	if RunService:IsStudio() then
+		model:SetAttribute("FloppyFaceAttempt", true)
+	end
 	if
 		not (
 			eyeL
@@ -144,6 +150,9 @@ local function setup(model: Model)
 		end
 	end
 	faces[model] = face
+	if RunService:IsStudio() then
+		model:SetAttribute("FloppyFaceBones", #face.left + #face.right + #face.lids + #face.gaze)
+	end
 end
 
 local function consider(instance: Instance)
@@ -161,10 +170,46 @@ local function consider(instance: Instance)
 		task.defer(setup, instance)
 	end
 end
-for _, item in workspace:GetDescendants() do
-	consider(item)
+local pending: { [Model]: boolean } = {}
+local function refresh(model: Model)
+	if pending[model] then
+		return
+	end
+	pending[model] = true
+	task.defer(function()
+		pending[model] = nil
+		-- Model attributes and skinned-mesh descendants can replicate separately.
+		-- Rebuild the bone groups when another skeleton copy arrives.
+		faces[model] = nil
+		consider(model)
+	end)
 end
-workspace.DescendantAdded:Connect(consider)
+local function arrived(item: Instance)
+	if item:IsA("Model") then
+		item:GetAttributeChangedSignal("GroveResident"):Connect(function()
+			refresh(item)
+		end)
+		item:GetAttributeChangedSignal("Slug"):Connect(function()
+			refresh(item)
+		end)
+		item:GetAttributeChangedSignal("GroveReady"):Connect(function()
+			refresh(item)
+		end)
+		consider(item)
+	elseif item:IsA("Bone") then
+		local ancestor = item.Parent
+		while ancestor and ancestor ~= workspace do
+			if ancestor:IsA("Model") then
+				refresh(ancestor)
+			end
+			ancestor = ancestor.Parent
+		end
+	end
+end
+for _, item in workspace:GetDescendants() do
+	arrived(item)
+end
+workspace.DescendantAdded:Connect(arrived)
 -- Inventory and slot icons live in viewports, outside the workspace.
 for _, icon in CollectionService:GetTagged("SlugIcon") do
 	task.defer(setup, icon :: Model)
@@ -225,7 +270,7 @@ local function step(face: Face, dt: number, camera: Vector3)
 	elseif clock >= face.nextLook then
 		face.nextLook = clock + random:NextNumber(2.5, 6)
 		face.lookXTarget = random:NextNumber(-1, 1)
-		face.lookYTarget = random:NextNumber(-1, 0.3) -- mostly gazing low
+		face.lookYTarget = random:NextNumber(-0.45, 0.35) -- unhurried, mostly level rather than downcast
 	end
 	local dart = 1 - math.exp(-GAZE_RATE * dt)
 	face.lookX += (face.lookXTarget - face.lookX) * dart
@@ -253,7 +298,7 @@ local function step(face: Face, dt: number, camera: Vector3)
 	end
 	-- A small, slow mouthing so the face is never fully still.
 	local mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)
-	local jaw = face.jaw + (if inspecting then 0 else 0.014 * mouthing)
+	local jaw = face.jaw + (if inspecting then 0 else 0.008 * mouthing)
 	local lift = if inspecting then 0 else 0.006 * math.sin(clock * 1.7)
 	local open = face.lid + face.squint
 	local rest = T.faceLid + open

@@ -85,9 +85,9 @@ Tuning.values = {
 	-- straight from the gun and droops.
 	shotArcOne = 0.86,
 	shotArcTwo = 0.95,
-	-- Floppy's face at rest: tired, sick and lazy.
-	faceLid = 0.04,
-	faceTilt = 11,
+	-- Floppy's face at rest: content, drowsy and lazy.
+	faceLid = 0.03,
+	faceTilt = 16,
 	faceBlinkTime = 0.55,
 	faceBlinkClose = 0.13,
 	spotPitch = 13,

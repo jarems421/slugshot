@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import subprocess
+import sys
 from build_hub import main as build_hub
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,7 +23,8 @@ def main():
     absolute(project)
     project["name"] = "SlugshotGroveMotionCheck"
     project["tree"]["StarterPlayer"]["StarterPlayerScripts"]["GroveCheck"] = {
-        "$path": str(ROOT / "tools/studio/grove-motion-check.client.luau")
+        "$path": str(ROOT / "tools/studio/grove-motion-check.client.luau"),
+        "$attributes": {"FaceOnly": "--face-only" in sys.argv},
     }
     out = ROOT / "build/grove"
     out.mkdir(parents=True, exist_ok=True)

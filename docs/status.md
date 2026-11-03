@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-03 - happier sleepy Floppy:** softer resting lids, three lifted-corner smiles, gentler eye wandering and less jaw motion. Flat sole/import preserved. Repaired missed facial registration after resident rig replication. Native smile/blink checks, before/after renders, asset QA and full combat/creature checks pass; owner art verdict remains open. [Evidence](evidence/2026-11-03-floppy-happy-tired.json).
+
 **Implemented/verified, 2026-11-03 - Floppy lobby reference refresh:** old open GroveReview used a rounded-model reference. Rebuilt/opened that same review from current private configs; all nine imported Floppies pass flat-sole body bounds checks. Same-scale comparison with Inferno inspected; folded texture/spores retained, no new corner curl or mesh edits. Training saved references were already current and were preserved. [Evidence](evidence/2026-11-03-floppy-lobby-refresh.json).
 
 **Implemented/verified, 2026-11-03 - real cloud settings acceptance completed:** owner-approved private settings-only experience saved all twelve preferences and both keybind slots through Roblox DataStoreService, then restored them in a fresh Play session after normal leave/release. Fixed cold-start child waits and test packaging. Main game was not published. Local unpublished previews remain session-only; real-device/second-account logins remain untested. [Cloud evidence](evidence/2026-11-03-settings-cloud.json).
