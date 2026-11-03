@@ -1691,3 +1691,8 @@
 - **Implemented/verified:** slot 2 in the range with proposed numbers, fire scaled with the model. Checks pass; Studio Play loads with his icon. Firing not yet exercised.
 - **Unresolved:** owner playtest of shots and numbers; the merged Floppy check. Next: transformation animation.
 
+## 2026-11-02 - Slugs larger outside the gun
+
+- **Confirmed:** owner set 1.3 studs outside the gun, after first saying 1.5, to make slugs more visible when fired and hopping back. The size in the gun stays as it is.
+- **Implemented:** `Combat.Slugs.Floppy.Size` 1.3 drives flight, recovery and burrow effects; `GroundFloppies` went from 0.92 to 1.3 to match. The canister scales separately from its own measurements, and the 0.3 hit radius is unchanged. The range's big Floppy stays 3x, so it is now 3.9 studs.
+- **Unresolved:** owner's verdict and whether burrow effects, which grow with the slug, still look right. No Studio run yet.
