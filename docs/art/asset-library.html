@@ -6335,77 +6335,63 @@ vec4 chStone(int i) {
   float fi = float(i), u = (fi + 1.0)/float(CH_STONES + 1);
   vec2 a = vec2(0.0, -chHoleR(0.0)), b = vec2(2.6, -10.0), c = vec2(0.0, -CH_PLAT);
   vec2 xz = a*(1.0 - u)*(1.0 - u) + b*2.0*u*(1.0 - u) + c*u*u;
-  float y = 0.85;
-  float r = 0.65;
-  if (uPlaza > 0.5 && uPlaza < 1.5) y += 0.9*sin(u*3.14159);
-  if (uPlaza > 1.5) r = mod(fi, 2.0) < 0.5 ? 0.75 : 0.58;
-  y += 0.06*sin(uT*0.8 + fi*1.7);
-  return vec4(xz.x, y, xz.y, r);
+  // The tethered layout the owner chose: big rest stones between smaller ones.
+  float r = mod(fi, 2.0) < 0.5 ? 0.75 : 0.58;
+  return vec4(xz.x, 0.75 + 0.06*sin(uT*0.8 + fi*1.7), xz.y, r);
+}
+// A plain floating mossy stone (owner's reference photo): a flat slab of layered rock with a rounded, uneven outline,
+// a little narrower underneath, moss on top. Nothing hanging from it.
+float chSlab(vec3 q, float r, float th, float seed) {
+  float ang = atan(q.z, q.x);
+  float rr = r*(1.0 + 0.1*sin(ang*3.0 + seed) + 0.06*sin(ang*7.0 + seed*2.0));
+  rr *= 1.0 - 0.18*smoothstep(0.0, -th, q.y);
+  vec2 d = vec2(length(q.xz) - rr + 0.12, abs(q.y + th*0.5) - th*0.5 + 0.12);
+  float box = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - 0.12;
+  return box + 0.03*(noise3(q*4.0 + seed) - 0.5);
 }
 void chPathway(vec3 p, inout vec2 res) {
-  if (p.z > -4.5 || p.z < -16.5 || abs(p.x) > 4.5 || p.y > 3.0 || p.y < -7.0) return;
+  if (p.z > -4.5 || p.z < -16.5 || abs(p.x) > 4.5 || p.y > 2.5 || p.y < -2.5) return;
   for (int i = 0; i < CH_STONES; i++) {
-    float fi = float(i);
     vec4 st = chStone(i);
     vec3 q = p - st.xyz;
-    if (length(q.xz) > st.w + 1.2 || q.y > 1.0 || q.y < -st.w*2.4 - 3.0) continue;
-    // A flat mossy top over a rough rock that tapers to a jagged point underneath.
-    float ang = atan(q.z, q.x);
-    float rr = st.w*(1.0 + 0.08*sin(ang*5.0 + fi) + 0.05*sin(ang*11.0));
-    float top = max(length(q.xz) - rr, abs(q.y + 0.05) - 0.22) - 0.06;
-    float depth = st.w*2.4;
-    float under = max(length(q.xz) - rr*clamp(1.0 + q.y/depth, 0.0, 1.0), max(q.y - 0.0, -q.y - depth));
-    float rock = smin(top, under*0.8, 0.15) + 0.07*(noise3(q*3.0 + fi) - 0.5);
-    chKeep(rock*0.85, q.y > 0.08 ? 114.0 : 115.0, res);
-    // Roots trailing from underneath, a small crystal on some, bead vines hanging off the rim.
-    for (int k = 0; k < 3; k++) {
-      float fk = float(k);
-      float a = fk*2.1 + fi;
-      vec3 r0 = st.xyz + vec3(cos(a)*st.w*0.4, -st.w*0.6, sin(a)*st.w*0.4);
-      vec3 r1 = r0 + vec3(0.3*cos(a + 1.0), -1.2 - 1.0*hash1(fi + fk), 0.3*sin(a + 1.0));
-      chKeep(chSeg(p, r0, r1, 0.11, 0.04), 102.0, res);
-    }
-    if (mod(fi, 2.0) < 0.5) chCrystal(p, st.xyz + vec3(0.0, -st.w*1.6, 0.0), vec3(0.0, -1.0, 0.0), 0.3, fi*3.3, res);
-    // A small glowing crystal on each stone's edge marks the route from the clearing.
-    chCrystal(p, st.xyz + vec3(-st.w*0.55, 0.12, st.w*0.45), normalize(vec3(-0.3, 1.0, 0.25)), 0.22, fi*5.1 + 2.0, res);
-    vec3 e = st.xyz + vec3(st.w*0.95, -0.15, 0.2);
-    chLoop(p, e, e + vec3(0.25, -1.6 - hash1(fi*2.0), 0.0), 0.2, res);
-    if (uPlaza > 1.5 && i < CH_STONES - 1) {
-      vec4 nx = chStone(i + 1);
-      chLoop(p, st.xyz + vec3(-st.w*0.8, -0.2, 0.3), nx.xyz + vec3(-nx.w*0.8, -0.2, -0.3), 1.0, res);
-    }
+    if (length(q.xz) > st.w + 0.6 || q.y > 0.6 || q.y < -1.2) continue;
+    q.xz = rot(float(i)*1.3)*q.xz;
+    float th = 0.45 + 0.1*hash1(float(i)*4.0);
+    chKeep(chSlab(q, st.w, th, float(i)*2.7)*0.85, q.y > -0.06 ? 114.0 : 115.0, res);
   }
 }
-// Rubble floating round and under the path (owner), not much of it, each piece bobbing slowly.
+// Rubble floating round and under the path (owner): small slabs of the same rock, bobbing slowly.
 void chRubble(vec3 p, inout vec2 res) {
-  if (p.z > -4.0 || p.z < -16.5 || abs(p.x) > 5.5 || p.y > 2.6 || p.y < -6.0) return;
-  for (int i = 0; i < 14; i++) {
+  if (p.z > -4.0 || p.z < -16.5 || abs(p.x) > 6.0 || p.y > 2.4 || p.y < -4.5) return;
+  for (int i = 0; i < 16; i++) {
     float fi = float(i);
     float u = hash1(fi*3.1);
     vec2 a = vec2(0.0, -chHoleR(0.0)), b = vec2(2.6, -10.0), c = vec2(0.0, -CH_PLAT);
     vec2 xz = a*(1.0 - u)*(1.0 - u) + b*2.0*u*(1.0 - u) + c*u*u;
-    xz += vec2(hash1(fi*5.3) - 0.5, hash1(fi*7.7) - 0.5)*vec2(6.0, 2.0);
-    float y = mix(-4.5, 1.8, hash1(fi*9.1)) + 0.15*sin(uT*0.7 + fi*2.3);
-    float sz = 0.12 + 0.28*hash1(fi*2.2);
+    float side = hash1(fi*5.3) < 0.5 ? -1.0 : 1.0;
+    xz += vec2(side*(1.3 + 1.8*hash1(fi*6.1)), (hash1(fi*7.7) - 0.5)*1.5);
+    float y = mix(-3.2, 1.4, hash1(fi*9.1)) + 0.14*sin(uT*0.7 + fi*2.3);
+    float sz = 0.22 + 0.3*hash1(fi*2.2);
     vec3 q = p - vec3(xz.x, y, xz.y);
-    if (length(q) > sz*1.6) continue;
-    q.xz = rot(fi + uT*0.05)*q.xz;
-    float d = sdEll(q, vec3(1.0, 0.7, 0.85)*sz) + 0.06*sz*(noise3(q*9.0/sz) - 0.5)*4.0;
-    chKeep(max(d, -dot(q, normalize(vec3(0.3, 1.0, 0.2))) - sz*0.45)*0.8, 100.0, res);
+    if (length(q) > sz*1.8) continue;
+    q.xz = rot(fi*1.9)*q.xz;
+    q.xy = rot(0.25*sin(fi))*q.xy;
+    chKeep(chSlab(q, sz, sz*0.6, fi)*0.85, 115.0, res);
   }
 }
 // The clearing from the rope bridge: a lane of flat path stones set into the velvet, kept clear of plants.
 bool chInClearing(vec2 xz) { return abs(xz.x) < 3.2 && xz.y < -chHoleR(0.0) + 1.0 && xz.y > -27.0; }
+bool chInPath(vec2 xz) { return abs(xz.x) < 1.75 && xz.y < -chHoleR(0.0) + 0.3 && xz.y > -27.0; }
 void chPathSlabs(vec3 p, inout vec2 res) {
-  if (!chInClearing(p.xz) || p.y > 0.8) return;
-  float k = floor((p.z + 27.0)/1.6 + 0.5);
-  float z = -27.0 + k*1.6;
-  if (z > -chHoleR(0.0) - 0.6) return;
-  float x = 0.35*sin(k*1.7);
-  vec2 xz = vec2(x, z);
-  vec3 q = p - vec3(x, chVelvetH(xz) - 0.02, z);
-  float slab = max(length(q.xz/vec2(1.0, 0.8)) - 0.55, abs(q.y) - 0.06) - 0.03;
-  chKeep(slab, 113.0, res);
+  if (abs(p.x) > 1.9 || p.z > -chHoleR(0.0) + 0.4 || p.z < -27.0 || p.y > 0.6) return;
+  float edge = abs(p.x) - 1.3;
+  vec2 cid;
+  vec2 cells = edge > 0.0 ? chCells(p.xz*vec2(1.6, 1.1) + 31.0, cid) : chCells(p.xz*2.4, cid);
+  float dome = (edge > 0.0 ? 0.11 : 0.07)*(1.0 - cells.x*cells.x);
+  float groove = smoothstep(0.0, 0.08, cells.y);
+  float top = 0.16 + (dome + 0.02)*groove - 0.03;
+  float d = max(p.y - top, max(abs(p.x) - 1.75, -0.3 - p.y));
+  chKeep(d*0.7, edge > 0.0 ? 116.0 : 113.0, res);
 }
 
 // One root down the outer wall (owner, round 2): roots come out of the rock and dive back in, irregularly spaced, of
@@ -6570,6 +6556,7 @@ vec2 canopyHole(vec3 p) {
   vec2 cid;
   vec2 cells = chCells(p.xz*1.5, cid);
   float h = 0.05 + 0.14*smoothstep(0.0, 0.3, cells.y)*(1.0 - cells.x*cells.x) + 0.25*noise3(vec3(p.xz*0.15, 2.0));
+  if (chInPath(p.xz)) h = min(h, 0.0);
   float ground = max((p.y - h)*0.6, (wallR - r)*0.7);
   ground = max(ground, r - holeR - 11.0);
   float floorS = max((p.y - chFloorH(p.xz))*0.7, r - wallR - 1.0);
@@ -6725,20 +6712,33 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return mix(body, core*0.55, 0.15 + 0.4*facet);
   }
   if (id > 113.5 && id < 114.5) {
-    // Path stone tops: pale violet moss, with a faint glowing rim so the route reads from a distance.
-    vec3 c = mix(vec3(0.16, 0.1, 0.3), vec3(0.28, 0.18, 0.46), 0.4 + 0.4*g);
-    float edge = smoothstep(-0.25, 0.25, -n.y + 0.6);
-    emit = c*0.2 + vec3(0.7, 0.45, 1.0)*edge*0.35;
+    // Stone tops: grey rock with patches of the knoll's violet moss.
+    float moss = smoothstep(0.35, 0.65, noise3(p*2.2) + 0.3*n.y);
+    vec3 rock = mix(vec3(0.17, 0.16, 0.2), vec3(0.28, 0.27, 0.32), 0.4 + 0.4*g);
+    vec3 c = mix(rock, mix(vec3(0.1, 0.05, 0.2), vec3(0.18, 0.09, 0.32), g), moss);
+    emit = c*0.08;
     return c;
   }
   if (id > 114.5 && id < 115.5) {
-    // Path stone sides: lighter rock than the walls.
-    vec3 c = mix(vec3(0.09, 0.085, 0.13), vec3(0.17, 0.16, 0.23), smoothstep(0.4, 1.2, g));
+    // Stone sides: grey layered rock, lines of strata running round it.
+    float strata = 0.5 + 0.5*sin(p.y*26.0 + 2.0*noise3(p*2.0));
+    vec3 c = mix(vec3(0.12, 0.115, 0.15), vec3(0.24, 0.23, 0.28), 0.3 + 0.35*strata + 0.2*g);
     emit = c*0.05;
     return c;
   }
   if (id > 112.5 && id < 113.5) {
-    vec3 c = mix(vec3(0.07, 0.065, 0.1), vec3(0.13, 0.12, 0.18), 0.4 + 0.4*g);
+    // Cobbles: worn grey-violet, each its own shade, dark in the joints.
+    vec2 cid;
+    vec2 cells = chCells(p.xz*2.4, cid);
+    vec3 c = mix(vec3(0.15, 0.14, 0.2), vec3(0.27, 0.25, 0.33), hash1(cid.x*3.7 + cid.y*1.3));
+    c *= 0.85 + 0.25*g;
+    c = mix(vec3(0.03, 0.025, 0.05), c, smoothstep(0.0, 0.08, cells.y));
+    emit = c*0.05;
+    return c;
+  }
+  if (id > 115.5 && id < 116.5) {
+    // Edge stones: larger, darker kerb along both sides.
+    vec3 c = mix(vec3(0.1, 0.095, 0.14), vec3(0.19, 0.18, 0.24), 0.4 + 0.4*g);
     emit = c*0.04;
     return c;
   }
@@ -6875,7 +6875,7 @@ float inkWidth(float id) {
     if (id > 17.5) w = 0.035;
     if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 15.69)) w = 0.01;
     if (id >= 40.0) {
-      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.014 : id < 114.5 ? 0.006 : 0.012) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
+      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : 0.012) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
     }
   }
   return w*TR(id).x;

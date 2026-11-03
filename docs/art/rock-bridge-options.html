@@ -37,9 +37,9 @@ dd { margin: 0; }
 
 <main>
   <header>
-    <p class="eyebrow">Gun side · the big bridge</p>
+    <p class="eyebrow">Gun side · the big bridge · round 2</p>
     <h1>A floating rock pathway</h1>
-    <p class="lede">Four floating stones from the rim to the spire's platform, easy to parkour, with rubble drifting round and under them. A lane of path stones runs from where the rope bridge lands, kept clear of trees and plants, so you see the route the moment you arrive.</p>
+    <p class="lede">Your picks: the tethered stones' layout of big rest stones between smaller ones, as plain floating mossy slabs like your reference photo, with nothing hanging off them. A clean cobblestone path with kerb stones runs from where the rope bridge lands to the rim, and small slabs of rubble drift round and under the stones, bobbing.</p>
   </header>
 
   <div class="tabs" role="tablist" id="tabs"></div>
@@ -54,7 +54,7 @@ dd { margin: 0; }
       <p id="optLead"></p>
       <ul id="optPoints"></ul>
       <dl>
-        <dt>Stones</dt><dd>4, about 6.5 studs across</dd>
+        <dt>Stones</dt><dd>4: about 7.5 and 6 studs across, alternating</dd>
         <dt>Gaps</dt><dd>about 5.5 to 7 studs</dd>
         <dt>Route</dt><dd>a gentle curve, rim to platform</dd>
         <dt>Motion</dt><dd>stones and rubble bob slowly</dd>
@@ -67,14 +67,12 @@ dd { margin: 0; }
 <script>
 (() => {
   const OPTIONS = [
-    { key: "a", name: "A · Stepping stones", lead: "Level stones in a gentle curve, each with a pale violet moss top and a small glowing crystal on its edge.", points: ["The easiest to read and to jump", "Roots, bead vines and a crystal hang under each stone"] },
-    { key: "b", name: "B · Rising arc", lead: "The stones climb a little toward the middle of the hole and drop back to the platform.", points: ["A touch more parkour feel, still easy", "Looks like a path lifting over the canopy"] },
-    { key: "c", name: "C · Tethered stones", lead: "Larger rest-stop stones between smaller ones, joined by sagging bead vines.", points: ["Bead vines glow between the stones", "Big stones give you places to pause"] }
+    { key: "c", name: "Tethered layout · plain mossy stones", lead: "Flat slabs of grey layered rock with rounded uneven edges and violet moss on top, alternating big rest stones and smaller ones.", points: ["No roots, crystals, glow or vines on them", "Small rubble slabs float round and under the path, bobbing", "Cobblestone path from the rope bridge to the rim"] }
   ];
-  const VIEWS = [["rim", "At the rim"], ["side", "From the side"], ["entry", "From the clearing"], ["top", "From above"]];
+  const VIEWS = [["rim", "At the rim"], ["side", "From the side"], ["entry", "From the clearing"], ["path", "The cobble path"]];
   const tabs = document.getElementById("tabs"), big = document.getElementById("big"), thumbs = document.getElementById("thumbs");
   let current = 0, view = "rim";
-  function src(o, v) { return v === "top" ? "top-a.jpg" : `${v}-${OPTIONS[o].key}.jpg`; }
+  function src(o, v) { return v === "path" ? "path.jpg" : `${v}-${OPTIONS[o].key}.jpg`; }
   function render() {
     const o = OPTIONS[current];
     [...tabs.children].forEach((b, i) => b.setAttribute("aria-selected", String(i === current)));
@@ -88,7 +86,7 @@ dd { margin: 0; }
       const b = document.createElement("button");
       b.type = "button";
       b.setAttribute("aria-pressed", String(v === view));
-      b.innerHTML = `<img src="${src(current, v)}" alt=""><span>${label}${v === "top" ? " (A)" : ""}</span>`;
+      b.innerHTML = `<img src="${src(current, v)}" alt=""><span>${label}</span>`;
       b.onclick = () => { view = v; render(); };
       thumbs.appendChild(b);
     });
