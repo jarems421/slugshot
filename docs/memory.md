@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-03 — Inferno in the slug grove
+
+- **Confirmed (owner):** the grove goes from 30 Floppies to 15 slugs, 10 Floppies and 5 Infernos.
+- **Implemented on `lobby/grove-inferno`:** `HubArt` keeps 15 spread-out sites, close-up group included, and builds Inferno's base form at 1.3 studs with his outline at five of them. `GroveSlugs` drives both; Inferno hops more often and higher. **Verified offline:** stylua, selene, `build_hub.py`. **Not verified:** Studio runtime, since the Studio MCP listed no instances; the built place was opened for the owner.
+
 ## 2026-11-02 — Inferno in Blender and Studio
 
 - **Implemented, final since 2026-11-03:** both forms built and shown with Floppy in a private display place; faces cleaned of black lines, Floppy's blink improved, Inferno given an underside and active motion. Floppy's fixes are only on this branch.

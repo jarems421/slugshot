@@ -61,6 +61,9 @@
       "FloppyAppearance": {
         "$path": "experiments/creatures/floppy/server/FloppyAppearance.luau"
       },
+      "InfernoAppearance": {
+        "$path": "experiments/creatures/inferno/server/InfernoAppearance.luau"
+      },
       "LobbySettings": {
         "$className": "Folder",
         "SettingsPersistence": {
@@ -144,6 +147,12 @@
       },
       "FloppyMaterials": {
         "$path": "private-assets/floppy/materials.rbxmx"
+      },
+      "InfernoAsset": {
+        "$path": "private-assets/inferno/InfernoAsset.luau"
+      },
+      "InfernoMaterials": {
+        "$path": "private-assets/inferno/materials.rbxmx"
       },
       "LobbyAssets": {
         "$path": "private-assets/lobby/LobbyAssets.luau"

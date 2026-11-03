@@ -1,5 +1,6 @@
 --!strict
--- The slug grove's Floppies, on each client and look-only: slow, spread-out hops round where they live, a drowsy idle up
+-- The slug grove's Floppies and Infernos, on each client and look-only. Inferno hops more often and higher; otherwise
+-- they share Floppy's acting: slow, spread-out hops round where they live, a drowsy idle up
 -- close, and about one in four that notices a passing player, looks for a couple of seconds, then looks away for a while.
 -- Never all of them, so the place doesn't feel like it's staring (owner). A slug is thousands of triangles and only a stud
 -- or so tall, so those too far off to make out aren't drawn at all.
@@ -22,6 +23,10 @@ local LOOK_AGAIN = NumberRange.new(20, 40)
 local TURN_RATE = 5
 local EYE_RATE = 2 * math.pi / 12
 local EYE_SPACING = 0.74 -- at source; a slug's size comes from it, as in FloppyIdle
+local ANTENNA_SPACING = 0.72 -- the same for Inferno, who has no eye rings, as in InfernoMotion
+-- Inferno is restless where Floppy is drowsy: he hops more often and higher.
+local INFERNO_HOP_GAP = NumberRange.new(1.5, 4.5)
+local INFERNO_HOP_HEIGHT = 2.2
 local WATER_Y = -0.3
 
 type Driven = { bone: Bone, up: Vector3, axis: Vector3 }
@@ -38,6 +43,8 @@ type Slug = {
 	hopTo: Vector3,
 	shown: boolean,
 	glances: boolean,
+	hopGap: NumberRange,
+	hopHeight: number,
 	lookUntil: number,
 	lookAgain: number,
 	size: number,
@@ -70,12 +77,18 @@ local function prepare(model: Model): Slug?
 			table.insert(bones[item.Name], item)
 		end
 	end
+	local inferno = model:GetAttribute("Slug") == "Inferno"
 	local eyeL, eyeR = bones.eye_L, bones.eye_R
+	local left, right = bones.antenna_L, bones.antenna_R
+	if not inferno then
+		left, right = eyeL, eyeR
+	end
 	local root, head = bones.root, bones.head
-	if not (eyeL and eyeR and root and head) then
+	if not (left and right and root and head) then
 		return nil
 	end
-	local sideways = (eyeR[1].WorldPosition - eyeL[1].WorldPosition).Unit
+	local spacing = (right[1].WorldPosition - left[1].WorldPosition).Magnitude
+	local sideways = (right[1].WorldPosition - left[1].WorldPosition).Unit
 	local rough = (head[1].WorldPosition - root[1].WorldPosition).Unit
 	local up = (rough - sideways * rough:Dot(sideways)).Unit
 	local front = sideways:Cross(up)
@@ -90,12 +103,16 @@ local function prepare(model: Model): Slug?
 		end
 		return out
 	end
-	local eyes = drive(eyeL, (sideways * -0.4 + up * 0.05 + front).Unit)
-	for _, item in drive(eyeR, (sideways * 0.4 + up * 0.05 + front).Unit) do
-		-- The two eyes' rings spin in opposite directions.
-		item.axis = -item.axis
-		table.insert(eyes, item)
+	local eyes: { Driven } = {}
+	if not inferno then
+		eyes = drive(eyeL, (sideways * -0.4 + up * 0.05 + front).Unit)
+		for _, item in drive(eyeR, (sideways * 0.4 + up * 0.05 + front).Unit) do
+			-- The two eyes' rings spin in opposite directions.
+			item.axis = -item.axis
+			table.insert(eyes, item)
+		end
 	end
+	local hopGap = if inferno then INFERNO_HOP_GAP else HOP_GAP
 	local squash = drive(head, up)
 	for _, item in drive(bones.body_upper, up) do
 		table.insert(squash, item)
@@ -109,15 +126,17 @@ local function prepare(model: Model): Slug?
 		home = pivot.Position,
 		heading = yaw,
 		aim = yaw,
-		nextHop = os.clock() + pick(HOP_GAP),
+		nextHop = os.clock() + pick(hopGap),
 		hopStart = nil,
 		hopFrom = pivot.Position,
 		hopTo = pivot.Position,
 		shown = true,
 		glances = model:GetAttribute("GroveGlances") == true,
+		hopGap = hopGap,
+		hopHeight = if inferno then INFERNO_HOP_HEIGHT else HOP_HEIGHT,
 		lookUntil = 0,
 		lookAgain = 0,
-		size = (eyeR[1].WorldPosition - eyeL[1].WorldPosition).Magnitude / EYE_SPACING,
+		size = spacing / (if inferno then ANTENNA_SPACING else EYE_SPACING),
 		eyes = eyes,
 		squash = squash,
 	}
@@ -191,11 +210,11 @@ local function step(now: number)
 			if t >= 1 then
 				slug.hopStart = nil
 				slug.position = slug.hopTo
-				slug.nextHop = now + pick(HOP_GAP)
+				slug.nextHop = now + pick(slug.hopGap)
 				position = slug.position
 			else
 				position = slug.hopFrom:Lerp(slug.hopTo, t)
-					+ Vector3.new(0, HOP_HEIGHT * 4 * t * (1 - t), 0)
+					+ Vector3.new(0, slug.hopHeight * 4 * t * (1 - t), 0)
 			end
 			moved = true
 		elseif now > slug.nextHop and now > slug.lookUntil then
@@ -205,7 +224,7 @@ local function step(now: number)
 				local face = target - slug.position
 				slug.aim = math.atan2(-face.X, -face.Z)
 			else
-				slug.nextHop = now + pick(HOP_GAP)
+				slug.nextHop = now + pick(slug.hopGap)
 			end
 		end
 		if moved then
@@ -215,7 +234,7 @@ local function step(now: number)
 			for index, item in slug.eyes do
 				item.bone.Transform = CFrame.fromAxisAngle(item.axis, now * EYE_RATE + index)
 			end
-			local since = if slug.hopStart then -1 else now - (slug.nextHop - HOP_GAP.Min)
+			local since = if slug.hopStart then -1 else now - (slug.nextHop - slug.hopGap.Min)
 			local press = if since >= 0 and since < LANDING
 				then math.sin(math.pi * since / LANDING) * 0.14
 				else 0.012 * math.sin(now * 1.57 + slug.heading)

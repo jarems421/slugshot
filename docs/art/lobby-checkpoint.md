@@ -23,7 +23,7 @@ Where the lobby stands after the four main areas, written so a new chat can pick
 
 ## Decisions to keep
 
-- **Slugs:** 1.3 studs outside the gun, with the in-gun size and 0.3 hit radius unchanged. The grove has 30 Floppies, one in four glancing at a nearby player.
+- **Slugs:** 1.3 studs outside the gun, with the in-gun size and 0.3 hit radius unchanged. The grove has 15 slugs, 10 Floppies and 5 Infernos (owner, 2026-11-03), one in four glancing at a nearby player.
 - **Mountain:** one form of flat faces and hard ridges, from the owner's six reference pictures. Peaks are never tips added to a body. 165 studs tall and about 370 across, under the ceiling at 225.
 - **Look:** thin black lines on ridges and valleys, cut-out shading, small broken facets. No rows or rings of lines, which read as a contour map.
 - **Solid art:** you touch hidden collision chunks, not the drawn mountain, so it runs smoothly and its valleys stay open.
@@ -62,7 +62,7 @@ Everything runs from the repository root. Python needs the venv with moderngl, n
 
 - **Phone cost:** about 1.3M triangles and 270 MB of textures with the grove in view on desktop, against starting budgets of 200k and 100 MB. The estimate hasn't been re-run since before the grove. Lighter Floppies, fewer plants and baking small props together are the likely savings. This has to happen before the real phone and iPad tests.
 - **Not tried by hand:** running and climbing the mountain, the pond's splashes at real speed, the slugs' hopping and glancing. Collision stands up to 13 studs above the rock at one tested point.
-- **Inferno:** 10 grove slugs carry `InfernoLater`, as Floppies until a lobby swap is built.
+- **Inferno:** 5 grove slugs are Inferno, built 2026-11-03 on `lobby/grove-inferno`. Awaiting the owner's look in Studio.
 - **Far side:** undecided. The bounty board is still block-out, and other biomes aren't designed.
 - **Log noise:** `Failed to upload TexturePack` recurs with several Studio windows open, and isn't traced.
 

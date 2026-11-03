@@ -25,6 +25,7 @@ local groveSlugs =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_slugs")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 local FloppyAppearance = require(script.Parent:WaitForChild("FloppyAppearance")) :: any
+local InfernoAppearance = require(script.Parent:WaitForChild("InfernoAppearance")) :: any
 
 type PartInfo = { ink: string?, emissive: number, min: Vector3, max: Vector3 }
 type PieceInfo = {
@@ -1430,8 +1431,13 @@ local GROVE_TINT = Color3.fromRGB(150, 245, 225)
 local SLUG_STUDS = 1.3
 -- The source Floppy's length between root and antenna, as in the combat flight model.
 local SLUG_SOURCE = 2.72
+-- Inferno's base form is exported at Floppy's height, so 0.34 x that length is his reference length (CombatServer).
+local INFERNO_SOURCE = 0.34 * SLUG_SOURCE
 local GLANCE_EVERY = 4 -- about one slug in this many looks at a passing player
-local INFERNO_EVERY = 3 -- these become Inferno when its Roblox model exists; Floppies stand in until then
+-- 15 of the concept's 30 sites, spread out round the pond, with the close-up group (10-12) kept: 10 Floppies and 5 Infernos
+-- (owner, 2026-11-03). The site list keeps all 30 so the concept page still matches it.
+local GROVE_SITES = { 1, 3, 6, 10, 11, 12, 13, 15, 16, 18, 19, 23, 25, 27, 30 }
+local GROVE_INFERNOS = { [1] = true, [11] = true, [13] = true, [18] = true, [19] = true }
 
 local function groveAt(x: number, y: number, z: number): Vector3
 	return GROVE * Vector3.new(x * UNIT, y * UNIT, z * UNIT)
@@ -1676,6 +1682,56 @@ local function groveWater()
 	spores.Parent = air
 end
 
+-- Inferno's base form at a slug's height, in the same slug space as the Floppies, with his outline.
+local function groveInferno(): Model?
+	local module = ServerStorage:FindFirstChild("InfernoAsset")
+	local materials = ServerStorage:FindFirstChild("InfernoMaterials")
+	if not (module and materials) then
+		warn("HubArt: no Inferno asset in this build, the grove has only Floppies")
+		return nil
+	end
+	local asset = require(module) :: any
+	local ok, container = pcall(function()
+		return InsertService:LoadAsset(asset.base.model)
+	end)
+	if not ok then
+		warn(`HubArt: the grove's Inferno failed to load: {container}`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
+		return nil
+	end
+	local model = Instance.new("Model")
+	model.Name = "GroveSlug"
+	model:SetAttribute("Slug", "Inferno")
+	for _, child in (container :: Instance):GetChildren() do
+		child.Parent = model
+	end
+	(container :: Instance):Destroy()
+	InfernoAppearance.dress(model, materials, SLUG_STUDS)
+	for _, item in model:GetDescendants() do
+		if item:IsA("BasePart") then
+			item.Anchored = true
+			item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+			item.CastShadow = false
+			-- The import's RootPart is a block that isn't part of him.
+			if not item:IsA("MeshPart") then
+				item.Transparency = 1
+			end
+		elseif item:IsA("Bone") then
+			item.Transform = CFrame.identity
+		end
+	end
+	model:ScaleTo(model:GetScale() * SLUG_STUDS / INFERNO_SOURCE)
+	local left = model:FindFirstChild("antenna_L", true) :: Bone
+	local right = model:FindFirstChild("antenna_R", true) :: Bone
+	local root = model:FindFirstChild("root", true) :: Bone
+	local head = model:FindFirstChild("head", true) :: Bone
+	local up = (head.WorldPosition - root.WorldPosition).Unit
+	local front = (right.WorldPosition - left.WorldPosition):Cross(up).Unit
+	model.WorldPivot = CFrame.fromMatrix(root.WorldPosition, up:Cross(-front), up, -front)
+	InfernoAppearance.outline(model)
+	return model
+end
+
 local function groveSlugModels()
 	local asset = require(ServerStorage:WaitForChild("FloppyAsset")) :: any
 	local ok, container = pcall(function()
@@ -1713,19 +1769,24 @@ local function groveSlugModels()
 	local front = (face - up * face:Dot(up)).Unit
 	-- Slug space: its root on the ground, +Y up out of its back, -Z the way its face points.
 	template.WorldPivot = CFrame.fromMatrix(root.WorldPosition, up:Cross(-front), up, -front)
+	-- Floppies stand in at Inferno's sites if he can't load.
+	local inferno = groveInferno() or template
 	local group = Instance.new("Folder")
 	group.Name = "GroveSlugs"
 	group.Parent = art
-	for index, site in groveSlugs do
-		local slug = template:Clone()
+	for order, index in GROVE_SITES do
+		local site = groveSlugs[index]
+		local slug = (if GROVE_INFERNOS[index] then inferno else template):Clone()
 		slug.Name = `GroveSlug{index}`
-		slug:SetAttribute("GroveGlances", index % GLANCE_EVERY == 1)
-		slug:SetAttribute("InfernoLater", index % INFERNO_EVERY == 0)
+		slug:SetAttribute("GroveGlances", order % GLANCE_EVERY == 1)
 		slug:PivotTo(
 			CFrame.new(GROVE * Vector3.new(site.x, site.y, site.z))
 				* CFrame.Angles(0, site.heading, 0)
 		)
 		slug.Parent = group
+	end
+	if inferno ~= template then
+		inferno:Destroy()
 	end
 	template:Destroy()
 end
