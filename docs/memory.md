@@ -1654,3 +1654,11 @@
 - **Implemented:** the display places gained `SlugInspect`, because the merged `FloppyFace` waits for it and would otherwise stall.
 - **Unresolved:** no Studio Play run of the merged combat place, because Studio hung opening it. Owner to check the final Floppy in the real game. Inferno is not in the game yet.
 
+
+
+## 2026-11-03 ? Open-space shot and training handoff
+
+- **Confirmed:** screenshots show the same high open-space trajectory in first and third person.
+- **Implemented/verified:** replaced unreachable 300-stud fallback with a 60-stud sight zero and cached the surface sample with the completed frame. Native baseline fails high-lob assertion; fixed 16-case slide recovery suite and offline combat checks pass. See combat record for exact scope and limits.
+- **Implemented/verified:** deployed owner-private training 3D preview with GLB and editable Blender ZIP downloads; browser review passed. Subsequent concurrent training source edits were preserved.
+- **Unresolved:** owner feel, exact input replay and multiplayer latency.

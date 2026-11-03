@@ -23,3 +23,8 @@ Floppy speeds are 85/100/115 studs/s; gravity, drag, third-kick speed and damage
 Evidence and reproduction: [shot consistency](../combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current). Desktop one-client Studio checks do not prove observer, latency or moving-target behavior.
 
 Roblox's [render priorities](https://create.roblox.com/docs/reference/engine/enums/RenderPriority) and [camera ray API](https://create.roblox.com/docs/reference/engine/classes/Camera#ViewportPointToRay) were consulted. The frame-ownership choice is an implementation inference from this project's camera undo/apply passes, not an engine guarantee about arbitrary input callbacks.
+
+
+## 2026-11-03 follow-up
+
+**Implemented/verified:** cache surface hit/point with the completed firing frame and use a 60-stud zero when no surface is hit. The former 300-stud imaginary target saturated into a high lob. Native baseline/fixed evidence and limits are recorded in [combat notes](../combat.md#open-space-and-slide-rise-shooting-repair--2026-11-03).

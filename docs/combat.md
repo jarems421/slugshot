@@ -430,3 +430,18 @@ Current visual arms are 12% longer than the shortened version, with matching cro
 **Crosshair symmetry and size, 2026-11-01:** Triad now has a north-facing top mark and mirrored lower marks. Micro Cross was checked: both lines are 5.5 units long and 1.2 wide. Settings adds a 75–140% size slider in 5% steps, default 100%, applied to the aiming mark and its preview independently of the white charge ring. Size lasts through respawn during the current session. Combat verification and Studio checks pass for native slider input, symmetry, centered aim at 75/100/140%, white unchanged charge, accepted shot, respawn and cursor/menu transitions. [Evidence/limits](evidence/2026-11-01-crosshair-size-symmetry.json). Owner appearance and touch/gamepad checks remain open.
 
 `CrosshairSize` is a local player session attribute; `CrosshairStyles.size` clamps values and defaults invalid numbers to 1. `CrosshairStyles.resize` applies it to the centered mark frame alone (replacing the original `MarkScale`, which drifted down-right when resizing), so the aiming mark stays centered and the charge ring does not grow. The live Settings preview follows the same multiplier.
+
+
+## Open-space and slide-rise shooting repair ? 2026-11-03
+
+**Confirmed:** owner screenshots show Floppy flying far above the aiming direction into blank space, in both camera modes. A native controller reproduction with a briefly unqueryable surface launches the previous code at 39.71 degrees: its missing-surface fallback invents a target 300 studs away, beyond Floppy's reach, saturating the ballistic solve into a high lob.
+
+**Implemented:** empty space uses a 60-stud sight zero. Surface hit and point now belong to the same completed rendered frame as the ray, muzzle and shoulder, so an input release cannot combine that frame with a later surface query. Actual hit targeting, lower-power drop, speeds, cover checks and server validation remain in place. The Studio movement probe gains `SlideKey` to exercise the real press/cancel path while retaining the original `Slide` probe.
+
+**Implemented/verified:** native baseline fails the explicit high-lob assertion; fixed native run passes 16 releases across four travel directions and four stand-up offsets, with hip/ADS and four simulated open-space windows. Existing shared physics tests pass. `python tools/verify_combat.py` passes foundation, movement, combat formatting/lint, strict analysis and builds. [Sanitized measurements](evidence/2026-11-03-slide-rise-shot.json).
+
+Reproduce: `python tools/build_slide_shot_check.py`, then `powershell -NoProfile -File tools/studio/shooting_feel_check.ps1 -OutDir build/slide-shot/review -Timeout 240`. `--baseline` selects the pre-fix `9f99b67` combat client for comparison. The fixture's noncolliding target allows client-only query masking; its server surface remains available to verify actual flight.
+
+**Unresolved:** owner feel review, exact physical-input replay and multiplayer/latency. Screenshots establish the symptom, not the precise launch angle.
+
+**Implemented/verified ? training preview handoff:** [owner-private 3D arena preview](https://slugshot-training-arena.jarems421.chatgpt.site) is deployed, with GLB and editable Blender ZIP downloads. Its compressed scene passes browser controls and mobile layout checks. This is an inspection/build reference; no Roblox experience or Marketplace asset was published. The live training worktree has subsequent concurrent work and was left untouched during this handoff.

@@ -1726,6 +1726,8 @@ if RunService:IsStudio() then
 			testMove, testUntil = value.direction, os.clock() + (value.duration or 1)
 		elseif command == "Sprint" then
 			sprintTapped = value
+		elseif command == "SlideKey" then
+			slidePressed(value ~= false)
 		elseif command == "Hurt" then
 			send("Hurt")
 		elseif command == "Jump" and humanoid then

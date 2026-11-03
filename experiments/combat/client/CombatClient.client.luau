@@ -176,7 +176,13 @@ type AimFrame = {
 	ray: Ray,
 	muzzle: Vector3?,
 	shoulder: Vector3,
+	hit: RaycastResult?,
+	point: Vector3,
 }
+-- Empty space is a sight zero, not an imaginary target beyond Floppy's reach.
+-- A rising camera can clear a dummy for one frame; solving toward 300 studs
+-- then selected a maximum-range lob and sent that release over the target.
+local AIR_ZERO_DISTANCE = 60
 local renderedAim: AimFrame? = nil
 RunService:BindToRenderStep(
 	"SlugshotRenderedAim",
@@ -197,13 +203,20 @@ RunService:BindToRenderStep(
 			return
 		end
 		local cursor = AimCursor.point(camera)
+		local ray = camera:ViewportPointToRay(cursor.X, cursor.Y)
+		local params = RaycastParams.new()
+		params.FilterType = Enum.RaycastFilterType.Exclude
+		params.FilterDescendantsInstances = { character, camera }
+		local hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
 		renderedAim = {
 			character = character,
 			camera = camera,
 			tool = blaster(),
-			ray = camera:ViewportPointToRay(cursor.X, cursor.Y),
+			ray = ray,
 			muzzle = Viewmodel.muzzle(),
 			shoulder = torso.CFrame * shoulder.C0.Position,
+			hit = hit,
+			point = if hit then hit.Position else ray.Origin + ray.Direction * AIR_ZERO_DISTANCE,
 		}
 	end
 )
@@ -240,8 +253,14 @@ local function aim(
 	local ray = if useFrame
 		then (frame :: AimFrame).ray
 		else camera:ViewportPointToRay(cursor.X, cursor.Y)
-	local hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
-	local point = if hit then hit.Position else ray.Origin + ray.Direction * 300
+	local hit: RaycastResult? = nil
+	local point: Vector3
+	if useFrame then
+		hit, point = (frame :: AimFrame).hit, (frame :: AimFrame).point
+	else
+		hit = workspace:Raycast(ray.Origin, ray.Direction * 500, params)
+		point = if hit then hit.Position else ray.Origin + ray.Direction * AIR_ZERO_DISTANCE
+	end
 	local muzzle = if useFrame then (frame :: AimFrame).muzzle else Viewmodel.muzzle()
 	if presentationOnly then
 		return muzzle, ray.Direction, ray.Direction, point
@@ -266,7 +285,7 @@ local function aim(
 		local origin = obstruction.Position + obstruction.Normal * (slug.Radius + 0.01)
 		return origin, -obstruction.Normal, ray.Direction, point, true
 	end
-	local toward = point - muzzle
+	local toward = point - (muzzle :: Vector3)
 	if hit and (toward.Magnitude <= 0.5 or toward.Unit:Dot(ray.Direction) <= 0) then
 		local origin = point + hit.Normal * (slug.Radius + 0.01)
 		local root = character:FindFirstChild("HumanoidRootPart")

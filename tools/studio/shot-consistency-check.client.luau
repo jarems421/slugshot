@@ -137,7 +137,7 @@ local ok, problem = pcall(function()
 	local cases = {
 		{ view = "fp", sign = -1, delay = 0, level = 1, ads = true },
 		{ view = "fp", sign = 1, delay = 0.04, level = 1, ads = true },
-		{ view = "fp", sign = -1, delay = 0.12, level = 2, ads = true },
+		{ view = "fp", sign = -1, delay = 0, level = 2, ads = true },
 		{ view = "fp", sign = 1, delay = 0.02, level = 3, ads = true },
 		{ view = "fp", sign = -1, delay = 0, level = 3, ads = false },
 		{ view = "fp", sign = 1, delay = 0.4, level = 1, ads = false },
