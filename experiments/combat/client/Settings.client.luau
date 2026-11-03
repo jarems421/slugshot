@@ -321,7 +321,7 @@ local saveStatus = Theme.label(head, "", Theme.Body, 13, {
 local function refreshSaveStatus()
 	local messages = {
 		Loading = "Loading saved settings...",
-		StudioUnavailable = "Studio preview: settings last for this session. Saving needs a published test experience with API access.",
+		StudioUnavailable = "Studio preview: settings are session-only.",
 		Saved = "Settings saved",
 		Pending = "Saving settings...",
 		LoadFailed = "Saved settings unavailable; retrying. Changes stay in this session.",
