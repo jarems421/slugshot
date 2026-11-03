@@ -37,9 +37,9 @@ dd { margin: 0; }
 
 <main>
   <header>
-    <p class="eyebrow">Gun side · the big bridge · round 3</p>
+    <p class="eyebrow">Gun side · the big bridge · round 4</p>
     <h1>A floating rock pathway</h1>
-    <p class="lede">Your picks: the tethered stones' layout of big rest stones between smaller ones, as plain floating mossy slabs like your reference photo, with nothing hanging off them. A clean cobblestone path with kerb stones runs from where the rope bridge lands to the rim, and rubble like the spawn island's (angular chunks, mostly small with a few bigger) clusters tightly round and under every stone, drifting and bobbing.</p>
+    <p class="lede">Your picks: the tethered stones' layout of big rest stones between smaller ones, as plain floating slabs of grey rock like your reference photo, with cracks and a fine grain on top and nothing hanging off them. A clean cobblestone path with kerb stones runs from where the rope bridge lands to the rim, and small rubble like the spawn island's clusters tightly round and under every stone, tightest at the start, drifting and bobbing.</p>
   </header>
 
   <div class="tabs" role="tablist" id="tabs"></div>
@@ -67,12 +67,12 @@ dd { margin: 0; }
 <script>
 (() => {
   const OPTIONS = [
-    { key: "c", name: "Tethered layout · plain mossy stones", lead: "Flat slabs of grey layered rock with rounded uneven edges and violet moss on top, alternating big rest stones and smaller ones.", points: ["No roots, crystals, glow or vines on them", "Spawn-island rubble in tight clusters round and under each stone, a few between", "Cobblestone path from the rope bridge to the rim"] }
+    { key: "c", name: "Tethered layout · plain rock stones", lead: "Flat slabs of grey layered rock with rounded uneven edges, cracked and finely grained on top, alternating big rest stones and smaller ones.", points: ["No moss, roots, crystals, glow or vines on them", "Spawn-island rubble in tight clusters round and under each stone, a few between", "Cobblestone path from the rope bridge to the rim"] }
   ];
-  const VIEWS = [["close", "Beside the stones"], ["rim", "At the rim"], ["side", "From the side"], ["path", "The cobble path"]];
+  const VIEWS = [["stone", "Looking down on the stones"], ["close", "Beside the stones"], ["rim", "At the rim"], ["path", "The cobble path"]];
   const tabs = document.getElementById("tabs"), big = document.getElementById("big"), thumbs = document.getElementById("thumbs");
-  let current = 0, view = "close";
-  function src(o, v) { return v === "path" || v === "close" ? `${v}.jpg` : `${v}-${OPTIONS[o].key}.jpg`; }
+  let current = 0, view = "stone";
+  function src(o, v) { return v === "path" || v === "close" || v === "stone" ? `${v}.jpg` : `${v}-${OPTIONS[o].key}.jpg`; }
   function render() {
     const o = OPTIONS[current];
     [...tabs.children].forEach((b, i) => b.setAttribute("aria-selected", String(i === current)));
