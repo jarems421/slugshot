@@ -8,6 +8,8 @@
 
 **Unresolved:** final envelope, pit depth in studs, and the fall fade/respawn implementation.
 
+**Implemented as a browser concept, study 03:** [live 3D page](https://claude.ai/artifact/ND4dAkrsfRti5qmCkVPF8v), source [shop-concept-03.html](shop-concept-03.html). Eight cream/lavender pods on a faceted rock pillar, gnarled purple trunk, an 84-stud blue main cap with glowing gills plus orange and violet side caps, hanging vines, 13 giant jungle mushrooms, trumpet flowers, a plank root bridge with mint studs, and a 76-deep mist pit with a lit fungus floor. Inside: curved counter, terminal, keeper's stool, a blaster wall of eight original blasters, and six slug tank ideas (Energy Column, Moss Globe, Hive Cells, Fungus Cloche, Lantern Orbs, Slug Tube Run). Verified: one headless software-rendered screenshot of the approach view ([evidence](evidence/general-shop/study-03-approach.png)); the interior views were not screenshotted. Owner verdict unresolved.
+
 ## Study 02 - pod-grown shop over a mist chasm (2026-11-02)
 
 **Confirmed feedback:** owner rejected brown and the conventional shape. Supplied house screenshots show rounded room pods, porthole windows, a central tree and a giant blue fungal canopy. The revised design uses those architectural categories with an original arrangement and sign; reference artwork is not redistributed.
