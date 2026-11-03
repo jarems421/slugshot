@@ -22,7 +22,8 @@ h2 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 0; 
 @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
 .view { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .big { width: 100%; max-width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; background: #05070a; }
-.thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.thumbs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 560px) { .thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .thumbs button { padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: none; cursor: pointer; display: flex; flex-direction: column; }
 .thumbs img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; display: block; }
 .thumbs span { font-size: 12px; color: var(--muted); padding: 4px 6px; text-align: left; background: var(--card); }
@@ -37,9 +38,9 @@ dd { margin: 0; }
 
 <main>
   <header>
-    <p class="eyebrow">Gun side · the shop · outside</p>
+    <p class="eyebrow">Gun side · the shop · outside · round 2</p>
     <h1>The Burrow Exchange, outside</h1>
-    <p class="lede">Your answers: pale pods filling the spire's platform, about 45 studs across and up to 30 tall; the spire's plum roots climbing on up as a twisted trunk; one huge glowing blue cap over it, its top level with the tallest rim trees. Portholes with glowing cyan glass, an arched doorway facing the rock path, lit warm inside, and a lantern each side. Pick a shape; the inside comes next as its own study.</p>
+    <p class="lede">Your pick, clustered pods, with your notes in: the rock path now lines up with the doorway, a small uneven cobble mat leads from the last stone to the door, the cap is whole and a little higher, and the trunk climbs further and fans out wide beneath it. The hut has heavier outlines, a metal band round each pod, a thicker door frame and a sign plate above the door. On the spire, the roots now come out of the rock under the platform and dive in and out on the way down.</p>
   </header>
 
   <div class="tabs" role="tablist" id="tabs"></div>
@@ -67,11 +68,9 @@ dd { margin: 0; }
 <script>
 (() => {
   const OPTIONS = [
-    { key: "a", name: "A · Clustered pods", lead: "A big main pod in front with smaller pods heaped round the trunk, as in your picture.", points: ["Closest to your reference", "The main pod holds the shop room", "Smaller pods read as alcoves and storerooms"] },
-    { key: "b", name: "B · Stacked pods", lead: "Smaller pods climb round the trunk in a rising spiral above the main pod.", points: ["Taller and slimmer", "The trunk shows most between the pods", "Most playful silhouette"] },
-    { key: "c", name: "C · Ring of pods", lead: "A tall central dome ringed by small pods at its base, with one pod on top.", points: ["Wider and lower", "The door stays clear in front", "Neatest, most symmetrical"] }
+    { key: "a", name: "Clustered pods (chosen)", lead: "A big main pod in front with smaller pods heaped round the trunk, as in your picture.", points: ["Path lined up with the door, cobble mat at the door", "Trunk flaring wide under the cap", "Spire roots coming out of the rock"] }
   ];
-  const VIEWS = [["front", "From the last stone"], ["three", "From the side"], ["far", "From the clearing"]];
+  const VIEWS = [["front", "From the last stone"], ["door", "At the door"], ["three", "From the side"], ["far", "From the clearing"], ["spire", "The spire roots"]];
   const tabs = document.getElementById("tabs"), big = document.getElementById("big"), thumbs = document.getElementById("thumbs");
   let current = 0, view = "front";
   function src(o, v) { return `${v}-${OPTIONS[o].key}.jpg`; }
