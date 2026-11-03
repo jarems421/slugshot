@@ -1,5 +1,13 @@
 # General shop: The Burrow Exchange (working name)
 
+## Lobby build direction (2026-11-03)
+
+**Confirmed by the owner:** study 02's exterior (rounded pods, portholes, trunk) is the direction. "Shop bar" means a shop counter. Keep the pit and the bridge; the pit is fairly deep but has a visible floor. The canopy becomes a jungle of mushroom canopies with hanging vines, as in the owner's two re-shared house pictures (stored privately in `private-assets/reference/shop`, not redistributed).
+
+**Considering (agent recommendation, owner agreed):** shrink the building to fit a slightly enlarged gun-side envelope, and redesign the interior around the counter, a blaster wall and slug displays. Budget it for phones from the start.
+
+**Unresolved:** final envelope, pit depth in studs, and the fall fade/respawn implementation.
+
 ## Study 02 - pod-grown shop over a mist chasm (2026-11-02)
 
 **Confirmed feedback:** owner rejected brown and the conventional shape. Supplied house screenshots show rounded room pods, porthole windows, a central tree and a giant blue fungal canopy. The revised design uses those architectural categories with an original arrangement and sign; reference artwork is not redistributed.

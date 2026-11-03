@@ -1946,3 +1946,6 @@
 - **Confirmed cause:** one beam segment plus transparent fade endpoints hid the entire animated layer. Earlier speed-only checks missed this.
 - **Implemented/verified locally:** twelve fade segments, actual waterfall body texture, all seven streams/full widths and lower lobes, speed 0.22. Native preload/reference/fade/stream checks and close-up sampled sequence pass; owner motion verdict remains open.
 - **Preserved:** fixed mesh, slower diffuse storm timing, other active worktrees. No new asset upload or experience publication. [Evidence](evidence/2026-11-03-visible-lava-gloop.json).
+## 2026-11-03 - Shop direction
+
+- **Confirmed:** lobby shop follows study 02's exterior, with a shop counter inside, a deep pit with a floor and bridge, and a jungle of mushroom canopies. Owner references stored privately. See [general shop](art/general-shop.md).
