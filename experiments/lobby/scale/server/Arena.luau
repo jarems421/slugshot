@@ -629,8 +629,11 @@ local function holeRadius(t: number): number
 	local count = #hole.radii
 	local f = (t % (2 * math.pi)) / (2 * math.pi) * count
 	local i = math.floor(f)
+	local frac = f - i
+	-- A tiny negative angle wraps to exactly 2 pi, one step past the last radius.
+	i %= count
 	local a, b = hole.radii[i + 1], hole.radii[(i + 1) % count + 1]
-	return a + (b - a) * (f - i)
+	return a + (b - a) * frac
 end
 
 local function holeEdge(t: number, extra: number): Vector3
@@ -686,8 +689,8 @@ local function buildGunSide(root: Instance)
 	while angle < gunSide.to - 1e-6 do
 		local a1, a2 = angle, math.min(angle + step, gunSide.to)
 		local middle = (a1 + a2) / 2
-		-- Runs of floor along this sector, outside the hole: { from, to, from is the hole's edge, to is the hole's edge }.
-		local runs = {}
+		-- Runs of floor along this sector, outside the hole, and whether each end is the hole's edge.
+		local runs: { { from: number, to: number, fromEdge: boolean, toEdge: boolean } } = {}
 		local runStart: number? = RIM_WIDTH
 		local startsAtEdge = false
 		local r = RIM_WIDTH
@@ -695,7 +698,10 @@ local function buildGunSide(root: Instance)
 			local nextR = math.min(r + 1, outer)
 			local open = inHole(polar(middle, nextR, 0))
 			if runStart and open then
-				table.insert(runs, { runStart, nextR, startsAtEdge, true })
+				table.insert(
+					runs,
+					{ from = runStart, to = nextR, fromEdge = startsAtEdge, toEdge = true }
+				)
 				runStart = nil
 			elseif not runStart and not open then
 				runStart, startsAtEdge = nextR, true
@@ -703,15 +709,18 @@ local function buildGunSide(root: Instance)
 			r = nextR
 		end
 		if runStart then
-			table.insert(runs, { runStart, outer, startsAtEdge, false })
+			table.insert(
+				runs,
+				{ from = runStart, to = outer, fromEdge = startsAtEdge, toEdge = false }
+			)
 		end
 		for _, run in runs do
 			local function ends(edgeAngle: number): (number, number)
-				local lo, hi = run[1], run[2]
-				if run[3] then
+				local lo, hi = run.from, run.to
+				if run.fromEdge then
 					lo = edgeAlong(edgeAngle, lo - 4, lo + 3)
 				end
-				if run[4] then
+				if run.toEdge then
 					hi = edgeAlong(edgeAngle, hi + 3, hi - 4)
 				end
 				return lo, hi
