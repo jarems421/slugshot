@@ -5854,7 +5854,7 @@ vec2 innerWall(vec3 p) {
       if (k <= 12) {
         float y = 0.1 - fk*1.0;
         float aa = fi*0.8976 + fk*0.32 + 0.15*sin(fk*0.8 + fi);
-        cur = vec3(cos(aa), 0.0, sin(aa))*(spireR(min(y, FLOOR_Y + 2.6)) + 0.5) + vec3(0.0, y, 0.0);
+        cur = vec3(cos(aa), 0.0, sin(aa))*(spireR(max(y, FLOOR_Y + 2.6)) + 0.5) + vec3(0.0, y, 0.0);
       } else {
         float e = fk - 12.0;
         float aa = fi*0.8976 + 12.0*0.32 + 0.15*sin(12.0*0.8 + fi) + 0.18*e + 0.12*sin(e*1.3 + fi);
@@ -6119,15 +6119,19 @@ void chLoop(vec3 p, vec3 a, vec3 c, float sag, inout vec2 res) {
   vec2 fq = sdBezier(p, a, m, c);
   chKeep(fq.x - 0.05, 105.0, res);
   float slot = floor(fq.y*6.0 + 0.5)/6.0;
-  if (slot > 0.05 && slot < 0.95) chKeep(length(p - chQuad(a, m, c, slot) - vec3(0.0, -0.07, 0.0)) - 0.12, 104.0, res);
+  if (slot > 0.05 && slot < 0.95) chKeep(length(p - chQuad(a, m, c, slot) - vec3(0.0, -0.07, 0.0)) - 0.14, 104.0, res);
 }
 
-// One root down the outer wall: cell c's angle, its own winding, braided on odd cells.
+// One root down the outer wall (owner, round 2): roots come out of the rock and dive back in, irregularly spaced, of
+// varied thickness. Positive offset is inside the rock, negative stands out into the hole. Braided on odd cells.
 vec2 chRootAt(float tc, float y, float c, float strand) {
   float d = -y;
   float braid = mod(c, 2.0);
-  float t = tc + (braid < 0.5 ? 0.018*sin(d*0.55 + c*1.7) + 0.006*sin(d*1.3 + c) : 0.011*sin(d*0.45 + c) + strand*0.005*cos(d*2.2 + c));
-  float off = braid < 0.5 ? 0.2 + 0.12*sin(d*0.9 + c*2.3) : 0.28 + strand*0.18*sin(d*2.2 + c);
+  float jitter = (hash1(c*1.31) - 0.5)*0.07;
+  float wob = 0.6 + 0.8*hash1(c*2.9);
+  float t = tc + jitter + (braid < 0.5 ? 0.02*sin(d*0.5*wob + c*1.7) + 0.007*sin(d*1.4 + c) : 0.012*sin(d*0.45*wob + c) + strand*0.005*cos(d*2.2 + c));
+  float dive = 0.05 + 0.32*sin(d*0.55*wob + c*2.3) + 0.12*sin(d*1.7 + c);
+  float off = braid < 0.5 ? dive - 0.12 : dive - 0.05 + strand*0.15*sin(d*2.2 + c);
   return vec2(t, off);
 }
 const float CH_CELLS = 56.0;
@@ -6136,28 +6140,35 @@ void chOuterWall(vec3 p, float t, inout vec2 res) {
   for (int k = -1; k <= 1; k++) {
     float c = cell + float(k);
     float tc = c/CH_CELLS*6.2831853;
-    float len = 14.0 + 8.0*hash1(c*3.3);
     float braid = mod(c, 2.0);
-    // Roots.
+    bool hasRoot = hash1(c*8.8) > 0.18;
+    // Some roots burst out of the rock partway down rather than at the rim.
+    float y0 = hash1(c*3.9) < 0.35 ? -2.0 - 9.0*hash1(c*4.1) : -0.4;
+    float len = 8.0 + 13.0*hash1(c*3.3);
+    float r0 = (braid > 0.5 ? 0.22 : 0.3) + 0.22*hash1(c*6.1);
     for (int sIdx = 0; sIdx < 2; sIdx++) {
-      if (sIdx == 1 && braid < 0.5) break;
+      if (!hasRoot || (sIdx == 1 && braid < 0.5)) break;
       float strand = sIdx == 0 ? 1.0 : -1.0;
-      vec2 a0 = chRootAt(tc, 0.0, c, strand);
-      vec3 prev = chWallPoint(a0.x, -0.35, -0.15);
-      float r0 = braid > 0.5 ? 0.3 : 0.42;
-      for (int s = 1; s <= 11; s++) {
-        float y = -len*float(s)/11.0;
-        if (prev.y < p.y - 3.0 || prev.y > p.y + len/11.0 + 3.0) {
-          vec2 ap = chRootAt(tc, y, c, strand);
-          prev = chWallPoint(ap.x, y, ap.y);
-          continue;
-        }
+      vec2 a0 = chRootAt(tc, y0, c, strand);
+      vec3 prev = chWallPoint(a0.x, y0, 0.35);
+      for (int s = 1; s <= 12; s++) {
+        float fs = float(s);
+        float y = y0 - len*fs/12.0;
         vec2 ap = chRootAt(tc, y, c, strand);
-        vec3 cur = chWallPoint(ap.x, y, ap.y);
-        chKeep(chSeg(p, prev, cur, r0*(1.0 - 0.05*float(s - 1)), r0*(1.0 - 0.05*float(s))), 102.0, res);
-        if (sIdx == 0 && mod(float(s), 3.0) < 0.5 && s < 11) {
-          vec2 bp = chRootAt(tc + 6.2831853/CH_CELLS, y - 0.6, c + 1.0, 1.0);
-          chLoop(p, cur, chWallPoint(bp.x, y - 0.6, bp.y + 0.1), 0.9, res);
+        // The tip sinks back into the rock.
+        vec3 cur = chWallPoint(ap.x, y, s == 12 ? 0.45 : ap.y);
+        if (prev.y < p.y - 3.0 || cur.y > p.y + 3.0) { prev = cur; continue; }
+        float b1 = 1.0 + 0.3*sin(fs*1.7 + c*3.0), b2 = 1.0 + 0.3*sin((fs + 1.0)*1.7 + c*3.0);
+        chKeep(chSeg(p, prev, cur, r0*b1*(1.0 - 0.045*(fs - 1.0)), r0*b2*(1.0 - 0.045*fs)), 102.0, res);
+        // Glowing bead vines: loops across to the next root, and strands hanging free.
+        if (sIdx == 0 && s < 12) {
+          if (mod(fs, 2.0) < 0.5) {
+            vec2 bp = chRootAt(tc + 6.2831853/CH_CELLS, y - 0.5, c + 1.0, 1.0);
+            chLoop(p, cur, chWallPoint(bp.x, y - 0.5, min(bp.y, 0.0) - 0.1), 0.8 + 0.5*hash1(c + fs), res);
+          } else if (hash1(c*2.3 + fs) > 0.45) {
+            vec2 od = chDir(ap.x);
+            chLoop(p, cur, cur + vec3(-od.x*0.6, -2.2 - 1.6*hash1(c + fs*3.0), -od.y*0.6), 0.25, res);
+          }
         }
         prev = cur;
       }
@@ -6212,8 +6223,10 @@ void chSpire(vec3 p, inout vec2 res) {
       vec3 cur;
       if (k <= 24) {
         float y = -0.5 - fk*1.0;
-        float aa = fi*0.8976 + fk*0.3 + 0.15*sin(fk*0.8 + fi);
-        cur = vec3(cos(aa), 0.0, sin(aa))*(chSpireR(min(y, CH_FLOOR + 2.6)) + 0.5) + vec3(0.0, y, 0.0);
+        float aa = fi*0.8976 + fk*(0.24 + 0.1*hash1(fi*2.0)) + 0.15*sin(fk*0.8 + fi);
+        // In and out of the rock as it spirals down.
+        float out_ = 0.6 + 0.35*sin(fk*0.7 + fi*2.1) + 0.1*sin(fk*1.9 + fi);
+        cur = vec3(cos(aa), 0.0, sin(aa))*(chSpireR(max(y, CH_FLOOR + 2.6)) + out_) + vec3(0.0, y, 0.0);
       } else {
         float e = fk - 24.0;
         float aa = fi*0.8976 + 24.0*0.3 + 0.15*sin(24.0*0.8 + fi) + 0.16*e;
@@ -6221,15 +6234,27 @@ void chSpire(vec3 p, inout vec2 res) {
         cur = vec3(cos(aa)*rad, 0.0, sin(aa)*rad);
         cur.y = chFloorH(cur.xz) + 0.1;
       }
-      if (k > 0 && abs(p.y - cur.y) < 3.0) chKeep(chSeg(p, prev, cur, 0.55 - 0.01*fk, 0.55 - 0.01*(fk + 1.0)), 102.0, res);
+      float rs = (0.35 + 0.22*hash1(fi*5.0))*(1.0 + 0.25*sin(fk*1.3 + fi));
+      if (k > 0 && abs(p.y - cur.y) < 3.0) {
+        chKeep(chSeg(p, prev, cur, rs*(1.0 - 0.008*fk), rs*(1.0 - 0.008*(fk + 1.0))), 102.0, res);
+        // Bead vines looped round to the next spiral root, and some hanging free.
+        if (k <= 22 && mod(fk + fi, 3.0) < 0.5) {
+          float a2 = (fi + 1.0)*0.8976 + (fk + 1.0)*0.3;
+          vec3 nxt = vec3(cos(a2), 0.0, sin(a2))*(chSpireR(cur.y - 1.0) + 0.3) + vec3(0.0, cur.y - 1.0, 0.0);
+          chLoop(p, cur, nxt, 0.7, res);
+        } else if (k <= 22 && mod(fk + fi, 5.0) < 0.5) {
+          chLoop(p, cur, cur + normalize(vec3(cur.x, 0.0, cur.z))*0.5 + vec3(0.0, -2.4, 0.0), 0.25, res);
+        }
+      }
       prev = cur;
     }
   }
+  // Smaller shelves, spread evenly round and down the spire (owner: too clustered).
   for (int i = 0; i < 26; i++) {
     float fi = float(i);
-    float aa = fi*2.4 + 0.6*hash1(fi*9.0), y = -1.5 - 20.0*hash1(fi*4.7);
+    float aa = fi*2.39996 + 0.3*hash1(fi*9.0), y = -1.5 - (fi + 0.5)/26.0*20.0 + 0.5*(hash1(fi*4.7) - 0.5);
     vec3 o = vec3(cos(aa), 0.0, sin(aa));
-    chShelf(p, o*(chSpireR(y) + 0.2) + vec3(0.0, y, 0.0), o, 0.75 + 0.25*hash1(fi), res);
+    chShelf(p, o*(chSpireR(y) + 0.2) + vec3(0.0, y, 0.0), o, 0.42 + 0.18*hash1(fi), res);
     float ac = aa + 1.2, yc = -2.5 - mod(fi*3.7, 19.0);
     vec3 oc = vec3(cos(ac), 0.0, sin(ac));
     if (mod(fi, 2.0) < 0.5) chCrystal(p, oc*(chSpireR(yc) - 0.1) + vec3(0.0, yc, 0.0), normalize(oc + vec3(0.0, 0.35, 0.0)), 1.0 + 0.4*hash1(fi*2.0), fi*1.7, res);
@@ -6271,6 +6296,22 @@ vec2 canopyHole(vec3 p) {
     if (abs(r - wallR) < 3.2) chOuterWall(p, t, res);
     if (r < chSpireR(p.y) + 3.0 || (p.y < CH_FLOOR + 3.0 && r < 14.0)) chSpire(p, res);
     if (p.y < CH_FLOOR + 6.0 && r < wallR) chFloorLife(p, res);
+  }
+  // Normal-sized giant mushrooms on the velvet round the rim (owner), clear of the bridge landing at t = 0.
+  if (p.y > -0.5 && p.y < 9.0) {
+    for (int i = 0; i < 16; i++) {
+      float fi = float(i);
+      float tt = (fi + 0.5)/16.0*6.2831853 + 0.25*(hash1(fi*3.3) - 0.5);
+      if (abs(mod(tt + 3.14159, 6.2831853) - 3.14159) < 0.4) continue;
+      vec2 bxz = chDir(tt)*(chHoleR(tt) + 3.0 + 6.0*hash1(fi*5.7));
+      float hgt = 3.4 + 3.8*hash1(fi*7.1);
+      float capR = hgt*0.42;
+      if (length(p.xz - bxz) > capR*1.3 + 0.6) continue;
+      vec3 base = vec3(bxz.x, 0.0, bxz.y);
+      vec3 tip = base + vec3(0.25*sin(fi), hgt*0.9, 0.25*cos(fi));
+      chKeep(chSeg(p, base - vec3(0.0, 0.3, 0.0), tip, 0.12*hgt + 0.25, 0.06*hgt + 0.12)*0.9, 103.0, res);
+      chCap(p, tip, capR, mod(fi, 4.0), res);
+    }
   }
   // The giant mushroom canopy rising from the floor.
   if (p.y < CH_FLOOR + 19.0 && r < 21.0) {
@@ -6330,14 +6371,17 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   }
   if (id < 102.5) {
     float grain = smoothstep(0.35, 0.65, noise3(vec3(p.x*5.0, p.y*1.2, p.z*5.0)));
-    return mix(vec3(0.05, 0.022, 0.04), vec3(0.15, 0.07, 0.1), grain*0.5 + 0.3*g)*(0.6 + 0.4*deep);
+    // Lighter than the rock so the roots read as they twist in and out of it.
+    vec3 c = mix(vec3(0.13, 0.06, 0.1), vec3(0.32, 0.16, 0.22), grain*0.5 + 0.3*g);
+    emit = c*0.08;
+    return c*(0.7 + 0.3*deep);
   }
   if (id < 103.5) {
     vec3 c = mix(vec3(0.3, 0.28, 0.34), vec3(0.48, 0.46, 0.52), 0.4 + 0.4*g);
     emit = c*0.05;
     return c*(0.55 + 0.45*deep);
   }
-  if (id < 104.5) { vec3 c = vec3(1.0, 0.4, 0.85); emit = c*1.1; return c; }
+  if (id < 104.5) { vec3 c = vec3(1.0, 0.4, 0.85); emit = c*1.6; return c; }
   if (id < 105.5) return mix(vec3(0.03, 0.06, 0.07), vec3(0.06, 0.1, 0.12), 0.5 + 0.4*g);
   if (id < 106.5) {
     vec3 c = mix(vec3(0.08, 0.04, 0.17), vec3(0.2, 0.12, 0.34), 0.35 + 0.35*g);
