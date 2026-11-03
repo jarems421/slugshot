@@ -217,10 +217,14 @@ task.spawn(function()
 	for _, flow in game:GetService("CollectionService"):GetTagged("HubLavaFlow") do
 		assert(flow:IsA("Beam"), "lava flow is not a scrolling ribbon")
 		assert(
-			math.abs(flow.TextureSpeed - 0.28) < 0.001,
+			math.abs(flow.TextureSpeed - 0.4) < 0.001,
 			"lava flow speed differs from the slow-flow brief"
 		)
 		assert(flow.Attachment0 and flow.Attachment1, "lava flow has no endpoints")
+		assert(
+			not flow.FaceCamera and flow.TextureMode == Enum.TextureMode.Wrap,
+			"lava does not follow the waterfall ribbon method"
+		)
 		assert(
 			flow.Attachment0.WorldPosition.Y > flow.Attachment1.WorldPosition.Y,
 			"lava flows uphill"
@@ -228,7 +232,43 @@ task.spawn(function()
 		flowCount += 1
 	end
 	assert(flowCount == 20, "missing lava flow ribbons")
-	print(`HUBCHECK lava flow ribbons={flowCount} speed=0.28; storm bolts=0 diffuse bloom retained`)
+	print(
+		`HUBCHECK lava flow ribbons={flowCount} speed=0.4 surface-aligned; storm bolts=0 diffuse bloom retained`
+	)
+	-- Observe rendered cloud illumination before manually emitting review blooms.
+	local cloud =
+		game:GetService("CollectionService"):GetTagged("HubStormCloud")[1] :: SurfaceAppearance
+	assert(cloud and cloud:IsA("SurfaceAppearance"), "storm cloud material missing")
+	local starts: { number } = {}
+	local durations: { number } = {}
+	local activeAt: number? = nil
+	local armed = cloud.EmissiveStrength < 0.71
+	local observedAt = os.clock()
+	while os.clock() - observedAt < 22 do
+		game:GetService("RunService").RenderStepped:Wait()
+		local now = os.clock()
+		if not armed then
+			armed = cloud.EmissiveStrength < 0.71
+		elseif cloud.EmissiveStrength > 0.74 and not activeAt then
+			activeAt = now
+			table.insert(starts, now)
+		elseif cloud.EmissiveStrength < 0.71 and activeAt then
+			table.insert(durations, now - activeAt)
+			activeAt = nil
+		end
+	end
+	assert(#starts >= 2 and #starts <= 5 and #durations >= 1, "unexpected storm flash frequency")
+	for index = 2, #starts do
+		assert(starts[index] - starts[index - 1] >= 4.8, "storm flashes too frequent")
+	end
+	for _, duration in durations do
+		assert(duration > 1 and duration < 1.8, "storm fade is not slow and smooth")
+	end
+	print(
+		"HUBCHECK storm cadence "
+			.. game:GetService("HttpService")
+				:JSONEncode({ flashes = #starts, durations = durations })
+	)
 	for index, radius in { 30, 72 } do
 		local base = holder:GetAttribute("VeilY") :: number
 		holder.Position = Vector3.new(radius, base - 25 + 90 * (1 - radius / 96) ^ 1.7 - 52, 0)

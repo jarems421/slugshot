@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified locally; owner motion verdict pending",
+  "ownerCorrection": "Storm flashes too frequent/quick; lava must visibly use a slowed waterfall flow, rather than almost invisible glints. Refresh the actual on-screen place.",
+  "storm": {
+    "previousIntervalSeconds": [
+      1.2,
+      4.4
+    ],
+    "intervalSeconds": [
+      5,
+      9
+    ],
+    "cloudAttackSeconds": 0.2,
+    "cloudReleaseSeconds": 1.2,
+    "bloomLifetimeSeconds": [
+      1.2,
+      1.6
+    ],
+    "bloomAttackFraction": 0.15,
+    "boltsStillRemoved": true,
+    "nativeCadence": {
+      "durations": [
+        1.2993348999880254,
+        1.3167834999621846,
+        1.3164940999704413
+      ],
+      "flashes": 3
+    }
+  },
+  "lava": {
+    "previousMethod": "Sparse lavaflow highlight texture",
+    "method": "Reuse mountain waterfall streak texture with warm orange tint, surface-aligned attachments, Wrap mapping and visible alpha-colour bands.",
+    "textureSpeed": 0.4,
+    "waterfallTextureSpeeds": [
+      1.5,
+      2.3
+    ],
+    "lightEmission": 0.1,
+    "ribbons": 20,
+    "noNewAssetUpload": true
+  },
+  "preview": {
+    "place": "build/SlugshotGroveReview.rbxlx",
+    "freshness": "Compiled HubArt/HubMotion sources now checked against current authored files alongside private model refs; manifest stores hashes only.",
+    "savedCheckpoint": "build/lobby-fx-review/viscous/Review.saved.rbxlx"
+  },
+  "verification": [
+    "PASS: native downhill/surface-aligned lava ribbon checks, no bolt emitter, live cloud cadence and fade-duration observation.",
+    "PASS: formatting, Selene (zero warnings), strict Luau analysis and private normal/review builds."
+  ],
+  "review": "build/lobby-fx-review/viscous-final",
+  "limits": [
+    "Local desktop Studio only; final look/viscosity remains an owner judgment.",
+    "No mesh/export/experience publication."
+  ]
+}

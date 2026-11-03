@@ -28,12 +28,18 @@ def main():
     subprocess.run(["rojo","build",str(path),"--output",str(place)],cwd=ROOT,check=True)
     doc=ET.parse(place)
     hashes={}
-    for name in ["FloppyAsset","InfernoAsset"]:
-        expected=(ROOT/"private-assets"/("floppy" if name=="FloppyAsset" else "inferno")/(name+".luau")).read_text(encoding="utf-8")
+    expected_sources=[
+        ("FloppyAsset",ROOT/"private-assets/floppy/FloppyAsset.luau"),
+        ("InfernoAsset",ROOT/"private-assets/inferno/InfernoAsset.luau"),
+        ("HubArt",ROOT/"experiments/lobby/hub/server/HubArt.server.luau"),
+        ("HubMotion",ROOT/"experiments/lobby/hub/client/HubMotion.client.luau"),
+    ]
+    for name,source_path in expected_sources:
+        expected=source_path.read_text(encoding="utf-8")
         sources=[item.findtext('Properties/*[@name="Source"]') for item in doc.iter("Item") if item.findtext('Properties/string[@name="Name"]')==name]
         assert sources and all(s and s.replace("\r\n","\n")==expected.replace("\r\n","\n") for s in sources),f"stale {name} in review place"
         hashes[name]=hashlib.sha256(expected.encode()).hexdigest()
-    (out/"review-manifest.json").write_text(json.dumps({"assetConfigHashes":hashes,"compiledReferencesCurrent":True,"place":place.name},indent=2),encoding="utf-8")
-    print("PASS: review embeds current private Floppy and Inferno references")
+    (out/"review-manifest.json").write_text(json.dumps({"assetConfigHashes":{k:v for k,v in hashes.items() if k.endswith("Asset")},"sourceHashes":hashes,"compiledReferencesCurrent":True,"place":place.name},indent=2),encoding="utf-8")
+    print("PASS: review embeds current private references and lobby effect sources")
 
 if __name__=="__main__":main()

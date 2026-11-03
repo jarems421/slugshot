@@ -1919,3 +1919,9 @@
 - **Confirmed:** gentle flowing lava, much slower than the mountain waterfall; remove solid lightning bolts, keep diffuse storm flashes.
 - **Implemented/verified locally:** existing lava texture scroll increased to 0.28; twenty downward ribbons verified. Zap creation/emission removed; softer larger bloom and cloud glow retained. Normal/check builds, formatting/lint/types and native tour pass. Corrected an obstructed lava review camera.
 - **Limits:** owner final motion verdict pending; no mesh changes, new upload or experience publication. [Evidence](evidence/2026-11-03-lobby-lava-storm.json).
+
+## 2026-11-03 - Readable viscous lava; less frequent storm flashes
+
+- **Confirmed:** lava should look like the mountain waterfall slowed down, rather than sparse glints; storm flashes need longer gaps and fades.
+- **Implemented/verified locally:** full waterfall streak texture reused in orange, surface-aligned Wrap ribbons at speed 0.4 with lower-emission colour contrast. Cloud flashes every 5-9 seconds with a 0.2-second rise/1.2-second release; bloom lifetime 1.2-1.6 seconds. Native live cadence/flow and static checks pass.
+- **Implemented:** saved/checkpointed old preview, rebuilt the canonical review, added authored effect-source freshness hashes. No upload/publish. [Evidence](evidence/2026-11-03-viscous-lava-and-slow-storm.json); owner motion approval open.

@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified locally, 2026-11-03 - owner lava/storm revision:** full waterfall streak layer slowed to 0.4 and tinted orange; surface-aligned visible bands replace sparse glints. Storm flashes now 5-9 seconds apart with gradual rise/longer fade. Live cloud timing and flow checks pass; canonical review checks current FX sources before opening. [Evidence](evidence/2026-11-03-viscous-lava-and-slow-storm.json); owner feel verdict open.
+
 **Implemented/verified locally, 2026-11-03 - lava/storm motion:** gentle downward lava scroll at 0.28, much slower than the mountain waterfall; solid storm bolt emitter removed, diffuse blooms/cloud flashes retained. Native tour and formatting/lint/types/build checks pass. [Evidence](evidence/2026-11-03-lobby-lava-storm.json); owner motion verdict open.
 
 **Implemented/verified locally, 2026-11-03 - Floppy lobby greetings:** stronger player-height head tracking, reliable near/watched notice, independent reaction slots, a happy smile and small jaw drop, then hopping resumes. Native actual-bone/recovery checks and full creature/combat checks pass. [Evidence](evidence/2026-11-03-floppy-greeting.json); owner feel verdict open.

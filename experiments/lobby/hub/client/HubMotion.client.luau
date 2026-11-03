@@ -227,12 +227,17 @@ end
 -- Lightning: diffuse cloud illumination and a soft bloom, without solid bolt sprites.
 local STORM_GLOW = 0.7
 local STORM_FLASH = 1.5
-local nextFlash = 3
-local flashLeft = 0
-local function flash(t: number, dt: number)
-	if flashLeft > 0 then
-		flashLeft = math.max(flashLeft - dt * 3.5, 0)
-		local strength = STORM_GLOW + STORM_FLASH * flashLeft
+local nextFlash = 6
+local flashAt = -math.huge
+local flashPower = 0
+local lastFlashStrength = -1
+local function flash(t: number)
+	local age = t - flashAt
+	-- Ease into the glow, then let it dissipate over a full second rather than snap off.
+	local phase = math.clamp(if age < 0.2 then age / 0.2 else 1 - (age - 0.2) / 1.2, 0, 1)
+	local strength = STORM_GLOW + STORM_FLASH * flashPower * (0.5 - 0.5 * math.cos(phase * math.pi))
+	if math.abs(strength - lastFlashStrength) > 0.0001 then
+		lastFlashStrength = strength
 		for _, item in CollectionService:GetTagged("HubStormCloud") do
 			if item:IsA("SurfaceAppearance") then
 				item.EmissiveStrength = strength
@@ -242,8 +247,9 @@ local function flash(t: number, dt: number)
 	if t < nextFlash then
 		return
 	end
-	nextFlash = t + 1.2 + 3.2 * math.random()
-	flashLeft = 0.6 + 0.4 * math.random()
+	nextFlash = t + 5 + 4 * math.random()
+	flashAt = t
+	flashPower = 0.6 + 0.4 * math.random()
 	local art = workspace:FindFirstChild("HubArt")
 	local holder = art and art:FindFirstChild("StormFlash")
 	if not holder or not holder:IsA("BasePart") then
@@ -463,7 +469,7 @@ RunService.RenderStepped:Connect(function(dt: number)
 	if t >= nextMove then
 		nextMove = t + (if low then MOVE_RATE else 0)
 		moveParts(t)
-		flash(t, dt)
+		flash(t)
 		pulseStep(t)
 		if ERUPTIONS then
 			eruptionStep(t)

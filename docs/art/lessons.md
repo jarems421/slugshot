@@ -353,3 +353,7 @@ Cutting between two markers removed code living between them that others needed,
 ## 2026-11-03 - Check movement from an unobstructed view
 
 The first fixed lava-camera view sat inside the portal arch and could not show the volcano. Technical scrolling checks alone were insufficient visual evidence. Move the authored review view beside the arch, then capture the same view at different times. The storm review must not wait for or emit a deleted Zap effect; keep only normal-lifetime diffuse blooms and cloud flashes.
+
+## 2026-11-03 - A moving glint is not a flowing liquid surface
+
+Owner could not see the intended lava motion after a texture-speed increase. The sparse highlight texture plus additive glow was too subtle over the emissive painted lava. Use the waterfall's fuller streak pattern, warm tint, surface-aligned width and wrapping; preserve slow speed and include alpha-colour contrast instead of relying entirely on emitted light. Storm flash timing needs both longer intervals and a gentle attack/release: slowing only the sprite fade leaves abrupt whole-cloud illumination. Native review now observes actual cloud material changes and checks their duration/spacing. Confirm the compiled review embeds current effect source before reopening the same file; save/checkpoint the old session before rebuilding.

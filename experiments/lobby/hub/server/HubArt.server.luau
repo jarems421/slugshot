@@ -937,8 +937,8 @@ local function buildSkyWell()
 	bloom.LightEmission = 1
 	bloom.LightInfluence = 0
 	bloom.Size = NumberSequence.new(80, 100)
-	bloom.Transparency = fade({ { 0, 0.62 }, { 1, 1 } })
-	bloom.Lifetime = NumberRange.new(0.35, 0.55)
+	bloom.Transparency = fade({ { 0, 1 }, { 0.15, 0.62 }, { 0.5, 0.8 }, { 1, 1 } })
+	bloom.Lifetime = NumberRange.new(1.2, 1.6)
 	bloom.Rate = 0
 	bloom.Speed = NumberRange.new(0)
 	bloom.Parent = flash
@@ -1157,13 +1157,28 @@ local function buildVolcano()
 				to,
 				w0,
 				w1,
-				fxTexture("lavaflow"),
-				Color3.new(1, 1, 1),
-				fade({ { 0, 1 }, { 0.3, 0.25 }, { 0.7, 0.25 }, { 1, 1 } }),
-				0.28,
+				fxTexture("streak"),
+				Color3.fromRGB(240, 75, 10),
+				fade({ { 0, 1 }, { 0.2, 0.2 }, { 0.8, 0.2 }, { 1, 1 } }),
+				0.4,
 				1
 			)
-			-- Same scrolling texture method as the mountain falls, at a much slower pace.
+			-- The waterfall's full flowing streak layer, not sparse specular glints.
+			-- Keep its width tangent to the volcano rather than billboarding at the viewer.
+			flow.FaceCamera = false
+			flow.TextureMode = Enum.TextureMode.Wrap
+			flow.TextureLength = (to - from).Magnitude
+			-- An opaque-colour component keeps moving bands readable over emissive lava.
+			flow.LightEmission = 0.1
+			local along = (to - from).Unit
+			for _, node in { flow.Attachment0, flow.Attachment1 } do
+				if node then
+					local point = node.WorldPosition
+					local across = (point - volcanoAxis(point)).Unit:Cross(along).Unit
+					node.CFrame =
+						CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
+				end
+			end
 			CollectionService:AddTag(flow, "HubLavaFlow")
 			-- A soft halo, standing off the flow. HubMotion brightens these in a slow wave running downhill.
 			local halo = beam(
