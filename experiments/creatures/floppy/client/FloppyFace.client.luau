@@ -147,7 +147,17 @@ local function setup(model: Model)
 end
 
 local function consider(instance: Instance)
-	if instance:IsA("Model") and (instance.Name == "Floppy" or instance.Name == "FloppyFlight") then
+	if
+		instance:IsA("Model")
+		and (
+			instance.Name == "Floppy"
+			or instance.Name == "FloppyFlight"
+			or (
+				instance:GetAttribute("GroveResident") == true
+				and instance:GetAttribute("Slug") == "Floppy"
+			)
+		)
+	then
 		task.defer(setup, instance)
 	end
 end
@@ -197,7 +207,8 @@ local function step(face: Face, dt: number, camera: Vector3)
 	local squint = face.model:GetAttribute("FaceSquint")
 	face.squint += ((if typeof(squint) == "number" then squint else 0) - face.squint) * blend
 	local icon = CollectionService:HasTag(face.model, "SlugIcon")
-	if not icon and (face.head.WorldPosition - camera).Magnitude > FAR then
+	local far = if face.model:GetAttribute("GroveResident") == true then 24 else FAR
+	if not icon and (face.head.WorldPosition - camera).Magnitude > far then
 		return
 	end
 	-- Eyes dart to a new spot, then rest there.

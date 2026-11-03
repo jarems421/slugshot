@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified in one-client desktop Studio",
+  "focusedRun": {
+    "meanDt": 0.017696466862289255,
+    "maxDt": 0.7643917798995972,
+    "residents": {
+      "Inferno": 5,
+      "Floppy": 9
+    },
+    "supportSamples": 521,
+    "renderFrames": 1471,
+    "press": [
+      -0.14988763645373654,
+      0.24
+    ],
+    "changedFrames": 492,
+    "lookSeen": true,
+    "animationFrames": 1471
+  },
+  "offline": [
+    "verify_combat.py",
+    "verify_slugs.py",
+    "explicit lobby/face strict analysis",
+    "selene lobby and native fixture",
+    "StyLua touched Luau files"
+  ],
+  "finalResidentCount": 14,
+  "authoredSiteChange": "Remove narrow pond-rock site 6; final count matches safe residents in the native run.",
+  "groundPolicy": {
+    "contacts": 9,
+    "maxPlaneResidualStuds": 0.12,
+    "maxHabitatRadiusStuds": 68,
+    "maxHomeHopRadiusStuds": 7
+  },
+  "worldVisualHeightStuds": 2,
+  "limits": [
+    "No steady-FPS guarantee: focused run includes a 0.764-second hitch; background runs measured about 15 FPS.",
+    "Roblox texture-service 429 warnings occurred during asset loading.",
+    "Ground checks use engine collision surfaces; owner art/feel, observer and mobile review remain open."
+  ],
+  "ownership": "Original project slugs, existing facial rigs and materials; no new external assets or publication."
+}

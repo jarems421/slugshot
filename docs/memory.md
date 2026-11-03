@@ -1855,3 +1855,13 @@
 ## 2026-11-03 - Training Studio handoff validation
 
 - **Implemented/verified:** final native review passes after mesh/texture preload and a neutral 13:30 lighting key; the inherited cavern preset was midnight. Roof shadows are disabled for the stable art review, excessive island point fills removed, restrained wall fills retained. Six native views and server/client motion checks pass. An earlier generated review was saved/closed before opening the final normal review; unrelated Studio work stays open. Final owner lighting/art approval remains unresolved.
+
+
+## 2026-11-03 ? Springing exhibition residents
+
+- **Confirmed:** user authorized smoother spring hops, exhibition-only roaming, full rock support, frequent small-group player reactions and two-stud size outside the gun; reducing count is permitted. The reported bad-request error appeared in this chat, not the hosted preview.
+- **Implemented:** render-frame movement with infrequent decisions, supported landing footprints and slope alignment, bounded homes, reused Floppy/Inferno faces and shared outside-gun scale. Existing loaded scale is independent.
+- **Implemented/verified:** native cadence/grounding/notice suite and offline combat/creature checks pass. One unsafe site was omitted in the first passing native run. Texture service throttling and multiple active Studios limit performance conclusions; owner feel and mobile review remain unresolved.
+- **Implemented/verified:** shooting fix `69629a4` reached main; GitHub foundation CI completed successfully. The owner-private training preview and editable downloads remain available.
+
+- **Implemented/verified ? final grove review:** focused native run: 1,471 display frames and animation updates, mean 17.70 ms/frame, 521 rest contacts and player reactions pass. Final authored list omits site 6, leaving 14 (nine Floppies, five Infernos). A 764 ms hitch and texture-service throttling remain recorded; no steady frame-rate claim.

@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented, 2026-11-03 (`fix/grove-spring-motion`):** render-frame spring hops, whole-footprint ground support, bounded exhibition homes, nearby Floppy/Inferno reactions and a shared two-stud outside-gun visual size. Native grounding/motion/notice checks pass; focused native run averages about 56.5 FPS with all 1,471 frames animated; 14 safe residents retained. Owner verdict and limits are recorded in [lobby notes](art/lobby-hub.md#springing-exhibition-residents--2026-11-03). Shooting repair and preview handoff were pushed to main as `69629a4`; foundation CI passed.
+
 **Implemented/verified, 2026-11-03 (`fix/slide-rise-shot`):** repaired open-space high lob and coherent target sampling during slide recovery. Baseline reproduces the lob; fixed native 16-case slide recovery suite and offline combat/movement/foundation checks pass. [Evidence and limits](combat.md#open-space-and-slide-rise-shooting-repair--2026-11-03). Owner-private training preview is deployed there with editable asset downloads.
 
 **Confirmed, 2026-11-03:** owner approved the inspect and first-person Floppy motion ("this work is perfect"). Multi-client and devices remain untested.

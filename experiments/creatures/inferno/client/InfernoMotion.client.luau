@@ -3,6 +3,7 @@
 -- cocky and always performing at you. Each moment a move sets a target pose; every channel then springs toward it, so
 -- any move can flow into any other with no snap. Big moves wind up first, overshoot, then settle, and the body, head
 -- and antennae lag behind the turn. He never blinks (owner, 2026-11-02). Amounts are in concept units, scaled by size.
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
 local RunService = game:GetService("RunService")
@@ -343,7 +344,15 @@ end
 
 local function consider(instance: Instance)
 	if
-		instance:IsA("Model") and (instance.Name == "Inferno" or instance.Name == "InfernoDragon")
+		instance:IsA("Model")
+		and (
+			instance.Name == "Inferno"
+			or instance.Name == "InfernoDragon"
+			or (
+				instance:GetAttribute("GroveResident") == true
+				and instance:GetAttribute("Slug") == "Inferno"
+			)
+		)
 	then
 		task.delay(0.5, setup, instance)
 	end
@@ -770,6 +779,36 @@ RunService.RenderStepped:Connect(function(dt: number)
 			continue
 		end
 		rig.clock += dt
+		if model:GetAttribute("GroveResident") == true then
+			if
+				model:GetAttribute("GroveReady") ~= true
+				or (
+						model:GetPivot().Position
+						- (workspace.CurrentCamera :: Camera).CFrame.Position
+					).Magnitude
+					> 24
+			then
+				continue
+			end
+			local pivot = model:GetPivot()
+			rig.sideways, rig.up, rig.front = pivot.RightVector, pivot.UpVector, pivot.LookVector
+			local character = Players.LocalPlayer.Character
+			local head = character and character:FindFirstChild("Head")
+			local target = if head and head:IsA("BasePart")
+				then head.Position
+				else (workspace.CurrentCamera :: Camera).CFrame.Position
+			local look = (model:GetAttribute("GroveLook") or 0) :: number
+			local press = (model:GetAttribute("GrovePress") or 0) :: number
+			stepFace(rig, dt, target, look)
+			local heads: { Item } = rig.bones.head or {}
+			for _, item in heads do
+				item.bone.Transform = CFrame.new(item.y * -press * 0.55 * rig.scale)
+					* CFrame.fromAxisAngle(item.y, rig.lookYaw)
+					* CFrame.fromAxisAngle(item.x, -rig.lookPitch)
+			end
+			antennae(rig, dt, press * 0.6)
+			continue
+		end
 		if rig.dragon then
 			stepDragon(rig, dt)
 		else

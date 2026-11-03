@@ -20,6 +20,7 @@ export type Slug = {
 	Blurb: string, -- one line for the inventory
 }
 
+Combat.WorldSlugSize = 2 -- owner, 2026-11-03: every slug outside the gun
 Combat.MaxHealth = 100
 Combat.Cooldown = 1.5 -- from the moment of firing, hit or miss
 -- Local creature recovery finishes naturally, independently of ammo readiness.
@@ -66,7 +67,7 @@ Combat.Slugs = {
 		Drag = 0.35,
 		Radius = 0.3,
 		Tumble = 2,
-		Size = 1.3, -- owner, 2026-11-02: permanent Floppy size outside the gun
+		Size = Combat.WorldSlugSize,
 		Transforms = false,
 		ExactFrom = 3,
 		Blurb = "A drowsy, soft little slug.",
@@ -81,7 +82,7 @@ Combat.Slugs = {
 		Drag = 0.05,
 		Radius = 0.3,
 		Tumble = 0,
-		Size = 1,
+		Size = Combat.WorldSlugSize,
 		Transforms = true,
 		ExactFrom = 2,
 		Blurb = "A cocky little menace. Fast, hot and hits hard.",

@@ -886,7 +886,8 @@ local function buildSkyWell()
 	local storm = placeUnderCeiling("hub-storm")
 	if storm then
 		-- One swirl: its body, and a thin veil of cloud turning a little faster over it for depth.
-		for name, rate in { StormBody = 1.8, StormVeil = 2.4 } do
+		local sheets: { [string]: number } = { StormBody = 1.8, StormVeil = 2.4 }
+		for name, rate in sheets do
 			setMotion(storm, name, ORBIT * rate, 0, 0, 0)
 			local sheet = storm:FindFirstChild(name, true)
 			local surface = sheet and sheet:FindFirstChildWhichIsA("SurfaceAppearance")
@@ -1427,16 +1428,15 @@ local GROVE_KEYS = {
 }
 local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
 local GROVE_TINT = Color3.fromRGB(150, 245, 225)
--- Every slug is this tall outside the gun (owner, 2026-11-02).
-local SLUG_STUDS = 1.3
+-- Shared outside-gun size (owner, 2026-11-03).
+local SLUG_STUDS = (require :: any)(ReplicatedStorage:WaitForChild("Combat")).WorldSlugSize
 -- The source Floppy's length between root and antenna, as in the combat flight model.
 local SLUG_SOURCE = 2.72
 -- Inferno's base form is exported at Floppy's height, so 0.34 x that length is his reference length (CombatServer).
 local INFERNO_SOURCE = 0.34 * SLUG_SOURCE
-local GLANCE_EVERY = 4 -- about one slug in this many looks at a passing player
--- 15 of the concept's 30 sites, spread out round the pond, with the close-up group (10-12) kept: 10 Floppies and 5 Infernos
--- (owner, 2026-11-03). The site list keeps all 30 so the concept page still matches it.
-local GROVE_SITES = { 1, 3, 6, 10, 11, 12, 13, 15, 16, 18, 19, 23, 25, 27, 30 }
+-- 14 supported habitats: nine Floppies and five Infernos. Site 6 is a pond rock
+-- too narrow to support a two-stud resident; retain all source sites for the concept.
+local GROVE_SITES = { 1, 3, 10, 11, 12, 13, 15, 16, 18, 19, 23, 25, 27, 30 }
 local GROVE_INFERNOS = { [1] = true, [11] = true, [13] = true, [18] = true, [19] = true }
 
 local function groveAt(x: number, y: number, z: number): Vector3
@@ -1774,11 +1774,17 @@ local function groveSlugModels()
 	local group = Instance.new("Folder")
 	group.Name = "GroveSlugs"
 	group.Parent = art
-	for order, index in GROVE_SITES do
+	for _, index in GROVE_SITES do
 		local site = groveSlugs[index]
 		local slug = (if GROVE_INFERNOS[index] then inferno else template):Clone()
 		slug.Name = `GroveSlug{index}`
-		slug:SetAttribute("GroveGlances", order % GLANCE_EVERY == 1)
+		slug:SetAttribute(
+			"Slug",
+			if GROVE_INFERNOS[index] and inferno ~= template then "Inferno" else "Floppy"
+		)
+		slug:SetAttribute("GroveResident", true)
+		slug:SetAttribute("WorldSlugSize", SLUG_STUDS)
+		slug:SetAttribute("GroveOrigin", GROVE.Position)
 		slug:PivotTo(
 			CFrame.new(GROVE * Vector3.new(site.x, site.y, site.z))
 				* CFrame.Angles(0, site.heading, 0)

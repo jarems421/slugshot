@@ -182,3 +182,8 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 - **Prevention:** when a shared client script gains a `WaitForChild`, check each project file that includes it. `verify_slugs.py` does not catch this, because it doesn't run the place.
 - **Assets:** private ids are per worktree and ignored by git, so merging code does not deliver a new model. Sync `private-assets/floppy` separately, with a backup, and check the template names match.
 
+
+
+## 2026-11-03 ? Grove runtime cadence and ground support
+
+**Confirmed problem:** choppy hopping and residents partially perched on rocks. **Cause:** the client discarded accumulated Heartbeat time after a 30 Hz gate; landing queries checked only the pivot. **Implemented:** render-frame poses with separately throttled decisions; compression/hold/flight/landing phases; nine support contacts over a circular footprint and slope alignment. Unsafe homes relocate or omit the resident. Reuse existing facial bones/morphs through a resident-specific path. No Blender meshes, rig weights or exports were changed. **Evidence:** native integration covers cadence, spring excursion, bounded movement, rest contact and notice; subjective owner approval remains open. Avoid redundant whole-model writes while idle and cull unreadable facial work.

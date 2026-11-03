@@ -284,3 +284,8 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 - "vertically" and "horizontal length", said of a flame seen from the side: thickness and length along the tail. Bigger does not automatically mean longer, so ask or change only the named direction.
 - Start from the concept they already approved. Inventing a new flame shape cost several rounds.
 
+
+
+## Exhibition hopping and size (2026-11-03)
+
+**Confirmed:** "spring up" means visible compression, a short tension hold, fast extension into forward flight and a cushioned landing. "Low frame rate" includes a presentation timer skipping rendered frames; keep decision frequency separate from drawing. "Not fully on" requires support under the whole belly, not only the centre. Slugs outside the gun should be about two studs; the chamber has its own loaded scale. Nearby residents may briefly pause, look up and react, without the whole population staring.

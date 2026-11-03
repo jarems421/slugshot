@@ -93,3 +93,21 @@ The basins' pools have no splash rings; the foam where each fall lands stays. Th
 ## Costs at the checkpoint
 
 Desktop, grove in view: about 1.3M triangles, 194 draw calls and 266 MB of textures. Portal side: about 182k triangles and 137 draw calls. Measured in Studio on an RTX 3070; not phone evidence.
+
+
+## Springing exhibition residents ? 2026-11-03
+
+**Confirmed:** owner rejected the low-frame-rate hopping and partial rock support. Residents should compress, briefly build tension, spring forward, and land softly; roam only around the exhibition's pool, mushroom trees and mountain. Passing players should often attract a few brief reactions: blank/drowsy Floppy, smiling or annoyed Inferno. All slugs outside the gun are about two studs, with the loaded scale unchanged. Reducing the resident count is authorized if needed.
+
+**Implemented:** visible position and skeleton presentation run each render frame, replacing the lossy 30 Hz Heartbeat gate. Destination/attention decisions stay infrequent. The hop has 0.24 s compression, 0.07 s tension hold, 0.58 s flight and 0.24 s landing. Idle models avoid redundant whole-model and body-bone writes; detailed faces only run within 24 studs. Existing Floppy face and Inferno grin-to-anger morphs are reused, with a resident-only path that does not start Inferno's display flips/spins.
+
+A nine-contact circular support test checks the whole belly footprint against a gentle plane, rejecting water, steep ground, ledges and rounded tips. Residents are snapped to safe nearby ground, aligned to its normal, and remain inside a 68-stud exhibition radius plus their footprint. Hops stay within seven studs of the supported home. Unsafe sites are omitted if relocation fails. Reactions are limited to three at once, with individual cooldowns; an annoyed Inferno prefers a supported hop away afterward.
+
+`Combat.WorldSlugSize = 2` supplies Floppy and Inferno flight/recovery size and grove scale. Loaded/viewmodel scale and projectile balance values are unchanged.
+
+**Implemented/verified:** native one-client integration checks render cadence, compression/extension, bounded motion, rest contact and player notice; offline combat/movement/foundation and creature checks pass. Reproduce with `python tools/lobby/build_grove_check.py`, then `powershell -NoProfile -File tools/lobby/grove_check.ps1 -OutDir build/grove/review -Timeout 240`.
+
+**Unresolved:** owner motion/face approval, mobile performance and multiplayer observers. Studio texture-service 429 warnings and concurrent Studio load affected this desktop session; frame measurements are evidence for that run, not a claim of steady 60 FPS. The native check is kept out of normal builds.
+
+
+**Implemented/verified ? final native review:** 14 supported residents (nine Floppies, five Infernos); final authored sites omit the narrow pond rock at site 6. The focused 26-second run measured 1,471 rendered frames and 1,471 animation updates, mean 17.70 ms/frame (about 56.5 FPS), with a 764 ms maximum hitch. It recorded 521 rest-contact samples, squash/stretch range -0.150 to +0.240 and passing-player reactions; bounded motion passed. Earlier background runs were about 15 FPS. [Sanitized evidence](../evidence/2026-11-03-grove-spring-motion.json). This verifies display-frame cadence and native behavior, not an uninterrupted 60 FPS or owner approval.

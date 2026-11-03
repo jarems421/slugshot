@@ -39,6 +39,9 @@
       },
       "GooArt": {
         "$path": "private-assets/ui/GooArt.luau"
+      },
+      "InfernoAsset": {
+        "$path": "private-assets/inferno/InfernoAsset.luau"
       }
     },
     "ServerScriptService": {
@@ -131,6 +134,12 @@
         },
         "LobbyFirstPerson": {
           "$path": "experiments/lobby/hub/client/LobbyFirstPerson.client.luau"
+        },
+        "GroveFloppyFace": {
+          "$path": "experiments/creatures/floppy/client/FloppyFace.client.luau"
+        },
+        "GroveInfernoMotion": {
+          "$path": "experiments/creatures/inferno/client/InfernoMotion.client.luau"
         }
       }
     },

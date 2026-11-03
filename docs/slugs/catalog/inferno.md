@@ -577,3 +577,6 @@ The Kindle mark-and-ignite idea in the report is dropped from the recommendation
 ## Unresolved
 
 The small step in the antenna tips seen from the side; the shot numbers and ability; shooting in Roblox; the Highlight outline's draw limit in a crowded scene; and a side-by-side and name/IP check before any publication. "Inferno" sounds like the franchise's Infurnus.
+
+
+**Confirmed/implemented, 2026-11-03 ? world scale and exhibition:** owner set the outside-gun visual size to approximately two studs for all species; shared combat and grove scales now use that value. Loaded scale stays independent. Exhibition residents spring through compression/hold/flight/landing, remain on supported ground in their habitat and briefly react to nearby players through existing facial controls. [Runtime record and limits](../../art/lobby-hub.md#springing-exhibition-residents--2026-11-03).

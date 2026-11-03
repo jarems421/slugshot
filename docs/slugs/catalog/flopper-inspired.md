@@ -152,3 +152,6 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 ## Considering: first sound direction (2026-11-02)
 
 The whole-game [sound audit](../../audio/sound-plan.md) proposes very soft damp body contact, brief earth friction during the existing recovery/burrow, and sparse sleepy airy burbles for Floppy. These are unapproved audio ideas, not a change to the final visual design or motion. Blinks, glowing bulbs and UI idle performances should generally stay silent. Only five whole-game sketches were authored for review; none is a Floppy vocal or a finished burrow sound. Await owner approval before producing the creature sound set.
+
+
+**Confirmed/implemented, 2026-11-03 ? world scale and exhibition:** owner set the outside-gun visual size to approximately two studs for all species; shared combat and grove scales now use that value. Loaded scale stays independent. Exhibition residents spring through compression/hold/flight/landing, remain on supported ground in their habitat and briefly react to nearby players through existing facial controls. [Runtime record and limits](../../art/lobby-hub.md#springing-exhibition-residents--2026-11-03).
