@@ -6360,23 +6360,45 @@ void chPathway(vec3 p, inout vec2 res) {
     chKeep(chSlab(q, st.w, th, float(i)*2.7)*0.85, q.y > -0.06 ? 114.0 : 115.0, res);
   }
 }
-// Rubble floating round and under the path (owner): small slabs of the same rock, bobbing slowly.
+// Rubble like the spawn island's (owner): the same angular chunks as debrisStone, a few bigger among many small, in tight
+// clusters round and under each stone and a few between them, drifting and bobbing slowly. Painted as the stones' rock.
+void chDebris(vec3 q, vec3 c, float sz, float fi, inout vec2 res) {
+  vec3 l = q - c;
+  if (length(l) - sz*1.5 > res.x) return;
+  l.xz = rot(fi*1.3 + 0.04*uT)*l.xz;
+  l.xy = rot(fi*2.1)*l.xy;
+  l.yz = rot(fi*0.7)*l.yz;
+  float d = sdBox(l, sz*vec3(1.0, 0.68, 0.82));
+  d = smax(d, dot(l, normalize(vec3(0.7, 0.8, 0.2))) - sz*0.42, 0.02);
+  d = smax(d, dot(l, normalize(vec3(-0.5, -0.7, 0.6))) - sz*0.5, 0.02);
+  chKeep(d*0.8, 115.0, res);
+}
 void chRubble(vec3 p, inout vec2 res) {
-  if (p.z > -4.0 || p.z < -16.5 || abs(p.x) > 6.0 || p.y > 2.4 || p.y < -4.5) return;
-  for (int i = 0; i < 16; i++) {
-    float fi = float(i);
-    float u = hash1(fi*3.1);
+  if (p.z > -4.0 || p.z < -16.5 || abs(p.x) > 5.0 || p.y > 2.0 || p.y < -3.5) return;
+  for (int k = 0; k < CH_STONES; k++) {
+    vec4 st = chStone(k);
+    if (length(p.xz - st.xz) > st.w*2.0 + 0.6) continue;
+    for (int i = 0; i < 14; i++) {
+      float fi = float(i) + float(k)*14.0;
+      float a = hash1(fi*3.3 + 301.0)*6.2832;
+      float rad = st.w*(0.2 + 1.5*hash1(fi*5.7 + 302.0));
+      float h = hash1(fi*7.9 + 303.0);
+      // Thickest just under the stone, a few round its edge at its own height.
+      float y = rad < st.w ? -0.55 - 1.6*h*h : -0.4 + 0.9*(h - 0.5);
+      float big = hash1(fi*11.3 + 304.0);
+      float sz = 0.06 + 0.1*hash1(fi + 305.0) + 0.22*big*big*big;
+      vec3 c = vec3(st.x + cos(a)*rad, st.y + y + 0.09*sin(uT*0.3 + fi*1.7), st.z + sin(a)*rad);
+      chDebris(p, c, sz, fi, res);
+    }
+  }
+  // A few between the stones.
+  for (int i = 0; i < 10; i++) {
+    float fi = float(i) + 80.0;
+    float u = (float(i) + 0.5)/10.0;
     vec2 a = vec2(0.0, -chHoleR(0.0)), b = vec2(2.6, -10.0), c = vec2(0.0, -CH_PLAT);
-    vec2 xz = a*(1.0 - u)*(1.0 - u) + b*2.0*u*(1.0 - u) + c*u*u;
-    float side = hash1(fi*5.3) < 0.5 ? -1.0 : 1.0;
-    xz += vec2(side*(1.3 + 1.8*hash1(fi*6.1)), (hash1(fi*7.7) - 0.5)*1.5);
-    float y = mix(-3.2, 1.4, hash1(fi*9.1)) + 0.14*sin(uT*0.7 + fi*2.3);
-    float sz = 0.22 + 0.3*hash1(fi*2.2);
-    vec3 q = p - vec3(xz.x, y, xz.y);
-    if (length(q) > sz*1.8) continue;
-    q.xz = rot(fi*1.9)*q.xz;
-    q.xy = rot(0.25*sin(fi))*q.xy;
-    chKeep(chSlab(q, sz, sz*0.6, fi)*0.85, 115.0, res);
+    vec2 xz = a*(1.0 - u)*(1.0 - u) + b*2.0*u*(1.0 - u) + c*u*u + (vec2(hash1(fi*5.3), hash1(fi*7.7)) - 0.5)*1.6;
+    float y = 0.2 - 1.4*hash1(fi*9.1);
+    chDebris(p, vec3(xz.x, y + 0.09*sin(uT*0.3 + fi*1.7), xz.y), 0.07 + 0.1*hash1(fi + 305.0), fi, res);
   }
 }
 // The clearing from the rope bridge: a lane of flat path stones set into the velvet, kept clear of plants.
