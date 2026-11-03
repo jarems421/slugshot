@@ -1599,3 +1599,35 @@
 - **Confirmed:** owner wants the live P-panel Idle arms values Gun tips down = -20 and Arms up = -0.35 as defaults, plus a noticeably farther base third-person camera.
 - **Implemented/verified offline and in Studio:** Tuning defaults updated; fixed third-person distance is 10 rather than 7 studs. Combat/foundation/movement checks pass; fresh P panel shows both requested values as defaults, and native third-person view is visibly wider. New normal place is `build/SlugshotInspectTuned.rbxlx`; previous inspect preview saved before replacement, creature-design window preserved.
 - **Unresolved:** owner verdict on the chosen 10-stud camera distance. No other live panel values were requested or copied.
+
+## 2026-11-02 - Inspect gun motion rework
+
+- **Confirmed:** owner wants a quick, dramatic thrown backflip, a small animated arm-swing catch, an outward tilt showing the slug, and a quicker plain lower with no flip. Perfect the gun and third-person look first; slug acting comes after.
+- **Implemented/verified:** on `feature/inspect-polish` (uncommitted), separate from Codex's uncommitted `fix/shot-consistency` work. 54-pose review, native loadout regression and movement/combat checks pass; see [revision](slugs/inspect-revision.md#quick-backflip-arm-swing-catch-and-plain-drop-2026-11-02-current).
+- **Unresolved:** owner feel verdict, multi-client/latency and devices.
+- **Confirmed/implemented, later that day:** owner said the upright hold looked too frozen. Added a small moving hold of slow, unrelated wrist turns that keeps the gun in place for the slug; checks pass, owner verdict open.
+
+## 2026-11-02 - Clear canister and spring-driven slug act
+
+- **Confirmed:** gun inspect is "perfect". Owner wants the canister clear, springy hops round, a bum shake that is not a body wiggle, a slow return, smooth stages and a less frozen chamber idle.
+- **Implemented/verified:** on `feature/inspect-polish` (uncommitted). Removed the canister's inverted ink hull; loaded Floppy uses SlugIcon's spring approach; review, native regression and offline checks pass; see [revision](slugs/inspect-revision.md#clear-canister-and-spring-driven-slug-act-2026-11-02-current).
+- **Unresolved:** owner verdict on the act, multi-client/latency and devices.
+
+## 2026-11-02 - Floppy inspect reduced to smile and HUD wiggle
+
+- **Confirmed:** owner rejected the hop and bum-shake act as "horrible". Faster flip, shorter inspect, a little smile, then the wiggle already in the HUD.
+- **Implemented/verified:** on `feature/inspect-polish` (uncommitted). Review, native regression and offline checks pass; see [revision](slugs/inspect-revision.md#smile-then-the-hud-wiggle-2026-11-02-current).
+- **Unresolved:** owner verdict, multi-client/latency and devices.
+
+## 2026-11-03 - Floppy wiggle: base stuck, body fluid
+
+- **Confirmed:** owner: wiggle "too stiff"; slug "stuck to the bottom of the barrel", only the top moving, body "more fluid".
+- **Implemented/verified:** on `feature/inspect-polish` (uncommitted), a spine bend with trailing joints replaces the whole-body lean; base drift 0.0000 studs. Checks pass; see [revision](slugs/inspect-revision.md#base-stuck-body-fluid-2026-11-03-current).
+- **Unresolved:** owner verdict, multi-client/latency and devices.
+
+## 2026-11-03 - First-person slug mesh fix
+
+- **Confirmed:** owner saw Floppy still in the inspect; wants smile, soft wiggle with base stuck, small hop home, snug wiggle while lowering, soft antennae.
+- **Implemented/verified:** on `feature/inspect-polish` (uncommitted). The first-person copy destroyed the Motor6Ds its skinned mesh needs; restored. Earlier close-up evidence was third-person only. Checks pass; see [revision](slugs/inspect-revision.md#first-person-mesh-fix-and-smile-wiggle-hop-2026-11-03-current).
+- **Unresolved:** owner verdict, multi-client/latency and devices.
+- **Confirmed, later:** owner approved it as "perfect" and asked to commit and merge to `main`.

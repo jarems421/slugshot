@@ -463,6 +463,8 @@ function Animator.start()
 							local right = (Vector3.xAxis - up * up.X).Unit
 							handRotation =
 								CFrame.fromMatrix(Vector3.zero, right, up, right:Cross(up))
+							handRotation = CFrame.Angles(Inspect.armPitch(inspecting), 0, 0)
+								* handRotation
 						end
 						local handFrame = CFrame.new(layer.base.Position)
 							* handRotation
@@ -475,7 +477,11 @@ function Animator.start()
 						joint.C0 = joint.C0:Lerp(CFrame.new(joint.C0.Position) * gripRotation, w)
 					end
 					-- Apply the sampled spin after pose blending, about the native grip.
-					joint.C0 *= tool.Grip:Inverse() * Inspect.flourish(inspecting) * tool.Grip
+					local height = if character ~= Players.LocalPlayer.Character
+							or not FirstPerson.active()
+						then Inspect.ThirdToss
+						else 1
+					joint.C0 *= tool.Grip:Inverse() * Inspect.flourish(inspecting, height) * tool.Grip
 					joint.C1 = tool.Grip
 					character:SetAttribute("BlasterFlourish", "inspect")
 					continue

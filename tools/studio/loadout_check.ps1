@@ -10,6 +10,8 @@ public static class Win {
     [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr dc, uint flags);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
     public struct RECT { public int L, T, R, B; }
 }
 "@
@@ -19,7 +21,7 @@ $exe = (Get-ChildItem "$env:LOCALAPPDATA\Roblox\Versions" -Recurse -Filter Roblo
 $started = Get-Date
 $proc = Start-Process $exe -ArgumentList "`"$place`"" -PassThru
 $hwnd = [IntPtr]::Zero
-for ($i = 0; $i -lt 40; $i++) {
+for ($i = 0; $i -lt 90; $i++) {
     Start-Sleep -Seconds 1
     $live = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
     if ($live -and $live.MainWindowTitle -like "*SlugshotLoadoutCheck*") { $hwnd = $live.MainWindowHandle; break }
@@ -39,7 +41,7 @@ function Capture($name) {
     $bitmap.Save((Join-Path $OutDir "$name.png"), [System.Drawing.Imaging.ImageFormat]::Png)
     $graphics.Dispose(); $bitmap.Dispose()
     Write-Output "captured $name ($w x $h)"
-    if ($name -like 'fp-*' -or $name -like 'third-*') {
+    if ($name -like 'fp-*' -or $name -like 'third-*' -or $name -like 'chamber-*') {
         [Win]::SetForegroundWindow($hwnd) | Out-Null
         Start-Sleep -Milliseconds 100
         [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x4B, [IntPtr]1) | Out-Null
@@ -48,6 +50,7 @@ function Capture($name) {
     }
 }
 function PressPlay {
+    if ([Win]::IsIconic($hwnd)) { [Win]::ShowWindow($hwnd, 9) | Out-Null; Start-Sleep -Milliseconds 300 }
     [Win]::SetForegroundWindow($hwnd) | Out-Null
     Start-Sleep -Milliseconds 300
     [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x74, [IntPtr]1) | Out-Null
@@ -68,7 +71,7 @@ function Record($view) {
     $watch = [System.Diagnostics.Stopwatch]::StartNew()
     $timings = @()
     $index = 0
-    while ($watch.Elapsed.TotalSeconds -lt 7.1) {
+    while ($watch.Elapsed.TotalSeconds -lt 4.8) {
         $bitmap = New-Object System.Drawing.Bitmap $w, $h
         $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
         $dc = $graphics.GetHdc()
@@ -106,7 +109,7 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
                     $seen[$key] = $true
                     if ($line -match "LOADOUTCHECK (shot|record|key|wheel|PASS|FAIL)") { $running = $true }
                     if ($line -match "LOADOUTCHECK shot (\S+)") { Capture $Matches[1] }
-                    elseif ($line -match "LOADOUTCHECK record (fp|third)") { Record $Matches[1] }
+                    elseif ($line -match "LOADOUTCHECK record (fp|third|chamber)") { Record $Matches[1] }
                     elseif ($line -match "LOADOUTCHECK key result (.+)") { Write-Output "key result: $($Matches[1].Trim())" }
                     elseif ($line -match "LOADOUTCHECK key ([VR2Q])") {
                         $code = switch ($Matches[1]) { 'V' { 0x56 } 'R' { 0x52 } '2' { 0x32 } 'Q' { 0x51 } }
@@ -129,7 +132,8 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
         }
     }
     if ($seen.Keys | Where-Object { $_ -match "LOADOUTCHECK (PASS|FAIL)" }) { break }
-    if (-not $running -and ((Get-Date) - $lastPress).TotalSeconds -gt 45) { Write-Output "Play has not started; pressing again"; PressPlay; $lastPress = Get-Date }
+    if (-not $running -and ((Get-Date) - $started).TotalSeconds -gt 90) { Capture "stalled"; Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue; throw "Play did not start within 90s" }
+    if (-not $running -and ((Get-Date) - $lastPress).TotalSeconds -gt 30) { Write-Output "Play has not started; pressing again"; PressPlay; $lastPress = Get-Date }
 }
 Capture "end"
 Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue

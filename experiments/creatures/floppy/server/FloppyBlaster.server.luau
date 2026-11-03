@@ -101,6 +101,12 @@ local turned = lying < upright
 local fix = (if turned then CFrame.Angles(-math.pi / 2, 0, 0) else CFrame.identity)
 	* (spec.rotation or CFrame.identity)
 for mesh, part in parts do
+	if mesh.name == CANISTER .. "_Ink" then
+		-- An inverted hull shows its inside faces through clear glass: a solid black
+		-- wall behind the slug. The chamber's rings and collars already frame the glass.
+		part:Destroy()
+		continue
+	end
 	local s = mesh.size * SCALE
 	part.Name = mesh.name
 	part.Size = if turned then Vector3.new(s.X, s.Z, s.Y) else s
@@ -293,8 +299,8 @@ floppy:SetAttribute(
 	(Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude / 2 + 0.1) * target
 )
 floppy:SetAttribute(
-	"InspectHopHeight",
-	math.max(0, math.min(0.035, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008))
+	"ChamberRoom",
+	math.max(0, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008)
 )
 local up = (head.WorldPosition - rootBone.WorldPosition).Unit
 local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition

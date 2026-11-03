@@ -11,6 +11,7 @@ local shared = game:GetService("ReplicatedStorage"):WaitForChild("MovementExperi
 local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
+local Inspect = require(script.Parent.SlugInspect)
 local FirstPerson = require(script.Parent.FirstPerson)
 local Recoil = require(script.Parent.BlasterRecoil)
 local Tuning = require(script.Parent.Tuning)
@@ -618,7 +619,14 @@ function Presentation.start(clips: Clips.Library)
 		rig.aiming = aiming
 		local fidget = Moves.Fidget
 		local injured = health < humanoid.MaxHealth * Moves.InjuredBelow
-		if speed > 1 or aiming or injured or not grounded or rig.action then
+		if
+			speed > 1
+			or aiming
+			or injured
+			or not grounded
+			or rig.action
+			or Inspect.elapsed(character)
+		then
 			rig.fidgetAt = now + fidget.After + math.random() * fidget.Spread
 		end
 		if not grounded or rig.action then
@@ -662,7 +670,14 @@ function Presentation.start(clips: Clips.Library)
 		local t = elapsed * move.rate
 		local kind = move.kind
 		local cancel = (kind == "Settle" and (speed > 1.5 or character:GetAttribute("Aiming")))
-			or (kind == "Fidget" and (speed > 1.5 or character:GetAttribute("Aiming")))
+			or (
+				kind == "Fidget"
+				and (
+					speed > 1.5
+					or character:GetAttribute("Aiming")
+					or Inspect.elapsed(character) ~= nil
+				)
+			)
 		local weight = 1
 		if kind == "Flinch" then
 			weight = 1 - 0.5 * smoothstep(speed / A.IdleBlendSpeed)
