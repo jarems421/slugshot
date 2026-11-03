@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-03 - Mesh-bound lava replaces floating ribbons
+
+- **Confirmed:** owner rejected the animation sitting on top of lava.
+- **Implemented/verified locally:** removed all lava Beam overlays; animate original material colour pixels using a world-height phase mapped through original UVs. Preserve paint/shading inputs at 256-square resolution and fixed mesh/collision. Native check: 57,756 changed bytes, 22,590 animated texels, 287 revisions, zero overlay beams. Corrected close-ups inspected; slow storm cadence remains.
+- **Implemented:** checkpointed saved review, rebuilt/reopened canonical Studio review with current source; no source asset upload, experience publication or security-setting change.
+- **Unresolved:** owner motion verdict, mobile resource/performance and published API acceptance. [Evidence](evidence/2026-11-03-integrated-lava-material.json), [ADR 0026](decisions/0026-mesh-bound-lava-material.md).
+
 ## 2026-11-03 — Inferno in the slug grove
 
 - **Confirmed (owner):** the grove goes from 30 Floppies to 15 slugs, 10 Floppies and 5 Infernos.

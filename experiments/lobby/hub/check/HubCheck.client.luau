@@ -189,13 +189,21 @@ task.spawn(function()
 	)
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
-	game:GetService("ContentProvider")
-		:PreloadAsync(
-			game:GetService("CollectionService"):GetTagged("HubLavaFlow"),
-			function(_, status)
-				assert(status == Enum.AssetFetchStatus.Success, "lava body texture failed to load")
-			end
-		)
+	local lava = art:WaitForChild("hub-volcano"):FindFirstChild("Flows", true) :: MeshPart
+	local readyDeadline = os.clock() + 90
+	while lava:GetAttribute("LavaSurfaceReady") ~= true and os.clock() < readyDeadline do
+		task.wait(0.2)
+	end
+	assert(
+		lava:GetAttribute("LavaSurfaceReady") == true,
+		"mesh-bound lava material did not initialise"
+	)
+	local lavaFrame, lavaSize, lavaContent = lava.CFrame, lava.Size, lava.MeshContent
+	local appearance = lava:FindFirstChildOfClass("SurfaceAppearance") :: SurfaceAppearance
+	local image = appearance.ColorMapContent.Object :: EditableImage
+	assert(image and image:IsA("EditableImage"), "colour map is not an animated surface image")
+	local firstPixels = image:ReadPixelsBuffer(Vector2.zero, image.Size)
+	local firstRevision = lava:GetAttribute("LavaMaterialRevision") :: number
 	print("HUBCHECK tour starts")
 	local camera = workspace.CurrentCamera
 	camera.CameraType = Enum.CameraType.Scriptable
@@ -222,58 +230,31 @@ task.spawn(function()
 	local holder = workspace:WaitForChild("HubArt"):WaitForChild("StormFlash") :: BasePart
 	local bloom = holder:WaitForChild("Bloom") :: ParticleEmitter
 	assert(holder:FindFirstChild("Zap") == nil, "solid storm bolt emitter still exists")
-	local waterfallBody: Beam? = nil
-	for _, item in art:GetDescendants() do
-		if
-			item:IsA("Beam")
-			and item.Parent
-			and item.Parent:IsA("Attachment")
-			and item.Parent.Parent
-			and item.Parent.Parent.Name == "FallFlow"
-			and math.abs(item.TextureSpeed - 1.5) < 0.001
-		then
-			waterfallBody = item
-			break
+	assert(
+		#game:GetService("CollectionService"):GetTagged("HubLavaFlow") == 0,
+		"detached lava ribbons remain"
+	)
+	assert(
+		lava.CFrame == lavaFrame and lava.Size == lavaSize and lava.MeshContent == lavaContent,
+		"lava geometry moved or changed"
+	)
+	local lastPixels = image:ReadPixelsBuffer(Vector2.zero, image.Size)
+	local changed = 0
+	for offset = 0, buffer.len(firstPixels) - 1 do
+		if buffer.readu8(firstPixels, offset) ~= buffer.readu8(lastPixels, offset) then
+			changed += 1
 		end
 	end
-	assert(waterfallBody, "waterfall body layer missing from comparison")
-	local flowCount = 0
-	for _, flow in game:GetService("CollectionService"):GetTagged("HubLavaFlow") do
-		assert(flow:IsA("Beam"), "lava flow is not a scrolling ribbon")
-		assert(
-			flow.Segments >= #flow.Transparency.Keypoints - 1,
-			"flow fade has no visible interior samples"
-		)
-		assert(
-			flow.Texture == (waterfallBody :: Beam).Texture,
-			"lava uses a highlight instead of the waterfall body texture"
-		)
-		assert(
-			math.abs(flow.TextureSpeed - 0.22) < 0.001,
-			"lava flow speed differs from the slow-flow brief"
-		)
-		assert(flow.Attachment0 and flow.Attachment1, "lava flow has no endpoints")
-		assert(
-			not flow.FaceCamera and flow.TextureMode == Enum.TextureMode.Wrap,
-			"lava does not follow the waterfall ribbon method"
-		)
-		assert(
-			flow.Attachment0.WorldPosition.Y > flow.Attachment1.WorldPosition.Y,
-			"lava flows uphill"
-		)
-		flowCount += 1
-	end
-	assert(flowCount == 35, "missing lava flow ribbons")
-	local streams: { [number]: boolean } = {}
-	for _, flow in game:GetService("CollectionService"):GetTagged("HubLavaFlow") do
-		streams[flow:GetAttribute("LavaStream") :: number] = true
-	end
-	for index = 0, 6 do
-		assert(streams[index], "a lava stream is still static")
-	end
-	print(
-		`HUBCHECK lava flow ribbons={flowCount} streams=7 speed=0.22 surface-aligned; storm bolts=0 diffuse bloom retained`
-	)
+	assert(changed > 1000, "actual lava colour-map pixels did not animate")
+	local revisions = (lava:GetAttribute("LavaMaterialRevision") :: number) - firstRevision
+	assert(revisions > 20, "material animation skipped its updates")
+	print("HUBCHECK mesh lava " .. game:GetService("HttpService"):JSONEncode({
+		changedBytes = changed,
+		revisions = revisions,
+		animatedTexels = lava:GetAttribute("LavaAnimatedTexels"),
+		meshFixed = true,
+		overlayBeams = 0,
+	}))
 	-- Observe rendered cloud illumination before manually emitting review blooms.
 	local cloud =
 		game:GetService("CollectionService"):GetTagged("HubStormCloud")[1] :: SurfaceAppearance

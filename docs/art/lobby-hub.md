@@ -1,5 +1,7 @@
 # Lobby hub in Roblox
 
+**Current lava revision, 2026-11-03:** owner rejected the overlay sitting above the lava. The original lava MeshPart now carries an animated colour map directly, retaining paint/shading inputs at 256-square resolution. No lava Beam ribbons remain. A broad twelve-second colour wave moves downhill; mesh, UVs and collision stay fixed. Actual-buffer/fixed-mesh checks and corrected native close-ups pass; slower storm preserved. Supersedes historical beam approaches below. Owner verdict and mobile/published acceptance remain open. [Evidence](../evidence/2026-11-03-integrated-lava-material.json), [decision and fallback](../decisions/0026-mesh-bound-lava-material.md).
+
 The final hub designs built for the game, on top of the approved block-out, whose simple colliders still carry the player. Everything here is look-only. Status: **Implemented, in owner review, 2026-11-01.** Not published. Runtime performance on a real phone is **Unresolved**.
 
 ## How it's built

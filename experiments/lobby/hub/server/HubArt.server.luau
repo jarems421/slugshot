@@ -1092,12 +1092,6 @@ local function volcRadius(a: number, y: number): number
 		+ 2 * math.sin(a * 3 + 0.5) * (1 - t)
 end
 
--- A point on the volcano's wall, in world space, in the study's own units of angle and height.
--- The volcano's middle at this height, to find which way is out from its surface.
-local function volcanoAxis(at: Vector3): Vector3
-	return PLAZA * Vector3.new(0, at.Y, VOLCANO_Z)
-end
-
 local function volcWall(a: number, y: number, offset: number): Vector3
 	local cx, cz = volcCentre(y)
 	local r = volcRadius(a, y) + offset
@@ -1115,97 +1109,13 @@ local function buildVolcano()
 		shorten(volcano)
 		-- The lava breathes, slowly.
 		for _, part in volcano:GetDescendants() do
-			if part:IsA("MeshPart") and (part.Name == "Flows" or part.Name == "Pool") then
+			if part:IsA("MeshPart") and part.Name == "Flows" then
+				CollectionService:AddTag(part, "HubLavaSurface")
+			elseif part:IsA("MeshPart") and part.Name == "Pool" then
 				part:SetAttribute("PulseRate", 0.55)
 				part:SetAttribute("PulseDepth", 0.32)
 				CollectionService:AddTag(part, "HubPulse")
 			end
-		end
-	end
-	-- All seven poured streams, including their full visible width and rounded foot.
-	local rivers = {
-		{ -1.18, 8, 4.8, 0 },
-		{ -1.18 + 0.897598, 25, 3.6, 1 },
-		{ -1.18 + 0.897598 * 2, 13, 4.2, 2 },
-		{ -1.18 + 0.897598 * 3, 10, 5.2, 3 },
-		{ -1.18 + 0.897598 * 4, 38, 3.4, 4 },
-		{ -1.18 + 0.897598 * 5, 10, 4.5, 5 },
-		{ -1.18 + 0.897598 * 6, 21, 3.8, 6 },
-	}
-	for _, river in rivers do
-		local a0, lo, wide, k = river[1], river[2], river[3], river[4]
-		local segments = 5
-		for s = 0, segments - 1 do
-			local function at(f: number): (Vector3, number)
-				local t = math.clamp(f / segments, 0, 1)
-				local y = 129 + (lo - 129) * t
-				local a = a0 + 0.08 * math.sin(y / 130 * 5 + k * 2)
-				local foot = math.clamp((t - 0.78) / 0.22, 0, 1)
-				local w = wide
-					* (0.74 + 0.2 * math.sin(t * 15 + k * 2))
-					* (0.62 + 0.38 * math.sin(math.pi * t * 0.7 + 0.35))
-					* (1 + 0.55 * foot * foot * (3 - 2 * foot))
-				-- On the thick flow's smooth surface, not the ribbed rock under it.
-				local height = y / 130
-				local over = 84
-					- 54 * height ^ 0.72
-					+ 0.45 * (15 - 5 * height)
-					+ 2 * math.sin(a * 3 + 0.5) * (1 - height)
-				over = math.max(over, 96 - y * 1.5)
-				return volcWall(a, y, over + 4.9 - volcRadius(a, y)), w * 3.3 * VOLCANO_SCALE
-			end
-			-- Overlapping, each fading out at both ends, so none of them stops in a straight line.
-			local from, w0 = at(math.max(s - 0.35, 0))
-			local to, w1 = at(s + 1.35)
-			local flow = beam(
-				"LavaRiver",
-				from,
-				to,
-				w0,
-				w1,
-				fxTexture("flow"),
-				Color3.fromRGB(255, 38, 3),
-				fade({ { 0, 1 }, { 0.15, 0.08 }, { 0.85, 0.08 }, { 1, 1 } }),
-				0.22,
-				1
-			)
-			-- Use the waterfall's opaque flowing body, not just its highlight layer.
-			-- Keep its width tangent to the volcano rather than billboarding at the viewer.
-			flow.FaceCamera = false
-			-- With one segment, both sampled ends were transparent: the whole flow vanished.
-			-- Interior samples are required to render the opaque middle of this fade.
-			flow.Segments = 12
-			flow.TextureMode = Enum.TextureMode.Wrap
-			flow.TextureLength = (to - from).Magnitude
-			-- An opaque-colour component keeps moving bands readable over emissive lava.
-			flow.LightEmission = 0.3
-			flow.Brightness = 3
-			flow:SetAttribute("LavaStream", k)
-			local along = (to - from).Unit
-			for _, node in { flow.Attachment0, flow.Attachment1 } do
-				if node then
-					local point = node.WorldPosition
-					local across = (point - volcanoAxis(point)).Unit:Cross(along).Unit
-					node.CFrame =
-						CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
-				end
-			end
-			CollectionService:AddTag(flow, "HubLavaFlow")
-			-- A soft halo, standing off the flow. HubMotion brightens these in a slow wave running downhill.
-			local halo = beam(
-				"LavaHalo",
-				from + (from - volcanoAxis(from)).Unit * 4,
-				to + (to - volcanoAxis(to)).Unit * 4,
-				w0 * 2.4,
-				w1 * 2.4,
-				fxTexture("softbeam"),
-				Color3.fromRGB(255, 96, 24),
-				fade({ { 0, 1 }, { 0.5, 0.75 }, { 1, 1 } }),
-				0,
-				1
-			)
-			halo:SetAttribute("Phase", k * 1.7 - s * 0.8)
-			CollectionService:AddTag(halo, "HubLavaGlow")
 		end
 	end
 	-- Glints crossing the pool to every spill, flat on the lava, at the same pace as the ones running down the streams.

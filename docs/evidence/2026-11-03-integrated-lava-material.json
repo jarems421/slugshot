@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified in desktop Studio; owner verdict pending",
+  "ownerBrief": "Integrate slow flow into lava itself; the animation sits on top.",
+  "provenance": "Original Slugshot volcano mesh and paint; no new art, upload or source-model edits",
+  "implementation": {
+    "surface": "Original Flows MeshPart and UVs; zero lava overlay Beams",
+    "maps": "Present material inputs cloned to 256-square EditableImages; only colour animates",
+    "flow": "18-stud wavelength, twelve-second cycle, approximately 1.5 studs/second downhill",
+    "updateLimitHz": 24,
+    "failureBehavior": "Original static material retained if setup fails"
+  },
+  "native": {
+    "result": "PASS",
+    "meshFixed": true,
+    "changedBytes": 57756,
+    "animatedTexels": 22590,
+    "materialRevisions": 287,
+    "overlayBeams": 0,
+    "stormFlashDurationsSeconds": [1.30057, 1.29984, 1.29910],
+    "visualReview": "Corrected close-ups A/B and sampled sequence retain orange paint on the mesh, with no detached ribbons",
+    "captures": "build/lobby-fx-review/integrated-final-native",
+    "place": "build/SlugshotLobbyHubCheck.rbxlx"
+  },
+  "static": "PASS: StyLua, Selene, strict Luau analysis; normal/review builds and compiled-source freshness",
+  "rejectedAttempts": [
+    "Vertex tint did not visibly affect the existing SurfaceAppearance.",
+    "Incorrect image pivot placement rendered white despite passing byte-change tests. Centered placement and greater-than-90-percent painted coverage assertion fix this."
+  ],
+  "limits": [
+    "Desktop single-client Studio only; mobile memory/performance and observers untested.",
+    "Published use requires Mesh/Image APIs and asset permissions; no setting changed or experience published.",
+    "Maps resampled to 256 square; original geometry and source textures untouched.",
+    "Sampled captures do not establish frame rate or owner approval."
+  ]
+}

@@ -1,5 +1,7 @@
 # Current status
 
+**Implemented/verified locally, 2026-11-03 - integrated lava material:** owner rejected the floating layer. Removed lava ribbons; animate the original lava's UV-mapped colour image, retaining paint/shading inputs and fixed geometry. Native actual-pixel/fixed-mesh/zero-overlay checks and corrected close-ups pass; slower storm retained. Canonical review refreshed. [Evidence and limits](evidence/2026-11-03-integrated-lava-material.json), [ADR 0026](decisions/0026-mesh-bound-lava-material.md). Supersedes beam approaches below; owner verdict and mobile/published acceptance remain open.
+
 **Implemented/verified locally, 2026-11-03 - invisible lava-layer repair:** the one-segment beam sampled only transparent fade ends. Twelve segments now render the flowing middle; all seven streams use the waterfall body texture, full widths and slow 0.22 scroll with fixed geometry. Native texture/fade/coverage and close-up sequence checks pass. [Evidence](evidence/2026-11-03-visible-lava-gloop.json); owner gloop verdict remains open.
 
 **Implemented/verified locally, 2026-11-03 - owner lava/storm revision:** full waterfall streak layer slowed to 0.4 and tinted orange; surface-aligned visible bands replace sparse glints. Storm flashes now 5-9 seconds apart with gradual rise/longer fade. Live cloud timing and flow checks pass; canonical review checks current FX sources before opening. [Evidence](evidence/2026-11-03-viscous-lava-and-slow-storm.json); owner feel verdict open.

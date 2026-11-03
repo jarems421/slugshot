@@ -1,5 +1,11 @@
 # Art direction and asset library lessons
 
+## 2026-11-03 - Integrate flow into the material
+
+**Confirmed:** visible beams still looked detached from lava. Replace overlays with an animated colour image on the original UV-mapped SurfaceAppearance. Native image-buffer changes and fixed-mesh checks establish actual material animation; close-up captures establish retained colour and surface registration. Preserve the source paint and shading maps.
+
+**Implemented/verified:** initial vertex tint did not visibly affect SurfaceAppearance. The first image resize used the default center pivot at zero, copying only a quarter and rendering white despite passing pixel-change tests. Center the target pivot, require over 90% opaque coverage on mapped texels, then inspect corrected native captures. Wait for HubSolid and the material's actual SlugshotMaterial name, rather than assuming the tag and child replicate together. [Evidence and API limits](../evidence/2026-11-03-integrated-lava-material.json).
+
 ### Pod-house shop feedback (2026-11-02)
 
 - **Confirmed:** "like the houses" referred to clustered rounded pods around an organic tree/fungal silhouette, not another arched retailer or a palette swap. Owner-provided screenshots resolved the ambiguity.
