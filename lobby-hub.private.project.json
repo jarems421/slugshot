@@ -33,6 +33,12 @@
       },
       "LookPack": {
         "$path": "experiments/lobby/shared/LookPack.luau"
+      },
+      "Combat": {
+        "$path": "experiments/combat/shared"
+      },
+      "GooArt": {
+        "$path": "private-assets/ui/GooArt.luau"
       }
     },
     "ServerScriptService": {
@@ -54,6 +60,15 @@
       },
       "FloppyAppearance": {
         "$path": "experiments/creatures/floppy/server/FloppyAppearance.luau"
+      },
+      "LobbySettings": {
+        "$className": "Folder",
+        "SettingsPersistence": {
+          "$path": "experiments/combat/server/SettingsPersistence.server.luau"
+        },
+        "SettingsStore": {
+          "$path": "experiments/combat/server/SettingsStore.luau"
+        }
       }
     },
     "StarterPlayer": {
@@ -80,6 +95,39 @@
         },
         "GroveWater": {
           "$path": "experiments/lobby/hub/client/GroveWater.client.luau"
+        },
+        "Combat": {
+          "$className": "Folder",
+          "FloppyRecovery": {
+            "$path": "experiments/combat/client/FloppyRecovery.luau"
+          },
+          "Goo": {
+            "$path": "experiments/combat/client/Goo.luau"
+          },
+          "GooBar": {
+            "$path": "experiments/combat/client/GooBar.luau"
+          },
+          "PvpFx": {
+            "$path": "experiments/combat/client/PvpFx.luau"
+          },
+          "PvpTheme": {
+            "$path": "experiments/combat/client/PvpTheme.luau"
+          },
+          "SettingsSync": {
+            "$path": "experiments/combat/client/SettingsSync.luau"
+          },
+          "SlugIcon": {
+            "$path": "experiments/combat/client/SlugIcon.luau"
+          },
+          "SlugVisuals": {
+            "$path": "experiments/combat/client/SlugVisuals.luau"
+          },
+          "Settings": {
+            "$path": "experiments/combat/client/Settings.client.luau"
+          }
+        },
+        "LobbyFirstPerson": {
+          "$path": "experiments/lobby/hub/client/LobbyFirstPerson.client.luau"
         }
       }
     },

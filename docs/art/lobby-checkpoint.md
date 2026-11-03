@@ -17,6 +17,10 @@ Where the lobby stands after the four main areas, written so a new chat can pick
 
 "The four main areas" is the agent's grouping of the owner's "four main assets", from the table's first four rows.
 
+## Playing it
+
+`SlugshotLobbyHub` runs in first person with the game's settings, saved between sessions, and no guns or combat HUD (`LobbyFirstPerson.client.luau`). V toggles the camera and M opens settings. The temporary range, `python tools/build_combat_range.py`, has the latest movement, slugs, blaster and shooting.
+
 ## Decisions to keep
 
 - **Slugs:** 1.3 studs outside the gun, with the in-gun size and 0.3 hit radius unchanged. The grove has 30 Floppies, one in four glancing at a nearby player.
@@ -64,4 +68,4 @@ Everything runs from the repository root. Python needs the venv with moderngl, n
 
 ## Next: the shop
 
-The owner called it the "shop bar" on 2026-11-03. The plan on record is a walk-in shop on the gun side at -90 degrees, radius 190, about 50 by 40 studs and 18 tall ([layout](../../experiments/lobby/scale/shared/layout.json)), with a [slug workshop](lobby-assets.md) beside it that must not look like a real blacksmith's forge. **Unresolved:** whether "bar" means a shop counter or something new, so ask first. Get reference pictures before the first build, and show visibly different options if a shape misses.
+The owner called it the "shop bar" on 2026-11-03. The plan on record is a walk-in shop on the gun side at -90 degrees, radius 190, about 50 by 40 studs and 18 tall ([layout](../../experiments/lobby/scale/shared/layout.json)), with a [slug workshop](lobby-assets.md) beside it that must not look like a real blacksmith's forge. A browser concept already exists from another chat: [The Burrow Exchange](general-shop.md), a pod-grown shop over a mist chasm, on its second study. Read it first. **Unresolved:** whether "bar" means a shop counter or something new, and whether that concept is still the direction, so ask first. Get reference pictures before the first build, and show visibly different options if a shape misses.
