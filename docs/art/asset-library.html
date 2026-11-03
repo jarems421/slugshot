@@ -5768,9 +5768,9 @@ vec3 wallLifePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 // ---------- 13: the canopy hole's inner wall meeting its floor. 1 unit = 5 studs. Owner, 2026-11-03: the hole is
 // underground, so crystals everywhere; the inner wall (the spire under the shop) and the floor share one design, close to
 // the outer wall but a little different: the plum roots spiral down the spire and spread across the floor, with cupped
-// shelves and crystal clusters, and no sideways trees. Options by uPlaza pick the crystals' colour: 0 cyan and azure
-// like the approved crystals, 1 violet and magenta like the velvet, 2 mixed.
-// Ids: 90 rock, 91 velvet, 92 plum root, 93 pale stalk, 95 cupped shelf, 96 shelf gills, 98 crystal.
+// shelves and crystal clusters, and no sideways trees. Crystals mixed cyan and violet (owner's pick, C). The floor also has
+// mushrooms. Options by uPlaza are now the mist (round 3): 0 ground fog, 1 layered sheets, 2 rising veils.
+// Ids: 90 rock, 91 velvet, 92 plum root, 93 pale stalk, 95 cupped shelf, 96 gills, 98 crystal, 99 mushroom cap.
 vec2 cellsIF(vec2 x, out vec2 cellId) {
   vec2 i = floor(x), f = fract(x);
   float d1 = 8.0, d2 = 8.0;
@@ -5894,6 +5894,24 @@ vec2 innerWall(vec3 p) {
     float cr = crystalCluster(p, b, normalize(vec3(0.0, 1.0, 0.0) + vec3(xz.x, 0.0, xz.y)*0.03), 1.2 + 1.0*hash1(fi*5.0), fi*2.3 + 4.0);
     if (cr < res.x) res = vec2(cr, 98.0 + 0.1*mod(fi + 1.0, 2.0));
   }
+  // Mushrooms on the floor among the crystals: mid-sized with glowing gills, and little clusters round them.
+  for (int i = 0; i < 16; i++) {
+    float fi = float(i);
+    float aa = fi*2.399 + 2.0, rad = 4.8 + 9.0*hash1(fi*4.3);
+    vec2 xz = vec2(cos(aa), sin(aa))*rad;
+    float tall = i < 8 ? 1.0 + 1.6*hash1(fi*1.9) : 0.35 + 0.35*hash1(fi*2.9);
+    vec3 b = vec3(xz.x, floorHeight(xz) - 0.1, xz.y);
+    if (length(p - b) > tall*2.2 + 1.0) continue;
+    vec3 tip = b + vec3(0.2*sin(fi*3.0), tall, 0.2*cos(fi*3.0))*vec3(tall, 1.0, tall);
+    float stem = segIF(p, b, tip, 0.1 + 0.08*tall, 0.06 + 0.05*tall);
+    if (stem < res.x) res = vec2(stem, 93.0);
+    float capR = 0.35 + 0.42*tall;
+    vec3 q = p - tip;
+    float rr2 = length(q.xz);
+    q.y += 0.14*capR*pow(clamp(rr2/capR, 0.0, 1.3), 3.0);
+    float cap = smax(sdEll(q, vec3(1.0, 0.5, 1.0)*capR), -sdEll(q + vec3(0.0, 0.22*capR, 0.0), vec3(0.9, 0.34, 0.9)*capR), 0.06);
+    if (cap*0.75 < res.x) res = vec2(cap*0.75, q.y < -0.02*capR ? 96.0 : 99.0 + 0.1*mod(fi, 3.0));
+  }
   // Two canopy stems rising from the floor, out of sight.
   for (int i = 0; i < 2; i++) {
     float fi = float(i);
@@ -5905,8 +5923,36 @@ vec2 innerWall(vec3 p) {
   return res;
 }
 
+// Mist (round 3): density by option, drifting slowly, thinning toward the patch's edge.
+float mistDensity(vec3 q) {
+  float r = length(q.xz);
+  if (r > 19.0) return 0.0;
+  float edge = 1.0 - smoothstep(13.0, 19.0, r);
+  float h = q.y - FLOOR_Y;
+  float n = noise3(q*0.32 + vec3(uT*0.03, 0.0, -uT*0.02)) + 0.5*noise3(q*0.9 + vec3(0.0, -uT*0.04, 0.0));
+  float d;
+  if (uPlaza < 0.5) {
+    d = exp(-max(h, 0.0)/2.2)*smoothstep(0.45, 1.1, n)*0.6;
+  } else if (uPlaza < 1.5) {
+    d = 0.0;
+    for (int k = 0; k < 3; k++) {
+      float level = FLOOR_Y + 2.5 + float(k)*3.2;
+      d += exp(-pow((q.y - level)/0.4, 2.0))*smoothstep(0.85, 1.2, n + 0.1*float(k))*0.4;
+    }
+    d += exp(-max(h, 0.0)/1.0)*0.15;
+  } else {
+    float v = noise3(vec3(q.x*0.55, q.y*0.12 - uT*0.06, q.z*0.55)) + 0.4*noise3(vec3(q.x*1.4, q.y*0.3 - uT*0.1, q.z*1.4));
+    d = smoothstep(0.75, 1.15, v)*0.45*smoothstep(FLOOR_Y + 13.0, FLOOR_Y + 1.0, q.y) + exp(-max(h, 0.0)/1.2)*0.2;
+  }
+  return d*edge;
+}
+vec3 mistColour(vec3 q) {
+  float h = clamp((q.y - FLOOR_Y)/12.0, 0.0, 1.0);
+  return mix(vec3(0.2, 0.12, 0.36), vec3(0.1, 0.1, 0.24), h);
+}
+
 vec3 innerFloorPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
-  float option = uPlaza;
+  float option = 2.0;   // crystals: mixed (owner's pick)
   emit = vec3(0.0);
   spec = 0.05;
   float g = noise3(p*1.7) + 0.5*noise3(p*5.0);
@@ -5940,6 +5986,14 @@ vec3 innerFloorPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 c = mix(vec3(0.08, 0.04, 0.17), vec3(0.2, 0.12, 0.34), 0.35 + 0.35*g);
     emit = c*0.14;
     return c*(0.6 + 0.4*deep);
+  }
+  if (id > 98.95) {
+    // Floor mushroom caps: the canopy's teal, violet and azure, dark at the crown.
+    float k = floor(fract(id)*10.0 + 0.5);
+    vec3 base = k < 0.5 ? vec3(0.08, 0.36, 0.42) : k < 1.5 ? vec3(0.24, 0.1, 0.42) : vec3(0.08, 0.2, 0.5);
+    vec3 c = base*(0.6 + 0.5*smoothstep(0.2, 1.0, g));
+    emit = c*0.25;
+    return c;
   }
   if (id < 96.5) {
     float lines = 0.5 + 0.5*sin(atan(p.z, p.x)*120.0 + p.y*30.0);
@@ -6041,7 +6095,7 @@ bool emissive(float id) {
   if (id >= 80.0) return abs(id - 83.0) < 0.5 || (id > 87.5 && id < 90.0);
 #endif
 #if ASSET == 13 || ASSET == 14
-  if (id >= 90.0) return id > 95.5;
+  if (id >= 90.0) return id > 95.5 && id < 98.95;
 #endif
 #if ASSET == 9
   if (id >= 40.0) return abs(id - 42.0) < 0.5 || abs(id - 44.0) < 0.5 || (id > 47.9 && id < 48.9) || abs(id - 54.0) < 0.5 || abs(id - 58.0) < 0.5;
@@ -6896,6 +6950,20 @@ void main() {
     col += mix(uCapGlow, vec3(1.0), 0.2)*spore*1.4*TR(5.0).z;
   }
 #endif
+#if ASSET == 13
+  {
+    // Mist: marched through the scene, so it hangs between the camera and everything behind it.
+    float tEndM = hitId > 0.0 ? t : 60.0, trans = 1.0, stepL = tEndM/48.0;
+    vec3 acc = vec3(0.0);
+    for (int i = 0; i < 48; i++) {
+      vec3 q = ro + rd*((float(i) + 0.5)*stepL);
+      float a = 1.0 - exp(-mistDensity(q)*stepL);
+      acc += trans*a*mistColour(q);
+      trans *= 1.0 - a;
+    }
+    col = col*trans + acc;
+  }
+#endif
 #if ASSET >= 10 && ASSET <= 12
   if (ASSET != 10 || uPlaza < 0.5) {
     float spore = 0.0, tEnd = hitId > 0.0 ? t : 110.0;
@@ -7203,12 +7271,12 @@ void main() {
     notes: [["Status", "New asset study v1, 3 Nov 2026: the knoll's plum roots down the hole's walls, each with a second kind of hanging growth."]]
   });
   ASSETS.push({
-    id: "hole-inner", name: "Hole inner wall and floor", kind: "New asset · canopy hole", size: "the spire under the shop, 52 studs across at the top, standing on the hole's floor 60 studs below in this study", version: "v2", concept: true, noLive: true, shader: 13,
-    variantLabel: "Crystals",
+    id: "hole-inner", name: "Hole inner wall and floor", kind: "New asset · canopy hole", size: "the spire under the shop, 52 studs across at the top, standing on the hole's floor 60 studs below in this study", version: "v3", concept: true, noLive: true, shader: 13,
+    variantLabel: "Mist",
     variants: [
-      { name: "A · Cyan and azure", option: 0, bright: [0.35, 0.9, 1.0], camera: { target: [0, -6.0, 0], dist: 26, pitch: 0.1 } },
-      { name: "B · Violet and magenta", option: 1, bright: [0.8, 0.42, 1.0], camera: { target: [0, -6.0, 0], dist: 26, pitch: 0.1 } },
-      { name: "C · Mixed", option: 2, bright: [0.55, 0.65, 1.0], camera: { target: [0, -6.0, 0], dist: 26, pitch: 0.1 } }
+      { name: "A · Ground fog", option: 0, bright: [0.35, 0.9, 1.0], camera: { target: [0, -6.0, 0], dist: 26, pitch: 0.1 } },
+      { name: "B · Layered sheets", option: 1, bright: [0.8, 0.42, 1.0], camera: { target: [0, -6.0, 0], dist: 26, pitch: 0.1 } },
+      { name: "C · Rising veils", option: 2, bright: [0.55, 0.65, 1.0], camera: { target: [0, -6.0, 0], dist: 26, pitch: 0.1 } }
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -6.5, 0], dist: 24, figure: [0, -100, 0], glow: [0, -8, -6], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "Study v2, 3 Nov 2026: the inner wall and floor share one design, with crystals; options are the crystals' colour."]]
