@@ -19,3 +19,16 @@ The server rate-limits requests, bounds encoded payloads, validates every value 
 **Unresolved:** a real cloud-backed leave/rejoin, full BindToClose runtime coverage, multi-client/latency/device coverage and crash recovery. Studio MCP returned an empty instance list; isolated Studio Play tests used the existing window/log automation. These tests do not establish Roblox cloud persistence. Publishing or enabling Studio API access was not performed. Sudden process loss may lose changes since the last successful save; disconnecting before the client sends its pending snapshot can lose that final edit. Wait for “Settings saved” before leaving during acceptance testing.
 
 Primary guidance: [Roblox Data stores](https://create.roblox.com/docs/cloud-services/data-stores), [player data and session locking](https://create.roblox.com/docs/cloud-services/data-stores/player-data-purchasing), [best practices](https://create.roblox.com/docs/cloud-services/data-stores/best-practices).
+
+
+## 2026-11-03 repair and explicit cloud gate
+
+**Confirmed:** owner reports settings-load failure and corrupted close glyph, and requires real persistence plus final shooting/hopping/notice verification before main delivery.
+
+**Implemented/verified locally:** encode close/checkmark through `utf8.char`, retain unavailable-storage status while editing, and show an explicit session-only explanation for unpublished Studio previews. `Store.connect` does not attempt cloud access when Studio has no universe; API-access/publishing errors in Studio receive the same transparent state. No defaults are saved over a failed load. This explains the preview limitation; it does not add local disk persistence or establish cloud saving.
+
+Reset the open status on every `UpdateAsync` transform retry and verify the returned lease token. A conflicting retry must not inherit the first attempt's Loaded result and admit a foreign lease. Added native account isolation/conflict regression and unavailable/recovery UI coverage. Fixed an old test input that assigned WheelUp to two actions while expecting both to persist.
+
+**Implemented/verified:** real client/server schema/store/UI tests pass all preferences, cleared bindings, early edits, recovery, save acknowledgement and production leave flush with injected JSON storage. [Current evidence](../evidence/2026-11-03-settings-and-final-review.json).
+
+**Prepared, not performed:** `python tools/build_settings_cloud_check.py` builds a small production-storage acceptance place without private assets or animation IDs. First visit confirms a cloud save; after stopping/leaving normally, the next visit checks restoration. It is intentionally separate from live preferences in Studio. Roblox requires a published experience and Studio API access; [official documentation](https://create.roblox.com/docs/cloud-services/data-stores). Publishing/enabling access requires owner approval under AGENTS.md. Real cloud rejoin remains unresolved until that approval and test.

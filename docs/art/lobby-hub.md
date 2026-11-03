@@ -114,3 +114,6 @@ A nine-contact circular support test checks the whole belly footprint against a 
 
 
 **Owner revision, 2026-11-03 - body-only splat:** supersedes the weaker landing above. Takeoff now compresses to 0.36 over 0.30 s, holds tension 0.10 s, extends into 0.58 s flight, then compresses to 0.50 on contact and recovers over 0.38 s. Existing Floppy lower-body spread bones add a small bulge. No landing slime or floor wetness is introduced. Floppy's canonical private model now has the flat folded sole and two underside spore patches requested to match Inferno. Native staged-asset review passes for both species, 14 residents and 1,274 animated/display frames, with 414 rest contacts. [Evidence](../evidence/2026-11-03-floppy-flat-sole.json). Owner feel/art review remains open.
+
+
+**Implemented/verified, 2026-11-03 - actual upward gaze:** corrected resident head-axis signs (and Inferno's resident basis) so both heads physically tilt upward rather than merely entering a look state. The new native check reads each head bone's transformed facing, visits both species, and measures about 12.6 degrees Floppy / 23.3 degrees Inferno upward. Focused run: 1,562 animation/display frames, mean 16.67 ms, maximum 31.72 ms; 524 rest contacts and both landing peaks pass. [Current evidence](../evidence/2026-11-03-settings-and-final-review.json).

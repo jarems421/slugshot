@@ -289,7 +289,7 @@ local title = Theme.label(head, "Settings", Theme.TitleBold, 32, {
 	ZIndex = 6,
 })
 -- Modal frees the cursor while the menu is open (first person locks it).
-local close = Theme.button(head, "Ã—", Theme.Body, 28, {
+local close = Theme.button(head, utf8.char(0xD7), Theme.Body, 28, {
 	Name = "Close",
 	Modal = true,
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -321,6 +321,7 @@ local saveStatus = Theme.label(head, "", Theme.Body, 13, {
 local function refreshSaveStatus()
 	local messages = {
 		Loading = "Loading saved settings...",
+		StudioUnavailable = "Studio preview: settings last for this session. Saving needs a published test experience with API access.",
 		Saved = "Settings saved",
 		Pending = "Saving settings...",
 		LoadFailed = "Saved settings unavailable; retrying. Changes stay in this session.",
@@ -995,7 +996,7 @@ local function refreshSprint()
 	local mode = (player:GetAttribute("SprintMode") :: string?) or "Toggle"
 	sprintText.Text = SPRINT_TEXT[mode] or ""
 	local on = player:GetAttribute("SprintDoubleTap") ~= false
-	doubleMark.Text = if on then "âœ“" else ""
+	doubleMark.Text = if on then utf8.char(0x2713) else ""
 	Fx.tween(doubleMark, 0.12, { BackgroundColor3 = if on then TEAL else Fx.Blank })
 	if on ~= doubleOn then
 		doubleOn = on

@@ -10,6 +10,7 @@ function Sync.start(keys: any)
 	local keysTouched, applying, loaded, queued = false, false, false, false
 	local remote: RemoteEvent? = nil
 	local revision = 0
+	local loadingStatus = "Loading"
 	local function snapshot(): any
 		local attributes = {}
 		for name in Schema.Defaults do
@@ -20,7 +21,7 @@ function Sync.start(keys: any)
 	end
 	local function changed()
 		revision += 1
-		player:SetAttribute("SettingsSaveStatus", if loaded then "Pending" else "Loading")
+		player:SetAttribute("SettingsSaveStatus", if loaded then "Pending" else loadingStatus)
 		if queued or not loaded then
 			return
 		end
@@ -80,6 +81,7 @@ function Sync.start(keys: any)
 					player:SetAttribute("SettingsSaveStatus", "Saved")
 				end
 			elseif status ~= "Loaded" then
+				loadingStatus = status
 				player:SetAttribute("SettingsSaveStatus", status)
 			end
 		end)

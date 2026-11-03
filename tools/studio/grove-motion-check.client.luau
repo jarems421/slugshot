@@ -42,6 +42,7 @@ local ok, problem = pcall(function()
 	local frames, changed, previous = 0, 0, subject:GetPivot()
 	local phases: { [string]: boolean } = {}
 	local lookSeen = false
+	local headLift = { Floppy = 0, Inferno = 0 }
 	local minPress, maxPress = 0, 0
 	local landingPeak = { Floppy = 0, Inferno = 0 }
 	local supportSamples = 0
@@ -51,10 +52,22 @@ local ok, problem = pcall(function()
 	print("GROVECHECK focus")
 	task.wait(1.5)
 	local start = os.clock()
+	local visitChanged = false
 	local before = workspace:GetAttribute("GroveRenderedFrames") :: number
 	local maxDt, totalDt = 0, 0
 	while os.clock() - start < 26 do
 		local dt = RunService.RenderStepped:Wait()
+		if not visitChanged and os.clock() - start > 12 then
+			for _, candidate in models do
+				if candidate:GetAttribute("Slug") ~= subject:GetAttribute("Slug") then
+					subject = candidate
+					view = subject:GetPivot().Position
+					root.CFrame = CFrame.new(view + Vector3.new(0, 3, 7))
+					visitChanged = true
+					break
+				end
+			end
+		end
 		frames += 1
 		totalDt += dt
 		maxDt = math.max(maxDt, dt)
@@ -79,6 +92,18 @@ local ok, problem = pcall(function()
 				landingPeak[species] = math.max(landingPeak[species] or 0, press)
 			end
 			lookSeen = lookSeen or ((model:GetAttribute("GroveLook") or 0) :: number) > 0.5
+			if
+				((model:GetAttribute("GroveLook") or 0) :: number) > 0.9
+				and model:GetAttribute("GroveStage") == "rest"
+			then
+				local head = model:FindFirstChild("head", true) :: Bone
+				local residentFrame = model:GetPivot()
+				local localFacing = head.WorldCFrame:VectorToObjectSpace(residentFrame.LookVector)
+				local facing = head.TransformedWorldCFrame:VectorToWorldSpace(localFacing)
+				local species = model:GetAttribute("Slug") :: string
+				headLift[species] =
+					math.max(headLift[species] or 0, facing:Dot(residentFrame.UpVector))
+			end
 			assert(
 				((model:GetAttribute("GroveHomeDistance") or 0) :: number) < 7.7,
 				"resident escaped home region"
@@ -102,6 +127,10 @@ local ok, problem = pcall(function()
 		"landing did not visibly compress both species"
 	)
 	assert(lookSeen, "no passing-player reaction")
+	assert(
+		headLift.Floppy > 0.08 and headLift.Inferno > 0.08,
+		"a resident did not tilt its actual head up at the player"
+	)
 	assert(supportSamples > 0, "no ground contact samples")
 	print("GROVECHECK result " .. HttpService:JSONEncode({
 		residents = counts,
@@ -113,6 +142,7 @@ local ok, problem = pcall(function()
 		press = { minPress, maxPress },
 		lookSeen = lookSeen,
 		landingPeak = landingPeak,
+		headLift = headLift,
 		supportSamples = supportSamples,
 	}))
 	RunService:UnbindFromRenderStep("GroveCheckCamera")

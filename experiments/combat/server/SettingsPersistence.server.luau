@@ -58,7 +58,11 @@ local function join(player: Player)
 		while player.Parent and not record.session do
 			local ok, session, status = pcall(function()
 				if not adapter then
-					adapter = Store.connect()
+					local connected, reason = Store.connect()
+					if not connected then
+						return nil, reason
+					end
+					adapter = connected
 				end
 				return adapter:open(player.UserId)
 			end)
@@ -74,7 +78,24 @@ local function join(player: Player)
 				notify(player, "NewerVersion")
 				return
 			end
-			notify(player, if ok and status == "Busy" then "Loading" else "LoadFailed")
+			local unavailable = ok and status == "StudioUnavailable"
+			if not ok and game:GetService("RunService"):IsStudio() then
+				local problem = string.lower(tostring(session))
+				unavailable = problem:find("studioaccess", 1, true) ~= nil
+					or problem:find("api services", 1, true) ~= nil
+					or problem:find("publish", 1, true) ~= nil
+					or (
+						problem:find("studio", 1, true) ~= nil
+						and problem:find("api", 1, true) ~= nil
+					)
+			end
+			notify(
+				player,
+				if unavailable
+					then "StudioUnavailable"
+					elseif ok and status == "Busy" then "Loading"
+					else "LoadFailed"
+			)
 			task.wait(10)
 		end
 	end)

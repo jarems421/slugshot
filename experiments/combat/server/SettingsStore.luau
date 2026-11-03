@@ -10,18 +10,22 @@ function Store.new(dataStore: any): any
 	return setmetatable({ dataStore = dataStore }, Store)
 end
 
-function Store.connect(): any
+function Store.connect(): (any, string?)
+	if game:GetService("RunService"):IsStudio() and game.GameId == 0 then
+		return nil, "StudioUnavailable"
+	end
 	-- Keep Studio tests separate from live player preferences.
 	local name = if game:GetService("RunService"):IsStudio()
 		then "SlugshotSettings_Studio"
 		else "SlugshotSettings"
-	return Store.new(game:GetService("DataStoreService"):GetDataStore(name))
+	return Store.new(game:GetService("DataStoreService"):GetDataStore(name)), nil
 end
 
 function Store.open(self: any, userId: number): (any, string)
 	local token = HttpService:GenerateGUID(false)
 	local status = "Busy"
 	local raw = self.dataStore:UpdateAsync(`user:{userId}`, function(previous: any)
+		status = "Busy" -- UpdateAsync may retry after another server wins the lease.
 		if Schema.future(previous) then
 			status = "NewerVersion"
 			return nil
@@ -41,8 +45,13 @@ function Store.open(self: any, userId: number): (any, string)
 		status = "Loaded"
 		return nextValue
 	end)
-	if status ~= "Loaded" or raw == nil then
-		return nil, status
+	if
+		status ~= "Loaded"
+		or typeof(raw) ~= "table"
+		or typeof(raw.lease) ~= "table"
+		or raw.lease.token ~= token
+	then
+		return nil, if status == "Loaded" then "Busy" else status
 	end
 	return { key = `user:{userId}`, token = token, data = Schema.normalize(raw) }, status
 end

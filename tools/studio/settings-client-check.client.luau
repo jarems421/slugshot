@@ -19,10 +19,33 @@ end
 local function check()
 	local gui = player:WaitForChild("PlayerGui"):WaitForChild("Settings", 20)
 	expect(gui, "Settings UI did not start")
+	expect(
+		(gui:FindFirstChild("Close", true) :: TextButton).Text == utf8.char(0xD7),
+		"settings close icon is corrupted"
+	)
 	local keys = (require :: any)(player.PlayerScripts.MovementSandbox.Keybinds)
 	expect(player:GetAttribute("SettingsLoaded") ~= true, "test missed the early-edit window")
 	player:SetAttribute("LookSensitivity", 27)
 	keys.set("inventory", 1, "F13")
+	untilTrue(function()
+		return player:GetAttribute("SettingsSaveStatus") == "StudioUnavailable"
+	end)
+	player:SetAttribute("LookSensitivity", 28)
+	expect(
+		player:GetAttribute("SettingsSaveStatus") == "StudioUnavailable",
+		"early edit hid unavailable storage status"
+	)
+	player:SetAttribute("LookSensitivity", 27)
+	expect(
+		string.find(
+			(gui:FindFirstChild("SaveStatus", true) :: TextLabel).Text,
+			"Studio preview",
+			1,
+			true
+		) ~= nil
+	)
+	print("SETTINGSCHECK PASS unavailable-store UI preserves edits and reports session-only status")
+
 	untilTrue(function()
 		return player:GetAttribute("SettingsLoaded") == true
 	end)

@@ -196,3 +196,8 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 **Asset repair:** rebuild the sole at the existing rim with Inferno's shallow folded plane. Its inherited rim UVs initially stretched old body spores/emission into streaks. Paint a full sole mask, clear inherited emission there, add two controlled sage patches, and neutralize bad seam normals. Material and wire views were inspected; QA passes. Existing deliberate eye UV stacking/socket contacts and the millimetric skin/root gap are documented in evidence. The inverted ink hull must use back-face culling in Blender review, matching the engine: drawing both sides blacked out the body and concealed the sole.
 
 **Verified/limits:** FBX model and idle reimport, 19 bones, body 8k triangles, <=4 influences, 12-second seamless idle; private staged import and native motion/grounding pass. Owner appearance approval and real-device/observer checks remain separate. Baselines are preserved locally; no accepted authored mesh was overwritten.
+
+
+## 2026-11-03 - Verify actual head direction, not an intent flag
+
+**Problem:** the resident look blend rose, but head-axis signs could tilt the face down. The previous notice check only proved entry into the look state. **Implemented/verified:** use the resident pivot's basis consistently for Inferno; correct yaw/pitch signs and Floppy head pitch. Native acceptance now projects the actual transformed head-facing vector onto local up and requires positive lift in both species while grounded. It measures 12.6/23.3 degrees in this run, with 60 FPS mean focused cadence. No mesh/export changes. See final settings/review evidence for limits.

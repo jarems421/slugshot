@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified offline and local Studio; real cloud rejoin pending authorization",
+  "settings": {
+    "passes": [
+      "missing/old/invalid/duplicate data",
+      "all 12 preferences/both key slots/clear/reset/session fence",
+      "future-version protection/failure retry/expired lease/account isolation/conflicting UpdateAsync retry",
+      "unavailable-store UI preserves edits and reports session-only status",
+      "real client hydration/early edits/color/flip/keybind/save acknowledgement",
+      "real remote changes/cleared slots/reset/UI status",
+      "production leave flush/release (injected storage)"
+    ],
+    "storage": "Injected JSON-roundtripping storage for native integration and account/rejoin/failure tests; not cloud-backed.",
+    "glyphs": "Close and double-tap checkmark now use ASCII-safe utf8.char construction.",
+    "lease": "Reset status on every UpdateAsync callback retry and verify the returned lease token.",
+    "unpublishedStudio": "Explicit session-only status; retries preserve edits and never claim a successful save.",
+    "preparedCloudArtifact": "build/SlugshotSettingsCloudCheck.rbxlx; no private assets/animations; production SettingsStore/SettingsPersistence/SettingsSync and Keybinds.",
+    "remaining": "Publish private test and enable Studio API access only with owner approval; then real cloud save/leave/rejoin."
+  },
+  "grove": {
+    "meanDt": 0.016666406123432665,
+    "headLift": {
+      "Inferno": 0.3948667049407959,
+      "Floppy": 0.21821030974388123
+    },
+    "maxDt": 0.031719401478767395,
+    "residents": {
+      "Inferno": 5,
+      "Floppy": 9
+    },
+    "supportSamples": 524,
+    "renderFrames": 1562,
+    "press": [
+      -0.17988514531977537,
+      0.49999997275066543
+    ],
+    "landingPeak": {
+      "Inferno": 0.49999997275066543,
+      "Floppy": 0.49999920852205837
+    },
+    "changedFrames": 388,
+    "lookSeen": true,
+    "animationFrames": 1562
+  },
+  "headTiltDegrees": {
+    "Inferno": 23.257661050663263,
+    "Floppy": 12.603937592743417
+  },
+  "shooting": {
+    "nativeSlideCases": 16,
+    "pass": true,
+    "maxVisibleSurfaceError": 0.0006056312704458833
+  },
+  "limits": [
+    "Cloud persistence is not verified and cannot run from an unpublished local place.",
+    "Focused desktop one-client grove timing is not a device-wide or multiplayer guarantee."
+  ]
+}

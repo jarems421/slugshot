@@ -6,7 +6,8 @@ local function expect(condition: any, message: string?)
 end
 
 local Schema = require(game:GetService("ReplicatedStorage").Combat.SettingsSchema)
-local Store = require(game:GetService("ServerScriptService").SettingsPersistence.SettingsStore)
+local Store =
+	require(game:GetService("ServerScriptService").SettingsPersistence.ProductionSettingsStore)
 local function clone(value: any): any
 	return if value == nil then nil else Http:JSONDecode(Http:JSONEncode(value))
 end
@@ -23,6 +24,13 @@ function backing:UpdateAsync(key: string, transform: (any) -> any): any
 end
 local function check()
 	local normal = Schema.normalize(nil)
+	if game.GameId == 0 then
+		local unavailable, status = Store.connect()
+		expect(
+			unavailable == nil and status == "StudioUnavailable",
+			"unpublished preview attempted a cloud load"
+		)
+	end
 	expect(normal.attributes.LookSensitivity == 50)
 	expect(normal.bindings.shiftLock[2] == "RightControl")
 	local invalidInputs: { any } =
@@ -49,6 +57,26 @@ local function check()
 			and bad.bindings.left[1] == false
 			and bad.bindings.left[2] == false
 	)
+	-- UpdateAsync may invoke a transform more than once on a conflicting lease.
+	local competing: any = {
+		lease = { token = "other", expires = os.time() + 60 },
+		attributes = { LookSensitivity = 14 },
+	}
+	local contested = Store.new({
+		UpdateAsync = function(_self: any, _key: string, transform: (any) -> any): any
+			transform(nil) -- first proposal loses a concurrent update
+			transform(competing) -- final retry must report Busy, not the earlier Loaded
+			return competing
+		end,
+	})
+	local stolen, locked = contested:open(909)
+	expect(stolen == nil and locked == "Busy", "conflicting retry admitted a foreign lease")
+	local independent = Store.new(backing):open(910)
+	expect(
+		independent and independent.data.attributes.LookSensitivity == 50,
+		"another account inherited someone else's settings"
+	)
+	expect(Store.new(backing):save(independent, independent.data, true))
 	local old =
 		Schema.normalize({ LookSensitivity = 29, CrosshairStyle = "Dot", removed = "ignored" })
 	expect(old.attributes.LookSensitivity == 29 and old.attributes.CrosshairStyle == "Dot")
@@ -75,6 +103,7 @@ local function check()
 	data.bindings.forward = { "J", "Up" }
 	data.bindings.shiftLock = { false, "RightControl" } :: { any }
 	data.bindings.nextSlug = { "WheelUp", false } :: { any }
+	data.bindings.previousSlug = { false, false } :: { any }
 	data.bindings.inventory = { "F13", "MouseButton3" }
 	data.bindings.settings = { false, false }
 	expect(store:save(session, data, true))
@@ -124,7 +153,9 @@ local function check()
 	values["user:405"] =
 		{ lease = { token = "corrupt", expires = 1e12 }, attributes = { LookSensitivity = 19 } }
 	expect(store:open(405).data.attributes.LookSensitivity == 19, "corrupt lease blocked loading")
-	print("SETTINGSCHECK PASS future-version protection/failure retry/expired lease")
+	print(
+		"SETTINGSCHECK PASS future-version protection/failure retry/expired lease/account isolation/conflicting UpdateAsync retry"
+	)
 	print("SETTINGSCHECK store done (injected storage; not Roblox cloud persistence)")
 end
 local ok, message = pcall(function()

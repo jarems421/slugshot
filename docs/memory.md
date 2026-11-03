@@ -1873,3 +1873,11 @@
 - **Implemented/verified:** stronger compression/extension and cushioned recovery; flat shallow-folded Floppy export with two sage patches. Baseline source/export/private config retained. FBX/idle roundtrip, installed Blender QA and native privately staged asset review pass; both species reach the landing peak and all 14 residents pass contact/boundary/notice checks. All 12 private assets Approved before canonical ignored config update.
 - **Implemented/verified:** full `verify_slugs.py --blender` passes on Blender 4.5.14, plus lobby strict analysis/lint. No floor effects, experience or Marketplace publication.
 - **Unresolved:** owner verdict, real-device and multiplayer observer review. Detailed measurements and accepted baseline QA warnings are in the flat-sole evidence.
+
+
+## 2026-11-03 - Final delivery review and settings repair
+
+- **Confirmed:** owner requests all work on main after shooting, smooth spring hops and actual upward gaze are verified; also reports settings persistence failure and a corrupted close icon. Settings are treated as per Roblox account, following it across devices/sessions.
+- **Implemented/verified:** corrected icon/checkmark encoding, conflicting settings lease retries and retained honest unavailable-store UI status. Native injected-store tests pass all preferences, bindings, recovery, account isolation and production leave flush.
+- **Implemented/verified:** caught and corrected downward head-axis signs; native transformed-head check now measures positive upward gaze for both species. Focused 1,562-frame run averages 60 FPS; both landing peaks, 524 rest contacts and boundaries pass. Fresh 16-case actual shooting recovery/open-space suite also passes.
+- **Prepared/unresolved:** real cloud persistence requires a published test experience and Studio API access. Minimal production-code acceptance file is built and typed, without private assets/animation IDs. Owner permission requested; do not publish or claim real cloud rejoin success until granted and tested.

@@ -37,10 +37,16 @@ function backing:UpdateAsync(key: string, transform: (any) -> any): any
 	end
 	return nextValue
 end
+local attempts = 0
 return {
 	new = Store.new,
-	connect = function(): any
-		task.wait(10) -- allow early edits before the initial load reply
+	connect = function(): (any, string?)
+		attempts += 1
+		if attempts == 1 then
+			task.wait(1)
+			return nil, "StudioUnavailable"
+		end
+		task.wait(2) -- recover after the production retry, retaining early edits
 		return Store.new(backing)
 	end,
 }

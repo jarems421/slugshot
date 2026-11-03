@@ -353,7 +353,7 @@ local function step(dt: number)
 			slug.model:SetAttribute("FaceLook", Vector2.new(0, 0.8 * slug.lookBlend))
 			for _, item in slug.head do
 				item.bone.Transform = CFrame.new(item.up * -press * 0.55 * slug.size / 2.72)
-					* CFrame.fromAxisAngle(item.side, -0.22 * slug.lookBlend + lean)
+					* CFrame.fromAxisAngle(item.side, 0.22 * slug.lookBlend + lean)
 			end
 		end
 		if poseChanged then

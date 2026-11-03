@@ -275,6 +275,10 @@ local function setup(model: Model)
 	local sideways = (antennaR.WorldPosition - antennaL.WorldPosition).Unit
 	local up = (Vector3.yAxis - sideways * sideways.Y).Unit
 	local front = sideways:Cross(up)
+	if model:GetAttribute("GroveResident") == true then
+		local pivot = model:GetPivot()
+		sideways, up, front = pivot.RightVector, pivot.UpVector, pivot.LookVector
+	end
 	local scale = (antennaR.WorldPosition - antennaL.WorldPosition).Magnitude
 		/ (if dragon then ANTENNA_SPACING.dragon else ANTENNA_SPACING.base)
 	-- Roblox can create one skeleton per skinned mesh: every copy is driven, each through its own axes.
@@ -803,8 +807,8 @@ RunService.RenderStepped:Connect(function(dt: number)
 			local heads: { Item } = rig.bones.head or {}
 			for _, item in heads do
 				item.bone.Transform = CFrame.new(item.y * -press * 0.55 * rig.scale)
-					* CFrame.fromAxisAngle(item.y, rig.lookYaw)
-					* CFrame.fromAxisAngle(item.x, -rig.lookPitch)
+					* CFrame.fromAxisAngle(item.y, -rig.lookYaw)
+					* CFrame.fromAxisAngle(item.x, rig.lookPitch)
 			end
 			antennae(rig, dt, press * 0.6)
 			continue
