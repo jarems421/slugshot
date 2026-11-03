@@ -1,5 +1,29 @@
 # Training arena asset
 
+## Revision 2 - rock, runes, rubble and Studio (2026-11-02, current)
+
+**Confirmed:** owner liked the first design and requested plain rock flooring without plants, a running-figure movement rune and target range rune instead of floor lettering, no training wording, adjustable/stationary moving dummies, and more/smaller debris spread around the rim, with a few pieces high enough to see from first person. Most rubble should remain low. Owner requested seeing the distant enclosure in Studio.
+
+**Implemented:** 66 shallow, closed natural-stone surfaces replace the flat green-grey floor. Painted blue-grey rock, chips and restrained stone boundaries; no fungi, roots or glowing fissures. Running and target symbols sit on original standing runestones. All floor text, including distance labels, is removed. Eight original lower rubble groups spread farther out and slightly higher; 16 medium and 32 small additional rocks surround the entire rim, with most below floor level and a few peeking above it. The rest of the layout stays.
+
+The browser review now animates the designated moving target, with a 0-20 studs/s slider and **Keep stationary**. The separate Studio review uses the same motion rule, server-owned speed, a bounded/rate-limited remote, and replicated configuration. **F** opens/closes the controls: slower/faster, Stationary and Reset to 7. Other dummies remain fixed. Zero holds the current position; resume keeps phase. Values describe peak speed along a sinusoidal 10-stud half-width track.
+
+**Studio:** `build/SlugshotTrainingReview.rbxlx` (normal review); `build/SlugshotTrainingReviewCheck.rbxlx` (disposable assertions and camera tour). `python tools/training/build_studio.py` generates an isolated movement-spawn adapter and maps only training art/control scripts. No movement, lobby, combat or foundation source is changed. Existing island/wall/rubble private assets are reused; the new authored model and one paint texture were imported privately for this requested Studio review. IDs stay under ignored `private-assets/training`; the experience is not published. The native review includes the full distant 360-degree walls and ceiling, with restrained wall fills and a shadow-free art-review key so the sealed roof does not black out the island.
+
+Reproduce after building the asset above:
+
+```powershell
+python tools/training/import_draft.py
+python tools/training/build_studio.py --check
+powershell -NoProfile -File tools/training/studio_review.ps1 -Check
+python tools/training/build_studio.py
+powershell -NoProfile -File tools/training/studio_review.ps1
+```
+
+**Implemented/verified:** all 267 authored component QA checks pass; GLB reimport preserves 369 mesh objects, 784,786 triangles, materials and exact bounds. WebGL view/rotate/reset/mobile-width checks pass, including stationary, speed change and button behavior. Training Luau formatting, lint and strict analysis pass. Full movement/foundation verification passes. Real one-client Studio server checks pass 30/120 Hz equivalence, pause/resume continuity and malformed speeds; client tests confirm replicated 0/4/16 changes, actual target motion, stopping, controls presence and rejection of forged 99. Six native camera views were captured after mesh/texture preload and inspected. [Sanitized evidence](../evidence/2026-11-02-training-asset.json), [ADR 0023](../decisions/0023-training-review-and-target-motion.md).
+
+**Unresolved:** owner's final tweaks/lighting verdict; multi-client and mobile performance; fine collision/parkour route validation. This is an art/movement/target-motion review, with full shooting damage and the all-species training selector still to integrate. Earlier draft metrics/choices below are historical. Preview lighting differs between Blender/browser and Roblox, and no final parity approval is implied.
+
 ## Current scope (2026-11-02)
 
 **Confirmed:** owner requested a training arena based on the floating spawn island, enlarged to about two or three times its present scale. Remove the roots, cracked top and lower spiral; add more rubble beneath it. Empty space surrounds it, with the existing rock-wall language enclosing all directions and the ceiling. Include a small movement area, dummies and eventually training-only access to every implemented slug, independent of ownership.

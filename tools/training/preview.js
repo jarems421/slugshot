@@ -5,6 +5,12 @@ import {OrbitControls} from './vendor/OrbitControls.js';
 const status=document.querySelector('#status'), loading=document.querySelector('#loading');
 const stage=document.querySelector('#stage'), fallback=document.querySelector('#fallback');
 let scene, camera, renderer, controls, asset, room=[], active='island', rotating=false;
+let dummySpeed=7,dummyPhase=0,lastTime=0,mover=[];
+const speedInput=document.querySelector('#speed'),speedLabel=document.querySelector('#speedLabel');
+function setSpeed(speed){dummySpeed=Math.max(0,Math.min(20,Number(speed)||0));speedInput.value=String(dummySpeed);speedLabel.textContent=dummySpeed===0?'Stationary':`${dummySpeed} studs/s`;}
+speedInput.addEventListener('input',()=>setSpeed(speedInput.value));
+document.querySelector('#stationary').onclick=()=>setSpeed(0);
+function moveDummy(dt){dummyPhase+=dt*dummySpeed/10;for(const {object,x} of mover)object.position.x=x+Math.sin(dummyPhase)*10;}
 const views={
   island:{eye:[210,180,290],target:[0,-12,0],fov:40},
   above:{eye:[0,285,65],target:[0,0,0],fov:40},
@@ -54,10 +60,10 @@ async function init(){
     controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=0.08;controls.minDistance=5;controls.maxDistance=1400;controls.autoRotateSpeed=0.45;
     const gltf=await new GLTFLoader().loadAsync('./slugshot-training-arena.glb',e=>{if(e.total)status.textContent=`Loading ${Math.round(e.loaded/e.total*100)}%`;});
     asset=gltf.scene;scene.add(asset);let objects=0,triangles=0;
-    asset.traverse(o=>{if(o.name.startsWith('ROOM_'))room.push(o);if(o.isMesh){objects++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;o.castShadow=!o.name.includes('_Ink')&&!o.name.startsWith('ROOM_');o.receiveShadow=!o.name.includes('_Ink');}});
+    asset.traverse(o=>{if(o.name.startsWith('ROOM_'))room.push(o);if(o.isMesh){objects++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;o.castShadow=!o.name.includes('_Ink')&&!o.name.startsWith('ROOM_');o.receiveShadow=!o.name.includes('_Ink');if(o.name.startsWith('TARGET_STRAFE_'))mover.push({object:o,x:o.position.x});}});
     loading.style.display='none';status.textContent='Ready to inspect';setView('island');
-    window.trainingReview={mode:'webgl',setView,stats:{objects,triangles},get active(){return active},get roomVisible(){return room.filter(o=>o.visible).length},camera,controls};
-    renderer.setAnimationLoop(()=>{controls.update();if(active==='room')visibility();renderer.render(scene,camera);});
+    window.trainingReview={mode:'webgl',setView,setSpeed,stats:{objects,triangles},get speed(){return dummySpeed},get moverX(){return mover[0]?.object.position.x},get active(){return active},get roomVisible(){return room.filter(o=>o.visible).length},camera,controls};
+    renderer.setAnimationLoop(time=>{const dt=lastTime?Math.min((time-lastTime)/1000,0.1):0;lastTime=time;moveDummy(dt);controls.update();if(active==='room')visibility();renderer.render(scene,camera);});
     addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
   }catch(error){console.warn('Training preview:',error);useFallback('This browser could not open the interactive view. The rendered angles and downloadable 3D asset are available.');}
 }

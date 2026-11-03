@@ -84,5 +84,97 @@
     "Owner art/scale verdict",
     "Roblox import/collisions/lighting and performance",
     "Gameplay dummies, movement checks, fall recovery and all-slug loadout selector"
-  ]
+  ],
+  "revision_2": {
+    "owner_feedback": "First design liked. Plain normal rock floor without plants; running/target runes instead of lettering; remove training wording; adjust moving dummy speed or keep stationary; spread rubble, add smaller rim pieces, raise some while keeping majority low. Show enclosure in Studio.",
+    "base_draft": "10ba7cb",
+    "geometry": {
+      "mesh_objects": 369,
+      "triangles": 784786,
+      "floor_stones": 66,
+      "additional_rim_rocks": 48,
+      "new_component_qa": 267,
+      "qa_failures": 0,
+      "glb_bytes": 40508740
+    },
+    "glb_sha256": "3e4b5dea14e364ba952ba5ddc83dfaf5d280dfc7eecd8291415f9ccd40926a9d",
+    "roundtrip": {
+      "pass": true,
+      "before": {
+        "objects": 369,
+        "triangles": 784786,
+        "min": [
+          -469.87066650390625,
+          -469.8705749511719,
+          -235.0
+        ],
+        "max": [
+          469.8707275390625,
+          469.87066650390625,
+          277.4232482910156
+        ],
+        "room_parts": 68,
+        "missing_materials": []
+      },
+      "after": {
+        "objects": 369,
+        "triangles": 784786,
+        "min": [
+          -469.87066650390625,
+          -469.8705749511719,
+          -235.0
+        ],
+        "max": [
+          469.8707275390625,
+          469.87066650390625,
+          277.4232482910156
+        ],
+        "room_parts": 68,
+        "missing_materials": []
+      },
+      "max_bounds_error_studs": 0.0,
+      "limits": "Offline Blender-to-GLB roundtrip only. Not Studio playback, collisions, performance or owner approval."
+    },
+    "browser": {
+      "pass": true,
+      "mode": "webgl",
+      "stats": {
+        "objects": 369,
+        "triangles": 784786
+      },
+      "dummyControls": true,
+      "views": 5,
+      "mobileWidth": 390,
+      "rotation": true,
+      "reset": true,
+      "errors": []
+    },
+    "studio": {
+      "version": "0.745.0.7451137",
+      "clients": 1,
+      "device": "Windows desktop; local server; no injected network simulation",
+      "fixture": "tools/training/build_studio.py --check; tools/training/studio_review.ps1 -Check",
+      "results": [
+        "[TRAININGCHECK] server PASS: 66 floor stones, 48 rim rocks, 68 enclosure parts; motion, pause, resume, invalid input",
+        "[TRAININGCHECK] client PASS: replicated 0/4/16 speed, pause, movement, forged speed rejection and controls",
+        "[TRAININGCHECK] view room",
+        "[TRAININGCHECK] view west",
+        "[TRAININGCHECK] view ceiling",
+        "[TRAININGCHECK] view edge",
+        "[TRAININGCHECK] view runes",
+        "[TRAININGCHECK] view overview",
+        "[TRAININGCHECK] ALL PASS"
+      ],
+      "observed": "Native material views inspected at room, west wall, ceiling, rim at eye height, running rune and overview. Eye-height rim image shows a higher rock beyond the edge. Original private rubble imports required independent group bounds restoration. Sealed cavern needed stable art-review illumination; final preview disables global roof shadows, removes the excessive island point fills, and retains restrained wall fills with a neutral 13:30 preview key (the shared cavern preset starts at midnight). Waiting for mesh/texture preload prevented misleading partial/white review frames.",
+      "normal_place": "build/SlugshotTrainingReview.rbxlx",
+      "controls": "F opens controls; speed 0-20 studs/s; Stationary; Reset 7. Speed is peak sinusoidal speed; same path and phase on pause/resume. Other dummies remain stationary.",
+      "private_imports": "Only authored draft model (under 2 MB) and one stone texture privately imported for requested Studio review; existing island/rubble/wall IDs reused; no marketplace listing or experience publication.",
+      "limits": [
+        "One local client only. Server/client speed and rejection tested; no multiplayer latency or device-performance claim.",
+        "Scripted eye-height camera review is not an owner walk-through or final art approval.",
+        "This review has movement and adjustable target motion; shooting damage and the all-species selector are not integrated here."
+      ]
+    },
+    "validation_completed": "2026-11-03"
+  }
 }

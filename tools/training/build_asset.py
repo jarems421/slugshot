@@ -15,7 +15,7 @@ from pathlib import Path
 import bpy
 import bmesh
 import numpy as np
-from mathutils import Matrix, Vector
+from mathutils import Matrix, Vector, geometry
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/training"
@@ -24,6 +24,7 @@ RNG = random.Random(42017)
 NEW = []
 IMPORTS = []
 SOURCE_MATERIALS = {}
+SOURCE_BOUNDS = {}
 
 
 def material(name, color, metal=0, rough=0.8, glow=0):
@@ -58,6 +59,8 @@ def mesh(name, verts, faces, mat, collection):
     data.materials.append(mat)
     bm = bmesh.new()
     bm.from_mesh(data)
+    bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=1e-5)
+    bmesh.ops.dissolve_degenerate(bm,edges=list(bm.edges),dist=1e-5)
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     bmesh.ops.triangulate(bm, faces=list(bm.faces))
     bm.to_mesh(data)
@@ -136,6 +139,11 @@ def import_asset(source, key, col, keep=None):
         for old in list(obj.users_collection): old.objects.unlink(obj)
         col.objects.link(obj)
         obj.name = key + "_" + original
+        obj['SourceAsset']=key;obj['SourceGroup']=original
+        obj['SourceTransform']=list(Matrix.Identity(4)[0])+list(Matrix.Identity(4)[1])+list(Matrix.Identity(4)[2])+list(Matrix.Identity(4)[3])
+        pts=[obj.matrix_world@Vector(v) for v in obj.bound_box]
+        lo=[min(v[i] for v in pts) for i in range(3)];hi=[max(v[i] for v in pts) for i in range(3)]
+        SOURCE_BOUNDS.setdefault(key,{})[original]={'min':[lo[0],lo[2],-hi[1]],'max':[hi[0],hi[2],-lo[1]]}
         cache_key = (key,original)
         if cache_key not in SOURCE_MATERIALS:
             if original.endswith('_Ink'):
@@ -166,6 +174,9 @@ def import_asset(source, key, col, keep=None):
 
 
 def transformed(obj, matrix):
+    if 'SourceTransform' in obj:
+        old=list(obj['SourceTransform']);prior=Matrix([old[i:i+4] for i in range(0,16,4)]);total=matrix@prior
+        obj['SourceTransform']=[v for row in total for v in row]
     obj.matrix_world = matrix @ obj.matrix_world
     apply(obj)
 
@@ -185,6 +196,99 @@ def target(name, x, y, z, col, mats, yaw=0):
         disc = cylinder(name+"_Bullseye", (0,-0.59-(0.76-radius)*0.06,3.0), radius,0.035,mat,col)
         disc.rotation_euler[0]=math.pi/2; pieces.append(disc)
     for obj in pieces: transformed(obj,home)
+
+
+def rock_floor(points, mat, col):
+    """Broad, low natural stones: quiet painted rock, no plants or glowing cracks."""
+    seeds=[]
+    rand=random.Random(7441)
+    for x in range(-88,89,22):
+        for y in range(-88,89,22):
+            if math.hypot(x,y)<100:seeds.append(np.array([x+rand.uniform(-5,5),y+rand.uniform(-5,5)]))
+    def clip(poly,n,d):
+        result=[]
+        for a,b in zip(poly,poly[1:]+poly[:1]):
+            da,db=np.dot(a,n)-d,np.dot(b,n)-d
+            if da<=0:result.append(a)
+            if (da<0)!=(db<0):result.append(a+(b-a)*(da/(da-db)))
+        return result
+    for i,seed in enumerate(seeds):
+        poly=[np.array(p) for p in points]
+        for other in seeds:
+            if np.array_equal(seed,other):continue
+            n=other-seed;poly=clip(poly,n,(np.dot(other,other)-np.dot(seed,seed))/2)
+            if len(poly)<3:break
+        if len(poly)<3:continue
+        poly=[poly[i] for i in geometry.convex_hull_2d([Vector((p[0],p[1])) for p in poly])]
+        center=sum(poly)/len(poly);outer=[center+(p-center)*0.998 for p in poly]
+        inner=[center+(p-center)*0.965 for p in poly];n=len(poly)
+        verts=[(p[0],p[1],z) for z,ring in [(-0.8,outer),(0.1,outer),(0.5,inner)] for p in ring]
+        verts += [(center[0],center[1],0.5),(center[0],center[1],-0.8)]
+        faces=[]
+        for k in range(n):
+            j=(k+1)%n
+            faces += [(3*n,k+2*n,j+2*n),(3*n+1,j,k),(k,j,j+n,k+n),(k+n,j+n,j+2*n,k+2*n)]
+        mesh(f'FLOOR_Rock_{i:02d}',verts,faces,mat,col)
+    # Paint in the same blue-grey, chipped, inked rock family as the source walls;
+    # no atlas projection, moss, fungi or missing procedural shader in export.
+    dim=1024;yy,xx=np.mgrid[:dim,:dim]/dim;coords=np.stack((xx*220-110,yy*220-110),axis=-1)
+    dist=np.stack([((coords-p)**2).sum(axis=-1) for p in seeds]);ids=np.argmin(dist,axis=0)
+    palette=np.array([[0.29,0.32,0.37],[0.33,0.35,0.39],[0.27,0.30,0.34],[0.35,0.37,0.40],[0.30,0.33,0.36]])
+    colors=palette[ids%len(palette)]
+    rng=np.random.default_rng(7441);grain=rng.normal(0,0.005,(dim,dim))
+    broad=0.012*np.sin(xx*41+np.sin(yy*27)*3)+0.008*np.cos(yy*47+xx*7)
+    # A sparse layer of irregular painted chips at a readable scale.
+    chips=np.zeros((dim,dim))
+    for _ in range(1300):
+        x,y=rng.integers(2,dim-8,2);w,h=rng.integers(1,5,2);chips[y:y+h,x:x+w]-=rng.uniform(0.025,0.065)
+    pixels=np.ones((dim,dim,4),dtype='f4');pixels[:,:,:3]=np.clip(colors+(grain+broad+chips)[:,:,None],0,1)
+    image=bpy.data.images.new('Plain painted rock',width=dim,height=dim,alpha=False)
+    image.pixels.foreach_set(pixels.ravel());image.filepath_raw=str(OUT/'training-stone.png');image.file_format='PNG';image.save();image.pack()
+    node=mat.node_tree.nodes.new('ShaderNodeTexImage');node.image=image
+    shader=next(n for n in mat.node_tree.nodes if n.type=='BSDF_PRINCIPLED');mat.node_tree.links.new(node.outputs['Color'],shader.inputs['Base Color'])
+
+
+def rune(kind, location, stone, ink, glow, col):
+    x,y=location
+    block('RUNE_'+kind+'_Stone',(x,y,3.8),(6.4,1.4,6.6),stone,col,0.45)
+    block('RUNE_'+kind+'_Inlay',(x,y-0.73,3.8),(5.25,0.12,5.3),ink,col,0.3)
+    def line(a,b,index):
+        va=Vector((x+a[0],y-0.84,3.8+a[1]));vb=Vector((x+b[0],y-0.84,3.8+b[1]))
+        obj=block(f'RUNE_{kind}_Stroke{index}',(va+vb)/2,(0.23,0.16,(vb-va).length),glow,col,0.06)
+        obj.rotation_euler=(vb-va).to_track_quat('Z','Y').to_euler();apply(obj)
+    if kind=='Run':
+        segments=[((0.15,1.05),(-0.55,-0.3)),((-0.05,0.65),(1.2,0.25)),((1.2,0.25),(1.65,0.9)),((-0.1,0.65),(-1.2,0.35)),((-1.2,0.35),(-1.7,-0.2)),((-0.55,-0.3),(0.55,-0.85)),((0.55,-0.85),(1.0,-1.9)),((-0.55,-0.3),(-1.15,-1.2)),((-1.15,-1.2),(-2,-1.3))]
+        for i,(a,b) in enumerate(segments):line(a,b,i)
+        obj=cylinder('RUNE_Run_Head',(x+0.45,y-0.85,5.45),0.42,0.16,glow,col,24);obj.rotation_euler[0]=math.pi/2;apply(obj)
+    else:
+        for r in [1.95,1.15,0.28]:
+            n=40;verts=[]
+            for depth in [0,0.15]:
+                for radius in [max(0.02,r-0.1),r+0.1]:
+                    verts += [(x+math.cos(i*math.tau/n)*radius,y-0.78-depth,3.8+math.sin(i*math.tau/n)*radius) for i in range(n)]
+            faces=[]
+            for i in range(n):
+                j=(i+1)%n
+                faces += [(i,j,j+n,i+n),(i+2*n,i+3*n,j+3*n,j+2*n),(i,i+2*n,j+2*n,j),(i+n,j+n,j+3*n,i+3*n)]
+            mesh(f'RUNE_Target_Ring_{r}',verts,faces,glow,col)
+
+
+def rim_debris(points,col,stone):
+    total=LAYOUT['rim_rocks']+LAYOUT['rim_small_rocks']
+    for i in range(total):
+        small=i>=LAYOUT['rim_rocks']
+        j=i-LAYOUT['rim_rocks'] if small else i
+        n=LAYOUT['rim_small_rocks'] if small else LAYOUT['rim_rocks']
+        a=j*math.tau/n+RNG.uniform(-0.025,0.025)+(0.06 if small else 0)
+        index=int(a%math.tau/math.tau*len(points));r=math.hypot(*points[index])+RNG.uniform(5,16)
+        size=RNG.uniform(1.3,3.4) if small else RNG.uniform(5,10)
+        z=RNG.uniform(-15,-3) if small else RNG.uniform(-5,0)
+        bm=bmesh.new();bmesh.ops.create_icosphere(bm,subdivisions=2,radius=0.5)
+        for v in bm.verts:v.co*=RNG.uniform(0.91,1.09)
+        bm.verts.ensure_lookup_table();verts=[tuple(v.co) for v in bm.verts]
+        faces=[tuple(v.index for v in f.verts) for f in bm.faces];bm.free()
+        obj=mesh(f'EDGE_Rock_{i:02d}',verts,faces,stone,col)
+        obj.location=(math.sin(a)*r,math.cos(a)*r,z);obj.scale=(size,size*RNG.uniform(0.7,1.1),size*RNG.uniform(0.65,1.0));obj.rotation_euler=(RNG.uniform(-0.3,0.3),RNG.uniform(-0.3,0.3),a);apply(obj)
 
 
 def main():
@@ -218,27 +322,21 @@ def main():
         j=(i+1)%count
         faces.extend([(0,1+i,1+j),(1+i,1+count+i,1+count+j,1+j),(len(verts)-1,1+count+j,1+count+i)])
     cap=mesh('ISLAND_UnbrokenTop',verts,faces,stone,island)
-    # Baked, subtle variation; no procedural nodes that disappear on glTF export.
-    dim=1024; yy,xx=np.mgrid[:dim,:dim]/dim
-    rng=np.random.default_rng(617)
-    variation=0.018*np.sin(xx*19+np.sin(yy*10)*2)+0.012*np.cos(yy*27)+rng.normal(0,0.003,(dim,dim))
-    pixels=np.ones((dim,dim,4),dtype='f4')
-    for i,base in enumerate([0.185,0.209,0.197]): pixels[:,:,i]=np.clip(base+variation,0,1)
-    image=bpy.data.images.new('Training slate paint',width=dim,height=dim,alpha=False)
-    image.pixels.foreach_set(pixels.ravel());image.filepath_raw=str(OUT/'training-stone.png');image.file_format='PNG';image.save();image.pack()
-    node=stone.node_tree.nodes.new('ShaderNodeTexImage');node.image=image
-    shader=next(n for n in stone.node_tree.nodes if n.type=='BSDF_PRINCIPLED')
-    stone.node_tree.links.new(node.outputs['Color'],shader.inputs['Base Color'])
+    # The support cap is recessed under the plain, low-relief stone surface.
+    for v in cap.data.vertices:
+        if v.co.z>0:v.co.z=0
+    rock_floor(points,stone,island)
     # A denser cloud below the island, reused from the approved original rubble.
     originals=import_asset(args.source,'hub-rock-debris',rubble)
     templates=[o for o in originals]
     for k in range(LAYOUT['debris_copies']):
         a=k*math.tau/LAYOUT['debris_copies']+0.15
         scale=RNG.uniform(0.75,1.22)
-        transform=Matrix.Translation((math.cos(a)*38,math.sin(a)*38,-32-k*3.3)) @ Matrix.Rotation(a,4,'Z') @ Matrix.Diagonal((scale,scale,scale,1))
+        transform=Matrix.Translation((math.cos(a)*53,math.sin(a)*53,-23-k*3.3)) @ Matrix.Rotation(a,4,'Z') @ Matrix.Diagonal((scale,scale,scale,1))
         for src in templates:
             obj=src.copy();obj.data=src.data;obj.name=f'DEBRIS_{k:02d}_{src.name}';rubble.objects.link(obj)
             transformed(obj,transform)
+    rim_debris(points,rubble,stone)
     for obj in originals: bpy.data.objects.remove(obj,do_unlink=True)
     # Open firing lanes on the right, independent movement loop on the left.
     block('RANGE_FiringLine',(24,-52,0.56),(58,0.3,0.08),teal,props,0)
@@ -246,7 +344,7 @@ def main():
         y=-52+d; x=[10,30,5,37,13,27][index]
         target(f'TARGET_{d:03d}',x,y,0.5,props,(ink,stone,orange,pale,teal))
         block(f'RANGE_Mark_{d}',(24,y,0.55),(46,0.16,0.06),teal,props,0)
-        text(f'LABEL_{d}',f'{d} STUDS',(49,y,0.62),1.35,pale,props)
+
     block('TARGET_RaisedBase',(55,22,5.5),(10,10,10),stone,props,0.6)
     target('TARGET_ELEVATED',55,22,10.5,props,(ink,stone,orange,pale,teal))
     target('TARGET_STRAFE',44,-7,0.5,props,(ink,stone,orange,pale,teal))
@@ -265,9 +363,8 @@ def main():
         block('COURSE_WallRunBand',(x,y,11.7),(2.9,length-1,0.35),teal,props,0)
     for x in [-48,-32]: block('COURSE_SlidePost',(x,-43,3.5),(1.6,3,6),metal,props,0.2)
     block('COURSE_SlideLintel',(-40,-43,6.3),(18,3.5,1.5),orange,props,0.3)
-    text('LABEL_Movement','MOVEMENT',(-41,-57,0.65),3,pale,props)
-    text('LABEL_Range','OPEN RANGE',(22,-63,0.65),3,pale,props)
-    text('LABEL_Training','TRAINING',(-2,-73,0.65),4.3,pale,props)
+    rune('Run',(-52,-53),stone,ink,teal,props)
+    rune('Target',(55,-56),stone,ink,teal,props)
     # Low chunky equipment console; future all-slug selector belongs here.
     block('STATION_Base',(-2,-62,1.5),(7,4,2),metal,props,0.4)
     block('STATION_Console',(-2,-62,3.0),(7,3.6,1.2),orange,props,0.3)
@@ -335,6 +432,30 @@ def main():
             for obj in walls.objects:obj.hide_render=name!='inside'
             cam.location=loc;cam.rotation_euler=(Vector(aim)-cam.location).to_track_quat('-Z','Y').to_euler();camdata.lens=lens
             scene.render.filepath=str(OUT/f'{name}.png');bpy.ops.render.render(write_still=True)
+    # A small private authored-only upload suffices for Studio: source art reuses
+    # its existing IDs. Matrices are Blender Z-up; the Studio loader converts axes.
+    authored=[o for o in scene.objects if o.type=='MESH' and 'SourceAsset' not in o]
+    for obj in scene.objects:obj.select_set(obj in authored)
+    bpy.ops.export_scene.gltf(filepath=str(OUT/'training-authored.glb'),export_format='GLB',use_selection=True,export_apply=True,export_extras=True,export_yup=True,export_animations=False,export_cameras=False,export_lights=False,export_materials='NONE')
+    def bounds(obj):
+        pts=[obj.matrix_world@Vector(v) for v in obj.bound_box]
+        lo=[min(v[i] for v in pts) for i in range(3)];hi=[max(v[i] for v in pts) for i in range(3)]
+        return {'min':[lo[0],lo[2],-hi[1]],'max':[hi[0],hi[2],-lo[1]]}
+    source_parts=[];new_parts={}
+    for obj in scene.objects:
+        if obj.type!='MESH':continue
+        if 'SourceAsset' in obj:
+            source_parts.append({'name':obj.name,'key':obj['SourceAsset'],'group':obj['SourceGroup'],'matrix':list(obj['SourceTransform'])})
+        else:
+            spec=bounds(obj);mat=obj.data.materials[0]
+            imported=next(({'key':key,'group':group} for (key,group),value in SOURCE_MATERIALS.items() if value==mat),None)
+            if imported:spec['sourceMaterial']=imported
+            else:
+                shader=next(n for n in mat.node_tree.nodes if n.type=='BSDF_PRINCIPLED')
+                spec['color']=list(mat.diffuse_color[:3]);spec['emissive']=shader.inputs['Emission Strength'].default_value
+                if mat==stone:spec['paint']='training-stone.png'
+            new_parts[obj.name]=spec
+    (OUT/'studio-layout.json').write_text(json.dumps({'source':source_parts,'sourceBounds':SOURCE_BOUNDS,'authored':new_parts},indent=1))
     # QA selected authored components. Imported split meshes and deliberate inverse ink shells are catalogued separately.
     sys.path.insert(0,str(Path.home()/'.agents/skills/el4cteo-blender-asset-qa/scripts'))
     import qa_check

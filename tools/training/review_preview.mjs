@@ -26,11 +26,14 @@ try{
   if((await ev('trainingReview.active')).value!==view)throw Error('View button failed: '+view);
   const n=(await ev('trainingReview.roomVisible')).value;if(view==='inside'&&n<1)throw Error('Inside view hides enclosure');if(view==='island'&&n!==0)throw Error('Island view obscured by room');
  }
+ await ev('trainingReview.setSpeed(0)');let parked=(await ev('trainingReview.moverX')).value;await sleep(500);if(Math.abs((await ev('trainingReview.moverX')).value-parked)>0.001)throw Error('Stationary dummy drift');
+ await ev('trainingReview.setSpeed(12)');await sleep(600);if(Math.abs((await ev('trainingReview.moverX')).value-parked)<0.05)throw Error('Speed control did not move dummy');
+ await ev(`document.getElementById('stationary').click()`);if((await ev('trainingReview.speed')).value!==0)throw Error('Stationary button failed');
  await ev(`document.getElementById('rotate').click()`);if(!(await ev('trainingReview.controls.autoRotate')).value)throw Error('Auto rotation failed');
  await ev(`document.getElementById('reset').click()`);if((await ev('trainingReview.active')).value!=='island'||(await ev('trainingReview.controls.autoRotate')).value)throw Error('Reset failed');
  await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await sleep(400);
  if((await ev('document.documentElement.scrollWidth>document.documentElement.clientWidth')).value)throw Error('Mobile horizontal overflow');
  const shot=await call('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(out,'mobile.png'),Buffer.from(shot.data,'base64'));
  if(errors.length)throw Error(errors.join('\n'));
- fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({pass:true,...stats,views:5,mobileWidth:390,rotation:true,reset:true,errors},null,2));console.log(JSON.stringify({pass:true,...stats,views:5,rotation:true,reset:true,mobileWidth:390,errors}));
+ fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({pass:true,...stats,dummyControls:true,views:5,mobileWidth:390,rotation:true,reset:true,errors},null,2));console.log(JSON.stringify({pass:true,...stats,dummyControls:true,views:5,rotation:true,reset:true,mobileWidth:390,errors}));
 }finally{ws?.close();child.kill();}
