@@ -50,11 +50,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("key")
     ap.add_argument("--page", default="docs/art/asset-library.html")
+    ap.add_argument("--source", help="the concept this asset is a lighter copy of")
     args = ap.parse_args()
     out = Path("build/lobby/export")/args.key
     report = json.loads((out/"build.json").read_text())
     page = Path(args.page).read_text(encoding="utf-8")
-    bank, items = dump_renders(extract(page, r'<script id="lib">(.*?)</script>'), {args.key})
+    bank, items = dump_renders(extract(page, r'<script id="lib">(.*?)</script>'), {args.source or args.key})
     gpu = Gpu(page, items[0], bank)
     for g in report["groups"]:
         g.pop("emit", None)
@@ -82,6 +83,9 @@ def main():
         if g["id"] in GLOWING and (lum[valid] > 0.05).mean() > 0.01:
             peak = float(np.percentile(lum[valid & (lum > 0.05)], 98))
             mask = np.clip(lum/peak, 0, 1)
+            # The giant mushroom's whole top glows a little, not only its spots and gills (owner).
+            if args.key.startswith("mushroom") and g["name"] == "Cap":
+                mask = np.maximum(mask, 0.42)
             Image.fromarray((mask*255 + 0.5).astype("u1")).save(out/"textures"/f"{g['name']}-emit.png")
             base = alb.max(axis=2)[valid & (mask > 0.5)]
             g["emit"] = f"textures/{g['name']}-emit.png"

@@ -15,6 +15,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Movement lab and playtest plan](movement.md)
 - [Movement research](research/movement.md), [asset provenance](movement-assets.md) and [results](movement-verification.md)
 - [Loadout selection and inspect](loadout-controls.md), [ADR 0021](decisions/0021-loadout-controls-and-inspect.md)
+- [Sound event audit, proposed direction and five-sound approval batch](audio/sound-plan.md)
 - [PvP UI: HUD, inventory, settings, keybinds and goo](pvp-ui.md), [ADR 0020](decisions/0020-ui-goo-and-keybinds.md)
 - [Combat / temporary target range](combat.md), [shot consistency](combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current), [ADR 0022](decisions/0022-shot-frame-and-flight-consistency.md), [first-person camera research and comparison](research/first-person-acrobatics.md) and [reversible camera experiment](decisions/0014-acrobatic-camera-comparison.md)
 - [First-person owner wording and recurring regression fixes](combat.md#owner-language-contextual-interpretations-to-carry-forward)
@@ -27,6 +28,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Confirmed slug recovery and Floppy burrow sequence](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md)
 - [One-handed ADS](decisions/0019-one-handed-ads.md)
 - [Gun, flip, burrow and first-person review with proposals (2026-11-01)](reviews/2026-11-01-combat-feel-review.md)
+- [Lobby checkpoint, 2026-11-03](art/lobby-checkpoint.md): start here for lobby work.
 - [Visual style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md) [Slugterra environment research](research/slugterra-environment.md), [art lessons](art/lessons.md), [look pack](art/look-pack.md) and the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr)
 - [Owner design language](slugs/owner-design-language.md): what feedback phrases have meant, working style, animation/runtime lessons
 - [Blender modelling lessons](slugs/blender-lessons.md)
@@ -36,6 +38,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [ADR template](templates/adr.md), [foundation ADR](decisions/0001-foundation.md), [movement ADR](decisions/0002-movement-experiment.md), [clip presentation ADR](decisions/0003-clip-presentation.md), [Place1 traversal ADR](decisions/0004-place1-traversal.md), [Mixamo variants ADR](decisions/0005-mixamo-variants-transitions.md), [wall run / v4 feedback ADR](decisions/0006-wall-run-and-v4-feedback.md), [block limbs ADR](decisions/0007-block-limbs-and-original-run.md), [R6 rig ADR](decisions/0008-r6-rig.md) and [cleanup / type check ADR](decisions/0009-cleanup-type-check-and-trusted-physics.md)
 - [Roadmap](roadmap.md)
 - [Open questions](questions.md)
+- [Training arena asset review](art/training-arena.md)
 - [Current status](status.md)
 - [Dated memory](memory.md)
 - [Verification evidence](verification.md)

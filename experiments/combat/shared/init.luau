@@ -16,6 +16,7 @@ export type Slug = {
 	Tumble: number, -- end-over-end turns per second in flight
 	Size: number, -- visual height outside the barrel (studs); used through flight and recovery
 	Transforms: boolean, -- Floppy is the one slug that never transforms
+	ExactFrom: number, -- first shot level that lands exactly where it is aimed
 	Blurb: string, -- one line for the inventory
 }
 
@@ -50,7 +51,7 @@ Combat.CooldownTolerance = 0.15
 Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 
 -- Slot order; switching between slots comes with the second slug.
-Combat.Loadout = { "Floppy" }
+Combat.Loadout = { "Floppy", "Inferno" }
 Combat.SlotCount = 5 -- owner, 2026-11-02: five carried slugs
 Combat.SlugTotal = 13 -- owner, 2026-11-01: Floppy plus twelve planned models
 
@@ -65,9 +66,25 @@ Combat.Slugs = {
 		Drag = 0.35,
 		Radius = 0.3,
 		Tumble = 2,
-		Size = 1, -- owner, 2026-11-01: permanent Floppy size outside the gun
+		Size = 1.3, -- owner, 2026-11-02: permanent Floppy size outside the gun
 		Transforms = false,
+		ExactFrom = 3,
 		Blurb = "A drowsy, soft little slug.",
+	},
+	-- Proposal for owner playtest (docs/slugs/catalog/inferno.md): far faster and flatter than Floppy, and exact from the
+	-- second kick. Drag can't be 0 in the closed-form flight, so it's small enough not to matter at these speeds.
+	Inferno = {
+		Label = "Inferno",
+		Damage = 25,
+		Speed = { 300, 420, 500 },
+		Gravity = 20,
+		Drag = 0.05,
+		Radius = 0.3,
+		Tumble = 0,
+		Size = 1,
+		Transforms = true,
+		ExactFrom = 2,
+		Blurb = "A cocky little menace. Fast, hot and hits hard.",
 	},
 } :: { [string]: Slug }
 
@@ -168,7 +185,9 @@ function Combat.launchDirection(
 			end
 		end
 	end
-	local amount = if Combat.level(charge) == 3 then 1 else math.clamp(correction, 0, 1)
+	local amount = if Combat.level(charge) >= slug.ExactFrom
+		then 1
+		else math.clamp(correction, 0, 1)
 	return if arc then straight:Lerp(arc, amount).Unit else straight
 end
 

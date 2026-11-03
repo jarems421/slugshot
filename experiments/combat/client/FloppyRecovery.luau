@@ -312,6 +312,7 @@ function Recovery.new(
 	victim: Model?,
 	now: number
 ): State
+	model:SetAttribute("Landed", true)
 	local joints: { Joint } = {}
 	local root = model:FindFirstChild("root", true)
 	local head = model:FindFirstChild("head", true)

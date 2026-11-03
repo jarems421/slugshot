@@ -287,3 +287,65 @@ What was hard during the lobby art-direction and concept rounds of 2026-10-31 to
 - **Trace symbols from the real model:** hand-drawn silhouettes read as an older design; `tools/lobby/blaster_rune.py` regenerates the rune from the current mesh.
 - **Surfaces that must blend need one paint function and no moving parts at the join:** a spinning pool and separately painted streams could never line up.
 - **In `cut`-style patches, don't stop at a marker the same patch moves:** it silently ate the start of `volcanoFlow`; the shader compile caught it.
+- **Keep the sky the colour of the enclosure:** Roblox can stop drawing far parts at lower graphics levels, and anything bright behind them flashes through a closed cavern.
+- **A repeating map beats a bigger one for large surfaces:** the floor lava went from a few blurry pixels per stud to about 34, with world-space UVs and one 1024 tile. Mesh UVs outside 0 to 1 do repeat on a SurfaceAppearance.
+- **Stacked sheets read as separate pieces:** different speeds and hard alpha edges make layers look like loose chunks. Make the main body one opaque surface that reaches behind whatever frames it, and keep any overlay soft.
+- **A patch script should write its files together at the end:** one that stops midway leaves some files changed and others not.
+- **Never send global keystrokes to Studio on a shared machine:** `SetForegroundWindow` can silently fail, and the keys go to whatever has focus, which may be someone else's session or a place that must not be published. Check the foreground window first, and hand outward-facing steps to the owner.
+- **Studio frame rates only count while focused:** an unfocused window is throttled to 15 fps, which looks like a performance problem.
+- **Graphics level in Studio:** game scripts can't set it (`settings()` needs the Plugin capability). A plugin setting `Rendering.QualityLevel` works and visibly changes the picture; `EditQualityLevel` had no visible effect in Play.
+- **Resizing the Studio window gives true device viewports:** panels take 200 by 295 pixels, so a 1044x685 window has an exact 844x390 view.
+- **Texture memory builds up during a run:** report its peak per device, not per view.
+- **Start a green scene dark:** bright moss and glowing water at full strength flattened the first grove render into a toy. Dark ground and stone first, then saturation only on mushrooms, water and crystals.
+- **The ink's reach is fixed in world units:** at true scale it swallowed Floppy's face, so anything that small must draw its own lines.
+- **Build a surface from the approved parts:** a noisy cone painted like rock never read as Slugterra; rebuilding from the lining's actual block shape did in one pass. Square tops still read as a ruined castle until the slants and height differences were strong.
+- **Give hero objects their own random stream in generators:** changing the mountain's placements moved every Floppy away from the camera and the arrival side.
+- **Check file times after a batch render:** one silently failed render left an old mountain in a sheet that looked plausible.
+- **Upright blocks read as a castle, slope-following plates as a mountain:** the same rock works once it's sheared along the slope, with ridges and an uneven outline. Too regular a profile just turns it into cones or a tiled pyramid.
+- **Keep concept renders gentle:** `--gentle` splits each frame into five times as many bands and rests between them, about doubling the time but leaving the PC usable.
+- **Measure where water lands against where the pond is:** the falls' foot sat about 10 studs behind the pond's edge, hidden by the bank, which read as disconnected from every angle.
+- **Regular rows and straight profiles read as architecture on any rock:** tilt the layers, vary the profile and add lower spurs before adding detail.
+
+## Mountain summits (2026-11-02)
+
+A slope that narrows to zero always ends in a small, shrunken tip, however broken its rocks are. Keep a share of the width at the top and split it into separate tapered masses with notches between them (owner: "too thin at the top"). In the grove's views the camera faces +z, so a peak at negative x appears on screen right.
+
+## Grove in Roblox (2026-11-02)
+
+Scattered props sharing one mesh need a budget per prop, not per part: 200 triangles per mushroom cap read as faceted up close. Small emissive spots such as lily buds blow out to white at the strength that suits larger glowing shapes. Crowds of full-detail skinned models cost far more than the scenery around them, so check triangles with them in and out of view.
+
+## Simplifying a shape with hidden insides (2026-11-02)
+
+Blender's Decimate keeps triangles on sealed pockets inside a shape, because they are small and closed, and leaves the visible skin in huge shards that look like holes. Keep only the largest connected surface, and sample it near the final triangle size so little simplifying is needed. Measure the spread of triangle areas in the export: a median of 3 square studs with many far larger ones was the tell. A shape that must be walked on can be a separate smooth form with the detailed one baked onto it.
+
+## Placing things on simplified meshes (2026-11-02)
+
+Place what stands on a surface using the exported mesh, not the ideal shape: the grove's simplified ground differed by up to 2 studs, enough for plants to float. Sink feet a little and use the lowest ground under the whole foot. A piece's fit bounds must also come from the exported mesh, or the game rescales it. And a tapered square block reads as a pyramid at any size: tips need uneven faces, shelves and neighbouring crags. When a check reads Studio logs, make sure other open windows' logs aren't mixed in: a 0.903 size warning came from an older window.
+
+## Mountain form (2026-11-02)
+
+Rounds of designing tips on a body failed because a peak isn't a part: in the owner's references the whole mountain is one form, with ridges unbroken from summit to foot. A height over a triangle grid with its corners sampled from a ridged shape gives real flat faces and hard edges. Ask for references before designing a distinctive shape: six written designs missed where six pictures from the owner settled it.
+
+## Shader size and collision on large meshes (2026-11-02)
+
+Adding many samples of a heavy shape to one paint branch made the driver run the wrong branch for other materials: mushrooms and crystals came out in the ground's colours, and unrelated code changes made the fault come and go. Keep heavy paint out of pieces that don't use it (`@mountain-paint` markers), and compare painted colours per piece after any shader growth. Precise collision on one huge mesh can stand tens of studs above a concave surface, so measure it against the drawn surface and split it into chunks. The owner reads raised rims as "the wall between the lava streams": tie such changes to where the streams actually are.
+
+## Replacing shader blocks (2026-11-03)
+
+Cutting between two markers removed code living between them that others needed, and because the batch kept going, a 13-minute rebuild left the old mountain in place with no plants. Print failures loudly in long batches and stop at the first one. Raising glow on many props at once bleaches them: check colour before brightness.
+
+## 2026-11-02 - Training asset reuse and review
+
+- **Confirmed:** reuse the spawn rock without roots, cracked top or lower spiral; enlarge it and add underside debris. Build a full asset for owner inspection before gameplay.
+- **Implemented/verified:** source lobby GLBs carry geometry only. Restoring each report's color/normal/emissive maps and inverse ink materials prevents a misleading grey review. Packed images survive the GLB reimport. Keep the original assets as a read-only, hashed snapshot.
+- **Implemented/verified:** the measured rim uses x=sin(angle), shader z=-cos(angle). Blender maps y=-z, so y must be +cos(angle). Mirroring that sign produced cap overhangs; material renders exposed the error, and the corrected cap tracks the rock.
+- **QA lesson:** the generic wire review scales thickness to total asset bounds, producing enormous miter spikes on thin range marks. The training-only verification adapts that invocation to 0.015-stud wires without even-offset miters; the installed skill remains unchanged. Random-color and thin-wire sheets plus actual materials are complementary checks.
+- **Limits:** deliberate detached rubble, split source shells and arena-relative offsets are documented exceptions. Offline export consistency and a desktop/mobile-width browser check do not prove Roblox collision or runtime performance. [Asset and evidence](training-arena.md).
+
+## 2026-11-02 - Plain rock training floor and native review
+
+- **Confirmed:** the owner liked the first layout; flooring should use the normal stone language without fungi, with action pictograms rather than words. Some rubble should be visible from eye height at the rim; most stays below.
+- **Implemented/verified:** low, closed painted stones cover the support cap, original running/target runestones replace all lettering, and 48 additional closed rocks span the rim. Geometry QA catches degenerate clip intersections and inconsistent winding: weld duplicate vertices, remove degenerates, and use convex boundary stones before exporting.
+- **Rejected internally:** taking arbitrary loose components from the existing debris group produced thin flakes that read as cards near eye height. Closed faceted stones give the higher pieces volume; original debris groups remain below.
+- **Native evidence:** sealed roofs block the sun; ambient alone made the first Studio review too dark. Local shadow-free fills restore readability. Mesh/texture loading initially made screenshots show missing or white pieces: preload the review art before acceptance captures. Source rubble imports can recenter groups separately; restore each group's bounds. Eye-height rim, rune, room and ceiling captures were inspected after these fixes.
+- **Limits:** offline QA and a one-client native review do not prove mobile performance, route collision quality or final owner approval. [Current review](training-arena.md).

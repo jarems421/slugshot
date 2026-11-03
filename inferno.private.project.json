@@ -30,6 +30,9 @@
         },
         "FloppyAppearance": {
           "$path": "experiments/creatures/floppy/server/FloppyAppearance.luau"
+        },
+        "InfernoAppearance": {
+          "$path": "experiments/creatures/inferno/server/InfernoAppearance.luau"
         }
       }
     },

@@ -5,7 +5,9 @@
 -- Plays on every Floppy in the workspace: the one on the pedestal and the one
 -- loaded in the equipped blaster. Each Floppy's own frame comes from its bones
 -- (eye to eye is sideways, root to head is up), so a Floppy lying in the gun
--- moves the same way relative to himself.
+-- moves the same way relative to himself. A loaded Floppy instead lives on springs
+-- (same tuning as SlugIcon): idle and the inspect's look only set targets, so they flow
+-- into one another.
 local Players = game:GetService("Players")
 local Inspect: any = nil -- resolved after startup; standalone creature places have no movement folder
 local CollectionService = game:GetService("CollectionService")
@@ -23,7 +25,28 @@ local TIP = Vector3.new(0.90, 1.44 + 0.25, 0.56)
 
 type Motion = { [Bone]: (number) -> CFrame }
 local floppies: { [Model]: Motion } = {}
-local inspectModels: { [Model]: () -> () } = {}
+local inspectModels: { [Model]: (number, boolean) -> () } = {}
+
+type Spring = { x: number, v: number, target: number, freq: number, damp: number }
+local TIME_STEP = 1 / 120 -- fixed, so the motion is the same at any frame rate
+local function spring(freq: number, damp: number): Spring
+	return { x = 0, v = 0, target = 0, freq = freq, damp = damp }
+end
+local function stepSpring(s: Spring, dt: number)
+	local w = TAU * s.freq
+	s.v += (w * w * (s.target - s.x) - 2 * s.damp * w * s.v) * dt
+	s.x += s.v * dt
+end
+-- How far the springs bend the rig, in source units and radians. As SlugIcon's.
+-- The wiggle bends up the spine, each joint trailing the one below, so the base stays put
+-- and the body flows above it.
+local BEND_LOWER, BEND_UPPER, BEND_HEAD = math.rad(2), math.rad(11), math.rad(7)
+local TRAIL_ANGLE = 0.1
+local SQUASH_UPPER, SQUASH_HEAD, SQUASH_FLANK = 0.38, 0.03, 0.28
+local STRETCH_FLANK_SHARE = 0.6
+local SWAY_UPPER = 0.07
+local PITCH_HEAD, PITCH_UPPER = math.rad(22), math.rad(6)
+local FLOP_ANGLE = 0.12
 
 local function setup(model: Model)
 	local bones: { [string]: Bone } = {}
@@ -137,8 +160,8 @@ local function setup(model: Model)
 			else handle.CFrame:PointToObjectSpace(
 				(root.WorldPosition + head.WorldPosition) / 2
 			)
-		local height = model:GetAttribute("InspectHopHeight")
-		local hopHeight = if typeof(height) == "number" then height else 0
+		local height = model:GetAttribute("ChamberRoom")
+		local room = if typeof(height) == "number" then height else 0
 		local joints: { { joint: Weld, base: CFrame } } = {}
 		for _, item in model:GetDescendants() do
 			if item:IsA("Weld") and item.Part0 == handle then
@@ -150,18 +173,76 @@ local function setup(model: Model)
 				table.insert(joints, { joint = item, base = base :: CFrame })
 			end
 		end
-		inspectModels[model] = function()
-			local t = inspectTime()
-			local pose = CFrame.identity
-			if t then
-				local stand = Inspect.stand(t)
-				local rotation = CFrame.fromAxisAngle(uy, Inspect.turn(t, "Floppy"))
-					* upright:Lerp(CFrame.identity, 1 - stand)
-				-- The barrel already stands him up. Keep the whole performance inside
-				-- the chamber; never slide him sideways through its glass to show him.
-				local lift = uy * hopHeight * Inspect.hop(t)
-				pose = CFrame.new(lift + pivot) * rotation * CFrame.new(-pivot)
+
+		local squash, sway, lag = spring(5, 0.26), spring(3.4, 0.42), spring(2.6, 0.34)
+		local pitch, flop, stand = spring(1.8, 0.8), spring(2.4, 0.5), spring(2.2, 0.8)
+		local tip = spring(2.2, 0.4)
+		local springs = { squash, sway, lag, tip, pitch, flop, stand }
+		local leftover, clock = 0, 0
+		local flying, landed = false, false
+
+		inspectModels[model] = function(dt: number, restore: boolean)
+			if restore then
+				for _, entry in joints do
+					if entry.joint.Parent then
+						entry.joint.C0 = entry.base
+					end
+				end
+				return
 			end
+			clock += dt
+			local t = inspectTime()
+			local looking = if t then Inspect.looking(t) else 0
+			-- Slow, loose and never quite repeating, in the chamber or looking at the holder.
+			local swell, beat, pump, hop, crouch, snug = 0, 0, 0, 0, 0, 0
+			if t then
+				swell, beat, pump = Inspect.wiggle(t)
+				hop, crouch = Inspect.hop(t)
+				snug = Inspect.snug(t)
+			end
+			local idle = 1 - math.max(swell, looking)
+			squash.target = 0.1 * math.sin(TAU * clock / 3.6) * idle + 0.12 * swell * pump + crouch
+			sway.target = 0.16 * math.sin(TAU * clock / 7.3) * idle + swell * beat + snug
+			pitch.target = 0.14 * math.sin(TAU * clock / 11) * idle
+				+ 0.7 * looking * (1 - swell)
+				+ 0.15 * swell
+			stand.target = looking
+			-- Turns to the holder, snaps home during the hop, drifts home if interrupted.
+			stand.freq = if not t then 1.4 elseif looking > 0 then 2.2 else 3
+			stand.damp = if not t then 1 elseif looking > 0 then 0.8 else 0.9
+			if t and hop > 0 and not flying then
+				flying = true
+				squash.v -= 10
+			end
+			if t and Inspect.landed(t) and not landed then
+				landed = true
+				squash.v += 12
+			end
+			if not t then
+				flying, landed = false, false
+			end
+			local steps = math.min(dt, 0.1) + leftover
+			while steps >= TIME_STEP do
+				steps -= TIME_STEP
+				local before = squash.v
+				lag.target = sway.x
+				tip.target = lag.x
+				for _, item in springs do
+					stepSpring(item, TIME_STEP)
+				end
+				flop.v += (squash.v - before) * 0.08
+			end
+			leftover = steps
+			local upness = math.clamp(stand.x, 0, 1)
+			local float = CFrame.new(uy * 0.012 * math.sin(TAU * clock / 4.3))
+				* CFrame.fromAxisAngle(uy, math.rad(10) * math.sin(TAU * clock / 6.7))
+				* CFrame.fromAxisAngle(sx, math.rad(3) * math.sin(TAU * clock / 5.3 + 1))
+			-- Upright he stands on top of the chamber's end cap, not sunk into it.
+			local pose = CFrame.new(uy * room * (0.4 * hop - 0.4 * upness) + pivot)
+				* upright:Lerp(CFrame.identity, 1 - upness)
+				-- Upright he is stuck to the bottom: only the rig moves.
+				* float:Lerp(CFrame.identity, upness)
+				* CFrame.new(-pivot)
 			model:SetAttribute("InspectPose", pose)
 			for _, entry in joints do
 				if entry.joint.Parent then
@@ -169,47 +250,65 @@ local function setup(model: Model)
 				end
 			end
 		end
-	end
-	-- Anticipate, spring, land, then sweep the hips. The upper body counters
-	-- that sweep so this is an articulated gesture rather than a rigid swivel.
-	local lower = bones.body_lower
-	if lower then
-		local uy, sx = toLocal(lower, up), toLocal(lower, sideways)
-		motion[lower] = function(_clock: number): CFrame
-			local t = inspectTime()
-			local sway = if t then Inspect.wiggle(t) else 0
-			return CFrame.new(sx * SCALE * 0.09 * sway / math.rad(9))
-				* CFrame.fromAxisAngle(uy, sway)
-		end
-	end
-	if upper then
-		local idleUpper = motion[upper]
-		local uy, fz, sx = toLocal(upper, up), toLocal(upper, front), toLocal(upper, sideways)
-		motion[upper] = function(clock: number): CFrame
-			local t = inspectTime()
-			if not t then
-				return idleUpper(clock)
+
+		local lower = bones.body_lower
+		if lower then
+			-- This bone's origin is at the base, so turning it leaves the base where it is.
+			local lz = toLocal(lower, front)
+			motion[lower] = function(_: number): CFrame
+				return CFrame.fromAxisAngle(lz, -BEND_LOWER * sway.x)
 			end
-			local squeeze, sway = Inspect.compression(t), Inspect.wiggle(t)
-			local pose = CFrame.new(
-				(uy * (-0.10 * squeeze + 0.035 * Inspect.hop(t)) - sx * (0.05 * sway / math.rad(9)))
-					* SCALE
-			) * CFrame.fromAxisAngle(uy, -0.55 * sway) * CFrame.fromAxisAngle(fz, -0.35 * sway)
-			return idleUpper(clock):Lerp(pose, Inspect.stand(t))
 		end
-	end
-	local idleHead = motion[head]
-	local headSide, headUp = toLocal(head, sideways), toLocal(head, up)
-	motion[head] = function(clock: number): CFrame
-		local t = inspectTime()
-		if not t then
-			return idleHead(clock)
+		if upper then
+			local idleUpper = motion[upper]
+			local ux, uu, uz = toLocal(upper, sideways), toLocal(upper, up), toLocal(upper, front)
+			motion[upper] = function(c: number): CFrame
+				return idleUpper(c)
+					* CFrame.new((ux * SWAY_UPPER * lag.x - uu * SQUASH_UPPER * squash.x) * SCALE)
+					* CFrame.fromAxisAngle(uz, -BEND_UPPER * lag.x)
+					* CFrame.fromAxisAngle(ux, -PITCH_UPPER * pitch.x)
+			end
 		end
-		local squeeze = Inspect.compression(t)
-		local pose = CFrame.new(headUp * SCALE * (-0.12 * squeeze + 0.06 * Inspect.hop(t)))
-			* CFrame.fromAxisAngle(headSide, math.rad(7) * Inspect.stand(t) - math.rad(9) * squeeze)
-			* CFrame.fromAxisAngle(headUp, -0.45 * Inspect.wiggle(t))
-		return idleHead(clock):Lerp(pose, Inspect.stand(t))
+		local idleHead = motion[head]
+		local hx, hu, hz = toLocal(head, sideways), toLocal(head, up), toLocal(head, front)
+		motion[head] = function(c: number): CFrame
+			return idleHead(c)
+				* CFrame.new(hu * -SQUASH_HEAD * squash.x * SCALE)
+				* CFrame.fromAxisAngle(hz, -BEND_HEAD * tip.x)
+				* CFrame.fromAxisAngle(hx, -PITCH_HEAD * pitch.x)
+		end
+		for _, side in { -1, 1 } do
+			local antenna = bones["antenna_" .. (side < 0 and "L" or "R")]
+			if antenna then
+				local idleAntenna = motion[antenna]
+				local axis = toLocal(antenna, front)
+				motion[antenna] = function(c: number): CFrame
+					-- They spread with a jolt and trail behind the head's bend.
+					return idleAntenna(c)
+						* CFrame.fromAxisAngle(
+							axis,
+							-side * flop.x * FLOP_ANGLE + (lag.x - tip.x) * TRAIL_ANGLE
+						)
+				end
+			end
+		end
+		-- Flanks flatten out with a squash: Roblox has no bone scale.
+		local flanks: { [string]: Vector3 } = {
+			jelly_L = -sideways,
+			jelly_R = sideways,
+			jelly_F = front,
+			jelly_B = -front,
+		}
+		for name, direction in flanks do
+			local flankBone = bones[name]
+			if flankBone then
+				local outward = toLocal(flankBone, direction)
+				motion[flankBone] = function(_: number): CFrame
+					local flank = if squash.x > 0 then squash.x else squash.x * STRETCH_FLANK_SHARE
+					return CFrame.new(outward * flank * SQUASH_FLANK * SCALE)
+				end
+			end
+		end
 	end
 	-- Roblox can create one skeleton per skinned mesh. Animate every copy;
 	-- a name-keyed dictionary alone silently leaves the other meshes at rest.
@@ -257,7 +356,7 @@ local start = os.clock()
 RunService:BindToRenderStep(
 	"SlugshotFloppyIdle",
 	Enum.RenderPriority.Character.Value + 2,
-	function()
+	function(dt: number)
 		if not Inspect then
 			local movement = Players.LocalPlayer.PlayerScripts:FindFirstChild("MovementSandbox")
 			local module = movement and movement:FindFirstChild("SlugInspect")
@@ -273,7 +372,7 @@ RunService:BindToRenderStep(
 			then
 				local restoreInspect = inspectModels[model]
 				if restoreInspect then
-					restoreInspect()
+					restoreInspect(0, true)
 				end
 				floppies[model] = nil
 				inspectModels[model] = nil
@@ -281,7 +380,7 @@ RunService:BindToRenderStep(
 			end
 			local inspectModel = inspectModels[model]
 			if inspectModel then
-				inspectModel()
+				inspectModel(dt, false)
 			end
 			for bone, fn in motion do
 				bone.Transform = fn(t)

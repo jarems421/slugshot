@@ -224,10 +224,9 @@ local function inView(camera: Camera, centre: Vector3): boolean
 	return to.Magnitude < 60 or to.Unit:Dot(camera.CFrame.LookVector) > 0.25
 end
 
--- Lightning: the clouds themselves light up from inside, with short zaps in the gaps between the sheets. Occasional and brief.
+-- Lightning: the storm lights up from inside, with short bolts and a local bloom just under its surface.
 local STORM_GLOW = 0.7
 local STORM_FLASH = 1.5
-local ZAP_LEVELS = { 245, 280, 325 } -- between the cloud sheets, so a zap never crosses one
 local nextFlash = 3
 local flashLeft = 0
 local function flash(t: number, dt: number)
@@ -252,11 +251,17 @@ local function flash(t: number, dt: number)
 	end
 	local angle = math.random() * 2 * math.pi
 	local radius = 26 + 50 * math.random()
+	-- Under the storm's surface at this radius by more than the bloom's size, so nothing is cut by it.
+	local base = holder:GetAttribute("VeilY") :: number
 	holder.Position = Vector3.new(
 		radius * math.cos(angle),
-		ZAP_LEVELS[math.random(#ZAP_LEVELS)],
+		base - 25 + 90 * (1 - radius / 96) ^ 1.7 - 40,
 		radius * math.sin(angle)
 	)
+	local bloom = holder:FindFirstChild("Bloom")
+	if bloom and bloom:IsA("ParticleEmitter") then
+		bloom:Emit(1)
+	end
 	local zap = holder:FindFirstChild("Zap")
 	if zap and zap:IsA("ParticleEmitter") and math.random() < 0.7 then
 		zap:Emit(1)
@@ -271,6 +276,7 @@ local chosen = false
 local button: TextButton? = nil
 
 local function setDetail(value: boolean)
+	workspace:SetAttribute("HubDetailLow", value)
 	low = value
 	for _, tag in { "HubDistantInk", "HubSpareCloud" } do
 		for _, part in CollectionService:GetTagged(tag) do
@@ -286,7 +292,8 @@ local function setDetail(value: boolean)
 	end
 	for _, e in CollectionService:GetTagged("HubMist") do
 		if e:IsA("ParticleEmitter") then
-			e.Rate = if value then 1.5 else 3
+			local high = e:GetAttribute("HighRate") or 3
+			e.Rate = if value then high / 2 else high
 		end
 	end
 	for _, halo in CollectionService:GetTagged("HubLavaGlow") do
@@ -330,6 +337,7 @@ if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
 	end)
 end
 workspace:GetAttributeChangedSignal("HubReduceDetail"):Connect(function()
+	chosen = true
 	setDetail(workspace:GetAttribute("HubReduceDetail") == true)
 end)
 

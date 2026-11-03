@@ -2,7 +2,7 @@
 -- Firing slugs: hold LMB (or R2) with the blaster out to charge, release to fire. A
 -- tap still fires at a decent speed; a full charge is faster and droops less. The
 -- shot flies on this screen at once and is sent to the server, which judges it.
--- One slug for now (Floppy); the slug bar shows its cooldown.
+-- Floppy and Inferno so far; the slug bar shows the selected slot's cooldown.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -561,10 +561,16 @@ end
 -- A blaster's canister shows the slug only while it is loaded: the server marks
 -- SlugReady on the tool; this player's own gun follows the local prediction.
 local shown: { [Tool]: boolean } = {}
+local shownSlug: { [Tool]: string } = {}
+-- Each slug's loaded model in the canister; only the selected one shows.
+local LOADED_MODELS: { [string]: string } = { Floppy = "Floppy", Inferno = "InfernoLoaded" }
 local function setCanister(tool: Tool, visible: boolean)
-	if shown[tool] == visible then
+	local selected = tool:GetAttribute("SelectedSlugId")
+	local selectedId = if typeof(selected) == "string" then selected else "Floppy"
+	if shown[tool] == visible and shownSlug[tool] == selectedId then
 		return
 	end
+	shownSlug[tool] = selectedId
 	local returned = visible and shown[tool] == false
 	shown[tool] = visible
 	if returned then
@@ -575,18 +581,20 @@ local function setCanister(tool: Tool, visible: boolean)
 				return if handle and handle:IsA("BasePart") then handle.Position else nil
 			end)
 	end
-	local floppy = tool:FindFirstChild("Floppy")
-	if not floppy then
-		return
-	end
-	for _, item in floppy:GetDescendants() do
-		if item:IsA("BasePart") then
-			if item:GetAttribute("CanisterTransparency") == nil then
-				item:SetAttribute("CanisterTransparency", item.Transparency)
+	for id, name in LOADED_MODELS do
+		local loaded = tool:FindFirstChild(name)
+		if loaded then
+			local show = visible and id == selectedId
+			for _, item in loaded:GetDescendants() do
+				if item:IsA("BasePart") then
+					if item:GetAttribute("CanisterTransparency") == nil then
+						item:SetAttribute("CanisterTransparency", item.Transparency)
+					end
+					item.Transparency = if show
+						then item:GetAttribute("CanisterTransparency") :: number
+						else 1
+				end
 			end
-			item.Transparency = if visible
-				then item:GetAttribute("CanisterTransparency") :: number
-				else 1
 		end
 	end
 end

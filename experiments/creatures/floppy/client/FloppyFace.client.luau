@@ -177,18 +177,14 @@ local function step(face: Face, dt: number, camera: Vector3)
 	local want = EXPRESSIONS[if typeof(chosen) == "number"
 		then chosen
 		else math.floor(clock / HOLD) % #EXPRESSIONS + 1]
-	if inspectTime then
-		local squeeze = Inspect.compression(inspectTime)
-		local spring = Inspect.hop(inspectTime)
-		-- Sleepy recognition, a deliberate squint before the jump, then a
-		-- brighter cheeky smile on takeoff. No random mouth chatter in this act.
-		local awake = Inspect.stand(inspectTime)
+	local looking = if inspectTime then Inspect.looking(inspectTime) else nil
+	if looking then
 		want = {
-			low = 0.09 * awake,
-			high = 0.035 * awake,
-			wide = 0.03 * awake,
-			jaw = 0.015 + 0.035 * spring,
-			lid = -0.035 * awake + 0.07 * squeeze - 0.035 * spring,
+			low = 0.065 * looking,
+			high = 0.025 * looking,
+			wide = 0.02 * looking,
+			jaw = 0.015,
+			lid = -0.035 * looking,
 		}
 	end
 	local blend = 1 - math.exp(-BLEND_RATE * dt)
@@ -205,11 +201,12 @@ local function step(face: Face, dt: number, camera: Vector3)
 		return
 	end
 	-- Eyes dart to a new spot, then rest there.
-	local chosenLook = if inspectTime
-		then Vector2.new(
-			-0.3 * Inspect.wiggle(inspectTime),
-			0.65 * Inspect.stand(inspectTime) - 0.6 * Inspect.compression(inspectTime)
-		)
+	local swell, beat = 0, 0
+	if inspectTime then
+		swell, beat = Inspect.wiggle(inspectTime)
+	end
+	local chosenLook = if looking
+		then Vector2.new(beat * swell, (0.65 - 0.45 * swell) * looking)
 		else face.model:GetAttribute("FaceLook")
 	if typeof(chosenLook) == "Vector2" then
 		face.lookXTarget, face.lookYTarget = chosenLook.X, chosenLook.Y
@@ -242,9 +239,6 @@ local function step(face: Face, dt: number, camera: Vector3)
 	local chosenBlink = face.model:GetAttribute("FaceBlink")
 	if typeof(chosenBlink) == "number" then
 		blink = chosenBlink
-	end
-	if inspecting then
-		blink = 0
 	end
 	-- A small, slow mouthing so the face is never fully still.
 	local mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)

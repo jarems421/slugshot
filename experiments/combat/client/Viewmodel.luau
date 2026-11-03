@@ -83,7 +83,11 @@ local function gunPoint(where: () -> Vector3): Vector3?
 		for _, part in tool:GetDescendants() do
 			if part:IsA("BasePart") and part ~= handle then
 				local offset = handle.CFrame:ToObjectSpace(part.CFrame)
-				if part.Transparency < 1 and not part:FindFirstAncestor("Floppy") then
+				if
+					part.Transparency < 1
+					and not part:FindFirstAncestor("Floppy")
+					and not part:FindFirstAncestor("InfernoLoaded")
+				then
 					local half = part.Size / 2
 					local reach = math.abs(offset.XVector.Z) * half.X
 						+ math.abs(offset.YVector.Z) * half.Y
@@ -182,6 +186,26 @@ local function build(character: Model, tool: Tool?, camera: Camera): Rig
 				table.insert(current.gun, { source = source, copy = copy, bones = bones })
 			end
 		end
+		-- A skinned mesh ignores its bones unless a joint ties it to the part holding them,
+		-- so restore the rig's Motor6Ds. Anchored copies stay where place() puts them.
+		local copies: { [BasePart]: BasePart } = {}
+		for _, item in current.gun do
+			copies[item.source] = item.copy
+		end
+		for _, item in current.gun do
+			for _, joint in item.source:GetChildren() do
+				if joint:IsA("Motor6D") and joint.Part0 and joint.Part1 then
+					local part0, part1 = copies[joint.Part0], copies[joint.Part1]
+					if part0 and part1 then
+						local copied = Instance.new("Motor6D")
+						copied.Name = joint.Name
+						copied.C0, copied.C1 = joint.C0, joint.C1
+						copied.Part0, copied.Part1 = part0, part1
+						copied.Parent = part1
+					end
+				end
+			end
+		end
 	end
 	model.Parent = camera
 	return current
@@ -193,7 +217,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	local character = current.character
 	local point = character:GetAttribute("BlasterPoint")
 	local inspectTime = Inspect.elapsed(character)
-	local inspectWeight = if inspectTime then Inspect.weight(inspectTime) else 0
+	local inspectWeight = if inspectTime then Inspect.viewWeight(inspectTime) else 0
 	local action = character:GetAttribute("FirstPersonAction")
 	local sliding = action == "Slide"
 	local steady = typeof(point) == "Vector3"
@@ -383,8 +407,9 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 			local reach = presented * armToHandle:Inverse() * handShift:Inverse()
 			target = target:Lerp(reach, inspectWeight)
 		end
-		local rate = if character:GetAttribute("BlasterPoint") ~= nil
-			then POSE_RATE * 2
+		local rate = if inspectWeight > 0
+			then RUN_POSE_RATE -- the follow must not blur the flick and catch
+			elseif character:GetAttribute("BlasterPoint") ~= nil then POSE_RATE * 2
 			elseif flipping and AcrobaticCamera.enabled() and AcrobaticCamera.status() < 3 then 72
 			else POSE_RATE + (RUN_POSE_RATE - POSE_RATE) * straightWeight
 		local alpha = 1 - math.exp(-rate * dt)

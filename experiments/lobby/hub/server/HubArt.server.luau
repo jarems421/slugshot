@@ -13,7 +13,18 @@ local ServerStorage = game:GetService("ServerStorage")
 local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
 local rimShape =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
+local groveStream =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_stream")) :: any
+local groveFlora =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_flora")) :: any
+local groveCrystals =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_crystals")) :: any
+local groveTrees =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_trees")) :: any
+local groveSlugs =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_slugs")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
+local FloppyAppearance = require(script.Parent:WaitForChild("FloppyAppearance")) :: any
 
 type PartInfo = { ink: string?, emissive: number, min: Vector3, max: Vector3 }
 type PieceInfo = {
@@ -46,6 +57,15 @@ local GLOW: { [string]: number } = {
 	["hub-portal-training"] = 0.75,
 	["hub-portal-veylume"] = 0.75,
 	["hub-storm"] = 0.7,
+	-- Mushroom caps in the whirlpool and on the spawn rock glow more (owner).
+	["hub-pit-flora"] = 1.8,
+	-- Their colour goes pale at any more.
+	["hub-flora-star"] = 0.4,
+	["hub-flora-bell"] = 0.4,
+	["hub-flora-lantern"] = 0.5,
+	["hub-flora-plant"] = 0.5,
+	["hub-flora-grass"] = 0.5,
+	["hub-rock-dress"] = 1.4,
 }
 
 -- Pieces whose ink a phone can skip: far away or small on screen (HubMotion.client decides).
@@ -59,6 +79,9 @@ local DISTANT = {
 	"hub-ceiling-vines",
 	"hub-arch",
 	"hub-volcano",
+	"hub-grove-mountain",
+	"hub-grove-rocks",
+	"hub-grove-dress",
 	"hub-well-isles",
 	"hub-well-bits",
 	"hub-rock-debris",
@@ -131,6 +154,7 @@ local function loadPiece(key: string): Model?
 	local info = private.assets[key]
 	if not info then
 		warn(`HubArt: {key} is not uploaded`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
 		return nil
 	end
 	local ok, container = pcall(function()
@@ -138,6 +162,7 @@ local function loadPiece(key: string): Model?
 	end)
 	if not ok then
 		warn(`HubArt: {key} failed to load: {container}`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
 		return nil
 	end
 	local loaded = container :: Instance
@@ -241,6 +266,8 @@ local SOLID: { [string]: { string } } = {
 	["hub-arch"] = { "Pylons", "ArchL", "ArchR", "Pillars", "Base" },
 	["hub-plaza-floor"] = { "Floor" },
 	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
+	["hub-grove-ground"] = { "Ground", "Bed" },
+	["hub-grove-rocks"] = { "Stones", "Runes" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -248,9 +275,9 @@ local SOLID: { [string]: { string } } = {
 local solidQueue: { MeshPart } = {}
 local function makeSolid(model: Model, key: string)
 	local names = SOLID[key]
-	if names then
+	if names or key == "hub-grove-solid" then
 		for _, part in model:GetDescendants() do
-			if part:IsA("MeshPart") and table.find(names, part.Name) then
+			if part:IsA("MeshPart") and (not names or table.find(names, part.Name)) then
 				table.insert(solidQueue, part)
 			end
 		end
@@ -290,6 +317,12 @@ local function buildCollision(whenDone: () -> ())
 							failed,
 							os.clock() - started
 						)
+					)
+					workspace:SetAttribute("HubSolidParts", #solidQueue)
+					workspace:SetAttribute("HubSolidFailed", failed)
+					workspace:SetAttribute(
+						"HubArtFailed",
+						workspace:GetAttribute("HubArtFailed") or 0
 					)
 					whenDone()
 				end
@@ -377,6 +410,16 @@ local function beam(
 end
 
 -- The block-out's stand-ins for these designs turn invisible. Their collision stays, except what would snag a fall.
+-- Where a point stands round the hub, in the layout's degrees: 0 is PvP and 90 the slug side.
+local function zoneAngle(at: Vector3): number
+	return math.deg(math.atan2(at.X, -at.Z))
+end
+
+local function onSlugSide(at: Vector3): boolean
+	local angle = zoneAngle(at)
+	return angle >= 40 and angle <= 135
+end
+
 local function hideBlockOut()
 	local root = workspace:WaitForChild("LobbyScale", 30) :: Model
 	local function hide(container: Instance?)
@@ -405,6 +448,13 @@ local function hideBlockOut()
 	if oldVolcano then
 		oldVolcano:Destroy()
 	end
+	-- So do the grove's pond and mountain. The overgrowth's sketched mushrooms went too, one of them reaching over the volcano's side.
+	for _, name in { "SlugPond", "WaterfallMountain", "VeylumeOvergrowth" } do
+		local old = root:FindFirstChild(name)
+		if old then
+			old:Destroy()
+		end
+	end
 	-- The real gates stand where the block-out's did.
 	local portals = root:FindFirstChild("Portals")
 	if portals then
@@ -430,6 +480,17 @@ local function hideBlockOut()
 	end
 	local cavern = root:FindFirstChild("Cavern")
 	if cavern then
+		-- The mountain's back passes through the wall here. The dark beyond it is the backdrop, and players can climb over.
+		for _, item in cavern:GetChildren() do
+			if item:IsA("BasePart") and item.Name == "Wall" then
+				local angle = zoneAngle(item.Position)
+				if angle > 52 and angle < 128 then
+					item.Transparency = 1
+					item.CanCollide = angle <= 58 or angle >= 122
+					item.CanQuery = false
+				end
+			end
+		end
 		hide(cavern:FindFirstChild("Ceiling"))
 		local sky = cavern:FindFirstChild("SkyWell")
 		if sky then
@@ -458,7 +519,11 @@ local function hideBlockOut()
 			if item:IsA("BasePart") and item.Name == "Surface" then
 				local at = item.Position
 				local angle = math.abs(math.deg(math.atan2(at.X, -at.Z)))
-				if item.Color == portalGround or (item.Color == growthGround and angle < 39) then
+				if
+					item.Color == portalGround
+					or (item.Color == growthGround and angle < 39)
+					or onSlugSide(at)
+				then
 					item.Transparency = 1
 				end
 			end
@@ -477,6 +542,15 @@ local function lighting()
 	-- Phone first: no shadows and no voxel-heavy lamps, so every device gets the same look. The concepts' shading is
 	-- painted in; a soft light from the Sky Well brings out the normal maps.
 	Lighting.GlobalShadows = false
+	-- As dark as the cavern. Roblox stops drawing far parts at lower graphics levels, and the bright default sky then
+	-- showed through wherever the far wall dropped out (phones especially).
+	local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
+	for _, face in { "SkyboxBk", "SkyboxDn", "SkyboxFt", "SkyboxLf", "SkyboxRt", "SkyboxUp" } do
+		(sky :: any)[face] = fxTexture("cavernsky")
+	end
+	sky.CelestialBodiesShown = false
+	sky.StarCount = 0
+	sky.Parent = Lighting
 	Lighting.ClockTime = 12
 	Lighting.GeographicLatitude = 35
 	Lighting.Brightness = 0.9
@@ -495,9 +569,10 @@ local function lighting()
 end
 
 -- A star twinkle at each crystal's tip (look-pack.md), scaled to how far away they're seen.
-local function addTwinkles(key: string, size: number)
+local function addTwinkles(key: string, size: number, drop: number?)
 	for index, point in private.assets[key].points do
-		local source = holder("Twinkle", point.p, Vector3.one * size * 0.4)
+		local source =
+			holder("Twinkle", point.p - Vector3.new(0, drop or 0, 0), Vector3.one * size * 0.4)
 		local e = Instance.new("ParticleEmitter")
 		e.Name = "Twinkle"
 		e.Texture = fxTexture("twinkle")
@@ -735,20 +810,6 @@ local function buildMaelstrom()
 			if pool then
 				pool:SetAttribute("LocalSpin", ORBIT * 2.5)
 				CollectionService:AddTag(pool, "HubMover")
-				local rings = Instance.new("ParticleEmitter")
-				rings.Texture = fxTexture("ripple")
-				rings.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
-				rings.EmissionDirection = Enum.NormalId.Top
-				rings.Speed = NumberRange.new(0.05)
-				rings.Color = ColorSequence.new(Color3.fromRGB(190, 255, 245))
-				rings.LightEmission = 0.4
-				rings.LightInfluence = 0
-				rings.Size = NumberSequence.new(1.5, 8)
-				rings.Transparency = fade({ { 0, 0.6 }, { 0.2, 0.3 }, { 1, 1 } })
-				rings.Lifetime = NumberRange.new(1.6, 2.4)
-				rings.Rate = 1
-				rings.Shape = Enum.ParticleEmitterShape.Disc
-				rings.Parent = pool
 			end
 		end
 	end
@@ -790,32 +851,43 @@ local function buildMaelstrom()
 	motes.Parent = pit
 end
 
+-- The owner lowered the ceiling from where the concept has it, and everything fixed to it comes down too.
+local CEILING_DROP = 250 - layout.cavern.ceilingY
+
+local function placeUnderCeiling(key: string): Model?
+	local model = place(key)
+	if model then
+		model:PivotTo(model:GetPivot() - Vector3.new(0, CEILING_DROP, 0))
+	end
+	return model
+end
+
 local function buildSkyWell()
-	place("hub-well-rock")
-	place("hub-well-glow")
-	addTwinkles("hub-well-glow", 6)
-	place("hub-ceiling-vines")
-	place("hub-ceiling-gems")
-	addTwinkles("hub-ceiling-gems", 7)
-	local isles = place("hub-well-isles")
+	placeUnderCeiling("hub-well-rock")
+	placeUnderCeiling("hub-well-glow")
+	addTwinkles("hub-well-glow", 6, CEILING_DROP)
+	placeUnderCeiling("hub-ceiling-vines")
+	placeUnderCeiling("hub-ceiling-gems")
+	addTwinkles("hub-ceiling-gems", 7, CEILING_DROP)
+	local isles = placeUnderCeiling("hub-well-isles")
 	if isles then
 		for index = 0, 4 do
 			setMotion(isles, `Isle{index}`, -ORBIT, 6, ORBIT * (4 + index), index * 1.0)
 		end
 	end
-	local bits = place("hub-well-bits")
+	local bits = placeUnderCeiling("hub-well-bits")
 	if bits then
 		for index = 0, 5 do
 			local spin = if index < 3 then -ORBIT * 2 else -ORBIT
 			setMotion(bits, `Bits{index}`, spin, 6, ORBIT * (4 + index % 3 * 2), index * 1.9)
 		end
 	end
-	local storm = place("hub-storm")
+	local storm = placeUnderCeiling("hub-storm")
 	if storm then
-		for index = 0, 5 do
-			-- Each layer winds a little faster toward the eye, which gives the cloud its depth.
-			setMotion(storm, `Cloud{index}`, ORBIT * (1.7 + index * 0.16), 0, 0, 0)
-			local sheet = storm:FindFirstChild(`Cloud{index}`, true)
+		-- One swirl: its body, and a thin veil of cloud turning a little faster over it for depth.
+		for name, rate in { StormBody = 1.8, StormVeil = 2.4 } do
+			setMotion(storm, name, ORBIT * rate, 0, 0, 0)
+			local sheet = storm:FindFirstChild(name, true)
 			local surface = sheet and sheet:FindFirstChildWhichIsA("SurfaceAppearance")
 			if surface then
 				CollectionService:AddTag(surface, "HubStormCloud")
@@ -828,7 +900,7 @@ local function buildSkyWell()
 		local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * 16
 		beam(
 			"LightShaft",
-			offset + Vector3.new(0, 262, 0),
+			offset + Vector3.new(0, 262 - CEILING_DROP, 0),
 			offset * 2.4 + Vector3.new(0, 18, 0),
 			80,
 			170,
@@ -839,9 +911,9 @@ local function buildSkyWell()
 			1
 		)
 	end
-	-- A soft round glow well under the storm. A sprite that crosses a flat cloud sheet is cut in a straight line there, which
-	-- read as a box in the sky (owner), so none may reach the sheets (the lowest is at 200).
-	local mouth = holder("MouthGlow", Vector3.new(0, 118, 0), Vector3.one)
+	-- A soft round glow well under the storm. A sprite that crosses the storm's surface is cut along it, which read as
+	-- a box in the sky (owner), so none may reach it.
+	local mouth = holder("MouthGlow", Vector3.new(0, 118 - CEILING_DROP, 0), Vector3.one)
 	local haze = Instance.new("ParticleEmitter")
 	haze.Texture = fxTexture("flash")
 	haze.Color = ColorSequence.new(Color3.fromRGB(150, 180, 225))
@@ -854,7 +926,7 @@ local function buildSkyWell()
 	haze.Speed = NumberRange.new(0)
 	haze.Parent = mouth
 	-- Lightning: the client moves this holder inside the storm and fires its two emitters.
-	local flash = holder("StormFlash", Vector3.new(0, 300, 0), Vector3.one)
+	local flash = holder("StormFlash", Vector3.new(0, 300 - CEILING_DROP, 0), Vector3.one)
 	local zap = Instance.new("ParticleEmitter")
 	zap.Name = "Zap"
 	zap.Texture = fxTexture("zap")
@@ -868,6 +940,21 @@ local function buildSkyWell()
 	zap.Speed = NumberRange.new(0)
 	zap.Rotation = NumberRange.new(0, 360)
 	zap.Parent = flash
+	-- The cloud round the bolt lighting up.
+	local bloom = Instance.new("ParticleEmitter")
+	bloom.Name = "Bloom"
+	bloom.Texture = fxTexture("flash")
+	bloom.Color = ColorSequence.new(Color3.fromRGB(190, 180, 255))
+	bloom.LightEmission = 1
+	bloom.LightInfluence = 0
+	bloom.Size = NumberSequence.new(70, 80)
+	bloom.Transparency = fade({ { 0, 0.45 }, { 1, 1 } })
+	bloom.Lifetime = NumberRange.new(0.25, 0.4)
+	bloom.Rate = 0
+	bloom.Speed = NumberRange.new(0)
+	bloom.Parent = flash
+	-- The veil's height at the middle of the storm, for placing the bolts just under it.
+	flash:SetAttribute("VeilY", 256 - CEILING_DROP)
 end
 
 local function buildPortals()
@@ -979,6 +1066,18 @@ end
 local PLAZA = CFrame.new(0, 0, -157) * CFrame.Angles(0, math.pi, 0)
 local VOLCANO_Z = 111 -- studs behind the plaza's origin
 local VOLCANO_SCALE = 1.15
+local PLAZA_HEIGHT = 0.85 -- the volcano and the gate stand this share of their modelled height (owner: too near the ceiling)
+
+-- Squashes a piece toward the ground, keeping its width.
+local function shorten(model: Model)
+	for _, part in model:GetDescendants() do
+		if part:IsA("MeshPart") then
+			local at = part.Position
+			part.Size = Vector3.new(part.Size.X, part.Size.Y * PLAZA_HEIGHT, part.Size.Z)
+			part.Position = Vector3.new(at.X, at.Y * PLAZA_HEIGHT, at.Z)
+		end
+	end
+end
 
 local function placeInPlaza(key: string): Model?
 	local model = place(key)
@@ -1016,7 +1115,7 @@ local function volcWall(a: number, y: number, offset: number): Vector3
 	return PLAZA
 		* Vector3.new(
 			(cx + math.cos(a) * r) * VOLCANO_SCALE,
-			y * VOLCANO_SCALE,
+			y * VOLCANO_SCALE * PLAZA_HEIGHT,
 			(cz + math.sin(a) * r) * VOLCANO_SCALE + VOLCANO_Z
 		)
 end
@@ -1024,6 +1123,7 @@ end
 local function buildVolcano()
 	local volcano = placeInPlaza("hub-volcano")
 	if volcano then
+		shorten(volcano)
 		-- The lava breathes, slowly.
 		for _, part in volcano:GetDescendants() do
 			if part:IsA("MeshPart") and (part.Name == "Flows" or part.Name == "Pool") then
@@ -1119,7 +1219,8 @@ local function buildVolcano()
 	end
 	-- The crater: what erupts is run by HubMotion.client.
 	local cx, cz = volcCentre(130)
-	local top = PLAZA * Vector3.new(cx * VOLCANO_SCALE, 147, cz * VOLCANO_SCALE + VOLCANO_Z)
+	local top = PLAZA
+		* Vector3.new(cx * VOLCANO_SCALE, 147 * PLAZA_HEIGHT, cz * VOLCANO_SCALE + VOLCANO_Z)
 	local crater = holder("Crater", top, Vector3.new(26, 1, 26))
 	CollectionService:AddTag(crater, "HubCrater")
 	local function emitter(name: string): ParticleEmitter
@@ -1188,7 +1289,8 @@ local function buildVolcano()
 	plume.Size = fade({ { 0, 16 }, { 1, 58 } })
 	plume.Transparency = fade({ { 0, 1 }, { 0.2, 0.62 }, { 1, 1 } })
 	plume.Lifetime = NumberRange.new(9, 13)
-	plume.Rate = 1.5
+	plume.Rate = 1.9
+	plume:SetAttribute("HighRate", 1.9)
 	plume.Speed = NumberRange.new(7, 11)
 	plume.SpreadAngle = Vector2.new(10, 10)
 	CollectionService:AddTag(plume, "HubMist")
@@ -1200,7 +1302,8 @@ local function buildVolcano()
 	steam.Size = fade({ { 0, 20 }, { 1, 85 } })
 	steam.Transparency = fade({ { 0, 1 }, { 0.12, 1 }, { 0.3, 0.68 }, { 1, 1 } })
 	steam.Lifetime = NumberRange.new(12, 18)
-	steam.Rate = 3
+	steam.Rate = 3.8
+	steam:SetAttribute("HighRate", 3.8)
 	steam.Speed = NumberRange.new(4, 8)
 	steam.SpreadAngle = Vector2.new(38, 38)
 	CollectionService:AddTag(steam, "HubMist")
@@ -1210,7 +1313,8 @@ local function buildVolcano()
 	smoke.Size = fade({ { 0, 24 }, { 1, 95 } })
 	smoke.Transparency = fade({ { 0, 1 }, { 0.3, 1 }, { 0.5, 0.72 }, { 1, 1 } })
 	smoke.Lifetime = NumberRange.new(12, 18)
-	smoke.Rate = 2.5
+	smoke.Rate = 3.2
+	smoke:SetAttribute("HighRate", 3.2)
 	smoke.Speed = NumberRange.new(3, 6)
 	smoke.SpreadAngle = Vector2.new(30, 30)
 	CollectionService:AddTag(smoke, "HubMist")
@@ -1222,15 +1326,51 @@ local function buildArch()
 	if floor then
 		floor:PivotTo(floor:GetPivot() + Vector3.new(0, 0.08, 0))
 	end
+	if floor then
+		local lava = floor:FindFirstChild("Lava", true)
+		if lava then
+			lava:SetAttribute("PulseRate", 0.55)
+			lava:SetAttribute("PulseDepth", 0.25)
+			CollectionService:AddTag(lava, "HubPulse")
+		end
+	end
+	-- A slight glow standing over the cracks, in plaza units. Each stops at the pit's edge.
+	for index, crack in
+		{
+			{ 3.0, -3.8, 13.0, -14.0, 0.42, 0.04 },
+			{ 1.2, -3.8, 3.87, -11.36, 0.42, 0.15 },
+			{ 8.0, -8.8, 14.0, -7.0, 0.2, 0.03 },
+			{ 3.4, -9.0, 2.3, -11.1, 0.18, 0.1 },
+			{ 5.0, -3.0, 16.5, -3.6, 0.34, 0.05 },
+		}
+	do
+		for _, side in { -1, 1 } do
+			local halo = beam(
+				"CrackGlow",
+				PLAZA * Vector3.new(side * crack[1] * 5, 1, crack[2] * 5),
+				PLAZA * Vector3.new(side * crack[3] * 5, 1, crack[4] * 5),
+				math.max(crack[5] * 26, 3),
+				math.max(crack[6] * 26, 3),
+				fxTexture("softbeam"),
+				Color3.fromRGB(255, 96, 24),
+				fade({ { 0, 1 }, { 0.5, 0.75 }, { 1, 1 } }),
+				0,
+				1
+			)
+			halo:SetAttribute("Phase", index * 1.9)
+			CollectionService:AddTag(halo, "HubLavaGlow")
+		end
+	end
 	local arch = placeInPlaza("hub-arch")
 	if arch then
+		shorten(arch)
 		setMotion(arch, "ArchBits", 0, 1.3, 0.55, 0)
 	end
 	-- Fires on the pylons.
 	for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
 		for _, side in { -1, 1 } do
 			local position = PLAZA
-				* Vector3.new(side * spot[1] * 5, (spot[3] + 0.42) * 5, spot[2] * 5)
+				* Vector3.new(side * spot[1] * 5, (spot[3] + 0.42) * 5 * PLAZA_HEIGHT, spot[2] * 5)
 			local source = holder("PylonFire", position, Vector3.new(4, 1, 4))
 			local flames = Instance.new("ParticleEmitter")
 			flames.Texture = fxTexture("flame")
@@ -1272,6 +1412,487 @@ end
 
 -- What players bump into: the arch's feet, the pylons, the columns and the volcano itself, all invisible and simple.
 -- The hidden block-out shapes the solid art replaces, so nothing invisible stands proud of it.
+-- The slug side: Slug Grove (docs/art/lobby-hub.md). Its concept's space is shader units, with the pond at the origin, +Z
+-- toward the wall and the hub behind -Z.
+local GROVE = CFrame.new(layout.pond.radius, 0, 0) * CFrame.Angles(0, math.pi / 2, 0)
+local GROVE_KEYS = {
+	"hub-grove-ground",
+	"hub-grove-mountain",
+	"hub-grove-solid",
+	"hub-grove-water",
+	"hub-grove-falls",
+	"hub-grove-rocks",
+	"hub-grove-dress",
+}
+local GROVE_FOOT = Vector3.new(0.4, 0.1, 8.4)
+local GROVE_TINT = Color3.fromRGB(150, 245, 225)
+-- Every slug is this tall outside the gun (owner, 2026-11-02).
+local SLUG_STUDS = 1.3
+-- The source Floppy's length between root and antenna, as in the combat flight model.
+local SLUG_SOURCE = 2.72
+local GLANCE_EVERY = 4 -- about one slug in this many looks at a passing player
+local INFERNO_EVERY = 3 -- these become Inferno when its Roblox model exists; Floppies stand in until then
+
+local function groveAt(x: number, y: number, z: number): Vector3
+	return GROVE * Vector3.new(x * UNIT, y * UNIT, z * UNIT)
+end
+
+-- Flowing water along the stream's own path, node to node, so it follows the mountain. Each segment is one repeat of the texture
+-- and all move at one speed, so the pattern runs on across the joins.
+local function groveFlow(
+	lift: number,
+	texture: string,
+	color: Color3,
+	transparency: number,
+	speed: number,
+	emission: number
+)
+	local nodes: { Attachment } = {}
+	local count = #groveStream
+	for index, row in groveStream do
+		local before = groveStream[math.max(index - 1, 1)]
+		local after = groveStream[math.min(index + 1, count)]
+		local along = (groveAt(after[1], after[2], after[3]) - groveAt(
+			before[1],
+			before[2],
+			before[3]
+		)).Unit
+		local across = GROVE.XVector
+		local out = along:Cross(across).Unit
+		if out:Dot(Vector3.yAxis - GROVE.ZVector) < 0 then
+			out = -out
+		end
+		local node = holder("FallFlow", groveAt(row[1], row[2], row[3]) + out * lift, Vector3.one)
+		local a = Instance.new("Attachment")
+		-- The width runs along each attachment's Y.
+		a.CFrame = CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
+		a.Parent = node
+		table.insert(nodes, a)
+	end
+	for index = 1, count - 1 do
+		local b = Instance.new("Beam")
+		b.Attachment0, b.Attachment1 = nodes[index], nodes[index + 1]
+		b.Width0, b.Width1 = groveStream[index][4] * 2 * UNIT, groveStream[index + 1][4] * 2 * UNIT
+		b.FaceCamera = false
+		b.Segments = 1
+		b.Texture = texture
+		b.TextureMode = Enum.TextureMode.Wrap
+		b.TextureLength = (nodes[index].WorldPosition - nodes[index + 1].WorldPosition).Magnitude
+		b.TextureSpeed = speed
+		b.LightEmission = emission
+		b.LightInfluence = 0
+		b.Color = ColorSequence.new(color)
+		local from = if index == 1 then 1 else transparency
+		local to = if index == count - 1 then 1 else transparency
+		b.Transparency = NumberSequence.new(from, to)
+		b.Parent = nodes[index]
+	end
+end
+
+-- A band of water drifting flat across the pond, from where the falls land, fading out before the banks.
+local function pondCurrent(
+	fromX: number,
+	fromZ: number,
+	toX: number,
+	toZ: number,
+	width: number,
+	speed: number
+)
+	local from, to = groveAt(fromX, -0.07, fromZ), groveAt(toX, -0.07, toZ)
+	local along = (to - from).Unit
+	local across = along:Cross(Vector3.yAxis).Unit
+	local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+	local axes = CFrame.fromMatrix(Vector3.zero, along, across, along:Cross(across))
+	a0.CFrame, a1.CFrame = axes, axes
+	a0.Parent = holder("PondCurrent", from, Vector3.one)
+	a1.Parent = holder("PondCurrent", to, Vector3.one)
+	local b = Instance.new("Beam")
+	b.Attachment0, b.Attachment1 = a0, a1
+	b.Width0, b.Width1 = width * 0.45, width
+	b.FaceCamera = false
+	b.Segments = 1
+	b.Texture = fxTexture("streak")
+	b.TextureMode = Enum.TextureMode.Wrap
+	b.TextureLength = 26
+	b.TextureSpeed = speed
+	b.LightEmission = 0.7
+	b.LightInfluence = 0
+	b.Color = ColorSequence.new(Color3.fromRGB(160, 250, 235))
+	b.Transparency = fade({ { 0, 1 }, { 0.2, 0.62 }, { 0.75, 0.68 }, { 1, 1 } })
+	b.Parent = a0.Parent
+end
+
+-- The pond moving by itself: currents from the falls, rings, glints, slow light under the surface, and pads on the swell.
+local function pondLife()
+	local water = art:FindFirstChild("hub-grove-water")
+	local pond = water and water:FindFirstChild("Pond", true)
+	if pond and pond:IsA("MeshPart") then
+		-- See-through, so the deeper bed shows.
+		pond.Transparency = 0.2
+		pond:SetAttribute("PulseRate", 0.45)
+		pond:SetAttribute("PulseDepth", 0.16)
+		CollectionService:AddTag(pond, "HubPulse")
+	end
+	local dress = art:FindFirstChild("hub-grove-dress")
+	if dress then
+		setMotion(dress :: Model, "Pads", 0, 0.14, 0.5, 0)
+	end
+	for _, band in
+		{
+			{ -4.2, -1.6, 0.42 },
+			{ -1.6, -4.6, 0.3 },
+			{ 1.4, -5.0, 0.36 },
+			{ 4.4, -2.6, 0.48 },
+			{ -5.0, 2.2, 0.34 },
+			{ 5.2, 2.0, 0.4 },
+		}
+	do
+		pondCurrent(0.4, 6.6, band[1], band[2], 34, band[3])
+	end
+	local surface = holder("GroveSurface", groveAt(0, -0.09, 0.4), Vector3.new(64, 0.2, 66))
+	local rings = Instance.new("ParticleEmitter")
+	rings.Name = "Rings"
+	rings.Texture = fxTexture("ripple")
+	rings.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+	rings.EmissionDirection = Enum.NormalId.Top
+	rings.Speed = NumberRange.new(0.05)
+	rings.Color = ColorSequence.new(GROVE_TINT)
+	rings.LightEmission = 0.5
+	rings.LightInfluence = 0
+	rings.Size = NumberSequence.new(1.5, 13)
+	rings.Transparency = fade({ { 0, 0.7 }, { 0.15, 0.35 }, { 1, 1 } })
+	rings.Lifetime = NumberRange.new(2, 3.4)
+	rings.Rate = 2.4
+	rings.Parent = surface
+	local glints = Instance.new("ParticleEmitter")
+	glints.Name = "Glints"
+	glints.Texture = fxTexture("twinkle")
+	glints.EmissionDirection = Enum.NormalId.Top
+	glints.Speed = NumberRange.new(0.05, 0.2)
+	glints.Color = ColorSequence.new(Color3.fromRGB(205, 255, 245))
+	glints.LightEmission = 1
+	glints.LightInfluence = 0
+	glints.Size = fade({ { 0, 0 }, { 0.4, 1.3 }, { 1, 0 } })
+	glints.Lifetime = NumberRange.new(0.8, 1.6)
+	glints.Rate = 14
+	CollectionService:AddTag(glints, "HubSpareTwinkle")
+	glints.Parent = surface
+	-- What players' steps use (GroveWater.client).
+	local splash = holder("GroveSplash", groveAt(0, -0.07, 0), Vector3.one)
+	local stepRings = rings:Clone()
+	stepRings.Rate = 0
+	stepRings.Size = NumberSequence.new(1.5, 11)
+	stepRings.Lifetime = NumberRange.new(1, 1.7)
+	stepRings.Transparency = fade({ { 0, 0.15 }, { 1, 1 } })
+	stepRings.Parent = splash
+	local drops = Instance.new("ParticleEmitter")
+	drops.Name = "Drops"
+	drops.Texture = fxTexture("droplet")
+	drops.EmissionDirection = Enum.NormalId.Top
+	drops.Speed = NumberRange.new(9, 19)
+	drops.SpreadAngle = Vector2.new(34, 34)
+	drops.Acceleration = Vector3.new(0, -62, 0)
+	drops.Color = ColorSequence.new(Color3.fromRGB(205, 255, 245))
+	drops.LightEmission = 0.5
+	drops.LightInfluence = 0
+	drops.Size = fade({ { 0, 0.7 }, { 1, 0.25 } })
+	drops.Lifetime = NumberRange.new(0.4, 0.75)
+	drops.Rate = 0
+	drops.Parent = splash
+	local foam = Instance.new("ParticleEmitter")
+	foam.Name = "Foam"
+	foam.Texture = fxTexture("mist")
+	foam.EmissionDirection = Enum.NormalId.Top
+	foam.Speed = NumberRange.new(2, 5)
+	foam.SpreadAngle = Vector2.new(50, 50)
+	foam.Color = ColorSequence.new(Color3.fromRGB(215, 250, 245))
+	foam.LightEmission = 0.3
+	foam.LightInfluence = 0
+	foam.Size = NumberSequence.new(2.5, 8)
+	foam.Transparency = fade({ { 0, 0.55 }, { 1, 1 } })
+	foam.Lifetime = NumberRange.new(0.5, 0.9)
+	foam.Rate = 0
+	foam.Parent = splash
+end
+
+local function groveWater()
+	groveFlow(1.6, fxTexture("flow"), Color3.fromRGB(205, 255, 248), 0.45, 1.5, 0.3)
+	groveFlow(1.75, fxTexture("streak"), GROVE_TINT, 0.4, 2.3, 0.6)
+	-- A soft light in the cave's mouth, as if the water glows back into it.
+	pointLight(groveAt(0.4, 20.5, 21.5), GROVE_TINT, 0.5, 22)
+	local foot = groveAt(GROVE_FOOT.X, GROVE_FOOT.Y, GROVE_FOOT.Z)
+	local landing = holder("GroveFoot", foot, Vector3.new(26, 0.5, 14))
+	local ripples = Instance.new("ParticleEmitter")
+	ripples.Name = "Ripples"
+	ripples.Texture = fxTexture("ripple")
+	ripples.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+	ripples.EmissionDirection = Enum.NormalId.Top
+	ripples.Speed = NumberRange.new(0.05)
+	ripples.Color = ColorSequence.new(GROVE_TINT)
+	ripples.LightEmission = 0.5
+	ripples.LightInfluence = 0
+	ripples.Size = NumberSequence.new(5, 26)
+	ripples.Transparency = fade({ { 0, 0.5 }, { 0.15, 0.2 }, { 1, 1 } })
+	ripples.Lifetime = NumberRange.new(2.2, 3)
+	ripples.Rate = 1.4
+	ripples.Parent = landing
+	local mist = Instance.new("ParticleEmitter")
+	mist.Name = "Mist"
+	mist.Texture = fxTexture("mist")
+	mist.EmissionDirection = Enum.NormalId.Top
+	mist.Speed = NumberRange.new(2, 5)
+	mist.SpreadAngle = Vector2.new(30, 30)
+	mist.Color = ColorSequence.new(Color3.fromRGB(215, 245, 240))
+	mist.LightEmission = 0.25
+	mist.LightInfluence = 0
+	mist.Size = NumberSequence.new(9, 26)
+	mist.Transparency = fade({ { 0, 1 }, { 0.2, 0.72 }, { 1, 1 } })
+	mist.Lifetime = NumberRange.new(3, 5)
+	mist.Rotation = NumberRange.new(0, 360)
+	mist.RotSpeed = NumberRange.new(-12, 12)
+	mist.Rate = 4
+	mist.Parent = landing
+	pointLight(foot + Vector3.new(0, 6, 0), GROVE_TINT, 0.6, 32)
+	-- Rings spreading across the pond now and then, and spores drifting through the clearing.
+	local pond = holder("GrovePond", groveAt(0, -0.05, 0), Vector3.new(58, 0.5, 58))
+	local rings = ripples:Clone()
+	rings.Size = NumberSequence.new(2, 11)
+	rings.Rate = 0.9
+	rings.Parent = pond
+	local air = holder("GroveAir", groveAt(0, 3, -2), Vector3.new(190, 26, 190))
+	local spores = Instance.new("ParticleEmitter")
+	spores.Name = "Spores"
+	spores.Texture = fxTexture("spore")
+	spores.EmissionDirection = Enum.NormalId.Top
+	spores.Speed = NumberRange.new(0.3, 1.1)
+	spores.SpreadAngle = Vector2.new(180, 180)
+	spores.Color = ColorSequence.new(Color3.fromRGB(190, 255, 220))
+	spores.LightEmission = 1
+	spores.LightInfluence = 0
+	spores.Size = NumberSequence.new(0.5, 0.25)
+	spores.Transparency = fade({ { 0, 1 }, { 0.2, 0.15 }, { 0.8, 0.15 }, { 1, 1 } })
+	spores.Lifetime = NumberRange.new(7, 12)
+	spores.Rate = 10
+	spores.Parent = air
+end
+
+local function groveSlugModels()
+	local asset = require(ServerStorage:WaitForChild("FloppyAsset")) :: any
+	local ok, container = pcall(function()
+		return InsertService:LoadAsset(asset.model)
+	end)
+	if not ok then
+		warn(`HubArt: the grove's Floppy failed to load: {container}`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
+		return
+	end
+	local template = Instance.new("Model")
+	template.Name = "GroveSlug"
+	for _, child in (container :: Instance):GetChildren() do
+		child.Parent = template
+	end
+	(container :: Instance):Destroy()
+	FloppyAppearance.apply(template, 0.08)
+	for _, item in template:GetDescendants() do
+		if item:IsA("BasePart") then
+			item.Anchored = true
+			item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+			item.CastShadow = false
+		elseif item:IsA("Bone") then
+			item.Transform = CFrame.identity
+		end
+	end
+	local eyeL = template:FindFirstChild("eye_L", true) :: Bone
+	local eyeR = template:FindFirstChild("eye_R", true) :: Bone
+	local root = template:FindFirstChild("root", true) :: Bone
+	local head = template:FindFirstChild("head", true) :: Bone
+	local sourceScale = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / 0.74
+	template:ScaleTo(template:GetScale() * SLUG_STUDS / (SLUG_SOURCE * sourceScale))
+	local up = (head.WorldPosition - root.WorldPosition).Unit
+	local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
+	local front = (face - up * face:Dot(up)).Unit
+	-- Slug space: its root on the ground, +Y up out of its back, -Z the way its face points.
+	template.WorldPivot = CFrame.fromMatrix(root.WorldPosition, up:Cross(-front), up, -front)
+	local group = Instance.new("Folder")
+	group.Name = "GroveSlugs"
+	group.Parent = art
+	for index, site in groveSlugs do
+		local slug = template:Clone()
+		slug.Name = `GroveSlug{index}`
+		slug:SetAttribute("GroveGlances", index % GLANCE_EVERY == 1)
+		slug:SetAttribute("InfernoLater", index % INFERNO_EVERY == 0)
+		slug:PivotTo(
+			CFrame.new(GROVE * Vector3.new(site.x, site.y, site.z))
+				* CFrame.Angles(0, site.heading, 0)
+		)
+		slug.Parent = group
+	end
+	template:Destroy()
+end
+
+-- The mushrooms are the approved giant mushroom at every size, with its roots, mound and sprouts, in the colours nearest the concept's.
+-- Under 20 studs tall they use a much lighter copy, as a small one is only a little of the screen.
+local TREE_COLOURS =
+	{ [0] = "mushroom-13", [1] = "mushroom-12", [2] = "mushroom-5", [3] = "mushroom-3" }
+local TREE_LIGHTS = {
+	[0] = Color3.fromRGB(90, 240, 225),
+	[1] = Color3.fromRGB(110, 245, 150),
+	[2] = Color3.fromRGB(190, 120, 255),
+	[3] = Color3.fromRGB(110, 165, 255),
+}
+local TREE_GLOW = 0.3 -- caps are far bigger on screen here than in the look test, and blow out to white at full strength
+local SMALL_TREE = 20
+local FLORA_KEYS: { [number]: string } = {
+	[0] = "hub-flora-star",
+	[1] = "hub-flora-bell",
+	[2] = "hub-flora-lantern",
+	[3] = "hub-flora-plant",
+	[4] = "hub-flora-grass",
+}
+
+local function groveProps()
+	local lobby = require(ServerStorage:WaitForChild("LobbyAssets")) :: any
+	local materials = ServerStorage:WaitForChild("LobbyMaterials")
+	local cache: { [string]: Model } = {}
+	local function template(key: string, glow: number): Model?
+		if cache[key] then
+			return cache[key]
+		end
+		local info = lobby.assets[key]
+		local ok, container = pcall(function()
+			return InsertService:LoadAsset(info.model)
+		end)
+		if not ok then
+			warn(`HubArt: {key} failed to load: {container}`)
+			workspace:SetAttribute(
+				"HubArtFailed",
+				(workspace:GetAttribute("HubArtFailed") or 0) + 1
+			)
+			return nil
+		end
+		local model = Instance.new("Model")
+		model.Name = key
+		for _, child in (container :: Instance):GetDescendants() do
+			if child:IsA("MeshPart") then
+				child.Parent = model
+			end
+		end
+		(container :: Instance):Destroy()
+		LookPack.styleModel(model, key, info.groups, materials, glow)
+		for _, part in model:GetDescendants() do
+			if part:IsA("MeshPart") then
+				part.Anchored = true
+				part.CanCollide, part.CanQuery, part.CanTouch = false, false, false
+				part.CastShadow = false
+			end
+		end
+		-- Its foot, at the middle of its base on the ground.
+		local lo, hi = paintedBounds(model)
+		model.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
+		cache[key] = model
+		return model
+	end
+	local function plant(
+		source: Model,
+		parent: Instance,
+		x: number,
+		y: number,
+		z: number,
+		turn: number,
+		tall: number
+	): Model
+		local copy = source:Clone()
+		local lo, hi = paintedBounds(copy)
+		copy:ScaleTo(copy:GetScale() * tall / (hi.Y - lo.Y))
+		copy:PivotTo(CFrame.new(GROVE * Vector3.new(x, y, z)) * CFrame.Angles(0, turn, 0))
+		copy.Parent = parent
+		return copy
+	end
+	local trees = Instance.new("Model")
+	trees.Name = "GroveTrees"
+	trees.Parent = art
+	for index, site in groveTrees do
+		local small = site.height < SMALL_TREE
+		local source =
+			template(TREE_COLOURS[site.colour] .. (if small then "-s" else ""), TREE_GLOW)
+		if source then
+			local tree = plant(source, trees, site.x, site.y, site.z, index * 1.9, site.height)
+			if not small then
+				for _, part in tree:GetDescendants() do
+					if part:IsA("MeshPart") and part.Name == "Stem" then
+						table.insert(solidQueue, part)
+					end
+				end
+				if site.height > 20 then
+					pointLight(
+						GROVE * Vector3.new(site.x, site.y + site.height * 0.62, site.z),
+						TREE_LIGHTS[site.colour],
+						0.22,
+						site.height * 0.8
+					)
+				end
+			end
+		end
+	end
+	local crystals = Instance.new("Model")
+	crystals.Name = "GroveCrystals"
+	crystals.Parent = art
+	for index, site in groveCrystals do
+		local source = template(site.key, 1)
+		if source then
+			plant(source, crystals, site.x, site.y, site.z, index * 2.3, site.height)
+		end
+	end
+	for _, model in cache do
+		model:Destroy()
+	end
+	-- The plants: one of each loaded, then copies. Each is modelled round its root at the ground.
+	local flora = Instance.new("Model")
+	flora.Name = "GroveFlora"
+	flora.Parent = art
+	local plants: { [number]: Model } = {}
+	for kind, key in FLORA_KEYS do
+		local model = loadPiece(key)
+		if model then
+			model.WorldPivot = CFrame.identity
+			plants[kind] = model
+		end
+	end
+	for _, site in groveFlora do
+		local source = plants[site[1]]
+		if source then
+			local copy = source:Clone()
+			copy:ScaleTo(copy:GetScale() * site[5])
+			copy:PivotTo(
+				CFrame.new(GROVE * Vector3.new(site[2], site[3], site[4]))
+					* CFrame.Angles(0, site[6], 0)
+			)
+			copy.Parent = flora
+			for _, part in copy:GetDescendants() do
+				if part:IsA("MeshPart") and isInk(part) then
+					CollectionService:AddTag(part, "HubDistantInk")
+				end
+			end
+		end
+	end
+	for _, model in plants do
+		model:Destroy()
+	end
+end
+
+local function buildGrove()
+	for _, key in GROVE_KEYS do
+		local model = place(key)
+		if model then
+			model:PivotTo(GROVE * model:GetPivot())
+		end
+	end
+	groveProps()
+	groveWater()
+	pondLife()
+	groveSlugModels()
+end
+
 local function retireBlockOut()
 	local root = workspace:WaitForChild("LobbyScale") :: Model
 	local function retire(container: Instance?)
@@ -1289,6 +1910,12 @@ local function retireBlockOut()
 	if shore then
 		for _, item in shore:GetDescendants() do
 			if item.Name == "Lip" and item:IsA("BasePart") then
+				item:Destroy()
+			end
+		end
+		-- The grove's ground is solid as drawn, with a basin for the pond, so the flat one can't stay.
+		for _, item in shore:GetChildren() do
+			if item:IsA("BasePart") and item.Name == "Surface" and onSlugSide(item.Position) then
 				item:Destroy()
 			end
 		end
@@ -1314,6 +1941,7 @@ buildSkyWell()
 buildPortals()
 buildVolcano()
 buildArch()
+buildGrove()
 buildCollision(function()
 	retireBlockOut()
 	workspace:SetAttribute("HubSolid", true)
@@ -1328,14 +1956,12 @@ for _, key in DISTANT do
 		end
 	end
 end
--- Stacked sheets of cloud are the most expensive thing to draw when looking up, so a phone drops every other one.
+-- The veil is see-through cloud across most of the screen when looking up, so low detail drops it.
 local storm = art:FindFirstChild("hub-storm")
 if storm then
-	for _, name in { "Cloud1", "Cloud3" } do
-		local part = storm:FindFirstChild(name, true)
-		if part then
-			CollectionService:AddTag(part, "HubSpareCloud")
-		end
+	local veil = storm:FindFirstChild("StormVeil", true)
+	if veil then
+		CollectionService:AddTag(veil, "HubSpareCloud")
 	end
 end
 print("HubArt: built")

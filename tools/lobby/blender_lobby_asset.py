@@ -22,6 +22,7 @@ from mathutils.bvhtree import BVHTree
 ARGS = sys.argv[sys.argv.index("--") + 1:]
 KEY = ARGS[0]
 BUDGET = int(ARGS[1]) if len(ARGS) > 1 else 14000  # game triangles for the whole asset, excluding ink
+LIGHT = KEY.endswith("-s")  # a copy for small on-screen use: the budget is firm
 SRC = (Path("build/lobby/meshes")/KEY).resolve()
 OUT = (Path("build/lobby/export")/KEY).resolve()
 TEX = 1024
@@ -224,7 +225,9 @@ def main():
         name = g["name"]
         dense = build_dense(name, np.load(SRC/f"{name}.npz"))
         target = int(min(MAX_TRIS, max(MIN_TRIS, BUDGET*g["faces"]/total)))
-        if name in SMALL_DETAIL:
+        if LIGHT:
+            target = max(120, int(BUDGET*g["faces"]/total))
+        elif name in SMALL_DETAIL:
             # Many small pieces share one mesh: never crush them below a quarter of their dense detail.
             target = max(target, int(min(g["faces"]*0.25, 4000)))
         low = make_low(dense, name, target)

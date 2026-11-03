@@ -33,6 +33,12 @@
       },
       "LookPack": {
         "$path": "experiments/lobby/shared/LookPack.luau"
+      },
+      "Combat": {
+        "$path": "experiments/combat/shared"
+      },
+      "GooArt": {
+        "$path": "private-assets/ui/GooArt.luau"
       }
     },
     "ServerScriptService": {
@@ -51,6 +57,18 @@
       },
       "HubArt": {
         "$path": "experiments/lobby/hub/server/HubArt.server.luau"
+      },
+      "FloppyAppearance": {
+        "$path": "experiments/creatures/floppy/server/FloppyAppearance.luau"
+      },
+      "LobbySettings": {
+        "$className": "Folder",
+        "SettingsPersistence": {
+          "$path": "experiments/combat/server/SettingsPersistence.server.luau"
+        },
+        "SettingsStore": {
+          "$path": "experiments/combat/server/SettingsStore.luau"
+        }
       }
     },
     "StarterPlayer": {
@@ -71,6 +89,45 @@
         },
         "HubMotion": {
           "$path": "experiments/lobby/hub/client/HubMotion.client.luau"
+        },
+        "GroveSlugs": {
+          "$path": "experiments/lobby/hub/client/GroveSlugs.client.luau"
+        },
+        "GroveWater": {
+          "$path": "experiments/lobby/hub/client/GroveWater.client.luau"
+        },
+        "Combat": {
+          "$className": "Folder",
+          "FloppyRecovery": {
+            "$path": "experiments/combat/client/FloppyRecovery.luau"
+          },
+          "Goo": {
+            "$path": "experiments/combat/client/Goo.luau"
+          },
+          "GooBar": {
+            "$path": "experiments/combat/client/GooBar.luau"
+          },
+          "PvpFx": {
+            "$path": "experiments/combat/client/PvpFx.luau"
+          },
+          "PvpTheme": {
+            "$path": "experiments/combat/client/PvpTheme.luau"
+          },
+          "SettingsSync": {
+            "$path": "experiments/combat/client/SettingsSync.luau"
+          },
+          "SlugIcon": {
+            "$path": "experiments/combat/client/SlugIcon.luau"
+          },
+          "SlugVisuals": {
+            "$path": "experiments/combat/client/SlugVisuals.luau"
+          },
+          "Settings": {
+            "$path": "experiments/combat/client/Settings.client.luau"
+          }
+        },
+        "LobbyFirstPerson": {
+          "$path": "experiments/lobby/hub/client/LobbyFirstPerson.client.luau"
         }
       }
     },
@@ -81,6 +138,18 @@
       },
       "HubMaterials": {
         "$path": "private-assets/lobby/hub_materials.rbxmx"
+      },
+      "FloppyAsset": {
+        "$path": "private-assets/floppy/FloppyAsset.luau"
+      },
+      "FloppyMaterials": {
+        "$path": "private-assets/floppy/materials.rbxmx"
+      },
+      "LobbyAssets": {
+        "$path": "private-assets/lobby/LobbyAssets.luau"
+      },
+      "LobbyMaterials": {
+        "$path": "private-assets/lobby/materials.rbxmx"
       }
     }
   }

@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-02",
+  "branch": "fix/settings-persistence",
+  "base_revision": "9e7a41c",
+  "documentation": "docs/pvp-ui.md (requested docs/MVP-UI.md is absent)",
+  "offline": {
+    "command": "python tools/verify_combat.py",
+    "result": "PASS: foundation and movement checks, combat formatting/lint/strict typing and both private builds",
+    "test_fixture_checks": "PASS: StyLua, Selene, strict Luau types with absolute test sourcemap",
+    "isolation": "PASS: production modules mapped in both combat builds; test storage and fixture scripts excluded"
+  },
+  "roblox": {
+    "environment": "Windows desktop, Roblox Studio 0.745.0.7451137",
+    "place": "SlugshotSettingsCheck local file",
+    "mode": "one server and one client, real Studio Play",
+    "storage": "injected JSON-roundtripping in-memory store; real production schema/store/service/client code",
+    "automation": "tools/build_settings_check.py and tools/studio/settings_check.ps1",
+    "observed_utc": "2026-11-02T13:34:44Z to 2026-11-02T13:35:28Z",
+    "passes": [
+      "SETTINGSCHECK PASS missing/old/invalid/duplicate data",
+      "SETTINGSCHECK PASS all 12 preferences/both key slots/clear/reset/session fence",
+      "SETTINGSCHECK PASS future-version protection/failure retry/expired lease",
+      "SETTINGSCHECK PASS real client hydration/early edits/color/flip/keybind/save acknowledgement",
+      "SETTINGSCHECK PASS real remote changes/cleared slots/reset/UI status",
+      "SETTINGSCHECK PASS production leave flush/release (injected storage)"
+    ],
+    "departure": "test-only remote kicks the test player; real PlayerRemoving handler flushes all default values and releases the lease",
+    "network": "inherited Studio settings; not changed or characterized",
+    "fps": "not measured",
+    "warnings": [
+      "Studio redundant built-in flag warnings",
+      "Studio built-in font/image resolution warnings for Montserrat and Inconsolata",
+      "Expected test-player kick/disconnect at end"
+    ],
+    "runtime_log": "ignored build/settings-final-pass/runtime.log",
+    "screenshot": "ignored build/settings-final-pass/end.png"
+  },
+  "harness_repairs": [
+    "Initial stop-key automation did not demonstrate shutdown and is not counted as a pass. The final harness tests an actual player departure instead.",
+    "A test-only comparison initially treated hex letter casing as a different colour. Corrected before the final passing run."
+  ],
+  "unverified": [
+    "Real Roblox cloud-backed leave/rejoin",
+    "Full BindToClose execution in a real server shutdown",
+    "Multi-client, latency/device and crash recovery coverage"
+  ],
+  "owner_direction": "Owner allowed skipping real rejoin if Studio MCP remained unavailable. Direct proxy connection initialized successfully but list_roblox_studios repeatedly returned no sessions. No publishing or Studio API/security changes were made.",
+  "sha256": {
+    "experiments/combat/shared/SettingsSchema.luau": "da603bb803f70895a8b0f029c67e0ac0ef07e89b26a68c3a4ef6719a409eea11",
+    "experiments/combat/server/SettingsStore.luau": "232cf1f186942ce36049ee30f20f05f4e1cb7f5cc1edc40c020b0b60a795e11a",
+    "experiments/combat/server/SettingsPersistence.server.luau": "d817627089da8e797559ec6215e2352ddaaab9d446f05cac32dfb8db0957fa06",
+    "experiments/combat/client/SettingsSync.luau": "f884b195c33868e7131317414f46a561a58134535064818a651d710019f08ded",
+    "experiments/combat/client/Settings.client.luau": "c7e84cb7844785a75f83d28470038e81e5c44acea2d3c46c13fb429825a1dd13",
+    "experiments/movement/client/Keybinds.luau": "66350c8d3b814b7024ff33b7a2953b873671a43740e8d701d123abb8e6ecbbc4",
+    "experiments/movement/shared/KeybindDefinitions.luau": "dc2e8a4706bce2f293a1a6ecc5c7c0360ac91b6239719455d7371e3f308edb5e",
+    "tools/studio/settings-store-check.server.luau": "b5358925f1e08936b651ef66476df05fe73654d3378f1249d724ff24b56307f8",
+    "tools/studio/settings-test-store.luau": "8695252c0075d8ab914f617df6942fbab6fd504520458a7eca8548c1bcba0ed3",
+    "tools/studio/settings-client-check.client.luau": "5830df3f53b46864d4a7bed3c2a9dc5fa3d1e3d26bdeabf2c028fbb137ab80f5"
+  }
+}

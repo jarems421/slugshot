@@ -101,6 +101,12 @@ local turned = lying < upright
 local fix = (if turned then CFrame.Angles(-math.pi / 2, 0, 0) else CFrame.identity)
 	* (spec.rotation or CFrame.identity)
 for mesh, part in parts do
+	if mesh.name == CANISTER .. "_Ink" then
+		-- An inverted hull shows its inside faces through clear glass: a solid black
+		-- wall behind the slug. The chamber's rings and collars already frame the glass.
+		part:Destroy()
+		continue
+	end
 	local s = mesh.size * SCALE
 	part.Name = mesh.name
 	part.Size = if turned then Vector3.new(s.X, s.Z, s.Y) else s
@@ -293,8 +299,8 @@ floppy:SetAttribute(
 	(Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude / 2 + 0.1) * target
 )
 floppy:SetAttribute(
-	"InspectHopHeight",
-	math.max(0, math.min(0.035, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008))
+	"ChamberRoom",
+	math.max(0, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008)
 )
 local up = (head.WorldPosition - rootBone.WorldPosition).Unit
 local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
@@ -321,6 +327,63 @@ for _, descendant in floppy:GetDescendants() do
 	end
 end
 floppy.Parent = tool
+
+-- Inferno's base form in the canister, fitted the same way. CombatClient shows whichever slug is selected.
+local infernoAsset = ReplicatedStorage:FindFirstChild("InfernoAsset")
+local infernoAppearance = script.Parent:FindFirstChild("InfernoAppearance")
+local infernoMaterials = game:GetService("ServerStorage"):FindFirstChild("InfernoMaterials")
+if infernoAsset and infernoAppearance and infernoMaterials then
+	local INFERNO_SIZE = Vector3.new(1.636, 2.506, 1.83) -- source units: wide, tall, deep
+	local infernoAssets = (require :: any)(infernoAsset)
+	local infernoOk, infernoContainer =
+		pcall(InsertService.LoadAsset, InsertService, infernoAssets.base.model)
+	if infernoOk then
+		local inferno = Instance.new("Model")
+		-- Not "Inferno": InfernoMotion would set him flipping about inside the gun.
+		inferno.Name = "InfernoLoaded"
+		for _, child in (infernoContainer :: Instance):GetChildren() do
+			child.Parent = inferno
+		end
+		(infernoContainer :: Instance):Destroy()
+		local fit = math.min(
+			canisterSize.X * 0.84 / INFERNO_SIZE.X,
+			canisterSize.Y * 0.82 / INFERNO_SIZE.Z,
+			canisterSize.Z * 0.86 / INFERNO_SIZE.Y
+		);
+		(require :: any)(infernoAppearance).dress(inferno, infernoMaterials, fit)
+		local left = inferno:FindFirstChild("antenna_L", true) :: Bone
+		local right = inferno:FindFirstChild("antenna_R", true) :: Bone
+		local infernoRoot = inferno:FindFirstChild("root", true) :: Bone
+		local infernoHead = inferno:FindFirstChild("head", true) :: Bone
+		inferno:ScaleTo(
+			inferno:GetScale() * fit / ((right.WorldPosition - left.WorldPosition).Magnitude / 0.72)
+		)
+		local infernoUp = (infernoHead.WorldPosition - infernoRoot.WorldPosition).Unit
+		local infernoBack = -(right.WorldPosition - left.WorldPosition).Unit:Cross(infernoUp)
+		local infernoReference = CFrame.fromMatrix(
+			infernoRoot.WorldPosition + infernoUp * INFERNO_SIZE.Y * fit / 2,
+			infernoUp:Cross(infernoBack),
+			infernoUp,
+			infernoBack
+		)
+		inferno:PivotTo(placed * infernoReference:Inverse() * inferno:GetPivot())
+		for _, descendant in inferno:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				attach(
+					descendant,
+					handle.CFrame:ToObjectSpace(descendant.CFrame),
+					descendant.Parent :: Instance
+				)
+				if not descendant:IsA("MeshPart") then
+					descendant.Transparency = 1
+				end
+			end
+		end
+		inferno.Parent = tool
+	else
+		warn(`could not load Inferno: {infernoContainer}`)
+	end
+end
 
 -- One broad, low-intensity fill instead of sub-stud light pools. The
 -- albedo-modulated material floor keeps the slug readable if local lighting

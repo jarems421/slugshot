@@ -72,6 +72,16 @@ function Visuals.model(slugId: string): Model
 	return standIn()
 end
 
+-- The shape shown in icons, where a slug that transforms shows its base form.
+function Visuals.iconModel(slugId: string): Model
+	local assets = ReplicatedStorage:FindFirstChild("CombatAssets")
+	local template = assets and assets:FindFirstChild(slugId .. "Icon")
+	if template and template:IsA("Model") then
+		return template:Clone()
+	end
+	return Visuals.model(slugId)
+end
+
 local function fade(part: BasePart, duration: number, goal: { [string]: any })
 	goal.Transparency = 1
 	local tween = TweenService:Create(

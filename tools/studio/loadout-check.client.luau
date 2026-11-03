@@ -109,14 +109,16 @@ local ok, problem = pcall(function()
 	local rest = sampledAttachment.C0
 	task.wait(1.9)
 	assert(sampledRoot ~= rest, "slug did not hop/turn")
-	local turning = sampledRoot
+	-- Upright he is stuck to the chamber's floor: the life is in the rig, not the attachment.
+	local spine = (loaded :: Instance):FindFirstChild("body_upper", true) :: Bone
+	local turning = spine.Transform
 	local visual = (workspace.CurrentCamera :: Camera):FindFirstChild("FirstPersonBodyVisual")
 	assert(visual and visual:FindFirstChild("Handle"), "first person gun missing")
 	capture("first-person-look")
 	task.wait(0.1)
-	assert(sampledRoot ~= turning, "slug pose frozen")
+	assert(spine.Transform ~= turning, "slug pose frozen")
 	capture("first-person-wiggle")
-	task.wait(3)
+	task.wait(2)
 	assert(inspect.elapsed(character) == nil, "inspect did not finish")
 	probe:Invoke("Inspect")
 	waitFor(function()

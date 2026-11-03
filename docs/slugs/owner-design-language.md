@@ -269,6 +269,12 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 
 **Confirmed:** "flip the gun up and then you catch it" means an airborne end-over-end toss, catch, then a separate outward wrist turn to reveal the chamber side. A barrel roll/twirl did not satisfy it. "The slime shouldn't come out" means all inspect acting remains inside the chamber, even if an outward offset makes the face easier to see. "Springing up" means compress, extend quickly, turn while airborne and cushion the landing. "More fluid" with "don't add ... jiggles" means coordinated hip/upper-body motion with eased reversals, not a rigid whole-model swivel or extra jelly oscillation. This supersedes the prior spin interpretation; owner verdict on the new candidate remains open.
 
+"Black background" on the canister was the inside of its inverted ink hull seen through clear glass. "Shaking a bum, not just wiggling its body side to side" means the base travels while the top stays still, so it needs a pivot at the waist rather than a bigger sweep. "Frozen frame" and "animated, but not really animated" mean slow, loose, non-repeating motion at a size that reads at the slug's loaded scale; authored amounts shrink with the model. "Springy" and "smooth" point at the spring-driven icon performance the owner already called perfect, so reuse that first. "Perfect" on the gun means leave its motion alone from here.
+
+The elaborate hop and bum-shake act built from those phrases was then rejected as "horrible": "I give up on the current animation". "It already does it in the HUD" was the way out: when the owner points at an existing approved motion, reuse it unchanged. For a tiny slug in a chamber, a small readable gesture beats an ambitious performance.
+
+"Too stiff" on that wiggle meant the body moved as one rigid piece. "Stuck to the bottom" with "just the top bit" means a fixed base and a bend travelling up the body, each part trailing the one below. A motion approved in one context (a loose HUD icon) may need changing when the slug is seen standing on a surface.
+
 ## Fire effects (Inferno, 2026-11-02)
 
 - "trapped in a box" / "boxy": a visible strip edge or a square-cut end. Fire must taper to a point and fade softly.
