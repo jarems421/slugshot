@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-03",
+  "status": "Requested animation not achieved; failed effect removed and original static lava restored",
+  "ownerFeedback": "15:34 screenshot: lava looks low quality; one final attempt authorized, with explicit permission to admit failure",
+  "previousFailure": "1024-square source colour/normal/glow maps were reduced to 256; tightly packed UV islands lost detail and showed jagged boundaries",
+  "finalRejectedExperiment": {
+    "method": "Native-resolution maps, actual mountain-waterfall pattern, corrected UV-edge padding, cached colour palette",
+    "maps": 1024,
+    "originalNormalPixelsIdentical": true,
+    "animatedTexels": 434957,
+    "changedTexels": 357716,
+    "alphaChanges": 0,
+    "medianUpdateMilliseconds": 25.7923,
+    "p95UpdateMilliseconds": 30.0355,
+    "frameP95Milliseconds": 35.0597,
+    "renderFailure": "Review rendered white after swapping original and animated materials; unresolved whether swapping caused it. Performance alone also failed acceptance.",
+    "captures": "build/lobby-fx-review/full-quality-native",
+    "ignoredPrototype": "build/lobby-fx-review/quality-prefix.luau"
+  },
+  "deliveredState": {
+    "lava": "Original authored static material and geometry; no EditableImage replacement and no Beam flow overlays",
+    "storm": "Previously slower diffuse flashes preserved",
+    "sourceAssets": "Unchanged; original 1024-square maps remain in existing private asset mappings",
+    "preview": "build/SlugshotGroveReview.rbxlx"
+  },
+  "verification": {
+    "static": "PASS: StyLua, Selene, strict Luau analysis and normal/review build freshness",
+    "native": "PASS: original material references unchanged, no EditableImage replacements, fixed mesh and zero lava flow overlays; lower/middle/side close-ups inspected. Slower diffuse storm cadence passed; tour completed.",
+    "captures": "build/lobby-fx-review/restored-final-native",
+    "observedStormFlashDurationsSeconds": [1.33406, 1.33474, 1.26640, 1.26736]
+  },
+  "handoff": [
+    "Runtime lava replacement code was removed from HubMotion.client.luau; do not re-enable the 256-square approach.",
+    "HubArt.server.luau retains original volcano placement and material setup, without lava flow overlays.",
+    "HubCheck.client.luau now checks unchanged original material references, fixed geometry and no overlays, with lower/middle/side close-ups.",
+    "The mountain waterfall still uses groveFlow and the private flow/streak textures in HubArt.server.luau. No new assets were uploaded.",
+    "No experience publication or Mesh/Image API security-setting change."
+  ]
+}

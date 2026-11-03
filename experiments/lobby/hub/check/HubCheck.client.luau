@@ -8,6 +8,13 @@ local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "lavaFlowB", from = Vector3.new(-115, 80, -205), at = Vector3.new(0, 85, -268) },
 	{ name = "lavaCloseA", from = Vector3.new(-40, 85, -188), at = Vector3.new(-25, 78, -214) },
 	{ name = "lavaCloseB", from = Vector3.new(-40, 85, -188), at = Vector3.new(-25, 78, -214) },
+	{ name = "lavaCloseLower", from = Vector3.new(-44, 16, -162), at = Vector3.new(-35, 12, -187) },
+	{
+		name = "lavaCloseMiddle",
+		from = Vector3.new(-44, 54, -174),
+		at = Vector3.new(-30, 43, -203),
+	},
+	{ name = "lavaCloseSide", from = Vector3.new(-60, 30, -170), at = Vector3.new(-35, 21, -188) },
 	{ name = "grovePath", from = Vector3.new(75, 9, 0), at = Vector3.new(285, 70, 0) },
 	{ name = "grovePond", from = Vector3.new(112, 7, -24), at = Vector3.new(190, 14, 6) },
 	{ name = "groveFront", from = Vector3.new(100, 14, 0), at = Vector3.new(230, 60, 0) },
@@ -190,20 +197,13 @@ task.spawn(function()
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	local lava = art:WaitForChild("hub-volcano"):FindFirstChild("Flows", true) :: MeshPart
-	local readyDeadline = os.clock() + 90
-	while lava:GetAttribute("LavaSurfaceReady") ~= true and os.clock() < readyDeadline do
-		task.wait(0.2)
-	end
-	assert(
-		lava:GetAttribute("LavaSurfaceReady") == true,
-		"mesh-bound lava material did not initialise"
-	)
 	local lavaFrame, lavaSize, lavaContent = lava.CFrame, lava.Size, lava.MeshContent
 	local appearance = lava:FindFirstChildOfClass("SurfaceAppearance") :: SurfaceAppearance
-	local image = appearance.ColorMapContent.Object :: EditableImage
-	assert(image and image:IsA("EditableImage"), "colour map is not an animated surface image")
-	local firstPixels = image:ReadPixelsBuffer(Vector2.zero, image.Size)
-	local firstRevision = lava:GetAttribute("LavaMaterialRevision") :: number
+	assert(appearance.ColorMapContent.Object == nil, "runtime lava colour replacement remains")
+	assert(appearance.NormalMapContent.Object == nil, "runtime lava normal replacement remains")
+	assert(appearance.EmissiveMaskContent.Object == nil, "runtime lava glow replacement remains")
+	local colourMap, normalMap, glowMap =
+		appearance.ColorMapContent, appearance.NormalMapContent, appearance.EmissiveMaskContent
 	print("HUBCHECK tour starts")
 	local camera = workspace.CurrentCamera
 	camera.CameraType = Enum.CameraType.Scriptable
@@ -238,23 +238,14 @@ task.spawn(function()
 		lava.CFrame == lavaFrame and lava.Size == lavaSize and lava.MeshContent == lavaContent,
 		"lava geometry moved or changed"
 	)
-	local lastPixels = image:ReadPixelsBuffer(Vector2.zero, image.Size)
-	local changed = 0
-	for offset = 0, buffer.len(firstPixels) - 1 do
-		if buffer.readu8(firstPixels, offset) ~= buffer.readu8(lastPixels, offset) then
-			changed += 1
-		end
-	end
-	assert(changed > 1000, "actual lava colour-map pixels did not animate")
-	local revisions = (lava:GetAttribute("LavaMaterialRevision") :: number) - firstRevision
-	assert(revisions > 20, "material animation skipped its updates")
-	print("HUBCHECK mesh lava " .. game:GetService("HttpService"):JSONEncode({
-		changedBytes = changed,
-		revisions = revisions,
-		animatedTexels = lava:GetAttribute("LavaAnimatedTexels"),
-		meshFixed = true,
-		overlayBeams = 0,
-	}))
+	assert(lava:FindFirstChildOfClass("SurfaceAppearance") == appearance, "lava material replaced")
+	assert(
+		appearance.ColorMapContent == colourMap
+			and appearance.NormalMapContent == normalMap
+			and appearance.EmissiveMaskContent == glowMap,
+		"original lava texture references changed"
+	)
+	print("HUBCHECK original lava material retained; mesh fixed; no lava animation overlays")
 	-- Observe rendered cloud illumination before manually emitting review blooms.
 	local cloud =
 		game:GetService("CollectionService"):GetTagged("HubStormCloud")[1] :: SurfaceAppearance

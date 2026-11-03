@@ -1,5 +1,12 @@
 # Project memory
 
+## 2026-11-03 - Owner rejects lava quality; final attempt discarded
+
+- **Confirmed:** owner's 15:34 screenshot shows unacceptable jagged patches. Prior map/pixel checks did not establish visual quality. The 1024-to-256 map reduction damaged the packed UV atlas and normal/glow detail.
+- **Rejected:** final native-resolution attempt reused the waterfall's actual pattern and padded UV seams. Source normal pixels matched, but approximately 25-30 ms updates were too expensive; the baseline/material-swap comparison also showed white surfaces. Do not mistake those numeric passes for successful animation.
+- **Implemented:** removed runtime EditableImage replacement and lava overlay beams; restored original authored material and fixed geometry. Slower diffuse storm changes preserved. Lava is static; waterfall-like animation is unresolved. [Evidence and handoff](evidence/2026-11-03-lava-quality-rollback.json).
+- **Verified:** final native tour completed; original texture references remain unchanged, no dynamic replacements/flow overlays, fixed mesh, lower/middle/side close-ups inspected and slower diffuse storm cadence passes. Formatting/lint/types and normal/review source-freshness checks pass. Canonical review rebuilt for the owner.
+
 ## 2026-11-03 - Mesh-bound lava replaces floating ribbons
 
 - **Confirmed:** owner rejected the animation sitting on top of lava.

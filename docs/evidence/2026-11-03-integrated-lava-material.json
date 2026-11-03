@@ -1,6 +1,6 @@
 {
   "date": "2026-11-03",
-  "status": "Implemented/verified in desktop Studio; owner verdict pending",
+  "status": "Rejected by owner for low texture quality; runtime removed. Historical numeric passes below do not establish art acceptance. See 2026-11-03-lava-quality-rollback.json.",
   "ownerBrief": "Integrate slow flow into lava itself; the animation sits on top.",
   "provenance": "Original Slugshot volcano mesh and paint; no new art, upload or source-model edits",
   "implementation": {

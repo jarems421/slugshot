@@ -1,6 +1,12 @@
 # 0026 - Animate the lava's own material
 
-Date: 2026-11-03. Status: Implemented locally; owner review pending.
+Date: 2026-11-03. Status: Rejected after owner quality review; runtime removed. Historical attempt below.
+
+## Final disposition
+
+The owner's 15:34 screenshot exposed jagged patches and lost material quality. Reducing the 1024-square atlas and its normal/glow maps to 256 was unacceptable. A final full-resolution attempt reused the actual waterfall pattern, corrected UV-edge padding and cached colour palettes. It passed pixel/normal/geometry checks but cost approximately 25-30 ms per update on this desktop. Its comparison also rendered white after temporarily swapping materials; whether that particular failure came from the comparison swap remains unresolved. This is not an accepted animation solution.
+
+Remove runtime image replacement and all lava flow overlays. Retain the original authored material and geometry, plus the separate slower diffuse storm changes. Lava is static pending a future implementation. [Rollback evidence and handoff](../evidence/2026-11-03-lava-quality-rollback.json).
 
 ## Decision
 

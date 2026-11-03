@@ -1107,18 +1107,16 @@ local function buildVolcano()
 	local volcano = placeInPlaza("hub-volcano")
 	if volcano then
 		shorten(volcano)
-		-- The lava breathes, slowly.
+		-- Retain the crater pool's original slow glow; downhill lava keeps its authored material.
 		for _, part in volcano:GetDescendants() do
-			if part:IsA("MeshPart") and part.Name == "Flows" then
-				CollectionService:AddTag(part, "HubLavaSurface")
-			elseif part:IsA("MeshPart") and part.Name == "Pool" then
+			if part:IsA("MeshPart") and part.Name == "Pool" then
 				part:SetAttribute("PulseRate", 0.55)
 				part:SetAttribute("PulseDepth", 0.32)
 				CollectionService:AddTag(part, "HubPulse")
 			end
 		end
 	end
-	-- Glints crossing the pool to every spill, flat on the lava, at the same pace as the ones running down the streams.
+	-- Original crater-pool glints; no flow overlay is added to the downhill lava.
 	for k = 0, 6 do
 		local angle = -1.18 + k * 0.897598
 		local from = volcWall(angle, 128.6, 5 - volcRadius(angle, 128))

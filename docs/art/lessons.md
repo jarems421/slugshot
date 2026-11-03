@@ -1,5 +1,9 @@
 # Art direction and asset library lessons
 
+## 2026-11-03 - Reject texture-quality and performance regressions
+
+Owner's close-up exposed the 256-square lava material as jagged and low quality. The original 1024-square atlas has tightly packed UV islands: reducing colour, normal and glow maps together damages the painted surface. Distant screenshots and changed-pixel counts missed this. The final full-resolution variant preserved original normal pixels but cost about 25-30 ms per update, and its material-swap comparison rendered white. These are failed acceptance results. Restore the original static material rather than ship the experiment. [Record](../evidence/2026-11-03-lava-quality-rollback.json). Earlier integrated-material conclusions below are superseded.
+
 ## 2026-11-03 - Integrate flow into the material
 
 **Confirmed:** visible beams still looked detached from lava. Replace overlays with an animated colour image on the original UV-mapped SurfaceAppearance. Native image-buffer changes and fixed-mesh checks establish actual material animation; close-up captures establish retained colour and surface registration. Preserve the source paint and shading maps.
