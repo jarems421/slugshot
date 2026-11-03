@@ -7,7 +7,7 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 | Design | Status | Design and sources |
 | --- | --- | --- |
 | Floppy (first slug) | Final design confirmed as a 3D concept; Blender game model and Studio import pending | [Design and reference notes](flopper-inspired.md) |
-| Inferno (fire slug) | Base and slug-dragon forms final as 3D concepts; Blender model and Studio import pending | [Design and reference notes](inferno.md) |
+| Inferno (fire slug) | Both forms final as concepts, built in Blender and showing in a private Studio display; owner verdict pending; shooting not started | [Design and reference notes](inferno.md) |
 
 ## Ability rule
 

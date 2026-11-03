@@ -70,3 +70,36 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 - **Cause:** `image.save()` then `image.pack()` on an image that was already packed left the embedded copy unchanged, so the export baked the old colour. The PNG on disk was new.
 - **Fix:** load the saved PNG as a fresh image, pack that and swap it into the material; verify by diffing the exported game texture against the checkpoint (now 97k texels changed).
 - **Rule:** after editing a packed texture, check the packed pixels (or the downstream bake) rather than the file on disk.
+
+## Black lines and double lids on slug faces (2026-11-02)
+
+- **Confirmed (owner):** Floppy's blink looked buggy, with "two layers of eyelids", and both faces had too many black lines.
+- **Causes:** an inverted-hull ink shell shows inside any carved hollow, drawing broken lines round eyes and mouths. Tucking it inward made cracks; only deleting those shell faces worked. Floppy's lid colour was a median of baked texels, which picked up near-black hollows. A contour ring beside the rim read as a second lid, and any painted rim stretches into hairs as a skinned lid closes.
+- **Fixes, verified in Studio captures:** no shell on faces; lids painted from their known colours (encoded sRGB values, since byte image pixels are not linear); no painted rim. Part-closed separate lids poke through the head, so a lid only moves during a blink.
+- **Pipeline notes:** Decimate's vertex group preserves low weights, so a "keep" group must be inverted, with a small factor. Voxel remesh before reducing removes surface-net junctions. Glb import adds a 2-stud RootPart, and the glTF importer an Icosphere: measure bounds from the skinned meshes. Luau has no `math.tau`.
+- **Floppy lower lid (owner, same day):** a pale sliver along the lower lids was the unpainted socket wall beside the eye, keeping a glossy bake; the socket now takes the lower lid colour. **Overlay patches:** never carry a copy of the skin in an overlay, because it shows as a box under different shading; hold only the feature, and keep it opaque where it matters.
+- **Outline follow-up (owner, same day):** a hull with its face cut away broke as soon as the model turned, because the cut assumed a front view. A `Highlight` holds from every angle; Inferno no longer exports a hull. **Floppy's blink:** each eye needs its own closing distance and a turn matching the rim slopes, or the upper lid overshoots the lower lid at the inner corner. Verified in Studio captures; owner verdict pending.
+
+## 2026-11-02: Inferno dragon, frayed inner eye corners
+
+- **Problem:** the transformed form showed a crumbly dark fringe at both inner eye corners in every mood, and a thick dark crescent above each eye.
+- **Cause:** the socket wall (0.075 deep, about four mesh cells wide, painted near-black) is exposed because this form's eyes face further outward, so the front view looks straight at the inner wall.
+- **Fix:** per-form socket depth. The dragon uses `recess` 0.045 and `inset` 0.02; the base form keeps 0.075 and 0.035.
+- **Knock-on fault:** with the eye closer to the skin, the furrowed lid went behind it, leaving a stepped notch at the inner corners. The dragon's lid now comes 0.032 forward as it furrows (base form 0.012).
+- **Prevention:** a change to eye depth needs the lid's forward travel checked at full anger, not only the resting face.
+- **Capture trap:** 12 identical Edit-mode frames mean Play never started. Compare frame file sizes before diagnosing the models.
+- **Verified:** Studio Play captures of the review build, close-ups of grin, midway and angry. Owner approval is still pending. Faint hairlines remain at the lower eye rims and a small tick at the inner corners when angry.
+
+## 2026-11-02: Inferno tail fire, from particles to mesh
+
+- **Owner feedback:** "trapped in a box"; "looks too stiff, not fluid enough"; "when u initially start/ load u can see the white box instead of the flame"; "its not blewnded into tail at all".
+- **Attempts that failed:**
+  - Particles left loose puffs.
+  - A Beam showed a white strip until its texture loaded, and looked flat and stiff. It also scrolled by default (`TextureSpeed`), which clipped the flame to a square end and wrapped its point back to the tail tip.
+  - The `Highlight` outline draws over transparent effects, so the tail tip stayed visible through any flame laid over it. No colour change can fix that.
+  - Separate sculpted tongues read first as a clawed hand, then as nubs when pulled in, then as a bird's foot.
+- **Fix:** the concept's approved radial flame formula, ported into the body's signed-distance surface, with its own bones and matte roughness. Being in the body gives one outline, one texture and no load flash.
+- **Prevention:** when a concept is already approved, port its formula first instead of designing a new shape. Effects that must merge with an outlined body belong in the body mesh.
+- **Limit:** the concept's yellow core came from a see-through volume. A solid surface can't show that, so the core is suggested by yellow ridges and deeper grooves.
+- **Fire effect round it:** every particle version (licks, embers, streams, large and small) broke into separate blobs, which the owner rejected as "individual fireballs". What holds together is a single soft Beam layer shaped like the flame and drawn behind it, with `TextureSpeed` 0, and enabled by the client only after `ContentProvider:PreloadAsync`. Beams and particles parented to a client-animated bone appear not to follow it, which left them offset from the flame (owner: "the fire isnt tracking the tail"). Their ends need to be free attachments that the client places each frame, after all bones are driven, from the bone chain's own `CFrame * Transform`, because `TransformedWorldCFrame` lags a frame. Anchor each end to the bone it visually sits on: a bone that pivots at the tail tip swings points up the tail the wrong way.
+- **Verified:** Studio Play captures, side and underneath, two frames apart. Owner approval pending.

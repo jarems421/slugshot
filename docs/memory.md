@@ -1,5 +1,9 @@
 # Project memory
 
+## 2026-11-02 — Inferno in Blender and Studio
+
+- **Implemented, owner verdict pending:** both forms built and shown with Floppy in a private display place; faces cleaned of black lines, Floppy's blink improved, Inferno given an underside and active motion. Floppy's fixes are only on this branch.
+
 ## 2026-11-02 — Inferno and the ability rule
 
 - **Confirmed:** one versatile ability per slug, rewarding creative use ([rule](slugs/catalog/index.md#ability-rule)). Inferno is the working name for the Burpy-inspired fire slug: shorter flight time, harder hits, exact aim from the second kick, no arms or feet, and a small tail.
@@ -20,6 +24,7 @@
 - **Confirmed:** the forward face masses looked wrong and were removed. Wider cute-fierce eyes, a deeper smile and more marking detail were requested.
 - **Confirmed:** the base form is final and the name is Inferno. The bullet transformed form was rejected as a missile; owner wants a slug mixed with a dragon, keeping his DNA. The slug-dragon concept was then confirmed as final ("okay its perfect"), with Blender, Studio and shooting next.
 - **Implemented:** final original concept of the base form ([record](slugs/catalog/inferno.md)), plus the research report in `reports/`.
+- **Implemented/verified:** owner called the faces "perfect", then asked for Inferno to match Floppy's size (confirmed cause: same display multiplier, smaller game model), lower transformed eyes, a thinner top-lip band, belly texture on the transformed form and a tail flame that blends in and moves fluidly. All built; the flame is now part of the body mesh, using the approved concept formula. Evidence is export sizes and Studio Play captures; owner verdict on the final flame is pending.
 - **Unresolved:** owner verdict, shot numbers, the ability, and a name and IP check, since Inferno sounds like the franchise's Infurnus.
 
 ## 2026-10-31 — Bridge style leaning

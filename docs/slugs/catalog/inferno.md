@@ -504,6 +504,27 @@ A bigger form with a compact curving body, an arched neck, a short soft snout, a
 
 **Rights check (Unresolved):** an orange winged creature with a yellow underside and a flame on its tail tip also resembles a very well-known character from another franchise, so the check before publication should cover that as well as the slug reference.
 
+## Implemented — Blender and Studio display, 2026-11-02
+
+**Confirmed, owner:** open Studio with large models of Floppy and Inferno, to judge their faces. Inferno must blink, go between an angry and a smiling mouth, and be far more active and cocky than Floppy, including a backflip, with smooth transitions. Remove the black lines from both faces, improve Floppy's blink, and give Inferno an underside like Floppy's.
+
+- **Build:** [`build_inferno.py`](../../../tools/slugs/build_inferno.py) ports the approved concept to `assets/source/slugs/models/inferno/inferno-{base,dragon}.blend` and ignored `build/slugs/inferno`. Bodies are 12,000 and 16,000 triangles, doubled by the ink shell, with 1024 maps. Rendered from front, three-quarter, side, back and under.
+- **Face:** each eye sits in a recess. Blinks use a separate plain lid mesh hidden inside the head when open, which swings over the eye, so no second lid outline can show. There is no ink shell on the face, and eye and smile lines are deep red.
+- **Underside:** painted folds with matching shallow geometry, on the base form.
+- **Motion:** [`InfernoMotion`](../../../experiments/creatures/inferno/client/InfernoMotion.client.luau) springs every channel toward a target pose. Base: bouncing, leaning in, head wag, spin, leap and backflip, always looking at the player. Dragon: wing beats, banking, swoop, barrel roll and tail whip, with a particle tail fire. Both blink and move between grin and angry.
+- **Display:** `inferno.private.project.json` builds `build/SlugshotInfernoDisplay.rbxlx`. Assets are private and listed Approved; ids stay in ignored `private-assets/inferno`.
+- **Verified in Studio:** one local client loaded all three models with no errors from these scripts. Captures show the grin, angry mouth, half and full blink, the backflip and the dragon's banking. Frames do not prove smoothness: **Unresolved:** owner verdict on motion and faces; the dragon's face is less close to the concept than the base; gameplay, canister fit and shooting are not started.
+
+**Revision, 2026-11-02 (owner verdict pending):** the owner wants no blinking on Inferno (their earlier dictated note was misread as asking for it), corners of the mouth angled down and fiercer eyes when angry, outlines that hold through flips, better ground contact, and more transitional flips. He no longer blinks: the lid mesh is now a slanted fierce lid that slides out of the head only when angry. The hull is gone from Inferno's model; the display outlines both slugs with a `Highlight`, which is limited in how many can draw at once, so the game needs a plan for it. His foot curves under, and the base can no longer sink through the floor. Flips and spins wind up, overshoot and settle, with the body arching behind the turn. In this entry above, the blink and lid descriptions are superseded by this note.
+
+**Revision, 2026-11-02 (owner verdict pending):** the owner still saw a blink, which was the lid hiding and returning with each mood, and found the bent smile's corners unclean. Lids now stay on the eyes in both forms and anger furrows them down and inward. The angry mouth is a separate patch with clenched teeth, whose whole shape curves down, textured with the skin it covers, fading in over the grin. Floppy was confirmed "perfect". This supersedes the mouth and hidden-lid notes above.
+
+**Teeth revision, 2026-11-02 (owner verdict pending):** blocky teeth were rejected. From the owner's reference, the angry mouth keeps its downturned shape but is one solid white shape with a grey band under the top lip and one wavy line, with no individual teeth.
+
+**Mouth patch revision, 2026-11-02 (owner verdict pending):** the skin-textured patch showed as a box during the change, and angry should last about a second longer. The grin and gritted mouth are now two patches holding only mouth pixels over clean body skin, which no longer has the grin hollow. Angry now holds for about 2.6–3.2 s.
+
+**Face rebuild, 2026-11-02 (owner verdict pending):** the owner found the lids looked glued on and cut through the face, the grin had no bottom edge, and the mouth change cut rather than transitioned. Overlays were dropped. As on Floppy, each eye is now its own mesh behind the skin and the upper lid is the skin stretching over it. The mouth is one mesh on 20 lip bones that morphs from grin to gritted, with ink all the way round. This supersedes every earlier lid and mouth note.
+
 ## Considering — not approved
 
 **Shot numbers.** These are first proposals for the shared `Combat.Slugs` table on `main`, for owner playtest. Nothing has been changed there.
@@ -527,6 +548,17 @@ At 500 studs/s, a 100-stud shot takes about 0.2 s, against about 1 s for Floppy.
 
 The Kindle mark-and-ignite idea in the report is dropped from the recommendation, because its result doesn't depend on the surroundings.
 
+## Size and finishing notes (2026-11-02)
+
+**Confirmed (owner):** the base form matches Floppy's game size; "probably just size the inferno slug up to match floppy".
+
+**Implemented/verified (offline export sizes and Studio Play captures; owner approval pending):**
+- **Size:** `GAME_SCALE` went from 0.34 to 0.4218. The base form is now 0.69 wide and 1.057 tall, the same as Floppy. The transformed form scales with it, to 1.87 x 1.55 x 0.84 studs.
+- **Transformed eyes:** moved lower, nearer the mouth (centre height 1.37 to 1.32).
+- **Transformed mouth:** the grey band under the top lip is about half as thick (it now starts at 0.86 of the mouth height, was 0.73). The base form keeps its band.
+- **Transformed underside:** folds across the pale belly, painted and in the surface, matching the base form's sole. The base form's sole was already done.
+- **Tail fire:** part of the body mesh, using the approved concept's flame formula at length 1.9 (concept 1.5), starting 0.45 up the tail. Colour licks up the tail and runs yellow, orange, red; fire is matte (roughness 0.85). Seven bones move it: a chain of three carries a wave down it and four swell its sides so the lobes roll round it. No separate texture, so no white box on load. The outline now runs round the flame too, as one silhouette with the tail. Around it (owner: "a simple nice" fire effect "to make it pop"): a soft orange-red glow behind it, one continuous flame-shaped layer pair running back past the point, flickering in width and off until its image has loaded so it never flashes white. The owner rejected separate licks and embers as "individual fireballs". Behind the shoulders the transformed form is shorter (owner: "shorten the tail a bit. As well as the body", then "the tails tooo long still"): the body to 80% of its length and the tail to 50%. The glow is placed from the moved bones every frame, so it tracks the tail. Owner corrected its size: back to the earlier length, but taller.
+
 ## Unresolved
 
-The small step in the antenna tips seen from the side; the shot numbers and ability; the Blender build, ink shell, rig, Roblox export and Studio check; and a side-by-side and name/IP check before any publication. "Inferno" sounds like the franchise's Infurnus.
+The small step in the antenna tips seen from the side; the shot numbers and ability; shooting in Roblox; the Highlight outline's draw limit in a crowded scene; and a side-by-side and name/IP check before any publication. "Inferno" sounds like the franchise's Infurnus.

@@ -88,6 +88,8 @@ He dictates; read for sound, not spelling. Seen: "drawl"/"Drew" = drool, "spider
 | "uncanny" (eyes) | Soft upper lids that stop before both corners. | Lidless discs; lids all the way round (glasses); fold lines and creases (crow's feet). |
 | "too flat", "too 2D" (face) | Very soft sockets, a mild form shadow and a shadow under the smile, on the sleek head. | Forward masses around the mouth and forehead ("looks like a chud"), which also looked wrong from the side. |
 | "antennas", fox ears | A crossover: broad at the root, slicked back, drooping and flexible, with soft glowing tips. | Thin antennae; stubby cat ears; pale claw-like tips. |
+| "two layers of eyelids", "black lines" (faces in Studio) | One flat lid colour with no rim or ring, and no ink shell on the face. | Dark rims, contour rings, hull outlines in hollows. |
+| "more active", "cocky" (motion) | Pending: bouncing, leaning in at you, a backflip, always looking at you, springy transitions. | Floppy-style slow idle. |
 | "the blackness" | Orange, red and yellow only, with maroon outlines. | A charred black crust with molten cracks, however original. |
 
 He often pastes outside critiques; address each point, but they can drift towards the franchise character. A multi-tongued flame on the belly was declined twice for that reason, with him told each time.
