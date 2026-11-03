@@ -8,6 +8,7 @@ import math
 
 ROOT = Path(__file__).resolve().parents[2]
 L = json.loads((ROOT / "experiments/lobby/scale/shared/layout.json").read_text(encoding="utf-8"))
+G = json.loads((ROOT / "experiments/lobby/scale/shared/gun_side.json").read_text(encoding="utf-8"))
 OUT = ROOT / "build/lobby-scale/plan.html"
 SIZE = 660
 
@@ -49,10 +50,6 @@ def top_down():
         s.append(sector(zone["from"], zone["to"], inner, wall, rgb(zone["color"])))
     growth = L["overgrowth"]
     s.append(sector(growth["from"], growth["to"], growth["innerRadius"], growth["outerRadius"], rgb(growth["color"])))
-    ravine = L["ravine"]
-    s.append(sector(ravine["from"], ravine["to"], ravine["innerRadius"], ravine["outerRadius"], rgb([214, 96, 34])))
-    ledge = ravine["ledge"]
-    s.append(sector(ravine["from"], ravine["to"], ravine["innerRadius"], ravine["innerRadius"] + ledge["width"], rgb([172, 152, 96])))
     for peak, label in ((L["volcano"], "rimRadius"), (L["mountain"], "topRadius")):
         center = polar(peak["angle"], peak["radius"])
         s.append(circle(center, peak["baseRadius"], rgb(peak["color"])))
@@ -78,12 +75,19 @@ def top_down():
         )
     s.append(circle((0, 0), rock["radius"], "rgb(142,146,162)"))
     # Buildings and gates, drawn square to the centre.
-    shop = L["gunShop"]
-    c = polar(shop["angle"], shop["radius"])
-    s.append(
-        f'<rect x="{c[0] - shop["depth"] / 2:.1f}" y="{c[1] - shop["width"] / 2:.1f}" width="{shop["depth"]}" height="{shop["width"]}" '
-        f'fill="{rgb(shop["color"])}" stroke="var(--ink)" stroke-width="1.5"/>'
-    )
+    # The gun side's canopy hole, big bridge and shop platform (tools/lobby/gun_side_sites.py).
+    hole = G["hole"]
+    cx, cz = hole["centre"]
+    ix, iz = -hole["out"][0], -hole["out"][1]
+    edge = []
+    for i, r in enumerate(hole["radii"]):
+        t = i/len(hole["radii"])*2*math.pi
+        edge.append(f'{cx + (ix*math.cos(t) - iz*math.sin(t))*r:.1f},{cz + (iz*math.cos(t) + ix*math.sin(t))*r:.1f}')
+    s.append(f'<polygon points="{" ".join(edge)}" fill="var(--pit)" stroke="var(--lip)" stroke-width="2"/>')
+    a, b = polar(G["bridge"]["angle"], G["bridge"]["from"]), polar(G["bridge"]["angle"], G["bridge"]["to"])
+    s.append(f'<line x1="{a[0]:.1f}" y1="{a[1]:.1f}" x2="{b[0]:.1f}" y2="{b[1]:.1f}" stroke="rgb(150,108,66)" stroke-width="{G["bridge"]["width"]}"/>')
+    c = (cx, cz)
+    s.append(circle(c, G["platform"], "rgb(172,152,96)", 'stroke="var(--ink)" stroke-width="1.5"'))
     for portal in L["portals"]:
         p = polar(portal["angle"], portal["radius"])
         half = portal["width"] / 2 + 4
@@ -107,8 +111,8 @@ def top_down():
     s.append(text(polar(70, 262), "Waterfall", "label on", dy=-8))
     s.append(text(polar(70, 262), "mountain", "label on", dy=7))
     s.append(text(pond_center, "Slug pond", "label on", dy=4))
-    s.append(text(polar(-42.5, 245), "Lava ravine", "label on"))
-    s.append(text(c, "Gun shop", "small dark", dy=4))
+    s.append(text(c, "Shop", "small dark", dy=4))
+    s.append(text(polar(-112, 140), "Mushroom knoll", "small on"))
     s.append(text(polar(37, 240), "Overgrowth", "small on"))
     s.append(text(polar(215, 262), "Caverns", "small on"))
     s.append(text((52, 44), "Maelstrom", "small on"))
@@ -174,7 +178,7 @@ def rows():
         ("Portals", "Curved arc about 50 apart, PvP raised 4 and largest"),
         ("Volcano and mountain", f"{L['volcano']['height']} high"),
         ("Slug pond", f"{L['pond']['diameter']} across, wadeable, slugs all around it"),
-        ("Gun shop", f"Walk-in building, {L['gunShop']['width']} by {L['gunShop']['depth']}"),
+        ("Shop", "Pod shop on a platform in the canopy hole, reached by a big bridge over it"),
     ]
     return "".join(f"<tr><th scope=\"row\">{k}</th><td>{v}</td></tr>" for k, v in entries)
 

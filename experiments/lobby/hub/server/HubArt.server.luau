@@ -23,6 +23,9 @@ local groveTrees =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_trees")) :: any
 local groveSlugs =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_slugs")) :: any
+-- The gun side's knoll and canopy hole, in world studs (tools/lobby/gun_side_sites.py).
+local gunSide =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("gun_side")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 local FloppyAppearance = require(script.Parent:WaitForChild("FloppyAppearance")) :: any
 local InfernoAppearance = require(script.Parent:WaitForChild("InfernoAppearance")) :: any
@@ -1789,12 +1792,15 @@ local function groveProps()
 		y: number,
 		z: number,
 		turn: number,
-		tall: number
+		tall: number,
+		frame: CFrame?
 	): Model
 		local copy = source:Clone()
 		local lo, hi = paintedBounds(copy)
 		copy:ScaleTo(copy:GetScale() * tall / (hi.Y - lo.Y))
-		copy:PivotTo(CFrame.new(GROVE * Vector3.new(x, y, z)) * CFrame.Angles(0, turn, 0))
+		copy:PivotTo(
+			CFrame.new((frame or GROVE) * Vector3.new(x, y, z)) * CFrame.Angles(0, turn, 0)
+		)
 		copy.Parent = parent
 		return copy
 	end
@@ -1833,6 +1839,76 @@ local function groveProps()
 			plant(source, crystals, site.x, site.y, site.z, index * 2.3, site.height)
 		end
 	end
+	-- The gun side: the knoll's forest, and the canopy rising out of the hole from its floor far below. Only the
+	-- knoll's big stems are solid; nobody can reach the canopy.
+	local knoll = Instance.new("Model")
+	knoll.Name = "KnollTrees"
+	knoll.Parent = art
+	for index, site in gunSide.trees do
+		local small = site.height < SMALL_TREE
+		local source =
+			template(TREE_COLOURS[site.colour] .. (if small then "-s" else ""), TREE_GLOW)
+		if source then
+			local tree = plant(
+				source,
+				knoll,
+				site.x,
+				site.y,
+				site.z,
+				index * 2.7,
+				site.height,
+				CFrame.identity
+			)
+			if not small then
+				for _, part in tree:GetDescendants() do
+					if part:IsA("MeshPart") and part.Name == "Stem" then
+						table.insert(solidQueue, part)
+					end
+				end
+				if site.height > 30 then
+					pointLight(
+						Vector3.new(site.x, site.y + site.height * 0.62, site.z),
+						TREE_LIGHTS[site.colour],
+						0.22,
+						site.height * 0.8
+					)
+				end
+			end
+		end
+	end
+	local canopy = Instance.new("Model")
+	canopy.Name = "HoleCanopy"
+	canopy.Parent = art
+	for index, site in gunSide.canopy do
+		local source = template(TREE_COLOURS[site.colour], TREE_GLOW)
+		if source then
+			plant(source, canopy, site.x, site.y, site.z, index * 1.7, site.height, CFrame.identity)
+			-- Only the top layer of caps carries a light, so the hole glows without a crowd of lights.
+			if site.height > 70 then
+				pointLight(
+					Vector3.new(site.x, site.y + site.height * 0.9, site.z),
+					TREE_LIGHTS[site.colour],
+					0.3,
+					site.height * 0.6
+				)
+			end
+		end
+	end
+	for index, site in gunSide.crystals do
+		local source = template(site.key, 1)
+		if source then
+			plant(
+				source,
+				crystals,
+				site.x,
+				site.y,
+				site.z,
+				index * 1.9,
+				site.height,
+				CFrame.identity
+			)
+		end
+	end
 	for _, model in cache do
 		model:Destroy()
 	end
@@ -1848,13 +1924,13 @@ local function groveProps()
 			plants[kind] = model
 		end
 	end
-	for _, site in groveFlora do
+	local function placePlant(site: { number }, frame: CFrame)
 		local source = plants[site[1]]
 		if source then
 			local copy = source:Clone()
 			copy:ScaleTo(copy:GetScale() * site[5])
 			copy:PivotTo(
-				CFrame.new(GROVE * Vector3.new(site[2], site[3], site[4]))
+				CFrame.new(frame * Vector3.new(site[2], site[3], site[4]))
 					* CFrame.Angles(0, site[6], 0)
 			)
 			copy.Parent = flora
@@ -1864,6 +1940,12 @@ local function groveProps()
 				end
 			end
 		end
+	end
+	for _, site in groveFlora do
+		placePlant(site, GROVE)
+	end
+	for _, site in gunSide.flora do
+		placePlant(site, CFrame.identity)
 	end
 	for _, model in plants do
 		model:Destroy()

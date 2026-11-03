@@ -7,6 +7,9 @@ local layout = require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild
 -- Measured from the final art, so the ground underfoot matches what you see (tools/lobby/hub_mesh.py shape).
 local rimShape =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("rim_shape")) :: any
+-- The gun side's knoll, canopy hole, big bridge and shop platform (tools/lobby/gun_side_sites.py).
+local gunSide =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("gun_side")) :: any
 
 type Options = {
 	ghost: boolean?, -- no collision, queries or touches: scenery the player and movement ignore
@@ -265,14 +268,6 @@ local function mushroom(parent: Instance, base: Vector3, height: number)
 end
 
 local function zoneColor(angle: number, radius: number): Color3?
-	local ravine = layout.ravine
-	if
-		within(angle, ravine.from, ravine.to)
-		and radius > ravine.innerRadius
-		and radius < ravine.outerRadius
-	then
-		return nil
-	end
 	local growth = layout.overgrowth
 	if
 		within(angle, growth.from, growth.to)
@@ -320,6 +315,7 @@ local function buildSpawnRock(root: Instance)
 end
 
 local RIM_WIDTH = 104 -- where the hub's cliff art ends
+local KNOLL = Color3.fromRGB(86, 122, 92)
 
 local function buildShore(root: Instance)
 	local parent = folder(root, "Shore")
@@ -329,9 +325,22 @@ local function buildShore(root: Instance)
 		local a1 = sector * SECTOR - 180
 		local a2 = a1 + SECTOR
 		local middle = (a1 + a2) / 2
-		-- Runs of equal colour merge into one cell to keep the part count down.
+		-- Runs of equal colour merge into one cell to keep the part count down. The gun side's floor is
+		-- cut round its hole by buildGunSide, so only its strip at the pit is made here.
 		local start = radii[1]
-		for band = 1, #radii - 1 do
+		local onGunSide = within(middle, gunSide.from, gunSide.to)
+		if onGunSide then
+			quad(
+				rimStrip,
+				polar(a1, pitEdge(a1), 0),
+				polar(a2, pitEdge(a2), 0),
+				polar(a2, RIM_WIDTH, 0),
+				polar(a1, RIM_WIDTH, 0),
+				KNOLL,
+				shore.thickness
+			)
+		end
+		for band = 1, if onGunSide then 0 else #radii - 1 do
 			local color = zoneColor(middle, (radii[band] + radii[band + 1]) / 2)
 			local nextColor = if band < #radii - 1
 				then zoneColor(middle, (radii[band + 1] + radii[band + 2]) / 2)
@@ -610,29 +619,195 @@ local function buildPortals(root: Instance)
 	label(parent, "Bounty board", base + Vector3.new(0, board.height + 5, 0))
 end
 
-local function buildGunShop(root: Instance)
-	local shop = layout.gunShop
-	local parent = folder(root, "GunShop")
-	local base = polar(shop.angle, shop.radius, 0)
-	local frame = CFrame.lookAt(base, Vector3.zero)
-	local color = rgb(shop.color)
-	local h, w, d = shop.height, shop.width, shop.depth
-	local wall = 2
-	local function piece(name: string, size: Vector3, x: number, y: number, z: number)
-		block(parent, name, size, frame * CFrame.new(x, y, z), color)
+-- The hole's edge, in polar form round its centre: angle t from the hub-ward side, as gun_side_sites.py writes it.
+local hole = gunSide.hole
+local HOLE_CENTRE = Vector3.new(hole.centre[1], 0, hole.centre[2])
+local HOLE_IN = -Vector3.new(hole.out[1], 0, hole.out[2])
+local HOLE_ACROSS = Vector3.new(-HOLE_IN.Z, 0, HOLE_IN.X)
+
+local function holeRadius(t: number): number
+	local count = #hole.radii
+	local f = (t % (2 * math.pi)) / (2 * math.pi) * count
+	local i = math.floor(f)
+	local a, b = hole.radii[i + 1], hole.radii[(i + 1) % count + 1]
+	return a + (b - a) * (f - i)
+end
+
+local function holeEdge(t: number, extra: number): Vector3
+	local r = holeRadius(t) + extra
+	return HOLE_CENTRE + (HOLE_IN * math.cos(t) + HOLE_ACROSS * math.sin(t)) * r
+end
+
+local function inHole(at: Vector3): boolean
+	local d = Vector3.new(at.X, 0, at.Z) - HOLE_CENTRE
+	return d.Magnitude < holeRadius(math.atan2(d:Dot(HOLE_ACROSS), d:Dot(HOLE_IN)))
+end
+
+-- Where a ray out from the hub at this angle crosses the hole's edge, between two radii.
+local function edgeAlong(angle: number, inside: number, outside: number): number
+	for _ = 1, 24 do
+		local mid = (inside + outside) / 2
+		if inHole(polar(angle, mid, 0)) then
+			inside = mid
+		else
+			outside = mid
+		end
 	end
-	piece("BackWall", Vector3.new(w, h, wall), 0, h / 2, d / 2)
-	piece("SideWall", Vector3.new(wall, h, d), -w / 2, h / 2, 0)
-	piece("SideWall", Vector3.new(wall, h, d), w / 2, h / 2, 0)
-	local front = (w - shop.door) / 2
-	piece("FrontWall", Vector3.new(front, h, wall), -(shop.door + front) / 2, h / 2, -d / 2)
-	piece("FrontWall", Vector3.new(front, h, wall), (shop.door + front) / 2, h / 2, -d / 2)
-	piece("OverDoor", Vector3.new(shop.door, 5, wall), 0, h - 2.5, -d / 2)
-	piece("Roof", Vector3.new(w + 6, 2, d + 6), 0, h + 1, 0)
-	for index = -1, 1 do
-		piece("DisplayStand", Vector3.new(6, 3.5, 3), index * 14, 1.75, d / 2 - 6)
+	return (inside + outside) / 2
+end
+
+-- An invisible wall from a to b: it stops players, never the camera or a wall run.
+local function barrier(parent: Instance, a: Vector3, b: Vector3, height: number)
+	local length = (b - a).Magnitude
+	if length < 0.05 then
+		return
 	end
-	label(parent, "GUN SHOP  50 x 40, walk in", base + Vector3.new(0, h + 8, 0))
+	local part = block(
+		parent,
+		"Barrier",
+		Vector3.new(1, height, length + 0.6),
+		CFrame.lookAt((a + b) / 2, b) + Vector3.new(0, height / 2, 0),
+		LIGHT,
+		{ transparency = 1 }
+	)
+	part.CanQuery = false
+	part.CanTouch = false
+end
+
+-- The gun side (owner, 2026-11-03): a mushroom knoll fills it and wraps round an uneven hole full of canopy. A big bridge
+-- crosses to the shop on its platform in the middle, and the hole can't be entered.
+local function buildGunSide(root: Instance)
+	local parent = folder(root, "GunSide")
+	local floor = folder(parent, "Floor")
+	local outer = shore.wallRadius
+	local bridge = gunSide.bridge
+	local step = 1.5
+	local angle = gunSide.from
+	while angle < gunSide.to - 1e-6 do
+		local a1, a2 = angle, math.min(angle + step, gunSide.to)
+		local middle = (a1 + a2) / 2
+		-- Runs of floor along this sector, outside the hole: { from, to, from is the hole's edge, to is the hole's edge }.
+		local runs = {}
+		local runStart: number? = RIM_WIDTH
+		local startsAtEdge = false
+		local r = RIM_WIDTH
+		while r < outer do
+			local nextR = math.min(r + 1, outer)
+			local open = inHole(polar(middle, nextR, 0))
+			if runStart and open then
+				table.insert(runs, { runStart, nextR, startsAtEdge, true })
+				runStart = nil
+			elseif not runStart and not open then
+				runStart, startsAtEdge = nextR, true
+			end
+			r = nextR
+		end
+		if runStart then
+			table.insert(runs, { runStart, outer, startsAtEdge, false })
+		end
+		for _, run in runs do
+			local function ends(edgeAngle: number): (number, number)
+				local lo, hi = run[1], run[2]
+				if run[3] then
+					lo = edgeAlong(edgeAngle, lo - 4, lo + 3)
+				end
+				if run[4] then
+					hi = edgeAlong(edgeAngle, hi + 3, hi - 4)
+				end
+				return lo, hi
+			end
+			local lo1, hi1 = ends(a1)
+			local lo2, hi2 = ends(a2)
+			quad(
+				floor,
+				polar(a1, lo1, 0),
+				polar(a2, lo2, 0),
+				polar(a2, hi2, 0),
+				polar(a1, hi1, 0),
+				KNOLL,
+				shore.thickness
+			)
+		end
+		angle = a2
+	end
+
+	-- The hole: rock walls round its edge, a dark floor far below, and a barrier all round except where the bridge leaves.
+	local walls = folder(parent, "HoleWalls")
+	local seal = folder(parent, "Seal")
+	local count = #hole.radii
+	local half = bridge.width / 2
+	local function onDeck(at: Vector3): boolean
+		local rel = at - HOLE_CENTRE
+		return math.abs(rel:Dot(HOLE_ACROSS)) < half + 0.5 and rel:Dot(HOLE_IN) > 0
+	end
+	local kept: { Vector3 } = {}
+	for i = 0, count - 1 do
+		local t1, t2 = i / count * 2 * math.pi, (i + 1) / count * 2 * math.pi
+		local p1, p2 = holeEdge(t1, 1), holeEdge(t2, 1)
+		local mid = (p1 + p2) / 2
+		block(
+			walls,
+			"HoleWall",
+			Vector3.new(2, -hole.floor, (p2 - p1).Magnitude + 0.8),
+			CFrame.lookAt(mid, p2) + Vector3.new(0, hole.floor / 2, 0),
+			ROCK
+		)
+		if not (onDeck(p1) or onDeck(p2)) then
+			barrier(seal, p1, p2, hole.barrier)
+			table.insert(kept, p1)
+			table.insert(kept, p2)
+		end
+	end
+	local across = 0
+	for i = 0, count - 1 do
+		across = math.max(across, hole.radii[i + 1])
+	end
+	block(
+		walls,
+		"HoleFloor",
+		Vector3.new(across * 2 + 8, 4, across * 2 + 8),
+		CFrame.new(HOLE_CENTRE + Vector3.new(0, hole.floor - 2, 0)),
+		WALL
+	)
+
+	-- The big bridge: a steady deck, walled in on both sides from the knoll to the platform.
+	local deck = folder(parent, "Bridge")
+	local near, far = polar(bridge.angle, bridge.from, 0), polar(bridge.angle, bridge.to, 0)
+	beam(deck, "Deck", near, far, bridge.width, 2, PLANK)
+	local side = (far - near).Unit:Cross(Vector3.yAxis)
+	for _, sign in { -1, 1 } do
+		local offset = side * sign * (half + 0.5)
+		local a, b = near + offset - (far - near).Unit * 4, far + offset
+		barrier(seal, a, b, hole.barrier)
+		-- Close the corner between the bridge's wall and the nearest stretch of the hole's barrier.
+		local best, bestDistance = nil, math.huge
+		for _, point in kept do
+			local d = (point - a).Magnitude
+			if d < bestDistance then
+				best, bestDistance = point, d
+			end
+		end
+		if best then
+			barrier(seal, a, best, hole.barrier)
+		end
+	end
+
+	-- The shop's platform in the middle of the hole, walled in except where the bridge arrives.
+	local platform = gunSide.platform
+	disc(parent, "Platform", 2, platform * 2, HOLE_CENTRE + Vector3.new(0, -1, 0), LEDGE)
+	local ring = 48
+	for i = 0, ring - 1 do
+		local t1, t2 = i / ring * 2 * math.pi, (i + 1) / ring * 2 * math.pi
+		local p1 = HOLE_CENTRE
+			+ (HOLE_IN * math.cos(t1) + HOLE_ACROSS * math.sin(t1)) * (platform + 0.5)
+		local p2 = HOLE_CENTRE
+			+ (HOLE_IN * math.cos(t2) + HOLE_ACROSS * math.sin(t2)) * (platform + 0.5)
+		if not (onDeck(p1) or onDeck(p2)) then
+			barrier(seal, p1, p2, hole.barrier)
+		end
+	end
+	label(parent, "SHOP  pods to come", HOLE_CENTRE + Vector3.new(0, 14, 0))
+	label(parent, "MUSHROOM KNOLL", polar(-90, 112, 12))
 end
 
 local function buildPond(root: Instance)
@@ -735,63 +910,6 @@ local function buildMountain(root: Instance)
 	label(parent, "WATERFALL MOUNTAIN  135 high, overlook", center + Vector3.new(0, h + 8, 0))
 end
 
-local function buildRavine(root: Instance)
-	local ravine = layout.ravine
-	local parent = folder(root, "LavaRavine")
-	local color = rgb(ravine.color)
-	local bottom = -ravine.wallDepth
-	local inner, outer = ravine.innerRadius, ravine.outerRadius
-	local ledge = ravine.ledge
-	local function ledgeY(angle: number): number
-		if angle <= ledge.levelAt then
-			return ledge.y
-		end
-		return ledge.y * (ravine.to - angle) / (ravine.to - ledge.levelAt)
-	end
-	local angle = ravine.from
-	while angle < ravine.to do
-		local a1, a2 = angle, angle + SECTOR
-		local middle = angle + SECTOR / 2
-		panel(parent, "RavineWall", middle, inner - 1, bottom, 0, 2, color)
-		panel(parent, "RavineWall", middle, outer + 1, bottom, 0, 2, color)
-		quad(
-			parent,
-			polar(a1, inner, ravine.lavaY),
-			polar(a2, inner, ravine.lavaY),
-			polar(a2, outer, ravine.lavaY),
-			polar(a1, outer, ravine.lavaY),
-			LAVA,
-			0.5,
-			{ ghost = true, neon = true }
-		)
-		quad(
-			parent,
-			polar(a1, inner, ledgeY(a1)),
-			polar(a2, inner, ledgeY(a2)),
-			polar(a2, inner + ledge.width, ledgeY(a2)),
-			polar(a1, inner + ledge.width, ledgeY(a1)),
-			LEDGE,
-			2
-		)
-		angle = a2
-	end
-	for _, edge in { ravine.from, ravine.to } do
-		local a, b = polar(edge, inner, 0), polar(edge, outer, 0)
-		quad(parent, a, b, b + Vector3.new(0, bottom, 0), a + Vector3.new(0, bottom, 0), color, 2)
-	end
-	local crossing = ravine.crossing
-	beam(
-		parent,
-		"Crossing",
-		polar(crossing.angle, inner - 1, 0),
-		polar(crossing.angle, outer + 1, 0),
-		crossing.width,
-		1,
-		PLANK
-	)
-	label(parent, "LAVA RAVINE  ledge and crossing", polar(crossing.angle, (inner + outer) / 2, 10))
-end
-
 local function buildOvergrowth(root: Instance)
 	local growth = layout.overgrowth
 	local parent = folder(root, "VeylumeOvergrowth")
@@ -818,11 +936,10 @@ function Arena.create(): Model
 	buildMaelstrom(model)
 	buildCavern(model)
 	buildPortals(model)
-	buildGunShop(model)
+	buildGunSide(model)
 	buildPond(model)
 	buildVolcano(model)
 	buildMountain(model)
-	buildRavine(model)
 	buildOvergrowth(model)
 	model.Parent = workspace
 	return model

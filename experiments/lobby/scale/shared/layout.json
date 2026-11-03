@@ -34,14 +34,8 @@
   ],
   "pvpRise": { "radius": 161, "topRadius": 22, "baseRadius": 32, "height": 6 },
   "bountyBoard": { "angle": -10.5, "radius": 148, "width": 12, "height": 9 },
-  "gunShop": { "angle": -90, "radius": 190, "width": 50, "depth": 40, "height": 18, "door": 14, "color": [170, 122, 74] },
   "pond": { "angle": 90, "radius": 155, "diameter": 70, "stones": 7, "mushrooms": 6, "slugs": 14 },
   "volcano": { "angle": 0, "radius": 235, "baseRadius": 65, "rimRadius": 22, "craterRadius": 12, "craterFloorRadius": 8, "craterFloorY": 112, "height": 135, "color": [90, 66, 60] },
-  "ravine": {
-    "from": -60, "to": -25, "innerRadius": 205, "outerRadius": 275, "wallDepth": 40, "lavaY": -38, "color": [66, 54, 56],
-    "ledge": { "width": 8, "y": -14, "levelAt": -42 },
-    "crossing": { "angle": -42.5, "width": 10 }
-  },
   "mountain": { "angle": 70, "radius": 240, "baseRadius": 65, "topRadius": 30, "height": 135, "color": [70, 102, 86] },
   "waterfall": { "width": 12, "topY": 92 },
   "overgrowth": { "from": 25, "to": 50, "innerRadius": 190, "outerRadius": 270, "color": [104, 88, 130], "mushrooms": 5 }

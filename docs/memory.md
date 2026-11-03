@@ -1949,3 +1949,4 @@
 ## 2026-11-03 - Shop direction
 
 - **Confirmed:** lobby shop follows study 02's exterior, with a shop counter inside, a deep pit with a floor and bridge, and a jungle of mushroom canopies. Owner references stored privately. See [general shop](art/general-shop.md).
+- **Implemented (not run in Studio):** gun side phase 1 on `lobby/shop`: ravine removed, knoll and sealed canopy hole in the block-out, props from approved assets. Studio test waits for other Studio windows to close (six open, 3.7 GB free).
