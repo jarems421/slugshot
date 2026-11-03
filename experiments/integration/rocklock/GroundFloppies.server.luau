@@ -25,7 +25,7 @@ local eyeL = template:FindFirstChild("eye_L", true) :: Bone
 local eyeR = template:FindFirstChild("eye_R", true) :: Bone
 assert(eyeL and eyeR, "Ground Floppy reference bones missing")
 local sourceScale = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / 0.74
-template:ScaleTo(template:GetScale() * 0.92 / (2.72 * sourceScale))
+template:ScaleTo(template:GetScale() * 1.3 / (2.72 * sourceScale)) -- owner: 1.3 studs outside the gun
 local group = Instance.new("Folder")
 group.Name = "MapFloppies"
 group.Parent = workspace

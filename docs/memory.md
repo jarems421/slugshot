@@ -1565,3 +1565,9 @@
 - **Confirmed:** owner explicitly requested pushing the shooting/white ADS iteration and updating documentation.
 - **Implemented/verified:** implementation `064f7ed` and its documentation delivered from `fix/shooting-feel` to main. Main was clean and matched `origin/main` at `caa6b02`, allowing a fast-forward with no conflicts. Existing combat/movement/foundation checks and native evidence remain applicable; delivery changes documentation only. No restricted assets or ignored builds are included; concurrent lobby sources remain untouched.
 - **Unresolved:** owner feel/art verdict and the runtime coverage limits recorded in [combat notes](combat.md#charge-accuracy-gentler-drop-and-white-ads-2026-11-02).
+
+## 2026-11-02 - Slugs larger outside the gun
+
+- **Confirmed:** owner set 1.3 studs outside the gun, after first saying 1.5, to make slugs more visible when fired and hopping back. The size in the gun stays as it is.
+- **Implemented:** `Combat.Slugs.Floppy.Size` 1.3 drives flight, recovery and burrow effects; `GroundFloppies` went from 0.92 to 1.3 to match. The canister scales separately from its own measurements, and the 0.3 hit radius is unchanged. The range's big Floppy stays 3x, so it is now 3.9 studs.
+- **Unresolved:** owner's verdict and whether burrow effects, which grow with the slug, still look right. No Studio run yet.

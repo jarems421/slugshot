@@ -65,7 +65,7 @@ Combat.Slugs = {
 		Drag = 0.35,
 		Radius = 0.3,
 		Tumble = 2,
-		Size = 1, -- owner, 2026-11-01: permanent Floppy size outside the gun
+		Size = 1.3, -- owner, 2026-11-02: permanent Floppy size outside the gun
 		Transforms = false,
 		Blurb = "A drowsy, soft little slug.",
 	},
