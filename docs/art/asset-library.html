@@ -6450,13 +6450,36 @@ void chBigCap(vec3 p, vec3 top, float capR, inout vec2 res) {
   float cap = smax(sdEll(qs, vec3(1.0, 0.27, 1.0)*capR), -hollow, 0.1);
   chKeep(cap*0.7, q.y < -0.015*capR ? 107.0 : 109.3, res);
 }
-void chPorthole(vec3 p, vec3 pos, vec3 n, float rad, inout vec2 res) {
+void chWindowAt(int i, int k, out vec3 pos, out vec3 n, out float rad) {
+  vec3 c, r;
+  chPod(i, c, r);
+  float fk = float(k);
+  // The main pod's windows flank the door, facing the path, with one at the back.
+  float a = i == 0 ? (k == 0 ? -0.62 : k == 1 ? 0.62 : 3.0) : -0.6 + fk*1.1 + float(i);
+  vec3 d = normalize(vec3(sin(a), 0.18 + 0.1*fk, -cos(a)));
+  n = normalize(d/r);
+  pos = c + d*r;
+  rad = i == 0 ? 0.7 : 0.42 + 0.08*hash1(float(i) + fk);
+  if (i == 3 && k == 0) rad = 0.95;
+}
+// A real window: a round opening in the shell, a metal rim round it, glowing glass set back inside, and a cross of bars.
+float chWindowCut(vec3 p, vec3 pos, vec3 n, float rad) {
   vec3 q = p - pos;
-  if (length(q) > rad + 0.3) return;
   float h = dot(q, n);
-  float radial = length(q - n*h);
-  chKeep(length(vec2(radial - rad, h - 0.04)) - 0.1, 118.0, res);
-  chKeep(max(abs(h + 0.03) - 0.03, radial - rad), 119.0, res);
+  return max(length(q - n*h) - rad, abs(h + 0.1) - 0.35);
+}
+void chWindow(vec3 p, vec3 pos, vec3 n, float rad, inout vec2 res) {
+  vec3 q = p - pos;
+  if (length(q) > rad + 0.4) return;
+  float h = dot(q, n);
+  vec3 inPlane = q - n*h;
+  float radial = length(inPlane);
+  chKeep(length(vec2(radial - rad, h + 0.02)) - 0.1, 118.0, res);
+  chKeep(max(abs(h + 0.2) - 0.03, radial - rad), 119.0, res);
+  vec3 t1 = normalize(cross(n, vec3(0.0, 1.0, 0.0)));
+  vec3 t2 = cross(n, t1);
+  float bars = min(abs(dot(inPlane, t1)), abs(dot(inPlane, t2))) - 0.045;
+  chKeep(max(max(bars, abs(h + 0.14) - 0.04), radial - rad), 118.0, res);
 }
 void chShop(vec3 p, inout vec2 res) {
   if (length(p.xz - vec2(0.3, 1.5)) > 9.6 || p.y < -0.6 || p.y > 10.5) return;
@@ -6477,6 +6500,16 @@ void chShop(vec3 p, inout vec2 res) {
   float arch = max(max(abs(dq.x) - 0.85, -dq.y), length(vec2(dq.x, max(dq.y - 1.5, 0.0))) - 0.85);
   float door = max(arch, abs(dq.z) - 0.6);
   float shell = max(pods, -door);
+  for (int i = 0; i < 6; i++) {
+    vec3 c, r;
+    chPod(i, c, r);
+    if (c.y < -5.0 || length(p - c) > max(r.x, r.y) + 0.7) continue;
+    for (int k = 0; k < 3; k++) {
+      vec3 wp, wn; float wr;
+      chWindowAt(i, k, wp, wn, wr);
+      shell = max(shell, -chWindowCut(p, wp, wn, wr));
+    }
+  }
   chKeep(shell*0.9, 117.0, res);
   chKeep(max(max(arch, abs(dq.z - 0.45) - 0.1), -p.y), 120.0, res);
   // A frame round the doorway.
@@ -6487,26 +6520,16 @@ void chShop(vec3 p, inout vec2 res) {
   chKeep(plate, 118.0, res);
   chKeep(sdBox(sq - vec3(0.0, 0.0, -0.09), vec3(0.9, 0.16, 0.02)), 119.0, res);
   chKeep(max(frame, -p.y), 118.0, res);
-  // Lanterns set into the wall either side of the door, no hooks.
-  for (int k = 0; k < 2; k++) {
-    float sx = k == 0 ? -1.3 : 1.3;
-    vec3 lp = vec3(sx, 1.7, c0.z - r0.z + 0.42);
-    chKeep(length((p - lp)/vec3(1.0, 1.3, 1.0)) - 0.18, 120.0, res);
-  }
-  // Portholes facing out round each pod.
+
+  // Real windows round each pod.
   for (int i = 0; i < 6; i++) {
     vec3 c, r;
     chPod(i, c, r);
-    if (c.y < -5.0 || length(p - c) > max(r.x, r.y) + 0.6) continue;
+    if (c.y < -5.0 || length(p - c) > max(r.x, r.y) + 0.7) continue;
     for (int k = 0; k < 3; k++) {
-      float fk = float(k);
-      float a = (i == 0 ? (k == 1 ? 1.15 : -1.15 + fk*0.0) : -0.6 + fk*1.1 + float(i)) + (i == 0 && k == 2 ? 2.6 : 0.0);
-      vec3 d = normalize(vec3(sin(a), 0.18 + 0.1*fk, -cos(a)));
-      vec3 sp = c + d*r;
-      vec3 n = normalize(d/r);
-      float rad = i == 0 ? 0.7 : 0.42 + 0.08*hash1(float(i) + fk);
-      if (i == 3 && k == 0) rad = 0.95;
-      chPorthole(p, sp - n*0.05, n, rad, res);
+      vec3 wp, wn; float wr;
+      chWindowAt(i, k, wp, wn, wr);
+      chWindow(p, wp, wn, wr, res);
     }
   }
   // The trunk: the spire's plum roots climbing on up through the pods to the cap.
@@ -7814,6 +7837,8 @@ void main() {
     }
     if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 3.5 && hitId > 2.3 && hitId < 2.5) || (hitId > 29.5 && hitId < 31.5)) { crease = 0.0; idEdge *= 0.6; }
     if (hitId > 55.5 && hitId < 58.5 || hitId > 39.5 && hitId < 42.5) { crease = 0.0; idEdge = 0.0; }
+    // The shop's smooth pod shells and their windows and door: clean outlines only, no crease smudges (owner).
+    if (uAsset > 14.5 && hitId > 116.5 && hitId < 120.5) crease = 0.0;
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
     if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }
