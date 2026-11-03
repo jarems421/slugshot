@@ -27,6 +27,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [Confirmed slug recovery and Floppy burrow sequence](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md)
 - [One-handed ADS](decisions/0019-one-handed-ads.md)
 - [Gun, flip, burrow and first-person review with proposals (2026-11-01)](reviews/2026-11-01-combat-feel-review.md)
+- [Lobby checkpoint, 2026-11-03](art/lobby-checkpoint.md): start here for lobby work.
 - [Visual style guide](art/style-guide.md), [lobby roadmap](art/lobby-roadmap.md), [lobby asset plan](art/lobby-assets.md) [Slugterra environment research](research/slugterra-environment.md), [art lessons](art/lessons.md), [look pack](art/look-pack.md) and the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr)
 - [Owner design language](slugs/owner-design-language.md): what feedback phrases have meant, working style, animation/runtime lessons
 - [Blender modelling lessons](slugs/blender-lessons.md)

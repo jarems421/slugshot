@@ -148,7 +148,7 @@ def side_section():
     for sign in (1, -1):
         mid = sign * (rock["radius"] + inner) / 2
         s.append(f'<path d="M{sign * rock["radius"]} 0 Q{mid} {bridges["sag"] * 2} {sign * inner} 0" fill="none" stroke="rgb(150,108,66)" stroke-width="3"/>')
-    s.append(text((0, z(ceiling) - 8), "Sky Well, 250 up", "small"))
+    s.append(text((0, z(ceiling) - 8), "Sky Well, 225 up", "small"))
     s.append(text((0, 58), "Maelstrom water", "small on"))
     s.append(text((0, 104), "falls on to -500, then respawn", "small on"))
     s.append(text((c, z(volcano["height"]) - 8), "Volcano rim, 135", "small"))

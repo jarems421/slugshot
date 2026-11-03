@@ -142,6 +142,23 @@
 **Implemented, 2026-11-01 (`experiment/lobby-concepts`):** first interactive browser blockout of the [volcano](art/volcano-concept/index.html), visually checked in a headless Chrome screenshot. **Unresolved:** owner verdict, walkable route, Blender production and Roblox appearance/performance. This is not a game asset.
 
 **Confirmed, 2026-11-01 (`experiment/lobby-concepts`):** owner requested rotatable concepts for a combined waterfall mountain and pond, a separate volcano, a general shop and a shopkeeper NPC. **Implemented:** [concept brief](art/remaining-concepts.md) and isolated worktree based on the current lobby. **Unresolved:** concepts have not yet been generated or approved.
+**Confirmed/implemented, 2026-11-03 (checkpoint, delivered to `main` at the owner's request):** the lobby's centre, ceiling, portal side and slug side are built, and the owner marked the mountain and slug exhibition complete ("Looking perfect"). The shop is next, in a new chat. **Verified in Studio:** check runs with 84 solid parts, 0 failed, 0 floor holes, and 47 mushrooms, 155 plants, 9 crystals and 30 slugs. **Unresolved:** phone cost (about 1.3M triangles against a 200k starting budget), running and climbing the mountain by hand, Inferno in the lobby, the far side. See the [lobby checkpoint](art/lobby-checkpoint.md).
+
+**Implemented, 2026-11-03 (`experiment/lobby`):** Slug Grove environment: faceted mountain with black lines, stream from a shallow cave, deeper animated pond with player splashes, approved mushrooms throughout, new flora and crystals. **Unresolved:** owner's verdict; phone cost is well over budget; Inferno still uses Floppy stand-ins.
+
+**Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain at 165 studs with black lining and layered rock over a smooth runnable surface; volcano walls raised between the lava streams. **Next (owner):** waterfall, pond, surroundings and Floppies. **Unresolved:** owner's verdict; phone cost.
+
+**Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain rebuilt to the owner's references (151 studs), approved giant mushrooms as its trees, and the volcano and gate at 85% height. **Unresolved:** owner's verdict, pond redesign, phone cost.
+
+**Implemented, 2026-11-02 (`experiment/lobby`):** Slug Grove is in the hub place: mountain, falls, pond, mushrooms, plants and 30 Floppies at 1.3 studs. **Verified:** Studio check run with no errors or floor holes. **Unresolved:** owner's verdict, slug motion and phone cost; see [lobby hub](art/lobby-hub.md).
+
+**Implemented, 2026-11-02 (concept only, not in Roblox):** Slug Grove v5: broad mountain summits with jagged crowns, about 185 studs tall in the middle. **Unresolved:** owner's verdict; size change for slugs is on `fix/slug-size`, not in this branch.
+
+**Implemented, 2026-11-02 (`experiment/lobby`), concept only, owner verdict pending:** slug grove v4 (uneven three-peak mountain, waterfall landing in a richer pond, mushrooms, Floppies; about 10 to become Inferno once its model exists) as shader asset 9 in the asset library. Device testing waits until the lobby is built.
+
+**Implemented, 2026-11-02 (`experiment/lobby`):** automatic mobile estimate, `python tools/lobby/mobile_check.py`, run twice in Studio. **Confirmed:** real phone and iPad tests wait until the lobby is complete; nothing is published.
+
+**Implemented, 2026-11-02 (`experiment/lobby`), seen in Studio by camera captures, owner verdict pending:** portal side rebuilt as a broken arch on pillars with Codex's volcano; stone, ground and volcano solid as drawn, so the camera stops at them; ceiling lowered to 225 with a rune slab divide, rune stones and hanging rock at its border, and a one-piece storm; crisp floor magma. **Confirmed:** the spiral route and cave entrance are removed, with a replacement to come. **Unresolved:** walking and wall-running on the solid art, phone performance (needs the owner's OK to publish a private copy), the bounty board. See [lobby hub](art/lobby-hub.md).
 
 **Implemented, 2026-11-01 (`experiment/lobby`):** **Confirmed:** the owner approved as final the spawn rock v11 with runestone gateways, Sky Well v10, Maelstrom v5 and rope bridge v2, in the [asset library](https://claude.ai/artifact/77cwAiKc1n5SfsVwD1njyr). **Implemented:** all are built for Roblox on the block-out ([lobby hub](art/lobby-hub.md)), in owner review. **Unresolved:** owner verdict and phone performance.
 

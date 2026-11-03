@@ -7,6 +7,7 @@ Requires Node, moderngl, numpy and Pillow.
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 import moderngl
@@ -27,6 +28,7 @@ def main():
     ap.add_argument("--every", type=int, default=2)
     ap.add_argument("--frames", nargs="*", type=int)
     ap.add_argument("--keys", nargs="*", default=[f"portal-plaza-{i}" for i in range(1, 9)])
+    ap.add_argument("--gentle", action="store_true", help="short draws with rests between, so the PC stays usable; takes about twice as long")
     args = ap.parse_args()
     page = Path(args.page).read_text(encoding="utf-8")
     vs = extract(page, r'<script id="vs" type="x-shader/x-vertex">(.*?)</script>')
@@ -50,11 +52,15 @@ def main():
         prog["uRes"].value = (w, h)
         fbo.use()
         fbo.clear(0, 0, 0)
-        band = h//BANDS
-        for b in range(BANDS):
-            ctx.scissor = (0, b*band, w, band if b < BANDS - 1 else h - b*band)
+        bands = BANDS*5 if args.gentle else BANDS
+        band = h//bands
+        for b in range(bands):
+            started = time.perf_counter()
+            ctx.scissor = (0, b*band, w, band if b < bands - 1 else h - b*band)
             vao.render()
             ctx.finish()
+            if args.gentle:
+                time.sleep(time.perf_counter() - started)
         ctx.scissor = None
         return Image.frombytes("RGB", (w, h), fbo.read(components=3)).transpose(Image.FLIP_TOP_BOTTOM)
 

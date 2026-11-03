@@ -531,6 +531,49 @@
 - **Confirmed:** owner requested Slugterra-inspired crystal formations as cavern light sources and asked that concurrent gun and animation work be preserved.
 - **Implemented:** five original Blender designs, 16 formations, visible crystal-hosted point lights and a cool native Roblox post-processing look, in separately named `-crystals` place builds.
 - **Verified, limited:** Blender FBX roundtrip and automated movement, foundation and map checks passed. **Unresolved:** subjective visual review and Studio/device performance. See [research](research/rocklock-crystals.md) and [Rocklock](rocklock.md).
+## 2026-11-02 - Slug grove concept v1
+
+- **Owner request:** start the slug exhibition area: a green and teal mountain full of life with a pond, Floppies only for now and in a decent number, not crowded so the slugs stand out, mushrooms as the main trees round the lake, Codex's flowers and plants used a lot, and some Floppies glancing at a passing player then looking away (never all of them). Four reference images supplied. Concept first, as an artifact.
+- **Confirmed:** phone and iPad tests and the low-quality switch wait until the lobby is built.
+- **Implemented, rendered offline and inspected:** shader asset 9 `slug-grove` in the [asset library](art/asset-library.html), placed by `tools/lobby/grove_sites.py`. Floppies and Codex's plants are simplified stand-ins in the shader. Nothing is in Roblox.
+- **Proposed, not approved:** the mountain about 180 studs across against the block-out's 130; glancing rule of about one Floppy in four within about 15 studs; brighter antenna bulbs so Floppies read from afar.
+- **Owner feedback on v1:** the rest is fine but the mountain looks bad and not Slugterra. Its surface should use the volcano's and whirlpool lining's rock, wider and taller, with three peaks of different heights and looks, the middle tallest.
+- **Implemented, rendered offline and inspected (v2):** the mountain is built from rings of angular rock columns with dark joints, in the rock wall's stone with plate tints and fractures. Middle peak about 170 studs with a crown of spires, a heavy broken left peak at 120, a thin leaning right peak at 95, about 250 across, under the ceiling at 225. Each waterfall tier runs in a gorge cut through the columns.
+- **Known flaw:** one small flower sits buried in a boulder near the close-up. The silhouette's middle crown can read slightly castle-like. The new rock takes about three times as long to render, and has no Roblox cost measured yet.
+- **Owner feedback on v2:** it looks like a castle and should look like a mountain again; once that's done, it's good to go into Roblox.
+- **Implemented, rendered offline and inspected (v3):** the same rock laid along the slopes as broken plates, with ridges from each summit. Middle peak about 170 studs, left about 125, right about 100; footprint about 320 by 290 studs measured from the placement shape, against 130 in the block-out. Renders now take `--gentle` in `tools/lobby/render_plaza.py`, after the owner's PC lagged during earlier runs.
+- **Owner feedback on v3:** shape right, look wrong: odd tips, slopes so linear they read as perfect triangles, the falls not connected to the pond, and a basic pond.
+- **Implemented, rendered offline and inspected (v4):** uneven slopes, tilted rock layers, four lower spurs and broken-rock summits; the pond has an inlet reaching the falls' foot (they had landed about 10 studs behind its edge), a rocky shore, depth colour, drifting light, ripples, lily pads and crystals. Footprint about 390 studs, measured from the placement shape.
+- **Confirmed (owner):** swap about 10 Floppies for Inferno and make the slugs 1 stud, or about 0.8, with no re-render for this. Stand-ins measure about 0.98 studs and the game Floppy about 1, so this doesn't enlarge them; asked.
+- **Blocker:** Inferno has a final concept only, with its Blender model and Studio import pending on `feature/slug-asset-pipeline`, in another session's uncommitted work.
+- **Unresolved:** the owner's verdict on v4, where a 390-stud footprint fits in the slug zone.
+
+## 2026-11-02 - Automatic mobile check
+
+- **Confirmed (owner):** use an automatic estimate for now, then run real phone and iPad checks and fine-tune once the lobby is complete. The owner's phone is very bad, and testing it after every change would take too long. Nothing was published.
+- **Implemented, run twice in Studio:** `tools/lobby/mobile_check.py` ([details and first results](art/lobby-hub.md)).
+- **Unresolved:** real frame rates and calibrated budgets, which need the device run. One early probe shot at level 1 showed the gate, arch and volcano missing; it didn't recur in two full runs and is unexplained.
+
+## 2026-11-02 - Phone test build
+
+- **Owner request:** publish a private copy to test on a phone and report the results.
+- **Implemented:** `python tools/lobby/build_hub.py --phone` builds `build/SlugshotLobbyPhoneTest.rbxlx`: a self-running test of 8 views at both detail levels with a results card, using only the original movement clips, so the owner's private clips stay off Roblox. Run once in Studio on the PC to prove the test and card work.
+- **Not done:** nothing is published yet, and there are no phone results. No test experience exists, Open Cloud can't create one, and publishing through Studio's dialog needs focus and clicks. An attempt at Alt+P landed in another Studio window because the machine was in use; it opened no dialog and published nothing, but may have toggled a panel in that session. The agent stopped and handed the publish step to the owner.
+- **Measured on the PC:** high-detail triangles reach about 429k looking across the map and 408k from under the rock, above the 373k previously reported as heaviest. The frame rates from that run aren't valid: Studio throttles to 15 fps when it loses focus.
+
+## 2026-11-02 - Ceiling redesign, one-piece storm, crisp floor lava
+
+- **Owner request:** crisper floor lava with a slight glow, a more interesting ceiling border, replace the black ring and its glowing lines (rune slabs suggested), fill the empty perimeter round the storm with small rocks and crystals, and make the storm one entity.
+- **Implemented, seen in Studio by camera captures:** all five ([lobby hub](art/lobby-hub.md)). The lightning was fired on purpose at both ends of its range and showed no cut lines.
+- **Agent's design choice, owner verdict needed:** the hanging rune stones and rock curtain at the border; the dark paving behind the crown.
+- **Not verified:** the storm's motion, which was only sampled in stills; phone performance. Spawn view rose from about 270k to 296k triangles and 194 to 210 draw calls.
+
+## 2026-11-02 - Lower ceiling, rubble tornado, dark sky
+
+- **Owner request:** lower the ceiling noticeably (about 25 studs), make the floating rubble a short, tight tornado near the ceiling, and add small rubble under the spawn rock.
+- **Implemented, seen in Studio by camera captures:** all three ([lobby hub](art/lobby-hub.md)).
+- **Found and fixed, unrequested:** bright sky showed through when a camera was about 500+ studs from the far wall. Rays proved the wall complete, and the sky now matches the cavern. The distance-culling explanation is inferred from which views showed it, not measured.
+- **Unresolved:** the owner's verdict on the tornado's shape, and the arch stumps now sit close to the ceiling's crystals.
 
 ## 2026-11-02 - Volcano top, real blaster rune, route and entrance removed
 
@@ -1696,3 +1739,62 @@
 - **Confirmed:** owner set 1.3 studs outside the gun, after first saying 1.5, to make slugs more visible when fired and hopping back. The size in the gun stays as it is.
 - **Implemented:** `Combat.Slugs.Floppy.Size` 1.3 drives flight, recovery and burrow effects; `GroundFloppies` went from 0.92 to 1.3 to match. The canister scales separately from its own measurements, and the 0.3 hit radius is unchanged. The range's big Floppy stays 3x, so it is now 3.9 studs.
 - **Unresolved:** owner's verdict and whether burrow effects, which grow with the slug, still look right. No Studio run yet.
+## 2026-11-02 - Slug grove concept v5
+
+- **Confirmed:** owner wants thick summits with several jagged spikes per peak, not small shrunken tips, and slugs at 1.3 studs outside the gun.
+- **Implemented:** summits keep 34-44% of their base width and end in crowns of three, four and three jagged masses. Heights are about 185, 130 and 110 studs; the foot stays about 390 across. Three stills were re-rendered and inspected.
+- **Unresolved:** owner's verdict; the two closer page views still show the previous summits; the two side crowns read a little flat; the footprint against the wall and Veylume needs checking in Roblox.
+
+## 2026-11-02 - Slug Grove built in Roblox
+
+- **Confirmed:** owner approved building straight into Studio without another concept page, with wide sharp tips, one to three per big peak.
+- **Implemented/verified in Studio:** nine private pieces and 30 Floppies at 1.3 studs. Evidence from a check run: no errors in the filtered log, 182 floor raycasts with 0 holes, 30 slugs, 51 solid parts built in 18.5 s, and captures inspected. About 650-700k triangles on desktop with the grove in view.
+- **Unresolved:** owner's verdict; hopping and glancing weren't watched running; walking and climbing untested; mobile check not re-run; Inferno still uses Floppy stand-ins; plants are the concept's versions, not Codex's models; the size of the mountain against Veylume's overgrowth at 40-50 degrees.
+
+## 2026-11-02 - Grove mountain smaller and smooth
+
+- **Confirmed:** owner: too close to the ceiling, tips should be more distinct, the surface should look jagged without real cracks to fall into, and the front had gaps.
+- **Implemented/verified in Studio:** 137 studs tall (was 185) and about 293 across (was 390); smooth solid body with the jagged rock baked on; three, two and one tips. The gaps were huge shards left by simplifying a mesh with sealed pockets inside; the mesh is now its clean outer skin. Check run: 0 failed pieces, 182 floor raycasts with 0 holes, 30 slugs, captures inspected.
+- **Unresolved:** owner's verdict. Running and climbing it weren't tried by hand; 475 of 5,463 two-stud steps on it change height by over 7 studs, which measures steepness and doesn't separate faces from any leftover ledges. Mobile check not re-run. The concept page still shows the older jagged mountain.
+
+## 2026-11-02 - Grove peaks and floating props
+
+- **Confirmed:** owner: peaks looked like pyramids; mushrooms and crystals floated off the mountain; flowers and mushrooms floated on the ground.
+- **Implemented/verified in Studio:** tips with uneven faces, shelves and side crags. A sign slip had left the solid body about 10 studs inside the shape props were placed on; fixed. `grove_sites.py` now places on the exported ground and mountain meshes. Check run: 54 ground feet all sunk in, by 0.44 at least and about 1 stud typically; 0 failed pieces. Captures inspected.
+- **Unresolved:** owner's verdict. The mountain's feet come from its exported mesh, but the Studio ray check there hits collision, so it can't confirm them independently. Running and climbing weren't tried by hand. The mobile check wasn't re-run.
+
+## 2026-11-02 - Mountain rebuilt to the owner's references
+
+- **Confirmed:** owner chose the direction with six reference pictures: one natural mountain of faces and ridges, not sharp stubby tips; a little bigger and taller; volcano and gate shorter; use the approved giant mushroom; plant the ferns deeper. Owner also said the pond looks poor.
+- **Implemented/verified in Studio:** tops are mountain 151, volcano 133 and gate 134 studs. Check run: 6 trees, 30 slugs, 57 solid parts in 15.6 s with 0 failed, 182 floor raycasts with 0 holes, 57 ground feet all sunk in. Captures inspected. About 860k triangles on desktop with the grove in view.
+- **Unresolved:** owner's verdict; the pond isn't redesigned; running on it wasn't tried by hand; the trees are the heaviest new cost and phones will need lighter ones; one `Failed to upload TexturePack` log line appeared with several Studio windows open and wasn't traced; the concept pages still show earlier mountains.
+
+## 2026-11-02 - Mountain finish and volcano walls
+
+- **Confirmed:** owner: mountain a little larger, higher resolution, Slugterra-style black lining but thin inner lines, rougher layered look; volcano walls between lava streams extended upward only, with a little more steam. Waterfall, pond, surroundings and Floppies are next.
+- **Implemented/verified in Studio:** tops are mountain 165, volcano 143 and gate 133 studs. Check run: 77 solid parts with 0 failed in 18.8 s, 182 floor raycasts with 0 holes, 57 ground feet sunk in, 6 trees, 30 slugs. Collision sits about 1 stud under the drawn rock (p90 0.58 under), worst 13 above at one of 91 points. Captures inspected.
+- **Unresolved:** owner's verdict. Running and climbing weren't tried by hand. About 920k triangles and 257 MB of textures with the grove in view, far over the phone guesses, and the mobile check wasn't re-run. A `Failed to upload TexturePack` log line recurs with several Studio windows open and isn't traced.
+
+## 2026-11-02 - Grove stream and cave
+
+- **Confirmed:** owner: the waterfall should stick to the mountain like a thick animated stream, flow over the rocks with none poking through, and come out of a rough hole that's neither big nor tight.
+- **Implemented/verified in Studio:** 14 segments, 141 studs long; the trace's last push was 0.00 studs, so no rock is above it at the sampled points. Captures of the mouth and stream inspected, and successive captures show the pattern moving. Check run: 77 solid parts with 0 failed, 182 floor raycasts with 0 holes.
+- **Unresolved:** owner's verdict on the motion and speed, which stills can't show; the pond is still to do; the mountain's four framing boulders moved aside from the stream.
+
+## 2026-11-03 - Grove environment finished
+
+- **Confirmed:** owner: remove the mountain's contour look and add black lines; shallower, lighter cave; no splash in the whirlpool basins; deeper, livelier pond with splashes when running; the approved mushrooms everywhere, mainly small; grass, flowers and a few crystals in the area's colours; approved five new flora designs; mushroom tops should glow.
+- **Implemented/verified in Studio:** check run: 78 solid parts with 0 failed, 41 mushrooms, 78 plants, 9 crystals, 30 slugs, 0 floor holes, 67 ground feet all sunk in, 6 splashes from a character moved across the pond by script. Captures inspected.
+- **Unresolved:** owner's verdict. Splashes weren't seen at real running speed. About 1.1M triangles and 290 MB of textures with the grove in view, over double the phone guesses, and the mobile check wasn't re-run. The whirlpool's and spawn rock's mushrooms got a code glow increase, not checked up close. `Failed to upload TexturePack` still recurs, untraced.
+
+## 2026-11-03 - Grove sides filled
+
+- **Confirmed:** owner: replace the sketched mushroom trees at the back left, no overlap with the volcano's side, three trees each side, flowers in the empty space, no full rebuild.
+- **Implemented/verified in Studio:** the block-out's `VeylumeOvergrowth` is removed, so the sketched mushrooms are gone. Six trees added (47 in all) and 77 plants (155 in all) from their own site lists, with no mesh rebuilt. Check run: 84 solid parts with 0 failed, 0 floor holes; the nearest tree box reaches 43 degrees round the hub, against the volcano side's edge at 40.
+- **Unresolved:** owner's verdict. The block-out's overgrowth label went with the folder. About 1.3M triangles with the grove in view; the phone pass is still owed.
+
+## 2026-11-03 - Lobby checkpoint
+
+- **Confirmed:** owner marked the mountain and slug exhibition complete and asked for a checkpoint, delivery to `main`, and the shop next in a new chat.
+- **Implemented:** [checkpoint](art/lobby-checkpoint.md) written with state, decisions, rebuild steps, traps and open items; roadmap tracker, hub notes, asset plan, index and status updated.
+- **Unresolved:** see the checkpoint's Open list. The phone estimate wasn't re-run; the owner stopped that run to go straight to delivery.
