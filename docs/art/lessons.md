@@ -10,6 +10,12 @@ Owner's close-up exposed the 256-square lava material as jagged and low quality.
 
 **Implemented/verified:** initial vertex tint did not visibly affect SurfaceAppearance. The first image resize used the default center pivot at zero, copying only a quarter and rendering white despite passing pixel-change tests. Center the target pivot, require over 90% opaque coverage on mapped texels, then inspect corrected native captures. Wait for HubSolid and the material's actual SlugshotMaterial name, rather than assuming the tag and child replicate together. [Evidence and API limits](../evidence/2026-11-03-integrated-lava-material.json).
 
+### Shop study 03 rejected (2026-11-03)
+
+- **Owner:** "very bad, horrible". It didn't fit the lobby map and didn't use any existing assets; it generated its own.
+- **Lesson:** design lobby pieces in the lobby's real coordinates and with the approved library (giant mushroom v2, grove plants, crystals, Floppies, rope bridge). Only model what doesn't exist yet. Check the layout with the owner on a to-scale plan before building art.
+- **Owner's layout (Confirmed):** remove the lava ravine. The gun-side rope bridge lands on a place with a small mushroom forest; a second, substantial bridge crosses a big hole full of mushroom canopy to the shop. [Plan](https://claude.ai/artifact/DEmM21QCY21ykLjvw93HUr).
+
 ### Pod-house shop feedback (2026-11-02)
 
 - **Confirmed:** "like the houses" referred to clustered rounded pods around an organic tree/fungal silhouette, not another arched retailer or a palette swap. Owner-provided screenshots resolved the ambiguity.
