@@ -5522,7 +5522,7 @@ void wallShroom(vec3 p, inout vec2 res) {
 // One plum root's path down the wall, by height: its angle round the pillar and how far it stands off the rock.
 vec2 rootPath(int i, float y, float option, float strand) {
   float fi = float(i);
-  float a0 = fi*0.785 + 0.3*sin(fi*2.0);
+  float a0 = fi*0.5236 + 0.2*sin(fi*2.0);
   float t = WALL_TOP - y;
   float a, off;
   // The mix: every other root is a braided pair, the rest meander alone.
@@ -5544,7 +5544,7 @@ vec2 rootPath(int i, float y, float option, float strand) {
 }
 void wallRoots(vec3 p, inout vec2 res) {
   float option = uPlaza;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 12; i++) {
     float fi = float(i);
     bool braid = (option > 0.5 && option < 1.5) || (option > 2.5 && mod(fi, 2.0) > 0.5);
     float len = 9.5 - 3.0*hash1(fi*3.3);
@@ -5587,18 +5587,19 @@ void wallRoots(vec3 p, inout vec2 res) {
 // Two giant mushrooms grow sideways out of the wall and curve up, like the ones round the Maelstrom, with bead vines
 // looped round their stems.
 void wallTrees(vec3 p, inout vec2 res) {
-  for (int i = 0; i < 2; i++) {
+  // Owner, 2026-11-03: about 70% of the first study's size, so they don't dwarf the real hole; three round the pillar.
+  for (int i = 0; i < 3; i++) {
     float fi = float(i);
-    float a = i == 0 ? 0.6 : 3.6;
-    float y = i == 0 ? -4.5 : -7.0;
+    float a = i == 0 ? 0.6 : i == 1 ? 2.75 : 4.75;
+    float y = i == 0 ? -4.5 : i == 1 ? -7.2 : -2.8;
     vec3 outv = vec3(cos(a), 0.0, sin(a));
-    vec3 s0 = wallPoint(a, y, -0.4);
-    vec3 s1 = s0 + outv*3.0 + vec3(0.0, -0.2, 0.0);
-    vec3 s2 = s0 + outv*3.4 + vec3(0.0, 3.2, 0.0);
-    float capR = i == 0 ? 1.9 : 1.6;
-    if (length(p - (s0 + s2)*0.5) > 5.5 + capR) continue;
+    vec3 s0 = wallPoint(a, y, -0.3);
+    vec3 s1 = s0 + outv*2.1 + vec3(0.0, -0.15, 0.0);
+    vec3 s2 = s0 + outv*2.4 + vec3(0.0, 2.25, 0.0);
+    float capR = i == 0 ? 1.35 : i == 1 ? 1.15 : 1.2;
+    if (length(p - (s0 + s2)*0.5) > 4.0 + capR) continue;
     vec2 bz = sdBezier(p, s0, s1, s2);
-    float stem = bz.x - mix(0.55, 0.3, smoothstep(0.0, 0.7, bz.y)) - 0.02*sin(bz.y*40.0);
+    float stem = bz.x - mix(0.4, 0.22, smoothstep(0.0, 0.7, bz.y)) - 0.015*sin(bz.y*40.0);
     if (stem*0.85 < res.x) res = vec2(stem*0.85, 86.0);
     vec3 q = p - s2 - vec3(0.0, 0.15, 0.0);
     float ang = atan(q.z, q.x), rr = length(q.xz);
@@ -5617,13 +5618,13 @@ void wallTrees(vec3 p, inout vec2 res) {
         vec3 tg = normalize(2.0*(1.0 - t)*(s1 - s0) + 2.0*t*(s2 - s1));
         vec3 n2 = cross(tg, side);
         float th = t*3.0*6.28318 + fi*1.3;
-        float rad = mix(0.55, 0.3, smoothstep(0.0, 0.7, t)) + 0.07;
+        float rad = mix(0.4, 0.22, smoothstep(0.0, 0.7, t)) + 0.06;
         vec3 h = c + (side*cos(th) + n2*sin(th))*rad;
         if (k > 0) {
-          float d = sdSeg(p, prev, h, 0.06, 0.06);
+          float d = sdSeg(p, prev, h, 0.05, 0.05);
           if (d < res.x) res = vec2(d, 82.0);
           if (mod(float(k), 3.0) < 0.5) {
-            float bd = length(p - h - (side*cos(th) + n2*sin(th))*0.05) - 0.12;
+            float bd = length(p - h - (side*cos(th) + n2*sin(th))*0.04) - 0.1;
             if (bd < res.x) res = vec2(bd, 83.0);
           }
         }
