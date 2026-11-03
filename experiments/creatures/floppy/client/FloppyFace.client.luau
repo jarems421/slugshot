@@ -241,6 +241,18 @@ local function step(face: Face, dt: number, camera: Vector3)
 			jaw = 0.015,
 			lid = -0.035 * looking,
 		}
+	elseif not inspecting and face.model:GetAttribute("GroveResident") == true then
+		local greeting = math.clamp((face.model:GetAttribute("FaceGreeting") or 0) :: number, 0, 1)
+		if greeting > 0 then
+			-- A content greeting: lift both smile corners while the jaw eases down.
+			want = {
+				low = want.low + 0.04 * greeting,
+				high = want.high + 0.02 * greeting,
+				wide = want.wide + 0.01 * greeting,
+				jaw = want.jaw + 0.04 * greeting,
+				lid = want.lid - 0.018 * greeting,
+			}
+		end
 	end
 	local blend = 1 - math.exp(-BLEND_RATE * dt)
 	face.low += (want.low - face.low) * blend

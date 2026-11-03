@@ -32,6 +32,7 @@ type Slug = {
 	lookUntil: number,
 	lookAgain: number,
 	lookBlend: number,
+	lookPitch: number,
 	mood: number,
 	inferno: boolean,
 	size: number,
@@ -180,6 +181,7 @@ local function prepare(model: Model): Slug?
 		lookUntil = 0,
 		lookAgain = os.clock() + random:NextNumber(0, 3),
 		lookBlend = 0,
+		lookPitch = 0.4,
 		mood = 0,
 		inferno = inferno,
 		size = model:GetAttribute("WorldSlugSize") :: number,
@@ -205,11 +207,13 @@ local function prepare(model: Model): Slug?
 	return slug
 end
 
-local function decide(now: number, player: Vector3)
-	local looking = 0
+local function decide(now: number, player: Vector3, camera: CFrame)
+	-- Reserve room for each species, so Inferno reactions cannot suppress Floppy.
+	local looking = { Floppy = 0, Inferno = 0 }
 	for _, slug in slugs do
 		if now < slug.lookUntil then
-			looking += 1
+			local species = if slug.inferno then "Inferno" else "Floppy"
+			looking[species] += 1
 		end
 	end
 	for _, slug in slugs do
@@ -217,19 +221,31 @@ local function decide(now: number, player: Vector3)
 			continue
 		end
 		local away = player - slug.position
+		local species = if slug.inferno then "Inferno" else "Floppy"
+		local toFace = slug.position + slug.up * slug.size * 0.65 - camera.Position
+		local watched = not slug.inferno
+			and toFace.Magnitude < 18
+			and toFace.Magnitude > 0.01
+			and camera.LookVector:Dot(toFace.Unit) > 0.96
 		if
 			now > slug.lookAgain
 			and now > slug.lookUntil
-			and away.Magnitude < NOTICE
-			and looking < 3
+			and (away.Magnitude < NOTICE or watched)
+			and looking[species] < (if slug.inferno then 3 else 2)
 		then
-			slug.lookAgain = now + random:NextNumber(10, 20)
-			if random:NextNumber() < 0.7 then
+			slug.lookAgain = now
+				+ (if slug.inferno then random:NextNumber(10, 20) else random:NextNumber(7, 10))
+			if not slug.inferno or random:NextNumber() < 0.7 then
 				slug.lookAt = now
-				slug.lookUntil = now + random:NextNumber(1.8, 3)
-				slug.mood = if random:NextNumber() < 0.5 then 0 else 1
+				slug.lookUntil = now
+					+ (
+						if slug.inferno
+							then random:NextNumber(1.8, 3)
+							else random:NextNumber(2.3, 3.2)
+					)
+				slug.mood = if not slug.inferno or random:NextNumber() < 0.5 then 0 else 1
 				slug.model:SetAttribute("ReviewMood", slug.mood)
-				looking += 1
+				looking[species] += 1
 			end
 		end
 		if now > slug.nextHop and now > slug.lookUntil + 0.45 then
@@ -283,7 +299,7 @@ local function step(dt: number)
 	end
 	if now >= nextDecision then
 		nextDecision = now + 0.12
-		decide(now, player)
+		decide(now, player, camera.CFrame)
 	end
 	for _, slug in slugs do
 		if not slug.shown then
@@ -292,6 +308,10 @@ local function step(dt: number)
 		local looking = now < slug.lookUntil
 		slug.lookBlend += ((if looking then 1 else 0) - slug.lookBlend) * (1 - math.exp(-7 * dt))
 		local away = player - slug.position
+		local horizontal = (away - slug.up * away:Dot(slug.up)).Magnitude
+		local targetPitch =
+			math.clamp(math.atan2(away:Dot(slug.up) + 1.5 - slug.size * 0.6, horizontal), 0.4, 0.75)
+		slug.lookPitch += (targetPitch - slug.lookPitch) * (1 - math.exp(-7 * dt))
 		local yaw = if looking then math.atan2(-away.X, -away.Z) else slug.aim
 		local turn = math.atan2(math.sin(yaw - slug.heading), math.cos(yaw - slug.heading))
 		slug.heading += turn * (1 - math.exp(-8 * dt))
@@ -346,14 +366,16 @@ local function step(dt: number)
 		slug.model:SetAttribute("GrovePress", press)
 		slug.model:SetAttribute("GroveLook", slug.lookBlend)
 		local poseChanged = slug.hopAt ~= nil
+			or slug.lookBlend > 0.001
 			or math.abs(press - slug.lastPress) > 0.0001
 			or math.abs(slug.lookBlend - slug.lastLook) > 0.0001
 		if not slug.inferno and poseChanged then
 			slug.model:SetAttribute("FaceExpression", 1)
 			slug.model:SetAttribute("FaceLook", Vector2.new(0, 0.8 * slug.lookBlend))
+			slug.model:SetAttribute("FaceGreeting", slug.lookBlend)
 			for _, item in slug.head do
 				item.bone.Transform = CFrame.new(item.up * -press * 0.55 * slug.size / 2.72)
-					* CFrame.fromAxisAngle(item.side, 0.22 * slug.lookBlend + lean)
+					* CFrame.fromAxisAngle(item.side, slug.lookPitch * slug.lookBlend + lean)
 			end
 		end
 		if poseChanged then

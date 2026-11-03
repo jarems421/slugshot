@@ -185,3 +185,7 @@ Rebuild this review with `python tools/lobby/build_grove_review.py`. The builder
 **Native integration fix:** facial bone groups could be missed while a resident rig replicated in pieces. Refresh after grove readiness/identity changes and when additional skeleton descendants arrive. The isolated Studio check now verifies actual upward mouth-corner transforms in all three expressions and complete blink closure/reopening; every resident must register. See the sanitized evidence for combined motion/gaze measurements and limits.
 
 **Implemented/verified, final combined native run:** all nine Floppy rigs registered; three smile poses and blink pass. Both species look upward and land with body squash; 3,602/3,602 rendered frames animate at 60 FPS mean, with 1,213 support samples. Owner art approval remains open.
+
+## More visible lobby greetings (2026-11-03)
+
+**Confirmed:** owner sees Burpy look up, but Floppy rarely does; Floppy should always smile, lower the jaw slightly, then resume hopping. **Implemented/verified locally:** stronger height-tracking head lift, reliable near/watched greetings, shorter cooldown, and two reserved Floppy reaction slots. Smooth positive smile corners plus a small jaw opening blend in/out with the look. Native tests measure actual head, smile and lower-lip bones and a later hop. [Evidence and limits](../../evidence/2026-11-03-floppy-greeting.json). No mesh/export change; owner feel verdict remains open.

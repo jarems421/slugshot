@@ -120,3 +120,7 @@ A nine-contact circular support test checks the whole belly footprint against a 
 
 
 **Implemented/verified, 2026-11-03 - canonical flat-sole review refresh:** the open old GroveReview referenced the rounded asset even though the SplatReview/canonical config had the flat sole. `python tools/lobby/build_grove_review.py` now rebuilds the single canonical review, checks embedded config source freshness and includes review-only imported-body bounds validation. All nine Floppies pass at roughly +0.0051 studs above their root. Existing texture folds/spores remain; no added curling or new geometry. Current training's saved asset reference was already correct and was preserved. [Evidence](../evidence/2026-11-03-floppy-lobby-refresh.json).
+
+### Floppy look-up greeting revision - 2026-11-03
+
+**Implemented/verified locally:** Floppy reactions now have their own two slots, reliable nearby notice, shorter cooldown and a stronger height-tracking head tilt. Watching a nearby resident also qualifies. Floppies always smile and lower the jaw a little, then return to hopping. Native head/mouth/boundary/contact/cadence checks pass; owner feel approval remains open. [Evidence](../evidence/2026-11-03-floppy-greeting.json).

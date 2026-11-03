@@ -4,6 +4,18 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local faceOnly = script:GetAttribute("FaceOnly") == true
+local function faceAmount(model: Model, name: string): number
+	local bone = model:FindFirstChild(name, true) :: Bone
+	local left = model:FindFirstChild("eye_L", true) :: Bone
+	local right = model:FindFirstChild("eye_R", true) :: Bone
+	local head = model:FindFirstChild("head", true) :: Bone
+	local origin = model:FindFirstChild("root", true) :: Bone
+	local side = (right.WorldPosition - left.WorldPosition).Unit
+	local rough = (head.WorldPosition - origin.WorldPosition).Unit
+	local up = (rough - side * rough:Dot(side)).Unit
+	return bone.Transform.Position:Dot(bone.WorldCFrame:VectorToObjectSpace(up))
+		/ ((right.WorldPosition - left.WorldPosition).Magnitude / 0.74)
+end
 local function waitFor(check: () -> boolean, seconds: number)
 	local deadline = os.clock() + seconds
 	while not check() do
@@ -46,6 +58,9 @@ local ok, problem = pcall(function()
 	local phases: { [string]: boolean } = {}
 	local lookSeen = false
 	local headLift = { Floppy = 0, Inferno = 0 }
+	local greeted: { [Model]: boolean } = {}
+	local resumed: { [Model]: boolean } = {}
+	local greetingJaw, greetingSmile = 0, 0
 	local minPress, maxPress = 0, 0
 	local landingPeak = { Floppy = 0, Inferno = 0 }
 	local supportSamples = 0
@@ -86,6 +101,9 @@ local ok, problem = pcall(function()
 		previous = pivot
 		for _, model in models do
 			local phase = model:GetAttribute("GrovePhase") :: string
+			if greeted[model] and phase == "hop" then
+				resumed[model] = true
+			end
 			if phase and not phases[phase] then
 				phases[phase] = true
 				print("GROVECHECK shot " .. phase)
@@ -106,6 +124,12 @@ local ok, problem = pcall(function()
 				local localFacing = head.WorldCFrame:VectorToObjectSpace(residentFrame.LookVector)
 				local facing = head.TransformedWorldCFrame:VectorToWorldSpace(localFacing)
 				local species = model:GetAttribute("Slug") :: string
+				if species == "Floppy" then
+					greeted[model] = true
+					greetingJaw = math.max(greetingJaw, -faceAmount(model, "mouth_low"))
+					greetingSmile = math.max(greetingSmile, faceAmount(model, "mouth_L"))
+					assert(model:GetAttribute("ReviewMood") == 0, "Floppy greeting was not happy")
+				end
 				headLift[species] =
 					math.max(headLift[species] or 0, facing:Dot(residentFrame.UpVector))
 			end
@@ -135,10 +159,15 @@ local ok, problem = pcall(function()
 		assert(lookSeen, "no passing-player reaction")
 		print("GROVECHECK head " .. HttpService:JSONEncode(headLift))
 		assert(
-			headLift.Floppy > 0.08 and headLift.Inferno > 0.08,
+			headLift.Floppy > 0.34 and headLift.Inferno > 0.08,
 			"a resident did not tilt its actual head up at the player"
 		)
 		assert(supportSamples > 0, "no ground contact samples")
+		assert(
+			greetingJaw > 0.035 and greetingSmile > 0.085,
+			"Floppy did not smile and lower its actual jaw"
+		)
+		assert(next(resumed) ~= nil, "Floppy did not resume hopping after greeting")
 	end
 	-- Check the actual imported facial bones, after the resident controller and before
 	-- the facial renderer. An intent attribute alone cannot prove a readable smile.
@@ -173,26 +202,15 @@ local ok, problem = pcall(function()
 			floppy:SetAttribute("FaceExpression", expression)
 			floppy:SetAttribute("FaceBlink", blink)
 			floppy:SetAttribute("FaceLook", Vector2.zero)
+			floppy:SetAttribute("FaceGreeting", 0)
 		end
 	)
-	local function faceAmount(name: string): number
-		local bone = floppy:FindFirstChild(name, true) :: Bone
-		local left = floppy:FindFirstChild("eye_L", true) :: Bone
-		local right = floppy:FindFirstChild("eye_R", true) :: Bone
-		local head = floppy:FindFirstChild("head", true) :: Bone
-		local origin = floppy:FindFirstChild("root", true) :: Bone
-		local side = (right.WorldPosition - left.WorldPosition).Unit
-		local rough = (head.WorldPosition - origin.WorldPosition).Unit
-		local up = (rough - side * rough:Dot(side)).Unit
-		return bone.Transform.Position:Dot(bone.WorldCFrame:VectorToObjectSpace(up))
-			/ ((right.WorldPosition - left.WorldPosition).Magnitude / 0.74)
-	end
 	local smiles = {}
 	for index = 1, 3 do
 		expression = index
 		task.wait(1.2)
 		RunService.RenderStepped:Wait()
-		local left, right = faceAmount("mouth_L"), faceAmount("mouth_R")
+		local left, right = faceAmount(floppy, "mouth_L"), faceAmount(floppy, "mouth_R")
 		print(
 			"GROVECHECK smile "
 				.. HttpService:JSONEncode({ index = index, left = left, right = right })
@@ -201,16 +219,16 @@ local ok, problem = pcall(function()
 		table.insert(smiles, { left, right })
 		print("GROVECHECK shot smile-" .. tostring(index))
 	end
-	local openLid = faceAmount("lid_L")
+	local openLid = faceAmount(floppy, "lid_L")
 	blink = 1
 	task.wait(0.4)
 	RunService.RenderStepped:Wait()
-	local closedLid = faceAmount("lid_L")
+	local closedLid = faceAmount(floppy, "lid_L")
 	assert(closedLid < openLid - 0.1, "blink did not close the actual lid")
 	blink = 0
 	task.wait(0.7)
 	RunService.RenderStepped:Wait()
-	assert(math.abs(faceAmount("lid_L") - openLid) < 0.01, "lid did not reopen")
+	assert(math.abs(faceAmount(floppy, "lid_L") - openLid) < 0.01, "lid did not reopen")
 	RunService:UnbindFromRenderStep("GroveCheckFace")
 	floppy:SetAttribute("FaceBlink", nil)
 	print(
@@ -227,6 +245,9 @@ local ok, problem = pcall(function()
 		press = { minPress, maxPress },
 		lookSeen = lookSeen,
 		landingPeak = landingPeak,
+		greetingJaw = greetingJaw,
+		greetingSmile = greetingSmile,
+		resumedHopping = next(resumed) ~= nil,
 		headLift = headLift,
 		supportSamples = supportSamples,
 	}))

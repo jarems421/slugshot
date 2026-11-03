@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-03",
+  "status": "Implemented/verified locally; owner feel verdict pending",
+  "ownerBrief": "Lobby Floppies must visibly look up when watched or passed, always smile with a small jaw drop, then resume hopping.",
+  "changes": [
+    "Track player height with a smoothed 0.4-0.75-radian head pitch, replacing the small fixed 0.22-radian look.",
+    "Nearby Floppies reliably greet without the old random miss; 7-10-second start-to-start cooldown and 2.3-3.2-second pause.",
+    "Separate reaction budgets (two Floppies, three Infernos) prevent Infernos from occupying every reaction slot.",
+    "Watching within 18 studs and the central viewing cone can also trigger a Floppy greeting; proximity remains 14 studs.",
+    "Greeting smoothly raises both smile corners and adds 0.04 source units of jaw opening, then fades back before/while hopping resumes.",
+    "Existing hop, grounding, flat sole, model size and inspect poses preserved."
+  ],
+  "native": {
+    "meanDt": 0.016665776765934795,
+    "resumedHopping": true,
+    "headLift": {
+      "Inferno": 0.43611493706703186,
+      "Floppy": 0.6197026968002319
+    },
+    "greetingSmile": 0.08711763553094372,
+    "maxDt": 0.02273079939186573,
+    "residents": {
+      "Inferno": 5,
+      "Floppy": 9
+    },
+    "supportSamples": 1197,
+    "renderFrames": 3602,
+    "lookSeen": true,
+    "press": [
+      -0.17988372711859055,
+      0.4999995871617839
+    ],
+    "landingPeak": {
+      "Inferno": 0.4999994640196163,
+      "Floppy": 0.4999995871617839
+    },
+    "changedFrames": 1110,
+    "greetingJaw": 0.04382864880802019,
+    "animationFrames": 3602
+  },
+  "checks": [
+    "PASS: native combined resident motion/gaze/facial suite, including actual smile/jaw deformation and post-greeting hop.",
+    "PASS: verify_slugs.py and verify_combat.py.",
+    "PASS: StyLua, Selene (zero warnings), strict luau-lsp analysis of both controllers and native fixture."
+  ],
+  "preview": "build/SlugshotGroveReview.rbxlx rebuilt from current private references and source.",
+  "limits": [
+    "Focused local desktop Studio run only; no mobile or networked observer validation.",
+    "Owner verdict on expression strength remains open.",
+    "No mesh edit, asset upload or experience publication."
+  ]
+}

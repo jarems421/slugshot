@@ -1907,3 +1907,9 @@
 - **Implemented/verified in Studio:** repaired missed facial registration on partially replicated resident rigs; all three imported smiles and full blink pass native bone checks. Automatic checks distinguish rendered poses from intent flags.
 
 **Implemented/verified, final combined native run:** all nine Floppy rigs registered; three smile poses and blink pass. Both species look upward and land with body squash; 3,602/3,602 rendered frames animate at 60 FPS mean, with 1,213 support samples. Owner art approval remains open.
+
+## 2026-11-03 - Floppy looks up and smiles at passing players
+
+- **Confirmed:** make lobby Floppy look up clearly like Burpy; always a smile with a little jaw drop, then resume hopping.
+- **Implemented/verified locally:** height-tracking head lift, reliable near/watched greetings, shorter cooldown and independent reaction slots; native actual-bone smile/jaw/upward-head and subsequent-hop assertions pass, alongside contact/cadence and full creature/combat checks.
+- **Limits:** runtime-only pose change; no upload/publish. Owner feel verdict remains open. [Evidence](evidence/2026-11-03-floppy-greeting.json).

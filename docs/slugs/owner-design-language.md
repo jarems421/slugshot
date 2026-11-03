@@ -299,3 +299,5 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 ## Happy, tired Floppy (2026-11-03)
 
 **Confirmed:** keep Floppy drowsy, but make him content/happy rather than depressed. The owner identifies eyelids and a smile that can read as sadness. Preserve sleepy blinks and asymmetry; soften the resting eyes and keep both mouth corners lifted across idle expressions. This is a facial design revision, not a request for a more energetic personality.
+
+**Confirmed, 2026-11-03 - Floppy greetings:** looking up must be obvious at player height, like Inferno, rather than a small gaze/intent flag. When a player watches or passes, Floppy pauses, always gives a sleepy smile with a small jaw drop, then continues hopping. No angry Floppy greeting.
