@@ -67,14 +67,14 @@ The owner chose an automatic estimate after each lobby or map change, with real 
 
 ## Slug Grove (slug side, built 2026-11-02)
 
-**Implemented, owner's verdict pending.** Nine `hub-grove-*` pieces from asset 9 in the library (`tools/lobby/hub_mesh.py`), placed by `buildGrove` in `HubArt.server.luau`: concept origin at the pond (radius 155 at 90 degrees), +z toward the wall. Mountain, ground, stones, rune stones and mushrooms are solid as drawn; water, falls, plants and crystals are not.
+**Complete (owner, 2026-11-03: "Looking perfect").** See the [checkpoint](lobby-checkpoint.md). The `hub-grove-*` pieces (ground, mountain, solid, water, falls, rocks, dress) and five `hub-flora-*` plants come from asset 9 in the library (`tools/lobby/hub_mesh.py`), placed by `buildGrove` in `HubArt.server.luau`: concept origin at the pond (radius 155 at 90 degrees), +z toward the wall. Ground, stones and rune stones are solid as drawn, the mountain through hidden chunks (`hub-grove-solid`), and large mushrooms at their stems; water, falls, plants, caps and crystals are passable.
 
-- **Mountain:** one form of flat triangular faces and hard ridges after the owner's references: `mountainHeight` gives the ridges and each triangle's corners sample it, so the surface is flat faces with no cracks or overhangs. About 165 studs tall and 370 across. Black lines and tilted rock layers are baked onto the flat faces, with cut-out shading. Players touch `hub-grove-solid`, 24 chunks hidden 0.3 studs under the surface, because one collision shape over the whole mountain bridged its valleys with invisible walls. Its back passes through the wall, so the wall is hidden from 52 to 128 degrees and has no collision from 58 to 122.
+- **Mountain:** one form of flat triangular faces and hard ridges after the owner's references: `mountainHeight` gives the ridges and each triangle's corners sample it, so the surface is flat faces with no cracks or overhangs. About 165 studs tall and 370 across. Thin black lines and small broken facets are baked onto the flat faces (`rockFacets`), with cut-out shading; the earlier tilted layers read as a contour map and are gone. Players touch `hub-grove-solid`, 24 chunks hidden 0.3 studs under the surface, because one collision shape over the whole mountain bridged its valleys with invisible walls. Its back passes through the wall, so the wall is hidden from 52 to 128 degrees and has no collision from 58 to 122.
 - **Ground:** replaces the flat block-out from 40 to 135 degrees, with a basin for the pond.
 - **Slugs:** 30 real Floppies at 1.3 studs from `experiments/lobby/scale/shared/grove_slugs.json`, moved by `GroveSlugs.client.luau`: hops, a drowsy idle up close, and one in four glancing at a player within 15 studs. Ten carry `InfernoLater`, to swap once Inferno has a Roblox model.
-- **Trees:** all 41 mushrooms are the approved giant mushroom v2, in teal, green, purple and azure, at 30% glow. Those under 20 studs tall use lighter `mushroom-N-s` copies of about 1,800 triangles; only large stems are solid.
+- **Trees:** all 47 mushrooms, including three in each back corner (`side_trees`), are the approved giant mushroom v2, in teal, green, purple and azure, at 30% glow. Those under 20 studs tall use lighter `mushroom-N-s` copies of about 1,800 triangles; only large stems are solid.
 - **Volcano and gate:** Titan's Arch and the volcano stand at 85% height through `PLAZA_HEIGHT`, keeping their width (owner). The volcano's walls between its lava streams rise above the lava, slightly pointed, and its steam is about 25% denser (owner).
-- **Plants:** five designs the owner approved (grass, broad plant, lanterns, moonbells, star lily; artifact 5HPDn2SiYnPcvKJyGs58KX), `hub-flora-*`, each a separate prop placed from `grove_flora.json`, 78 in all.
+- **Plants:** five designs the owner approved (grass, broad plant, lanterns, moonbells, star lily; artifact 5HPDn2SiYnPcvKJyGs58KX), `hub-flora-*`, each a separate prop placed from `grove_flora.json`, 155 in all, the later ones filling the empty ground (`side_flora`). The block-out's sketched overgrowth mushrooms are removed.
 - **Crystals:** nine of the crystal assets in cyan, emerald and jade, from `grove_crystals.json`.
 - **Cost:** a Floppy is the heavy part, so slugs beyond 130 studs (60 at low detail) aren't drawn. A lighter slug model is the likely fix if phones struggle.
 
@@ -85,3 +85,11 @@ Unlike the Maelstrom's falls, the grove's waterfall is a thick stream hugging th
 ### Grove pond (owner, 2026-11-03)
 
 About 2.5 studs deeper, see-through, with currents spreading from the falls, rings, glints and pads on a swell (`pondLife` in `HubArt`). `GroveWater.client.luau` splashes for each character in the water: a ripple, drops and foam with each step, more at speed, a big splash on landing, and small ripples when standing still. It's look-only. It takes its outline from `pondEdge`, so change both together.
+
+### Whirlpool basins and mushroom glow (owner, 2026-11-03)
+
+The basins' pools have no splash rings; the foam where each fall lands stays. The whirlpool's and spawn rock's mushrooms glow more through `GLOW` in `HubArt`; they are older baked mushrooms, not the giant mushroom asset.
+
+## Costs at the checkpoint
+
+Desktop, grove in view: about 1.3M triangles, 194 draw calls and 266 MB of textures. Portal side: about 182k triangles and 137 draw calls. Measured in Studio on an RTX 3070; not phone evidence.

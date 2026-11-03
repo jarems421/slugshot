@@ -1,5 +1,7 @@
 # Current status
 
+**Confirmed/implemented, 2026-11-03 (checkpoint, delivered to `main` at the owner's request):** the lobby's centre, ceiling, portal side and slug side are built, and the owner marked the mountain and slug exhibition complete ("Looking perfect"). The shop is next, in a new chat. **Verified in Studio:** check runs with 84 solid parts, 0 failed, 0 floor holes, and 47 mushrooms, 155 plants, 9 crystals and 30 slugs. **Unresolved:** phone cost (about 1.3M triangles against a 200k starting budget), running and climbing the mountain by hand, Inferno in the lobby, the far side. See the [lobby checkpoint](art/lobby-checkpoint.md).
+
 **Implemented, 2026-11-03 (`experiment/lobby`):** Slug Grove environment: faceted mountain with black lines, stream from a shallow cave, deeper animated pond with player splashes, approved mushrooms throughout, new flora and crystals. **Unresolved:** owner's verdict; phone cost is well over budget; Inferno still uses Floppy stand-ins.
 
 **Implemented, 2026-11-02 (`experiment/lobby`):** grove mountain at 165 studs with black lining and layered rock over a smooth runnable surface; volcano walls raised between the lava streams. **Next (owner):** waterfall, pond, surroundings and Floppies. **Unresolved:** owner's verdict; phone cost.

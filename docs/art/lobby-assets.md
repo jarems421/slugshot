@@ -1,5 +1,7 @@
 # Lobby asset plan
 
+**Checkpoint, 2026-11-03:** the slug side's mountain, pond and flora are built and complete; what's actually in the game is in [lobby hub](lobby-hub.md) and the [checkpoint](lobby-checkpoint.md). This list stays as the original plan. New grove plants: grass, broad plant, lanterns, moonbells, star lily.
+
 The props and kits the lobby needs, to be authored in Blender so the space looks deliberately designed and hand-made, not assembled from generated or free models. Every asset follows the [style guide](style-guide.md); the order of work follows the [lobby roadmap](lobby-roadmap.md).
 
 Research basis: [Slugterra environment research](../research/slugterra-environment.md).

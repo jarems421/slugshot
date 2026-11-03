@@ -1035,3 +1035,9 @@
 - **Confirmed:** owner: replace the sketched mushroom trees at the back left, no overlap with the volcano's side, three trees each side, flowers in the empty space, no full rebuild.
 - **Implemented/verified in Studio:** the block-out's `VeylumeOvergrowth` is removed, so the sketched mushrooms are gone. Six trees added (47 in all) and 77 plants (155 in all) from their own site lists, with no mesh rebuilt. Check run: 84 solid parts with 0 failed, 0 floor holes; the nearest tree box reaches 43 degrees round the hub, against the volcano side's edge at 40.
 - **Unresolved:** owner's verdict. The block-out's overgrowth label went with the folder. About 1.3M triangles with the grove in view; the phone pass is still owed.
+
+## 2026-11-03 - Lobby checkpoint
+
+- **Confirmed:** owner marked the mountain and slug exhibition complete and asked for a checkpoint, delivery to `main`, and the shop next in a new chat.
+- **Implemented:** [checkpoint](art/lobby-checkpoint.md) written with state, decisions, rebuild steps, traps and open items; roadmap tracker, hub notes, asset plan, index and status updated.
+- **Unresolved:** see the checkpoint's Open list. The phone estimate wasn't re-run; the owner stopped that run to go straight to delivery.

@@ -1,5 +1,7 @@
 # Lobby roadmap
 
+> **Checkpoint, 2026-11-03:** the centre, ceiling, portal side and slug side are built, and the slug side is complete. See the [checkpoint](lobby-checkpoint.md). The shop is next.
+>
 > **Superseded, owner 2026-11-02:** the spiral route and the cave entrance described below are removed from the lobby; something else is planned there.
 
 How the Slugshot lobby goes from plan to finished space. Each phase ends with an owner review, and the next phase does not start until the owner is happy. The look follows the [style guide](style-guide.md); the props come from the [lobby asset plan](lobby-assets.md).
@@ -205,7 +207,7 @@ Check low graphics settings, mobile, triangle/texture/light budgets and draw cal
 | 0 Plan | Implemented; awaiting owner review |
 | 1 Style test | Treatment chosen; concepts final; [look pack](look-pack.md) and Studio look-test place built 2026-11-01, awaiting owner verdict |
 | 2 Greybox | Sketch approved by the owner 2026-11-01 as the baseline; fine-tuning continues per asset |
-| 3 Assets | Concepts final for the wall, crystals, mushroom, gates, spawn rock, Sky Well, Maelstrom and rope bridges; terrain, entrance, gun shop and slug exhibition not designed. Hub centrepieces, bridges and gates built for Roblox on the block-out, in owner review ([lobby hub](lobby-hub.md)) |
-| 4 Assembly/lighting | Not started |
-| 5 Life pass | Not started |
-| 6 Performance/polish | Not started |
+| 3 Assets | Built in Roblox: spawn rock, bridges, gates, Maelstrom, Sky Well, storm, ceiling, portals, arch, volcano, floor. **Slug Grove complete, owner 2026-11-03.** Next: gun side shop. Far side, bounty board and other biomes not designed ([checkpoint](lobby-checkpoint.md)) |
+| 4 Assembly/lighting | Done for the four built areas, as part of each; the shop and far side remain |
+| 5 Life pass | Done for the slug side (hopping and glancing Floppies, stream, pond), though not checked by hand. Other areas have motion from their own builds |
+| 6 Performance/polish | Not started. An automatic estimate exists, and the grove is well over its budget. Real phone and iPad tests wait for lobby completion |
