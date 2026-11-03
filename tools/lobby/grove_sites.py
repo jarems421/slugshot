@@ -298,6 +298,61 @@ def crystal_sites():
     return rows
 
 
+def zone_angle(x, z):
+    """Round the hub in degrees, as the layout counts: the volcano's side ends at 40, the slug side at 135."""
+    return math.degrees(math.atan2(31.0 + z, x))
+
+
+def side_trees(top):
+    """Three trees filling each side of the clearing (owner): the emptiest spots well clear of the volcano's side, the mountain and each other."""
+    rows, placed = [], [(t[0], t[2]) for t in top if t[3] >= 2.6]
+    for low, high, heights in ((50.0, 82.0, ((8.6, 1), (7.2, 3), (6.2, 2))), (98.0, 130.0, ((8.4, 2), (7.0, 0), (6.4, 1)))):
+        for height, colour in heights:
+            cap = height*0.45
+            best, spot = -1.0, None
+            for gx in range(-120, 121):
+                for gz in range(-40, 80):
+                    x, z = gx*0.5, gz*0.5
+                    a = zone_angle(x, z)
+                    if z < -6.0 or abs(x) < 15.0 or not low < a < high or not 46.0 < zone_angle(x + cap, z) < 132.0 or not 46.0 < zone_angle(x - cap, z) < 132.0:
+                        continue
+                    if math.hypot(31.0 + z, x) + cap > 58.0 or pond_edge(x, z) < 3.0 or inside_mountain_foot(x, z):
+                        continue
+                    gap = min(math.hypot(x - px, z - pz) for px, pz in placed)
+                    if gap > best:
+                        best, spot = gap, (x, z)
+            assert spot, (low, height)
+            x, z = spot
+            placed.append(spot)
+            rows.append((x, rest(x, z, 0.25*height) - 0.1, z, height, colour))
+            print(f"side tree at {x:.1f}, {z:.1f}, round the hub {zone_angle(x, z):.0f} degrees, {best*5:.0f} studs from its nearest neighbour")
+    return rows
+
+
+def side_flora(top, stones, trees):
+    """More plants across what's still empty: kind, x, y, z, size, turn, in studs. Their own random stream, so nothing else moves."""
+    rnd = random.Random(83)
+    rows, taken = [], [(t[0], t[2], 0.25*t[3]) for t in top] + [(t[0], t[2], 0.25*t[3]) for t in trees] + [(s[0], s[2], s[3] + 0.2) for s in stones]
+    flowers = 0
+    for _ in range(26):
+        a0 = math.radians(rnd.uniform(50.0, 128.0))
+        r0 = rnd.uniform(24.0, 56.0)
+        cx, cz = math.cos(a0)*r0, math.sin(a0)*r0 - 31.0
+        for _ in range(rnd.randint(4, 7)):
+            x, z = cx + rnd.gauss(0, 1.4), cz + rnd.gauss(0, 1.4)
+            if not 46.0 < zone_angle(x, z) < 132.0 or math.hypot(31.0 + z, x) > 58.0 or pond_edge(x, z) < 0.5 or inside_mountain_foot(x, z):
+                continue
+            if any(math.hypot(x - tx, z - tz) < reach for tx, tz, reach in taken):
+                continue
+            kind = 4 if rnd.random() < 0.5 else rnd.choice((0, 0, 1, 1, 2, 2, 3))
+            taken.append((x, z, 0.35 if kind < 4 else 0.2))
+            flowers += kind < 4
+            sink = {0: -0.05, 1: -0.05, 2: -0.05, 3: -0.05, 4: 0.0}[kind]
+            rows.append([kind, x*5, (rest(x, z, 0.12) + sink)*5, z*5, rnd.uniform(0.9, 1.4), rnd.uniform(0, 6.28)])
+    print(f"side flora: {flowers} plants and flowers, {len(rows) - flowers} grass")
+    return rows
+
+
 def shrooms(rnd):
     top, more = [], []
     # Round the lake, with the side facing the hub left open so the mountain and the slugs can be seen.
@@ -523,13 +578,15 @@ def main():
     sites = [{"x": round(x*5, 2), "y": round(y*5, 2) if index < 9 else round(ground(x, z)*5, 2), "z": round(z*5, 2), "heading": round(h, 3)}
              for index, (x, y, z, h) in enumerate(slug_rows)]
     SITES.write_text(json.dumps(sites, indent=1) + "\n", encoding="utf-8")
+    side_rows = side_trees(top)
     # The big mushrooms round the lake are the approved giant mushroom asset, placed by the game.
     TREES.write_text(json.dumps([{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": int(c[3])}
-                                 for t, c in zip(top, more)], indent=1) + "\n", encoding="utf-8")
+                                 for t, c in zip(top, more)] + [{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": t[4]} for t in side_rows], indent=1) + "\n", encoding="utf-8")
     # The plants are props the game places: kind, x, y, z, size, turn.
     kinds = [[int(f[3]), f[0]*5, f[1]*5 + 0.45, f[2]*5, rnd.uniform(0.9, 1.35), rnd.uniform(0, 6.28)] for f in flowers]
     kinds += [[3, f[0]*5, f[1]*5 + 0.55, f[2]*5, 1.1 + 0.6*f[3], rnd.uniform(0, 6.28)] for f in ferns]
     kinds += [[4, f[0]*5, f[1]*5, f[2]*5, f[3], rnd.uniform(0, 6.28)] for f in grass(rnd, stones)]
+    kinds += side_flora(top, stones, side_rows)
     FLORA.write_text(json.dumps([[round(v, 2) for v in row] for row in kinds]) + "\n", encoding="utf-8")
     CRYSTALS.write_text(json.dumps(crystal_sites(), indent=1) + "\n", encoding="utf-8")
     print(f"grove props: {len(top)} mushrooms ({sum(1 for t in top if t[3] >= 2.6)} large or medium), {len(kinds)} plants")

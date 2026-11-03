@@ -448,8 +448,8 @@ local function hideBlockOut()
 	if oldVolcano then
 		oldVolcano:Destroy()
 	end
-	-- So do the grove's pond and mountain.
-	for _, name in { "SlugPond", "WaterfallMountain" } do
+	-- So do the grove's pond and mountain. The overgrowth's sketched mushrooms went too, one of them reaching over the volcano's side.
+	for _, name in { "SlugPond", "WaterfallMountain", "VeylumeOvergrowth" } do
 		local old = root:FindFirstChild(name)
 		if old then
 			old:Destroy()

@@ -166,6 +166,23 @@ task.spawn(function()
 	end
 	print(`HUBCHECK pondSplashes {(workspace:GetAttribute("GrovePondSplashes") or 0) - before}`)
 	root.CFrame = home
+	local reach = 180
+	for _, tree in (art:FindFirstChild("GroveTrees") or art):GetChildren() do
+		if tree:IsA("Model") then
+			local at, size = tree:GetBoundingBox()
+			for _, side in { -1, 1 } do
+				local edge = at.Position
+					+ at.Rotation * Vector3.new(side * size.X / 2, 0, side * size.Z / 2)
+				reach = math.min(reach, math.deg(math.atan2(edge.X, -edge.Z)))
+			end
+		end
+	end
+	print(
+		`HUBCHECK trees nearest the volcano side reach {math.floor(reach)} degrees (its side ends at 40)`
+	)
+	print(
+		`HUBCHECK sketched mushrooms left {workspace.LobbyScale:FindFirstChild("VeylumeOvergrowth") ~= nil}`
+	)
 	print(`HUBCHECK groveSlugs count={if slugs then #slugs:GetChildren() else 0}`)
 	task.wait(12)
 	print("HUBCHECK tour starts")

@@ -1029,3 +1029,9 @@
 - **Confirmed:** owner: remove the mountain's contour look and add black lines; shallower, lighter cave; no splash in the whirlpool basins; deeper, livelier pond with splashes when running; the approved mushrooms everywhere, mainly small; grass, flowers and a few crystals in the area's colours; approved five new flora designs; mushroom tops should glow.
 - **Implemented/verified in Studio:** check run: 78 solid parts with 0 failed, 41 mushrooms, 78 plants, 9 crystals, 30 slugs, 0 floor holes, 67 ground feet all sunk in, 6 splashes from a character moved across the pond by script. Captures inspected.
 - **Unresolved:** owner's verdict. Splashes weren't seen at real running speed. About 1.1M triangles and 290 MB of textures with the grove in view, over double the phone guesses, and the mobile check wasn't re-run. The whirlpool's and spawn rock's mushrooms got a code glow increase, not checked up close. `Failed to upload TexturePack` still recurs, untraced.
+
+## 2026-11-03 - Grove sides filled
+
+- **Confirmed:** owner: replace the sketched mushroom trees at the back left, no overlap with the volcano's side, three trees each side, flowers in the empty space, no full rebuild.
+- **Implemented/verified in Studio:** the block-out's `VeylumeOvergrowth` is removed, so the sketched mushrooms are gone. Six trees added (47 in all) and 77 plants (155 in all) from their own site lists, with no mesh rebuilt. Check run: 84 solid parts with 0 failed, 0 floor holes; the nearest tree box reaches 43 degrees round the hub, against the volcano side's edge at 40.
+- **Unresolved:** owner's verdict. The block-out's overgrowth label went with the folder. About 1.3M triangles with the grove in view; the phone pass is still owed.
