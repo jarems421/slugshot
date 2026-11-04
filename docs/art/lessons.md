@@ -349,3 +349,8 @@ Cutting between two markers removed code living between them that others needed,
 - **Rejected internally:** taking arbitrary loose components from the existing debris group produced thin flakes that read as cards near eye height. Closed faceted stones give the higher pieces volume; original debris groups remain below.
 - **Native evidence:** sealed roofs block the sun; ambient alone made the first Studio review too dark. Local shadow-free fills restore readability. Mesh/texture loading initially made screenshots show missing or white pieces: preload the review art before acceptance captures. Source rubble imports can recenter groups separately; restore each group's bounds. Eye-height rim, rune, room and ceiling captures were inspected after these fixes.
 - **Limits:** offline QA and a one-client native review do not prove mobile performance, route collision quality or final owner approval. [Current review](training-arena.md).
+
+## Training arena: seeing through the wrong lighting (2026-11-03)
+
+- **Problem:** the arena's walls looked huge and close until the client's void fog applied, and reused lobby crystal sets put sprouts on the lanes. Scale walls for the distance and judge them only with the zone's real fog; reuse set dressing by group, not whole assets.
+- **Limits:** one-client Studio only. [Record](training-arena.md).

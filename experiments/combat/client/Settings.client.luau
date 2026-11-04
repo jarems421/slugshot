@@ -12,6 +12,7 @@ local UserInputService = game:GetService("UserInputService")
 local Theme = require(script.Parent.PvpTheme)
 local Fx = require(script.Parent.PvpFx)
 local Goo = require(script.Parent.Goo)
+local Backdrop = require(script.Parent.Backdrop)
 local GooBar = require(script.Parent.GooBar)
 local SlugIcon = require(script.Parent.SlugIcon)
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
@@ -42,6 +43,7 @@ local BAND_SWELL, BAND_SWELL_RATE = 3, 0.13
 local BAND_TENSION, BAND_RESTORE, BAND_DAMPING = 0.3, 0.003, 0.99
 local BAND_POKE = 0.9 -- how hard choosing a tab shakes it
 local GOO_DRIPS = { 0.04, 0.17, 0.24, 0.38, 0.47, 0.6, 0.68, 0.83, 0.93 }
+local TAB_ORDER = { "Controls", "Gameplay", "Crosshair" }
 
 local Schema = require(ReplicatedStorage:WaitForChild("Combat").SettingsSchema)
 local DEFAULTS = table.clone(Schema.Defaults)
@@ -163,10 +165,6 @@ local stage = Theme.new("Frame", {
 	Parent = holder,
 })
 local pop = Theme.new("UIScale", { Parent = stage })
-local halo = Fx.glow(stage, Fx.Accents.Controls, 0)
-halo.AnchorPoint = Vector2.new(0.5, 0.5)
-halo.Position = UDim2.fromScale(0.5, 0.5)
-halo.Size = UDim2.new(1, 260, 1, 260)
 local dropShadow = Theme.new("Frame", {
 	Name = "Shadow",
 	Position = UDim2.fromOffset(0, 9),
@@ -193,38 +191,47 @@ Theme.new("UIGradient", {
 	Rotation = 90,
 	Parent = panel,
 })
--- Behind everything, slow pools of light wander as if from crystals out of sight. Far too soft to step.
-type Light = { image: ImageLabel, x: number, y: number, reach: number, rate: number, phase: number }
-local lights: { Light } = {}
-for _, spec in
-	{
-		{ x = 0.72, y = 0.72, size = 900, reach = 0.05, rate = 0.07, phase = 0, see = 0.8 },
-		{ x = 0.34, y = 0.42, size = 720, reach = 0.09, rate = 0.05, phase = 2, see = 0.88 },
-	}
-do
-	local image = Fx.glow(panel, Fx.Accents.Controls, 1)
-	image.AnchorPoint = Vector2.new(0.5, 0.5)
-	image.Size = UDim2.fromOffset(spec.size, spec.size)
-	image.ImageTransparency = spec.see
-	table.insert(lights, {
-		image = image,
-		x = spec.x,
-		y = spec.y,
-		reach = spec.reach,
-		rate = spec.rate,
-		phase = spec.phase,
-	})
+-- The cavern passage behind the menu, as on the loading screen (owner, 2026-11-03): one picture per tab colour so its
+-- crystals' light matches, cross-fading with the tab. Dimmed more than the loading screen so every row stays easy to
+-- read. The panel's gradient shows until the pictures have loaded. The panel clips square, so each layer is rounded.
+local scenery = Theme.new("Frame", {
+	Name = "Scenery",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	ZIndex = 0,
+	Parent = panel,
+})
+local backdrops: { [string]: CanvasGroup } = {}
+for _, name in TAB_ORDER do
+	local back = Backdrop.new(scenery, PANEL_W / PANEL_H, PANEL_RADIUS)
+	back.set(`back{name}`)
+	local group = back.group :: CanvasGroup
+	group.Name = `Backdrop{name}`
+	group.GroupTransparency = 1
+	backdrops[name] = group
 end
-
+local veil = Theme.new("Frame", {
+	Name = "Veil",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Color3.fromRGB(10, 10, 26),
+	BackgroundTransparency = 0.68,
+	BorderSizePixel = 0,
+	ZIndex = 2,
+	Parent = scenery,
+})
+Theme.corner(veil, PANEL_RADIUS)
 -- Slugterra first (owner, 2026-11-02): the menu is a place in the cavern. Crystals grow out of the panel,
 -- light its corner and pulse slowly, with twinkles around them. All original art.
-type Crystal = { image: ImageLabel, glow: ImageLabel, phase: number }
+type Crystal = { image: ImageLabel, light: Fx.CrystalLight, phase: number }
 local crystals: { Crystal } = {}
 local function crystalCluster(image: string, position: UDim2, size: number, phase: number)
-	local glow = Fx.glow(panel, Fx.Accents.Controls, 1)
-	glow.AnchorPoint = Vector2.new(0.5, 1)
-	glow.Position = position + UDim2.fromOffset(-size * 0.5, 30)
-	glow.Size = UDim2.fromOffset(size * 2, size * 1.7)
+	local light = Fx.crystalLight(
+		panel,
+		Fx.Accents.Controls,
+		position - UDim2.fromOffset(size * 0.5, 0),
+		size,
+		1
+	)
 	local cluster = Theme.new("ImageLabel", {
 		Name = "Crystal",
 		AnchorPoint = Vector2.new(1, 1),
@@ -236,15 +243,14 @@ local function crystalCluster(image: string, position: UDim2, size: number, phas
 		ZIndex = 2,
 		Parent = panel,
 	})
-	table.insert(crystals, { image = cluster, glow = glow, phase = phase })
+	table.insert(crystals, { image = cluster, light = light, phase = phase })
 end
 crystalCluster("crystal", UDim2.new(1, -2, 1, 6), 262, 0)
 crystalCluster("crystalSmall", UDim2.new(0.56, 0, 1, 4), 92, 2.1)
 local twinkles = Fx.twinkles(panel, {
 	{ x = 1, y = 1, w = -290, h = -300, weight = 6 },
 	{ x = 0.56, y = 1, w = -120, h = -120, weight = 2 },
-	{ x = 0.14, y = 0.14, w = 960, h = 460, weight = 3 },
-}, 18, Fx.Accents.Controls)
+}, 16, Fx.Accents.Controls)
 
 local head = Theme.new("Frame", {
 	Name = "Header",
@@ -289,7 +295,7 @@ local title = Theme.label(head, "Settings", Theme.TitleBold, 32, {
 	ZIndex = 6,
 })
 -- Modal frees the cursor while the menu is open (first person locks it).
-local close = Theme.button(head, "Ã—", Theme.Body, 28, {
+local close = Theme.button(head, "×", Theme.Body, 28, {
 	Name = "Close",
 	Modal = true,
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -366,7 +372,6 @@ local pages: { [string]: Frame } = {
 	Gameplay = page("GameplayPage"),
 	Crosshair = page("CrosshairPage"),
 }
-local TAB_ORDER = { "Controls", "Gameplay", "Crosshair" }
 
 local function tabY(index: number): number
 	return 26 + (index - 1) * (TAB_H + TAB_GAP)
@@ -412,15 +417,11 @@ local function setChrome(accent: Color3)
 	Fx.tween(title, 0.25, { TextColor3 = accent })
 	Fx.tween(pill, 0.25, { BackgroundColor3 = accent })
 	Fx.tween(pillGlow, 0.25, { ImageColor3 = accent })
-	Fx.tween(halo, 0.35, { ImageColor3 = accent })
 	gooColour = accent
 	twinkles.setColour(accent)
-	for _, light in lights do
-		Fx.tween(light.image, 0.35, { ImageColor3 = accent })
-	end
 	for _, cluster in crystals do
 		Fx.tween(cluster.image, 0.35, { ImageColor3 = accent })
-		Fx.tween(cluster.glow, 0.35, { ImageColor3 = accent })
+		cluster.light.setColour(accent)
 	end
 end
 local function showPage(name: string, animate: boolean)
@@ -450,6 +451,9 @@ local function showPage(name: string, animate: boolean)
 		Enum.EasingStyle.Back
 	)
 	setChrome(Fx.Accents[name])
+	for key, backdrop in backdrops do
+		Fx.tween(backdrop, 0.35, { GroupTransparency = if key == name then 0 else 1 })
+	end
 	if animate then
 		Fx.cascade(pages[name])
 	end
@@ -995,7 +999,7 @@ local function refreshSprint()
 	local mode = (player:GetAttribute("SprintMode") :: string?) or "Toggle"
 	sprintText.Text = SPRINT_TEXT[mode] or ""
 	local on = player:GetAttribute("SprintDoubleTap") ~= false
-	doubleMark.Text = if on then "âœ“" else ""
+	doubleMark.Text = if on then "✓" else ""
 	Fx.tween(doubleMark, 0.12, { BackgroundColor3 = if on then TEAL else Fx.Blank })
 	if on ~= doubleOn then
 		doubleOn = on
@@ -1570,7 +1574,6 @@ local function refreshOpen()
 		Fx.tween(pop, 0.32, { Scale = 1 }, Enum.EasingStyle.Back)
 		Fx.tween(dim, 0.2, { BackgroundTransparency = 0.45 })
 		Fx.tween(blur, 0.2, { Size = OPEN_BLUR })
-		Fx.tween(halo, 0.3, { ImageTransparency = 0.55 })
 		Fx.cascade(pages[current])
 		Fx.sound("select")
 	else
@@ -1579,7 +1582,6 @@ local function refreshOpen()
 		Fx.tween(pop, 0.12, { Scale = 0.93 })
 		Fx.tween(dim, 0.14, { BackgroundTransparency = 1 })
 		Fx.tween(blur, 0.14, { Size = 0 })
-		Fx.tween(halo, 0.12, { ImageTransparency = 1 })
 		task.delay(0.13, function()
 			if token == openToken then
 				holder.Visible = false
@@ -1661,17 +1663,10 @@ RunService:BindToRenderStep(
 					+ Goo.waveAt(Goo.Band, (frontScroll + across) % Goo.Band.period)
 				entry.drip.step(dt, shift, true, gooShown or gooColour)
 			end
-			for _, light in lights do
-				local beat = 2 * math.pi * light.rate * gooClock + light.phase
-				light.image.Position = UDim2.fromScale(
-					light.x + light.reach * math.sin(beat),
-					light.y + light.reach * math.cos(beat * 0.7)
-				)
-			end
 			-- Crystals breathe light slowly; never a flicker (style guide).
 			for _, cluster in crystals do
 				local level = 0.5 + 0.5 * math.sin(gooClock * 1.1 + cluster.phase)
-				cluster.glow.ImageTransparency = 0.72 - 0.2 * level
+				cluster.light.breathe(level)
 			end
 		end
 	end

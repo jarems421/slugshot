@@ -1,0 +1,62 @@
+{
+  "version": 5,
+  "origin": [6000, 0, 0],
+  "island": { "scale": 4.0 },
+  "arrival": { "spawn": [0, 4, 112], "portal": [0, 0, 128] },
+  "runes": {
+    "Move": { "stones": [[-16, 92], [-36, 88]], "color": [62, 196, 182] },
+    "Target": { "stones": [[16, 92], [36, 88]], "color": [255, 138, 44] }
+  },
+  "station": { "at": [60, 82] },
+  "range": {
+    "firingZ": 70,
+    "line": { "from": 22, "to": 134, "z": 74 },
+    "still": [
+      { "distance": 20, "x": 40 },
+      { "distance": 35, "x": 58 },
+      { "distance": 50, "x": 76 },
+      { "distance": 70, "x": 94 },
+      { "distance": 90, "x": 112 },
+      { "distance": 110, "x": 128 }
+    ],
+    "moving": [
+      { "distance": 28, "x": 84, "halfWidth": 34 },
+      { "distance": 60, "x": 84, "halfWidth": 34 }
+    ],
+    "raised": [
+      { "distance": 45, "x": 130, "height": 6 },
+      { "distance": 95, "x": 46, "height": 10 }
+    ],
+    "cover": [
+      { "x": 36, "z": 64, "size": [10, 3.5, 2.6] },
+      { "x": 104, "z": 64, "size": [10, 3.5, 2.6] }
+    ],
+    "defaults": { "health": 100, "speed": 7, "minSpeed": 0, "maxSpeed": 24, "minHealth": 25, "maxHealth": 500 }
+  },
+  "course": {
+    "slideLane": { "x": -92, "z": 90, "length": 64, "width": 16 },
+    "vaults": [
+      { "x": -44, "z": 66, "size": [20, 2.6, 2.2] },
+      { "x": -44, "z": 50, "size": [20, 3.0, 2.2] },
+      { "x": -44, "z": 34, "size": [20, 3.4, 2.2] }
+    ],
+    "mantles": [
+      { "x": -44, "z": 14, "size": [20, 3, 8] },
+      { "x": -44, "z": -4, "size": [20, 4.5, 8] },
+      { "x": -44, "z": -22, "size": [20, 5.5, 8] }
+    ],
+    "jumps": [
+      { "x": -44, "z": -46, "size": [12, 5.5, 12] },
+      { "x": -66, "z": -58, "size": [10, 5.5, 10] },
+      { "x": -90, "z": -56, "size": [9, 5.5, 9] },
+      { "x": -112, "z": -44, "size": [8, 5.5, 8] }
+    ],
+    "wallRun": [
+      { "x": -123, "z": 4, "size": [3, 20, 56] },
+      { "x": -101, "z": 4, "size": [3, 20, 56] }
+    ],
+    "climb": [
+      { "x": -96, "z": 58, "size": [24, 16, 10] }
+    ]
+  }
+}

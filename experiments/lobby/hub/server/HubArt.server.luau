@@ -1026,10 +1026,18 @@ local function buildPortals()
 					e.Size = NumberSequence.new(size * across)
 					e.Transparency = fade({ { 0, 1 }, { 0.5, 1 - strength }, { 1, 1 } })
 					e.Lifetime = NumberRange.new(period * 2)
-					e.Rate = 1 / period
+					e.Rate = 0 -- HubMotion emits on the beat, and starts it already mid-turn
 					e.Rotation = NumberRange.new(0)
 					e.RotSpeed = NumberRange.new(turn)
+					e:SetAttribute("SwirlPeriod", period)
 					e.Parent = surface
+					-- One already at its brightest and fading, so the join looks like any other moment of the cycle.
+					local start = e:Clone()
+					start.Name = name .. "Start"
+					start.Lifetime = NumberRange.new(period)
+					start.Transparency = fade({ { 0, 1 - strength }, { 1, 1 } })
+					start.Parent = surface
+					CollectionService:AddTag(e, "HubPortalSwirl")
 					if side < 0 then
 						CollectionService:AddTag(e, "HubSpareTwinkle")
 					end
