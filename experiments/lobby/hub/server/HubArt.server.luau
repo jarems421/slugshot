@@ -114,6 +114,39 @@ local function paintedBounds(model: Model): (Vector3, Vector3)
 	return lo, hi
 end
 
+-- One of the asset library's pieces (LobbyAssets), styled in the look pack and pivoted at the middle of its foot. Look
+-- only: anchored, with no collision or shadow. nil if it doesn't load.
+local function libraryPiece(key: string, glow: number): Model?
+	local info = (require(ServerStorage:WaitForChild("LobbyAssets")) :: any).assets[key]
+	local ok, container = pcall(function()
+		return InsertService:LoadAsset(info.model)
+	end)
+	if not ok then
+		warn(`HubArt: {key} failed to load: {container}`)
+		workspace:SetAttribute("HubArtFailed", (workspace:GetAttribute("HubArtFailed") or 0) + 1)
+		return nil
+	end
+	local model = Instance.new("Model")
+	model.Name = key
+	for _, child in (container :: Instance):GetDescendants() do
+		if child:IsA("MeshPart") then
+			child.Parent = model
+		end
+	end
+	(container :: Instance):Destroy()
+	LookPack.styleModel(model, key, info.groups, ServerStorage:WaitForChild("LobbyMaterials"), glow)
+	for _, part in model:GetDescendants() do
+		if part:IsA("MeshPart") then
+			part.Anchored = true
+			part.CanCollide, part.CanQuery, part.CanTouch = false, false, false
+			part.CastShadow = false
+		end
+	end
+	local lo, hi = paintedBounds(model)
+	model.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
+	return model
+end
+
 -- glTF imports can arrive turned; measured on pieces with several parts and reused for those with one.
 local importTurn: CFrame? = nil
 
@@ -1055,6 +1088,38 @@ end
 local PLAZA = CFrame.new(0, 0, -157) * CFrame.Angles(0, math.pi, 0)
 local VOLCANO_Z = 111 -- studs behind the plaza's origin
 local VOLCANO_SCALE = 1.15
+local PYLON_CRYSTAL = 7 -- studs tall, about the height of the fire it replaces
+-- Lava gloop layers: tile size in studs across and along the flow, and speed in studs a second (the waterfall runs at
+-- about 19, so this is a slow ooze). Textures from tools/lobby/hub_mesh.py fx. Warm streaks only: dark crust plates
+-- cut the lava up with black lines (owner, 2026-11-03), and strong contrast showed the joins between projections.
+local LAVA_GLOOP = {
+	{
+		name = "Skin",
+		image = "lavaskin",
+		colour = Color3.fromRGB(200, 72, 12),
+		transparency = 0.35,
+		across = 14,
+		along = 26,
+		speed = 2.2,
+	},
+	{
+		name = "Swell",
+		image = "lavaskin",
+		colour = Color3.fromRGB(235, 110, 20),
+		transparency = 0.55,
+		across = 30,
+		along = 54,
+		speed = 1.3,
+	},
+}
+-- Every side the streams face, and the top for where they flatten out at the foot.
+local GLOOP_FACES = {
+	Enum.NormalId.Front,
+	Enum.NormalId.Back,
+	Enum.NormalId.Left,
+	Enum.NormalId.Right,
+	Enum.NormalId.Top,
+}
 local PLAZA_HEIGHT = 0.85 -- the volcano and the gate stand this share of their modelled height (owner: too near the ceiling)
 
 -- Squashes a piece toward the ground, keeping its width.
@@ -1113,6 +1178,31 @@ local function buildVolcano()
 				part:SetAttribute("PulseRate", 0.55)
 				part:SetAttribute("PulseDepth", 0.32)
 				CollectionService:AddTag(part, "HubPulse")
+			end
+		end
+		-- The slow gloop (owner, 2026-11-03: like the waterfall, slower, part of the lava, not on top of it). Textures on
+		-- the lava's own part are drawn on its surface, projected from each side, so they follow every stream exactly and
+		-- slide straight down it. They can't glow, so they are what cools on molten rock: long dark wrinkles and rafts of
+		-- crust with glowing cracks, the crust slower than the skin under it. HubMotion.client scrolls them.
+		local flows = volcano:FindFirstChild("Flows", true)
+		if flows and flows:IsA("MeshPart") then
+			for _, layer in LAVA_GLOOP do
+				for _, face in GLOOP_FACES do
+					local texture = Instance.new("Texture")
+					texture.Name = `Gloop{layer.name}`
+					texture.Face = face
+					texture.Texture = fxTexture(layer.image)
+					texture.Color3 = layer.colour
+					texture.Transparency = layer.transparency
+					texture.StudsPerTileU, texture.StudsPerTileV = layer.across, layer.along
+					-- Seen from above, the texture runs the other way, so it still flows toward the plaza.
+					texture:SetAttribute(
+						"Speed",
+						if face == Enum.NormalId.Top then -layer.speed else layer.speed
+					)
+					texture.Parent = flows
+					CollectionService:AddTag(texture, "HubLavaGloop")
+				end
 			end
 		end
 	end
@@ -1291,31 +1381,38 @@ local function buildArch()
 		shorten(arch)
 		setMotion(arch, "ArchBits", 0, 1.3, 0.55, 0)
 	end
-	-- Fires on the pylons.
-	for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
-		for _, side in { -1, 1 } do
-			local position = PLAZA
-				* Vector3.new(side * spot[1] * 5, (spot[3] + 0.42) * 5 * PLAZA_HEIGHT, spot[2] * 5)
-			local source = holder("PylonFire", position, Vector3.new(4, 1, 4))
-			local flames = Instance.new("ParticleEmitter")
-			flames.Texture = fxTexture("flame")
-			flames.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 196, 90)),
-				ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 96, 24)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 28, 8)),
-			})
-			flames.LightEmission = 1
-			flames.LightInfluence = 0
-			flames.Size = fade({ { 0, 6.5 }, { 1, 2 } })
-			flames.Transparency = fade({ { 0, 0.2 }, { 0.7, 0.3 }, { 1, 1 } })
-			flames.Lifetime = NumberRange.new(0.6, 1.1)
-			flames.Rate = 12
-			flames.Speed = NumberRange.new(7, 12)
-			flames.SpreadAngle = Vector2.new(9, 9)
-			flames.EmissionDirection = Enum.NormalId.Top
-			flames.Parent = source
-			pointLight(position + Vector3.new(0, 4, 0), Color3.fromRGB(255, 120, 45), 0.6, 18)
+	-- Orange crystals on the pylons, the library's own crystals-11 (owner, 2026-11-03: the fire there didn't match the
+	-- look). Each lights the plaza warmly and breathes slowly, like every crystal; never a flicker.
+	local pylonCrystal = libraryPiece("crystals-11", 1)
+	if pylonCrystal then
+		local crystals = Instance.new("Model")
+		crystals.Name = "PylonCrystals"
+		crystals.Parent = art
+		local index = 0
+		for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
+			for _, side in { -1, 1 } do
+				index += 1
+				local top = PLAZA
+					* Vector3.new(side * spot[1] * 5, spot[3] * 5 * PLAZA_HEIGHT, spot[2] * 5)
+				local copy = pylonCrystal:Clone()
+				local lo, hi = paintedBounds(copy)
+				copy:ScaleTo(copy:GetScale() * PYLON_CRYSTAL / (hi.Y - lo.Y))
+				copy:PivotTo(
+					CFrame.new(top - Vector3.new(0, 0.3, 0)) * CFrame.Angles(0, index * 2.1, 0)
+				)
+				copy.Parent = crystals
+				for _, part in copy:GetDescendants() do
+					if part:IsA("MeshPart") and part.Name == "Crystal" then
+						part:SetAttribute("PulseRate", 0.6)
+						part:SetAttribute("PulseDepth", 0.25)
+						part:SetAttribute("Phase", index * 1.7)
+						CollectionService:AddTag(part, "HubPulse")
+					end
+				end
+				pointLight(top + Vector3.new(0, 4, 0), Color3.fromRGB(255, 160, 60), 0.6, 18)
+			end
 		end
+		pylonCrystal:Destroy()
 	end
 	-- Embers across the whole area.
 	local air = holder("PlazaEmbers", PLAZA * Vector3.new(0, 3, 30), Vector3.new(230, 4, 180))
@@ -1741,45 +1838,12 @@ local FLORA_KEYS: { [number]: string } = {
 }
 
 local function groveProps()
-	local lobby = require(ServerStorage:WaitForChild("LobbyAssets")) :: any
-	local materials = ServerStorage:WaitForChild("LobbyMaterials")
 	local cache: { [string]: Model } = {}
 	local function template(key: string, glow: number): Model?
-		if cache[key] then
-			return cache[key]
+		local model = cache[key] or libraryPiece(key, glow)
+		if model then
+			cache[key] = model
 		end
-		local info = lobby.assets[key]
-		local ok, container = pcall(function()
-			return InsertService:LoadAsset(info.model)
-		end)
-		if not ok then
-			warn(`HubArt: {key} failed to load: {container}`)
-			workspace:SetAttribute(
-				"HubArtFailed",
-				(workspace:GetAttribute("HubArtFailed") or 0) + 1
-			)
-			return nil
-		end
-		local model = Instance.new("Model")
-		model.Name = key
-		for _, child in (container :: Instance):GetDescendants() do
-			if child:IsA("MeshPart") then
-				child.Parent = model
-			end
-		end
-		(container :: Instance):Destroy()
-		LookPack.styleModel(model, key, info.groups, materials, glow)
-		for _, part in model:GetDescendants() do
-			if part:IsA("MeshPart") then
-				part.Anchored = true
-				part.CanCollide, part.CanQuery, part.CanTouch = false, false, false
-				part.CastShadow = false
-			end
-		end
-		-- Its foot, at the middle of its base on the ground.
-		local lo, hi = paintedBounds(model)
-		model.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
-		cache[key] = model
 		return model
 	end
 	local function plant(

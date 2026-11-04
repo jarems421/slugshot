@@ -1080,6 +1080,24 @@ def fx_textures():
     side = np.clip((1 - np.abs(x))/0.5, 0, 1)
     lava = np.array((255, 196, 96), "f4")[None, None]*np.ones((h, w, 1), "f4")
     Image.fromarray(np.dstack([lava, glint*side*255]).clip(0, 255).astype("u1"), "RGBA").save(folder/"lavaflow.png")
+    # The downhill lava's slow gloop (owner, 2026-11-03: like the waterfall, slower, part of the lava). Textures on the
+    # lava's own part draw on its surface; they can't glow, so they are the dark skin that cools on molten rock: rafts of
+    # crust with glowing cracks, and long soft wrinkles down the flow. Tiling both ways; tinted and scrolled in Roblox.
+    def periodic(size, along, across, seed):
+        f = np.fft.fft2(np.random.default_rng(seed).standard_normal((size, size)))
+        ky, kx = np.meshgrid(np.fft.fftfreq(size), np.fft.fftfreq(size), indexing="ij")
+        a = np.real(np.fft.ifft2(f*np.exp(-((ky*size/along)**2 + (kx*size/across)**2))))
+        return (a - a.min())/(a.max() - a.min())
+
+    def step(e0, e1, v):
+        t = np.clip((v - e0)/(e1 - e0), 0, 1)
+        return t*t*(3 - 2*t)
+
+    rafts = step(0.56, 0.66, periodic(512, 2.5, 5, 11)*0.8 + periodic(512, 8, 14, 12)*0.2)
+    cracks = step(0.045, 0.0, np.abs(periodic(512, 9, 12, 13) - 0.5))
+    save("lavacrust", rafts*(0.92 - 0.55*cracks*rafts))
+    wrinkles = step(0.12, 0.0, np.abs(periodic(512, 3, 26, 21) - 0.5))*step(0.4, 0.7, periodic(512, 3, 8, 22))
+    save("lavaskin", wrinkles*0.7)
     # A molten blob stretched along its flight, and a flame.
     save("droplet", np.exp(-(x_full/0.34)**2 - (y_full/0.82)**2)*1.6)
     tip = np.clip((y_full + 1)/2, 0, 1)
