@@ -7,7 +7,7 @@ function Motion.new(): State
 	return { speed = 7, phase = 0, radius = 10 }
 end
 function Motion.setSpeed(state: State, value: any): boolean
-	if typeof(value) ~= "number" or value ~= value or value < 0 or value > 20 then
+	if typeof(value) ~= "number" or value ~= value or value < 0 or value > 24 then
 		return false
 	end
 	state.speed = value

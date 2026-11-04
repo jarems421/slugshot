@@ -19,7 +19,12 @@ NAMES = {"barFront": "bar-front", "barBack": "bar-back", "barShine": "bar-shine"
          "bandFront": "band-front", "bandBack": "band-back", "bandShine": "band-shine", "edge": "goo-edge",
          "dripBook": "goo-drip-book", "bead": "goo-bead", "glow": "fx-glow", "spark": "fx-spark",
          "iconControls": "icon-controls", "iconMouseButton": "icon-mouse-button", "iconCrosshair": "icon-crosshair",
-         "crystal": "fx-crystal", "crystalSmall": "fx-crystal-small", "ledge": "fx-ledge"}
+         "crystal": "fx-crystal", "crystalSmall": "fx-crystal-small", "ledge": "fx-ledge",
+         "slugFloppy": "slug-floppy", "slugInferno": "slug-inferno"}
+# The menu backgrounds, six tiles each (tools/ui/backgrounds/tile.py).
+for _back, _file in (("Controls", "controls"), ("Gameplay", "gameplay"), ("Crosshair", "crosshair"), ("PvP", "pvp")):
+    for _index in range(1, 7):
+        NAMES[f"back{_back}{_index}"] = f"back-{_file}-{_index}"
 
 
 
@@ -34,7 +39,9 @@ def main():
     cache_path = PRIVATE / "goo-assets.json"
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     for name, filename in NAMES.items():
-        data = (ART / f"{filename}.png").read_bytes()
+        # The menu backgrounds are pictures, so JPEG; everything else is PNG.
+        path = next(ART / f"{filename}{ext}" for ext in (".png", ".jpg") if (ART / f"{filename}{ext}").exists())
+        data = path.read_bytes()
         digest = hashlib.sha256(data).hexdigest()
         if cache.get(name, {}).get("sha256") == digest:
             continue
@@ -42,10 +49,11 @@ def main():
                    "description": "Original Slugshot health bar texture",
                    "creationContext": {"creator": {"userId": str(owner)}}}
         boundary = uuid.uuid4().hex
-        body = (f'--{boundary}\r\nContent-Disposition: form-data; name="request"\r\n'
-                f'Content-Type: application/json\r\n\r\n{json.dumps(request)}\r\n'
-                f'--{boundary}\r\nContent-Disposition: form-data; name="fileContent"; filename="{filename}.png"\r\n'
-                'Content-Type: image/png\r\n\r\n').encode() + data + f'\r\n--{boundary}--\r\n'.encode()
+        body = ((f'--{boundary}\r\nContent-Disposition: form-data; name="request"\r\n'
+                 f'Content-Type: application/json\r\n\r\n{json.dumps(request)}\r\n'
+                 f'--{boundary}\r\nContent-Disposition: form-data; name="fileContent"; filename="{path.name}"\r\n'
+                 f'Content-Type: image/{"jpeg" if path.suffix == ".jpg" else "png"}\r\n\r\n').encode()
+                + data + f'\r\n--{boundary}--\r\n'.encode())
         operation = client.call("POST", "https://apis.roblox.com/assets/v1/assets", key,
                                 body, "multipart/form-data; boundary=" + boundary)
         operation_id = operation.get("operationId") or operation.get("path", "").split("/")[-1]

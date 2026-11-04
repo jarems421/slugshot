@@ -93,6 +93,46 @@ function Fx.glow(parent: Instance, colour: Color3, z: number?): ImageLabel
 	})
 end
 
+-- A crystal's light (owner, 2026-11-03: diffuse it and blend it in, with sparkles, on every menu): a wide, faint wash
+-- that fades into the panel and a softer core, both rising from the crystal's foot. foot is the crystal's bottom middle.
+export type CrystalLight = {
+	layers: { ImageLabel },
+	setColour: (Color3) -> (),
+	breathe: (level: number) -> (),
+}
+function Fx.crystalLight(
+	parent: Instance,
+	colour: Color3,
+	foot: UDim2,
+	size: number,
+	z: number?
+): CrystalLight
+	local wide = Fx.glow(parent, colour, z)
+	wide.AnchorPoint = Vector2.new(0.5, 0.5)
+	wide.Position = foot - UDim2.fromOffset(0, size * 0.42)
+	wide.Size = UDim2.fromOffset(size * 3.2, size * 2.7)
+	local core = Fx.glow(parent, colour, z)
+	core.AnchorPoint = Vector2.new(0.5, 0.5)
+	core.Position = foot - UDim2.fromOffset(0, size * 0.45)
+	core.Size = UDim2.fromOffset(size * 1.6, size * 1.5)
+	local light: CrystalLight
+	light = {
+		layers = { wide, core },
+		setColour = function(value: Color3)
+			for _, layer in light.layers do
+				Fx.tween(layer, 0.35, { ImageColor3 = value })
+			end
+		end,
+		-- level runs 0 to 1, slowly: a breath, never a flicker.
+		breathe = function(level: number)
+			wide.ImageTransparency = 0.84 - 0.08 * level
+			core.ImageTransparency = 0.78 - 0.12 * level
+		end,
+	}
+	light.breathe(0.5)
+	return light
+end
+
 export type ControlOptions = {
 	accent: Color3,
 	radius: number,

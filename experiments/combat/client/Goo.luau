@@ -187,9 +187,13 @@ export type Drip = {
 
 -- A drip hanging from (x, y), the goo's edge at rest. shift follows the edge as it moves, in design px.
 function Goo.drip(parent: Instance, x: number, y: number, z: number): Drip
+	local home = UDim2.fromOffset(x - CELL_W / 2, y - (ATTACH_ROW - WINDOW_TOP))
+	-- A surface swells and waves by up to about 13 px, more than a cell's room, which left drips hanging below the
+	-- goo (owner, 2026-11-03). The label moves by whole px, only when it must, and the cell takes the rest smoothly.
+	local moved = 0
 	local label = Theme.new("ImageLabel", {
 		Name = "Drip",
-		Position = UDim2.fromOffset(x - CELL_W / 2, y - (ATTACH_ROW - WINDOW_TOP)),
+		Position = home,
 		Size = UDim2.fromOffset(CELL_W, WINDOW_ROWS),
 		BackgroundTransparency = 1,
 		Image = Fx.asset("dripBook"),
@@ -238,10 +242,15 @@ function Goo.drip(parent: Instance, x: number, y: number, z: number): Drip
 			elseif wet and clock >= restUntil then
 				frame = 0
 			end
-			local clamped = math.clamp(shift, -MAX_SHIFT, MAX_SHIFT)
+			local within = MAX_SHIFT - 0.5
+			local keep = math.clamp(moved, math.ceil(shift - within), math.floor(shift + within))
+			if keep ~= moved then
+				moved = keep
+				label.Position = home + UDim2.fromOffset(0, moved)
+			end
 			label.ImageRectOffset = Vector2.new(
 				(shown % CELL_COLS) * CELL_W * CELL_SCALE,
-				(math.floor(shown / CELL_COLS) * CELL_H + WINDOW_TOP - clamped) * CELL_SCALE
+				(math.floor(shown / CELL_COLS) * CELL_H + WINDOW_TOP - (shift - moved)) * CELL_SCALE
 			)
 		end,
 		poke = function()

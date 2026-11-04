@@ -3,6 +3,7 @@
 -- Costs are kept low for phones: whole parts move in one BulkMoveTo, and a bridge's bones only update while someone is on
 -- it and it is in view.
 local CollectionService = game:GetService("CollectionService")
+local ContentProvider = game:GetService("ContentProvider")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -399,6 +400,55 @@ end
 -- can't show steps.
 local nextPulse = 0
 local baseGlow: { [SurfaceAppearance]: number } = {}
+-- The portals' spirals. A swirl's particle takes a whole beat to fade in, so left to its own rate the first one would
+-- reach full strength about ten seconds after joining. Each starts with one fading out and one fading in: already whole.
+local swirls: { [ParticleEmitter]: number } = {}
+local function startSwirl(e: ParticleEmitter)
+	local start = e.Parent and e.Parent:FindFirstChild(e.Name .. "Start")
+	e:Clear()
+	if start and start:IsA("ParticleEmitter") then
+		start:Clear()
+		if e.Enabled then
+			start:Emit(1)
+		end
+	end
+	if e.Enabled then
+		e:Emit(1)
+	end
+	swirls[e] = os.clock() + (e:GetAttribute("SwirlPeriod") or 10)
+end
+local function addSwirl(instance: Instance)
+	if instance:IsA("ParticleEmitter") then
+		startSwirl(instance)
+		task.spawn(function()
+			ContentProvider:PreloadAsync({ instance })
+		end)
+	end
+end
+CollectionService:GetInstanceAddedSignal("HubPortalSwirl"):Connect(addSwirl)
+for _, instance in CollectionService:GetTagged("HubPortalSwirl") do
+	addSwirl(instance)
+end
+-- Roblox may not run particles far from the camera, so whichever portal you've just reached starts fresh.
+Players.LocalPlayer:GetAttributeChangedSignal("InTraining"):Connect(function()
+	for e in swirls do
+		startSwirl(e)
+	end
+end)
+RunService.Heartbeat:Connect(function()
+	local now = os.clock()
+	for e, due in swirls do
+		if not e.Parent then
+			swirls[e] = nil
+		elseif now >= due then
+			swirls[e] = due + (e:GetAttribute("SwirlPeriod") or 10)
+			if e.Enabled then
+				e:Emit(1)
+			end
+		end
+	end
+end)
+
 local function pulseStep(t: number)
 	if t < nextPulse then
 		return

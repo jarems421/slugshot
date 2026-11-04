@@ -2027,3 +2027,27 @@
 ## 2026-11-04 - Restore original Floppy; Burpy approved
 
 **Confirmed:** owner calls Burpy perfect. Rejects Floppy under-eye repaint and displaced antennae; requests original flat-bottom design, original clean under-eyes, smooth upper-half wiggle with planted lower half, enlarged only without clipping. **Implemented/verified locally:** removed custom repaint, restored original antenna transforms/spring strengths, seated authored flat root plane and fitted a modest uniform enlargement. Native original material equality, flat contact, moving upper body and containment checks pass; approved Burpy is unchanged. [Evidence/limits](slugs/evidence/2026-11-04-floppy-original-restored.json).
+## 2026-11-03 - Training arena rebuilt inside the lobby place
+
+- **Confirmed:** owner reviewed Codex's draft: no boulders, more ink and visible debris, rock and moss floor, organised and functional, Slugterra-esque, distant walls fading to black void, walk-through portal with no freeze.
+- **Implemented/verified (one-client Studio):** see [training arena](art/training-arena.md) and ADR 0024. Real slug hits, feel and phones remain unverified.
+
+## 2026-11-03 - Training arena revision 4
+
+- **Confirmed:** owner wants a floating rock in a completely black void with no walls, 50% bigger, minimal with no orange and blue lines, little text over dummies, a physical F station for dummy settings matching the settings tab, no random balls of glow in menus, juice contained in the frame and the portal spiral starting almost at once.
+- **Implemented/verified (one-client Studio):** see [training arena](art/training-arena.md). New Roblox images can render flat for a few minutes after upload, so judge a texture change on a later run.
+
+## 2026-11-03 - Passage menu background
+
+- **Confirmed (owner):** the endless-cavern "Passage" is the background for the loading screen and settings; add different rock textures, mushrooms and moss; drips must hang from the slime, not float below it.
+- **Implemented/verified:** see status. Lobby mushrooms other than `mushroom-1` have painted caps with a grey emit mask; rendering the mask as the glow colour blew them out to white, so the kit multiplies emit by the colour map as Roblox does.
+- **Lesson:** a drip that follows its surface needs at least the surface's full travel (swell + art wave), not just the flipbook's spare rows.
+- **Confirmed (owner, follow-up):** the game must match the preview: sharp background, realistic slime and crystals, and the loading screen about 0.7 s longer.
+- **Lesson:** Roblox shrinks every image to 1024 px; a full-screen picture needs tiles that overlap a little. `AbsolutePosition` is measured below the top bar even when `IgnoreGuiInset` is on, so add `GuiService:GetGuiInset()` before judging whether something covers the screen.
+
+## 2026-11-03 - Training arena: plain, organised, knockdowns
+
+- **Confirmed (owner):** black around the arena; plain island with no crystals or mushrooms; no three-wall tower; better movement and slug-shooting practice; knockdown flips; grove-style runes with small, non-neon symbols (runner rejected as ugly; wings); matching station near the targets; glow level equal to the spawn island; sharper, mossier floor.
+- **Implemented/verified (one client):** see [training arena](art/training-arena.md). New knockdown checks pass.
+- **Lesson:** the arena glowed because its paint was about 2.5x brighter than the lobby's stone, crossing the lobby's bloom threshold; lighting itself is shared. Neon symbols bloom far more than the lobby's emissive-mask paint, so the runes use the same emissive-mask material.
+- **Lesson:** a single floor image over a 340-stud island is about 3 px/stud after Roblox's 1024 cap; tile it.

@@ -371,3 +371,7 @@ Owner could not see the intended lava motion after a texture-speed increase. The
 ## 2026-11-03 - A transparent beam can pass a texture-speed check
 
 **Repeated failure:** owner still saw static lava after several speed/contrast edits. **Actual cause:** one segment samples only the fade's fully transparent ends. Opaque diagnostic strips proved placement; a native image gallery and fetch status proved texture loading. Set enough segments to draw interior transparency keys (twelve here), then inspect a close-up time sequence. Also use the waterfall's primary `flow` texture, not only its `streak` highlight, and cover all seven streams at their full modelled widths. Do not claim visibility from a nonzero TextureSpeed alone. Native comparison initially looked for a beam parented directly to FallFlow; its actual parent is an Attachment. Correct the observer rather than bypassing it. See [Roblox Beam reference](https://create.roblox.com/docs/reference/engine/classes/Beam) and [local evidence](../evidence/2026-11-03-visible-lava-gloop.json).
+## Training arena: seeing through the wrong lighting (2026-11-03)
+
+- **Problem:** the arena's walls looked huge and close until the client's void fog applied, and reused lobby crystal sets put sprouts on the lanes. Scale walls for the distance and judge them only with the zone's real fog; reuse set dressing by group, not whole assets.
+- **Limits:** one-client Studio only. [Record](training-arena.md).
