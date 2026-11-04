@@ -7,6 +7,10 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local Recovery = require(script.Parent.FloppyRecovery)
+local Transformation = require(script.Parent.SlugTransformation)
+local movement = game:GetService("Players").LocalPlayer.PlayerScripts
+	:WaitForChild("MovementSandbox")
+local Tuning = (require :: any)(movement:WaitForChild("Tuning"))
 
 local Visuals = {}
 
@@ -30,10 +34,12 @@ type Flight = {
 	launch: Launch,
 	slug: Combat.Slug,
 	model: Model,
-	start: number,
+	age: number, -- seconds since firing, slowed by the Studio slow-motion slider
+	last: number,
 	t: number,
 	params: RaycastParams,
 	recovery: Recovery.State?,
+	transformation: Transformation.State?,
 }
 local flights: { Flight } = {}
 local CANISTER_GLOW = Color3.fromRGB(215, 240, 160) -- Floppy's bulb glow
@@ -187,6 +193,16 @@ local function prewarm()
 	end
 end
 prewarm()
+Transformation.prewarm()
+
+-- What a hit looks like at the moment of contact. A transformed slug also turns back here, ready for its landing.
+local function strike(flight: Flight, position: Vector3, normal: Vector3)
+	if flight.transformation then
+		Transformation.finish(flight.transformation, position, normal)
+	else
+		splat(position, normal)
+	end
+end
 
 function Visuals.launch(launch: Launch)
 	local slug = Combat.Slugs[launch.slugId]
@@ -200,6 +216,7 @@ function Visuals.launch(launch: Launch)
 		table.insert(exclude, launch.shooter.Character)
 	end
 	params.FilterDescendantsInstances = exclude
+	Transformation.timeScale = Tuning.values.shotSlowMo
 	local model = Visuals.model(launch.slugId)
 	model:PivotTo(CFrame.lookAt(launch.origin, launch.origin + launch.velocity))
 	model.Parent = folder
@@ -209,10 +226,12 @@ function Visuals.launch(launch: Launch)
 		launch = launch,
 		slug = slug,
 		model = model,
-		start = now,
+		age = 0,
+		last = now,
 		t = 0,
 		params = params,
 		recovery = nil,
+		transformation = Transformation.new(launch.slugId, model, launch, params, folder),
 	})
 end
 
@@ -220,6 +239,9 @@ function Visuals.cancel(shooter: Player, id: number)
 	for index = #flights, 1, -1 do
 		local flight = flights[index]
 		if flight.launch.shooter == shooter and flight.launch.id == id then
+			if flight.transformation then
+				Transformation.destroy(flight.transformation)
+			end
 			flight.model:Destroy()
 			table.remove(flights, index)
 		end
@@ -235,6 +257,10 @@ function Visuals.confirmImpact(
 	normal: Vector3,
 	victim: Model?
 )
+	if Tuning.values.shotSlowMo < 1 then
+		-- The server judges at real speed, so its hit would cut a slowed flight short; this screen's own sweep finds it.
+		return
+	end
 	for _, flight in flights do
 		if flight.launch.shooter == shooter and flight.launch.id == id then
 			if not flight.recovery then
@@ -243,9 +269,9 @@ function Visuals.confirmImpact(
 					flight.launch.origin,
 					flight.launch.velocity,
 					flight.slug,
-					math.min(now - flight.start, Combat.MaxFlight)
+					math.min(Combat.flightTime(flight.slug, flight.age), Combat.MaxFlight)
 				)
-				splat(position, normal)
+				strike(flight, position, normal)
 				local recovery = Recovery.new(
 					flight.model,
 					flight.slug.Size,
@@ -341,13 +367,15 @@ RunService.RenderStepped:Connect(function()
 			end
 			continue
 		end
+		flight.age += (now - flight.last) * Tuning.values.shotSlowMo
+		flight.last = now
 		local before = flight.t
-		flight.t = math.min(now - flight.start, Combat.MaxFlight)
+		flight.t = math.min(Combat.flightTime(slug, flight.age), Combat.MaxFlight)
 		local hit =
 			Combat.sweep(launch.origin, launch.velocity, slug, before, flight.t, flight.params)
 		local position, velocity = Combat.at(launch.origin, launch.velocity, slug, flight.t)
 		if hit then
-			splat(hit.Position, hit.Normal)
+			strike(flight, hit.Position, hit.Normal)
 			local victim = Combat.victim(hit.Instance)
 			local recovery = Recovery.new(
 				flight.model,
@@ -361,8 +389,12 @@ RunService.RenderStepped:Connect(function()
 			)
 			flight.recovery = recovery
 			Recovery.step(recovery, now)
+		elseif slug.Expires and flight.age >= slug.Expires then
+			strike(flight, position, velocity.Unit)
+			finish(index, flight)
 		elseif flight.t >= Combat.MaxFlight then
 			-- An unlanded shot falls locally; only a void/unsupported surface times out.
+			strike(flight, position, velocity.Unit)
 			flight.recovery = Recovery.new(
 				flight.model,
 				slug.Size,
@@ -372,6 +404,12 @@ RunService.RenderStepped:Connect(function()
 				flight.params,
 				nil,
 				now
+			)
+		elseif flight.transformation then
+			Transformation.step(
+				flight.transformation,
+				flight.age,
+				CFrame.lookAt(position, position + velocity)
 			)
 		else
 			local spin = -2 * math.pi * slug.Tumble * flight.t

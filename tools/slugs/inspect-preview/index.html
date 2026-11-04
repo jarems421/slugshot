@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inferno · Inspect studies</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+<main>
+  <header><div><p class="eyebrow">SLUGSHOT / MOTION STUDIES / 03</p><h1>Inferno, up close.</h1><p class="intro">A livelier face. A fuller canister. Feet on the base.</p></div><span class="status">Concept preview</span></header>
+  <div class="toolbar"><div class="segmented" aria-label="View"><button data-mode="chamber" aria-pressed="true">Inside the canister</button><button data-mode="gun" aria-pressed="false">Whole inspection</button><button data-mode="fire" aria-pressed="false">Fire shapes</button></div><div class="camera"><button id="quarter">Three-quarter</button><button id="side">Side</button><button id="reset-view" title="Reset the view">Reset view</button></div></div>
+  <section class="studies" aria-label="Compare three inspect versions">
+    <article data-version="0"><div class="stage"><canvas aria-label="Version A, Rolling flame"></canvas><span class="letter">A</span><span class="phase">Loading Inferno…</span></div><div class="description"><h2>Rolling flame <span class="pick">Start here</span></h2><p>One sustained, rolling breath. Smile to O, smug grin, then one spring back.</p><button class="solo" data-solo="0">Focus A</button></div></article>
+    <article data-version="1"><div class="stage"><canvas aria-label="Version B, Slow curl"></canvas><span class="letter">B</span><span class="phase">Loading Inferno…</span></div><div class="description"><h2>Slow curl</h2><p>A longer, slower curl. The same smooth mouth change and cushioned return hop.</p><button class="solo" data-solo="1">Focus B</button></div></article>
+    <article data-version="2"><div class="stage"><canvas aria-label="Version C, Playful flame"></canvas><span class="letter">C</span><span class="phase">Loading Inferno…</span></div><div class="description"><h2>Playful flame</h2><p>A continuous breath with quicker travelling ripples and a cheekier head tilt.</p><button class="solo" data-solo="2">Focus C</button></div></article>
+  </section>
+  <section class="transport" aria-label="Playback controls"><div class="playback"><button id="play" class="primary">Pause</button><button id="replay">Replay</button><button id="compare" hidden>Compare all</button></div><label class="timeline"><span id="time">0.00 / 6.80 s</span><input id="scrub" aria-label="Animation time" type="range" min="0" max="6.8" value="0" step="0.01"></label><label class="speed">Speed<select id="speed"><option value="0.5">½ speed</option><option value="1" selected>Normal</option><option value="1.5">1½ speed</option></select></label></section>
+  <div class="beats" aria-label="Jump to animation beat"><button data-time="1.47">01 <b>Already looking</b></button><button data-time="1.90">02 <b>Mouth to O</b></button><button data-time="2.6">03 <b>Breathe</b></button><button data-time="4.34">04 <b>Smug smile</b></button><button data-time="5.15">05 <b>Spring back</b></button></div>
+  <footer><p>Drag to turn · Scroll to zoom · Space to pause</p><p>Same gun choreography in every version. The fire stays inside the chamber.</p></footer>
+  <p id="error" role="alert" hidden></p>
+</main>
+<script type="module" src="preview.js"></script>
+</body></html>

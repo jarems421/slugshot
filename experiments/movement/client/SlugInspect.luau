@@ -1,10 +1,14 @@
 --!strict
--- Server-time cosmetic samples: flick, thrown backflip, catch, outward tilt, slug smile, wiggle and hop home, plain lower.
+-- Server-time cosmetic samples: opening toss, creature act, low returning toss/catch.
 local Inspect = {}
 Inspect.Release = 0.3
-Inspect.Catch = 0.62
+Inspect.Catch = 0.54
 Inspect.Lower = 3.35
-Inspect.Duration = 3.77
+Inspect.Duration = 3.90
+Inspect.ReturnRelease = Inspect.Lower + 0.08
+Inspect.ReturnCatch = Inspect.Lower + 0.32
+Inspect.InfernoLower = 4.12
+Inspect.InfernoDuration = Inspect.InfernoLower + Inspect.Duration - Inspect.Lower
 Inspect.ThirdToss = 1.6
 local TAU = 2 * math.pi
 local TOSS = Vector3.new(-0.35, 1.45, -0.55)
@@ -15,24 +19,24 @@ local HAND_RISE = {
 	{ 0, 0 },
 	{ 0.21, -0.2 },
 	{ Inspect.Release, 0 },
-	{ 0.38, 0.2 },
-	{ 0.5, -0.07 },
+	{ 0.36, 0.2 },
+	{ 0.44, -0.07 },
 	{ Inspect.Catch, 0 },
-	{ 0.73, -0.24 },
-	{ 0.92, 0.035 },
-	{ 1.12, 0 },
+	{ 0.65, -0.24 },
+	{ 0.84, 0.035 },
+	{ 1.04, 0 },
 }
 -- Catch weight carries on through the wrist in the flip's direction, then settles.
 local CATCH_ROCK = {
 	{ Inspect.Catch, 0 },
-	{ 0.72, 0.24 },
-	{ 0.9, -0.05 },
-	{ 1.08, 0 },
+	{ 0.64, 0.24 },
+	{ 0.82, -0.05 },
+	{ 1.0, 0 },
 }
 local REVEAL = {
-	{ 0.7, 0 },
-	{ 0.96, 1.07 },
-	{ 1.16, 1 },
+	{ 0.62, 0 },
+	{ 0.88, 1.07 },
+	{ 1.08, 1 },
 }
 
 local function smooth(value: number): number
@@ -73,24 +77,55 @@ local function track(keys: { { number } }, t: number): number
 		+ (uuu - uu) * span * slope(i + 1)
 end
 
-function Inspect.elapsed(character: Model): number?
+local function infernoSelected(character: Model): boolean
+	local tool = character:FindFirstChildOfClass("Tool")
+	return tool ~= nil and tool:GetAttribute("SelectedSlugId") == "Inferno"
+end
+
+-- Species acting uses real seconds. Both creatures share the same quick toss,
+-- catch, reveal and drop; Inferno simply holds longer for his approved breath.
+function Inspect.creatureElapsed(character: Model): number?
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local stamp = character:GetAttribute("SlugInspectAt")
 	if not humanoid or humanoid.Health <= 0 or typeof(stamp) ~= "number" then
 		return nil
 	end
 	local t = workspace:GetServerTimeNow() - stamp
-	return if t >= 0 and t < Inspect.Duration then t else nil
+	local duration = if infernoSelected(character)
+		then Inspect.InfernoDuration
+		else Inspect.Duration
+	return if t >= 0 and t < duration then t else nil
+end
+
+function Inspect.gunTime(t: number, slugId: string): number
+	if slugId ~= "Inferno" or t <= 1.15 then
+		return t
+	end
+	if t < Inspect.InfernoLower then
+		return 1.15 + (t - 1.15) * (Inspect.Lower - 1.15) / (Inspect.InfernoLower - 1.15)
+	end
+	return Inspect.Lower + t - Inspect.InfernoLower
+end
+
+function Inspect.elapsed(character: Model): number?
+	local t = Inspect.creatureElapsed(character)
+	return if t
+		then Inspect.gunTime(t, if infernoSelected(character) then "Inferno" else "Floppy")
+		else nil
 end
 
 function Inspect.weight(t: number): number
-	return smooth(t / 0.24) * (1 - smooth((t - Inspect.Lower) / (Inspect.Duration - Inspect.Lower)))
+	return smooth(t / 0.24)
+		* (1 - smooth((t - Inspect.Lower) / (Inspect.ReturnCatch - Inspect.Lower)))
 end
 
 -- First person swaps poses below the screen, so the arm never sweeps across the view.
 function Inspect.viewWeight(t: number): number
-	local gone = Inspect.Lower + 0.26
-	return smooth(t / 0.1) * (1 - smooth((t - gone) / (Inspect.Duration - gone)))
+	if t <= Inspect.ReturnCatch then
+		return smooth(t / 0.1)
+			* (1 - 0.20 * smooth((t - Inspect.Lower) / (Inspect.ReturnCatch - Inspect.Lower)))
+	end
+	return 0.80 * (1 - smooth((t - Inspect.ReturnCatch) / (Inspect.Duration - Inspect.ReturnCatch)))
 end
 
 function Inspect.reveal(t: number): number
@@ -135,16 +170,38 @@ function Inspect.gunRotation(t: number?): CFrame
 end
 
 function Inspect.airborne(t: number): number
+	if t >= Inspect.ReturnRelease then
+		local u = (t - Inspect.ReturnRelease) / (Inspect.ReturnCatch - Inspect.ReturnRelease)
+		return if u > 0 and u < 1 then u else 0
+	end
 	local u = (t - Inspect.Release) / (Inspect.Catch - Inspect.Release)
 	return if u > 0 and u < 1 then u else 0
 end
 
 function Inspect.handRise(t: number): number
+	if t >= Inspect.Lower then
+		return -0.09 * pulse(t, Inspect.Lower, 0.13) + 0.055 * pulse(t, Inspect.ReturnCatch, 0.1)
+	end
 	return track(HAND_RISE, t)
 end
 
 -- One steady backward turn in flight, barrel coming back toward the holder.
 function Inspect.spinAngle(t: number): number
+	if t >= Inspect.Lower then
+		if t < Inspect.ReturnRelease then
+			return TAU - 0.18 * pulse(t, Inspect.Lower, Inspect.ReturnRelease - Inspect.Lower)
+		elseif t < Inspect.ReturnCatch then
+			return TAU
+				* (
+					1
+					+ smooth(
+						(t - Inspect.ReturnRelease) / (Inspect.ReturnCatch - Inspect.ReturnRelease)
+					)
+				)
+		end
+		return TAU * 2
+			+ 0.08 * pulse(t, Inspect.ReturnCatch, Inspect.Duration - Inspect.ReturnCatch)
+	end
 	local u = Inspect.airborne(t)
 	if u > 0 then
 		return TAU * u
@@ -159,6 +216,13 @@ function Inspect.flight(t: number, height: number): Vector3
 	local u = Inspect.airborne(t)
 	if u <= 0 then
 		return Vector3.zero
+	end
+	if t >= Inspect.ReturnRelease then
+		return Vector3.new(
+			0.08 * math.sin(math.pi * u),
+			0.48 * height * 4 * u * (1 - u),
+			-0.08 * math.sin(math.pi * u)
+		)
 	end
 	local toss = Vector3.new(
 		TOSS.X * math.sin(math.pi * u),
@@ -188,12 +252,14 @@ end
 function Inspect.viewGun(t: number): CFrame
 	local carry = pulse(t, 0, Inspect.Catch + 0.16)
 	local rise = Inspect.handRise(t) + Inspect.holdLift(t)
-	-- Comes up from below the screen, and later drops straight back down.
+	-- The return blends into the live carry pose while the second toss is airborne.
 	local entry = 1 - smooth(t / 0.2)
-	local drop = smooth((t - Inspect.Lower) / 0.26)
-	return CFrame.new(0.5, -0.45 - 0.1 * carry + rise - 2.8 * (entry + drop), -2.7 - 0.55 * carry)
-		* CFrame.Angles(0.5 * rise - 0.5 * drop, 0, 0)
-		* Inspect.gunRotation(t)
+	local lowCatch = 0.24 * smooth((t - Inspect.Lower) / (Inspect.ReturnCatch - Inspect.Lower))
+	return CFrame.new(
+		0.25,
+		-0.68 - lowCatch - 0.1 * carry + rise - 2.8 * entry,
+		-2.8 - 0.55 * carry
+	) * CFrame.Angles(0.5 * rise, 0, 0) * Inspect.gunRotation(t)
 end
 
 -- Third-person shoulder pitch for the same hand curve on a rigid R6 arm.

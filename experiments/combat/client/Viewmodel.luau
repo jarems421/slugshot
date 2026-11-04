@@ -41,7 +41,14 @@ type Arm = {
 	fade: number,
 }
 type GunPart = { source: BasePart, copy: BasePart, bones: { { source: Bone, copy: Bone } } }
-type Rig = { model: Model, character: Model, tool: Tool?, arms: { Arm }, gun: { GunPart } }
+type Rig = {
+	model: Model,
+	character: Model,
+	tool: Tool?,
+	arms: { Arm },
+	gun: { GunPart },
+	lights: { { source: Beam, copy: Beam } },
+}
 local rig: Rig? = nil
 local straightWeight = 0
 local postureWeight = 0
@@ -128,6 +135,11 @@ end
 
 local function drop()
 	if rig then
+		for _, light in rig.lights do
+			if light.source.Parent then
+				light.source.Enabled = true
+			end
+		end
 		rig.model:Destroy()
 	end
 	rig, visualHandle = nil, nil
@@ -140,7 +152,8 @@ end
 local function build(character: Model, tool: Tool?, camera: Camera): Rig
 	local model = Instance.new("Model")
 	model.Name = "FirstPersonBodyVisual"
-	local current: Rig = { model = model, character = character, tool = tool, arms = {}, gun = {} }
+	local current: Rig =
+		{ model = model, character = character, tool = tool, arms = {}, gun = {}, lights = {} }
 	for _, name in { "Left Arm", "Right Arm" } do
 		local source = character:FindFirstChild(name)
 		if source and source:IsA("BasePart") then
@@ -170,6 +183,13 @@ local function build(character: Model, tool: Tool?, camera: Camera): Rig
 					local original = originals[i]
 					if item:IsA("Bone") and original and original:IsA("Bone") then
 						table.insert(bones, { source = original, copy = item })
+					elseif
+						item:IsA("Beam")
+						and item:GetAttribute("ChamberLight")
+						and original
+						and original:IsA("Beam")
+					then
+						table.insert(current.lights, { source = original, copy = item })
 					elseif
 						item:IsA("BaseScript")
 						or item:IsA("ModuleScript")
@@ -448,7 +468,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 				0
 			)
 			gunMap = armFrame * handShift * source.CFrame:Inverse()
-			if inspectWeight > 0 and handle and handle:IsA("BasePart") then
+			if inspectTime and handle and handle:IsA("BasePart") then
 				local gripJoint = source:FindFirstChild("RightGrip")
 				if gripJoint and gripJoint:IsA("JointInstance") then
 					gunMap = armFrame
@@ -485,11 +505,52 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 	end
 	visualHandle = nil
 	local gunFade = 1 - BlasterAnimator.handVisibility(character)
+	for _, light in current.lights do
+		light.source.Enabled = false
+		light.copy.Enabled = gunFade < 0.5
+	end
 	for _, item in current.gun do
 		local source = item.source
 		item.copy.CFrame = gunMap * source.CFrame
+		local inspectFrame = source:GetAttribute("InspectLocalFrame")
+		if typeof(inspectFrame) == "CFrame" and handle and handle:IsA("BasePart") then
+			item.copy.CFrame = gunMap * handle.CFrame * inspectFrame
+		end
 		item.copy.Transparency = source.Transparency
 		item.copy.LocalTransparencyModifier = gunFade
+		if source:GetAttribute("InspectFace") then
+			-- Inspection edits are local and may finish preparing after this copy was built.
+			local revision = source:GetAttribute("InspectMeshRevision")
+			if
+				source:IsA("MeshPart")
+				and item.copy:IsA("MeshPart")
+				and item.copy:GetAttribute("InspectMeshRevision") ~= revision
+			then
+				item.copy:ApplyMesh(source)
+				item.copy.Size = source.Size
+				item.copy:SetAttribute("InspectMeshRevision", revision)
+			end
+			item.copy.Color = source.Color
+			local surface = source:FindFirstChildOfClass("SurfaceAppearance")
+			local copiedSurface = item.copy:FindFirstChildOfClass("SurfaceAppearance")
+			local materialRevision = source:GetAttribute("InspectMaterialRevision")
+			if
+				surface
+				and item.copy:GetAttribute("InspectMaterialRevision") ~= materialRevision
+			then
+				if copiedSurface then
+					copiedSurface:Destroy()
+				end
+				local replacement = surface:Clone()
+				replacement.Parent = item.copy
+				copiedSurface = replacement
+				item.copy:SetAttribute("InspectMaterialRevision", materialRevision)
+			end
+			if surface and copiedSurface then
+				copiedSurface.Color = surface.Color
+				copiedSurface.EmissiveTint = surface.EmissiveTint
+			end
+		end
 		for _, bone in item.bones do
 			bone.copy.Transform = bone.source.Transform
 		end

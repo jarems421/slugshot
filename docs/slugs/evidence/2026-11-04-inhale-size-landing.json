@@ -1,0 +1,148 @@
+{
+  "date": "2026-11-04",
+  "state": "Implemented/verified locally; owner visual/feel approval pending",
+  "request": "Match Floppy loaded size, land instead of float, clean under-eye shading; earlier action, longer inhale, wider mouth, greater belly expansion and a small forward-leaning exhale hop",
+  "timing": {
+    "inhaleStart": 0.78,
+    "inhaleRiseSeconds": 0.82,
+    "mouthOpenStart": 0.93,
+    "mouthTransitionSeconds": 0.72,
+    "flameStart": 1.9,
+    "previousFlameStart": 2.06,
+    "flameEnd": 3.65,
+    "breathHopStart": 1.9,
+    "breathHopPeak": 2.15,
+    "breathHopEnd": 2.4,
+    "returnStart": 3.95,
+    "gunLower": 4.12,
+    "catch": 4.44,
+    "InfernoDuration": 4.67,
+    "FloppyDuration": 3.9
+  },
+  "inhale": {
+    "bellyCorrective": "Native skinned rest-space editable body; 32% lateral / 44% front-back expansion at the belly envelope peak, zero at sole/head",
+    "maximumBellyDisplacementStuds": 0.028301,
+    "mouth": "Inhaling horizontal radius .059 versus .038 neutral circle target; larger vertical opening; no cheek-inflation driver",
+    "hop": "Small smooth half-second rise and forward head/upper-body lean at exhale onset; same sole location on landing"
+  },
+  "size": {
+    "contract": "One chamber-relative sole-to-tip target for both species, then shared 5% clearance reduction from the first equal-height trial",
+    "loadedSizeIncrease": 1.045,
+    "FloppyRestHeight": 0.26526,
+    "InfernoRestHeight": 0.2678,
+    "heightRatio": 0.9905,
+    "note": "Breathing, squash and antennas naturally change transient silhouette height"
+  },
+  "Floppy": {
+    "landingSamples": 7,
+    "soleErrorStuds": 9e-06,
+    "plantedFootSamples": 15,
+    "plantedFootDriftStuds": 0.000169,
+    "upperMotionStuds": 0.011878,
+    "fitting": "Centre the undeformed silhouette for each facing and pin its sole there; fit final body/jelly/antenna pose after facial updates with 3% articulation reserve",
+    "startup": "Retry when the loaded model arrives before its complete skeleton; ignore other species icons",
+    "eyeShade": "Soft tapered under-eye crescent, repaired albedo and normal texels on the existing UV map; one shared local material/map set, preserving each instance emission; clone completed material revisions into first person",
+    "repaintedTexels": [
+      "67097"
+    ]
+  },
+  "skinTrace": [
+    {
+      "species": "Floppy",
+      "samples": 70,
+      "radial": 0.98489,
+      "axial": 0.86024
+    },
+    {
+      "species": "Inferno",
+      "samples": 188,
+      "radial": 0.89118,
+      "axial": 0.86002
+    }
+  ],
+  "checks": [
+    "verify_combat PASS including foundation/movement and ordinary private builds",
+    "verify_slugs PASS including creature contracts, formatting, lint and types",
+    "Studio native-final: current face/material copy, full body fit, 495-vertex fluid flame, inhaling body copy, reset/switch/fire/holster/death/disposal PASS",
+    "Studio motion-final: complete cycles, actual ellipse fit, equal rest height, planted landing, moving upper body, running catch and both tooth forms PASS"
+  ],
+  "runningCatch": [
+    "running return catch registered, speed 18.00, max grip frame step 0.21973, relative speed 2.171"
+  ],
+  "rejectedTrials": [
+    "Initial direct SurfaceAppearance map assignment is plugin-only; replaced by CreateSurfaceAppearanceAsync and cloning, without security changes",
+    "First loading probe exposed incomplete Floppy skeleton registration",
+    "Initial equal-height fit clipped during turning/antenna rebound; retained full motion evidence, added final-pose fitting and a common clearance reserve",
+    "Prior QA only sampled standing support; new independent trace covers the landing and return to idle"
+  ],
+  "review": {
+    "place": "build/SlugshotInspect-InhaleAndLanding.rbxlx",
+    "html": "build/inferno-inspect/revision6/Inferno-and-Floppy-inspection.html",
+    "clips": [
+      {
+        "key": "inferno-whole",
+        "title": "Normal view",
+        "detail": false,
+        "file": "inferno-whole.gif",
+        "sourceFrames": 55,
+        "frames": 46,
+        "durationMs": 5500,
+        "resample": "actual capture timestamps"
+      },
+      {
+        "key": "inferno-chamber",
+        "title": "Inhale and forward hop",
+        "detail": true,
+        "file": "inferno-chamber.gif",
+        "sourceFrames": 49,
+        "frames": 43,
+        "durationMs": 5500,
+        "resample": "actual capture timestamps"
+      },
+      {
+        "key": "floppy-current",
+        "title": "Floppy size and landing",
+        "detail": true,
+        "file": "floppy-current.gif",
+        "sourceFrames": 51,
+        "frames": 44,
+        "durationMs": 5500,
+        "resample": "actual capture timestamps"
+      },
+      {
+        "key": "inferno-running",
+        "title": "Running finish",
+        "detail": false,
+        "file": "inferno-running.gif",
+        "sourceFrames": 30,
+        "frames": 26,
+        "durationMs": 5500,
+        "resample": "actual capture timestamps"
+      }
+    ]
+  },
+  "limits": [
+    "Owner visual/feel approval remains open",
+    "Single client on this machine; mobile, memory budget, published experience and multiplayer remain unverified",
+    "Recording cadence is lower than live play",
+    "Known Studio profiler annotation warning occurs in some runs"
+  ],
+  "apiReferences": [
+    "https://create.roblox.com/docs/reference/engine/classes/AssetService#CreateSurfaceAppearanceAsync",
+    "https://create.roblox.com/docs/reference/engine/classes/EditableMesh"
+  ],
+  "sourceSha256": {
+    "experiments/creatures/floppy/client/FloppyIdle.client.luau": "41b5f2874baa266da41e18cf556ba5da6387e1f38028609b4a60f34b8d906be4",
+    "experiments/creatures/floppy/client/FloppyFace.client.luau": "068919df13026d54fe2d154b9d6769636f9f01c84a36dd35754c261fe2f486e3",
+    "experiments/creatures/floppy/client/FloppyEyeShade.luau": "fbd9886e5e83a5315bcfb449538c0cef0e452182c32d42ebf64d8bcba6df11f0",
+    "experiments/creatures/floppy/server/FloppyBlaster.server.luau": "c4c587eaf6f0439e090ac8a28af2806e6ee7bd2a651f312a75d46103aa1cc7cf",
+    "experiments/creatures/inferno/inspect/Flow.luau": "70e6102f7b0725e76a4eb1d0cfa411ed747d858a8051dc7490e54ffc33568e1c",
+    "experiments/creatures/inferno/inspect/Rig.luau": "6b43693aa418a56d494cf91f4fd1f14158fd59f3ce86c98d32e9731c7e2584a7",
+    "experiments/creatures/inferno/inspect/Breath.luau": "8ca5cfedebf4b1603401eece39255c5258148bfd495dceef41cd7e359703e1d6",
+    "experiments/creatures/inferno/inspect/Surface.luau": "28f64a29b1f620542edafd7a9a47b153b306f2c062a62b431125f8d67196528a",
+    "experiments/creatures/inferno/inspect/init.client.luau": "6e67b55eb30179efeeaad6c81383e97e27587c425e51309d42fc752dc4d2a236",
+    "experiments/combat/client/Viewmodel.luau": "21b1a0dab228e4a7305672c4fcf0d6a573b238d8c44a5cd152efaefa5ab8cb73"
+  },
+  "placeSha256": "0797e08b5374553d369aabcf5a063ac9df6093d178232874d23dc10241c329de",
+  "newUploadsPublishesPushes": false
+}

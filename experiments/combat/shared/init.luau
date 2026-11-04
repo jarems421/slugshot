@@ -5,6 +5,15 @@
 -- are first proposals for owner playtest tuning; Floppy is the weakest slug.
 local Combat = {}
 
+-- How a transforming slug's flight is timed. The path never changes: the slug leaves at full speed and slows along it,
+-- so the big form can be seen before it hits.
+export type Transformation = {
+	Spin: number, -- seconds
+	Flash: number,
+	Cruise: number, -- share of launch speed it slows to
+	Slowdown: number, -- seconds; how sharply
+}
+
 export type Slug = {
 	Label: string,
 	Damage: number,
@@ -16,7 +25,9 @@ export type Slug = {
 	Tumble: number, -- end-over-end turns per second in flight
 	Size: number, -- visual height outside the barrel (studs); used through flight and recovery
 	Transforms: boolean, -- Floppy is the one slug that never transforms
+	Transformation: Transformation?,
 	ExactFrom: number, -- first shot level that lands exactly where it is aimed
+	Expires: number?, -- seconds after firing that an unlanded shot disappears; without this it falls until it lands
 	Blurb: string, -- one line for the inventory
 }
 
@@ -84,6 +95,8 @@ Combat.Slugs = {
 		Tumble = 0,
 		Size = Combat.WorldSlugSize,
 		Transforms = true,
+		Transformation = { Spin = 0.15, Flash = 0.05, Cruise = 0.4, Slowdown = 0.04 },
+		Expires = Combat.Cooldown, -- gone as the next shot is ready; about 310 studs at full charge
 		ExactFrom = 2,
 		Blurb = "A cocky little menace. Fast, hot and hits hard.",
 	},
@@ -108,6 +121,17 @@ function Combat.at(origin: Vector3, velocity: Vector3, slug: Slug, t: number): (
 	local decay = math.exp(-k * t)
 	local position = origin + terminal * t + (velocity - terminal) * ((1 - decay) / k)
 	return position, terminal + (velocity - terminal) * decay
+end
+
+-- How far along its path (in Combat.at's t) a slug is, `elapsed` real seconds after firing. Server and clients both go
+-- through this, so they still agree on where a shot is.
+function Combat.flightTime(slug: Slug, elapsed: number): number
+	local shape = slug.Transformation
+	if not shape then
+		return elapsed
+	end
+	return shape.Cruise * elapsed
+		+ (1 - shape.Cruise) * shape.Slowdown * (1 - math.exp(-elapsed / shape.Slowdown))
 end
 
 -- The launch direction whose arc passes through `target`, so a shot lands where it is aimed

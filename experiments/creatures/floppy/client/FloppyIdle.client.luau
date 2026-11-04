@@ -26,6 +26,7 @@ local TIP = Vector3.new(0.90, 1.44 + 0.25, 0.56)
 type Motion = { [Bone]: (number) -> CFrame }
 local floppies: { [Model]: Motion } = {}
 local inspectModels: { [Model]: (number, boolean) -> () } = {}
+local fitModels: { [Model]: () -> () } = {}
 
 type Spring = { x: number, v: number, target: number, freq: number, damp: number }
 local TIME_STEP = 1 / 120 -- fixed, so the motion is the same at any frame rate
@@ -49,6 +50,9 @@ local PITCH_HEAD, PITCH_UPPER = math.rad(22), math.rad(6)
 local FLOP_ANGLE = 0.12
 
 local function setup(model: Model)
+	if floppies[model] or (model.Name ~= "Floppy" and model.Name ~= "FloppyFlight") then
+		return
+	end
 	local bones: { [string]: Bone } = {}
 	local allBones: { Bone } = {}
 	for _, d in model:GetDescendants() do
@@ -59,6 +63,13 @@ local function setup(model: Model)
 	end
 	local root, head, eyeL, eyeR = bones.root, bones.head, bones.eye_L, bones.eye_R
 	if not (root and head and eyeL and eyeR) then
+		-- The Model can arrive before its skinned parts and their bones.
+		-- Register only a complete skeleton, then retry the same loaded copy.
+		task.delay(0.1, function()
+			if model.Parent and not floppies[model] then
+				setup(model)
+			end
+		end)
 		return
 	end
 	local tool = model:FindFirstAncestorOfClass("Tool")
@@ -178,6 +189,116 @@ local function setup(model: Model)
 		local pitch, flop, stand = spring(1.8, 0.8), spring(2.4, 0.5), spring(2.2, 0.8)
 		local tip = spring(2.2, 0.4)
 		local springs = { squash, sway, lag, tip, pitch, flop, stand }
+		local body = model:FindFirstChild("FloppyBody", true)
+		if body and body:IsA("MeshPart") then
+			task.spawn(function()
+				local mesh =
+					game:GetService("AssetService")
+						:CreateEditableMeshAsync(Content.fromUri(body.MeshId), { FixedSize = true }) :: EditableMesh
+				local bases, points, meshBones = {}, {}, {}
+				for _, entry in joints do
+					bases[entry.joint.Part1] = entry.base
+				end
+				local function frame(bone: Bone, moved: boolean, frames: any): CFrame
+					if frames[bone] then
+						return frames[bone]
+					end
+					local parent = bone.Parent
+					local base = if parent and parent:IsA("Bone")
+						then frame(parent, moved, frames)
+						else bases[parent :: BasePart]
+					local transform = if moved then bone.Transform else CFrame.identity
+					local result = base * bone.CFrame * transform
+					frames[bone] = result
+					return result
+				end
+				for _, id in mesh:GetBones() do
+					meshBones[id] = model:FindFirstChild(mesh:GetBoneName(id), true) :: Bone
+				end
+				local rests = {}
+				local lowHeight, highHeight = math.huge, -math.huge
+				for _, id in mesh:GetVertices() do
+					local point = bases[body]
+						* ((mesh:GetPosition(id) - mesh:GetCenter()) * (body.Size / body.MeshSize))
+					local links = {}
+					local weights = mesh:GetVertexBoneWeights(id)
+					for k, boneId in mesh:GetVertexBones(id) do
+						local bone = meshBones[boneId]
+						table.insert(links, {
+							bone = bone,
+							point = frame(bone, false, rests):PointToObjectSpace(point),
+							weight = weights[k],
+						})
+					end
+					local y = point:Dot(uy)
+					lowHeight, highHeight = math.min(lowHeight, y), math.max(highHeight, y)
+					table.insert(points, { links = links, height = y, rest = point })
+				end
+				mesh:Destroy()
+				local half = model:GetAttribute("ChamberHalfSize") :: Vector3
+				local restMin, restMax = Vector3.one * math.huge, Vector3.one * -math.huge
+				local restFoot, footCount = Vector3.zero, 0
+				local sole = {}
+				for _, point in points do
+					point.foot = point.height < lowHeight + (highHeight - lowHeight) * 0.13
+					restMin, restMax = restMin:Min(point.rest), restMax:Max(point.rest)
+					if point.foot then
+						table.insert(sole, point)
+						restFoot += point.rest
+						footCount += 1
+					end
+				end
+				restFoot /= math.max(footCount, 1)
+				local restCentre = (restMin + restMax) / 2
+				fitModels[model] = function()
+					if body.Transparency >= 1 then
+						return
+					end
+					local original = model:GetAttribute("InspectPose") :: CFrame
+					local t = inspectTime()
+					local hop = if t then Inspect.hop(t) else 0
+					-- Only evaluate the sole. Whole-body searches both cost a
+					-- frame and repeatedly choke the upper-body spring output.
+					local frames = {}
+					local foot = Vector3.zero
+					for _, point in sole do
+						local p = Vector3.zero
+						for _, link in point.links do
+							p += (frame(link.bone, true, frames) * link.point) * link.weight
+						end
+						p = original * p
+						foot += p
+					end
+					foot /= math.max(footCount, 1)
+					local basis = if t and Inspect.looking(t) > 0.999 then upright else original
+					local anchor = pivot + basis:VectorToWorldSpace(restFoot - restCentre)
+					-- The authored root is the original flat ground plane. Seat
+					-- it on the cap, hiding the below-ground underside as in the
+					-- accepted standing design.
+					local flat = (original * frame(root, true, frames).Position).Z
+					local shift = Vector3.new(
+						anchor.X - foot.X,
+						anchor.Y - foot.Y,
+						pivot.Z + half.Z * 0.86 - flat - half.Z * 0.14 * hop
+					)
+					local pose = CFrame.new(shift) * original
+					model:SetAttribute("InspectPose", pose)
+					model:SetAttribute("InspectFootCentre", foot + shift)
+					model:SetAttribute("InspectUpperGain", 1)
+					model:SetAttribute("InspectFitRatio", nil)
+					model:SetAttribute("InspectSoleSamples", #sole)
+					model:SetAttribute("InspectGroundGap", half.Z * 0.14 * hop)
+					for _, entry in joints do
+						if entry.joint.Parent then
+							entry.joint.C0 = pose * entry.base
+							if entry.joint.Part1 then
+								entry.joint.Part1:SetAttribute("InspectLocalFrame", entry.joint.C0)
+							end
+						end
+					end
+				end
+			end)
+		end
 		local leftover, clock = 0, 0
 		local flying, landed = false, false
 
@@ -186,6 +307,9 @@ local function setup(model: Model)
 				for _, entry in joints do
 					if entry.joint.Parent then
 						entry.joint.C0 = entry.base
+						if entry.joint.Part1 then
+							entry.joint.Part1:SetAttribute("InspectLocalFrame", nil)
+						end
 					end
 				end
 				return
@@ -234,6 +358,7 @@ local function setup(model: Model)
 			end
 			leftover = steps
 			local upness = math.clamp(stand.x, 0, 1)
+			model:SetAttribute("InspectStandWeight", upness)
 			local float = CFrame.new(uy * 0.012 * math.sin(TAU * clock / 4.3))
 				* CFrame.fromAxisAngle(uy, math.rad(10) * math.sin(TAU * clock / 6.7))
 				* CFrame.fromAxisAngle(sx, math.rad(3) * math.sin(TAU * clock / 5.3 + 1))
@@ -256,7 +381,10 @@ local function setup(model: Model)
 			-- This bone's origin is at the base, so turning it leaves the base where it is.
 			local lz = toLocal(lower, front)
 			motion[lower] = function(_: number): CFrame
-				return CFrame.fromAxisAngle(lz, -BEND_LOWER * sway.x)
+				return CFrame.fromAxisAngle(
+					lz,
+					-BEND_LOWER * sway.x * (1 - math.clamp(stand.x, 0, 1))
+				)
 			end
 		end
 		if upper then
@@ -305,7 +433,9 @@ local function setup(model: Model)
 				local outward = toLocal(flankBone, direction)
 				motion[flankBone] = function(_: number): CFrame
 					local flank = if squash.x > 0 then squash.x else squash.x * STRETCH_FLANK_SHARE
-					return CFrame.new(outward * flank * SQUASH_FLANK * SCALE)
+					return CFrame.new(
+						outward * flank * SQUASH_FLANK * SCALE * (1 - math.clamp(stand.x, 0, 1))
+					)
 				end
 			end
 		end
@@ -376,6 +506,7 @@ RunService:BindToRenderStep(
 				end
 				floppies[model] = nil
 				inspectModels[model] = nil
+				fitModels[model] = nil
 				continue
 			end
 			local inspectModel = inspectModels[model]
@@ -385,6 +516,18 @@ RunService:BindToRenderStep(
 			for bone, fn in motion do
 				bone.Transform = fn(t)
 			end
+		end
+	end
+)
+
+-- The lids and mouth finish at Character + 3. Fit their final pose too, before
+-- the first-person copy is placed; a previous-frame blink can miss the glass.
+RunService:BindToRenderStep(
+	"SlugshotFloppySole",
+	Enum.RenderPriority.Character.Value + 4,
+	function()
+		for _, fit in fitModels do
+			fit()
 		end
 	end
 )

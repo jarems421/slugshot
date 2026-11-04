@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-03",
+  "state": "Implemented/verified offline and one native Studio client; owner visual approval pending",
+  "checks": [
+    "python tools/verify_combat.py: PASS (includes foundation and movement)",
+    "python tools/verify_slugs.py: PASS",
+    "git diff --check: PASS",
+    "CombatSelfTest: ALL PASS",
+    "TRANSCHECK: PASS"
+  ],
+  "runtime": {
+    "floorViews": 3,
+    "wallOcclusion": "PASS",
+    "revealFadeScaleAndUnfold": "PASS",
+    "earlyImpactBaseScale": "PASS",
+    "idempotentCancellation": "PASS",
+    "unlandedExpiry": "PASS",
+    "realFirstPersonTransformedVisibleAndCleanup": "PASS",
+    "clientMeasuredImpactSeconds": 0.23274809995200485,
+    "distanceStuds": 60.75909805297852,
+    "fixtureDamage": 0
+  },
+  "captureDirectory": "build/transformation-check/reset-final-2026-11-03",
+  "captureFramesPerThreeSeconds": {
+    "side": 28,
+    "firstPerson": 38
+  },
+  "warning": "Redundant Flag ID: LuauIfLocal (existing tooling warning)",
+  "limits": [
+    "owner acceptance pending",
+    "thin-cover/partial occlusion",
+    "full-frame-rate motion",
+    "real-player damage",
+    "multiplayer and devices"
+  ],
+  "changes": "Twirl and diffuse glow shared baseline; no explosion/rings/steam/cinders/overshoot; per-species motion/aura data; existing fire art retained",
+  "reviewPlace": "build/SlugshotInfernoTransformationReview.rbxlx",
+  "reviewPlaceState": "Opened in a separate Studio window for owner playtest; existing windows preserved"
+}

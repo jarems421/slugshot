@@ -564,7 +564,22 @@ local shown: { [Tool]: boolean } = {}
 local shownSlug: { [Tool]: string } = {}
 -- Each slug's loaded model in the canister; only the selected one shows.
 local LOADED_MODELS: { [string]: string } = { Floppy = "Floppy", Inferno = "InfernoLoaded" }
+local contentWatch: { [Tool]: RBXScriptConnection } = {}
 local function setCanister(tool: Tool, visible: boolean)
+	if not contentWatch[tool] then
+		contentWatch[tool] = tool.DescendantAdded:Connect(function(item: Instance)
+			if item:IsA("BasePart") then
+				shown[tool] = nil
+			end
+		end)
+		tool.Destroying:Once(function()
+			local connection = contentWatch[tool]
+			if connection then
+				connection:Disconnect()
+			end
+			contentWatch[tool], shown[tool], shownSlug[tool] = nil, nil, nil
+		end)
+	end
 	local selected = tool:GetAttribute("SelectedSlugId")
 	local selectedId = if typeof(selected) == "string" then selected else "Floppy"
 	if shown[tool] == visible and shownSlug[tool] == selectedId then

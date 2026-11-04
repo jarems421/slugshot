@@ -69,8 +69,9 @@ if not ok then
 	warn(`[Combat] Floppy flight model unavailable, shots draw a stand-in: {problem}`)
 end
 
--- Inferno flies in his base form until the transformation is built, and his icon shows it too. Both are exported at the same height as
--- Floppy (0.34 x 2.72 source units is Floppy's reference length), so they take his scale. Pivots match Floppy's.
+-- Inferno leaves the gun in his base form, which his icon also shows, and SlugTransformation swaps him to his transformed
+-- form in flight. Both are exported at the same height as Floppy (0.34 x 2.72 source units is Floppy's reference length),
+-- so they take his scale. Pivots match Floppy's.
 local function buildInfernoModels()
 	local assetModule = ReplicatedStorage:FindFirstChild("InfernoAsset")
 	local appearance = ServerScriptService:WaitForChild("FloppyIntegration")
@@ -82,6 +83,38 @@ local function buildInfernoModels()
 	local asset = (require :: any)(assetModule)
 	local Appearance = (require :: any)(appearance)
 	local scale = Combat.Slugs.Inferno.Size / (0.34 * 2.72)
+	-- Fire glows on its own rather than being lit like skin.
+	local function glowing(part: MeshPart, name: string)
+		local template = materials:FindFirstChild(name)
+		assert(template and template:IsA("SurfaceAppearance"), `no material for {name}`)
+		part.TextureID = ""
+		part.Color = Color3.new(1, 1, 1)
+		part.Material = Enum.Material.SmoothPlastic
+		part.CastShadow = false
+		local surface = template:Clone()
+		surface.EmissiveStrength = 2.5
+		surface.Parent = part
+	end
+	-- The flying dragon's wing fire: its own model on matching bones, lined up by its root bone (tools/slugs/build_wing_fire.py).
+	local function addWingFire(model: Model)
+		local container = InsertService:LoadAsset(asset.comicWingFireModel)
+		local mine = model:FindFirstChild("root", true) :: Bone
+		local theirs = container:FindFirstChild("root", true) :: Bone
+		assert(mine and theirs, "wing fire root bones missing")
+		local shift = mine.WorldPosition - theirs.WorldPosition
+		for _, item in container:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Position += shift
+				if item:IsA("MeshPart") then
+					glowing(item, "InfernoWingFire")
+				end
+			end
+		end
+		for _, child in container:GetChildren() do
+			child.Parent = model
+		end
+		container:Destroy()
+	end
 	local function build(id: number, name: string): (Model, Vector3)
 		local container = InsertService:LoadAsset(id)
 		local model = Instance.new("Model")
@@ -91,6 +124,9 @@ local function buildInfernoModels()
 		end
 		container:Destroy()
 		Appearance.dress(model, materials, Combat.Slugs.Inferno.Size)
+		if name == "InfernoTransformed" then
+			addWingFire(model)
+		end
 		for _, item in model:GetDescendants() do
 			if item:IsA("BasePart") then
 				item.Anchored = true
@@ -113,6 +149,20 @@ local function buildInfernoModels()
 		model.WorldPivot = CFrame.fromMatrix(centre, up:Cross(-front), up, -front)
 		model.Parent = combatAssets
 	end
+
+	local dragon, dragonSide = build(asset.dragon.model, "InfernoTransformed")
+	local dragonRoot = dragon:FindFirstChild("root", true) :: Bone
+	local dragonHead = dragon:FindFirstChild("head", true) :: Bone
+	local tail = dragon:FindFirstChild("tail_1", true) :: Bone
+	local forward = (dragonHead.WorldPosition - tail.WorldPosition).Unit
+	local dragonUp = forward:Cross(dragonSide).Unit
+	Appearance.outline(dragon)
+	pivot(
+		dragon,
+		(dragonRoot.WorldPosition + dragonHead.WorldPosition) / 2,
+		dragonUp,
+		dragonSide:Cross(dragonUp).Unit
+	)
 
 	local base, baseSide = build(asset.base.model, "InfernoIcon")
 	local baseRoot = base:FindFirstChild("root", true) :: Bone
@@ -380,7 +430,8 @@ RunService.Heartbeat:Connect(function()
 		local shot = shots[index]
 		-- Retain launch time across origin grace. Sweep the elapsed arc in small
 		-- segments so a delayed approval cannot skip an early hit or cut a curved path.
-		local untilTime = math.min(os.clock() - shot.started, Combat.MaxFlight)
+		local untilTime =
+			math.min(Combat.flightTime(shot.slug, os.clock() - shot.started), Combat.MaxFlight)
 		local hit: RaycastResult? = nil
 		while shot.t < untilTime do
 			local from = shot.t
@@ -393,7 +444,10 @@ RunService.Heartbeat:Connect(function()
 		if hit then
 			impact(shot, hit)
 			table.remove(shots, index)
-		elseif shot.t >= Combat.MaxFlight then
+		elseif
+			shot.t >= Combat.MaxFlight
+			or (shot.slug.Expires and os.clock() - shot.started >= shot.slug.Expires)
+		then
 			table.remove(shots, index)
 		end
 	end

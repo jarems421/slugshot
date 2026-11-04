@@ -189,3 +189,8 @@ Rebuild this review with `python tools/lobby/build_grove_review.py`. The builder
 ## More visible lobby greetings (2026-11-03)
 
 **Confirmed:** owner sees Burpy look up, but Floppy rarely does; Floppy should always smile, lower the jaw slightly, then resume hopping. **Implemented/verified locally:** stronger height-tracking head lift, reliable near/watched greetings, shorter cooldown, and two reserved Floppy reaction slots. Smooth positive smile corners plus a small jaw opening blend in/out with the look. Native tests measure actual head, smile and lower-lip bones and a later hop. [Evidence and limits](../../evidence/2026-11-03-floppy-greeting.json). No mesh/export change; owner feel verdict remains open.
+
+
+## Original loaded design restored (2026-11-04)
+
+**Confirmed:** owner rejects recent under-eye repaint/antenna changes and requests the original flat-bottom Floppy, clean original face, smooth upper-half wiggle and planted lower half. Loaded enlargement must stay inside the glass. **Implemented/verified locally:** original accepted face maps/antenna transforms restored, authored flat ground plane seated on the cap, and a modest uniform enlargement validated through the complete motion. [Evidence and review](../evidence/2026-11-04-floppy-original-restored.json). Owner restoration verdict and devices/multiplayer remain unresolved.

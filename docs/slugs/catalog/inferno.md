@@ -13,6 +13,8 @@
 
 **In the game, 2026-11-03 (proposal numbers, owner playtest pending):** slot 2 of the loadout. Damage 25, speed 300/420/500, gravity 20, drag 0.05, exact aim from the second kick. Owner: he fires in his base form until the transformation is built, and the base form also shows in icons and the canister. The fire sizes itself from his bones, so it scales down with the model. Verified: combat and creature checks pass, and the merged range loads in Studio Play with his icon in slot 2. Not verified: firing him, the canister view, recovery on landing, multiplayer. Landing reuses Floppy's recovery. The transformation animation is next.
 
+**Transformation, 2026-11-03 (uncommitted, owner verdict pending):** he now fires in his base form, spins and flashes into the dragon in flight at 2.6x size, flying level with rippling 3D fire along the back of each wing (flight only; the display model is unchanged), then turns back on the hit for his landing. See [transformation](../transformation-system.md#in-game-transformation-2026-11-03). This replaces the "fires in his base form" limit above.
+
 The sections below are the design history, oldest first. Where they differ, this section wins.
 
 ## Confirmed — owner direction, 2026-11-02
@@ -580,3 +582,23 @@ The small step in the antenna tips seen from the side; the shot numbers and abil
 
 
 **Confirmed/implemented, 2026-11-03 ? world scale and exhibition:** owner set the outside-gun visual size to approximately two studs for all species; shared combat and grove scales now use that value. Loaded scale stays independent. Exhibition residents spring through compression/hold/flight/landing, remain on supported ground in their habitat and briefly react to nearby players through existing facial controls. [Runtime record and limits](../../art/lobby-hub.md#springing-exhibition-residents--2026-11-03).
+## Transformation reset (2026-11-03)
+
+**Confirmed:** keep the horizontal twirl and gradual glow, with a diffuse near-floor appearance; remove the disliked explosion and return to a reusable shared sequence. **Implemented/verified:** shared motion/aura defaults with Inferno's warm palette and existing 2.6x form; no shared rings/explosion/steam/cinders or overshoot. Authored wing/tail fire and final source meshes preserved. Offline combat/creature checks and one native Studio transformation review pass. [Current presentation and limits](../transformation-system.md#current-owner-direction-shared-twirl-and-diffuse-glow-2026-11-03). **Unresolved:** owner visual/feel approval and multiplayer/device coverage.
+
+
+## Inspect studies (2026-11-03, preview only)
+
+**Confirmed:** preserve the gun inspect motion; give Inferno a cocky look and smile, a small fire breath inside the canister, another smile and settling hops. The owner withdrew gritted teeth/anger and requested several interactive candidates before Studio integration. **Implemented/verified:** three browser studies using the final base model, original flame contours and the existing blaster; standalone offline artifact, playback/shape comparison and browser QA. **Considering:** A Cheeky puff, B Lazy curl, C Double tease. **Unresolved:** owner selection and later native implementation; no game source or model edit in this preview pass. [Artifact/source/evidence](../inferno-inspect-studies.md).
+
+
+**Implemented/verified, inspect v2 (2026-11-03, preview only):** already looking on raise; a visible 0.55 s smile-to-O transition after the wrist reveal; sustained connected flame with travelling surface/colour flow; smirk and one grove-style compress/hold/stretch/turn/land return. The previous static silhouette/puffs were rejected. Shared gun sampler remains identical and Studio sources are untouched. Browser whole-cycle/flow/mouth/mobile checks pass; final contact sheet and 66-frame sampled motion clip are retained. [Latest revision and owner-review limits](../inferno-inspect-studies.md#current-revision-continuous-breath-and-spring-return).
+
+
+**Implemented/verified, inspect v3 (2026-11-03, preview only):** O aperture retained; thinner warm ink and cavity, staged mouth transitions with coordinated eyelid/head/corner acting. Loaded preview size increases 27%, evaluated sole rests on the inner cap and lifts only for the hop. Browser expression/control/flow/body-fit checks pass; no final source model or native runtime edits. Owner visual verdict and broader loaded-slug sizing integration remain open. [V3 design and evidence](../inferno-inspect-studies.md#current-revision-v3-face-transitions-and-grounded-canister-fit).
+
+
+**Confirmed/implemented and verified locally, 2026-11-03:** owner approved v3 Playful Flame as Inferno's gun inspection. The native client driver now plays the expressive O/contained flowing breath, smug smile and supported spring return; gun movement and Floppy remain unchanged. [Current decision, implementation, evidence and limits](../inferno-inspect-studies.md#current-decision-playful-flame-becomes-the-native-inspect).
+
+
+**Confirmed/implemented and locally verified, 2026-11-04:** accepted chamber lights are preserved. The breath gains a warmer/larger side-facing curl, lung-led lift and lid/mouth effort, and an upward dissipating tail. A shared closing flip/catch replaces the slow lower, tested at idle and while running. [Current revision, preview and limits](../inferno-inspect-studies.md#current-revision-breathing-effort-orange-curl-and-low-return-catch). Owner art/feel review remains open.

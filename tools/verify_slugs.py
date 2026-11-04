@@ -34,13 +34,16 @@ def main():
     run("selene", "experiments/creatures")
     run("rojo", "sourcemap", "creatures.test.project.json", "--output", "build/creatures.sourcemap.json")
     core = [str(path.relative_to(ROOT)) for path in (ROOT / "experiments/creatures").iterdir()
-            if path.name != "floppy"]
+            if path.name not in {"floppy", "inferno"}]
     run("luau-lsp", "analyze", f"--definitions=@roblox={definitions().relative_to(ROOT).as_posix()}", "--sourcemap=build/creatures.sourcemap.json", *core)
     # Floppy has a separate hierarchy and optional private assets. Type its sibling
     # requires against its own source-only map; do not add it to the public lab.
     run("rojo", "sourcemap", "floppy.check.project.json", "--output", "build/floppy-check.sourcemap.json")
     run("luau-lsp", "analyze", f"--definitions=@roblox={definitions().relative_to(ROOT).as_posix()}",
         "--sourcemap=build/floppy-check.sourcemap.json", "experiments/creatures/floppy")
+    run("rojo", "sourcemap", "inferno.check.project.json", "--output", "build/inferno-check.sourcemap.json")
+    run("luau-lsp", "analyze", f"--definitions=@roblox={definitions().relative_to(ROOT).as_posix()}",
+        "--sourcemap=build/inferno-check.sourcemap.json", "experiments/creatures/inferno")
     for project, name, is_test in (("creatures.project.json", "SlugshotCreaturePreview", False), ("creatures.test.project.json", "SlugshotCreatureTests", True)):
         output = f"build/{name}.rbxlx"
         run("rojo", "build", project, "--output", output)

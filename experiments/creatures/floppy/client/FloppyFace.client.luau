@@ -74,6 +74,9 @@ local function setup(model: Model)
 	if faces[model] or not model.Parent then
 		return
 	end
+	if model.Name ~= "Floppy" and model.Name ~= "FloppyFlight" then
+		return
+	end
 	local eyeL = model:FindFirstChild("eye_L", true)
 	local eyeR = model:FindFirstChild("eye_R", true)
 	local root = model:FindFirstChild("root", true)
@@ -94,6 +97,11 @@ local function setup(model: Model)
 			and model:FindFirstChild("gaze_L", true)
 		)
 	then
+		task.delay(0.1, function()
+			if model.Parent and not faces[model] then
+				setup(model)
+			end
+		end)
 		return
 	end
 	local sideways = (eyeR.WorldPosition - eyeL.WorldPosition).Unit

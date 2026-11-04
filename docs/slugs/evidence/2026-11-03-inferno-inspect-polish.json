@@ -1,0 +1,113 @@
+{
+  "date": "2026-11-03",
+  "state": "Implemented/verified locally; owner art and feel pending",
+  "sharedLoadedScaleIncrease": 1.1,
+  "rejectedInfernoScaleIncreases": [
+    1.25,
+    1.15
+  ],
+  "firstPersonInspectOffset": {
+    "x": 0.25,
+    "y": -0.68,
+    "z": -2.8,
+    "pulledBackFromRejectedPose": 0.4
+  },
+  "chamberLight": "8 smooth quarter-circle arcs + 2 rails, each with core/soft Beam layers; first-person clone references and third-person restoration checked",
+  "flame": {
+    "requestedExtraScale": 1.25,
+    "directionIntoChamberDegrees": 75,
+    "radialGlassMargin": 0.02,
+    "appliedScaleSamples": [
+      0.098289,
+      0.097378
+    ],
+    "rejectedSmallFlameSamples": [
+      0.044456,
+      0.045455
+    ],
+    "flowShapeColourTiming": "Preserved Playful Flame vertex sampler; only placement/scale fit changed",
+    "vertexContainment": "435 referenced vertices sampled at two developed breath poses"
+  },
+  "teeth": "Existing divider reshaped into two shallow points on both forms; original skin evaluated on rigid local surfaces; O fades it; only world models edited; ScaleTo registration and template/hotbar isolation PASS",
+  "skinTrace": [
+    {
+      "species": "Floppy",
+      "samples": 86,
+      "maxRadialRatio": 0.92518,
+      "maxAxialRatio": 0.8465
+    },
+    {
+      "species": "Inferno",
+      "samples": 170,
+      "maxRadialRatio": 0.99068,
+      "maxAxialRatio": 0.88972
+    }
+  ],
+  "checks": {
+    "offline": [
+      "verify_combat PASS, includes movement/foundation",
+      "verify_slugs PASS"
+    ],
+    "heldGeometryAndLifecycle": "light-flame-r2-output.log: supported sole/body/flame containment, light references/restoration, face copy, cycle, switch/fire/holster/death/disposal PASS",
+    "finalRuntime": "resume-final-output.log: CombatSelfTest ALL PASS; complete motion/full skin traces; hotbar/template isolation; both-form sharp smiles and ScaleTo registration PASS",
+    "visualReview": "sharp-teeth-r2: clean whole/chamber/Floppy recordings and base/transformed front/quarter smiles; later final check adds icon/resizing fixes"
+  },
+  "reviewFiles": {
+    "place": "build/SlugshotInfernoInspect-Refined.rbxlx",
+    "html": "build/inferno-inspect/revision3/Inferno-inspect-refined-preview.html",
+    "cleanArtCaptureSource": "build/inferno-inspect/revision3/sharp-teeth-r2",
+    "finalRuntimeEvidence": "build/inferno-inspect/revision3/resume-final",
+    "clips": [
+      {
+        "key": "inferno-whole",
+        "title": "Full inspection",
+        "rawFrames": 59,
+        "sampledFrames": 70,
+        "previewFrames": 59,
+        "seconds": 7,
+        "file": "inferno-whole.gif"
+      },
+      {
+        "key": "inferno-chamber",
+        "title": "Inferno \u00b7 chamber close-up",
+        "rawFrames": 60,
+        "sampledFrames": 70,
+        "previewFrames": 60,
+        "seconds": 7,
+        "file": "inferno-chamber.gif"
+      },
+      {
+        "key": "floppy-current",
+        "title": "Floppy \u00b7 same shared enlargement",
+        "rawFrames": 50,
+        "sampledFrames": 70,
+        "previewFrames": 50,
+        "seconds": 7,
+        "file": "floppy-current.gif"
+      }
+    ]
+  },
+  "limits": [
+    "Owner visual/feel approval pending",
+    "Recordings are below live frame cadence; do not establish game FPS",
+    "Final verification captures have an escape-menu overlay; presentation uses the earlier clean art-review captures and identifies later fixes",
+    "Other devices, deployed EditableMesh support, observers and multiplayer performance not verified",
+    "One final continuous trace plus held pose checks do not establish every possible timing/input combination"
+  ],
+  "runtimeWarnings": [
+    "Existing Studio debug.profileEnd annotation warning observed in final pass"
+  ],
+  "sourceSha256": {
+    "experiments/movement/client/SlugInspect.luau": "f735895d6808e4b5c029701228c214c68fdd35a0cf199834ed082e4bf4530e6a",
+    "experiments/combat/client/Viewmodel.luau": "750d320769359cdd8e4f2d58c20cac5713e30aee6cbc62c95bc63a20fcd33ea2",
+    "experiments/creatures/floppy/server/FloppyBlaster.server.luau": "d771d31737a39283745f02110a687dbef4d7df8bd0e7c95ca60d379e9018c0c3",
+    "experiments/creatures/floppy/client/FloppyIdle.client.luau": "0f85af249d633636dfb737a8262ed817516d9e11e17ee8c0358b0aa68b43b60e",
+    "experiments/creatures/inferno/server/InfernoAppearance.luau": "37e1a1d004cd0ce8c884746632f50b368bc54e5ac36e60b8a7ed23c20e8ed119",
+    "experiments/creatures/inferno/client/InfernoMotion.client.luau": "f47555d3783c86d11ef1c9645e81759a663c1d3fb5e752a2578fe818d528af28",
+    "experiments/creatures/inferno/client/InfernoTeeth.client.luau": "64b2bf0f4455dd489d17128b05f5847af3420b801af1afb47e93f69916bdb43a",
+    "experiments/creatures/inferno/inspect/Rig.luau": "22f0b28a57d3aae1d3f36bf946c6a5be520e6effb6b54502d3dd1fcb3618e14a",
+    "experiments/creatures/inferno/inspect/init.client.luau": "5c1a7a64444248c089e712d4d12330e905939b11eab6744f160f6421132b0946"
+  },
+  "placeSha256": "544681c0f140e15598b1262f040429dd79cef798a7ac9d0492041adf2bb2869a",
+  "uploadsPublishesPushes": false
+}

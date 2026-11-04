@@ -106,6 +106,8 @@ The world should feel alive. There should be **just enough activity that a space
 
 - **Creatures:** slugs such as Floppy resting, idling and wandering around spaces.
 - **Particles:** glowing motes, spores or fireflies drifting through the air.
+- **Effects are one shape (owner, confirmed 2026-11-03).** Fire, explosions and similar effects must read as one designed form, never as a bunch of individual fireballs or puffs assembled into an effect. Owner: "It needs to be one explosion, not multiple different fireballs forming the explosion." Use a drawn flipbook or a mesh with bold ink-style colour bands. Particles remain fine for small ambient motes.
+- **Fire that rides on a creature is geometry (owner, confirmed 2026-11-03).** A flat picture reads as "slapped on" and looks 2D at range. Give it real thickness, grow it out from under the part it belongs to, and animate it with a ripple.
 - **Plants:** subtle sway in vines, moss, fungi caps and glowing flora.
 - **Light:** gentle, slow pulsing of crystals and glows, never flicker or strobe.
 - **Sound:** environmental audio (drips, hums, distant water, creature sounds) supports the life pass.

@@ -36,11 +36,11 @@ function Appearance.dress(model: Model, materials: Instance, scale: number)
 		part.TextureID = ""
 		part.Reflectance = 0
 		if string.sub(part.Name, -8) == "MouthInk" or string.sub(part.Name, -9) == "MouthLine" then
-			-- Flat ink. The line starts clear; the client brings it in as he clenches.
+			-- A tapered tooth division reads in the resting grin as well as the clench.
 			part.Color = MOUTH_INK
 			part.Material = Enum.Material.SmoothPlastic
 			part.CastShadow = false
-			part.Transparency = if string.sub(part.Name, -9) == "MouthLine" then 1 else 0
+			part.Transparency = if string.sub(part.Name, -9) == "MouthLine" then 0.15 else 0
 		elseif string.sub(part.Name, -5) == "Mouth" or string.sub(part.Name, -4) == "Eyes" then
 			local template = materials:FindFirstChild(part.Name)
 			assert(template and template:IsA("SurfaceAppearance"), `no material for {part.Name}`)

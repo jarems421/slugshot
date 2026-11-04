@@ -1,0 +1,1187 @@
+{
+  "date": "2026-11-03",
+  "scope": "Browser revision v2 only; no Studio changes",
+  "state": "Implemented/verified browser mechanics; owner visual acceptance pending",
+  "artifact": "build/slugs/inferno/inspect-preview/Inferno-inspect-studies-v2.html",
+  "contactSheet": "build/slugs/inferno/inspect-preview/contact-sheet-v2.png",
+  "motion": "66 sampled frames at 20 fps from 1.40 to 4.65 s; not a live frame-rate benchmark",
+  "gunSamplerUnchanged": true,
+  "rejectedBaseline": "build/slugs/inferno/inspect-preview/rejected-v1",
+  "checks": [
+    "node syntax checks",
+    "Python compile",
+    "git diff --check",
+    "browser full-cycle/controls/mobile checks",
+    "same-breath shape evolution",
+    "mouth aperture/early look checks",
+    "409 samples per variant: every flame position and normal finite"
+  ],
+  "qa": {
+    "stats": [
+      {
+        "name": "look",
+        "models": 3,
+        "errors": [],
+        "time": 1.47,
+        "mode": "chamber",
+        "containment": [
+          0.03369631846248167,
+          0.02974006659501247,
+          0.03001089327099065
+        ],
+        "triangles": [
+          48017,
+          48017,
+          48017
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 0.12842758726130313,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 0.12842758726130313,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 0.12842758726130313,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 0,
+            "tail": 0
+          },
+          {
+            "visible": false,
+            "head": 0,
+            "tail": 0
+          },
+          {
+            "visible": false,
+            "head": 0,
+            "tail": 0
+          }
+        ]
+      },
+      {
+        "name": "mouth",
+        "models": 3,
+        "errors": [],
+        "time": 2.03,
+        "mode": "chamber",
+        "containment": [
+          0.03386456828915223,
+          0.03675348221194916,
+          0.03141272276204001
+        ],
+        "triangles": [
+          48017,
+          48017,
+          48017
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 1,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 0,
+            "tail": 0
+          },
+          {
+            "visible": false,
+            "head": 0,
+            "tail": 0
+          },
+          {
+            "visible": false,
+            "head": 0,
+            "tail": 0
+          }
+        ]
+      },
+      {
+        "name": "breath",
+        "models": 3,
+        "errors": [],
+        "time": 2.6,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          50257,
+          50257,
+          50257
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          }
+        ]
+      },
+      {
+        "name": "breath-later",
+        "models": 3,
+        "errors": [],
+        "time": 2.82,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          50257,
+          50257,
+          50257
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          }
+        ]
+      },
+      {
+        "name": "smile",
+        "models": 3,
+        "errors": [],
+        "time": 4.34,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          48017,
+          48017,
+          48017
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 1,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 1,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 1,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          }
+        ]
+      },
+      {
+        "name": "windup",
+        "models": 3,
+        "errors": [],
+        "time": 4.78,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          48017,
+          48017,
+          48017
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0.35903715555555527,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "windup",
+            "looking": 1
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0.35903715555555527,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "windup",
+            "looking": 1
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0.35903715555555527,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "windup",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          }
+        ]
+      },
+      {
+        "name": "settle",
+        "models": 3,
+        "errors": [],
+        "time": 5.15,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          48017,
+          48017,
+          48017
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": -0.07558003828084701,
+            "lift": 0.9809750297265165,
+            "turn": 0.3965100964071607,
+            "smug": 0,
+            "hopStage": "air",
+            "looking": 0.6034899035928394
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": -0.07558003828084701,
+            "lift": 0.9809750297265165,
+            "turn": 0.3965100964071607,
+            "smug": 0,
+            "hopStage": "air",
+            "looking": 0.6034899035928394
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": -0.07558003828084701,
+            "lift": 0.9809750297265165,
+            "turn": 0.3965100964071607,
+            "smug": 0,
+            "hopStage": "air",
+            "looking": 0.6034899035928394
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          }
+        ]
+      },
+      {
+        "name": "landing",
+        "models": 3,
+        "errors": [],
+        "time": 5.58,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          49517,
+          49517,
+          49517
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0.4955462739905246,
+            "lift": 0,
+            "turn": 1,
+            "smug": 0,
+            "hopStage": "land",
+            "looking": 0
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0.4955462739905246,
+            "lift": 0,
+            "turn": 1,
+            "smug": 0,
+            "hopStage": "land",
+            "looking": 0
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0.4955462739905246,
+            "lift": 0,
+            "turn": 1,
+            "smug": 0,
+            "hopStage": "land",
+            "looking": 0
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          }
+        ]
+      },
+      {
+        "name": "fire",
+        "models": 3,
+        "errors": [],
+        "time": 2.6,
+        "mode": "fire",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          2240,
+          2240,
+          2240
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          }
+        ]
+      },
+      {
+        "name": "fire-later",
+        "models": 3,
+        "errors": [],
+        "time": 2.82,
+        "mode": "fire",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          2240,
+          2240,
+          2240
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          }
+        ]
+      },
+      {
+        "name": "gun",
+        "models": 3,
+        "errors": [],
+        "time": 2.6,
+        "mode": "gun",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          54705,
+          54705,
+          54705
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          },
+          {
+            "mouth": 1,
+            "exhale": 1,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 0,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 1
+          }
+        ],
+        "flow": [
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          },
+          {
+            "visible": true,
+            "head": 1,
+            "tail": 0
+          }
+        ]
+      }
+    ],
+    "sweep": {
+      "stats": {
+        "models": 3,
+        "errors": [],
+        "time": 6.8,
+        "mode": "chamber",
+        "containment": [
+          1,
+          1,
+          1
+        ],
+        "triangles": [
+          48017,
+          48017,
+          48017
+        ],
+        "dimensions": [
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          },
+          {
+            "chamber": [
+              0.2975499965250492,
+              0.23803999722003935,
+              0.39219838678836816
+            ],
+            "fit": 0.18973344654650112
+          }
+        ],
+        "acting": [
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 1,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 0
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 1,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 0
+          },
+          {
+            "mouth": 0,
+            "exhale": 0,
+            "inhale": 1.4997597826618576e-32,
+            "press": 0,
+            "lift": 0,
+            "turn": 1,
+            "smug": 0,
+            "hopStage": "rest",
+            "looking": 0
+          }
+        ],
+        "flow": [
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          },
+          {
+            "visible": false,
+            "head": 1,
+            "tail": 1
+          }
+        ]
+      },
+      "allFinite": true,
+      "endPoseDifference": 1.9436886783297673e-32
+    },
+    "motion": {
+      "meanShapeDisplacement": 0.01122420574617863,
+      "alreadyLooking": true,
+      "mouthOpenHeight": 0.08400000000000002,
+      "smileHeight": 0.04148279130458832
+    },
+    "controls": {
+      "focused": true,
+      "compareRestored": true,
+      "beatPaused": true,
+      "beatTime": 2.6
+    },
+    "mobile": {
+      "width": 390,
+      "scroll": 390
+    },
+    "exceptions": []
+  },
+  "sourceHashes": {
+    "tools\\slugs\\inspect-preview\\preview.js": "15924159a91a0e5d314662f3bd68adf0b2347d8cace0b8637d01508a603263f9",
+    "tools\\slugs\\inspect-preview\\flow.js": "3c867ce60fad30d025d89c54de3c3a87453d52cb81116a2c1e56c5655d37d5c7"
+  }
+}

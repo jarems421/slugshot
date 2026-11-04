@@ -45,7 +45,27 @@ def flame_sprite(path):
     Image.fromarray(np.rot90(pixels, -1), "RGBA").save(path)
 
 
-def main():
+# Glowing templates for the fire effects (tools/slugs/upload_fire_effects.py): name, colour, glow mask, see-through tips.
+FIRE_MATERIALS = {"InfernoWingFire": ("comicWingFireImage", "comicWingFireGlow", True),
+                  "InfernoExplosion": ("comicExplosionImage", "comicExplosionGlow", False)}
+
+
+def add_fire_materials(folder, ids):
+    """SurfaceAppearance templates for the fire effects, from whichever of their ids are known."""
+    for name, (colour, glow, see_through) in FIRE_MATERIALS.items():
+        if colour not in ids or glow not in ids:
+            continue
+        item = ET.SubElement(folder, "Item", {"class": "SurfaceAppearance", "referent": name})
+        properties = ET.SubElement(item, "Properties")
+        ET.SubElement(properties, "string", name="Name").text = name
+        ET.SubElement(ET.SubElement(properties, "Content", name="ColorMap"), "url").text = f"rbxassetid://{ids[colour]}"
+        ET.SubElement(ET.SubElement(properties, "Content", name="EmissiveMaskContent"), "uri").text = f"rbxassetid://{ids[glow]}"
+        if see_through:
+            ET.SubElement(properties, "token", name="AlphaMode").text = "1"  # Transparency
+
+
+def private_uploader():
+    """An upload(name, path, asset_type, content_type) function that returns the asset id and skips identical files."""
     PRIVATE.mkdir(parents=True, exist_ok=True)
     sys.argv = ["upload_open_cloud.py", str(BUILD/"base/model.glb")]
     spec = importlib.util.spec_from_file_location("private_upload", CLIENT)
@@ -82,7 +102,13 @@ def main():
         cache_path.write_text(json.dumps(cache, indent=2) + "\n", encoding="utf-8")
         print("Uploaded:", name, flush=True)
         return cache[name]["id"]
+    return upload
 
+
+def main():
+    upload = private_uploader()
+    cache_path = PRIVATE/"assets.json"
+    cache = json.loads(cache_path.read_text())
     sprite = PRIVATE/"flame-sprite.png"
     flame_sprite(sprite)
     flame = upload("flameSprite", sprite, "Image", "image/png")
@@ -91,6 +117,8 @@ def main():
     folder = ET.SubElement(document, "Item", {"class": "Folder", "referent": "materials"})
     ET.SubElement(ET.SubElement(folder, "Properties"), "string", name="Name").text = "InfernoMaterials"
     lines = ["--!strict", "-- Private model ids, image ids and face rig numbers; never commit.", "return {", f"\tflame = {flame},"]
+    # Made by upload_fire_effects.py; kept when the rest of this file is rewritten.
+    lines += [f"\t{name} = {cache[name]['id']}," for name in cache if name.startswith("comic")]
     for form, (mesh, stem) in FORMS.items():
         textures = BUILD/form/"textures"
         with Image.open(textures/(stem + "-glow.png")) as glow:
@@ -134,6 +162,7 @@ def main():
         lines.append("\t},")
     lines += ["}", ""]
     (PRIVATE/"InfernoAsset.luau").write_text("\n".join(lines), encoding="utf-8")
+    add_fire_materials(folder, {name: item["id"] for name, item in cache.items()})
     ET.ElementTree(document).write(PRIVATE/"materials.rbxmx", encoding="utf-8", xml_declaration=True)
     print("PASS: Inferno assets and material templates written privately")
 

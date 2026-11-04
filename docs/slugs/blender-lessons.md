@@ -222,3 +222,96 @@ Updated 2026-10-31. This is a working record, not a redesign of the pipeline or 
 ## 2026-11-03 - Passing a gaze threshold did not prove a readable greeting
 
 **Owner feedback:** Floppy still did not visibly look up enough compared with Inferno. **Cause:** fixed 0.22-radian head tilt was subtle, and the 30% notice miss/10-20-second cooldown/shared reaction budget made encounters sparse. **Implemented:** smooth height-tracking 0.4-0.75-radian look, reliable Floppy notice, shorter cooldown and independent reaction slots. Smile corners and lower lip blend into a content jaw-drop greeting. **Verified:** native test now requires actual upward head projection above 0.34, positive smile/jaw motion and hopping after greeting. Keep expression/body checks separate from state attributes. No Blender geometry or rig changes. [Evidence](../evidence/2026-11-03-floppy-greeting.json).
+## 2026-11-03: Inferno flight fire, from particles to wing geometry
+
+- **Owner feedback:** "loads of individual different fireballs"; "a bunch of individual fireballs making up one effect"; beam flames "slapped on vertically", "just kind of stuck on" and too two-dimensional "from distances".
+- **Attempts that failed:** Roblox's realistic fire texture (too realistic); comic particle flipbooks (still separate fireballs, the same complaint as the 2026-11-02 tail fire); camera-facing Beams on the wings (a flat card, foreshortened from the shooter's view, which is the view that matters).
+- **Fix:** a closed lens-shaped mesh per wing with swept flame licks, rooted under the wing's chord and coloured by hard bands that follow each lick. It has rows of ripple bones parented to matching wing bones, and comes from a separate GLB merged into the flying dragon on the server, aligned by the `root` bone. The body's `Highlight` outline runs round it as one silhouette.
+- **Prevention:** this is the second time particles failed for fire. Start fire with a designed shape. Review effects from behind and at range, because first person sees them from behind. The first regular tongues read as a saw blade; uneven broad licks with an outward sweep fixed that.
+- **Beam traps seen on the way:** an image preloaded as anything but a Beam still draws a white box on first use, and `TextureSpeed` must be 0.
+- **Verified:** Studio captures from behind, at 30 studs and at three-quarter, at frozen flight positions with live bones, and a real first-person shot. **Unresolved:** owner verdict; first-person view at full speed.
+
+## 2026-11-03: A drawn comic explosion in 3D
+
+- **Owner feedback:** the flipbook explosion was "too choppy" and flat; "it needs to be 3D".
+- **Failed:** colouring a spiky mesh by distance from the centre, or along each lobe, gives bullseye rings on any point facing the camera, which read as candy corn. Rim shells pushed out along the surface normal folded over in the hollows between lobes and drew dark creases.
+- **Fix:** one star-shaped core in a single pale colour, plus inside-out shells pushed straight out from the centre (yellow, orange, red, ink). A star-shaped surface offset radially never folds, and inside-out shells show only round the silhouette, so the bands follow the outline from every side. Fade it by shrinking, not transparency: see-through, the inner shells show and it turns muddy. Preview renders need back-face culling on, as Roblox draws.
+- **Verified:** Studio stills in slow motion and a real shot. Owner verdict pending.
+
+## 2026-11-03: Reset the transformation around the accepted beats
+
+- **Confirmed, owner feedback:** keep the gradual glow and horizontal twirl; the actual explosion is disliked. A reusable species-neutral base matters more than continuing to refine Inferno-specific effects. Supersedes the explosion recipe above for this runtime.
+- **Implemented:** removed shared explosion/rings/steam/cinders and scale overshoot; motion/aura defaults are separate immutable style data. Authored creature geometry and wing/tail fire remain intact. The server no longer depends on the unused explosion upload.
+- **Technical cause/fix:** the glow billboard plane was depth-clipped near floors. Drawing its soft alpha image without world depth clipping, and separately raycasting camera-to-source for wall visibility, avoids that rectangular cutoff. The first native pass then caught a loading deadlock: `ImageLabel.IsLoaded` stayed false under a disabled billboard despite successful preloading. Gate on `ContentProvider:GetAssetFetchStatus` instead. Retain the failed captures as evidence, not as approved art.
+- **Prevention:** test low floor angles, cover occlusion, first-use texture readiness, early impact and cancellation. Offline checks alone missed the image-readiness behaviour. No Blender model edit, rig change or re-export was needed.
+
+
+**Implemented/verified, reset follow-up (2026-11-03):** the native transformation review passes all three floor views, wall occlusion, reveal/fade/unfold, early impact, repeated cancellation, expiry and a real first-person shot. Captures are in ignored `build/transformation-check/reset-final-2026-11-03/`. The floor cutoff is absent in these views. Owner feel and thin-cover transitions remain unverified; the successful image gate uses shared asset fetch status, not disabled-label IsLoaded.
+
+
+## 2026-11-03: Inspect preview looked like a static PNG
+
+- **Confirmed failure:** owner called the fire breath "just like a PNG" that "flashes up", and Inferno's acting insufficiently fluid. The first preview extruded one static flame contour, then scaled/faded it; two tiny rigid hops did not reproduce the lobby's spring motion. Passing finite-pose/bounds checks missed the visual failure.
+- **Diagnosis:** animation/motion coherence, not a missing texture or a new global skill. Existing quality-gate methods were sufficient; the implementation and evidence omitted sustained shape evolution, anticipatory mouth acting and articulated compression.
+- **Implemented repair:** preserve v1 as rejected; replace static extrusion with a connected volumetric surface driven by travelling waves and flowing colour, start already looking, separate mouth opening from fire amplitude, and use the grove's wind-up/hold/air/landing sequence with Floppy-style overlapping head/body motion.
+- **Prevention:** compare multiple fully developed breath frames after normalizing scale, check opening/closing and hop extremes, review a timed motion clip and contact sheet. A still, an extruded mesh or a loop flag does not establish fluid animation. Browser procedural shading still needs a later native equivalent; no Studio success is implied.
+
+- **Implemented/verified, final fluidity check:** fractional-power radius sampling exposed an occasional invalid vertex when floating-point smootherstep exceeded 1 by epsilon at full growth. Clamp its output and the sine domain; verify every position and normal over 409 samples per variant. Final browser full-cycle/control/flow/mouth checks pass. Mouth preparation was moved after the gun's existing wrist reveal so the viewer can see the whole smile-to-O transition.
+
+
+## 2026-11-03: O-mouth ink, expression overlap and canister grounding
+
+- **Confirmed failure:** O shape acceptable but outline too black/heavy, facial acting too consistent across the mouth change, and the centred Inferno floats in the chamber.
+- **Cause:** broad ink sheet behind an increasingly narrow mouth; near-black cavity darkens while grin is still wide; lips animate mostly alone; preview positions the body at the canister centre regardless of sole position.
+- **Implemented repair:** thin ink overhang toward nearest matching lip points while preserving skin weights; warm the rim/cavity; stage narrowing/opening/darkening with eyelid/head/corner overlap. Enlarge preview Inferno 27% and place the evaluated sole against a defined inner-cap support plane. Hop clearance is measured along the canister's long axis.
+- **Prevention:** inspect both mid-transition directions, not only grin/O endpoints. Measure a supported sole and actual skinned body clearance through wind-up/air/land; centring a bounding box does not make a character stand on anything. Existing authored Blender sources and native assets are unchanged; preview vertex edits are not an export claim.
+
+
+## 2026-11-03 - Port the approved inspect into the native canister
+
+- **Confirmed:** v3 Playful Flame is the selected performance. Browser art approval does not establish native skin/material/assembly behaviour.
+- **Observed failures:** initial sole sampling could not find bones under the MeshPart (the imported skeleton is a sibling); uncentred imported vertex coordinates seated Inferno too low; sampling world frames during equip used an assembly before physics settled. Resolve bone names through the model, subtract EditableMesh.GetCenter(), and derive canonical handle frames from authored welds. The viewmodel uses that explicit local frame for the same rendered pose.
+- **Observed native mouth defect:** large O translations folded the imported mouth corners. Applying the edited ink alone did not fix it. The exact engine binding cause remains unresolved. Copy the original mouth/ink vertices, UVs and skin weights into rigid local EditableMeshes and evaluate their existing bone skin explicitly; the round O and thin rim then render correctly. Final sources/GLBs were preserved; no re-upload was needed.
+- **Implemented/verified:** native close-ups, whole gun and motion record reviewed; actual complete-body samples pass support/radius/cap checks, moving flame vertices pass finite/cylinder bounds; all interruption/disposal checks pass. See [native evidence](evidence/2026-11-03-inferno-inspect-native.json). Retain failed captures. Native shader colour differs from browser; device/deployed memory and observer performance remain unverified.
+
+
+## 2026-11-03 - Source-only review missed a first-person body/face mismatch
+
+### Later native polish: fit clamps, tooth scope and dynamic bounds
+
+- **Confirmed failures:** nominally enlarging a sideways plume still looked tiny because its nearest-wall fit reduced the entire surface. Solid Neon discs and square strips made the chamber light look blocky. Put the same flowing curl into spare chamber height and use continuous curved core/soft bands. Verify actual applied scale and every visible flame vertex, not just the requested multiplier.
+- **Observed/fixed:** held Floppy poses passed while a continuous spring return crossed the glass. Cache the loaded skin and centre its current cross-section after writing bones; keep both species at the same 1.10 scale. Final full-cycle traces pass; this is local runtime evidence, not a multiplayer performance claim.
+- **Observed/fixed:** the sharper tooth attempt initially touched replicated templates and damaged icon framing. Only edit live world models, leave viewport/template meshes native, and test the actual hotbar. Imported skinned tooth edits also disappeared; a rigid local surface evaluated with original weights retains the two shallow points. Scale stored bone-local offsets when the model resizes. Native checks cover both forms and ScaleTo; no authored source or upload changed.
+- **Review limit:** the final native verification pass has an escape-menu overlay in its captures. Preserve those logs/images as evidence. The presentation uses the preceding clean art-review recordings and explicitly identifies the later icon/resizing fixes; do not silently treat obstructed screenshots as a clean final visual review.
+
+- **Confirmed failure:** owner saw the old slow inspect, black chamber and wrong Floppy act, and Inferno's smile separating during expression/hop. The isolated asset branch lagged the approved inspect branch. Preserving its gun file byte-for-byte preserved obsolete behaviour.
+- **Cause/fix:** compare accepted feature history before handoff, not only the current branch. Restore main's clear-canister hull removal and Motor6D reconstruction in the viewmodel. Without the joints, the body ignored bone transforms while the CPU mouth followed them. Stabilise mouth mesh bounds through the morph and use the matching physical scale when sharing that mesh with the first-person copy.
+- **Prevention/implemented and verified:** require the actual visible first-person body joint, check mouth bound-centre stability, review through the real glass and from a quarter view, and record complete toss/act/lower for both slugs. Current-main runtime integration, native geometry/lifecycle checks and full source suites pass. Flame functions and timing were compared against the prior checkpoint and are unchanged. See [revision evidence](evidence/2026-11-03-inferno-inspect-current-build.json); owner feel/device/multiplayer coverage remains open.
+
+
+## 2026-11-04 - Readable breath, dissipation and return-catch framing
+
+- **Observed/fixed:** a straight side jet hit the nearest wall and shrank, while the later downward aim looked head-on and dropped with the lips. Sweep the plume around the chamber cross-section, bound radial thickness/height and use a stable emitted frame for the tail. Advect/spread it upward with vertex-opacity breakup; do not collapse the centreline back toward the mouth.
+- **Observed/fixed:** stronger forward effort passed held poses but reached radial ratio 1.00235 in continuous motion. Ease the pitch while preserving head/torso lift and lid/mouth strain. The final trace is below 0.978; the common slug scale remains 1.10.
+- **Observed/fixed:** blending to normal carry before the closing catch hid the idle catch. Keep the low catch visible, partially follow live carry during the toss, then release the remaining presentation weight afterward. Check the grip projection as well as the complete running clip. Final native catch is visible at 0.519/0.819 and movement speed 18 studs/s.
+- **QA correction:** wait for a new server inspect timestamp before measuring a second performance; the previous stamp can remain after completion. Resample recordings using capture timestamps, since capture cadence varies. Preserve rejected evidence and distinguish local checks from owner feel/performance approval.
+
+
+## 2026-11-04 - Fixed sole, coherent assets and real glass dimensions
+
+- **Observed/fixed:** dynamic whole-body centring kept a chamber fit but made Floppy’s foot wiggle with the head. Anchor evaluated sole contact and limit upper/head articulation only when necessary. Independent native foot and head traces verify the base stays planted while the upper half moves. Preserve rounded rest geometry.
+- **Observed/fixed:** a newer private model paired with old serialized SurfaceAppearance maps produced black patches. Refresh the model, explicit map module and materials together; a date alone does not establish a valid asset bundle. Keep inverted-hull culling explicit. Rejected captures remain in revision5.
+- **Observed/fixed:** selecting the already-selected startup slot exposed both species because late model parts bypassed the visibility cache. Invalidate on arriving BaseParts and test with injected late parts under both unselected models. Do not hide this with a fixture-only slot change.
+- **Implemented/verified:** lights follow separate glass half-axes and ellipse handles; native body checks use those actual dimensions. Fire has bounded 3D ember vertices and outward fading motion. Overlap return/hop to avoid an unwanted extra beat. [Evidence](evidence/2026-11-04-inferno-embers-footing.json). Owner art/feel and device/multiplayer verdicts remain open.
+
+
+## Native inspection size, landing and inhale (2026-11-04)
+
+**Implemented/verified locally:** equal scale multipliers did not yield equal apparent size because Floppy had a more conservative diagonal-box fit. A common chamber-relative resting height gives a 0.9905 measured height ratio. Dynamic antenna rebound and final face poses still need room: include them in fitting after face updates, and reserve shared clearance. Pin the sole continuously after the hop, using the undeformed silhouette for facing placement; do not follow the leaning animated head with the whole body. Native full-motion landing, movement and ellipse checks pass.
+
+**Confirmed/verified:** a replicated Floppy Model can arrive before its complete skeleton, so an early return without retry silently omits inspection. Species-scoped readiness retries fix the native repro. Runtime SurfaceAppearance map setters are plugin-only; a direct-set trial failed and was discarded. Create one shared repaired material with CreateSurfaceAppearanceAsync, then clone material revisions into first person. Preserve per-instance emission settings. Inferno torso lift alone was insufficient: a native-skinned belly corrective now changes silhouette while leaving sole/head vertices fixed. [Evidence and owner limits](evidence/2026-11-04-inhale-size-landing.json).
+
+
+## Rejected Floppy overcorrection and restoration (2026-11-04)
+
+**Confirmed:** the owner rejected the under-eye repaint, then the experimental antenna adjustments, and requested the original flat-bottom creature. **Cause:** per-frame whole-body clearance gain cut the spine motion and made it stiff/choppy; attempting to fit an overly large model by altering accepted face/antenna features compounded the issue. **Verified restoration:** original static face maps and original antenna transforms; original upper spring strengths, planted authored flat plane and modest uniform loaded enlargement that fits the full native motion. Evaluate only sole support in the hot path. Never move the antenna roots or recolour approved lids to solve loaded-size clearance. [Evidence](evidence/2026-11-04-floppy-original-restored.json). Owner restored-Floppy feel/art verdict remains open; Burpy is approved and unchanged.
