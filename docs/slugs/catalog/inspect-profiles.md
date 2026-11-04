@@ -1,5 +1,7 @@
 # Slug inspect briefs
 
+**Current, confirmed by the owner 2026-11-04:** flip the gun up, inspect it (the slug's act), then flip it to catch it down. This is the pipeline's version merged into `main` (opening toss, slug act, returning 0.24 s flip and low catch); the earlier thrown backflip with a plain lower below is superseded.
+
 **Implemented/verified locally, later 2026-11-03:** the polish candidate gives both loaded slugs a shared 10% enlargement, lower/inward but farther arm framing, continuous thin chamber light and a larger contained Playful Flame. Both Inferno forms have two small tapered tooth points in their resting smiles. Full-cycle body-fit, hotbar/template isolation and tooth resizing checks pass. See [current revision and review files](../inferno-inspect-studies.md#current-revision-shared-fit-clean-lights-larger-breath-and-smile-teeth). **Unresolved:** owner art/feel approval and device/multiplayer performance.
 
 **Confirmed, owner, 2026-11-02:** inspect is a shared one-handed blaster raise/lower with a different creature response for every species. The same action must read in first and third person. R is the initial rebindable key chosen for implementation.
