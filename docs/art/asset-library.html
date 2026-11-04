@@ -6403,6 +6403,69 @@ void chRubble(vec3 p, inout vec2 res) {
     chDebris(p, vec3(xz.x, y + 0.09*sin(uT*0.3 + fi*1.7), xz.y), 0.04 + 0.07*hash1(fi + 305.0), fi, res);
   }
 }
+// ---- Sign lettering: a small stroke font, each letter line segments on a 2 by 3 grid.
+float chSeg2(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba*clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0)); }
+float chGlyph(int c, vec2 q) {
+  float d = 1e3;
+  if (c == 1) {        // S
+    d = min(d, chSeg2(q, vec2(2.0, 3.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 1.5)));
+    d = min(d, chSeg2(q, vec2(0.0, 1.5), vec2(2.0, 1.5))); d = min(d, chSeg2(q, vec2(2.0, 1.5), vec2(2.0, 0.0)));
+    d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(0.0, 0.0)));
+  } else if (c == 2) { // L
+    d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 0.0))); d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(2.0, 0.0)));
+  } else if (c == 3) { // I
+    d = min(d, chSeg2(q, vec2(1.0, 3.0), vec2(1.0, 0.0))); d = min(d, chSeg2(q, vec2(0.3, 3.0), vec2(1.7, 3.0)));
+    d = min(d, chSeg2(q, vec2(0.3, 0.0), vec2(1.7, 0.0)));
+  } else if (c == 4) { // N
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(2.0, 0.0)));
+    d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 3.0)));
+  } else if (c == 5) { // G
+    d = min(d, chSeg2(q, vec2(2.0, 3.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 0.0)));
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(2.0, 0.0))); d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 1.4)));
+    d = min(d, chSeg2(q, vec2(2.0, 1.4), vec2(1.0, 1.4)));
+  } else if (c == 6) { // E
+    d = min(d, chSeg2(q, vec2(2.0, 3.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 0.0)));
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(2.0, 0.0))); d = min(d, chSeg2(q, vec2(0.0, 1.5), vec2(1.5, 1.5)));
+  } else if (c == 7) { // R
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(2.0, 3.0)));
+    d = min(d, chSeg2(q, vec2(2.0, 3.0), vec2(2.0, 1.5))); d = min(d, chSeg2(q, vec2(2.0, 1.5), vec2(0.0, 1.5)));
+    d = min(d, chSeg2(q, vec2(0.9, 1.5), vec2(2.0, 0.0)));
+  } else if (c == 8) { // '
+    d = min(d, chSeg2(q, vec2(1.0, 3.0), vec2(0.8, 2.2)));
+  } else if (c == 9) { // T
+    d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(2.0, 3.0))); d = min(d, chSeg2(q, vec2(1.0, 3.0), vec2(1.0, 0.0)));
+  } else if (c == 10) { // A
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 2.2))); d = min(d, chSeg2(q, vec2(0.0, 2.2), vec2(1.0, 3.0)));
+    d = min(d, chSeg2(q, vec2(1.0, 3.0), vec2(2.0, 2.2))); d = min(d, chSeg2(q, vec2(2.0, 2.2), vec2(2.0, 0.0)));
+    d = min(d, chSeg2(q, vec2(0.0, 1.3), vec2(2.0, 1.3)));
+  } else if (c == 11) { // H
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 3.0)));
+    d = min(d, chSeg2(q, vec2(0.0, 1.5), vec2(2.0, 1.5)));
+  }
+  return d;
+}
+// "SLINGER'S" over "STASH". Codes: 1 S, 2 L, 3 I, 4 N, 5 G, 6 E, 7 R, 8 ', 9 T, 10 A, 11 H.
+int chSignChar(int line, int i) {
+  if (line == 0) {
+    if (i == 0) return 1; if (i == 1) return 2; if (i == 2) return 3; if (i == 3) return 4; if (i == 4) return 5;
+    if (i == 5) return 6; if (i == 6) return 7; if (i == 7) return 8; if (i == 8) return 1; return 0;
+  }
+  if (i == 0) return 1; if (i == 1) return 9; if (i == 2) return 10; if (i == 3) return 1; if (i == 4) return 11; return 0;
+}
+// Distance to the lettering in the sign's own coordinates (x across, y up, in sign units).
+float chSignText(vec2 uv) {
+  float best = 1e3;
+  for (int line = 0; line < 2; line++) {
+    int count = line == 0 ? 9 : 5;
+    float adv = 2.9;
+    float x0 = -float(count)*adv*0.5 + 0.45;
+    vec2 q = uv - vec2(x0, line == 0 ? 0.75 : -3.75);
+    int i = int(floor(q.x/adv));
+    if (i < 0 || i >= count) continue;
+    best = min(best, chGlyph(chSignChar(line, i), q - vec2(float(i)*adv, 0.0)));
+  }
+  return best;
+}
 // ---- The shop. The door faces -z, where the rock path arrives. Pods are ellipsoids: centre and radii.
 void chPod(int i, out vec3 c, out vec3 r) {
   c = vec3(0.0, -10.0, 0.0); r = vec3(0.1);
@@ -6435,6 +6498,14 @@ void chPod(int i, out vec3 c, out vec3 r) {
   }
 }
 const vec3 CH_CAP = vec3(0.3, 7.3, 1.5);
+const float CH_SIGN_TILT = 0.62;
+vec3 chSignPos() {
+  vec3 c, r;
+  chPod(0, c, r);
+  float y = 3.0;
+  float k = (y - c.y)/r.y;
+  return vec3(0.0, y, c.z - r.z*sqrt(max(1.0 - k*k, 0.0)) - 0.2);
+}
 const float CH_CAP_R = 6.8;
 // The shop's one huge cap: the giant mushroom's cap, flattened so its top sits level with the tallest rim trees.
 void chBigCap(vec3 p, vec3 top, float capR, inout vec2 res) {
@@ -6514,13 +6585,35 @@ void chShop(vec3 p, inout vec2 res) {
   chKeep(max(max(arch, abs(dq.z - 0.45) - 0.1), -p.y), 120.0, res);
   // A frame round the doorway.
   float frame = max(abs(arch + 0.11) - 0.11, abs(dq.z - 0.02) - 0.16) - 0.03;
-  // A sign plate above the door, teal metal with a glowing inset.
-  vec3 sq = p - vec3(0.0, 3.0, c0.z - r0.z + 0.55);
-  float plate = sdBox(sq, vec3(1.15, 0.32, 0.08)) - 0.04;
-  chKeep(plate, 118.0, res);
-  chKeep(sdBox(sq - vec3(0.0, 0.0, -0.09), vec3(0.9, 0.16, 0.02)), 119.0, res);
+  // The sign: smaller, centred just above the arch, tilted back to sit on the pod's curve, the shop's name on its face.
+  vec3 sq = p - chSignPos();
+  sq.yz = rot(-CH_SIGN_TILT)*sq.yz;
+  float plate = sdBox(sq, vec3(0.78, 0.33, 0.05)) - 0.035;
+  chKeep(plate, sq.z < -0.06 ? 121.0 : 118.0, res);
   chKeep(max(frame, -p.y), 118.0, res);
 
+  // Small mushrooms growing on the upper pods.
+  for (int k = 0; k < 4; k++) {
+    int pi = k == 0 ? 1 : k == 1 ? 2 : k == 2 ? 4 : 5;
+    vec3 c, r;
+    chPod(pi, c, r);
+    if (c.y < -5.0) continue;
+    float a = float(k)*2.1 + 0.4;
+    vec3 d = normalize(vec3(0.35*cos(a), 1.0, 0.35*sin(a) - 0.2));
+    vec3 base = c + d*r - d*0.05;
+    chSmallShroom(p, base, 0.45 + 0.2*hash1(float(k)*3.0), float(k)*2.0 + 1.0, res);
+  }
+  // Round vent hatches on the side pods: a flush disc with a rim, slots painted on.
+  for (int k = 0; k < 2; k++) {
+    vec3 c, r;
+    chPod(k == 0 ? 1 : 2, c, r);
+    vec3 d = normalize(vec3(k == 0 ? -0.55 : 0.55, -0.15, -0.8));
+    vec3 n = normalize(d/r);
+    vec3 q = p - (c + d*r);
+    float h = dot(q, n);
+    float radial = length(q - n*h);
+    chKeep(max(abs(h) - 0.04, radial - 0.36) - 0.01, 122.0, res);
+  }
   // Real windows round each pod.
   for (int i = 0; i < 6; i++) {
     vec3 c, r;
@@ -6929,6 +7022,9 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 c = mix(vec3(0.84, 0.85, 0.8), vec3(0.94, 0.95, 0.9), 0.5 + 0.3*noise3(p*0.8));
     c *= 0.92 + 0.1*smoothstep(-0.3, 0.8, n.y);
     c = mix(c, vec3(0.62, 0.78, 0.9), 0.14*smoothstep(0.2, 1.0, n.y));
+    // Violet moss creeping up the bottom of the pods.
+    float moss = 1.0 - smoothstep(0.25, 1.0, p.y + 0.6*(noise3(p*1.6) - 0.5));
+    c = mix(c, mix(vec3(0.1, 0.05, 0.2), vec3(0.2, 0.1, 0.34), noise3(p*4.0)), moss*0.9);
     emit = c*0.16;
     return c;
   }
@@ -6939,6 +7035,24 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return c;
   }
   if (id > 118.5 && id < 119.5) { vec3 c = vec3(0.45, 0.95, 1.0); emit = c*1.2; return c*0.6; }
+  if (id > 120.5 && id < 121.5) {
+    // The sign's face: dark teal with the shop's name in glowing gold.
+    vec3 sq = p - chSignPos();
+    sq.yz = rot(-CH_SIGN_TILT)*sq.yz;
+    float d = chSignText(vec2(-sq.x, sq.y)/0.06);
+    float letter = 1.0 - smoothstep(0.35, 0.6, d);
+    vec3 c = mix(vec3(0.06, 0.14, 0.16), vec3(1.0, 0.82, 0.45), letter);
+    emit = vec3(1.0, 0.75, 0.35)*letter*1.3;
+    return c;
+  }
+  if (id > 121.5 && id < 122.5) {
+    // Vent hatch: dark teal metal with slots.
+    vec3 c = vec3(0.12, 0.22, 0.24);
+    float slots = smoothstep(0.35, 0.5, abs(fract(p.y*7.0) - 0.5));
+    c *= 0.55 + 0.6*slots;
+    emit = c*0.05;
+    return c;
+  }
   if (id > 119.5 && id < 120.5) { vec3 c = vec3(1.0, 0.72, 0.4); emit = c*1.3; return c*0.6; }
   if (id > 112.5 && id < 113.5) {
     // Cobbles: worn grey-violet, each its own shade, dark in the joints.
@@ -7062,7 +7176,7 @@ bool emissive(float id) {
   if (id >= 90.0) return id > 95.5 && id < 98.95;
 #endif
 #if ASSET == 15
-  if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || (id > 111.95 && id < 112.5) || (id > 118.5 && id < 120.5);
+  if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || (id > 111.95 && id < 112.5) || (id > 118.5 && id < 121.5);
 #endif
 #if ASSET == 9
   if (id >= 40.0) return abs(id - 42.0) < 0.5 || abs(id - 44.0) < 0.5 || (id > 47.9 && id < 48.9) || abs(id - 54.0) < 0.5 || abs(id - 58.0) < 0.5;
@@ -7089,7 +7203,7 @@ float inkWidth(float id) {
     if (id > 17.5) w = 0.035;
     if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 15.69)) w = 0.01;
     if (id >= 40.0) {
-      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : id < 116.5 ? 0.012 : id < 117.5 ? 0.02 : id < 118.5 ? 0.012 : 0.0) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
+      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : id < 116.5 ? 0.012 : id < 117.5 ? 0.02 : id < 118.5 ? 0.012 : id < 120.5 ? 0.0 : 0.01) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
     }
   }
   return w*TR(id).x;
@@ -7838,7 +7952,7 @@ void main() {
     if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 3.5 && hitId > 2.3 && hitId < 2.5) || (hitId > 29.5 && hitId < 31.5)) { crease = 0.0; idEdge *= 0.6; }
     if (hitId > 55.5 && hitId < 58.5 || hitId > 39.5 && hitId < 42.5) { crease = 0.0; idEdge = 0.0; }
     // The shop's smooth pod shells and their windows and door: clean outlines only, no crease smudges (owner).
-    if (uAsset > 14.5 && hitId > 116.5 && hitId < 120.5) crease = 0.0;
+    if (uAsset > 14.5 && hitId > 116.5 && hitId < 122.5) crease = 0.0;
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
     if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }
