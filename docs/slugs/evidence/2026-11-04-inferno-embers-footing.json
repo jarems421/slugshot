@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-04",
+  "state": "Implemented/verified locally; owner visual/feel approval pending",
+  "timing": {
+    "previousInfernoSeconds": 6.5,
+    "currentInfernoSeconds": 4.67,
+    "returnHopStart": 3.95,
+    "gunReturnStart": 4.12,
+    "gunRelease": 4.2,
+    "gunCatch": 4.44,
+    "FloppySeconds": 3.9
+  },
+  "fire": {
+    "nominalScale": "0.75 * rig.scale / Flow.GameScale",
+    "emberSlots": 10,
+    "emberGeometry": "60 vertices / 80 triangles, same local editable surface; streamed emission with fading colour alpha",
+    "ending": "expand tangentially/upward; keep depth bounded and disperse outward",
+    "contained": "495 referenced vertices finite and inside the chamber in native-r1",
+    "appliedScaleSamples": [
+      "0.18843436987871623",
+      "0.16662017060249892",
+      "0.1663278633131574",
+      "0.17835607485049873"
+    ]
+  },
+  "effort": "Stronger torso/head lift and chin raise for inhale; stronger lid drop/tilt and antenna tension during exhale; no cheek-inflation driver",
+  "canisterOutline": "Fit 1.008 times the actual X/Y glass half-sizes, rather than one minimum radius; quarter-ellipse Bezier handles use separate tangent lengths",
+  "Floppy": {
+    "assetSource": "Current main private Floppy bundle, model and material maps together; no new asset upload",
+    "rounding": "Preserve current authored lower-body mesh and matched surface normals/materials",
+    "footing": "Pin evaluated lower-body sole to the inner cap; suppress lower-body sway while standing; reserve articulation corrections for upper/head bones",
+    "footSamples": 17,
+    "footDriftStuds": 3e-06,
+    "upperMotionStuds": 0.033668,
+    "sharedSizeIncrease": 1.1,
+    "bundleSha256": {
+      "FloppyAsset.luau": "c4be4630fcc2166ef294e0ea287710615bf1a0e95ad875f12dfa17cc024dd317",
+      "materials.rbxmx": "a7d287c9f0db5c98b2e6429f2ce0bf3299845e99d31855889eb5cb8ee4103975",
+      "image-assets.json": "e75ab93613f4e456f182fd540e3bb928ffe82b50c134c76d00bca41180fba31e",
+      "roblox_assets.json": "fc1b02266dcb091cc7ee5d7f5663db0dbcffc4605f2b9b0ffcca988701a92c2a"
+    }
+  },
+  "skinTrace": [
+    {
+      "species": "Floppy",
+      "samples": 71,
+      "radial": 0.99663,
+      "axial": 0.86005
+    },
+    {
+      "species": "Inferno",
+      "samples": 214,
+      "radial": 0.93757,
+      "axial": 0.89314
+    }
+  ],
+  "crossSection": "Actual elliptical chamber X/Y radii; fire keeps the conservative inner circular margin",
+  "checks": [
+    "verify_combat PASS (includes movement/foundation)",
+    "verify_slugs PASS",
+    "Studio CombatSelfTest ALL PASS",
+    "native-r1 geometry/face/ember/cancel/death/disposal PASS",
+    "motion-final full cycles, ellipse fit, fixed foot/moving upper body, running catch, visible grip, icon isolation and tooth rescaling PASS",
+    "content-final late-part visibility regression PASS"
+  ],
+  "runningCatch": [
+    "running return catch registered, speed 18.00, max grip frame step 0.22086, relative speed 2.258"
+  ],
+  "visibleCatch": [
+    "low catch grip on screen true at 0.519 0.814"
+  ],
+  "trialCorrections": [
+    "Newer Floppy model requires matching material bundle; mixed maps produced black patches and were rejected",
+    "Inverted ink hull explicitly uses one-sided culling",
+    "Selecting the already-selected first slot exposed a late-loaded-parts cache race; invalidate visibility cache on arriving BaseParts and test both species",
+    "Whole-body fit centring moved the foot with the head; fixed sole placement and upper-only articulation replace that behaviour"
+  ],
+  "review": {
+    "place": "build/SlugshotInfernoInspect-EmbersAndFooting.rbxlx",
+    "html": "build/inferno-inspect/revision5/Inferno-embers-and-footing-preview.html",
+    "clips": [
+      {
+        "key": "inferno-whole",
+        "title": "Normal view",
+        "diagnosticCamera": false,
+        "sourceFrames": 75,
+        "captureSpanSeconds": 5.4487,
+        "resample": "capture file timestamps",
+        "frames": 55,
+        "durationMs": 5500,
+        "file": "inferno-whole.gif"
+      },
+      {
+        "key": "inferno-running",
+        "title": "Running finish",
+        "diagnosticCamera": false,
+        "sourceFrames": 61,
+        "captureSpanSeconds": 5.4864,
+        "resample": "capture file timestamps",
+        "frames": 49,
+        "durationMs": 5500,
+        "file": "inferno-running.gif"
+      },
+      {
+        "key": "inferno-chamber",
+        "title": "Flame detail",
+        "diagnosticCamera": true,
+        "sourceFrames": 39,
+        "captureSpanSeconds": 5.4382,
+        "resample": "capture file timestamps",
+        "frames": 31,
+        "durationMs": 5500,
+        "file": "inferno-chamber.gif"
+      },
+      {
+        "key": "floppy-current",
+        "title": "Floppy footing",
+        "diagnosticCamera": true,
+        "sourceFrames": 83,
+        "captureSpanSeconds": 5.4949,
+        "resample": "capture file timestamps",
+        "frames": 55,
+        "durationMs": 5500,
+        "file": "floppy-current.gif"
+      }
+    ]
+  },
+  "limits": [
+    "Owner art/feel approval pending",
+    "Native recording cadence is lower than live play",
+    "Device/deployed EditableMesh/observer/multiplayer performance remains unverified",
+    "Known Studio profiler warning appears in some runs",
+    "Geometry/lifecycle pass precedes material pairing and visibility fix; final motion and targeted content tests cover those changes"
+  ],
+  "sourceSha256": {
+    "experiments/combat/client/CombatClient.client.luau": "0131bfe8a0c5cd44ce2f5b53904474ed99366ba120d5fc525ddbe1e8143314b3",
+    "experiments/movement/client/SlugInspect.luau": "1a7dbfebc5444b49ea9fb9c82f6f9353ed99044f9993bc54d6a17ba27e72c5c9",
+    "experiments/creatures/floppy/client/FloppyIdle.client.luau": "4357bbf832bd77856034033296f06e1979f99e62ff2cca223c177fcf577aaaac",
+    "experiments/creatures/floppy/server/FloppyBlaster.server.luau": "7c09700d40dda08423c679a7303022badbdb060b94d68f01df7ad6810fc00df8",
+    "experiments/creatures/floppy/server/FloppyAppearance.luau": "d9a51e0a0eb0b8f0562063ed15b3bc9e65b804de3e9dc3dfdf4577fa17b11bb0",
+    "experiments/creatures/inferno/inspect/Flow.luau": "c6365b0a429e9b8b265b14e2f4c29cc154e30d4f012a799cd0c186ec91cbc100",
+    "experiments/creatures/inferno/inspect/Rig.luau": "1ee0334fec623e0b5c9d93bfaf5487ef9561211dccb562a9ae907c2dbf335237",
+    "experiments/creatures/inferno/inspect/Surface.luau": "28f64a29b1f620542edafd7a9a47b153b306f2c062a62b431125f8d67196528a",
+    "experiments/creatures/inferno/inspect/init.client.luau": "33fe03da6f953a017241ab1009fd314edc3de886da048f2281d1d18a7d379d8d",
+    "private-assets/floppy/FloppyAsset.luau": "c4be4630fcc2166ef294e0ea287710615bf1a0e95ad875f12dfa17cc024dd317"
+  },
+  "placeSha256": "183fc7a6b4aedae96f9e004211722d2e8b70a84b228dae32e2013d4d9d25da7a",
+  "newUploadsPublishesPushes": false
+}

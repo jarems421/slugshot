@@ -149,3 +149,8 @@ Look renders are on the [Floppy and the Blaster](https://claude.ai/artifact/Fvvz
 **Confirmed/implemented, 2026-11-02 - inspect correction:** owner requires Floppy to remain in the chamber throughout the toss/catch and outward reveal. His turn now has compression, spring extension, airborne rotation and cushioned landing; the bum shake uses hips with upper-body/head counterrotation, without extra jiggles. Loaded fit reserves turn/hop space. [Current review](../inspect-revision.md#toss-catch-and-contained-spring-turn-2026-11-02-current). Existing creature source/art stays intact; owner verdict remains unresolved.
 
 **Confirmed/implemented, 2026-11-02 - shooting consistency:** owner wants first/second kicks slower with a little more drop and third-kick speed unchanged. Current Floppy speeds are **85 / 100 / 115 studs/s**; gravity 70, drag 0.35, damage 7, tumbling and no transformation remain. The continuous ballistic policy removes the abrupt distance switch; owner feel verdict on these speeds remains unresolved. [Mechanics/evidence](../../combat.md#shot-consistency-and-distinct-floppy-powers-2026-11-02-current).
+
+
+## Original loaded design restored (2026-11-04)
+
+**Confirmed:** owner rejects recent under-eye repaint/antenna changes and requests the original flat-bottom Floppy, clean original face, smooth upper-half wiggle and planted lower half. Loaded enlargement must stay inside the glass. **Implemented/verified locally:** original accepted face maps/antenna transforms restored, authored flat ground plane seated on the cap, and a modest uniform enlargement validated through the complete motion. [Evidence and review](../evidence/2026-11-04-floppy-original-restored.json). Owner restoration verdict and devices/multiplayer remain unresolved.

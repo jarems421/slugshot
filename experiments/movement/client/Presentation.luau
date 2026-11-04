@@ -11,6 +11,7 @@ local shared = game:GetService("ReplicatedStorage"):WaitForChild("MovementExperi
 local Config = require(shared.Config)
 local Math = require(shared.MotionMath)
 local Clips = require(shared.Clips)
+local Inspect = require(script.Parent.SlugInspect)
 local FirstPerson = require(script.Parent.FirstPerson)
 local Recoil = require(script.Parent.BlasterRecoil)
 local Tuning = require(script.Parent.Tuning)
@@ -635,7 +636,7 @@ function Presentation.start(clips: Clips.Library)
 		local wasAiming = rig.aiming
 		rig.aiming = aiming
 		local fidget = Moves.Fidget
-		if speed > 1 or aiming or not grounded or rig.action then
+		if speed > 1 or aiming or not grounded or rig.action or Inspect.elapsed(character) then
 			rig.fidgetAt = now + fidget.After + math.random() * fidget.Spread
 		end
 		if not grounded or rig.action then
@@ -689,7 +690,14 @@ function Presentation.start(clips: Clips.Library)
 		local t = elapsed * move.rate
 		local kind = move.kind
 		local cancel = (kind == "Settle" and (speed > 1.5 or character:GetAttribute("Aiming")))
-			or (kind == "Fidget" and (speed > 1.5 or character:GetAttribute("Aiming")))
+			or (
+				kind == "Fidget"
+				and (
+					speed > 1.5
+					or character:GetAttribute("Aiming")
+					or Inspect.elapsed(character) ~= nil
+				)
+			)
 		local weight = 1
 		if kind == "Flinch" then
 			-- The clip is strong for its weight, so it comes in late: a light hit is almost all spring.

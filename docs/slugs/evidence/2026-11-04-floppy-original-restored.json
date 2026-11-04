@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-04",
+  "state": "Implemented/verified locally; owner review pending",
+  "owner": "Burpy animation is perfect; restore original Floppy design with flat bottom, fixed original under-eyes, enlarged only as far as contained",
+  "restored": [
+    "Original accepted static face albedo/normal maps; custom under-eye repaint module removed",
+    "Original antenna transforms and placement; experimental tuck/translation removed",
+    "Original upper-body spring strengths; per-frame clearance gain removed",
+    "Authored flat ground plane seated on inner cap, with lower-body sway/flank motion suppressed while standing"
+  ],
+  "size": {
+    "increaseOverOriginalLoadedFit": 1.045,
+    "note": "Use original conservative Floppy fit with a modest enlargement; preserve approved Inferno size and all gun/light setup"
+  },
+  "native": {
+    "samples": 70,
+    "maximumRadialRatio": 0.97682,
+    "maximumAxialRatio": 0.87494,
+    "baseDriftStuds": 3e-06,
+    "upperMotionStuds": 0.036257,
+    "flatPlaneLandingErrorStuds": 0.0,
+    "landingSamples": 5,
+    "materials": "Native comparison confirms original template colour/normal maps, with no EditableImage replacement"
+  },
+  "Burpy": "All Inferno source and shared inspect timing hashes match the approved checkpoint; original Inferno blaster setup block matches exactly",
+  "checks": [
+    "verify_combat PASS",
+    "verify_slugs PASS",
+    "Studio original materials, flat landing, full motion containment and fixed base/moving upper half PASS",
+    "compiled normal build matches current sources and excludes fixtures/repaint module"
+  ],
+  "rejected": "Latest under-eye edits and antenna adjustments explicitly rejected; archived under ignored revision7; no further design changes",
+  "review": {
+    "place": "build/SlugshotInspect-FloppyOriginalRestored.rbxlx",
+    "preview": "build/inferno-inspect/revision7/Floppy-original-restored.html"
+  },
+  "limits": [
+    "Owner visual/feel verdict remains pending",
+    "Single-client desktop check; multiplayer/device coverage unverified",
+    "Capture cadence is lower than live play"
+  ],
+  "sourceSha256": {
+    "experiments/creatures/floppy/client/FloppyIdle.client.luau": "d3e149b2a645b32a2d534a746849b7d023d18efe21efd81fc1b2187e680170c4",
+    "experiments/creatures/floppy/client/FloppyFace.client.luau": "04ce2f08efb3013c01109e3f6df34ec6ffb3117dcf9a6f9c6d03797e202b9cdb",
+    "experiments/creatures/floppy/server/FloppyBlaster.server.luau": "6051353489478b094602eae39dc5c2c69bf3306a958dc67d8681d44f1da667c4"
+  },
+  "uploadsPublishesPushes": false
+}

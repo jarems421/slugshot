@@ -57,6 +57,12 @@
         },
         "FloppyFace": {
           "$path": "experiments/creatures/floppy/client/FloppyFace.client.luau"
+        },
+        "InfernoInspect": {
+          "$path": "experiments/creatures/inferno/inspect"
+        },
+        "InfernoTeeth": {
+          "$path": "experiments/creatures/inferno/client/InfernoTeeth.client.luau"
         }
       }
     },

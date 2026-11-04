@@ -18,6 +18,25 @@ end
 local floppy = Combat.Slugs.Floppy
 local MUZZLE = Vector3.new(0, 4.5, 0)
 
+-- A transforming slug's clock: full speed at launch, slowing and never speeding up. Slugs without one keep real time.
+do
+	local inferno = Combat.Slugs.Inferno
+	local shape = inferno.Transformation :: Combat.Transformation
+	local slowing, before, last = true, 0, math.huge
+	for step = 1, 600 do
+		local now = Combat.flightTime(inferno, step / 600)
+		local rate = (now - before) * 600
+		slowing = slowing and rate <= last + 1e-6 and rate >= shape.Cruise - 1e-6
+		before, last = now, rate
+	end
+	check(slowing, "transformation flight slows smoothly down to its cruise speed")
+	check(
+		(Combat.flightTime(inferno, 0.001) / 0.001) > 0.97,
+		"transformation flight starts at full speed"
+	)
+	check(Combat.flightTime(floppy, 0.7) == 0.7, "non-transforming slug keeps real time")
+end
+
 -- Closed form against small-step integration of dv/dt = g - k v.
 for _, charge in { 0, 1 } do
 	local velocity = Vector3.new(0, 0.3, -1).Unit * Combat.speed(floppy, charge)

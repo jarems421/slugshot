@@ -20,6 +20,9 @@ function Appearance.apply(model: Model, minimumLight: number?)
 			continue
 		end
 		if part.Name == "FloppyBody_Ink" then
+			-- An inverted hull must cull its outward backfaces. Importing it as
+			-- double-sided covers the coloured body with black surface patches.
+			part.DoubleSided = false
 			for _, child in part:GetChildren() do
 				if child:IsA("SurfaceAppearance") then
 					child:Destroy()

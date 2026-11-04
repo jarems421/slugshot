@@ -101,6 +101,12 @@ local turned = lying < upright
 local fix = (if turned then CFrame.Angles(-math.pi / 2, 0, 0) else CFrame.identity)
 	* (spec.rotation or CFrame.identity)
 for mesh, part in parts do
+	if mesh.name == CANISTER .. "_Ink" then
+		-- An inverted hull shows its inside faces through clear glass: a solid black
+		-- wall behind the slug. The chamber's rings and collars already frame the glass.
+		part:Destroy()
+		continue
+	end
 	local s = mesh.size * SCALE
 	part.Name = mesh.name
 	part.Size = if turned then Vector3.new(s.X, s.Z, s.Y) else s
@@ -212,36 +218,71 @@ for tag, sign in SIDES do
 	)
 end
 
--- Soft light-blue trim on the chamber: a ring at each end and a thin strip along
--- the top and bottom edges, so the tube glows without covering the slug.
-local GLOW = Color3.fromRGB(165, 210, 255)
-local radius = math.min(canisterSize.X, canisterSize.Y) / 2
-local function trim(name: string, size: Vector3, offset: CFrame)
-	local part = Instance.new("Part")
-	part.Name = name
-	part.Material = Enum.Material.Neon
-	part.Color = GLOW
-	part.Size = size
-	part.Transparency = 0.45
-	part.CastShadow = false
-	attach(part, offset, tool)
-	return part
+-- Continuous rounded light bands, with a restrained soft shoulder around the
+-- core. Solid cylinder caps and square strips made the glass look faceted.
+local GLOW = Color3.fromRGB(208, 235, 243)
+local rimX, rimY = canisterSize.X * 0.5 * 1.008, canisterSize.Y * 0.5 * 1.008
+local lightFrame = Instance.new("Part")
+lightFrame.Name = "ChamberLightFrame"
+lightFrame.Size = Vector3.one * 0.02
+lightFrame.Transparency = 1
+attach(lightFrame, CFrame.new(canisterCentre), tool)
+local function point(name: string, position: Vector3, tangent: Vector3): Attachment
+	local a = Instance.new("Attachment")
+	a.Name = name
+	a.CFrame =
+		CFrame.fromMatrix(position, tangent, Vector3.new(-tangent.Y, tangent.X, 0), Vector3.zAxis)
+	a.Parent = lightFrame
+	return a
+end
+local function band(name: string, a: Attachment, b: Attachment, curve: number, finishCurve: number?)
+	for _, soft in { false, true } do
+		local beam = Instance.new("Beam")
+		beam.Name = name .. (if soft then "Soft" else "Core")
+		beam.Attachment0, beam.Attachment1 = a, b
+		beam.CurveSize0, beam.CurveSize1 = curve, finishCurve or curve
+		beam.Segments = 24
+		beam.FaceCamera = true
+		beam.Width0, beam.Width1 = if soft then 0.024 else 0.009, if soft then 0.024 else 0.009
+		beam.Color = ColorSequence.new(GLOW)
+		beam.Transparency = NumberSequence.new(if soft then 0.90 else 0.22)
+		beam.LightEmission, beam.LightInfluence = 0.7, 0
+		beam:SetAttribute("ChamberLight", true)
+		beam.Parent = lightFrame
+	end
 end
 for i, z in { -1, 1 } do
-	local ring = trim(
-		"ChamberRing" .. i,
-		Vector3.new(0.03, radius * 2.04, radius * 2.04),
-		CFrame.new(canisterCentre + Vector3.new(0, 0, z * (canisterSize.Z / 2 - 0.04)))
-			* CFrame.Angles(0, math.pi / 2, 0)
-	)
-	ring.Shape = Enum.PartType.Cylinder
+	local anchors = {}
+	local tangents = {}
+	for j = 0, 3 do
+		local angle = j * math.pi / 2
+		local tangent = Vector3.new(-rimX * math.sin(angle), rimY * math.cos(angle), 0)
+		tangents[j + 1] = tangent.Magnitude
+		anchors[j + 1] = point(
+			`Ring{i}_{j}`,
+			Vector3.new(
+				rimX * math.cos(angle),
+				rimY * math.sin(angle),
+				z * (canisterSize.Z / 2 - 0.04)
+			),
+			tangent.Unit
+		)
+	end
+	for j = 1, 4 do
+		band(
+			`Ring{i}_{j}`,
+			anchors[j],
+			anchors[j % 4 + 1],
+			tangents[j] * 0.55228475,
+			tangents[j % 4 + 1] * 0.55228475
+		)
+	end
 end
 for i, y in { -1, 1 } do
-	trim(
-		"ChamberStrip" .. i,
-		Vector3.new(0.02, 0.02, canisterSize.Z - 0.08),
-		CFrame.new(canisterCentre + Vector3.new(0, y * radius * 0.98, 0))
-	)
+	local a =
+		point(`Rail{i}A`, Vector3.new(0, y * rimY, -(canisterSize.Z / 2 - 0.04)), Vector3.xAxis)
+	local b = point(`Rail{i}B`, Vector3.new(0, y * rimY, canisterSize.Z / 2 - 0.04), Vector3.xAxis)
+	band(`Rail{i}`, a, b, 0)
 end
 
 -- Floppy inside the canister: lying head-first toward the muzzle, belly down.
@@ -272,20 +313,27 @@ local _, reported = floppy:GetBoundingBox()
 local current = (eyeR.WorldPosition - eyeL.WorldPosition).Magnitude / EYE_SPACING
 assert(current > 1e-5, "Floppy eye spacing is zero")
 -- Leave room for the antenna tips, idle motion and the chamber walls.
-local target = math.min(
+local loadedSizeIncrease = 1.045 -- one shared height fit, with room for both creatures' full acting
+-- Match authored sole-to-tip height, rather than applying the same multiplier
+-- to two different bounding-box fits. The client checks the actual skinned
+-- silhouette against the elliptical glass throughout the turn and landing.
+local loadedHeight = loadedSizeIncrease * canisterSize.Y * 0.426978 * 2.506
+local floppyBaseFit = math.min(
 	canisterSize.X * 0.84 / SOURCE_SIZE.X,
 	canisterSize.Y * 0.82 / SOURCE_SIZE.Z,
 	canisterSize.Z * 0.86 / SOURCE_SIZE.Y,
-	-- Turning sweeps the source rectangle's corners. Reserve a circular
-	-- envelope plus articulation margin, not just its front-facing width.
 	math.min(canisterSize.X, canisterSize.Y)
 		* 0.9
 		/ (Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude + 0.2)
 )
+local floppyIncrease = loadedSizeIncrease
+local target = floppyBaseFit * floppyIncrease
 local shrink = target / current
 floppy:ScaleTo(floppy:GetScale() * shrink)
 -- Numeric containment contract for the client-only inspect, derived from this fit.
 floppy:SetAttribute("ChamberCentre", canisterCentre)
+floppy:SetAttribute("LoadedSizeIncrease", floppyIncrease)
+floppy:SetAttribute("LoadedHeight", SOURCE_SIZE.Y * target)
 floppy:SetAttribute("ChamberHalfSize", canisterSize / 2)
 floppy:SetAttribute("LoadedHalfLength", (SOURCE_SIZE.Y / 2 + 0.12) * target)
 floppy:SetAttribute(
@@ -293,8 +341,8 @@ floppy:SetAttribute(
 	(Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude / 2 + 0.1) * target
 )
 floppy:SetAttribute(
-	"InspectHopHeight",
-	math.max(0, math.min(0.035, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008))
+	"ChamberRoom",
+	math.max(0, canisterSize.Z / 2 - (SOURCE_SIZE.Y / 2 + 0.12) * target - 0.008)
 )
 local up = (head.WorldPosition - rootBone.WorldPosition).Unit
 local face = (eyeL.WorldPosition + eyeR.WorldPosition) / 2 - head.WorldPosition
@@ -339,11 +387,7 @@ if infernoAsset and infernoAppearance and infernoMaterials then
 			child.Parent = inferno
 		end
 		(infernoContainer :: Instance):Destroy()
-		local fit = math.min(
-			canisterSize.X * 0.84 / INFERNO_SIZE.X,
-			canisterSize.Y * 0.82 / INFERNO_SIZE.Z,
-			canisterSize.Z * 0.86 / INFERNO_SIZE.Y
-		);
+		local fit = loadedHeight / INFERNO_SIZE.Y;
 		(require :: any)(infernoAppearance).dress(inferno, infernoMaterials, fit)
 		local left = inferno:FindFirstChild("antenna_L", true) :: Bone
 		local right = inferno:FindFirstChild("antenna_R", true) :: Bone
@@ -361,6 +405,12 @@ if infernoAsset and infernoAppearance and infernoMaterials then
 			infernoBack
 		)
 		inferno:PivotTo(placed * infernoReference:Inverse() * inferno:GetPivot())
+		local body = inferno:FindFirstChild("InfernoBody", true) :: MeshPart
+		local bodyCentre = handle.CFrame:PointToObjectSpace(body.Position)
+		local centreShift = handle.CFrame:VectorToWorldSpace(
+			Vector3.new(canisterCentre.X - bodyCentre.X, canisterCentre.Y - bodyCentre.Y, 0)
+		)
+		inferno:PivotTo(inferno:GetPivot() + centreShift)
 		for _, descendant in inferno:GetDescendants() do
 			if descendant:IsA("BasePart") then
 				attach(
@@ -373,6 +423,10 @@ if infernoAsset and infernoAppearance and infernoMaterials then
 				end
 			end
 		end
+		inferno:SetAttribute("ChamberCentre", canisterCentre)
+		inferno:SetAttribute("LoadedSizeIncrease", loadedSizeIncrease)
+		inferno:SetAttribute("LoadedHeight", loadedHeight)
+		inferno:SetAttribute("ChamberSize", canisterSize)
 		inferno.Parent = tool
 	else
 		warn(`could not load Inferno: {infernoContainer}`)

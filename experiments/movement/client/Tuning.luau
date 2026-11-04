@@ -95,6 +95,8 @@ Tuning.values = {
 	landDip = 0.24,
 	-- Floppy's recovery, impact to gone.
 	recoveryTime = 1.5,
+	-- Studio review: slows every shot's flight and effects on this screen.
+	shotSlowMo = 1,
 	skidLength = 1,
 	wiggle = 1,
 }
@@ -165,6 +167,7 @@ Tuning.Entries = {
 	entry("spotRoll", "Side tilt (deg)", "Flip camera (Spot)", 0, 40, 1),
 	entry("landDip", "Landing dip", "Landing (first person)", 0, 0.6, 0.01),
 	entry("recoveryTime", "Total time (s)", "Floppy burrow", 1, 3, 0.05),
+	entry("shotSlowMo", "Shot speed (1 = real)", "Slow motion (review)", 0.05, 1, 0.01),
 	entry("skidLength", "Belly skid", "Floppy burrow", 0, 2, 0.05),
 	entry("wiggle", "Wiggle", "Floppy burrow", 0, 2, 0.05),
 	entry("hitFull", "Damage for a full reaction", "Getting hit", 10, 100, 1),

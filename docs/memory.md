@@ -1,5 +1,10 @@
 # Project memory
 
+## 2026-11-03 - Shared inspect fit and restrained chamber light
+
+- **Confirmed:** Floppy and Inferno must share one loaded-size increase. The owner rejected the blocky chamber light, undersized breath and excessively close inspection framing; normal view must show the upper arm. Both Inferno forms should have a clean wavy tooth division in their resting smile.
+- **Implemented/verified locally:** shared 10% fit, lower/inward but farther inspection pose, curved core/soft light frame, larger contained Playful Flame and tooth-divider transitions. Larger 25%/15% Inferno trials failed body containment; nominal flame enlargement alone failed visually because the fit clamp removed it. Native full-cycle skin traces, light-copy/lifecycle checks, both-form smile review and offline suites are recorded in [current evidence](slugs/evidence/2026-11-03-inferno-inspect-polish.json). New review build and standalone native-motion preview are under `build/inferno-inspect/revision3` / `build/SlugshotInfernoInspect-Refined.rbxlx`. **Unresolved:** owner feel, devices and multiplayer.
+
 ## 2026-11-02 — Inferno in Blender and Studio
 
 - **Implemented, final since 2026-11-03:** both forms built and shown with Floppy in a private display place; faces cleaned of black lines, Floppy's blink improved, Inferno given an underside and active motion. Floppy's fixes are only on this branch.
@@ -1659,3 +1664,80 @@
 - **Implemented/verified:** slot 2 in the range with proposed numbers, fire scaled with the model. Checks pass; Studio Play loads with his icon. Firing not yet exercised.
 - **Unresolved:** owner playtest of shots and numbers; the merged Floppy check. Next: transformation animation.
 
+## 2026-11-03 - Slug transformation
+
+- **Confirmed:** owner brief: fast spin, cool transformation, hit in the big form; quick but impactful, final form visible first; reusable with per-slug effects; never on Floppy.
+- **Implemented/verified:** `SlugTransformation`, `TransformationStyles` and `Combat.flightTime` (ADR 0023). Offline checks and one Studio run with a real first-person shot pass.
+- **Unresolved:** owner verdict on look, timing and the slower start; frame-rate smoothness; close shots; multiplayer.
+- **Confirmed (owner revisions):** base form twirls horizontally; no drawn swirl; soft glow; dragon flies level; comic fire; one flame per wing rather than separate fireballs; fastest at launch, then slowing; unlanded shots despawn.
+- **Implemented/verified:** all of the above, with offline checks and a Studio run. Flame frames show with no white boxes. Too many open Studio windows caused low-resource failures and blocked the check place.
+- **Confirmed (owner design note):** effects are one shape, never assembled from individual fireballs; recorded in `docs/art/style-guide.md`.
+- **Implemented/verified:** wing fire is now real geometry with a ripple and one drawn explosion replaces particle bursts. Studio captures from behind and at range plus a real shot pass. **Unresolved:** owner verdict.
+- **Implemented/verified:** 3D explosion (core plus radial inside-out rim shells) replaces the flipbook; wing fire glows, fades at its tips, is 15% longer, and leaves a faint trail and embers. Studio slow-motion stills and a real shot pass. **Unresolved:** owner verdict.
+- **Implemented/verified:** owner round 7: trail sheet removed for a soft wing glow; drawn comic embers replace sparkle textures; even-length solid wing fire; slimmer explosion with glow, light and sparks. Studio stills and a real shot pass. **Unresolved:** owner verdict.
+- **Implemented/verified (2026-11-03):** Inferno's explosion now spreads, thins and steams away instead of shrinking back in (owner request); the Studio transformation check captures it in slow motion. **Unresolved:** owner verdict.
+
+
+## 2026-11-03 - Reusable transformation reset
+
+- **Confirmed:** owner likes the horizontal twirl and gradual glow buildup, dislikes the actual explosion and square near-floor cutoff; wants a shared base with per-species tuning. Latest direction supersedes earlier explosion refinements.
+- **Implemented:** shared immutable motion/aura defaults and species palette/scale; clean non-overshooting reveal; no shared explosion/rings/steam/cinders/wing halos. Original Inferno model and authored fire preserved. Server no longer loads the unused explosion asset.
+- **Implemented/verified:** `verify_combat.py` (includes foundation/movement) and `verify_slugs.py` pass. Final native `TRANSCHECK PASS` and `CombatSelfTest ALL PASS`: three diffuse floor views, wall occlusion, reveal/fade/unfold, early impact scale, repeated cancellation, expiry, real first-person shot and cleanup. About 60.76 studs / 0.233 s measured by client. First-use image gate failed in earlier native passes; fixed using successful shared fetch status rather than disabled-label IsLoaded. [Design/evidence](slugs/transformation-system.md#current-owner-direction-shared-twirl-and-diffuse-glow-2026-11-03), [ADR 0024](decisions/0024-shared-transformation-baseline.md).
+- **Unresolved:** owner approval, full-frame-rate motion (captures about 9-13 fps), thin cover, real-player hits, multiplayer/devices. All prior unrelated uncommitted work retained; no uploads, main delivery or experience publication.
+
+
+## 2026-11-03 - Inferno inspect candidates before Studio
+
+- **Confirmed:** gun movement stays as Floppy's current inspect. Inferno looks at the holder with an arrogant smile, blows a small curled fire breath confined to the canister, smiles and settles with small hops. Owner explicitly withdrew angry/gritted teeth; two supplied screenshots guide shape only. No rename implied by Burpy.
+- **Confirmed:** owner requested multiple interactive artifact-style versions before Studio implementation.
+- **Implemented/verified:** three local browser studies with existing original Inferno/gun GLBs, original connected flame contours, current gun palette, replay/scrub/speed/focus/orbit and isolated-fire views. A standalone offline HTML embeds assets/library; no server/account/network needed. Reviewed official MIT Three.js r159 sources with pinned hashes. Browser QA passes model loading, 30 Hz whole-cycle finite-pose/plume-bound sampling, focus/compare/beat controls and 390 px layout. Contact sheet reviewed.
+- **Unresolved:** owner choice (A Cheeky puff, B Lazy curl, C Double tease), native fit/materials, first-/third-person/interruptions and devices. Browser gun composition is an approximation without native arms/viewmodel. Studio code and accepted assets remain unchanged by this task. [Study record](slugs/inferno-inspect-studies.md).
+
+
+## 2026-11-03 - Inferno inspect fluidity revision
+
+- **Confirmed:** owner rejects the fire as a PNG-like flash and stiff acting; already look at the holder on raise, smoothly form an O, sustain the breath longer, smirk and spring back like the lobby slug. Gun motion stays fixed; browser review still precedes Studio.
+- **Implemented:** v2 uses a deforming connected swept flame with travelling surface/colour flow; independent anticipatory mouth opening, sustained exhale and smooth smile return. One four-stage hop compresses, holds, stretches/turns in flight and cushions the landing. Floppy's distributed counter-motion and the latest grove hop informed the implementation. V1 preserved as rejected. Gun sampler unchanged; no native source/asset change.
+- **Unresolved:** owner visual acceptance and later Roblox equivalent for procedural browser surface/colour flow; native fit, interruptions and performance. [Revision/source/evidence](slugs/inferno-inspect-studies.md#current-revision-continuous-breath-and-spring-return).
+
+- **Implemented/verified, v2 follow-up:** browser full-cycle/control/mobile tests pass; developed flame geometry changes between sampled times, O-mouth aperture is 0.084 model units, actors already face the holder on the raise, and shared gun sampler is unchanged. Eight-pose contact sheet and 66-frame sampled 20 fps mouth/breath preview are saved. See `docs/slugs/evidence/2026-11-03-inferno-inspect-fluidity.json`. Owner acceptance remains open.
+
+
+## 2026-11-03 - Inferno inspect face and grounded fit
+
+- **Confirmed:** O shape is decent; black outline too heavy; smile/O transitions insufficiently expressive; fuller loaded-slug scale wanted and Inferno's standing pose floats. Face/outline are the priority. Preview-first scope persists.
+- **Implemented, preview only:** thinner warm mouth ink, warmer cavity, staged lip-width/height/pucker and cavity timing, coordinated eyelid/head/cheek/grin acting. Inferno is 27% larger; actual skinned sole is seated on the rear inner cap and lifts only during the spring hop. V2 preserved.
+- **Confirmed, source review:** Floppy's existing fit already reserves a circular turn/articulation envelope and inspect hop allowance; no Floppy or native runtime source changed here. The general larger-canister-fill request is recorded for later integration.
+- **Unresolved:** owner review and all native integration/Floppy sizing/device checks. [V3 design and evidence](slugs/inferno-inspect-studies.md#current-revision-v3-face-transitions-and-grounded-canister-fit).
+
+- **Implemented/verified, v3 delivery:** native sources remain unchanged; browser checks pass expression-change, warmer cavity, 27% scale, actual skinned sole grounding and body-envelope margins (max sampled radial ratio 0.914; at least 0.077 studs front clearance). Nine-pose comparison and 66-frame sampled motion clip retained. Shared gun sampler remains identical. See `docs/slugs/evidence/2026-11-03-inferno-inspect-face-fit.json`.
+
+
+## 2026-11-03 - Approved Playful Flame becomes Inferno inspect
+
+**Confirmed:** owner selected v3 C and said "Make that the animation". **Implemented/verified locally:** dedicated Inferno inspect driver, continuously deformed contained flame, expressive O/smug face with thinner ink, approved chamber-relative fit and skinned sole support; shared gun sampler byte-identical and Floppy unchanged. Native imported mouth folding was repaired with a locally evaluated editable skin, preserving the source. Combat/movement/foundation/creature checks and native first-/third-person cycle, body/flame bounds, face-copy and switch/fire/holster/death/disposal checks pass. [Evidence and remaining limits](slugs/inferno-inspect-studies.md#current-decision-playful-flame-becomes-the-native-inspect), [ADR 0025](decisions/0025-inferno-inspect-surface.md). Fresh fixture-free owner build: `build/SlugshotInfernoInspect.rbxlx`. **Unresolved:** native owner feel, devices/observers, low-memory/deployed mesh support and multiplayer load. No upload, security change or experience publication.
+
+
+## 2026-11-03 - Correct the stale inspect baseline and detached Inferno face
+
+**Confirmed:** user identified the delivered build's slow gun flip, black canister and wrong Floppy animation as previously fixed regressions. Keep the existing flame, fix mouth separation and strengthen the spring. **Implemented/verified:** scoped current-main inspect integration (`ecd7c73`); restored clear hull removal, Floppy performance and first-person rig Motor6Ds; further shortened flight to 0.24 s. Stable mouth surface bounds keep the render origin fixed; body now deforms with the same head motion. Stronger crouch/launch/landing and about 0.034-stud maximum hop; Inferno gets a 6.37 s cycle through a longer middle hold while Floppy stays 3.77 s. Flame generation/playback unchanged. Full offline suites and two native reviews pass, including actual first-person close-ups, current Floppy, complete motion, quarter face views, skin fit and cleanup. [Evidence and limits](slugs/inferno-inspect-studies.md#current-revision-integrate-the-approved-game-build-and-fix-face-attachment). New owner build: `build/SlugshotInfernoInspect-Current.rbxlx`; recorded comparison artifact under `build/inferno-inspect/revision2`. **Unresolved:** owner motion verdict, devices and multiplayer. Do not use the superseded handoff as the accepted gun/Floppy baseline.
+
+
+## 2026-11-04 - Breathing effort and low return catch
+
+**Confirmed/implemented and locally verified:** owner accepts the chamber lights and requests a warmer/larger side-facing curl, lung-led effort without cheek inflation, rising dissipation and a closing flip/catch. Native flame now sweeps around the chamber, stops following the recovering lips and fades via moving vertex opacity. Shared closing toss lasts 0.24 s and blends into live carry; final native body fits and a visible catch at 18 studs/s pass. [Current design/evidence](slugs/inferno-inspect-studies.md#current-revision-breathing-effort-orange-curl-and-low-return-catch). **Unresolved:** owner art/feel, devices and multiplayer.
+
+
+## 2026-11-04 - Embers, shorter return and planted Floppy
+
+**Confirmed/implemented and locally verified:** stronger inhale/strain, larger flame with fading 3D embers and outward release. Hop and gun return overlap; Inferno ends at 4.67 s. Owner clarified that Floppy should keep a rounded lower body, fixed to the floor while the upper half moves. Use the matching current private model/material bundle, pin the sole and constrain upper articulation instead of recentering the whole creature. Correct the outline to the glass ellipse and invalidate visibility on late parts. [Current proof and limits](slugs/evidence/2026-11-04-inferno-embers-footing.json). **Unresolved:** owner art/feel and broader runtime coverage.
+
+
+## 2026-11-04 - Matched loaded size, landing and visible inhale
+
+**Confirmed:** match Floppy/Inferno apparent loaded size; Floppy must land after hopping home and have soft under-eye darkness, not mascara streaks. Inferno should inhale longer with a wider mouth, larger belly and a small forward-leaning exhale hop. **Implemented/verified locally:** shared measured rest height (0.9905 ratio), continuous cap support, final-pose ellipse fit, loaded-skeleton startup retry, shared UV material repair, native belly corrective and revised timing. Offline and native lifecycle/full-motion checks pass. [Evidence and limitations](slugs/evidence/2026-11-04-inhale-size-landing.json). **Unresolved:** owner feel/art and device/multiplayer coverage.
+
+
+## 2026-11-04 - Restore original Floppy; Burpy approved
+
+**Confirmed:** owner calls Burpy perfect. Rejects Floppy under-eye repaint and displaced antennae; requests original flat-bottom design, original clean under-eyes, smooth upper-half wiggle with planted lower half, enlarged only without clipping. **Implemented/verified locally:** removed custom repaint, restored original antenna transforms/spring strengths, seated authored flat root plane and fitted a modest uniform enlargement. Native original material equality, flat contact, moving upper body and containment checks pass; approved Burpy is unchanged. [Evidence/limits](slugs/evidence/2026-11-04-floppy-original-restored.json).

@@ -253,7 +253,7 @@ local function setup(model: Model)
 	if rigs[model] then
 		return
 	end
-	local flight = model.Name == "InfernoFlight"
+	local flight = model.Name == "InfernoTransformed"
 	local dragon = flight or model.Name == "InfernoDragon"
 	local spec = if dragon then asset.dragon else asset.base
 	local antennaL, antennaR
@@ -272,7 +272,9 @@ local function setup(model: Model)
 		return
 	end
 	local sideways = (antennaR.WorldPosition - antennaL.WorldPosition).Unit
-	local up = (Vector3.yAxis - sideways * sideways.Y).Unit
+	-- In flight he points anywhere, so his up comes from his pivot, not the world.
+	local reference = if flight then model:GetPivot().UpVector else Vector3.yAxis
+	local up = (reference - sideways * sideways:Dot(reference)).Unit
 	local front = sideways:Cross(up)
 	local scale = (antennaR.WorldPosition - antennaL.WorldPosition).Magnitude
 		/ (if dragon then ANTENNA_SPACING.dragon else ANTENNA_SPACING.base)
@@ -336,7 +338,8 @@ local function setup(model: Model)
 		lastSpin = 0,
 		lastRoll = 0,
 	}
-	if dragon then
+	-- In flight his fire trail does this job.
+	if dragon and not flight then
 		addFireGlow(rigs[model])
 	end
 end
@@ -346,6 +349,9 @@ local function consider(instance: Instance)
 		instance:IsA("Model") and (instance.Name == "Inferno" or instance.Name == "InfernoDragon")
 	then
 		task.delay(0.5, setup, instance)
+	elseif instance:IsA("Model") and instance.Name == "InfernoTransformed" then
+		-- A shot is over in moments, so this can't wait.
+		task.defer(setup, instance)
 	end
 end
 for _, item in workspace:GetDescendants() do
@@ -441,9 +447,9 @@ local function stepFace(rig: Rig, dt: number, camera: Vector3, wantLook: number)
 	for name, delta in rig.mouth do
 		drive(rig, name, delta * angry)
 	end
-	-- The wavy line where the teeth meet comes in once the lips have closed up.
+	-- Keep the clean tapered tooth division in the smile; strengthen it at the clench.
 	for _, part in rig.mouthLine do
-		part.Transparency = 1 - ease((angry - 0.55) / 0.4)
+		part.Transparency = 0.15 * (1 - ease((angry - 0.55) / 0.4))
 	end
 	-- The lids are the skin above the eyes, so he never blinks: anger furrows them, with a little overshoot and tremble.
 	local furrow = spring(rig, "furrow", angry, 7, 0.6, dt) + 0.04 * angry * math.sin(clock * 19)
@@ -618,6 +624,10 @@ local function stepBase(rig: Rig, dt: number)
 	antennae(rig, dt, 0.5 * cCrouch - 0.3 * cRise + flipSpeed * 0.07 + math.abs(spinSpeed) * 0.03)
 end
 
+local WING_TRANSFORM_FOLD = 1.1
+local WING_FIRE_STATIONS = 7
+local WING_FIRE_RIPPLE = { 0.05, 0.13 } -- concept units, inner and outer row
+
 local function stepDragon(rig: Rig, dt: number)
 	local t = rig.clock
 	if rig.flight and rig.model:GetAttribute("Landed") then
@@ -662,7 +672,8 @@ local function stepDragon(rig: Rig, dt: number)
 	if hold then
 		rise, side, bank, beatSize = 0, 0, 0, 0
 	elseif rig.flight then
-		rise, side, bank = 0, 0, 0
+		-- SlugTransformation tilts him; the wings only flutter.
+		rise, side, bank, beatRate, beatSize = 0, 0, 0, 9, 0.14
 	end
 	if move ~= "roll" then
 		wrapTurn(rig, "roll")
@@ -671,7 +682,9 @@ local function stepDragon(rig: Rig, dt: number)
 	rig.wingClock += spring(rig, "beatRate", beatRate, 4, 1, dt) * dt
 	local beat = math.sin(rig.wingClock)
 	local size = spring(rig, "beatSize", beatSize, 6, 1, dt)
+	-- SlugTransformation holds the wings shut at the swap and lets them burst open.
 	local cFold = spring(rig, "fold", fold, 10, 0.9, dt)
+		+ ((rig.model:GetAttribute("TransformFold") :: number?) or 0) * WING_TRANSFORM_FOLD
 	local cRise = spring(rig, "rise", rise, 16, 0.8, dt)
 	local cForward = spring(rig, "forward", forward, 9, 0.85, dt)
 	local cSide = spring(rig, "side", side, 8, 0.9, dt)
@@ -755,6 +768,25 @@ local function stepDragon(rig: Rig, dt: number)
 			* CFrame.fromAxisAngle(item.z, -cBank * 0.5 - headLag)
 	end
 	antennae(rig, dt, -0.12 * beat * size / 0.42 + 0.5 * cForward + math.abs(rollSpeed) * 0.04)
+	if rig.flight then
+		-- A ripple runs out along each wing's fire and back through its licks; the outer row adds to the inner one.
+		for _, tag in { "L", "R" } do
+			for station = 1, WING_FIRE_STATIONS do
+				for row, reach in WING_FIRE_RIPPLE do
+					local ripple = t * 11 - station * 0.95 - row * 1.1
+					drive(
+						rig,
+						`wfire_{tag}_{station}_{row}`,
+						Vector3.new(
+							0.5 * reach * math.cos(ripple * 0.7),
+							reach * math.sin(ripple),
+							0.6 * reach * math.sin(ripple * 1.3)
+						)
+					)
+				end
+			end
+		end
+	end
 	-- Last, so it sees every bone where this frame put it.
 	stepFireGlow(rig, t)
 end
@@ -769,11 +801,13 @@ RunService.RenderStepped:Connect(function(dt: number)
 			rigs[model] = nil
 			continue
 		end
-		rig.clock += dt
+		-- The Studio slow-motion slider reaches him through this.
+		local step = dt * ((model:GetAttribute("TimeScale") :: number?) or 1)
+		rig.clock += step
 		if rig.dragon then
-			stepDragon(rig, dt)
+			stepDragon(rig, step)
 		else
-			stepBase(rig, dt)
+			stepBase(rig, step)
 		end
 	end
 end)

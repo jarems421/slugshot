@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-03",
+  "state": "Implemented/verified locally",
+  "ownerDecision": "v3 C Playful Flame approved; make that the animation",
+  "checks": {
+    "verify_combat": "pass (includes movement/foundation)",
+    "verify_slugs": "pass",
+    "studioCombatSelfTest": "ALL PASS",
+    "nativeInspect": "PASS",
+    "views": [
+      "first-person actual gun",
+      "third-person actual source",
+      "diagnostic close-up with casing hidden"
+    ],
+    "interruptions": [
+      "switch",
+      "fire",
+      "holster",
+      "death",
+      "model disposal"
+    ],
+    "developedFlameVertices": 435,
+    "finiteMovingFlameAndCylinderBounds": "pass at 2.45 and 3.10 seconds",
+    "sourceGunSamplerUnchanged": true
+  },
+  "bodySkinSamples": [
+    {
+      "seconds": 1.35,
+      "soleGapStuds": -2e-06,
+      "radialRatio": 0.8804,
+      "frontClearanceStuds": 0.10816
+    },
+    {
+      "seconds": 1.75,
+      "soleGapStuds": -3e-06,
+      "radialRatio": 0.8779,
+      "frontClearanceStuds": 0.10436
+    },
+    {
+      "seconds": 2.45,
+      "soleGapStuds": -2e-06,
+      "radialRatio": 0.9637,
+      "frontClearanceStuds": 0.10943
+    },
+    {
+      "seconds": 3.1,
+      "soleGapStuds": -2e-06,
+      "radialRatio": 0.9504,
+      "frontClearanceStuds": 0.10843
+    },
+    {
+      "seconds": 4.25,
+      "soleGapStuds": -2e-06,
+      "radialRatio": 0.9375,
+      "frontClearanceStuds": 0.10982
+    },
+    {
+      "seconds": 4.8,
+      "soleGapStuds": -2e-06,
+      "radialRatio": 0.9202,
+      "frontClearanceStuds": 0.1322
+    },
+    {
+      "seconds": 5.18,
+      "soleGapStuds": 0.020457,
+      "radialRatio": 0.8779,
+      "frontClearanceStuds": 0.08515
+    },
+    {
+      "seconds": 5.7,
+      "soleGapStuds": -3e-06,
+      "radialRatio": 0.8989,
+      "frontClearanceStuds": 0.12565
+    }
+  ],
+  "nativeCaptureFolder": "build/inferno-inspect/native-final",
+  "runtimeRecord": "build/inferno-inspect/native-final-output.log",
+  "sourceSha256": {
+    "experiments/creatures/inferno/inspect/Flow.luau": "b2bccd478b70d053515e474d574aac5d28d0eb45e4580ba3194222b9bd4a0716",
+    "experiments/creatures/inferno/inspect/init.client.luau": "96bdf57b7226c25990418ed3d7c89f3d25b5a45b6d9e46f7d6a3659de294ad3a",
+    "experiments/creatures/inferno/inspect/MouthRest.luau": "bf2df06a1c17c9b6a5567ecf28ebf9f388f8427a8ed597aae5f90b3f78704ef1",
+    "experiments/creatures/inferno/inspect/Rig.luau": "f78a151950bb348a9c1b6e64879f451f8ecb6a46bd894922048b6ea1e1284c63",
+    "experiments/creatures/inferno/inspect/Surface.luau": "87874a62cd5e6248452123c8d31c43028f1526a42a7e57d7306f3dd1b296ac3f"
+  },
+  "limits": [
+    "Native feel verdict remains owner playtest.",
+    "Native vertex-colour/Neon shading approximates browser shading.",
+    "Eight held body poses, not an exhaustive full-cycle vertex proof.",
+    "One local client; observer replication, devices, low-memory/deployed EditableMesh support and multiplayer performance unverified.",
+    "General loaded-slug resizing remains separate; Floppy unchanged."
+  ],
+  "failedTrialsRetained": "build/inferno-inspect/native-v1 through native-v12; v13 fixed mouth folds",
+  "warnings": [
+    "Earlier trials emitted builtin profiler/plugin warnings and two startup stalls.",
+    "An existing unrelated asset-type warning appears during startup; no new inspect script failure in final successful trial."
+  ]
+}

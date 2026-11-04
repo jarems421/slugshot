@@ -1,0 +1,144 @@
+{
+  "date": "2026-11-04",
+  "state": "Implemented/verified locally; owner art and feel review pending",
+  "feedback": "Keep approved chamber lights; give the fire a clearer angle, warmer orange, bigger curl, lung-led effort without puffed cheeks, rising dissipation and a low closing flip/catch that blends into running.",
+  "flame": {
+    "geometry": "Same connected 3D surface, swept tangentially around the chamber so the plume can read sideways and grow without hitting the nearest glass wall",
+    "curlRadiusConceptUnits": 0.22,
+    "nominalScale": "0.68 * rig.scale / Flow.GameScale",
+    "palette": "orange outer heat, amber/yellow hot ribbons; no dark red base",
+    "ending": "freeze emitted frame in chamber coordinates; advect/spread upward; per-vertex opacity breakup and neck release; complete fade by End + 0.68 s",
+    "containment": "2% radial glass margin and bounded end caps, checked for all 435 referenced vertices in native-r1",
+    "r1AppliedScaleSamples": [
+      "0.1730763438091799",
+      "0.1533883608469641",
+      "0.14790279519264393",
+      "0.12922175700449776"
+    ],
+    "r1OpacitySamples": [
+      "0.8238",
+      "0.8238",
+      "0.7902",
+      "0.5924"
+    ]
+  },
+  "face": "Lift/hold the torso and head through inhale, then lean and narrow/tilt lids with a wider, less protruding O; no cheek inflation channel added",
+  "return": {
+    "sharedBothSpecies": true,
+    "openingFlipFlight": 0.24,
+    "returnFlight": 0.24,
+    "Floppy": {
+      "release": 3.43,
+      "catch": 3.67,
+      "end": 3.9
+    },
+    "Inferno": {
+      "release": 6.03,
+      "catch": 6.27,
+      "end": 6.5
+    },
+    "handoff": "Keep low catch visible with 20% live carry contribution at catch, then release the remaining presentation weight over 0.23 s; preserve normal movement pose",
+    "runningProof": [
+      "running return catch registered, speed 18.00, max grip frame step 0.21389, relative speed 2.073"
+    ],
+    "framingProof": [
+      "low catch grip on screen true at 0.519 0.819"
+    ]
+  },
+  "sharedLoadedSizeIncrease": 1.1,
+  "skinTrace": [
+    {
+      "species": "Floppy",
+      "samples": 85,
+      "radial": 0.94786,
+      "axial": 0.84657
+    },
+    {
+      "species": "Inferno",
+      "samples": 248,
+      "radial": 0.97798,
+      "axial": 0.89013
+    }
+  ],
+  "validation": [
+    "verify_combat PASS (includes movement/foundation)",
+    "verify_slugs PASS",
+    "Studio CombatSelfTest ALL PASS",
+    "native-r1 body/sole/flame/face/first-third-person and switch/fire/holster/death/disposal PASS",
+    "motion-final complete motion, both body fits, running return, visible catch, preview isolation and tooth resizing PASS"
+  ],
+  "trialCorrections": [
+    "First full-cycle effort lean reached radial ratio 1.00235; ease head/body pitch while retaining lift and lid/mouth strain. Final ratio is below 0.978.",
+    "First return blend hid the catch below the view. Retain 80% presentation weight at the catch and use a brief live-carry release afterward. Native grip projection is visible at normalized (0.519, 0.819).",
+    "The initial running QA read a stale previous inspect timestamp. Final QA waits for the new server timestamp and measures through post-catch carry."
+  ],
+  "artifacts": {
+    "place": "build/SlugshotInfernoInspect-FireAndCatch.rbxlx",
+    "preview": "build/inferno-inspect/revision4/Inferno-breath-and-catch-preview.html",
+    "nativeGeometry": "build/inferno-inspect/revision4/native-r1",
+    "finalMotion": "build/inferno-inspect/revision4/motion-final",
+    "recordings": [
+      {
+        "key": "inferno-whole",
+        "title": "Normal view",
+        "diagnosticCamera": false,
+        "sourceFrames": 98,
+        "captureSpanSeconds": 6.9145,
+        "resample": "capture file timestamps",
+        "frames": 70,
+        "durationMs": 7000,
+        "file": "inferno-whole.gif"
+      },
+      {
+        "key": "inferno-running",
+        "title": "Running finish",
+        "diagnosticCamera": false,
+        "sourceFrames": 91,
+        "captureSpanSeconds": 6.9549,
+        "resample": "capture file timestamps",
+        "frames": 68,
+        "durationMs": 7000,
+        "file": "inferno-running.gif"
+      },
+      {
+        "key": "inferno-chamber",
+        "title": "Flame detail",
+        "diagnosticCamera": true,
+        "sourceFrames": 92,
+        "captureSpanSeconds": 6.9875,
+        "resample": "capture file timestamps",
+        "frames": 68,
+        "durationMs": 7000,
+        "file": "inferno-chamber.gif"
+      },
+      {
+        "key": "floppy-current",
+        "title": "Floppy",
+        "diagnosticCamera": true,
+        "sourceFrames": 96,
+        "captureSpanSeconds": 6.9369,
+        "resample": "capture file timestamps",
+        "frames": 70,
+        "durationMs": 7000,
+        "file": "floppy-current.gif"
+      }
+    ]
+  },
+  "limits": [
+    "Owner art/feel approval pending",
+    "Native recording cadence is lower than live play",
+    "Held geometry/lifecycle pass precedes the small final pitch and return-framing changes; final full-cycle body and catch checks cover those changes",
+    "Observer/device/deployed EditableMesh and multiplayer performance not established",
+    "Known Studio debug.profileEnd warning observed"
+  ],
+  "sourceSha256": {
+    "experiments/movement/client/SlugInspect.luau": "f24c5ea400b27bfacbdd57101e4066c3e78d589720be77888f592a1530f9ad2a",
+    "experiments/combat/client/Viewmodel.luau": "0e7d61a705c3dd8941abbf59dcd0e93ff5b899534a8eddcc2a0d5eaff26c39d8",
+    "experiments/creatures/inferno/inspect/Flow.luau": "4aa30095070f567dc24c50662ab3146cd96585d6c276d0f69047961f00c6958b",
+    "experiments/creatures/inferno/inspect/Rig.luau": "23658ae6fcc88290e945dc30eafa0d4b76f18a91b29007ca6ae19e6d5f88ee76",
+    "experiments/creatures/inferno/inspect/Surface.luau": "dec404f0072a149cc47e2fcf1caa93d766ea398c5c936d1b0434705a49d12d8c",
+    "experiments/creatures/inferno/inspect/init.client.luau": "0436b171aef6058733c64654509276df47270dcd1f9264b11b7904357b28bdb1"
+  },
+  "placeSha256": "98d3d6cbc19055e3a2169ad0a91e544b60d31ad25394c733a3a6d039761383db",
+  "newUploadsPublishesPushes": false
+}

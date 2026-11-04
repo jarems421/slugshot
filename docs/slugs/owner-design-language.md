@@ -278,3 +278,62 @@ More dictation slips: "mehdy" = meh, "extenuate" = accentuate, "target area" = t
 - "vertically" and "horizontal length", said of a flame seen from the side: thickness and length along the tail. Bigger does not automatically mean longer, so ask or change only the named direction.
 - Start from the concept they already approved. Inventing a new flame shape cost several rounds.
 
+## Transformation effects (2026-11-03)
+
+- **Confirmed, latest reset:** "I like the initial glowing" refers to the gradual buildup, not the explosion. "Quite literally about it" narrows the accepted baseline to that glow, horizontal twirl and larger-form reveal. Keep the shared sequence small; species fire styling is a separate concern. Earlier requests to improve explosion detail do not imply acceptance of that explosion.
+- **Confirmed:** near-floor glow should be "very diffused", with no square edge. Review at low camera angles beside a floor, not only against open sky.
+
+- **"Fireballs":** anything assembled from many separate flames or puffs. They want one designed shape.
+- **"Horizontal" flames on a wing:** seen from the shooter's position behind the slug, a band along the wing's span, not a flame standing up from it.
+- **"Stick to" / "blended":** the fire grows out from under the part instead of sitting on top of it.
+- **"Spinning" for a fired slug:** twirling along the flight line, lying flat and head first, not standing upright.
+
+
+## Inferno inspect fluidity (2026-11-03)
+
+- **Confirmed:** "like a PNG" refers to a nearly static fire shape that simply appears/scales/fades, even if it is technically an extruded mesh. The flame needs sustained internal flow and silhouette evolution.
+- **Confirmed:** Inferno should already watch the holder during the gun raise. Spend the saved setup time on a longer breath and a visibly smooth smile-to-O transition. The O must lead the flame, then return to a smug smile before the return hop.
+- **Confirmed:** "the springy hop we have in the lobby" means compress/hold, launch stretch and turn, then a cushioned landing; two small rigid translation pulses did not satisfy it. Floppy's smoothness comes from articulated, overlapping body/head motion rather than whole-model swivels alone.
+
+
+## Inferno facial transition and chamber fit (2026-11-03)
+
+- **Confirmed:** "O shape's decent" means preserve the aperture, refine its heavy black rim and the expression leading into/out of it. A mouth-only morph with nearly fixed eyes/head does not read as an expressive change.
+- **Confirmed:** "stood up" means supported on the inner canister base during the inspection, not merely upright while centred in the available space. Scale can be larger while retaining room for the actual turn and hop.
+- **Confirmed:** user requests fuller canisters for loaded slugs generally, but suspects floating is specifically Inferno; keep Floppy's established motion/containment safeguards while checking his eventual scale separately.
+
+
+## Playful Flame acceptance (2026-11-03)
+
+**Confirmed:** "I like the playful flame a lot ... it's perfect. Make that the animation" selects v3 C, including the refined face/ink and supported canister pose. The preview-first gate is satisfied for that candidate; proceed with native integration while preserving the gun choreography. Do not resurrect withdrawn anger/gritted teeth or the rejected static-puff design.
+
+
+## Current inspect baseline and spring feedback (2026-11-03)
+
+**Confirmed:** "older build" in this review specifically points to slow flip, black canister and obsolete Floppy acting. Compare the approved inspect branch before reopening a place. "Keep the flame the way it is" freezes the approved native flame while fixing rig attachment and hop. A face that follows bones over a body whose first-person skin is frozen reads as detached; source-only review does not satisfy a first-person complaint.
+
+## Inspect polish and viewing distance (later 2026-11-03)
+
+**Confirmed:** both loaded slugs should share one size increase. A requested percentage is adjustable to keep both contained. A flame multiplier is insufficient if the chamber clamp makes the visible result tiny. "Smooth and connected and blended" / "chic" light means continuous thin curved bands with restrained glow, rather than bright faceted caps and square joins.
+
+**Confirmed:** closer inspection still needs enough distance to see the upper arm. Lead with the normal gameplay camera and label diagnostic close-ups. Teeth should have slightly sharper small points like the supplied PNG, retaining a friendly smile rather than prominent fangs. Owner art approval remains open for the refined candidate.
+
+
+## Breath effort and closing flair (2026-11-04)
+
+**Confirmed:** breathing fire should visibly prepare through lungs/torso and show mild strain in the brow/head/mouth. Avoid a whistling-only face and excessive cheek inflation. A readable side-facing curl and warmer orange are preferred; the final wisp should travel and dissipate rather than drop with the recovering head. The owner accepts the current chamber lights. The closing flip should catch low and blend with the actual idle/running carry, with a visible catch rather than an off-screen handoff.
+
+
+## Planted lower body and overlapping return (2026-11-04)
+
+**Confirmed:** “flat surface” refers to Floppy’s lower-body shape, not the platform. Retain rounded volume and keep the lower body stuck to the cap while the upper half wiggles. Do not shift the whole creature to counter head motion. Inferno’s hop home is not a separate showcase beat: begin putting the gun down during it. “Emblems” in the fire context is implemented as small fading embers. Keep the inhale/strain readable through torso/head/brow effort without a large cheek balloon. The light frame should sit on the true glass perimeter.
+
+
+## Visible inhale and comparable loaded size (2026-11-04)
+
+**Confirmed:** a longer inhale needs the actual belly silhouette to expand and the mouth to widen; a torso lift alone did not read. A small forward-tilted hop at the start of blowing conveys effort. Compare slug sole-to-tip height, rather than assigning equal percentages to different fit formulas. Floppy must visibly contact the cap after his return hop. Dark under-eyes should be soft tapered skin shading, without tear-like painted streaks.
+
+
+## Original Floppy means restoration (2026-11-04)
+
+**Confirmed:** “original design with the flat bottom” means restore the approved creature and its normal antenna attachment/face materials. The owner rejects the new under-eye paint and antenna relocation. Keep enlargement subordinate to containment; retain the planted lower half and the original smooth upper-body wiggle. Burpy’s animation is explicitly approved. Do not reinterpret a local defect as permission to redesign accepted features.

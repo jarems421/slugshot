@@ -1,0 +1,137 @@
+{
+  "date": "2026-11-03",
+  "state": "Implemented/verified locally; owner feel pending",
+  "feedback": "Owner identified old gun/canister/Floppy baseline, detached mouth and insufficient spring; keep the flame.",
+  "integration": {
+    "source": "main",
+    "commit": "ecd7c73227b45fde181a11e2432009f9ef852eb0",
+    "paths": [
+      "experiments/movement/client/SlugInspect.luau",
+      "experiments/movement/client/BlasterAnimator.luau",
+      "experiments/movement/client/Presentation.luau",
+      "experiments/creatures/floppy/client/FloppyIdle.client.luau",
+      "experiments/creatures/floppy/client/FloppyFace.client.luau",
+      "experiments/creatures/floppy/server/FloppyBlaster.server.luau",
+      "experiments/combat/client/Viewmodel.luau"
+    ]
+  },
+  "flipFlightSeconds": {
+    "previousDelivered": 0.64,
+    "approvedNewer": 0.32,
+    "current": 0.24
+  },
+  "durations": {
+    "Floppy": 3.77,
+    "Inferno": 6.37
+  },
+  "flameUnchanged": "Flow centre/vertex and Surface fire/step functions byte-identical to previous handoff; same start/end, material, colour and containment.",
+  "checks": [
+    "verify_combat PASS (includes movement/foundation)",
+    "verify_slugs PASS",
+    "Studio CombatSelfTest ALL PASS",
+    "native body/flame bounds, face copy, stable mouth bounds, cycle and all interruption/disposal checks PASS",
+    "first-person body Motor6Ds present for both Inferno and Floppy",
+    "actual first-person close-ups through morph/crouch/launch/landing reviewed",
+    "complete Inferno whole-gun and chamber motion, current Floppy and quarter-view face review PASS"
+  ],
+  "bodySkinSamples": [
+    {
+      "seconds": 1.35,
+      "soleGapStuds": 1e-06,
+      "radialRatio": 0.8805,
+      "frontClearanceStuds": 0.10816
+    },
+    {
+      "seconds": 1.75,
+      "soleGapStuds": 1e-06,
+      "radialRatio": 0.8779,
+      "frontClearanceStuds": 0.10436
+    },
+    {
+      "seconds": 2.45,
+      "soleGapStuds": 0.0,
+      "radialRatio": 0.9637,
+      "frontClearanceStuds": 0.10943
+    },
+    {
+      "seconds": 3.1,
+      "soleGapStuds": 1e-06,
+      "radialRatio": 0.9504,
+      "frontClearanceStuds": 0.10842
+    },
+    {
+      "seconds": 4.25,
+      "soleGapStuds": 1e-06,
+      "radialRatio": 0.9375,
+      "frontClearanceStuds": 0.10982
+    },
+    {
+      "seconds": 4.72,
+      "soleGapStuds": 1e-06,
+      "radialRatio": 0.9354,
+      "frontClearanceStuds": 0.15447
+    },
+    {
+      "seconds": 4.91,
+      "soleGapStuds": 0.032481,
+      "radialRatio": 0.8779,
+      "frontClearanceStuds": 0.05398
+    },
+    {
+      "seconds": 5.29,
+      "soleGapStuds": 0.0,
+      "radialRatio": 0.9039,
+      "frontClearanceStuds": 0.15491
+    },
+    {
+      "seconds": 5.7,
+      "soleGapStuds": 0.0,
+      "radialRatio": 0.8895,
+      "frontClearanceStuds": 0.10866
+    }
+  ],
+  "recordings": [
+    {
+      "label": "Whole gun",
+      "capturedFrames": 88,
+      "capturedSeconds": 7,
+      "previewGifFrames": 88,
+      "previewMillisecondsPerFrame": 80
+    },
+    {
+      "label": "Canister close-up",
+      "capturedFrames": 107,
+      "capturedSeconds": 7,
+      "previewGifFrames": 54,
+      "previewMillisecondsPerFrame": 130
+    },
+    {
+      "label": "Current Floppy",
+      "capturedFrames": 125,
+      "capturedSeconds": 7,
+      "previewGifFrames": 63,
+      "previewMillisecondsPerFrame": 110
+    }
+  ],
+  "artifacts": [
+    "build/SlugshotInfernoInspect-Current.rbxlx",
+    "build/inferno-inspect/revision2/Inferno-inspect-current-preview.html",
+    "build/inferno-inspect/revision2/first-person-current-sheet.png"
+  ],
+  "runtimeLogs": [
+    "build/inferno-inspect/revision2/native-r1-output.log",
+    "build/inferno-inspect/revision2/motion-output.log"
+  ],
+  "limits": [
+    "One local Studio client; devices/observers/multiplayer performance untested.",
+    "Native capture samples around 13?18 fps; full-speed owner feel remains unverified.",
+    "Held-pose body bounds do not prove every possible intermediate pose."
+  ],
+  "sourceSha256": {
+    "experiments/creatures/inferno/inspect/Flow.luau": "7c7dd62ff9e7278573d9e3a5459b66bd0f8e7d7e653bdf25255f64917f7665fb",
+    "experiments/creatures/inferno/inspect/init.client.luau": "cfa7bc0f61c16876127e0ea8bcf1da9448279a1273b949ddeb69dc655de49f56",
+    "experiments/creatures/inferno/inspect/MouthRest.luau": "bf2df06a1c17c9b6a5567ecf28ebf9f388f8427a8ed597aae5f90b3f78704ef1",
+    "experiments/creatures/inferno/inspect/Rig.luau": "3805f1bb7ecfa0530f21d8ff2a7987fb892d99b59fe89929660cc092efca87bd",
+    "experiments/creatures/inferno/inspect/Surface.luau": "fc265ed3d63be267f0bd2ca9395a1e4f16da209e33734531375d1927c8dedf8d"
+  }
+}
