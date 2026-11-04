@@ -2074,4 +2074,5 @@
 
 - **Confirmed (owner):** stop testing guns in a separate range; one place with all the final work (lobby, portal to the real range, guns, slugs, inspections, settings, loading screen), one for testing. Burpee work declared done by the owner.
 - **Implemented/verified:** uncommitted work in four worktrees reviewed and committed, then merged with `lobby/shop` onto `main`. Conflicts: the inspect animation (the pipeline's current, owner-reviewed version kept over the earlier backflip rework), Inferno's motion step and grove behaviour (both kept), Floppy's idle (pipeline side), settings glyphs (main's encoding fix), the grove crystal effects (moved into the shared `libraryPiece` so the pylon crystals get them too), notes (both). Game place `tools/training/build_game.py`; see [status](status.md).
+- **Confirmed (owner, 2026-11-04):** the volcano's slow lava gloop animation is approved; the current inspection is flip up, inspect, flip to catch down (the pipeline's version). All branches merged into `main`; other Studio windows closed, only the game place left open.
 
