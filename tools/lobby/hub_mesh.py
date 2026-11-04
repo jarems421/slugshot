@@ -329,7 +329,7 @@ PORTAL = """vec2 assetMap(vec3 p) { vec2 r = portal(p/GS); r.x *= GS; return r; 
 # The gun side's shop, Slugworks (docs/art/general-shop.md), from the canopy hole composite (asset 15, option A, clustered
 # pods). Concept units are 5 studs; the hole's centre is the origin and the hub lies toward -z.
 GUN_ITEM = "canopy-hole-1"
-GUN_SHOP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 117.0); chShop(p, res); return res; }\n"
+GUN_SHOP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 117.0); chShopBody(p, res); return res; }\n"
 
 
 # The ground is nearly flat, at the floor you stand on; its velvet and cobbles are repeating maps (owner, 2026-11-04).
@@ -754,22 +754,20 @@ PIECES = {
             part("Cap", shop_cap, 10000, 1024, PROP_INK*2.0, 1.0, cage=0.05),
             part("Trunk", by_id((101.9, 102.1)), 5000, 1024, PROP_INK*1.2, 1.0, cage=0.03),
             part("Shrooms", by_id((102.9, 103.1), (106.9, 107.1), (108.95, 109.6)), 3500, 512, FINE_INK*1.5, 1.0, cage=0.02),
-            part("Sign", by_id((120.9, 121.1), (122.9, 123.1)), 1200, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
             part("Glass", by_id((118.9, 119.1)), 1500, 512, cage=0.015),
             part("Door", by_id((119.9, 120.1)), 600, 512, cage=0.015),
             part("Vents", by_id((121.9, 122.1)), 800, 512, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
             part("Rims", by_id((117.9, 118.1)), 5000, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
-            part("Mat", by_id((112.9, 113.1)), 400, 512, tile=2.5),
-            part("Pods", everything, 16000, 1024, PROP_INK, 1.0, cage=0.04),
+            part("PodsHigh", lambda ids, c: c[:, 1] > 3.3, 8000, 1024, PROP_INK, 1.0, cage=0.04),
+            part("Pods", everything, 10000, 1024, PROP_INK, 1.0, cage=0.04),
         ],
     },
     "hub-gun-ground": {
         "item": GUN_ITEM, "map": GUN_GROUND, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.6,
         "lo": (-47.0, -28.5, -27.5), "hi": (43.0, 1.2, 21.0), "step": 0.06, "normalH": 0.006,
         "parts": [
-            # Owner, 2026-11-04: the velvet and cobbles looked low resolution. Flat, with maps repeating every few studs.
-            part("Path", by_id((112.9, 113.1)), 800, 1024, tile=2.5),
-            part("Kerb", by_id((115.9, 116.1)), 1200, 1024, FINE_INK, 1.0, tile=2.5),
+            # Owner, 2026-11-04: the velvet looked low resolution. Flat, with a map repeating every 30 studs. The path is its
+            # own piece (hub-gun-path).
             part("VelvetA", gun_velvet(-99.0, -15.0), 4000, 1024, tile=6.0),
             part("VelvetB", gun_velvet(-15.0, 15.0), 4000, 1024, tile=6.0),
             part("VelvetC", gun_velvet(15.0, 99.0), 4000, 1024, tile=6.0),
@@ -869,6 +867,35 @@ PIECES = {
             part("Beads", by_id((103.9, 104.1)), 650, 512, FINE_INK*0.8, 1.0, cage=0.012),
             part("Vines", by_id((104.9, 105.1)), 450, 512, FINE_INK, 1.0, cage=0.012),
         ],
+    },
+    # The cobble path (owner, 2026-11-04): real cobbles, raised kerb stones, running on to the rope bridge and breaking up
+    # there. Its own piece so it can be sampled finely; the ground under it dips.
+    "hub-gun-path": {
+        "item": GUN_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 113.0); chPathGame(p, res); return res; }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
+        "lo": (-2.0, -0.36, -23.6), "hi": (2.0, 0.3, -14.4), "step": 0.01, "normalH": 0.002,
+        "parts": [
+            part("Kerb", by_id((115.9, 116.1)), 3500, 1024, FINE_INK*1.2, 1.0, cage=0.012),
+            part("PathNear", lambda ids, c: c[:, 2] > -17.6, 5000, 1024, cage=0.01),
+            part("PathFar", everything, 5000, 1024, cage=0.01),
+        ],
+    },
+    # The shop's cobble mat (owner, 2026-11-04: too perfect a circle; then faceted at the shop's coarser sampling).
+    # The shop's sign (owner, 2026-11-04: the name blurred from a distance): raised, outlined letters, sampled finely.
+    "hub-gun-sign": {
+        "item": GUN_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 121.0); chShopSign(p, res); return res; }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
+        "lo": (-1.0, 2.45, -3.45), "hi": (1.0, 3.5, -2.45), "step": 0.004, "normalH": 0.001,
+        "parts": [
+            part("Letters", by_id((123.9, 124.1)), 4500, 512, FINE_INK*0.6, 1.0, cage=0.006),
+            part("Plate", everything, 1500, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.01),
+        ],
+    },
+    "hub-gun-mat": {
+        "item": GUN_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 113.0); chShopMat(p, res); return res; }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
+        "lo": (-2.3, -0.3, -6.2), "hi": (2.3, 0.2, -2.7), "step": 0.006, "normalH": 0.0015,
+        "parts": [part("Mat", everything, 3000, 1024, cage=0.008)],
     },
     "hub-gun-stones": {
         "item": GUN_ITEM, "map": GUN_STONES, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.4,
@@ -1425,7 +1452,7 @@ def mesh(key):
 
 EVEN_GLOW = {"Plant", "Glow", "Sprouts", "Caps", "WellGlow", "CeilGems", "CollarGems", "BorderGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Beads": 0.8, "Pads": 0.55, "Plant": 1.1, "CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Beads": 0.8, "Letters": 1.0, "Pads": 0.55, "Plant": 1.1, "CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
 
 
 def periodic_cells(n, cells_u, cells_v, seed):

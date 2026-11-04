@@ -187,22 +187,46 @@ def cavern(hash1, crystals, trees):
         on_wall(t, -(12.0 + 72.0*hash1(c*2.2)), "hub-gun-shelves-" + ("b" if hash1(c*2.7) < 0.45 else "a"), 0.9 + 0.4*hash1(c*3.3))
     for k, c in enumerate(range(3, cells, 7)):
         on_wall((c + 0.25)/cells*2*math.pi, -(20.0 + 55.0*hash1(c*4.4)), "hub-gun-sideshroom-" + "ab"[k % 2], 1.0)
+    # A few on the spire too, smaller, filling its bare stretches (owner, 2026-11-04). Their back runs into the spire.
+    for k in range(5):
+        t = (k + 0.3)/5*2*math.pi + 0.4*hash1(k*4.9)
+        y = -(18.0 + 62.0*hash1(k*7.3 + 2.0))
+        dx, dz = hole_dir(t)
+        r = spire_radius(y) - 0.4
+        wall.append({"key": "hub-gun-sideshroom-" + "ba"[k % 2], "x": round(CX + dx*r, 2), "y": round(y, 2), "z": round(CZ + dz*r, 2),
+                     "ox": round(-dx, 4), "oz": round(-dz, 4), "s": 0.72})
     for k in range(44):
         t = hash1(k*17.3 + 3.0)*2*math.pi
         on_wall(t, -(4.0 + 76.0*hash1(k*5.9 + 1.0)), "hub-gun-vine-" + ("a" if k % 3 == 0 else "b"), 0.9 + 0.4*hash1(k*7.7))
 
-    keys = ("crystals-1-s", "crystals-2-s", "crystals-14-s")
+    # The approved crystal designs that read plainly as crystals (owner, 2026-11-04): the cyan cluster and violet spire.
+    keys = ("crystals-1-s", "crystals-2-s")
 
     def crystal(x, y, z, lean, tilt, k, tall):
-        crystals.append({"x": round(x, 2), "y": round(y, 2), "z": round(z, 2), "height": round(tall, 1), "key": keys[k % 3],
+        crystals.append({"x": round(x, 2), "y": round(y, 2), "z": round(z, 2), "height": round(tall, 1), "key": keys[k % len(keys)],
                          "lx": round(lean[0], 4), "lz": round(lean[1], 4), "tilt": round(tilt, 3)})
 
     # On the wall, growing out over the hole.
-    for k in range(22):
+    for k in range(12):
         t = hash1(k*23.1 + 5.0)*2*math.pi
         dx, dz = hole_dir(t)
         r = hole_radius(t) - 1.0
         crystal(CX + dx*r, -(10.0 + 92.0*hash1(k*4.3 + 2.0)), CZ + dz*r, (-dx, -dz), 0.95, k, 6.0 + 6.0*hash1(k*8.1))
+    # Along the top of the wall, under the rim, where the roots haven't started (owner, 2026-11-04: the edge looked
+    # bland): clusters at uneven spacing and heights, a few in twos, never a neat row.
+    t = 0.0
+    k = 0
+    while t < 2*math.pi - 0.05:
+        t += 0.13 + 0.16*hash1(k*3.7 + 11.0)
+        dx, dz = hole_dir(t)
+        r = hole_radius(t) - 0.8
+        y = -(3.0 + 11.0*hash1(k*5.3 + 12.0))
+        crystal(CX + dx*r, y, CZ + dz*r, (-dx, -dz), 0.75 + 0.5*hash1(k*2.9), k, 4.0 + 5.0*hash1(k*6.1 + 1.0))
+        if hash1(k*8.3) < 0.3:
+            t2 = t + 0.035
+            dx, dz = hole_dir(t2)
+            crystal(CX + dx*(hole_radius(t2) - 0.8), y - 2.5, CZ + dz*(hole_radius(t2) - 0.8), (-dx, -dz), 1.1, k + 1, 3.0 + 2.0*hash1(k))
+        k += 1
     # On the spire, growing out toward the wall.
     for k in range(8):
         t = (k + 0.5)/8*2*math.pi + 0.3*hash1(k*2.9)

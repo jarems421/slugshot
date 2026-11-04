@@ -6510,6 +6510,44 @@ float chSignText(vec2 uv) {
   return chGlyph(chSignChar(i), q - vec2(float(i)*adv, 0.0));
 }
 // ---- The shop. The door faces -z, where the rock path arrives. Pods are ellipsoids: centre and radii.
+vec2 chHash22(vec2 q) {
+  vec3 p3 = fract(vec3(q.xyx)*vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz)*p3.zy);
+}
+// Cells across x: distance to the nearest edge and to the cell's point (cell widths), and the cell's id and centre.
+vec2 chStoneCells(vec2 x, out vec2 cellId, out vec2 centre) {
+  vec2 n = floor(x), f = fract(x);
+  vec2 mg = vec2(0.0), mr = vec2(0.0);
+  float md = 8.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 g = vec2(float(i), float(j));
+    vec2 r = g + 0.15 + 0.7*chHash22(n + g) - f;
+    float d = dot(r, r);
+    if (d < md) { md = d; mr = r; mg = g; }
+  }
+  float edge = 8.0;
+  for (int j = -2; j <= 2; j++) for (int i = -2; i <= 2; i++) {
+    vec2 g = mg + vec2(float(i), float(j));
+    vec2 r = g + 0.15 + 0.7*chHash22(n + g) - f;
+    // Blended where two edges meet, so every stone's corners are rounded (owner: sharply broken off).
+    if (dot(mr - r, mr - r) > 1e-5) edge = smin(edge, dot(0.5*(mr + r), normalize(r - mr)), 0.12);
+  }
+  cellId = n + mg;
+  centre = x + mr;
+  return vec2(edge, length(mr));
+}
+// A field of domed stones over those cells, dipping at the joints: the signed height above the stones' tops.
+float chCobbleField(vec3 p, float freq, vec2 offset, float base, out vec2 cellId, out float edge) {
+  vec2 centre;
+  vec2 e = chStoneCells(p.xz*freq + offset, cellId, centre);
+  edge = e.x;
+  vec2 h = chHash22(cellId + 17.0);
+  float dome = (0.022 + 0.012*h.x)*(1.0 - min(e.y*e.y, 1.0));
+  float shoulder = 1.0 - smoothstep(0.0, 0.2, e.x);
+  float top = base + dome - 0.055*shoulder*shoulder;
+  return p.y - top;
+}
 void chPod(int i, out vec3 c, out vec3 r) {
   c = vec3(0.0, -10.0, 0.0); r = vec3(0.1);
   if (uPlaza < 0.5) {
@@ -6610,15 +6648,16 @@ void chWindow(vec3 p, vec3 pos, vec3 n, float rad, inout vec2 res) {
   float bars = min(abs(dot(inPlane, t1)), abs(dot(inPlane, t2))) - 0.045;
   chKeep(max(max(bars, abs(h + 0.14) - 0.04), radial - rad), 118.0, res);
 }
-void chShop(vec3 p, inout vec2 res) {
+void chShopBody(vec3 p, inout vec2 res) {
   if (length(p.xz - vec2(0.3, 0.7)) > 9.6 || p.y < -0.6 || p.y > 10.5) return;
   float pods = 1e3;
   for (int i = 0; i < 6; i++) {
     vec3 c, r;
     chPod(i, c, r);
     if (c.y < -5.0) continue;
-    float wave = 0.02*sin(atan(p.z - c.z, p.x - c.x)*7.0);
-    pods = smin(pods, sdEll(p - c, r) + wave, 0.25);
+    // A gentle ripple round each pod, faded out toward its top and bottom, where its seven lobes would meet in a star.
+    float wave = 0.02*sin(atan(p.z - c.z, p.x - c.x)*7.0)*smoothstep(0.25, 0.7, length((p.xz - c.xz)/r.xz));
+    pods = smin(pods, sdEll(p - c, r) + wave, 0.15);
   }
   // Seams round each pod are painted; the base sits into the platform.
   pods = max(pods, -p.y - 0.05);
@@ -6644,22 +6683,8 @@ void chShop(vec3 p, inout vec2 res) {
   // A frame round the doorway.
   float frame = max(abs(arch + 0.11) - 0.11, abs(dq.z - 0.02) - 0.16) - 0.03;
   // The sign: smaller, centred just above the arch, tilted back to sit on the pod's curve, the shop's name on its face.
-  vec3 sq = chSignLocal(p);
-  float plate = sdBox(sq - vec3(0.0, 0.0, 0.25), vec3(0.86, 0.22, 0.3)) - 0.035;
-  chKeep(plate, sq.z < -0.06 ? 121.0 : 123.0, res);
   chKeep(max(frame, -p.y), 118.0, res);
 
-  // Small mushrooms growing on the upper pods.
-  for (int k = 0; k < 4; k++) {
-    int pi = k == 0 ? 1 : k == 1 ? 2 : k == 2 ? 4 : 5;
-    vec3 c, r;
-    chPod(pi, c, r);
-    if (c.y < -5.0) continue;
-    float a = float(k)*2.1 + 0.4;
-    vec3 d = normalize(vec3(0.35*cos(a), 1.0, 0.35*sin(a) - 0.2));
-    vec3 base = c + d*r - d*0.05;
-    chSmallShroom(p, base, 0.45 + 0.2*hash1(float(k)*3.0), float(k)*2.0 + 1.0, res);
-  }
   // Round vent hatches on the side pods: a flush disc with a rim, slots painted on.
   for (int k = 0; k < 2; k++) {
     vec3 c, r;
@@ -6708,16 +6733,46 @@ void chShop(vec3 p, inout vec2 res) {
     chKeep(bq.x - mix(0.3, 0.14, bq.y), 102.0, res);
   }
   chBigCap(p, CH_CAP, CH_CAP_R, res);
+}
+// The cobble mat at the door (owner, 2026-11-04): its own piece in the game, sampled finely enough for its small stones.
+void chShopMat(vec3 p, inout vec2 res) {
   vec3 mq = p - vec3(0.0, 0.0, -4.45);
-  if (abs(mq.x) < 1.8 && abs(mq.z) < 1.2 && p.y < 0.5) {
-    float edge = length(mq.xz/vec2(1.3, 0.85)) - 1.0 + 0.1*(noise3(p*2.5) - 0.5);
-    // Flat, a little above the velvet; its cobbles are a repeating map in the game (owner: low quality).
-    chKeep(max(max(p.y - 0.06, edge*0.8), -0.25 - p.y)*0.7, 113.0, res);
+  if (abs(mq.x) < 2.2 && abs(mq.z) < 1.6 && p.y < 0.5) {
+    // Whole cobbles in a rough outline, missing and scattered toward its edge (owner, 2026-11-04: too perfect a circle).
+    vec2 cellId, centre;
+    vec2 ce = chStoneCells(p.xz*2.6 + 9.0, cellId, centre);
+    vec2 c = (centre - 9.0)/2.6 - vec2(0.0, -4.45);
+    vec2 hh = chHash22(cellId + 11.0);
+    float ring = length(c/vec2(1.35, 0.9)) - 1.0 + 0.25*(hh.y - 0.5);
+    // Every stone on the platform, none hanging over the hole.
+    if ((ring < 0.0 || (ring < 0.35 && hh.x < 0.35)) && length(centre/2.6 - 9.0/2.6) < CH_PLAT - 0.45) {
+      float cedge;
+      float d = chCobbleField(p, 2.6, vec2(9.0), 0.05 + 0.012*hh.y, cellId, cedge);
+      d = max(d, max(-ce.x*0.38 + 0.006, -0.25 - p.y));
+      chKeep(d*0.7, 113.0, res);
+    }
   }
+}
+// The sign on its block, and the shop's name standing out of its face in glowing letters with an outline of their own,
+// so it stays sharp from a distance (owner, 2026-11-04: painted on, it blurred).
+void chShopSign(vec3 p, inout vec2 res) {
+  vec3 sq = chSignLocal(p);
+  if (abs(sq.x) > 1.1 || abs(sq.y) > 0.5 || sq.z < -0.3 || sq.z > 0.75) return;
+  float plate = sdBox(sq - vec3(0.0, 0.0, 0.25), vec3(0.86, 0.22, 0.3)) - 0.035;
+  chKeep(plate, sq.z < -0.06 ? 121.0 : 123.0, res);
+  // Strokes thin enough that the S and G keep their gaps once outlined.
+  float stroke = chSignText(vec2(-sq.x, sq.y)/0.06)*0.06 - 0.022;
+  float letters = max(stroke + 0.006, abs(sq.z + 0.105) - 0.025 + 0.006) - 0.006;
+  chKeep(letters, 124.0, res);
+}
+void chShop(vec3 p, inout vec2 res) {
+  chShopBody(p, res);
+  chShopMat(p, res);
+  chShopSign(p, res);
 }
 // The clearing from the rope bridge: a lane of flat path stones set into the velvet, kept clear of plants.
 bool chInClearing(vec2 xz) { return abs(xz.x) < 3.2 && xz.y < -chHoleR(0.0) + 1.0 && xz.y > -27.0; }
-bool chInPath(vec2 xz) { return abs(xz.x) < 1.75 && xz.y < -chHoleR(0.0) + 0.3 && xz.y > -27.0; }
+bool chInPath(vec2 xz) { return abs(xz.x) < 1.85 && xz.y < -chHoleR(0.0) + 0.3 && xz.y > -27.0; }
 void chPathSlabs(vec3 p, inout vec2 res) {
   if (abs(p.x) > 1.9 || p.z > -chHoleR(0.0) + 0.4 || p.z < -27.0 || p.y > 0.6) return;
   float edge = abs(p.x) - 1.3;
@@ -7033,18 +7088,60 @@ vec2 chTerrain(vec3 p) {
 // The game's ground (owner, 2026-11-04: low resolution, and you walked through it): nearly flat, just above the block-out's
 // floor that you stand on. Its velvet cells and specks, and the path's cobbles, are repeating maps in the game.
 float chGroundH(vec2 xz) { return 0.025 + 0.02*noise3(vec3(xz*0.15, 2.0)); }
+// The cobble path (owner, 2026-11-04): domed cobbles with real joints, raised kerb stones along both sides, running from
+// the hole's rim on past the gun side's edge to the rope bridge's foot, where it breaks up into scattered stones.
+const float CH_PATH_RIM = 0.4, CH_PATH_EDGE = -19.6, CH_PATH_BRIDGE = -22.9;
+float chPathEnd() { return -chHoleR(0.0) + CH_PATH_RIM; }
+// How much of the path is missing at z: none on the gun side, most of it by the bridge.
+float chPathLoss(float z) { return 0.72*smoothstep(CH_PATH_EDGE + 0.4, CH_PATH_BRIDGE, z); }
+void chPathCobbles(vec3 p, inout vec2 res) {
+  float zr = chPathEnd();
+  if (abs(p.x) > 1.6 || p.z > zr || p.z < CH_PATH_BRIDGE - 0.6 || p.y > 0.3 || p.y < -0.35) return;
+  vec2 cellId, centre;
+  vec2 e = chStoneCells(p.xz*2.4, cellId, centre);
+  vec2 c = centre/2.4;
+  vec2 h = chHash22(cellId + 5.0);
+  // Whole stones in or out by their centre: inside the kerbs, before the rim, and thinning out toward the bridge.
+  float half = c.y < CH_PATH_EDGE - 0.3 ? 1.55 + 0.25*(h.y - 0.5) : 1.25;
+  if (abs(c.x) > half || c.y > zr - 0.1 || c.y < CH_PATH_BRIDGE || h.x < chPathLoss(c.y)) return;
+  float edge;
+  // Stones out by the bridge sit a little higher and unevenly, as if set loose in the ground.
+  float base = 0.04 + (c.y < CH_PATH_EDGE ? 0.012 + 0.02*h.y : 0.0);
+  float d = chCobbleField(p, 2.4, vec2(0.0), base, cellId, edge);
+  d = max(d, max(-e.x*0.42 + 0.006, -0.3 - p.y));
+  chKeep(d*0.7, 113.0, res);
+}
+// Kerb stones: blocks along each side, each its own length and a little its own height, rounded on top.
+void chPathKerb(vec3 p, inout vec2 res) {
+  float ax = abs(p.x);
+  float zr = chPathEnd();
+  if (ax < 1.15 || ax > 1.85 || p.z > zr + 0.1 || p.z < CH_PATH_EDGE - 1.6 || p.y > 0.4 || p.y < -0.35) return;
+  float side = sign(p.x);
+  float len = 0.6;
+  float k0 = floor((p.z - zr)/len);
+  for (int i = -1; i <= 1; i++) {
+    float k = k0 + float(i);
+    vec2 h = chHash22(vec2(k, side*7.0));
+    float a = zr + k*len + 0.08*(h.x - 0.5), b = zr + (k + 1.0)*len + 0.08*(chHash22(vec2(k + 1.0, side*7.0)).x - 0.5);
+    float zc = 0.5*(a + b), hl = 0.5*(b - a) - 0.03;
+    // The last kerb stones past the gun side's edge go missing, one or two left loose.
+    if (zc > zr - 0.05 || (zc < CH_PATH_EDGE + 0.2 && h.y < 0.6) || zc < CH_PATH_EDGE - 1.4) continue;
+    float top = 0.15 + 0.03*h.y;
+    vec3 q = vec3(ax - 1.48 - 0.03*(h.x - 0.5), p.y - (top - 0.25)*0.5 - 0.0, p.z - zc);
+    float d = sdBox(q, vec3(0.24, (top + 0.25)*0.5, hl) - 0.06) - 0.06;
+    d += 0.008*(noise3(p*9.0) - 0.5);
+    chKeep(d*0.85, 116.0, res);
+  }
+}
 void chPathGame(vec3 p, inout vec2 res) {
-  if (abs(p.x) > 1.9 || p.z > -chHoleR(0.0) + 0.4 || p.z < -27.0 || p.y > 0.6) return;
-  bool kerb = abs(p.x) > 1.3;
-  float top = kerb ? 0.065 - 0.3*max(abs(p.x) - 1.6, 0.0) : 0.04;
-  float d = max(p.y - top, max(abs(p.x) - 1.75, -0.3 - p.y));
-  chKeep(d*0.7, kerb ? 116.0 : 113.0, res);
+  chPathCobbles(p, res);
+  chPathKerb(p, res);
 }
 vec2 chTerrainGame(vec3 p) {
   float r = length(p.xz), t = chT(p.xz);
   float wallR = chWallR(t, p.y);
   float holeR = chHoleR(t);
-  float h = chInPath(p.xz) ? 0.0 : chGroundH(p.xz);
+  float h = chInPath(p.xz) ? -0.02 : chGroundH(p.xz);
   float ground = max((p.y - h)*0.6, (wallR - r)*0.7);
   ground = max(ground, chWedge(p));
   ground = max(ground, (-0.8 - p.y) - 30.0*(1.0 - smoothstep(1.5, 3.0, r - holeR)));
@@ -7054,7 +7151,6 @@ vec2 chTerrainGame(vec3 p) {
   solid = max(solid, CH_FLOOR - 4.0 - p.y);
   // Velvet only on top: the rim's edge below it is rock, as a repeating map seen side-on would streak.
   vec2 res = vec2(solid, p.y > -0.08 && (r > wallR - 0.2 || r < CH_PLAT - 0.1) ? 101.0 : 100.0);
-  chPathGame(p, res);
   res.x = max(res.x, chWedge(p));
   return res;
 }
@@ -7068,6 +7164,17 @@ void chVine(vec3 p, vec3 a, vec3 c, float sag, inout vec2 res) {
   vec3 m0 = (a + c)*0.5;
   if (length(p - m0) > length(a - c)*0.6 + sag + 0.5) return;
   vec3 m = m0 + vec3(0.0, -sag, 0.0);
+  vec2 fq = sdBezier(p, a, m, c);
+  chKeep(fq.x - CH_VINE_R, 105.0, res);
+  float count = max(floor(length(a - c)*1.5), 3.0);
+  float slot = floor(fq.y*count + 0.5)/count;
+  if (slot > 0.04 && slot < 0.96) chKeep(length(p - chQuad(a, m, c, slot)) - CH_BEAD_R, 104.0, res);
+}
+// A bead vine from a to c, sagging and bowed out by push, for vines draped round something round.
+void chVineOut(vec3 p, vec3 a, vec3 c, float sag, vec3 push, inout vec2 res) {
+  vec3 m0 = (a + c)*0.5;
+  if (length(p - m0) > length(a - c)*0.6 + sag + length(push) + 0.5) return;
+  vec3 m = m0 + vec3(0.0, -sag, 0.0) + push;
   vec2 fq = sdBezier(p, a, m, c);
   chKeep(fq.x - CH_VINE_R, 105.0, res);
   float count = max(floor(length(a - c)*1.5), 3.0);
@@ -7116,20 +7223,20 @@ void chRootPiece(vec3 p, float kind, inout vec2 res) {
     chKeep(bz.x - mix(0.2, 0.08, bz.y) + bark, 102.0, res);
   }
   // Bead vines: draped from the root across to the rock beside it, and a strand or two hanging free.
-  float len = kind < 0.5 ? 14.0 : kind < 1.5 ? 12.0 : 8.0;
   for (int k = 0; k < 4; k++) {
     float fk = float(k);
-    float s = 0.14 + fk*0.22;
-    if (s > 0.85) break;
-    vec3 a = chRootPath(kind, s, 1.0);
-    a.z = min(a.z, -0.05);
+    // Within each quarter of the root, the point standing furthest out of the rock.
+    float best = 0.0, bestZ = 1e3;
+    for (int j = 0; j < 7; j++) {
+      float sj = 0.06 + fk*0.22 + float(j)*0.03;
+      float zj = chRootPath(kind, sj, 1.0).z - chRootR(kind, sj);
+      if (zj < bestZ) { bestZ = zj; best = sj; }
+    }
+    if (bestZ > -0.15 || best > 0.88) continue;
+    vec3 a = chRootPath(kind, best, 1.0) - vec3(0.0, 0.0, 0.6*chRootR(kind, best));
     float side = mod(fk, 2.0) < 0.5 ? 1.0 : -1.0;
     chVine(p, a, vec3(side*1.5, a.y - 0.7 - 0.3*fk, 0.3), 0.75 + 0.15*fk, res);
-    if (k == 1 || k == 3) {
-      vec3 b = chRootPath(kind, s + 0.08, 1.0);
-      b.z = min(b.z, -0.1);
-      chVine(p, b, b + vec3(-0.25*side, -2.2 - 0.4*fk, -0.45), 0.2, res);
-    }
+    if (k == 1 || k == 3) chVine(p, a, a + vec3(-0.25*side, -2.2 - 0.4*fk, -0.45), 0.2, res);
   }
 }
 // Cupped shelves off one knot in the rock: kind 0 two of them, kind 1 three.
@@ -7194,12 +7301,16 @@ void chSpireGame(vec3 p, inout vec2 res) {
       if (k > 0 && abs(p.y - cur.y) < 3.0) {
         float bark = 0.025*(noise3(vec3(p.x*7.0, p.y*1.2, p.z*7.0)) - 0.5);
         chKeep(chSeg(p, prev, cur, rs*(1.0 - 0.008*fk), rs*(1.0 - 0.008*(fk + 1.0))) + bark, 102.0, res);
-        if (k <= 22 && mod(fk + fi, 3.0) < 0.5) {
-          float a2 = (fi + 1.0)*0.8976 + (fk + 1.0)*0.3;
-          vec3 nxt = vec3(cos(a2), 0.0, sin(a2))*(chSpireR(cur.y - 1.0) + 0.3) + vec3(0.0, cur.y - 1.0, 0.0);
-          chVine(p, cur, nxt, 0.7, res);
-        } else if (k <= 22 && mod(fk + fi, 5.0) < 0.5) {
-          chVine(p, cur, cur + normalize(vec3(cur.x, 0.0, cur.z))*0.5 + vec3(0.0, -2.4, 0.0), 0.2, res);
+        // Only from where the root stands proud, and bowed out round the spire so no stretch runs through its rock.
+        float proud = length(cur.xz) - chSpireR(cur.y);
+        vec3 out_ = normalize(vec3(cur.x, 0.0, cur.z));
+        vec3 from = cur + out_*max(0.35 - proud, 0.0);
+        if (k <= 22 && proud > 0.1 && mod(fk + fi, 3.0) < 0.5) {
+          float a2 = atan(cur.z, cur.x) + 0.75;
+          vec3 nxt = vec3(cos(a2), 0.0, sin(a2))*(chSpireR(cur.y - 1.0) + 0.35) + vec3(0.0, cur.y - 1.0, 0.0);
+          chVineOut(p, from, nxt, 0.6, normalize(vec3(from.x + nxt.x, 0.0, from.z + nxt.z))*0.9, res);
+        } else if (k <= 22 && proud > 0.1 && mod(fk + fi, 5.0) < 0.5) {
+          chVine(p, from, from + out_*0.5 + vec3(0.0, -2.4, 0.0), 0.2, res);
         }
       }
       prev = cur;
@@ -7314,9 +7425,20 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     vec3 c = mix(vec3(0.84, 0.85, 0.8), vec3(0.94, 0.95, 0.9), 0.5 + 0.3*noise3(p*0.8));
     c *= 0.92 + 0.1*smoothstep(-0.3, 0.8, n.y);
     c = mix(c, vec3(0.62, 0.78, 0.9), 0.14*smoothstep(0.2, 1.0, n.y));
+    // A clean dark line where two pods meet, so each reads as its own bulb.
+    float near0 = 1e3, near1 = 1e3;
+    for (int i = 0; i < 6; i++) {
+      vec3 pc, pr;
+      chPod(i, pc, pr);
+      if (pc.y < -5.0) continue;
+      float d = sdEll(p - pc, pr);
+      if (d < near0) { near1 = near0; near0 = d; } else if (d < near1) near1 = d;
+    }
+    float seam = (1.0 - smoothstep(0.018, 0.04, near1 - near0))*(1.0 - smoothstep(0.15, 0.3, near1));
     // Violet moss creeping up the bottom of the pods.
     float moss = 1.0 - smoothstep(0.25, 1.0, p.y + 0.6*(noise3(p*1.6) - 0.5));
     c = mix(c, mix(vec3(0.1, 0.05, 0.2), vec3(0.2, 0.1, 0.34), noise3(p*4.0)), moss*0.9);
+    c = mix(c, vec3(0.02, 0.02, 0.03), seam);
     emit = c*0.16;
     return c;
   }
@@ -7329,11 +7451,9 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   if (id > 118.5 && id < 119.5) { vec3 c = vec3(0.45, 0.95, 1.0); emit = c*1.2; return c*0.6; }
   if (id > 120.5 && id < 121.5) {
     // The sign's face: dark teal with the shop's name in glowing gold.
-    vec3 sq = chSignLocal(p);
-    float d = chSignText(vec2(-sq.x, sq.y)/0.06);
-    float letter = 1.0 - smoothstep(0.35, 0.6, d);
-    vec3 c = mix(vec3(0.06, 0.14, 0.16), vec3(1.0, 0.82, 0.45), letter);
-    emit = vec3(1.0, 0.75, 0.35)*letter*1.3;
+    // The plate's face: plain dark teal behind the raised letters.
+    vec3 c = mix(vec3(0.05, 0.12, 0.14), vec3(0.08, 0.17, 0.19), 0.5 + 0.4*g);
+    emit = c*0.05;
     return c;
   }
   if (id > 121.5 && id < 122.5) {
@@ -7345,19 +7465,26 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     return c;
   }
   if (id > 119.5 && id < 120.5) { vec3 c = vec3(1.0, 0.72, 0.4); emit = c*1.3; return c*0.6; }
+  if (id > 123.5 && id < 124.5) { vec3 c = vec3(1.0, 0.82, 0.45); emit = vec3(1.0, 0.75, 0.35)*1.2; return c; }
   if (id > 112.5 && id < 113.5) {
-    // Cobbles: worn grey-violet, each its own shade, dark in the joints.
-    vec2 cid;
-    vec2 cells = chCells(p.xz*2.4, cid);
-    vec3 c = mix(vec3(0.15, 0.14, 0.2), vec3(0.27, 0.25, 0.33), hash1(cid.x*3.7 + cid.y*1.3));
-    c *= 0.85 + 0.25*g;
-    c = mix(vec3(0.03, 0.025, 0.05), c, smoothstep(0.0, 0.08, cells.y));
+    // Cobbles: worn grey-violet, each its own shade, darker toward its edges, near black in the joints. The shop's mat
+    // uses its own, finer cells.
+    bool mat = abs(p.z + 4.45) < 1.6 && abs(p.x) < 2.2;
+    vec2 cid, centre;
+    vec2 e = chStoneCells(mat ? p.xz*2.6 + 9.0 : p.xz*2.4, cid, centre);
+    vec3 c = mix(vec3(0.15, 0.14, 0.2), vec3(0.27, 0.25, 0.33), chHash22(cid + 3.0).x);
+    c *= 0.85 + 0.2*g + 0.1*(noise3(p*22.0) - 0.5);
+    c *= 0.72 + 0.28*smoothstep(0.0, 0.2, e.x);
+    c = mix(vec3(0.025, 0.02, 0.045), c, smoothstep(0.02, 0.05, e.x));
     emit = c*0.05;
     return c;
   }
   if (id > 115.5 && id < 116.5) {
-    // Edge stones: larger, darker kerb along both sides.
-    vec3 c = mix(vec3(0.1, 0.095, 0.14), vec3(0.19, 0.18, 0.24), 0.4 + 0.4*g);
+    // Kerb stones: larger and darker than the cobbles, each its own shade, a fine grain and lighter worn tops.
+    float k = floor((p.z - chPathEnd())/0.6);
+    vec3 c = mix(vec3(0.12, 0.115, 0.16), vec3(0.21, 0.2, 0.26), chHash22(vec2(k, sign(p.x)*7.0)).y);
+    c *= 0.82 + 0.25*g + 0.12*(noise3(p*20.0) - 0.5);
+    c *= 0.85 + 0.25*smoothstep(0.1, 0.17, p.y);
     emit = c*0.04;
     return c;
   }
@@ -7467,7 +7594,7 @@ bool emissive(float id) {
   if (id >= 90.0) return id > 95.5 && id < 98.95;
 #endif
 #if ASSET == 15
-  if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || (id > 111.95 && id < 112.5) || (id > 118.5 && id < 121.5);
+  if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || (id > 111.95 && id < 112.5) || (id > 118.5 && id < 121.5) || (id > 123.5 && id < 124.5);
 #endif
 #if ASSET == 9
   if (id >= 40.0) return abs(id - 42.0) < 0.5 || abs(id - 44.0) < 0.5 || (id > 47.9 && id < 48.9) || abs(id - 54.0) < 0.5 || abs(id - 58.0) < 0.5;
@@ -8243,7 +8370,7 @@ void main() {
     if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 3.5 && hitId > 2.3 && hitId < 2.5) || (hitId > 29.5 && hitId < 31.5)) { crease = 0.0; idEdge *= 0.6; }
     if (hitId > 55.5 && hitId < 58.5 || hitId > 39.5 && hitId < 42.5) { crease = 0.0; idEdge = 0.0; }
     // The shop's smooth pod shells and their windows and door: clean outlines only, no crease smudges (owner).
-    if (uAsset > 14.5 && hitId > 116.5 && hitId < 123.5) crease = 0.0;
+    if (uAsset > 14.5 && hitId > 116.5 && hitId < 124.5) crease = 0.0;
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
     if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }

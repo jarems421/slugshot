@@ -1,5 +1,5 @@
 # Opens the gun-side check place (build_hub.py --gun), presses Play, captures each logged view, then
-# closes the window it opened. Never takes focus. Other Studio windows are never touched.
+# closes the window it opened. Takes focus only if Play has not started from a plain F5. Other Studio windows are never touched.
 param([Parameter(Mandatory = $true)][string]$OutDir, [int]$Timeout = 320)
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
@@ -16,6 +16,9 @@ public static class Win {
 $place = Join-Path (Split-Path $PSScriptRoot -Parent | Split-Path -Parent) "build\SlugshotLobbyGunCheck.rbxlx"
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 $exe = (Get-ChildItem "$env:LOCALAPPDATA\Roblox\Versions" -Recurse -Filter RobloxStudioBeta.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+# Recovery copies of this throwaway place (left when a run's window is closed) make Studio ask to restore, which
+# swallowed the Play key. The place is rebuilt each run, so they hold nothing worth keeping.
+Remove-Item "$env:LOCALAPPDATA\Roblox\RobloxStudio\AutoSaves\SlugshotLobbyGunCheck_AutoRecovery_*" -ErrorAction SilentlyContinue
 $started = Get-Date
 $proc = Start-Process $exe -ArgumentList "`"$place`"" -PassThru
 $hwnd = [IntPtr]::Zero
@@ -40,7 +43,10 @@ function Capture($name) {
     $graphics.Dispose(); $bitmap.Dispose()
     Write-Output "captured $name ($w x $h)"
 }
-function PressPlay {
+function PressPlay([bool]$focus = $false) {
+    # A plain F5 posted to the window, which Studio takes when its window is active. If that hasn't started Play, the
+    # retry brings this check's own window forward first (Studio ignored unfocused key messages in some runs).
+    if ($focus) { [Win]::SetForegroundWindow($hwnd) | Out-Null; Start-Sleep -Milliseconds 300 }
     [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x74, [IntPtr]0) | Out-Null
     Start-Sleep -Milliseconds 60
     [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x74, [IntPtr]0) | Out-Null
@@ -61,20 +67,24 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
             $content = $reader.ReadToEnd()
             $reader.Close(); $stream.Close()
         } catch { continue }
+        # Only this check's own log: other sessions' Studio windows open logs too, with some of the same lines.
+        if ($content -notmatch "SlugshotLobbyGunCheck") { continue }
         foreach ($line in ($content -split "`n")) {
+            if ($line -match "server foundation ready") { $running = $true }
             if ($line -match "GUNCHECK|CreatorError" -and $line -notmatch "Failed to upload TexturePack") {
                 $key = $log.Name + $line
                 if (-not $seen.ContainsKey($key)) {
                     $seen[$key] = $true
                     if ($line -match "GUNCHECK") { $running = $true }
-                    if ($line -match "GUNCHECK shot (\S+)") { Capture $Matches[1]; Write-Output ($line.Trim() -replace "^.*?GUNCHECK", "GUNCHECK") }
+                    if ($line -match "GUNCHECK shot (\S+)") { Capture $Matches[1] }
+                    elseif ($line -match "GUNCHECK ground") { Write-Output ($line.Trim() -replace "^.*?GUNCHECK", "GUNCHECK") }
                     elseif ($line -match "FLog::") { Write-Output ($line.Trim() -replace "^.*?\[FLog::[A-Za-z]+\] ", "") }
                 }
             }
         }
     }
     if ($seen.Keys | Where-Object { $_ -match "GUNCHECK (PASS|FAIL)" }) { break }
-    if (-not $running -and ((Get-Date) - $lastPress).TotalSeconds -gt 45) { Write-Output "Play has not started; pressing again"; PressPlay; $lastPress = Get-Date }
+    if (-not $running -and ((Get-Date) - $lastPress).TotalSeconds -gt 45) { Write-Output "Play has not started; pressing again"; PressPlay $true; $lastPress = Get-Date }
 }
 Capture "end"
 Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue
