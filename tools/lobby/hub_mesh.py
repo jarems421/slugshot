@@ -754,10 +754,6 @@ PIECES = {
             part("Cap", shop_cap, 10000, 1024, PROP_INK*2.0, 1.0, cage=0.05),
             part("Trunk", by_id((101.9, 102.1)), 5000, 1024, PROP_INK*1.2, 1.0, cage=0.03),
             part("Shrooms", by_id((102.9, 103.1), (106.9, 107.1), (108.95, 109.6)), 3500, 512, FINE_INK*1.5, 1.0, cage=0.02),
-            part("Glass", by_id((118.9, 119.1)), 1500, 512, cage=0.015),
-            part("Door", by_id((119.9, 120.1)), 600, 512, cage=0.015),
-            part("Vents", by_id((121.9, 122.1)), 800, 512, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
-            part("Rims", by_id((117.9, 118.1)), 5000, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
             part("PodsHigh", lambda ids, c: c[:, 1] > 3.3, 8000, 1024, PROP_INK, 1.0, cage=0.04),
             part("Pods", everything, 10000, 1024, PROP_INK, 1.0, cage=0.04),
         ],
@@ -876,12 +872,23 @@ PIECES = {
         "lo": (-2.0, -0.36, -23.6), "hi": (2.0, 0.3, -14.4), "step": 0.01, "normalH": 0.002,
         "parts": [
             part("Kerb", by_id((115.9, 116.1)), 3500, 1024, FINE_INK*1.2, 1.0, cage=0.012),
-            part("PathNear", lambda ids, c: c[:, 2] > -17.6, 5000, 1024, cage=0.01),
-            part("PathFar", everything, 5000, 1024, cage=0.01),
+            part("PathNear", lambda ids, c: c[:, 2] > -17.6, 12000, 1024, cage=0.01),
+            part("PathFar", everything, 12000, 1024, cage=0.01),
         ],
     },
     # The shop's cobble mat (owner, 2026-11-04: too perfect a circle; then faceted at the shop's coarser sampling).
     # The shop's sign (owner, 2026-11-04: the name blurred from a distance): raised, outlined letters, sampled finely.
+    # The shop's windows, door and doorframe (owner, 2026-11-04: messy outlines, the door's glow at its corners).
+    "hub-gun-trim": {
+        "item": GUN_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 118.0); chShopTrim(p, res); return res; }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
+        "lo": (-6.2, -0.2, -4.4), "hi": (6.2, 7.0, 4.6), "step": 0.008, "normalH": 0.002,
+        "parts": [
+            part("Glass", by_id((118.9, 119.1)), 2000, 512, cage=0.01),
+            part("Door", by_id((119.9, 120.1)), 800, 512, cage=0.01),
+            part("Rims", everything, 10000, 1024, FINE_INK*1.3, 1.0, hard=True, cage=0.01),
+        ],
+    },
     "hub-gun-sign": {
         "item": GUN_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 121.0); chShopSign(p, res); return res; }\n",
         "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
@@ -895,7 +902,7 @@ PIECES = {
         "item": GUN_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 113.0); chShopMat(p, res); return res; }\n",
         "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
         "lo": (-2.3, -0.3, -6.2), "hi": (2.3, 0.2, -2.7), "step": 0.006, "normalH": 0.0015,
-        "parts": [part("Mat", everything, 3000, 1024, cage=0.008)],
+        "parts": [part("Mat", everything, 6000, 1024, FINE_INK, 1.0, cage=0.008)],
     },
     "hub-gun-stones": {
         "item": GUN_ITEM, "map": GUN_STONES, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.4,

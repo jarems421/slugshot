@@ -6679,34 +6679,6 @@ void chShopBody(vec3 p, inout vec2 res) {
     }
   }
   chKeep(shell*0.9, 117.0, res);
-  chKeep(max(max(arch, abs(dq.z - 0.45) - 0.1), -p.y), 120.0, res);
-  // A frame round the doorway.
-  float frame = max(abs(arch + 0.11) - 0.11, abs(dq.z - 0.02) - 0.16) - 0.03;
-  // The sign: smaller, centred just above the arch, tilted back to sit on the pod's curve, the shop's name on its face.
-  chKeep(max(frame, -p.y), 118.0, res);
-
-  // Round vent hatches on the side pods: a flush disc with a rim, slots painted on.
-  for (int k = 0; k < 2; k++) {
-    vec3 c, r;
-    chPod(k == 0 ? 1 : 2, c, r);
-    vec3 d = normalize(vec3(k == 0 ? -0.55 : 0.55, -0.15, -0.8));
-    vec3 n = normalize(d/r);
-    vec3 q = p - (c + d*r);
-    float h = dot(q, n);
-    float radial = length(q - n*h);
-    chKeep(max(abs(h) - 0.04, radial - 0.36) - 0.01, 122.0, res);
-  }
-  // Real windows round each pod.
-  for (int i = 0; i < 6; i++) {
-    vec3 c, r;
-    chPod(i, c, r);
-    if (c.y < -5.0 || length(p - c) > max(r.x, r.y) + 0.7) continue;
-    for (int k = 0; k < 3; k++) {
-      vec3 wp, wn; float wr;
-      chWindowAt(i, k, wp, wn, wr);
-      chWindow(p, wp, wn, wr, res);
-    }
-  }
   // The trunk: the spire's plum roots climbing on up through the pods to the cap.
   for (int i = 0; i < 5; i++) {
     float fi = float(i);
@@ -6734,9 +6706,32 @@ void chShopBody(vec3 p, inout vec2 res) {
   }
   chBigCap(p, CH_CAP, CH_CAP_R, res);
 }
+// The shop's windows, door and doorframe: their own piece in the game, sampled finely so their outlines run clean (owner,
+// 2026-11-04). The frame lines the doorway's whole depth through the pod, so the lit door can't show past its corners.
+void chShopTrim(vec3 p, inout vec2 res) {
+  vec3 c0, r0;
+  chPod(0, c0, r0);
+  vec3 dq = p - vec3(0.0, 0.0, c0.z - r0.z);
+  float arch = max(max(abs(dq.x) - 0.85, -dq.y), length(vec2(dq.x, max(dq.y - 1.5, 0.0))) - 0.85);
+  chKeep(max(max(arch, abs(dq.z - 0.45) - 0.1), -p.y), 120.0, res);
+  float frame = max(abs(arch + 0.11) - 0.11, abs(dq.z - 0.215) - 0.385) - 0.03;
+  chKeep(max(frame, -p.y), 118.0, res);
+  for (int i = 0; i < 6; i++) {
+    vec3 c, r;
+    chPod(i, c, r);
+    if (c.y < -5.0 || length(p - c) > max(r.x, r.y) + 0.7) continue;
+    for (int k = 0; k < 3; k++) {
+      vec3 wp, wn; float wr;
+      chWindowAt(i, k, wp, wn, wr);
+      chWindow(p, wp, wn, wr, res);
+    }
+  }
+}
 // The cobble mat at the door (owner, 2026-11-04): its own piece in the game, sampled finely enough for its small stones.
 void chShopMat(vec3 p, inout vec2 res) {
   vec3 mq = p - vec3(0.0, 0.0, -4.45);
+  float region = sdBox(mq - vec3(0.0, -0.08, 0.0), vec3(2.1, 0.22, 1.5));
+  if (region > 0.02) { chKeep(region, 113.0, res); return; }
   if (abs(mq.x) < 2.2 && abs(mq.z) < 1.6 && p.y < 0.5) {
     // Whole cobbles in a rough outline, missing and scattered toward its edge (owner, 2026-11-04: too perfect a circle).
     vec2 cellId, centre;
@@ -6745,6 +6740,7 @@ void chShopMat(vec3 p, inout vec2 res) {
     vec2 hh = chHash22(cellId + 11.0);
     float ring = length(c/vec2(1.35, 0.9)) - 1.0 + 0.25*(hh.y - 0.5);
     // Every stone on the platform, none hanging over the hole.
+    chKeep(max(length(vec2(ce.x/2.6, max(p.y - 0.16, 0.0))), 0.004), 113.0, res);
     if ((ring < 0.0 || (ring < 0.35 && hh.x < 0.35)) && length(centre/2.6 - 9.0/2.6) < CH_PLAT - 0.45) {
       float cedge;
       float d = chCobbleField(p, 2.6, vec2(9.0), 0.05 + 0.012*hh.y, cellId, cedge);
@@ -6767,6 +6763,7 @@ void chShopSign(vec3 p, inout vec2 res) {
 }
 void chShop(vec3 p, inout vec2 res) {
   chShopBody(p, res);
+  chShopTrim(p, res);
   chShopMat(p, res);
   chShopSign(p, res);
 }
@@ -7094,16 +7091,24 @@ const float CH_PATH_RIM = 0.4, CH_PATH_EDGE = -19.6, CH_PATH_BRIDGE = -22.9;
 float chPathEnd() { return -chHoleR(0.0) + CH_PATH_RIM; }
 // How much of the path is missing at z: none on the gun side, most of it by the bridge.
 float chPathLoss(float z) { return 0.72*smoothstep(CH_PATH_EDGE + 0.4, CH_PATH_BRIDGE, z); }
+// Owner, 2026-11-04: stones looked cut off. These give a lower bound on the distance to their stones everywhere, never
+// "nothing here": the mesher samples only blocks whose centre reads near a surface, and gaps that read as far away cut the
+// stones beside them off square.
 void chPathCobbles(vec3 p, inout vec2 res) {
   float zr = chPathEnd();
-  if (abs(p.x) > 1.6 || p.z > zr || p.z < CH_PATH_BRIDGE - 0.6 || p.y > 0.3 || p.y < -0.35) return;
+  float region = sdBox(p - vec3(0.0, -0.09, 0.5*(zr + CH_PATH_BRIDGE)), vec3(2.05, 0.24, 0.5*(zr - CH_PATH_BRIDGE) + 0.35));
+  if (region > 0.02) { chKeep(region, 113.0, res); return; }
   vec2 cellId, centre;
   vec2 e = chStoneCells(p.xz*2.4, cellId, centre);
   vec2 c = centre/2.4;
   vec2 h = chHash22(cellId + 5.0);
   // Whole stones in or out by their centre: inside the kerbs, before the rim, and thinning out toward the bridge.
   float half = c.y < CH_PATH_EDGE - 0.3 ? 1.55 + 0.25*(h.y - 0.5) : 1.25;
-  if (abs(c.x) > half || c.y > zr - 0.1 || c.y < CH_PATH_BRIDGE || h.x < chPathLoss(c.y)) return;
+  if (abs(c.x) > half || c.y > zr - 0.1 || c.y < CH_PATH_BRIDGE || h.x < chPathLoss(c.y)) {
+    // No stone here: none nearer than this cell's own edge.
+    chKeep(max(length(vec2(e.x/2.4, max(p.y - 0.14, 0.0))), 0.004), 113.0, res);
+    return;
+  }
   float edge;
   // Stones out by the bridge sit a little higher and unevenly, as if set loose in the ground.
   float base = 0.04 + (c.y < CH_PATH_EDGE ? 0.012 + 0.02*h.y : 0.0);
@@ -7115,7 +7120,11 @@ void chPathCobbles(vec3 p, inout vec2 res) {
 void chPathKerb(vec3 p, inout vec2 res) {
   float ax = abs(p.x);
   float zr = chPathEnd();
-  if (ax < 1.15 || ax > 1.85 || p.z > zr + 0.1 || p.z < CH_PATH_EDGE - 1.6 || p.y > 0.4 || p.y < -0.35) return;
+  float zlo = CH_PATH_EDGE - 1.5;
+  float region = sdBox(vec3(ax - 1.48, p.y + 0.03, p.z - 0.5*(zr + zlo)), vec3(0.3, 0.28, 0.5*(zr - zlo) + 0.1));
+  if (region > 0.02) { chKeep(region, 116.0, res); return; }
+  // Between kept kerb stones nothing is nearer than about a stone's length.
+  chKeep(0.25, 116.0, res);
   float side = sign(p.x);
   float len = 0.6;
   float k0 = floor((p.z - zr)/len);

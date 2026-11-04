@@ -195,6 +195,15 @@ def cavern(hash1, crystals, trees):
         r = spire_radius(y) - 0.4
         wall.append({"key": "hub-gun-sideshroom-" + "ba"[k % 2], "x": round(CX + dx*r, 2), "y": round(y, 2), "z": round(CZ + dz*r, 2),
                      "ox": round(-dx, 4), "oz": round(-dz, 4), "s": 0.72})
+    # More high up, under the platform, where the spire was bare (owner, 2026-11-04); low enough that no cap reaches the
+    # platform's edge.
+    for k in range(6):
+        t = (k + 0.8)/6*2*math.pi + 0.3*hash1(k*3.1 + 7.0)
+        y = -(14.0 + 18.0*hash1(k*5.9 + 3.0))
+        dx, dz = hole_dir(t)
+        r = spire_radius(y) - 0.4
+        wall.append({"key": "hub-gun-sideshroom-" + "ab"[k % 2], "x": round(CX + dx*r, 2), "y": round(y, 2), "z": round(CZ + dz*r, 2),
+                     "ox": round(-dx, 4), "oz": round(-dz, 4), "s": round(0.6 + 0.12*hash1(k*2.3), 3)})
     for k in range(44):
         t = hash1(k*17.3 + 3.0)*2*math.pi
         on_wall(t, -(4.0 + 76.0*hash1(k*5.9 + 1.0)), "hub-gun-vine-" + ("a" if k % 3 == 0 else "b"), 0.9 + 0.4*hash1(k*7.7))

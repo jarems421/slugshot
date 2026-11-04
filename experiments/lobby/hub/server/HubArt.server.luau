@@ -1982,7 +1982,7 @@ end
 local GUN = CFrame.new(gunSide.hole.centre[1], 0, gunSide.hole.centre[2])
 	* CFrame.Angles(0, -math.pi / 2, 0)
 local GUN_KEYS =
-	{ "hub-gun-ground", "hub-gun-path", "hub-gun-mat", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop", "hub-gun-sign" }
+	{ "hub-gun-ground", "hub-gun-path", "hub-gun-mat", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop", "hub-gun-trim", "hub-gun-sign" }
 
 -- The cavern's pieces (owner, 2026-11-04): roots, shelves, side mushrooms and hanging vines, each modelled once and placed
 -- round the hole's wall from gun_side.json, facing out of the rock (each piece's +z runs into it).
