@@ -1954,3 +1954,4 @@
 ## 2026-11-04 - Gun side into the lobby
 
 - **Implemented/verified in Studio:** the whole gun side (knoll, hole walls, spire, floor, path stones, rubble, flowers, mist, spores) and stone slabs between every lobby zone, on `lobby/shop`. Play reaches `HubArt: built` with no game-script errors; the squares were a missing effect-texture table, fixed in the uploader. See [general shop](art/general-shop.md). Owner's look in Studio pending.
+- **Implemented/verified in Studio:** zone slabs now lie flat and wider (about 9 by 7 studs, 1 thick), per the owner.

@@ -813,7 +813,7 @@ PIECES = {
     },
     "hub-zone-slab": {
         "item": GUN_ITEM, "map": ZONE_SLAB, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.4,
-        "lo": (-0.75, -0.05, -0.3), "hi": (0.75, 1.4, 0.3), "step": 0.008, "normalH": 0.003,
+        "lo": (-1.0, -0.05, -0.8), "hi": (1.0, 0.3, 0.8), "step": 0.008, "normalH": 0.003,
         "parts": [part("Slab", everything, 700, 512, ROCK_INK, 0.7, cage=0.02)],
     },
     "hub-grove-mountain": {

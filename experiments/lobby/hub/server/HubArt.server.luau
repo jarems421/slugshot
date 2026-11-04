@@ -2055,8 +2055,8 @@ local function buildGunSide()
 	gunSideEffects()
 end
 
--- Stone slabs standing in a row along each line between lobby zones (owner, 2026-11-04), so each section is set apart.
--- Gaps between them are wide enough to walk through.
+-- Flat stone slabs in a row along each line between lobby zones (owner, 2026-11-04), so each section is set apart.
+-- They lie low enough to walk straight over.
 local ZONE_LINES = { 41, -41, 135, -135 }
 local function zoneSlabs()
 	local source = loadPiece("hub-zone-slab")
@@ -2075,12 +2075,12 @@ local function zoneSlabs()
 			local seed = line * 31 + index
 			local rad = math.rad(angle)
 			local along = Vector3.new(math.sin(rad), 0, -math.cos(rad))
-			local at = along * r - Vector3.new(0, 0.6, 0)
+			local at = along * r - Vector3.new(0, 0.5, 0)
 			local copy = source:Clone()
 			copy:ScaleTo(copy:GetScale() * (0.85 + 0.3 * ((seed * 0.618) % 1)))
 			local yaw = math.atan2(along.X, along.Z)
 				+ math.pi / 2
-				+ math.rad(((seed * 0.37) % 1 - 0.5) * 10)
+				+ math.rad(((seed * 0.37) % 1 - 0.5) * 8)
 			copy:PivotTo(CFrame.new(at) * CFrame.Angles(0, yaw, 0))
 			copy.Parent = folder
 			for _, part in copy:GetDescendants() do
