@@ -6282,13 +6282,16 @@ void chCap(vec3 p, vec3 top, float capR, float colour, inout vec2 res) {
   chKeep(cap*0.75, q.y < -0.02*capR ? 107.0 : 109.0 + 0.1*colour, res);
 }
 // A flower on the velvet (owner, 2026-11-03: the ground looked plain): thin stem, five petals tilted up, glowing heart.
+void chFlowerC(vec3 p, vec3 base, float tall, float seed, float col, inout vec2 res);
 void chFlower(vec3 p, vec3 base, float tall, float seed, inout vec2 res) {
+  chFlowerC(p, base, tall, seed, floor(hash1(seed*3.7)*4.0), res);
+}
+void chFlowerC(vec3 p, vec3 base, float tall, float seed, float col, inout vec2 res) {
   if (length(p - base - vec3(0.0, tall*0.6, 0.0)) > tall + 0.4) return;
   vec3 top = base + vec3(0.06*sin(seed*7.0), tall, 0.06*cos(seed*5.0));
   chKeep(chSeg(p, base - vec3(0.0, 0.1, 0.0), top, 0.035, 0.025), 110.0, res);
   vec3 q = p - top;
   if (length(q) > 0.45) return;
-  float col = floor(hash1(seed*3.7)*4.0);
   for (int k = 0; k < 5; k++) {
     float a = float(k)*1.2566 + seed;
     vec3 l = q;
@@ -6947,6 +6950,51 @@ float chMist(vec3 q) {
     d += band*smoothstep(0.55, 1.05, n)*(0.09 + 0.02*fk);
   }
   return d*inside;
+}
+
+// ---- Game pieces (tools/lobby/hub_mesh.py). The concept drew the knoll only near the hole; in the lobby it covers the whole
+// gun side, -135 to -40 degrees and 102 to 302 studs from the hub. World offset from the hub, in studs: the hole's centre
+// is at (-200, 0) and the concept's -z points at the hub.
+vec2 chWorldXZ(vec3 p) { return vec2(-200.0 - 5.0*p.z, 5.0*p.x); }
+float chWedge(vec3 p) {
+  vec2 w = chWorldXZ(p);
+  float rw = length(w), aw = degrees(atan(w.x, -w.y));
+  float da = max(-135.5 - aw, aw + 39.5);
+  return max(max(102.0 - rw, rw - 302.0)/5.0, radians(da)*rw/5.0);
+}
+// The knoll, the hole's walls, its floor and the spire, as one rock. Away from the hole the rock is only a few studs thick.
+vec2 chTerrain(vec3 p) {
+  float r = length(p.xz), t = chT(p.xz);
+  float wallR = chWallR(t, p.y);
+  float holeR = chHoleR(t);
+  vec2 cid;
+  vec2 cells = chCells(p.xz*1.5, cid);
+  float h = 0.05 + 0.14*smoothstep(0.0, 0.3, cells.y)*(1.0 - cells.x*cells.x) + 0.25*noise3(vec3(p.xz*0.15, 2.0));
+  if (chInPath(p.xz)) h = min(h, 0.0);
+  float ground = max((p.y - h)*0.6, (wallR - r)*0.7);
+  ground = max(ground, chWedge(p));
+  ground = max(ground, (-0.8 - p.y) - 30.0*(1.0 - smoothstep(1.5, 3.0, r - holeR)));
+  float floorS = max((p.y - chFloorH(p.xz))*0.7, r - wallR - 1.0);
+  float top = 0.05 + 0.12*smoothstep(0.0, 0.3, cells.y)*(1.0 - cells.x*cells.x);
+  float spire = max((r - chSpireR(p.y) - 0.3*noise3(vec3(cos(t)*2.0, p.y*0.5, sin(t)*2.0)))*0.7, p.y - top);
+  float solid = min(min(ground, floorS), spire);
+  solid = max(solid, CH_FLOOR - 4.0 - p.y);
+  vec2 res = vec2(solid, p.y > -0.35 && (r > wallR - 0.2 || r < CH_PLAT - 0.1) ? 101.0 : 100.0);
+  chPathSlabs(p, res);
+  // The cobble path stops at the gun side's edge, at the rope bridge's landing, not out over the whirlpool.
+  res.x = max(res.x, chWedge(p));
+  return res;
+}
+// The standing stone slab between lobby zones (owner): plain grey layered rock, a little tapered, with a chipped top.
+// Origin at the foot, about 6 studs wide, 6.5 tall and 1.5 thick.
+vec2 chZoneSlab(vec3 p) {
+  vec3 q = p - vec3(0.0, 0.65, 0.0);
+  float taper = 1.0 - 0.12*smoothstep(-0.65, 0.65, q.y);
+  vec3 b = vec3(0.6*taper, 0.65, 0.15*taper);
+  float d = sdBox(q, b - 0.06) - 0.06;
+  d = smax(d, q.y - 0.55 - 0.08*sin(q.x*7.0 + 1.0) - 0.05*noise3(q*6.0), 0.04);
+  d += 0.015*(noise3(q*9.0) - 0.5);
+  return vec2(d*0.8, q.y > 0.5 ? 114.0 : 115.0);
 }
 
 vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {

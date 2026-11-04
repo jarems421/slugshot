@@ -134,17 +134,63 @@ def scatter(count, spacing, test, tries=6000):
     return taken
 
 
+# The lines between lobby zones, where the stone slabs stand (owner, 2026-11-04): kept clear of props.
+BORDERS = (-41.0, -135.0)
+
+
+def near_border(x, z, pad):
+    a, r = to_polar(x, z)
+    return any(abs(math.radians(a - b))*r < pad for b in BORDERS)
+
+
 def knoll_ok(pad):
     return lambda x, z: on_knoll(x, z) and not in_hole(x, z, pad) and not on_path(x, z, pad)
 
 
 def main():
     trees, canopy, flora, crystals, slugs = [], [], [], [], []
-    # The knoll's forest: big trees at the back and sides, smaller ones near the paths.
-    for x, z in scatter(30, 22.0, knoll_ok(10.0)):
-        _, r = to_polar(x, z)
-        tall = rng.uniform(16, 26) if r < 150 else rng.uniform(22, 42)
-        trees.append({"x": round(x, 2), "y": 0.0, "z": round(z, 2), "height": round(tall, 1), "colour": rng.randrange(4)})
+    # As in the canopy hole composite (owner-approved, 2026-11-03): a ring of normal-sized giant mushrooms round the rim,
+    # clear of the bridge's landing, and a few more out on the wider knoll so it isn't bare.
+    def hash1(n):
+        return (math.sin(n*127.1 + 3.7)*43758.5453) % 1.0
+
+    tree_spots = []
+    for i in range(16):
+        tt = (i + 0.5)/16*2*math.pi + 0.25*(hash1(i*3.3) - 0.5)
+        if abs((tt + math.pi) % (2*math.pi) - math.pi) < 0.4:
+            continue
+        dx, dz = hole_dir(tt)
+        d = hole_radius(tt) + 15.0 + 30.0*hash1(i*5.7)
+        x, z = CX + dx*d, CZ + dz*d
+        if knoll_ok(4.0)(x, z) and not near_border(x, z, 14.0):
+            tall = 17.0 + 19.0*hash1(i*7.1)
+            trees.append({"x": round(x, 2), "y": 0.0, "z": round(z, 2), "height": round(tall, 1), "colour": i % 4})
+            tree_spots.append((x, z))
+    far = lambda x, z: knoll_ok(10.0)(x, z) and not in_hole(x, z, 60.0) and not near_border(x, z, 14.0)
+    for x, z in scatter(12, 40.0, far):
+        trees.append({"x": round(x, 2), "y": 0.0, "z": round(z, 2), "height": round(rng.uniform(20, 38), 1), "colour": rng.randrange(4)})
+        tree_spots.append((x, z))
+    # Round each tree's foot and scattered over the knoll: a third the approved grove plants (kinds 0 to 3), half the gun
+    # side's star flowers (5 magenta, 6 cyan), the rest small mushrooms (giant mushroom copies a few studs tall).
+    def plant_at(x, z, seed):
+        pick = hash1(seed*13.0)
+        if pick < 0.33:
+            flora.append([int(hash1(seed*7.0)*4), round(x, 2), 0.3, round(z, 2), round(0.9 + 0.35*hash1(seed), 2), round(6.28*hash1(seed*3.0), 2)])
+        elif pick < 0.83:
+            flora.append([5 if hash1(seed*5.0) < 0.5 else 6, round(x, 2), 0.3, round(z, 2), round(0.85 + 0.4*hash1(seed*2.0), 2), round(6.28*hash1(seed*9.0), 2)])
+        else:
+            trees.append({"x": round(x, 2), "y": 0.0, "z": round(z, 2), "height": round(2.0 + 2.5*hash1(seed*4.0), 1), "colour": int(hash1(seed*8.0)*4)})
+
+    ok = lambda x, z: knoll_ok(2.0)(x, z) and not near_border(x, z, 8.0)
+    for i, (tx, tz) in enumerate(tree_spots):
+        for k in range(6):
+            a = k*1.047 + i
+            r = 5.0 + 6.5*hash1(i*9.0 + k)
+            x, z = tx + math.cos(a)*r, tz + math.sin(a)*r
+            if ok(x, z):
+                plant_at(x, z, i*17.0 + k)
+    for n, (x, z) in enumerate(scatter(140, 9.0, ok)):
+        plant_at(x, z, 500.0 + n)
     # The canopy: tall stems from the hole's floor, caps layered at several depths, all below the rim.
     levels = [(76, 86, 5), (58, 70, 9), (40, 52, 12), (22, 34, 16)]
     taken = []
@@ -165,20 +211,8 @@ def main():
             if any(math.hypot(x - p[0], z - p[1]) < (cap + p[2])*0.42 for p in taken):
                 continue
             taken.append((x, z, cap))
-            canopy.append({"x": round(x, 2), "y": HOLE_FLOOR, "z": round(z, 2), "height": round(tall, 1), "colour": rng.randrange(4)})
+            canopy.append({"x": round(x, 2), "y": HOLE_FLOOR, "z": round(z, 2), "height": round(tall*0.75, 1), "colour": rng.randrange(4)})
             placed += 1
-    # Plants in clumps round the trees and along the rim, the way the grove has them.
-    for x, z in scatter(48, 9.0, knoll_ok(3.0)):
-        kind = rng.choices([4, 3, 2, 1, 0], [5, 3, 2, 2, 1])[0]
-        for _ in range(rng.randint(3, 6)):
-            px, pz = x + rng.uniform(-4, 4), z + rng.uniform(-4, 4)
-            if knoll_ok(1.5)(px, pz):
-                flora.append([kind, round(px, 2), 0.0, round(pz, 2), round(rng.uniform(0.85, 1.35), 2), round(rng.uniform(0, 6.28), 2)])
-    for x, z in scatter(9, 30.0, knoll_ok(4.0)):
-        crystals.append({"x": round(x, 2), "y": 0.0, "z": round(z, 2), "height": round(rng.uniform(5, 9), 1),
-                         "key": rng.choice(["crystals-1", "crystals-5", "crystals-10", "crystals-11"])})
-    for x, z in scatter(8, 12.0, knoll_ok(6.0)):
-        slugs.append({"x": round(x, 2), "y": 0.0, "z": round(z, 2), "heading": round(rng.uniform(0, 6.28), 3)})
     data = {
         "note": "Generated by tools/lobby/gun_side_sites.py. World studs; the hole's radii run round its centre from the hub-ward side.",
         "from": FROM, "to": TO,
@@ -190,7 +224,7 @@ def main():
     OUT.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
     print(f"hole {min(RADII):.0f} to {max(RADII):.0f} studs from its centre; near edge at {NEAR_EDGE:.0f}; "
           f"bridge {BRIDGE['to'] - BRIDGE['from']:.0f} long")
-    print(f"{len(trees)} knoll trees, {len(canopy)} canopy trees, {len(flora)} plants, {len(crystals)} crystals, {len(slugs)} Floppies")
+    print(f"{len(trees)} knoll trees and small mushrooms, {len(canopy)} canopy trees, {len(flora)} plants")
 
 
 if __name__ == "__main__":

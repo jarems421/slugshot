@@ -509,6 +509,16 @@ local function hideBlockOut()
 			item.MaxDistance = 90
 		end
 	end
+	local gunBlockOut = root:FindFirstChild("GunSide")
+	if gunBlockOut then
+		for _, item in gunBlockOut:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Transparency = 1
+			elseif item:IsA("BillboardGui") then
+				item.Enabled = false
+			end
+		end
+	end
 	local shore = root:FindFirstChild("Shore")
 	if shore then
 		for _, item in shore:GetChildren() do
@@ -1743,6 +1753,9 @@ local FLORA_KEYS: { [number]: string } = {
 	[2] = "hub-flora-lantern",
 	[3] = "hub-flora-plant",
 	[4] = "hub-flora-grass",
+	-- The gun side's own star flowers, magenta and cyan.
+	[5] = "hub-flora-gunstar-a",
+	[6] = "hub-flora-gunstar-b",
 }
 
 local function groveProps()
@@ -1958,7 +1971,79 @@ end
 -- toward the concept's -z, which is the world's +x from the hole.
 local GUN = CFrame.new(gunSide.hole.centre[1], 0, gunSide.hole.centre[2])
 	* CFrame.Angles(0, -math.pi / 2, 0)
-local GUN_KEYS = { "hub-gun-shop" }
+local GUN_KEYS =
+	{ "hub-gun-ground", "hub-gun-wall", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop" }
+
+-- The hole's mist (owner): layers at five depths, thick but see-through, drifting; and purple spores rising off the velvet.
+local function gunSideEffects()
+	local hole = gunSide.hole
+	local centre = Vector3.new(hole.centre[1], 0, hole.centre[2])
+	local folder = Instance.new("Folder")
+	folder.Name = "GunSideEffects"
+	folder.Parent = art
+	local count = #hole.radii
+	for layer = 0, 4 do
+		local y = (-3 - layer * 4.3) * 5
+		for k = 0, 7 do
+			local t = (k + 0.5) / 8 * 2 * math.pi + layer * 0.4
+			local r = hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1]
+				* (0.35 + 0.25 * (k % 3) / 2)
+			local at = centre + Vector3.new(math.cos(t), 0, math.sin(t)) * r + Vector3.new(0, y, 0)
+			local source = holder("Mist", at, Vector3.new(36, 2, 36))
+			source.Parent = folder
+			local e = Instance.new("ParticleEmitter")
+			e.Texture = fxTexture("mist")
+			e.Rate = 0.8
+			e.Lifetime = NumberRange.new(14, 20)
+			e.Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 26),
+				NumberSequenceKeypoint.new(1, 44),
+			})
+			e.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.3, 0.82),
+				NumberSequenceKeypoint.new(0.7, 0.85),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			e.Color =
+				ColorSequence.new(Color3.fromRGB(150, 120, 210), Color3.fromRGB(110, 100, 180))
+			e.LightEmission = 0.25
+			e.Speed = NumberRange.new(0.6, 1.4)
+			e.SpreadAngle = Vector2.new(180, 8)
+			e.EmissionDirection = Enum.NormalId.Right
+			e.Rotation = NumberRange.new(0, 360)
+			e.RotSpeed = NumberRange.new(-3, 3)
+			e.Parent = source
+		end
+	end
+	for k = 0, 11 do
+		local t = (k + 0.5) / 12 * 2 * math.pi
+		if math.abs(t - math.pi) > 2.6 then
+			continue
+		end
+		local r = hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1] + 30
+		local at = centre + Vector3.new(math.cos(t), 0, math.sin(t)) * r + Vector3.new(0, 1, 0)
+		local source = holder("Spores", at, Vector3.new(40, 1, 40))
+		source.Parent = folder
+		local e = Instance.new("ParticleEmitter")
+		e.Texture = fxTexture("spore")
+		e.Rate = 4
+		e.Lifetime = NumberRange.new(6, 9)
+		e.Size = NumberSequence.new(0.35)
+		e.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.15, 0.2),
+			NumberSequenceKeypoint.new(0.75, 0.3),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		e.Color = ColorSequence.new(Color3.fromRGB(190, 90, 255))
+		e.LightEmission = 1
+		e.Speed = NumberRange.new(1.5, 2.6)
+		e.SpreadAngle = Vector2.new(12, 12)
+		e.EmissionDirection = Enum.NormalId.Top
+		e.Parent = source
+	end
+end
 
 local function buildGunSide()
 	for _, key in GUN_KEYS do
@@ -1967,6 +2052,46 @@ local function buildGunSide()
 			model:PivotTo(GUN * model:GetPivot())
 		end
 	end
+	gunSideEffects()
+end
+
+-- Stone slabs standing in a row along each line between lobby zones (owner, 2026-11-04), so each section is set apart.
+-- Gaps between them are wide enough to walk through.
+local ZONE_LINES = { 41, -41, 135, -135 }
+local function zoneSlabs()
+	local source = loadPiece("hub-zone-slab")
+	if not source then
+		return
+	end
+	local folder = Instance.new("Model")
+	folder.Name = "ZoneSlabs"
+	folder.Parent = art
+	local lo, hi = paintedBounds(source)
+	source.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
+	for line, angle in ZONE_LINES do
+		local index = 0
+		for r = 112, 292, 10.5 do
+			index += 1
+			local seed = line * 31 + index
+			local rad = math.rad(angle)
+			local along = Vector3.new(math.sin(rad), 0, -math.cos(rad))
+			local at = along * r - Vector3.new(0, 0.6, 0)
+			local copy = source:Clone()
+			copy:ScaleTo(copy:GetScale() * (0.85 + 0.3 * ((seed * 0.618) % 1)))
+			local yaw = math.atan2(along.X, along.Z)
+				+ math.pi / 2
+				+ math.rad(((seed * 0.37) % 1 - 0.5) * 10)
+			copy:PivotTo(CFrame.new(at) * CFrame.Angles(0, yaw, 0))
+			copy.Parent = folder
+			for _, part in copy:GetDescendants() do
+				if part:IsA("MeshPart") and not isInk(part) then
+					part.CanCollide = true
+					part.CanQuery = true
+				end
+			end
+		end
+	end
+	source:Destroy()
 end
 
 local function buildGrove()
@@ -2032,6 +2157,7 @@ buildVolcano()
 buildArch()
 buildGrove()
 buildGunSide()
+zoneSlabs()
 buildCollision(function()
 	retireBlockOut()
 	workspace:SetAttribute("HubSolid", true)

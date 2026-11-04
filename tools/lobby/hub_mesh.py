@@ -306,7 +306,7 @@ GROVE_WATER = """vec2 assetMap(vec3 p) {
 GROVE_FALLS = "vec2 assetMap(vec3 p) { float along, tier; return vec2(groveFalls(p, along, tier), 44.0); }\n"
 GROVE_ROCKS = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 61.0); groveStones(p, res); groveRunes(p, res); return res; }\n"
 GROVE_DRESS = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 59.0); grovePads(p, res); groveBushes(p, res); groveVines(p, res); return res; }\n"
-# The ground of the portal side: stops at the pit, the wall and the zone's edges, and leaves the ravine open.
+# The ground of the portal side: stops at the pit, the wall and the zone's edges. The ravine is gone (owner, 2026-11-03).
 PLAZA_FLOOR = """vec2 assetMap(vec3 p) {
   float hr = length(p.xz + vec2(0.0, PZ_HUB)), a = atan(p.x, p.z + PZ_HUB), ch = plazaChannels(p.xz);
   float g = smax(p.y*0.8, -max(ch, -p.y - 0.4), 0.06);
@@ -314,8 +314,6 @@ PLAZA_FLOOR = """vec2 assetMap(vec3 p) {
   float l = max(ch, abs(p.y + 0.24) - 0.05);
   if (l < r.x) r = vec2(l, 31.0);
   float clip = max(max(20.4 - hr, hr - 61.0), (abs(a) - 0.735)*hr);
-  // The block-out's ravine stays open on this side (game x < 0, which is this scene's x > 0).
-  clip = max(clip, -max(max(0.436 - a, a - 0.76)*hr, max(41.0 - hr, hr - 55.0)));
   r.x = max(r.x, clip);
   return r;
 }
@@ -332,6 +330,49 @@ PORTAL = """vec2 assetMap(vec3 p) { vec2 r = portal(p/GS); r.x *= GS; return r; 
 # pods). Concept units are 5 studs; the hole's centre is the origin and the hub lies toward -z.
 GUN_ITEM = "canopy-hole-1"
 GUN_SHOP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 117.0); chShop(p, res); return res; }\n"
+
+
+GUN_GROUND = "vec2 assetMap(vec3 p) { return chTerrain(p); }\n"
+GUN_WALL = """vec2 assetMap(vec3 p) {
+  vec2 res = vec2(1e3, 102.0);
+  float r = length(p.xz), t = chT(p.xz), wallR = chWallR(t, p.y);
+  if (p.y < 0.6 && p.y > CH_FLOOR - 1.0 && abs(r - wallR) < 3.2) chOuterWall(p, t, res);
+  return res;
+}
+"""
+GUN_SPIRE = """vec2 assetMap(vec3 p) {
+  vec2 res = vec2(1e3, 102.0);
+  float r = length(p.xz);
+  if (p.y < 0.6 && p.y > CH_FLOOR - 1.0) {
+    if (r < chSpireR(p.y) + 3.0 || (p.y < CH_FLOOR + 3.0 && r < 14.0)) chSpire(p, res);
+    if (p.y < CH_FLOOR + 6.0 && r < chWallR(chT(p.xz), p.y)) chFloorLife(p, res);
+  }
+  return res;
+}
+"""
+GUN_STONES = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 115.0); chPathway(p, res); chRubble(p, res); return res; }\n"
+GUN_STAR = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 110.0); chFlowerC(p, vec3(0.0), 0.6, 1.0, COL, res); return res; }\n"
+ZONE_SLAB = "vec2 assetMap(vec3 p) { return chZoneSlab(p); }\n"
+
+
+def gun_velvet(lo, hi):
+    return lambda ids, c: (np.abs(ids - 101.0) < 0.1) & (c[:, 0] >= lo) & (c[:, 0] < hi)
+
+
+def gun_spire_rock(ids, c):
+    return np.hypot(c[:, 0], c[:, 2]) < 8.5
+
+
+def gun_floor_rock(ids, c):
+    return c[:, 1] < -21.5
+
+
+def gun_trees(ids, c):
+    return (np.abs(ids - 103.0) < 0.1) | ((ids > 108.95) & (ids < 109.6))
+
+
+def gun_stones_top(ids, c):
+    return c[:, 1] > 0.15
 
 
 def shop_cap(ids, c):
@@ -715,6 +756,66 @@ PIECES = {
             part("Pods", everything, 9000, 2048, PROP_INK, 1.0, cage=0.04),
         ],
     },
+    "hub-gun-ground": {
+        "item": GUN_ITEM, "map": GUN_GROUND, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.6,
+        "lo": (-47.0, -28.5, -27.5), "hi": (43.0, 1.2, 21.0), "step": 0.06, "normalH": 0.006,
+        "parts": [
+            part("Path", by_id((112.9, 113.1), (115.9, 116.1)), 3000, 1024, FINE_INK, 1.0, cage=0.04),
+            part("VelvetA", gun_velvet(-99.0, -15.0), 7000, 2048, cage=0.06),
+            part("VelvetB", gun_velvet(-15.0, 15.0), 7000, 2048, cage=0.06),
+            part("VelvetC", gun_velvet(15.0, 99.0), 7000, 2048, cage=0.06),
+            part("Spire", gun_spire_rock, 5000, 1024, ROCK_INK, 0.7, cage=0.08),
+            part("HoleFloor", gun_floor_rock, 4000, 1024, cage=0.08),
+            part("Walls", everything, 14000, 2048, ROCK_INK, 0.7, cage=0.08),
+        ],
+    },
+    "hub-gun-wall": {
+        "item": GUN_ITEM, "map": GUN_WALL, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-24.0, -25.0, -24.0), "hi": (24.0, 1.0, 24.0), "step": 0.025, "normalH": 0.004,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 4000, 512, FINE_INK, 1.0, cage=0.015),
+            part("Vines", by_id((104.9, 105.1)), 5000, 512, FINE_INK, 1.0, cage=0.015),
+            part("Trees", gun_trees, 6000, 1024, PROP_INK, 1.0, cage=0.03),
+            part("Crystals", by_id((107.95, 108.95)), 5000, 1024, PROP_INK, 1.0, hard=True, cage=0.02),
+            part("Shelves", by_id((105.9, 107.1)), 6000, 1024, FINE_INK*1.5, 1.0, cage=0.02),
+            part("Roots", everything, 12000, 2048, PROP_INK, 1.0, cage=0.03),
+        ],
+    },
+    "hub-gun-spire": {
+        "item": GUN_ITEM, "map": GUN_SPIRE, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-21.0, -25.0, -21.0), "hi": (21.0, 0.6, 21.0), "step": 0.025, "normalH": 0.004,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 2000, 512, FINE_INK, 1.0, cage=0.015),
+            part("Vines", by_id((104.9, 105.1)), 2000, 512, FINE_INK, 1.0, cage=0.015),
+            part("Shrooms", gun_trees, 4000, 1024, PROP_INK, 1.0, cage=0.03),
+            part("Crystals", by_id((107.95, 108.95)), 5000, 1024, PROP_INK, 1.0, hard=True, cage=0.02),
+            part("Shelves", by_id((105.9, 107.1)), 3000, 1024, FINE_INK*1.5, 1.0, cage=0.02),
+            part("Roots", everything, 6000, 1024, PROP_INK, 1.0, cage=0.03),
+        ],
+    },
+    "hub-gun-stones": {
+        "item": GUN_ITEM, "map": GUN_STONES, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.4,
+        "lo": (-5.5, -4.6, -16.6), "hi": (5.5, 1.8, -3.8), "step": 0.015, "normalH": 0.003,
+        "parts": [
+            part("Stones", gun_stones_top, 4000, 1024, ROCK_INK, 0.7, cage=0.03),
+            part("Rubble", everything, 3000, 512, ROCK_INK, 0.7, cage=0.02),
+        ],
+    },
+    "hub-flora-gunstar-a": {
+        "item": GUN_ITEM, "map": GUN_STAR.replace("COL", "0.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.3,
+        "lo": (-0.45, -0.15, -0.45), "hi": (0.45, 0.85, 0.45), "step": 0.006, "normalH": 0.002,
+        "parts": [part("Plant", everything, 1000, 512, FINE_INK*0.9, 1.0, cage=0.012)],
+    },
+    "hub-flora-gunstar-b": {
+        "item": GUN_ITEM, "map": GUN_STAR.replace("COL", "1.0"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.3,
+        "lo": (-0.45, -0.15, -0.45), "hi": (0.45, 0.85, 0.45), "step": 0.006, "normalH": 0.002,
+        "parts": [part("Plant", everything, 1000, 512, FINE_INK*0.9, 1.0, cage=0.012)],
+    },
+    "hub-zone-slab": {
+        "item": GUN_ITEM, "map": ZONE_SLAB, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.4,
+        "lo": (-0.75, -0.05, -0.3), "hi": (0.75, 1.4, 0.3), "step": 0.008, "normalH": 0.003,
+        "parts": [part("Slab", everything, 700, 512, ROCK_INK, 0.7, cage=0.02)],
+    },
     "hub-grove-mountain": {
         "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "shell": GROVE_SHELL, "shellStep": 0.2, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
         "gain": 3.0, "bakeEmit": True, "lo": (-50.0, -1.2, -1.0), "hi": (50.0, 38.0, 60.0), "step": 0.06, "normalH": 0.004,
@@ -839,6 +940,7 @@ PIECES = {
 
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
+    ("float far = 1.0 - smoothstep(chHoleR(chT(p.xz)) + 3.0, chHoleR(chT(p.xz)) + 10.0, length(p.xz));", "float far = 1.0;"),
     ("vec3 c = mix(gEdge, gCore, sw*0.75 + sw2*0.25);\n    c = mix(c, gHot, smoothstep(3.0, 0.0, r)*0.5);", "vec3 c = gEdge;"),
     ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
     # Cracks, painted by depth: a touch of lit stone at the lip, black walls, and glowing azure welling up from the bottom.
