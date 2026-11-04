@@ -17,6 +17,19 @@ local BRIDGE_SETTLE = 1.2 -- seconds for a bridge to come to rest after the last
 local BONE_COUNT = 17
 local BONE_SPAN = 10.6 -- bridge units, centre to end bone
 
+-- The downhill lava's slow gloop (owner, 2026-11-03): its crust and skin textures slide down its own surface every frame,
+-- so the motion stays smooth however slow it is. A larger offset moves a side texture up, hence the minus. Connected
+-- first, as the bridges below can wait for their bones before the rest of the motion starts.
+local gloopStarted = os.clock()
+RunService.RenderStepped:Connect(function()
+	local t = os.clock() - gloopStarted
+	for _, texture in CollectionService:GetTagged("HubLavaGloop") do
+		if texture:IsA("Texture") then
+			texture.OffsetStudsV = -t * (texture:GetAttribute("Speed") or 1)
+		end
+	end
+end)
+
 type Mover = {
 	part: BasePart,
 	base: CFrame,
