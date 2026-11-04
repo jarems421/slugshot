@@ -1,4 +1,4 @@
-# ADR 0025: Native Inferno inspection from the approved browser study
+# ADR 0029: Native Inferno inspection from the approved browser study
 
 Date: 2026-11-03. Status: Accepted for the isolated creature/combat experiment.
 

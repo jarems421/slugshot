@@ -1,4 +1,4 @@
-# 0024: Training arena lives inside the lobby place
+# 0030: Training arena lives inside the lobby place
 
 **Status:** Implemented for owner review, 2026-11-03.
 

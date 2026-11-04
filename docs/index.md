@@ -25,7 +25,7 @@ Open this repository or `docs/` as an Obsidian vault. All notes use ordinary Mar
 - [General shop concept](art/general-shop.md), [shop reference research](research/slugterra-shops.md) and [reusable curled cave fern](art/curled-cave-fern.md)
 - [Slug asset pipeline](slugs/pipeline.md), [rig contract](slugs/rig-specification.md), [species guide](slugs/species-guide.md), [transformation API](slugs/transformation-system.md), [Studio import](slugs/studio-import.md) and [evidence](slugs/verification.md)
 - [Slug design catalogue and records](slugs/catalog/index.md)
-- [Inferno inspect: approved Playful Flame and native evidence](slugs/inferno-inspect-studies.md), [ADR 0025](decisions/0025-inferno-inspect-surface.md)
+- [Inferno inspect: approved Playful Flame and native evidence](slugs/inferno-inspect-studies.md), [ADR 0025](decisions/0029-inferno-inspect-surface.md)
 - [Confirmed slug recovery and Floppy burrow sequence](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md)
 - [One-handed ADS](decisions/0019-one-handed-ads.md)
 - [Gun, flip, burrow and first-person review with proposals (2026-11-01)](reviews/2026-11-01-combat-feel-review.md)

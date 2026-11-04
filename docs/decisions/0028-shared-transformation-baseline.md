@@ -1,4 +1,4 @@
-# ADR 0024: A shared twirl-and-glow transformation
+# ADR 0028: A shared twirl-and-glow transformation
 
 **Status: Implemented, 2026-11-03; offline and one-client Studio checks pass; owner visual approval pending.**
 
@@ -8,4 +8,4 @@
 
 **Floor treatment:** the two existing soft radial images use an `AlwaysOnTop` billboard to prevent the floor from cutting across the billboard plane. A separate camera-to-source raycast hides it when a collidable surface blocks the source. The shooter simulation's collision parameters are not reused: camera visibility must exclude the viewing character, rather than the shooter's character. The board stays disabled until both images are loaded. [Billboard API](https://create.roblox.com/docs/reference/engine/classes/BillboardGui), [raycast filtering](https://create.roblox.com/docs/reference/engine/datatypes/RaycastParams).
 
-**Consequences/limits:** the aura can spill softly over nearby geometry while its source is visible, as bloom would; occlusion is checked at the centre rather than per pixel. Thin cover can hide the entire aura. The check costs one raycast per visible aura per frame during its short buildup/release, none after fading. Existing flight timing, hit authority, cooldowns and recovery remain with their current owners (ADR 0023). The native review passes three near-floor views, a wall blocker, early impact, cancellation, expiry and a real first-person shot. Owner feel, thin-cover transitions, multiplayer and device coverage remain open; offline type/build checks cannot establish visual quality.
+**Consequences/limits:** the aura can spill softly over nearby geometry while its source is visible, as bloom would; occlusion is checked at the centre rather than per pixel. Thin cover can hide the entire aura. The check costs one raycast per visible aura per frame during its short buildup/release, none after fading. Existing flight timing, hit authority, cooldowns and recovery remain with their current owners (ADR 0027). The native review passes three near-floor views, a wall blocker, early impact, cancellation, expiry and a real first-person shot. Owner feel, thin-cover transitions, multiplayer and device coverage remain open; offline type/build checks cannot establish visual quality.

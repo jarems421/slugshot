@@ -1,4 +1,4 @@
-# ADR 0023: Transforming slugs leave fast and slow down along their path
+# ADR 0027: Transforming slugs leave fast and slow down along their path
 
 **Status:** Implemented, 2026-11-03, for owner playtest. Numbers are proposals.
 
