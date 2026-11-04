@@ -782,7 +782,37 @@ local function buildGunSide(root: Instance)
 	-- The big bridge: a steady deck, walled in on both sides from the knoll to the platform.
 	local deck = folder(parent, "Bridge")
 	local near, far = polar(bridge.angle, bridge.from, 0), polar(bridge.angle, bridge.to, 0)
-	beam(deck, "Deck", near, far, bridge.width, 2, PLANK)
+	-- The floating rock path (owner, 2026-11-03): four stepping stones, alternating bigger and smaller, on a gentle curve
+	-- from the rim to the platform, as in the canopy hole composite (docs/art/general-shop.md). Concept units are 5 studs;
+	-- the concept's -z points at the hub, which is this hole's inward side.
+	local radius0 = holeRadius(0)
+	local function stoneAt(i: number): (Vector3, number)
+		local u = (i + 1) / 5
+		local a, b, c = Vector2.new(0, -radius0), Vector2.new(3, -50), Vector2.new(0, -26)
+		local xz = a * (1 - u) ^ 2 + b * 2 * u * (1 - u) + c * u * u
+		local at = HOLE_CENTRE + HOLE_IN * -xz.Y + HOLE_ACROSS * xz.X
+		return Vector3.new(at.X, 3.75, at.Z), if i % 2 == 0 then 3.75 else 2.9
+	end
+	for i = 0, 3 do
+		local top, r = stoneAt(i)
+		disc(deck, "Stone", 2, r * 2, top - Vector3.new(0, 1, 0), PLANK)
+	end
+	-- Under the stones, an invisible catch floor between the side walls: a missed jump lands here and is sent back to
+	-- the rim, so nobody falls into the hole.
+	local catch =
+		beam(deck, "CatchFloor", near, far, bridge.width + 12, 2, LIGHT, { transparency = 1 })
+	catch.CFrame -= Vector3.new(0, 6, 0)
+	catch.CanQuery = false
+	local back = polar(bridge.angle, bridge.from - 8, 4)
+	catch.Touched:Connect(function(hit: BasePart)
+		local character = hit.Parent
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local body = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if humanoid and body then
+			body.AssemblyLinearVelocity = Vector3.zero
+			body.CFrame = CFrame.lookAt(back, back + (far - near).Unit)
+		end
+	end)
 	local side = (far - near).Unit:Cross(Vector3.yAxis)
 	for _, sign in { -1, 1 } do
 		local offset = side * sign * (half + 0.5)

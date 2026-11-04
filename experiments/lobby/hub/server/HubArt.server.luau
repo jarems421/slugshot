@@ -272,6 +272,8 @@ local SOLID: { [string]: { string } } = {
 	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
 	["hub-grove-ground"] = { "Ground", "Bed" },
 	["hub-grove-rocks"] = { "Stones", "Runes" },
+	-- The shop's pods and trunk are solid, so its closed door can't be walked through; the cap stays passable.
+	["hub-gun-shop"] = { "Pods", "Trunk" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -1952,6 +1954,21 @@ local function groveProps()
 	end
 end
 
+-- The gun side's art (docs/art/general-shop.md): concept units are 5 studs round the canopy hole's centre, with the hub
+-- toward the concept's -z, which is the world's +x from the hole.
+local GUN = CFrame.new(gunSide.hole.centre[1], 0, gunSide.hole.centre[2])
+	* CFrame.Angles(0, -math.pi / 2, 0)
+local GUN_KEYS = { "hub-gun-shop" }
+
+local function buildGunSide()
+	for _, key in GUN_KEYS do
+		local model = place(key)
+		if model then
+			model:PivotTo(GUN * model:GetPivot())
+		end
+	end
+end
+
 local function buildGrove()
 	for _, key in GROVE_KEYS do
 		local model = place(key)
@@ -2014,6 +2031,7 @@ buildPortals()
 buildVolcano()
 buildArch()
 buildGrove()
+buildGunSide()
 buildCollision(function()
 	retireBlockOut()
 	workspace:SetAttribute("HubSolid", true)

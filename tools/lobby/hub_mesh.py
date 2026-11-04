@@ -328,6 +328,14 @@ BRIDGE = """vec2 assetMap(vec3 p) { return ropeBridge(p, 0.0, true); }
 """
 PORTAL = """vec2 assetMap(vec3 p) { vec2 r = portal(p/GS); r.x *= GS; return r; }
 """
+# The gun side's shop, Slugworks (docs/art/general-shop.md), from the canopy hole composite (asset 15, option A, clustered
+# pods). Concept units are 5 studs; the hole's centre is the origin and the hub lies toward -z.
+GUN_ITEM = "canopy-hole-1"
+GUN_SHOP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 117.0); chShop(p, res); return res; }\n"
+
+
+def shop_cap(ids, c):
+    return ((np.abs(ids - 107.0) < 0.1) | ((ids > 109.2) & (ids < 109.4))) & (c[:, 1] > 5.0)
 
 
 def by_id(*ranges):
@@ -695,6 +703,18 @@ PIECES = {
         ],
     },
     # The mesh is the flat-faced "shell"; the layered rock in "map" is baked onto it as colour and normals, so it can be run on (owner).
+    "hub-gun-shop": {
+        "item": GUN_ITEM, "map": GUN_SHOP, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
+        "lo": (-9.0, -0.7, -9.5), "hi": (9.6, 9.6, 9.0), "step": 0.025, "normalH": 0.004,
+        "parts": [
+            part("Cap", shop_cap, 9000, 2048, PROP_INK*2.0, 1.0, cage=0.05),
+            part("Trunk", by_id((101.9, 102.1)), 4000, 1024, PROP_INK*1.2, 1.0, cage=0.03),
+            part("Shrooms", by_id((102.9, 103.1), (106.9, 107.1), (108.95, 109.6)), 2500, 512, FINE_INK*1.5, 1.0, cage=0.02),
+            part("Windows", by_id((117.9, 122.5)), 4500, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.02),
+            part("Mat", by_id((112.9, 113.1)), 1500, 512, FINE_INK, 1.0, cage=0.02),
+            part("Pods", everything, 9000, 2048, PROP_INK, 1.0, cage=0.04),
+        ],
+    },
     "hub-grove-mountain": {
         "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "shell": GROVE_SHELL, "shellStep": 0.2, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
         "gain": 3.0, "bakeEmit": True, "lo": (-50.0, -1.2, -1.0), "hi": (50.0, 38.0, 60.0), "step": 0.06, "normalH": 0.004,
