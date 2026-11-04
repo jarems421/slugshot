@@ -9,6 +9,9 @@ local HOME_REACH = 7
 local NOTICE = 14
 local SHOW_NEAR = 140
 local WATER_Y = -0.3
+-- A Floppy looks up mostly from the waist. Tilting only the head sheared the cheek, which is part head-weighted,
+-- against the fully head-bound lids, and smeared his dark under-eyes into streaks (owner, 2026-11-03).
+local WAIST_LIFT = 0.8
 local rays = RaycastParams.new()
 rays.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -375,12 +378,21 @@ local function step(dt: number)
 			slug.model:SetAttribute("FaceGreeting", slug.lookBlend)
 			for _, item in slug.head do
 				item.bone.Transform = CFrame.new(item.up * -press * 0.55 * slug.size / 2.72)
-					* CFrame.fromAxisAngle(item.side, slug.lookPitch * slug.lookBlend + lean)
+					* CFrame.fromAxisAngle(
+						item.side,
+						slug.lookPitch * slug.lookBlend * (1 - WAIST_LIFT) + lean
+					)
 			end
 		end
 		if poseChanged then
 			for _, item in slug.squash do
 				item.bone.Transform = CFrame.new(item.up * -press * slug.size / 2.72)
+					* if slug.inferno
+						then CFrame.identity
+						else CFrame.fromAxisAngle(
+							item.side,
+							slug.lookPitch * slug.lookBlend * WAIST_LIFT
+						)
 			end
 			for _, item in slug.spread do
 				item.bone.Transform = CFrame.new(item.up * press * slug.size * 0.10)
