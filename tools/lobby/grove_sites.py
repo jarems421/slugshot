@@ -353,6 +353,49 @@ def side_flora(top, stones, trees):
     return rows
 
 
+# Studs each plant's leaves reach from its root at size 1, measured on the exported pieces (star, bell, lantern, plant, grass).
+FLORA_REACH = {0: 2.1, 1: 2.4, 2: 2.1, 3: 2.6, 4: 1.0}
+# The hub's bridge to the grove in grove studs: half its width with rails, and where its deck starts toward the hub.
+BRIDGE_X, BRIDGE_Z = 8.3, -62.0
+
+
+def on_real_ground(x, z, reach):
+    """Whether the game's ground mesh, not the ideal shape, is under this foot and all round it."""
+    for dx, dz in [(0.0, 0.0)] + [(reach*math.cos(k*0.785), reach*math.sin(k*0.785)) for k in range(8)]:
+        i, j = int((x + dx - GROUND_LO[0])/GROUND_STEP), int((z + dz - GROUND_LO[1])/GROUND_STEP)
+        if not (0 <= i < GROUND_GRID.shape[0] and 0 <= j < GROUND_GRID.shape[1]) or math.isnan(GROUND_GRID[i, j]):
+            return False
+    return True
+
+
+def settle_flora(kinds, reaches, stones, trees, gems):
+    """Drop plants the game would show floating or tangled (owner, 2026-11-03): past the ground's edge, on the bridge,
+    growing out of a crystal, rock or mushroom stem, or through another plant. Those on a slope sink to their foot's low
+    side. Earlier rows win, so the authored drifts keep their flowers; no random draws, so nothing else moves."""
+    assert GROUND_GRID is not None, "build hub-grove-ground first"
+    kept, dropped = [], {"no ground": 0, "bridge": 0, "crystal": 0, "rock or stem": 0, "another plant": 0}
+    for row, before in zip(kinds, reaches):
+        kind, x, y, z, size, turn = row
+        reach = FLORA_REACH[int(kind)]*size
+        foot = 0.6*reach/5.0
+        if not on_real_ground(x/5.0, z/5.0, foot):
+            dropped["no ground"] += 1
+        elif abs(x) < BRIDGE_X + reach and z < BRIDGE_Z + reach:
+            dropped["bridge"] += 1
+        elif any(math.hypot(x - c["x"], z - c["z"]) < reach + 0.3*c["height"] for c in gems):
+            dropped["crystal"] += 1
+        elif any(math.hypot(x/5.0 - s[0], z/5.0 - s[2]) < s[3] + foot for s in stones if abs(s[1] - y/5.0) < 2.0) or \
+                any(math.hypot(x/5.0 - t[0], z/5.0 - t[2]) < 0.12*t[3] + foot for t in trees if abs(t[1] - y/5.0) < 1.0):
+            dropped["rock or stem"] += 1
+        elif any(math.hypot(x - k[1], z - k[3]) < (0.4 if kind == 4 and k[0] == 4 else 0.75)*(reach + FLORA_REACH[int(k[0])]*k[4]) for k in kept):
+            dropped["another plant"] += 1
+        else:
+            dip = rest(x/5.0, z/5.0, before) - rest(x/5.0, z/5.0, max(before, foot))
+            kept.append([kind, x, y - max(dip, 0.0)*5.0, z, size, turn])
+    print(f"flora settled: kept {len(kept)} of {len(kinds)}; dropped {dropped}")
+    return kept
+
+
 def shrooms(rnd):
     top, more = [], []
     # Round the lake, with the side facing the hub left open so the mountain and the slugs can be seen.
@@ -579,16 +622,26 @@ def main():
              for index, (x, y, z, h) in enumerate(slug_rows)]
     SITES.write_text(json.dumps(sites, indent=1) + "\n", encoding="utf-8")
     side_rows = side_trees(top)
-    # The big mushrooms round the lake are the approved giant mushroom asset, placed by the game.
-    TREES.write_text(json.dumps([{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": int(c[3])}
-                                 for t, c in zip(top, more)] + [{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": t[4]} for t in side_rows], indent=1) + "\n", encoding="utf-8")
+    # The big mushrooms round the lake are the approved giant mushroom asset, placed by the game. Those on the banks need the
+    # game's ground under their foot (owner: some floated past its edge); each keeps the turn it had, so the rest don't spin.
+    trees = [{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": int(c[3])}
+             for t, c in zip(top, more)] + [{"x": round(t[0]*5, 2), "y": round(t[1]*5, 2), "z": round(t[2]*5, 2), "height": round(t[3]*5, 1), "colour": t[4]} for t in side_rows]
+    for index, tree in enumerate(trees):
+        tree["turn"] = round((index + 1)*1.9, 3)
+    standing = [t for t in trees if t["y"] >= 8.0 or on_real_ground(t["x"]/5, t["z"]/5, 0.03*t["height"])]
+    print(f"mushrooms past the ground's edge left out: {len(trees) - len(standing)}")
+    TREES.write_text(json.dumps(standing, indent=1) + "\n", encoding="utf-8")
     # The plants are props the game places: kind, x, y, z, size, turn.
     kinds = [[int(f[3]), f[0]*5, f[1]*5 + 0.45, f[2]*5, rnd.uniform(0.9, 1.35), rnd.uniform(0, 6.28)] for f in flowers]
     kinds += [[3, f[0]*5, f[1]*5 + 0.55, f[2]*5, 1.1 + 0.6*f[3], rnd.uniform(0, 6.28)] for f in ferns]
     kinds += [[4, f[0]*5, f[1]*5, f[2]*5, f[3], rnd.uniform(0, 6.28)] for f in grass(rnd, stones)]
     kinds += side_flora(top, stones, side_rows)
+    # The foot each was rested on: the ferns over half a unit, the rest over 0.12.
+    reaches = [0.12]*len(flowers) + [0.5]*len(ferns) + [0.12]*(len(kinds) - len(flowers) - len(ferns))
+    gem_sites = crystal_sites()
+    kinds = settle_flora(kinds, reaches, stones, top + [t[:4] for t in side_rows], gem_sites)
     FLORA.write_text(json.dumps([[round(v, 2) for v in row] for row in kinds]) + "\n", encoding="utf-8")
-    CRYSTALS.write_text(json.dumps(crystal_sites(), indent=1) + "\n", encoding="utf-8")
+    CRYSTALS.write_text(json.dumps(gem_sites, indent=1) + "\n", encoding="utf-8")
     print(f"grove props: {len(top)} mushrooms ({sum(1 for t in top if t[3] >= 2.6)} large or medium), {len(kinds)} plants")
     # For the check build: where everything baked into a piece should touch its surface.
     studs = lambda rows: [[round(r[0]*5, 2), round(r[1]*5, 2), round(r[2]*5, 2)] for r in rows]

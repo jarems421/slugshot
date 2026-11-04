@@ -117,7 +117,8 @@ end
 -- One of the asset library's pieces (LobbyAssets), styled in the look pack and pivoted at the middle of its foot. Look
 -- only: anchored, with no collision or shadow. nil if it doesn't load.
 local function libraryPiece(key: string, glow: number): Model?
-	local info = (require(ServerStorage:WaitForChild("LobbyAssets")) :: any).assets[key]
+	local lobby = require(ServerStorage:WaitForChild("LobbyAssets")) :: any
+	local info = lobby.assets[key]
 	local ok, container = pcall(function()
 		return InsertService:LoadAsset(info.model)
 	end)
@@ -143,6 +144,41 @@ local function libraryPiece(key: string, glow: number): Model?
 		end
 	end
 	local lo, hi = paintedBounds(model)
+	-- Crystals keep the tip lights and twinkles they have in the look test (owner: the grove's had none).
+	-- As there, scale to the concept's height, then measure the import's axis flip so each point lands on
+	-- its tip; planting scales the effects with the crystal.
+	if string.sub(key, 1, 9) == "crystals-" and hi.Y > lo.Y then
+		model:ScaleTo(model:GetScale() * info.height / (hi.Y - lo.Y))
+		lo, hi = paintedBounds(model)
+		local centre = (lo + hi) / 2
+		local scale = (hi.Y - lo.Y) / info.height
+		local best, bestError = Vector3.one, math.huge
+		for _, flip in
+			{
+				Vector3.new(1, 1, 1),
+				Vector3.new(-1, 1, -1),
+				Vector3.new(-1, 1, 1),
+				Vector3.new(1, 1, -1),
+			}
+		do
+			local err = 0
+			for name, spec in info.groups do
+				local part = model:FindFirstChild(name)
+				if part and part:IsA("MeshPart") then
+					err += (
+						(part.Position - centre)
+						- (spec.center - info.center) * flip * scale
+					).Magnitude
+				end
+			end
+			if err < bestError then
+				best, bestError = flip, err
+			end
+		end
+		LookPack.addEffects(model, info, lobby.fx, function(p: Vector3): Vector3
+			return centre + (p - info.center) * best * scale
+		end)
+	end
 	model.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
 	return model
 end
@@ -1878,7 +1914,8 @@ local function groveProps()
 		local source =
 			template(TREE_COLOURS[site.colour] .. (if small then "-s" else ""), TREE_GLOW)
 		if source then
-			local tree = plant(source, trees, site.x, site.y, site.z, index * 1.9, site.height)
+			local tree =
+				plant(source, trees, site.x, site.y, site.z, site.turn or index * 1.9, site.height)
 			if not small then
 				for _, part in tree:GetDescendants() do
 					if part:IsA("MeshPart") and part.Name == "Stem" then
