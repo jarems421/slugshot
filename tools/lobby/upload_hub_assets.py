@@ -42,7 +42,7 @@ def main():
         return asset_id
 
     manifest = json.loads(HUB.read_text()) if HUB.exists() else {}
-    manifest = {k: e for k, e in manifest.items() if (EXPORT/k/"build.json").exists()}
+    # Keep every uploaded piece, even ones built in another worktree: dropping those emptied the place's asset list.
     for k in keys:
         report = json.loads((EXPORT/k/"build.json").read_text())
         entry = {"model": cached(f"{k} model", EXPORT/k/f"{k}.glb", "Model", "model/gltf-binary"), "groups": {}}
