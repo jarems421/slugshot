@@ -1950,3 +1950,7 @@
 
 - **Confirmed:** lobby shop follows study 02's exterior, with a shop counter inside, a deep pit with a floor and bridge, and a jungle of mushroom canopies. Owner references stored privately. See [general shop](art/general-shop.md).
 - **Implemented (not run in Studio):** gun side phase 1 on `lobby/shop`: ravine removed, knoll and sealed canopy hole in the block-out, props from approved assets. Studio test waits for other Studio windows to close (six open, 3.7 GB free).
+
+## 2026-11-04 - Gun side into the lobby
+
+- **Implemented/verified in Studio:** the whole gun side (knoll, hole walls, spire, floor, path stones, rubble, flowers, mist, spores) and stone slabs between every lobby zone, on `lobby/shop`. Play reaches `HubArt: built` with no game-script errors; the squares were a missing effect-texture table, fixed in the uploader. See [general shop](art/general-shop.md). Owner's look in Studio pending.
