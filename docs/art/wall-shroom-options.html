@@ -1,0 +1,108 @@
+<title>Hole Wall Mushrooms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one row of three option cards, each a draggable turntable with its note; stacks to one column on phones. */
+:root {
+  --bg: #0c1016; --card: #141a22; --line: #26313d; --fg: #e8eef2; --muted: #9aa8b4; --accent: #9fd8ff;
+  --a: #d58cff; --b: #ffb04a; --c: #6fb4ff;
+  --display: "Baloo 2", "Trebuchet MS", sans-serif; --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+main { max-width: 1320px; margin: 0 auto; padding-block: 28px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 22px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1 { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1.05; margin: 2px 0 6px; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 70ch; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.view { position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: #05070a; cursor: grab; touch-action: pan-y; }
+.view:active { cursor: grabbing; }
+canvas { width: 100%; height: 100%; display: block; }
+.hint { position: absolute; right: 10px; bottom: 8px; font-size: 11px; color: var(--muted); background: rgba(5,7,10,0.6); padding: 2px 8px; border-radius: 999px; }
+.body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 21px; margin: 0; display: flex; gap: 10px; align-items: baseline; }
+h2 b { font-weight: 800; }
+.tag { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; transform: translateY(-1px); }
+p { margin: 0; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--fg); }
+.k { color: var(--muted); font-size: 13px; }
+.foot { color: var(--muted); font-size: 13px; max-width: 80ch; }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Gun side · canopy hole · wall mushrooms · round 2</p>
+    <h1>Mushrooms on the hole walls</h1>
+    <p class="lede">Your fan rosettes, reworked into flattened upside-down mushrooms: each cluster grows from one knot of flesh on the rock, so nothing floats loose. Same pillar of hole wall and velvet cap. Drag a picture to turn it.</p>
+  </header>
+
+  <section class="grid" id="grid"></section>
+
+  <p class="foot">Whichever you pick is placed many times down the hole&#39;s walls, alongside the roots and vines (their own study) and the approved crystals. Mixing two is fine too.</p>
+</main>
+
+<script>
+(() => {
+  const OPTIONS = [
+  {
+    "key": "wall-shrooms-1",
+    "tag": "--c",
+    "letter": "A",
+    "name": "Funnel caps",
+    "lead": "Three bowl-shaped caps on short curved stems, tilted up and out of the rock.",
+    "points": [
+      "Wavy rolled rims",
+      "Glowing lilac-blue gills underneath",
+      "Closest to your fan rosettes"
+    ]
+  },
+  {
+    "key": "wall-shrooms-2",
+    "tag": "--c",
+    "letter": "B",
+    "name": "Cupped shelves",
+    "lead": "Shallower cups with no stems, overlapping like plates straight off the rock.",
+    "points": [
+      "Hugs the wall the tightest",
+      "Reads as one growth, not a stack",
+      "Quietest of the three"
+    ]
+  },
+  {
+    "key": "wall-shrooms-3",
+    "tag": "--c",
+    "letter": "C",
+    "name": "Trumpet cups",
+    "lead": "Long slender stems arching out and up into deep cups.",
+    "points": [
+      "The most mushroom-like silhouette",
+      "Stands furthest off the wall",
+      "Glow shows from below and the side"
+    ]
+  }
+];
+  const COLS = 6, FW = 512, FH = 384, FRAMES = 36;
+  const grid = document.getElementById("grid");
+  OPTIONS.forEach(o => {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.innerHTML = `<div class="view"><canvas width="${FW}" height="${FH}" aria-label="Option ${o.letter}, ${o.name}, turntable"></canvas><span class="hint">Drag to turn</span></div>
+      <div class="body"><h2><span class="tag" style="background:var(${o.tag})"></span><b>${o.letter}</b> ${o.name}</h2>
+      <p>${o.lead}</p><ul>${o.points.map(x => `<li>${x}</li>`).join("")}</ul></div>`;
+    grid.appendChild(card);
+    const canvas = card.querySelector("canvas"), g = canvas.getContext("2d"), view = card.querySelector(".view");
+    const img = new Image();
+    let frame = 0;
+    const draw = () => { if (!img.complete || !img.naturalWidth) return; const f = ((Math.round(frame) % FRAMES) + FRAMES) % FRAMES; g.drawImage(img, (f % COLS) * FW, Math.floor(f / COLS) * FH, FW, FH, 0, 0, FW, FH); };
+    img.onload = draw;
+    img.src = `${o.key}.jpg`;
+    let dragging = false, lastX = 0;
+    view.addEventListener("pointerdown", e => { dragging = true; lastX = e.clientX; view.setPointerCapture(e.pointerId); });
+    view.addEventListener("pointermove", e => { if (!dragging) return; frame -= (e.clientX - lastX) / 12; lastX = e.clientX; draw(); });
+    const stop = () => { dragging = false; };
+    view.addEventListener("pointerup", stop); view.addEventListener("pointercancel", stop);
+  });
+})();
+</script>

@@ -186,18 +186,15 @@ for _, angle in { 90, 180, -90 } do
 	walkPath(`bridge {angle}`, { polar(angle, 15, 0), polar(angle, 55, -6), polar(angle, 95, 0) })
 end
 lipAndFall()
-walkPath("into the gun shop", { polar(-90, 140, 0), polar(-90, 165, 0), polar(-90, 190, 0) })
+local gunSide =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("gun_side")) :: any
+walkPath("over the big bridge to the shop", {
+	polar(-90, 100, 0),
+	polar(-90, gunSide.bridge.from, 0),
+	polar(-90, gunSide.bridge.to, 0),
+	polar(-90, 200, 0),
+})
 walkPath("wade across the pond", { polar(90, 100, 0), polar(90, 155, 0), polar(90, 200, 0) })
-local ravine = layout.ravine
-walkPath(
-	"ravine crossing",
-	{ polar(ravine.crossing.angle, 195, 0), polar(ravine.crossing.angle, 282, 0) }
-)
-walkPath("ravine ledge", {
-	polar(ravine.to + 3, ravine.innerRadius - 5, 0),
-	polar(ravine.to - 3, ravine.innerRadius + 4, 0),
-	polar(ravine.ledge.levelAt, ravine.innerRadius + 4, ravine.ledge.y),
-	polar(ravine.from + 3, ravine.innerRadius + 4, ravine.ledge.y),
-}, ravine.ledge.y - 2)
+walkPath("where the ravine was", { polar(-42.5, 195, 0), polar(-42.5, 282, 0) })
 walker:Destroy()
 print("[LobbyScaleCheck] DONE")

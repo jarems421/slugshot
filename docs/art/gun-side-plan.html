@@ -1,0 +1,176 @@
+<title>Gun Side Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one to-scale map on the left, the plan's numbers and open questions beside it; stacks on phones. */
+:root {
+  --bg: #f3f1ec; --fg: #1d2326; --muted: #5d6a6c; --line: #d5d1c7; --card: #fbfaf7;
+  --ground: #c9c2b3; --pit: #26323a; --water: #6fb6c4; --rock: #8b8174; --grove: #8fb39a;
+  --portal: #c79d82; --hole: #1c2a2f; --knoll: #6f9c6a; --shop: #e3dcc6; --bridge: #a8794e; --accent: #2f86d6; --lava: #e0602c;
+  --display: "Baloo 2", "Trebuchet MS", sans-serif; --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11181c; --fg: #e6eeec; --muted: #9aaeac; --line: #2a373c; --card: #172126;
+  --ground: #4a463f; --pit: #0b1013; --water: #2f7f90; --rock: #6d655b; --grove: #4f7a5d; --portal: #7d5f4d;
+  --hole: #05090b; --knoll: #4d8a52; --shop: #d8d1bb; --bridge: #b98a5d; --accent: #5fb0ff; --lava: #ff7a3a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #11181c; --fg: #e6eeec; --muted: #9aaeac; --line: #2a373c; --card: #172126;
+  --ground: #4a463f; --pit: #0b1013; --water: #2f7f90; --rock: #6d655b; --grove: #4f7a5d; --portal: #7d5f4d;
+  --hole: #05090b; --knoll: #4d8a52; --shop: #d8d1bb; --bridge: #b98a5d; --accent: #5fb0ff; --lava: #ff7a3a; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+main { max-width: 1180px; margin: 0 auto; padding-block: 28px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px; }
+@media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+h1 { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1.05; margin: 0 0 6px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 19px; margin: 0 0 8px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+p { margin: 0 0 10px; max-width: 62ch; }
+figure { margin: 0; }
+svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+ol, ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:first-child { color: var(--muted); white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.q { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+</style>
+
+<main>
+  <figure>
+    <p class="eyebrow">Slugshot lobby · top-down, to scale</p>
+    <h1>New gun side</h1>
+    <svg id="map" viewBox="-320 -320 640 640" role="img" aria-label="Top-down lobby map showing the proposed gun side layout"></svg>
+    <div class="legend">
+      <span><i style="background:var(--knoll)"></i>Mushroom knoll</span>
+      <span><i style="background:var(--hole)"></i>Canopy hole</span>
+      <span><i style="background:var(--shop)"></i>Shop</span>
+      <span><i style="background:var(--bridge)"></i>Bridges</span>
+      <span><i style="background:var(--lava)"></i>Ravine, removed</span>
+    </div>
+    <figcaption>Drawn from the lobby's own layout file: the spawn rock, Maelstrom, four rope bridges, cavern wall at 300, portals, volcano and Slug Grove are where they are in the place. The gun side is on the left.</figcaption>
+  </figure>
+
+  <div class="side">
+    <section>
+      <h2>Walking it from spawn</h2>
+      <ol>
+        <li>Cross the existing gun-side rope bridge from the spawn rock, as now.</li>
+        <li>Land on the <b>mushroom knoll</b>. It fills the whole gun side, edge to edge and out to the cavern wall, with a forest of the approved giant mushroom v2, the five grove plants, crystals and a few Floppies.</li>
+        <li>The knoll wraps all the way round the <b>hole</b>, an uneven pit about 130 across and 120 deep, full of giant mushroom caps at many levels with vines, as in the second picture.</li>
+        <li>A <b>big bridge</b> crosses from the knoll to the middle: about 50 long and 16 wide, heavier than the rope bridges, on root and stone supports.</li>
+        <li>It ends at the <b>shop</b>: the pod cluster from your pictures, on a rock spire and trunk rising out of the hole, under one huge blue cap.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Numbers</h2>
+      <table>
+        <tbody>
+          <tr><td>Knoll</td><td>The whole gun side, −135° to −40°, radius 85 to the wall at 300, minus the hole</td></tr>
+          <tr><td>Hole</td><td>Uneven, about 110 to 150 across, centred at radius 200; about 120 deep; at least 15 of ground behind it</td></tr>
+          <tr><td>Big bridge</td><td>From the hole's near edge to the shop at −90°, about 50 long, 16 wide</td></tr>
+          <tr><td>Shop</td><td>Centred in the hole, pods about 45 across; blue cap about 80 across, top near 75</td></tr>
+          <tr><td>Ravine</td><td>Filled in with the portal-side ground; its block-out and hole go</td></tr>
+          <tr><td>Hole access</td><td>None. Invisible walls along both sides of the big bridge and all round the rim, so you can look in but never jump in</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Assets it reuses</h2>
+      <ul>
+        <li>Giant mushroom v2 in teal, green, purple and azure, at every size, for the knoll and the canopy in the hole. Orange and red only on small mushrooms.</li>
+        <li>Grove plants: grass, broad plant, lanterns, moonbells, star lily.</li>
+        <li>Grove crystals, the Floppies, rim rock and moss.</li>
+        <li>New: only the shop pods, trunk, big blue cap and the big bridge, drawn in the same library style.</li>
+      </ul>
+    </section>
+
+    <section class="q">
+      <h2>Confirmed by you</h2>
+      <ul>
+        <li>The knoll fills the gun side and wraps round an uneven hole.</li>
+        <li>The canopy uses our mushroom assets; orange and red only on small ones.</li>
+        <li>The hole can't be entered; you only cross it on the bridge.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+  const L = {
+    spawn: 35, shoreIn: 85, wall: 300, bridgeAngles: [0, 90, 180, -90], bridgeW: 10,
+    zones: [["Portals", -40, 40, "--portal"], ["Slug side", 40, 135, "--grove"], ["Far side", 135, 225, "--ground"], ["Gun side", 225, 320, "--ground"]],
+    portals: [[-22.3, 165, 20], [0, 161, 30], [22.3, 165, 20]],
+    volcano: [0, 268, 65], pond: [90, 155, 35], mountain: [70, 240, 65],
+    ravine: [-60, -25, 205, 275],
+    knoll: [-135, -40, 85, 300], hole: { r: 200, mean: 62 }, bridge2: [-90, 128, 178, 16], shop: [-90, 200, 22], cap: [-90, 202, 40]
+  };
+  const NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('map');
+  const P = (a, r) => { const t = a * Math.PI / 180; return [r * Math.sin(t), -r * Math.cos(t)]; };
+  const el = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+  const v = name => `var(${name})`;
+  function sector(a1, a2, r1, r2, fill, extra = {}) {
+    const [x1, y1] = P(a1, r2), [x2, y2] = P(a2, r2), [x3, y3] = P(a2, r1), [x4, y4] = P(a1, r1), big = (a2 - a1) > 180 ? 1 : 0;
+    return el('path', Object.assign({ d: `M${x1},${y1} A${r2},${r2} 0 ${big} 1 ${x2},${y2} L${x3},${y3} A${r1},${r1} 0 ${big} 0 ${x4},${y4} Z`, fill }, extra));
+  }
+  function text(x, y, s, size = 11, fill = '--fg', anchor = 'middle', weight = 700) {
+    const t = el('text', { x, y, 'font-size': size, fill: v(fill), 'text-anchor': anchor, 'font-family': 'Atkinson Hyperlegible, system-ui, sans-serif', 'font-weight': weight });
+    t.textContent = s; return t;
+  }
+  el('circle', { cx: 0, cy: 0, r: L.wall + 8, fill: v('--rock') });
+  L.zones.forEach(z => sector(z[1], z[2], L.shoreIn, L.wall, v(z[3])));
+  el('circle', { cx: 0, cy: 0, r: L.shoreIn, fill: v('--water') });
+  el('circle', { cx: 0, cy: 0, r: L.spawn, fill: v('--rock') });
+  text(0, 4, 'Spawn', 11, '--bg');
+  // Ravine, struck through.
+  sector(L.ravine[0], L.ravine[1], L.ravine[2], L.ravine[3], v('--lava'), { opacity: 0.55 });
+  { const [x, y] = P(-42.5, 240); text(x, y - 4, 'Lava ravine', 10, '--fg'); text(x, y + 9, 'removed', 10, '--fg', 'middle', 400); }
+  // Existing landmarks.
+  L.portals.forEach(([a, r, w]) => { const [x, y] = P(a, r); el('rect', { x: x - w / 2, y: y - 3, width: w, height: 6, rx: 3, fill: v('--accent'), transform: `rotate(${a} ${x} ${y})` }); });
+  { const [x, y] = P(0, 140); text(x, y, 'Portals', 11); }
+  { const [x, y] = P(...L.volcano.slice(0, 2)); el('circle', { cx: x, cy: y, r: L.volcano[2] * 0.8, fill: v('--rock') }); text(x, y + 4, 'Volcano', 11, '--bg'); }
+  { const [x, y] = P(...L.mountain.slice(0, 2)); el('circle', { cx: x, cy: y, r: 55, fill: v('--knoll'), opacity: 0.6 }); }
+  { const [x, y] = P(...L.pond.slice(0, 2)); el('circle', { cx: x, cy: y, r: L.pond[2], fill: v('--water') }); text(x + 70, y + 60, 'Slug Grove', 11); }
+  { const [x, y] = P(180, 200); text(x, y, 'Far side', 11, '--muted'); }
+  // Proposed gun side: the knoll fills the whole wedge and wraps round an uneven hole.
+  sector(L.knoll[0], L.knoll[1], L.knoll[2], L.knoll[3], v('--knoll'));
+  const [hx, hy] = P(L.shop[0], L.hole.r);
+  const holeR = t => L.hole.mean * (1 + 0.16 * Math.sin(3 * t + 0.7) + 0.1 * Math.sin(5 * t + 2.1) + 0.07 * Math.sin(8 * t + 0.3)) * (1 + 0.18 * Math.cos(t - 0.4));
+  const pts = [];
+  for (let i = 0; i < 120; i++) { const t = i / 120 * Math.PI * 2, r = holeR(t); pts.push(`${hx + Math.cos(t) * r},${hy + Math.sin(t) * r}`); }
+  el('polygon', { points: pts.join(' '), fill: v('--hole'), stroke: v('--rock'), 'stroke-width': 3, 'stroke-linejoin': 'round' });
+  // Canopy caps seen from above in the hole.
+  let s = 11; const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  const cs = ['--accent', '--knoll', '--grove', '--water'];
+  for (let i = 0; i < 60; i++) {
+    const t = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * (holeR(t) - 10);
+    const x = hx + Math.cos(t) * r, y = hy + Math.sin(t) * r;
+    if (Math.abs(x - hx) < 12 && x < hx) continue;
+    el('circle', { cx: x, cy: y, r: 4 + rnd() * 10, fill: v(cs[i % 4]), opacity: 0.35 + rnd() * 0.3 });
+  }
+  // The knoll's mushroom forest, all round the hole and out to both edges.
+  for (let i = 0; i < 70; i++) {
+    const a = L.knoll[0] + 3 + rnd() * (L.knoll[1] - L.knoll[0] - 6), r = L.knoll[2] + 8 + rnd() * (L.knoll[3] - L.knoll[2] - 16);
+    const [x, y] = P(a, r), t = Math.atan2(y - hy, x - hx);
+    if (Math.hypot(x - hx, y - hy) < holeR(t) + 6) continue;
+    if (Math.abs(a + 90) < 5 && r < 160) continue;
+    el('circle', { cx: x, cy: y, r: 2.5 + rnd() * 4.5, fill: v('--grove'), stroke: v('--fg'), 'stroke-width': 0.6 });
+  }
+  { const [x, y] = P(-62, 125); text(x, y - 4, 'Mushroom', 11, '--bg'); text(x, y + 8, 'knoll', 11, '--bg'); }
+  // Bridges: the four existing rope bridges, then the big one.
+  L.bridgeAngles.forEach(a => { const [x1, y1] = P(a, L.spawn), [x2, y2] = P(a, L.shoreIn); el('line', { x1, y1, x2, y2, stroke: v('--bridge'), 'stroke-width': L.bridgeW }); });
+  { const [x1, y1] = P(-90, L.bridge2[1]), [x2, y2] = P(-90, L.bridge2[2]); el('line', { x1, y1, x2, y2, stroke: v('--bridge'), 'stroke-width': L.bridge2[3] }); }
+  { const [x, y] = P(-90, 152); text(x, y - 12, 'Big bridge', 10, '--shop'); }
+  { const [x, y] = P(L.cap[0], L.cap[1]); el('circle', { cx: x, cy: y, r: L.cap[2], fill: 'none', stroke: v('--accent'), 'stroke-width': 2, 'stroke-dasharray': '5 4' }); }
+  { const [x, y] = P(L.shop[0], L.shop[1]); el('circle', { cx: x, cy: y, r: L.shop[2], fill: v('--shop'), stroke: v('--fg'), 'stroke-width': 1 }); text(x, y + 4, 'Shop', 12, '--fg'); }
+  { const [x, y] = P(-104, 236); text(x, y, 'Canopy hole', 11, '--shop'); text(x, y + 12, '120 deep', 10, '--shop', 'middle', 400); }
+  // Scale bar.
+  el('line', { x1: 180, y1: 300, x2: 280, y2: 300, stroke: v('--fg'), 'stroke-width': 2 });
+  text(230, 293, '100 studs', 10, '--fg', 'middle', 400);
+})();
+</script>

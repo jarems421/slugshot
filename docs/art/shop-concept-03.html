@@ -1,0 +1,864 @@
+<title>The Burrow Exchange</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: full-bleed cavern viewport, one floating field-guide panel (bottom sheet on phones). */
+:root {
+  --cave: #0d1a22;
+  --panel: rgba(10, 22, 28, 0.88);
+  --line: rgba(127, 232, 200, 0.18);
+  --fg: #e6f1ee;
+  --muted: #9db4b2;
+  --mint: #7fe8c8;
+  --amber: #ffb45a;
+  --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--cave); color: var(--fg); font-family: var(--body); overflow: hidden; }
+#view { position: fixed; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#view:active { cursor: grabbing; }
+.panel {
+  position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  width: 340px; max-height: calc(100% - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; display: flex; flex-direction: column; gap: 14px; backdrop-filter: blur(6px);
+}
+.eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint); margin: 0; }
+h1 { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1; margin: 2px 0 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14px; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 15px; margin: 0; color: var(--fg); letter-spacing: 0.02em; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; color: var(--fg); background: rgba(127, 232, 200, 0.06); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+button:hover { background: rgba(127, 232, 200, 0.14); }
+button:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--mint); color: #0b1a17; border-color: var(--mint); }
+.tanks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tanks button { border-radius: 10px; text-align: left; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.tanks b { font-weight: 700; font-size: 13px; }
+.tanks span { font-size: 11px; color: var(--muted); }
+.tanks button[aria-pressed="true"] span { color: #17332c; }
+.note { margin: 0; font-size: 13px; line-height: 1.45; color: var(--fg); min-height: 3.6em; }
+.toggles { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.toggles label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.toggles input { accent-color: var(--mint); }
+dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px; font-variant-numeric: tabular-nums; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+.hint { font-size: 11px; color: var(--muted); margin: 0; }
+#fail { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+#fail[hidden] { display: none; }
+#toggle-panel { display: none; }
+@media (max-width: 640px) {
+  .panel { top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); width: auto; max-height: 52%; padding: 14px; gap: 10px; }
+  h1 { font-size: 24px; }
+  .panel.collapsed > :not(.head) { display: none; }
+  #toggle-panel { display: inline-block; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+</style>
+
+<canvas id="view" aria-label="3D model of the Burrow Exchange shop"></canvas>
+<div id="fail" hidden>This concept needs WebGL, which this browser has turned off.</div>
+
+<aside class="panel" id="panel">
+  <div class="head">
+    <div>
+      <p class="eyebrow">Slugshot lobby · gun side · study 03</p>
+      <h1>The Burrow Exchange</h1>
+    </div>
+    <button id="toggle-panel" aria-expanded="true">Hide</button>
+  </div>
+  <p class="lede">A cluster of pods on a rock pillar over a deep mist pit, under a jungle of mushroom canopies. Walk the root bridge in to the counter.</p>
+
+  <div class="group">
+    <h2>Views</h2>
+    <div class="chips" id="views"></div>
+  </div>
+
+  <div class="group">
+    <h2>Slug tank ideas</h2>
+    <div class="tanks" id="tanks"></div>
+    <p class="note" id="note">Pick a tank to fly to it. All six are in the shop at once so you can compare them.</p>
+  </div>
+
+  <div class="group">
+    <div class="toggles">
+      <label><input type="checkbox" id="opt-ink" checked> Ink lines</label>
+      <label><input type="checkbox" id="opt-mist" checked> Pit mist</label>
+      <label><input type="checkbox" id="opt-motion" checked> Motion</label>
+    </div>
+  </div>
+
+  <div class="group">
+    <h2>Size in studs</h2>
+    <dl>
+      <dt>Pod cluster</dt><dd>54 wide × 48 deep, 37 tall</dd>
+      <dt>Shop floor</dt><dd>30 × 26, door 6 × 10</dd>
+      <dt>Main canopy</dt><dd>84 across, top at 67</dd>
+      <dt>Pit</dt><dd>68 across, 76 deep to a lit floor</dd>
+      <dt>Bridge</dt><dd>30 long, 10 wide</dd>
+      <dt>Slugs</dt><dd>1.3 tall, as in the grove</dd>
+    </dl>
+    <p class="hint">Bigger than the 50 × 40 block-out plot. Drag to orbit, scroll or pinch to zoom.</p>
+  </div>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+const canvas = document.getElementById('view');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); }
+catch (e) { document.getElementById('fail').hidden = false; return; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+// ---------- shared helpers ----------
+let seed = 7;
+const R = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const rnd = (a, b) => a + (b - a) * R();
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const PI = Math.PI;
+const noise3 = (x, y, z) => Math.sin(x * 0.31 + y * 0.17) * Math.cos(z * 0.27 - y * 0.11) + 0.5 * Math.sin(x * 0.73 - z * 0.61 + y * 0.29);
+
+const FOG = 0x0d1a22, FOG_D = 0.0052;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(FOG);
+scene.fog = new THREE.FogExp2(FOG, FOG_D);
+
+const gm = new THREE.DataTexture(new Uint8Array([60, 60, 60, 255, 150, 150, 150, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
+gm.minFilter = gm.magFilter = THREE.NearestFilter; gm.needsUpdate = true;
+const toon = (color, o = {}) => new THREE.MeshToonMaterial(Object.assign({ color, gradientMap: gm }, o));
+const glowMat = (color) => new THREE.MeshBasicMaterial({ color });
+const glass = new THREE.MeshPhongMaterial({ color: 0xbff4ff, transparent: true, opacity: 0.16, shininess: 120, specular: 0xffffff, depthWrite: false, side: THREE.DoubleSide });
+
+// Ink: back-face hull pushed out along normals, fading into fog like the scene.
+const inkMats = {}, inks = [];
+function inkMat(w) {
+  if (!inkMats[w]) inkMats[w] = new THREE.ShaderMaterial({
+    uniforms: { w: { value: w }, ink: { value: new THREE.Color(0x0b0a10) }, fogC: { value: new THREE.Color(FOG) }, fogD: { value: FOG_D } },
+    vertexShader: 'uniform float w; varying float vd; void main(){ vec4 mv = modelViewMatrix * vec4(position + normal * w, 1.0); vd = -mv.z; gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform vec3 ink; uniform vec3 fogC; uniform float fogD; varying float vd; void main(){ float f = 1.0 - exp(-fogD * fogD * vd * vd); gl_FragColor = vec4(mix(ink, fogC, f), 1.0); }',
+    side: THREE.BackSide
+  });
+  return inkMats[w];
+}
+function ink(mesh, w = 0.25) {
+  const o = new THREE.Mesh(mesh.geometry, inkMat(w));
+  mesh.add(o); inks.push(o); return mesh;
+}
+// Boxy shapes have split normals, so their hull is a scaled copy instead.
+function inkBox(mesh, w = 0.12) {
+  mesh.geometry.computeBoundingBox();
+  const s = new THREE.Vector3(); mesh.geometry.boundingBox.getSize(s);
+  const o = new THREE.Mesh(mesh.geometry, inkMat(0));
+  o.scale.set((s.x + 2 * w) / s.x, (s.y + 2 * w) / s.y, (s.z + 2 * w) / Math.max(s.z, 1e-3));
+  mesh.add(o); inks.push(o); return mesh;
+}
+function mesh(geo, mat, parent, pos, w) {
+  const m = new THREE.Mesh(geo, mat);
+  if (pos) m.position.copy(pos);
+  (parent || scene).add(m);
+  if (w) ink(m, w);
+  return m;
+}
+
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); return t;
+}
+const glowTex = canvasTex(128, 128, (g, w) => {
+  const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.25, 'rgba(255,255,255,0.45)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, w, w);
+});
+function glow(color, size, pos, parent, op = 0.8) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+  s.scale.set(size, size, 1); s.position.copy(pos); (parent || scene).add(s); return s;
+}
+
+const animated = [];
+const outerOnly = [];
+const mistLayers = [];
+
+// ---------- lights: dark neutral ambient, few merged placed lights ----------
+scene.add(new THREE.HemisphereLight(0x9cc4d0, 0x2a2232, 0.5));
+const key = new THREE.DirectionalLight(0xe6eeff, 0.55); key.position.set(40, 90, 60); scene.add(key);
+const capLight = new THREE.PointLight(0x58d0ff, 1.5, 95, 1.4); capLight.position.set(0, 46, -12); scene.add(capLight);
+const doorLight = new THREE.PointLight(0xffc27a, 1.1, 34, 1.6); doorLight.position.set(0, 9, 22); scene.add(doorLight);
+const pitLight = new THREE.PointLight(0x3fe0c0, 1.6, 60, 1.3); pitLight.position.set(0, -62, 0); scene.add(pitLight);
+const shopWarm = new THREE.PointLight(0xffd29a, 1.1, 26, 1.5); shopWarm.position.set(0, 15, 2); scene.add(shopWarm);
+const shopCool = new THREE.PointLight(0x7fe8ff, 0.7, 20, 1.6); shopCool.position.set(0, 6, -4); scene.add(shopCool);
+const jungleLight = new THREE.PointLight(0xff7a4a, 0.8, 120, 1.2); jungleLight.position.set(-60, 40, 30); scene.add(jungleLight);
+
+// ---------- ground with the pit ----------
+const PIT_R = 34, PIT_FLOOR = -76;
+{
+  const g = new THREE.RingGeometry(PIT_R - 1, 190, 96, 10);
+  g.rotateX(-PI / 2);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z);
+    const k = THREE.MathUtils.smoothstep(r, 40, 75);
+    p.setY(i, (noise3(x * 0.4, 0, z * 0.4) * 1.2 + noise3(x * 0.09, 3, z * 0.09) * 4) * k);
+  }
+  g.computeVertexNormals();
+  mesh(g, toon(0x2e2a36, { flatShading: true }));
+
+  // Pit wall: jittered in 3D so it reads as broken rock, never as stacked rings.
+  const prof = [];
+  for (let i = 0; i <= 14; i++) { const y = 1 - i * (77 / 14); prof.push(new THREE.Vector2(PIT_R - i * 0.22, y)); }
+  const wg = new THREE.LatheGeometry(prof.reverse(), 56);
+  const wp = wg.attributes.position;
+  for (let i = 0; i < wp.count; i++) {
+    const x = wp.getX(i), y = wp.getY(i), z = wp.getZ(i);
+    const n = 1 + noise3(x * 0.5, y * 0.3, z * 0.5) * 0.05 + noise3(x * 0.15, y * 0.12, z * 0.15) * 0.06;
+    if (y < 0.5) { wp.setX(i, x * n); wp.setZ(i, z * n); }
+  }
+  wg.computeVertexNormals();
+  mesh(wg, toon(0x272331, { flatShading: true, side: THREE.DoubleSide }));
+
+  // Pit floor: it has an end, lit by glowing fungus and crystals.
+  const fg = new THREE.CircleGeometry(PIT_R, 40); fg.rotateX(-PI / 2);
+  mesh(fg, toon(0x1e2a2e), null, V3(0, PIT_FLOOR, 0));
+  for (let i = 0; i < 26; i++) {
+    const a = rnd(0, PI * 2), r = rnd(14, 30), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (R() < 0.5) {
+      const h = rnd(1.5, 4);
+      const c = mesh(new THREE.OctahedronGeometry(1, 0), glowMat(R() < 0.5 ? 0x5fe6ff : 0x9f7bff), null, V3(x, PIT_FLOOR + h * 0.5, z), 0.12);
+      c.scale.set(0.6, h, 0.6); c.rotation.set(rnd(-0.3, 0.3), rnd(0, PI), rnd(-0.3, 0.3));
+    } else {
+      const s = rnd(1, 2.4);
+      mesh(new THREE.CylinderGeometry(0.15 * s, 0.22 * s, s, 6), toon(0xcfc6b8), null, V3(x, PIT_FLOOR + s / 2, z));
+      const cap = mesh(new THREE.SphereGeometry(s * 0.6, 12, 6, 0, PI * 2, 0, PI / 2), glowMat(0x3fe0c0), null, V3(x, PIT_FLOOR + s, z), 0.08);
+      cap.scale.y = 0.6;
+    }
+  }
+  glow(0x3fe0c0, 70, V3(0, PIT_FLOOR + 4, 0), null, 0.35);
+
+  // Mist: soft sheets kept inside the pit radius.
+  const mistTex = canvasTex(256, 256, (g, w) => {
+    g.clearRect(0, 0, w, w);
+    for (let i = 0; i < 70; i++) {
+      const x = rnd(0, w), y = rnd(0, w), r = rnd(18, 60);
+      const gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, 'rgba(200,235,240,0.22)'); gr.addColorStop(1, 'rgba(200,235,240,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, w);
+    }
+    const m = g.createRadialGradient(w / 2, w / 2, w * 0.3, w / 2, w / 2, w / 2);
+    m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(1, 'rgba(0,0,0,1)');
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = m; g.fillRect(0, 0, w, w);
+  });
+  [-10, -24, -38, -52].forEach((y, i) => {
+    const d = new THREE.CircleGeometry(PIT_R - 1.5, 40); d.rotateX(-PI / 2);
+    const m = mesh(d, new THREE.MeshBasicMaterial({ map: mistTex, transparent: true, opacity: 0.55 - i * 0.06, depthWrite: false, color: 0xbfe2e6, side: THREE.DoubleSide }), null, V3(0, y, 0));
+    m.userData.spin = (i % 2 ? -1 : 1) * (0.01 + i * 0.004);
+    mistLayers.push(m);
+  });
+
+  // Rim boulders, faceted rock.
+  for (let i = 0; i < 22; i++) {
+    const a = rnd(0, PI * 2);
+    if (Math.abs(Math.atan2(Math.sin(a - PI / 2), Math.cos(a - PI / 2))) < 0.32) continue;
+    const r = rnd(PIT_R + 1, PIT_R + 7), s = rnd(1.5, 4.5);
+    const g2 = new THREE.IcosahedronGeometry(s, 1);
+    const q = g2.attributes.position;
+    for (let k = 0; k < q.count; k++) { const f = 1 + noise3(q.getX(k) * 2 + i, q.getY(k) * 2, q.getZ(k) * 2) * 0.15; q.setXYZ(k, q.getX(k) * f, q.getY(k) * f * 0.7, q.getZ(k) * f); }
+    g2.computeVertexNormals();
+    mesh(g2, toon(0x3a3444, { flatShading: true }), null, V3(Math.cos(a) * r, s * 0.25, Math.sin(a) * r), 0.3);
+  }
+}
+
+// ---------- the shop ----------
+const shop = new THREE.Group(); scene.add(shop);
+
+// Rock pillar the pods sit on, rising from the pit floor.
+{
+  const prof = [[0, PIT_FLOOR], [9, PIT_FLOOR], [11, -62], [9.5, -46], [12, -32], [15, -16], [17.5, -5], [19, 0.6], [15, 1.2], [0, 1.2]].map(p => new THREE.Vector2(p[0], p[1]));
+  const g = new THREE.LatheGeometry(prof, 11);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    if (y > PIT_FLOOR + 0.1 && y < 0.5) { const f = 1 + noise3(x * 0.35, y * 0.25, z * 0.35) * 0.14; p.setX(i, x * f); p.setZ(i, z * f); }
+  }
+  g.computeVertexNormals();
+  mesh(g, toon(0x3b3442, { flatShading: true }), shop, null, 0.35);
+}
+
+// Gnarled purple trunk: twisted strands that splay into roots below and the cap above.
+const TRUNK_TOP = 56;
+const trunkC = (y) => V3(Math.sin(y * 0.045) * 2.5, y, -13 + Math.cos(y * 0.05) * 2);
+const barkMat = toon(0x4b2f52);
+const trunk = new THREE.Group(); shop.add(trunk); outerOnly.push(trunk);
+for (let k = 0; k < 5; k++) {
+  const pts = [];
+  for (let y = -46; y <= TRUNK_TOP; y += 3) {
+    const c = trunkC(y);
+    const splay = y > 40 ? (y - 40) * 0.42 : y < -14 ? (-14 - y) * 0.16 : 0;
+    const a = k * (PI * 2 / 5) + y * 0.055, rr = 3 + splay;
+    pts.push(V3(c.x + Math.cos(a) * rr, y, c.z + Math.sin(a) * rr));
+  }
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 90, k % 2 ? 1.6 : 1.9, 7), barkMat, trunk, null, 0.28);
+}
+// Hanging roots under the pillar.
+for (let k = 0; k < 9; k++) {
+  const a = k / 9 * PI * 2 + 0.3, r0 = rnd(12, 17), pts = [];
+  for (let i = 0; i <= 6; i++) pts.push(V3(Math.cos(a) * (r0 - i * 0.8) + rnd(-0.5, 0.5), -2 - i * rnd(5, 8), Math.sin(a) * (r0 - i * 0.8) + rnd(-0.5, 0.5)));
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 30, rnd(0.5, 1.1), 6), barkMat, shop, null, 0.18);
+}
+
+// Pods. The main pod is hollow with a door cut; the rest are outer shells.
+const ell = (rx, ry, rz, ...a) => { const g = new THREE.SphereGeometry(1, 56, 36, ...a); g.scale(rx, ry, rz); return g; };
+const MAIN = { c: V3(0, 6, 2), r: V3(16, 14, 14) };
+const pods = [
+  { c: V3(-3, 21, -9), r: V3(14, 11, 12), col: 0xdcd6c2 },
+  { c: V3(-18, 9, -5), r: V3(9, 8.5, 9), col: 0xcfcbdc },
+  { c: V3(17, 10, -7), r: V3(10, 9, 9.5), col: 0xcfd9dc },
+  { c: V3(9, 31, -9), r: V3(7, 6, 6.5), col: 0xd8d1e0 },
+  { c: V3(3, 13, -21), r: V3(11, 10, 10), col: 0xcbd8c8 },
+  { c: V3(-15.5, 1.8, 9.5), r: V3(5, 4.5, 5), col: 0xccc4da },
+  { c: V3(-13, 29, -2), r: V3(5, 4.5, 5), col: 0xd2dcd4 },
+  { c: V3(14, 1.5, 9), r: V3(4, 3.6, 4), col: 0xd2d4dc }
+];
+const shellInk = 0.32;
+{
+  const W = 0.24, top = Math.acos(7 / 14);
+  const m = toon(0xd6dcc8, { side: THREE.DoubleSide });
+  mesh(ell(16, 14, 14, PI / 2 + W, PI * 2 - 2 * W), m, shop, MAIN.c, shellInk);
+  mesh(ell(16, 14, 14, PI / 2 - W, 2 * W, 0, top), m, shop, MAIN.c, shellInk);
+}
+pods.forEach(p => { const m = mesh(ell(p.r.x, p.r.y, p.r.z), toon(p.col), shop, p.c, shellInk); outerOnly.push(m); });
+
+// Portholes.
+const rimMat = toon(0x5f7f88), winMat = glowMat(0x8beeff);
+function porthole(pod, th, ph, size, both, isOuter) {
+  const d = V3(Math.sin(th) * Math.cos(ph), Math.cos(th), Math.sin(th) * Math.sin(ph));
+  const p = V3(pod.c.x + pod.r.x * d.x, pod.c.y + pod.r.y * d.y, pod.c.z + pod.r.z * d.z);
+  const n = V3(d.x / pod.r.x, d.y / pod.r.y, d.z / pod.r.z).normalize();
+  const g = new THREE.Group(); g.position.copy(p); g.lookAt(p.clone().add(n)); shop.add(g);
+  mesh(new THREE.TorusGeometry(size, size * 0.2, 8, 28), rimMat, g, null, 0.1);
+  const disc = mesh(new THREE.CircleGeometry(size * 0.95, 28), winMat, g, V3(0, 0, 0.05));
+  if (size > 2.5) {
+    const bar = toon(0x5f7f88);
+    mesh(new THREE.BoxGeometry(size * 1.9, 0.18, 0.1), bar, g, V3(0, 0, 0.12));
+    mesh(new THREE.BoxGeometry(0.18, size * 1.9, 0.1), bar, g, V3(0, 0, 0.12));
+  }
+  if (both) mesh(new THREE.CircleGeometry(size * 0.95, 28), winMat, g, V3(0, 0, -0.35)).rotation.y = PI;
+  const s = glow(0x7fe8ff, size * 4.5, V3(0, 0, 0.6), g, 0.55);
+  if (isOuter) outerOnly.push(g);
+  return g;
+}
+porthole(MAIN, 1.25, PI / 2 + 0.75, 1.7, true);
+porthole(MAIN, 1.25, PI / 2 - 0.75, 1.7, true);
+porthole(MAIN, 1.0, PI / 2 + 1.35, 1.3, true);
+porthole(MAIN, 1.0, PI / 2 - 1.35, 1.3, true);
+porthole(pods[0], 1.42, PI / 2 - 0.08, 4, false, true);
+porthole(pods[0], 1.1, PI / 2 + 0.85, 1.4, false, true);
+porthole(pods[1], 1.5, PI / 2 + 0.7, 1.6, false, true);
+porthole(pods[1], 1.2, PI + 0.2, 1.2, false, true);
+porthole(pods[2], 1.4, PI / 2 - 0.6, 1.9, false, true);
+porthole(pods[2], 1.1, 0.2, 1.2, false, true);
+porthole(pods[3], 1.3, PI / 2 + 0.2, 1.3, false, true);
+porthole(pods[4], 1.3, -0.2, 1.6, false, true);
+porthole(pods[4], 1.3, PI + 0.3, 1.6, false, true);
+porthole(pods[5], 1.3, PI / 2 + 0.3, 0.9, false, true);
+porthole(pods[6], 1.4, PI / 2, 1.0, false, true);
+porthole(pods[7], 1.3, PI / 2 - 0.3, 0.8, false, true);
+
+// Door surround: arched teal frame tucked into the pod front.
+{
+  const s = new THREE.Shape();
+  s.moveTo(-4.6, -0.5); s.lineTo(-4.6, 9); s.absarc(0, 9, 4.6, PI, 0, true); s.lineTo(4.6, -0.5); s.lineTo(-4.6, -0.5);
+  const h = new THREE.Path();
+  h.moveTo(-3, 0); h.lineTo(3, 0); h.lineTo(3, 7.4); h.absarc(0, 7.4, 3, 0, PI, false); h.lineTo(-3, 0);
+  s.holes.push(h);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 2, bevelEnabled: true, bevelSize: 0.15, bevelThickness: 0.15, bevelSegments: 2, curveSegments: 24 });
+  mesh(g, toon(0x2f6f72), shop, V3(0, 1, 14.4), 0.14);
+  const trim = mesh(new THREE.TorusGeometry(3.25, 0.16, 6, 32, PI), toon(0xc8a259), shop, V3(0, 8.4, 16.65), 0.06);
+  // Lanterns either side.
+  [-5.6, 5.6].forEach(x => {
+    mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.4, 6), toon(0x2b2b30), shop, V3(x, 10.3, 16.2));
+    mesh(new THREE.SphereGeometry(0.75, 16, 12), glowMat(0xffc27a), shop, V3(x, 9.2, 16.2), 0.08);
+    glow(0xffb45a, 7, V3(x, 9.2, 16.4), shop, 0.7);
+  });
+  // Sign board hung above the door.
+  const signTex = canvasTex(512, 128, (g2, w, hh) => {
+    g2.fillStyle = '#1d3a3c'; g2.fillRect(0, 0, w, hh);
+    g2.strokeStyle = '#c8a259'; g2.lineWidth = 8; g2.strokeRect(10, 10, w - 20, hh - 20);
+    g2.fillStyle = '#ffd38a'; g2.font = '800 54px "Baloo 2", Trebuchet MS, sans-serif'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+    g2.fillText('BURROW EXCHANGE', w / 2, hh / 2 + 4);
+  });
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(11, 2.6, 0.4), [toon(0x1d3a3c), toon(0x1d3a3c), toon(0x1d3a3c), toon(0x1d3a3c), new THREE.MeshBasicMaterial({ map: signTex }), toon(0x1d3a3c)]);
+  sign.position.set(0, 16.6, 15.3); sign.rotation.x = -0.12; shop.add(sign); inkBox(sign, 0.1);
+  [-4, 4].forEach(x => mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 5), toon(0x2b2b30), shop, V3(x, 18.5, 14.9)));
+  document.fonts && document.fonts.ready.then(() => {
+    const c = signTex.image, g2 = c.getContext('2d');
+    g2.fillStyle = '#1d3a3c'; g2.fillRect(14, 14, c.width - 28, c.height - 28);
+    g2.fillStyle = '#ffd38a'; g2.font = '800 54px "Baloo 2", Trebuchet MS, sans-serif'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+    g2.fillText('BURROW EXCHANGE', c.width / 2, c.height / 2 + 4); signTex.needsUpdate = true;
+  });
+}
+
+// ---------- canopy ----------
+function capGeo(rad, dome, droop) {
+  const pts = [];
+  for (let i = 0; i <= 14; i++) {
+    const t = i / 14, r = rad * t;
+    pts.push(new THREE.Vector2(r, dome * Math.cos(t * PI / 2) - droop * Math.pow(t, 3)));
+  }
+  pts.reverse(); pts[pts.length - 1].x = 0.01;
+  return new THREE.LatheGeometry(pts, 48);
+}
+const gillTex = canvasTex(512, 16, (g, w, h) => {
+  g.fillStyle = '#1a5a7a'; g.fillRect(0, 0, w, h);
+  for (let x = 0; x < w; x += 8) { g.fillStyle = x % 16 ? '#7fe8ff' : '#4fc0e8'; g.fillRect(x, 0, 3, h); }
+});
+gillTex.wrapS = THREE.RepeatWrapping; gillTex.repeat.set(10, 1);
+function mushroomCap(parent, pos, rad, color, underColor, dome, droop, rim) {
+  const g = new THREE.Group(); g.position.copy(pos); parent.add(g);
+  mesh(capGeo(rad, dome, droop), toon(color, { emissive: color, emissiveIntensity: 0.12, side: THREE.DoubleSide }), g, null, Math.max(0.12, rad * 0.008));
+  const under = capGeo(rad * 0.97, dome * 0.35, droop * 0.97);
+  const ut = gillTex.clone(); ut.needsUpdate = true;
+  mesh(under, new THREE.MeshBasicMaterial({ map: ut, color: underColor, side: THREE.DoubleSide }), g, V3(0, -0.35 - dome * 0.12, 0));
+  if (rim) { const t = mesh(new THREE.TorusGeometry(rad * 0.995, Math.max(0.2, rad * 0.012), 6, 64), glowMat(rim), g, V3(0, -droop + 0.05, 0)); t.rotation.x = PI / 2; }
+  return g;
+}
+
+// Vines hang from cap undersides, curtain-like, some with glowing bulbs.
+const vineMat = toon(0x4c7a3e), vineDark = toon(0x355a32);
+function vines(parent, center, rIn, rOut, yAt, count, lenMin, lenMax) {
+  for (let i = 0; i < count; i++) {
+    const a = rnd(0, PI * 2), r = rnd(rIn, rOut), L = rnd(lenMin, lenMax);
+    const piv = new THREE.Group(); piv.position.set(center.x + Math.cos(a) * r, yAt(r), center.z + Math.sin(a) * r); parent.add(piv);
+    const pts = [V3(0, 0, 0)];
+    for (let k = 1; k <= 4; k++) pts.push(V3(rnd(-0.6, 0.6) * k * 0.4, -L * k / 4, rnd(-0.6, 0.6) * k * 0.4));
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 14, rnd(0.14, 0.32), 5), R() < 0.6 ? vineMat : vineDark, piv, null, 0.07);
+    if (R() < 0.35) mesh(new THREE.SphereGeometry(rnd(0.3, 0.5), 8, 6), glowMat(R() < 0.5 ? 0x8bffd6 : 0x8beeff), piv, pts[4]);
+    piv.userData.sway = { p: rnd(0, PI * 2), a: 0.03 + 0.04 * R() };
+    animated.push(piv);
+  }
+}
+
+// Main cap over the shop and a smaller orange cap on a side branch.
+const capTop = trunkC(TRUNK_TOP);
+mushroomCap(shop, V3(capTop.x, TRUNK_TOP + 2, capTop.z), 42, 0x2f86d6, 0x7fe0ff, 9, 5, 0x9ff3ff);
+glow(0x5fd0ff, 120, V3(capTop.x, TRUNK_TOP - 6, capTop.z), shop, 0.22);
+vines(shop, capTop, 25, 41, (r) => TRUNK_TOP + 2 - 5 * Math.pow(r / 42, 3) - 0.6, 110, 6, 30);
+{
+  const b0 = trunkC(34), b1 = V3(16, 41, -2);
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([b0, V3(9, 38, -6), b1]), 20, 1.2, 6), barkMat, trunk, null, 0.2);
+  mushroomCap(trunk, V3(b1.x, b1.y + 1, b1.z), 13, 0xe0663a, 0xffb07a, 3.5, 1.6, 0xffc48a);
+  vines(trunk, b1, 3, 12.5, (r) => b1.y + 0.6 - 1.6 * Math.pow(r / 13, 3), 22, 3, 10);
+  const b2 = trunkC(26), b3 = V3(-17, 30, -12);
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([b2, V3(-10, 29, -13), b3]), 20, 1.0, 6), barkMat, trunk, null, 0.2);
+  mushroomCap(trunk, V3(b3.x, b3.y + 1, b3.z), 9, 0x7a4cc9, 0xc9a2ff, 2.6, 1.2, 0xd8b8ff);
+}
+
+// The jungle: giant mushrooms around the pit, plus a high canopy layer.
+const jungle = [
+  { a: 200, r: 58, h: 34, cap: 16, col: 0xd2453a, under: 0xff9a7a },
+  { a: 235, r: 80, h: 58, cap: 24, col: 0x2aa39a, under: 0x8bffe6 },
+  { a: 160, r: 64, h: 26, cap: 12, col: 0xe0782c, under: 0xffc48a },
+  { a: 135, r: 90, h: 46, cap: 20, col: 0x7a4cc9, under: 0xd8b8ff },
+  { a: 300, r: 62, h: 30, cap: 14, col: 0xe0782c, under: 0xffc48a },
+  { a: 330, r: 86, h: 52, cap: 22, col: 0xd2453a, under: 0xff9a7a },
+  { a: 20, r: 60, h: 22, cap: 11, col: 0x2aa39a, under: 0x8bffe6 },
+  { a: 45, r: 78, h: 40, cap: 18, col: 0x2f86d6, under: 0x7fe0ff },
+  { a: 120, r: 48, h: 16, cap: 8, col: 0xd2453a, under: 0xff9a7a },
+  { a: 268, r: 110, h: 70, cap: 28, col: 0x7a4cc9, under: 0xd8b8ff },
+  { a: 95, r: 120, h: 92, cap: 36, col: 0x2aa39a, under: 0x8bffe6 },
+  { a: 185, r: 115, h: 100, cap: 40, col: 0x2f86d6, under: 0x7fe0ff },
+  { a: 0, r: 125, h: 88, cap: 34, col: 0xd2453a, under: 0xff9a7a }
+];
+// Angles in degrees: 90 is the bridge side (+z), kept clear.
+jungle.forEach((j) => {
+  const a = j.a * PI / 180, x = Math.cos(a) * j.r, z = Math.sin(a) * j.r;
+  const lean = V3(-Math.cos(a), 0, -Math.sin(a)).multiplyScalar(j.h * 0.12);
+  const pts = [V3(x, -1, z), V3(x + lean.x * 0.3, j.h * 0.4, z + lean.z * 0.3), V3(x + lean.x, j.h, z + lean.z)];
+  const sr = Math.max(0.8, j.cap * 0.09);
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, sr, 10), toon(0xd4cab8), scene, null, 0.18);
+  mesh(new THREE.CylinderGeometry(sr * 1.2, sr * 2.2, 3, 10), toon(0xc2b7a3), scene, V3(x, 0.5, z), 0.15);
+  const top = pts[2];
+  const cap = mushroomCap(scene, V3(top.x, top.y + 1, top.z), j.cap, j.col, j.under, j.cap * 0.22, j.cap * 0.1, j.under);
+  cap.rotation.z = rnd(-0.08, 0.08); cap.rotation.x = rnd(-0.08, 0.08);
+  if (j.cap > 15) vines(scene, top, j.cap * 0.25, j.cap * 0.95, (r) => top.y + 1 - j.cap * 0.1 * Math.pow(r / j.cap, 3) - 0.3, Math.round(j.cap * 1.6), 4, Math.min(j.h * 0.7, 26));
+});
+
+// Trumpet flowers in clusters by the bridge and along the rim.
+{
+  const pts = [[0.05, 0], [0.18, 0.6], [0.28, 1.4], [0.5, 2.0], [1.0, 2.45], [1.45, 2.6]].map(p => new THREE.Vector2(p[0], p[1]));
+  const tg = new THREE.LatheGeometry(pts, 14);
+  const cols = [[0x8a46d0, 0xe0a8ff], [0x23a8a0, 0x9ffff0], [0xb2369a, 0xff9ad8]];
+  const clusters = [[-9, 40], [10, 42], [-14, 50], [15, 52], [-40, 10], [42, -8], [-30, -32], [30, 30], [-26, 30], [6, -44]];
+  clusters.forEach(([cx, cz]) => {
+    const c = cols[Math.floor(R() * cols.length)];
+    for (let i = 0; i < 6; i++) {
+      const x = cx + rnd(-3, 3), z = cz + rnd(-3, 3), h = rnd(1.5, 4.5);
+      const st = mesh(new THREE.CylinderGeometry(0.1, 0.14, h, 5), toon(0x3f6b3a), scene, V3(x, h / 2, z));
+      const f = mesh(tg, toon(c[0], { emissive: c[1], emissiveIntensity: 0.25, side: THREE.DoubleSide }), scene, V3(x, h - 0.2, z), 0.06);
+      const s = rnd(0.7, 1.2); f.scale.set(s, s, s); f.rotation.set(rnd(-0.5, 0.5), 0, rnd(-0.5, 0.5));
+      if (i === 0) glow(c[1], 6, V3(x, h + 1.8, z), scene, 0.4);
+    }
+  });
+}
+
+// ---------- root bridge ----------
+{
+  const plank = toon(0xbca88a), beam = toon(0x5a3d58);
+  for (let z = 16.5; z < 47; z += 1.75) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(10, 0.55, 1.5), plank);
+    b.position.set(rnd(-0.12, 0.12), 0.75, z); b.rotation.y = rnd(-0.03, 0.03); shop.add(b); inkBox(b, 0.08);
+  }
+  [-5.3, 5.3].forEach(x => {
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(x, 0.2, 14), V3(x * 1.02, 0.1, 30), V3(x * 1.08, -0.3, 48)]), 20, 0.55, 7), beam, shop, null, 0.12);
+    const posts = [];
+    for (let z = 18; z <= 46; z += 7) {
+      const h = 3.6 + rnd(-0.2, 0.2);
+      mesh(new THREE.CylinderGeometry(0.28, 0.36, h, 6), beam, shop, V3(x, h / 2 + 0.4, z), 0.08);
+      posts.push(V3(x, h + 0.2, z));
+      mesh(new THREE.SphereGeometry(0.28, 10, 8), glowMat(0x7fe8c8), shop, V3(x, 1.25, z + 3.5));
+      glow(0x7fe8c8, 2.6, V3(x, 1.4, z + 3.5), shop, 0.6);
+    }
+    for (let i = 0; i < posts.length - 1; i++) {
+      const a = posts[i], b = posts[i + 1], m = a.clone().lerp(b, 0.5); m.y -= 0.7;
+      mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([a, m, b]), 10, 0.16, 5), toon(0x4c7a3e), shop, null, 0.05);
+    }
+  });
+  // Two roots arch under the deck from the pillar to the rim.
+  [-3, 3].forEach(x => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(x * 2.5, -22, 9), V3(x * 1.4, -9, 22), V3(x, -1.5, 32), V3(x, 0, 38)]), 30, 1.3, 7), barkMat, shop, null, 0.18));
+}
+
+// ---------- interior ----------
+const interior = new THREE.Group(); shop.add(interior);
+{
+  const fg = new THREE.CircleGeometry(1, 56); fg.rotateX(-PI / 2); fg.scale(15.3, 1, 13.3);
+  mesh(fg, toon(0x51606a), interior, V3(0, 1.02, 2));
+  const rug = new THREE.CircleGeometry(5.5, 40); rug.rotateX(-PI / 2);
+  mesh(rug, toon(0x2f6f72), interior, V3(0, 1.06, 6));
+  const rug2 = new THREE.RingGeometry(5.0, 5.4, 40); rug2.rotateX(-PI / 2);
+  mesh(rug2, toon(0xc8a259), interior, V3(0, 1.08, 6));
+
+  // Curved counter at the back, facing the door.
+  const arc = (r0, r1, a0, a1) => {
+    const s = new THREE.Shape();
+    s.absarc(0, 0, r1, a0, a1, false); s.absarc(0, 0, r0, a1, a0, true); return s;
+  };
+  const body = new THREE.ExtrudeGeometry(arc(8.6, 10.4, PI * 0.18, PI * 0.82), { depth: 3.4, bevelEnabled: false, curveSegments: 40 });
+  body.rotateX(-PI / 2);
+  mesh(body, toon(0x2f6f72), interior, V3(0, 1, 2), 0.1);
+  const topG = new THREE.ExtrudeGeometry(arc(8.3, 10.8, PI * 0.16, PI * 0.84), { depth: 0.45, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 1, curveSegments: 40 });
+  topG.rotateX(-PI / 2);
+  mesh(topG, toon(0xd8c9a6), interior, V3(0, 4.4, 2), 0.08);
+  // Brass kick strip and mint panel lights, painted flat on the counter front.
+  for (let i = 0; i < 7; i++) {
+    const a = PI * (0.24 + i * 0.087), r = 8.55;
+    const p = mesh(new THREE.PlaneGeometry(1.5, 0.22), glowMat(0x7fe8c8), interior, V3(Math.cos(a) * r, 3.3, 2 - Math.sin(a) * r));
+    p.lookAt(0, 3.3, 2);
+  }
+  // Terminal and a few goods on the counter.
+  const term = new THREE.Group(); term.position.set(4.6, 4.9, 2 - 8.1); term.lookAt(0, 4.9, 6); interior.add(term);
+  const tb = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.6, 0.3), toon(0x2b3238)); tb.position.y = 0.9; tb.rotation.x = -0.25; term.add(tb); inkBox(tb, 0.06);
+  mesh(new THREE.PlaneGeometry(2.05, 1.25), glowMat(0x9ffff0), tb, V3(0, 0, 0.16));
+  [[-3.5, 0xffb45a], [-1.6, 0x7fe8ff], [1.2, 0xb48bff]].forEach(([x, c]) => {
+    const cn = mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.1, 14), glowMat(c), interior, V3(x, 5.5, 2 - 9.2), 0.07);
+    mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.18, 14), toon(0x8d989e), cn, V3(0, 0.62, 0));
+    mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.18, 14), toon(0x8d989e), cn, V3(0, -0.62, 0));
+  });
+  // Keeper's stool behind the counter.
+  mesh(new THREE.CylinderGeometry(1, 0.8, 0.5, 16), toon(0xc8a259), interior, V3(0, 3.4, -9.3), 0.06);
+  mesh(new THREE.CylinderGeometry(0.2, 0.3, 2.2, 8), toon(0x2b2b30), interior, V3(0, 2.1, -9.3));
+
+  // Blaster wall: a curved rack on the back wall with two rows of blasters.
+  const dots = canvasTex(256, 128, (g, w, h) => {
+    g.fillStyle = '#26363c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#3b5258';
+    for (let y = 8; y < h; y += 16) for (let x = 8; x < w; x += 16) { g.beginPath(); g.arc(x, y, 2.2, 0, PI * 2); g.fill(); }
+  });
+  dots.wrapS = dots.wrapT = THREE.RepeatWrapping; dots.repeat.set(4, 1.5);
+  const rackG = new THREE.CylinderGeometry(12.3, 12.3, 7, 40, 1, true, PI - 0.78, 1.56);
+  mesh(rackG, new THREE.MeshToonMaterial({ map: dots, gradientMap: gm, side: THREE.DoubleSide }), interior, V3(0, 8.6, 2));
+  const frame = mesh(new THREE.TorusGeometry(12.3, 0.18, 6, 40, 1.56), toon(0xc8a259), interior, V3(0, 12.1, 2), 0.05);
+  frame.rotation.set(-PI / 2, 0, PI / 2 - 0.78);
+  const frameB = frame.clone(); frameB.position.y = 5.1; interior.add(frameB);
+
+  const canCols = [0xff8a2a, 0x7fe8ff, 0xb48bff, 0x8bffb0, 0xff6b8b, 0xffd35a, 0xff8a2a, 0x7fe8ff];
+  let bi = 0;
+  [6.9, 10.2].forEach((y, row) => {
+    for (let k = 0; k < 4; k++) {
+      const a = PI + (k - 1.5) * 0.36;
+      const x = 12 * Math.sin(a), z = 2 + 12 * Math.cos(a);
+      const g = new THREE.Group(); g.position.set(x, y, z); g.lookAt(0, y, 2); interior.add(g);
+      blaster(g, canCols[bi++], row ? 1 : -1);
+    }
+  });
+}
+
+// An original compact blaster: graphite body, orange trim, glowing slug canister.
+function blaster(parent, canColor, dir) {
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 0.7), toon(0x30353a)); body.position.z = 0.6; parent.add(body); inkBox(body, 0.06);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.42, 0.16, 0.72), toon(0xff8a2a)); stripe.position.set(0, -0.15, 0.6); parent.add(stripe);
+  const barrel = mesh(new THREE.CylinderGeometry(0.2, 0.24, 1.5, 12), toon(0x9aa6ad), parent, V3(dir * 1.85, 0.12, 0.6), 0.05);
+  barrel.rotation.z = PI / 2;
+  const muzzle = mesh(new THREE.TorusGeometry(0.25, 0.08, 6, 14), toon(0xff8a2a), parent, V3(dir * 2.6, 0.12, 0.6));
+  muzzle.rotation.y = PI / 2;
+  const can = mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.95, 14), glowMat(canColor), parent, V3(-dir * 0.2, 0.75, 0.6), 0.05);
+  can.rotation.z = PI / 2;
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.55), toon(0x30353a)); grip.position.set(-dir * 0.7, -0.75, 0.6); grip.rotation.z = dir * 0.25; parent.add(grip); inkBox(grip, 0.05);
+  mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.6, 6), toon(0xc8a259), parent, V3(0, 0, 0.15)).rotation.x = PI / 2;
+}
+
+// ---------- slugs (original: upright blob, big eyes, two antennae) ----------
+const slugProfile = [[0, 0], [0.5, 0.04], [0.66, 0.32], [0.6, 0.72], [0.44, 1.05], [0.24, 1.25], [0.01, 1.32]].map(p => new THREE.Vector2(p[0], p[1]));
+const slugGeo = new THREE.LatheGeometry(slugProfile, 20);
+const eyeW = toon(0xffffff), eyeB = new THREE.MeshBasicMaterial({ color: 0x0b0a10 });
+const SLUGS = [0xffb43a, 0x4fb3ff, 0xb26bff, 0x58d68d, 0xff6b8b, 0xff7a2f, 0x36e0d0];
+function slug(color, parent, pos, s = 1) {
+  const g = new THREE.Group(); g.position.copy(pos); g.scale.setScalar(s); parent.add(g);
+  const b = mesh(slugGeo, toon(color, { emissive: color, emissiveIntensity: 0.15 }), g, null, 0.05);
+  [-1, 1].forEach(side => {
+    mesh(new THREE.SphereGeometry(0.2, 12, 10), eyeW, g, V3(side * 0.2, 0.92, 0.43), 0.03);
+    mesh(new THREE.SphereGeometry(0.1, 8, 6), eyeB, g, V3(side * 0.21, 0.93, 0.6));
+    const ant = mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.45, 5), toon(color), g, V3(side * 0.16, 1.45, 0.05));
+    ant.rotation.z = -side * 0.4;
+    mesh(new THREE.SphereGeometry(0.09, 8, 6), toon(color, { emissive: color, emissiveIntensity: 0.5 }), g, V3(side * 0.26, 1.66, 0.05), 0.03);
+  });
+  g.userData.hop = { p: rnd(0, PI * 2), base: pos.y }; animated.push(g);
+  return g;
+}
+
+// ---------- tank designs ----------
+const metal = toon(0x3d555c), brass = toon(0xc8a259);
+const tanks = [];
+const MS = (x, y, z) => V3(x, y, z); // shop coordinates
+function face(g, x, z) { g.lookAt(x, g.position.y, z); }
+
+// 1. Energy column
+{
+  const g = new THREE.Group(); g.position.set(-11, 1, 6); interior.add(g); face(g, 0, 6);
+  mesh(new THREE.CylinderGeometry(1.9, 2.1, 1.1, 24), metal, g, V3(0, 0.55, 0), 0.08);
+  mesh(new THREE.TorusGeometry(1.75, 0.12, 6, 24), brass, g, V3(0, 1.15, 0)).rotation.x = PI / 2;
+  mesh(new THREE.CylinderGeometry(1.6, 1.6, 6, 24, 1, true), glass, g, V3(0, 4.1, 0), 0.05);
+  const core = mesh(new THREE.CylinderGeometry(1.35, 1.35, 5.8, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0x3fd0ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }), g, V3(0, 4.1, 0));
+  mesh(new THREE.CylinderGeometry(1.9, 1.7, 0.9, 24), metal, g, V3(0, 7.5, 0), 0.08);
+  mesh(new THREE.SphereGeometry(0.5, 12, 8), glowMat(0x7fe8ff), g, V3(0, 8.1, 0), 0.05);
+  glow(0x5fd8ff, 9, V3(0, 4.5, 0), g, 0.5);
+  for (let i = 0; i < 16; i++) {
+    const b = mesh(new THREE.SphereGeometry(rnd(0.07, 0.16), 6, 5), glowMat(0xbff8ff), g, V3(rnd(-1.1, 1.1), rnd(1.3, 6.8), rnd(-1.1, 1.1)));
+    b.userData.bubble = { v: rnd(0.6, 1.4) }; animated.push(b);
+  }
+  const s = slug(SLUGS[1], g, V3(0, 3.6, 0)); s.userData.hop.float = true;
+  tanks.push({ name: 'Energy Column', short: 'Floating in a glow tube', note: 'A tall glass tube on a metal base, full of rising energy bubbles. The slug floats in the middle. Reads well from across the room.', target: MS(-11, 4.6, 6), cam: MS(-4, 6, 10.5) });
+}
+// 2. Moss globe
+{
+  const g = new THREE.Group(); g.position.set(-12, 1, -3); interior.add(g); face(g, 0, 2);
+  mesh(new THREE.CylinderGeometry(1.4, 1.8, 0.6, 18), metal, g, V3(0, 0.3, 0), 0.08);
+  for (let k = 0; k < 3; k++) {
+    const a = k * PI * 2 / 3;
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(Math.cos(a) * 1.2, 0.5, Math.sin(a) * 1.2), V3(Math.cos(a) * 1.9, 1.6, Math.sin(a) * 1.9), V3(Math.cos(a) * 1.6, 2.9, Math.sin(a) * 1.6)]), 10, 0.16, 5), brass, g, null, 0.05);
+  }
+  mesh(new THREE.SphereGeometry(2.4, 28, 20), glass, g, V3(0, 4.4, 0), 0.05);
+  mesh(new THREE.SphereGeometry(2.25, 24, 12, 0, PI * 2, PI / 2 + 0.25, PI / 2 - 0.25), toon(0x4c8a46, { side: THREE.DoubleSide }), g, V3(0, 4.4, 0));
+  const moss = new THREE.CircleGeometry(2.17, 24); moss.rotateX(-PI / 2);
+  mesh(moss, toon(0x5f9e4f), g, V3(0, 3.85, 0));
+  [[0.9, 0.5, 0x9f7bff], [-1, -0.4, 0x5fe6ff], [0.2, -1.1, 0x9f7bff]].forEach(([x, z, c]) => {
+    const cr = mesh(new THREE.OctahedronGeometry(0.35, 0), glowMat(c), g, V3(x, 4.25, z), 0.04); cr.scale.y = 1.8;
+  });
+  glow(0x8bffb0, 7, V3(0, 4.6, 0), g, 0.35);
+  slug(SLUGS[3], g, V3(-0.1, 3.86, 0.2));
+  tanks.push({ name: 'Moss Globe', short: 'A garden in a ball', note: 'A round glass globe held up by brass claws, with a moss bed and tiny crystals inside. Feels like a home rather than a cage.', target: MS(-12, 4.8, -3), cam: MS(-5, 6.2, 1.5) });
+}
+// 3. Hive cells
+{
+  const g = new THREE.Group(); g.position.set(13.2, 6.6, -1); interior.add(g); face(g, 0, -1);
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(7.2, 7.4, 0.5), toon(0x2b3a40)); plate.position.z = -0.6; g.add(plate); inkBox(plate, 0.08);
+  const hexR = 1.15, cols = [0xffb43a, 0xb26bff, 0x4fb3ff, 0xff6b8b, 0x58d68d, 0x36e0d0, 0xff7a2f, 0xffb43a, 0xb26bff];
+  let n = 0;
+  for (let cx = -1; cx <= 1; cx++) for (let cy = -1; cy <= 1; cy++) {
+    const x = cx * hexR * 1.75, y = cy * hexR * 2 + (cx === 0 ? 0 : hexR);
+    if (Math.abs(y) > 3.3) continue;
+    const cell = new THREE.Group(); cell.position.set(x, y, 0); g.add(cell);
+    const ring = mesh(new THREE.CylinderGeometry(hexR, hexR, 1.2, 6, 1, true), toon(0xc8a259, { side: THREE.DoubleSide }), cell, null, 0.05);
+    ring.rotation.x = PI / 2; ring.rotation.y = PI / 6;
+    const back = mesh(new THREE.CircleGeometry(hexR * 0.98, 6), glowMat(cols[n] & 0x7f7f7f | 0x202020), cell, V3(0, 0, -0.55));
+    back.rotation.z = PI / 6;
+    const front = mesh(new THREE.CircleGeometry(hexR * 0.98, 6), glass, cell, V3(0, 0, 0.6)); front.rotation.z = PI / 6;
+    slug(cols[n], cell, V3(0, -0.62, -0.1), 0.62);
+    n++;
+  }
+  glow(0xffd29a, 12, V3(0, 0, 1), g, 0.25);
+  tanks.push({ name: 'Hive Cells', short: 'Many slugs, little space', note: 'A wall of hexagon cells set into a panel, one slug in each. Holds the most slugs in the least floor space, and doubles as a collection wall.', target: MS(13.2, 6.6, -1), cam: MS(4.5, 6.6, 1.5) });
+}
+// 4. Fungus cloche
+{
+  const g = new THREE.Group(); g.position.set(10.6, 1, 7); interior.add(g); face(g, 0, 8);
+  mesh(new THREE.CylinderGeometry(2.6, 2.8, 1.4, 24), toon(0x6a4a3a), g, V3(0, 0.7, 0), 0.08);
+  mesh(new THREE.TorusGeometry(2.55, 0.14, 6, 28), brass, g, V3(0, 1.42, 0)).rotation.x = PI / 2;
+  const soil = new THREE.CircleGeometry(2.45, 24); soil.rotateX(-PI / 2);
+  mesh(soil, toon(0x3c2f34), g, V3(0, 1.43, 0));
+  mesh(new THREE.SphereGeometry(2.45, 28, 16, 0, PI * 2, 0, PI / 2), glass, g, V3(0, 1.45, 0), 0.05);
+  mesh(new THREE.SphereGeometry(0.3, 10, 8), brass, g, V3(0, 3.98, 0), 0.04);
+  [[-1.2, 0.3, 1.4, 0x3fe0c0], [1.1, -0.6, 1.1, 0xb48bff], [0.2, -1.3, 0.8, 0x3fe0c0], [1.2, 1, 0.7, 0xff9ad8]].forEach(([x, z, h, c]) => {
+    mesh(new THREE.CylinderGeometry(0.08, 0.12, h, 6), toon(0xd4cab8), g, V3(x, 1.45 + h / 2, z));
+    const cap = mesh(new THREE.SphereGeometry(h * 0.45, 12, 6, 0, PI * 2, 0, PI / 2), glowMat(c), g, V3(x, 1.45 + h, z), 0.03);
+    cap.scale.y = 0.6;
+  });
+  glow(0x9ffff0, 7, V3(0, 2.6, 0), g, 0.35);
+  slug(SLUGS[4], g, V3(-0.2, 1.45, 0.6), 0.9);
+  slug(SLUGS[0], g, V3(0.6, 1.45, 0.3), 0.75).rotation.y = -0.6;
+  tanks.push({ name: 'Fungus Cloche', short: 'A dome for a pair', note: 'A glass dome on a wooden base over a mini mushroom garden, sized for two slugs. Good on a table or as a counter centrepiece.', target: MS(10.6, 2.8, 7), cam: MS(5, 5, 11.5) });
+}
+// 5. Lantern orbs
+{
+  const g = new THREE.Group(); interior.add(g);
+  [[-4.5, 13, 4, SLUGS[5]], [0, 14.5, 1, SLUGS[2]], [4.5, 13, 4, SLUGS[6]]].forEach(([x, y, z, c]) => {
+    const piv = new THREE.Group(); piv.position.set(x, 19.4 - Math.abs(x) * 0.15, z); g.add(piv);
+    const L = piv.position.y - y;
+    mesh(new THREE.CylinderGeometry(0.06, 0.06, L, 5), toon(0x2b2b30), piv, V3(0, -L / 2, 0));
+    mesh(new THREE.CylinderGeometry(0.5, 0.8, 0.5, 12), brass, piv, V3(0, -L + 1.55, 0), 0.04);
+    mesh(new THREE.SphereGeometry(1.35, 22, 16), glass, piv, V3(0, -L, 0), 0.05);
+    mesh(new THREE.SphereGeometry(0.55, 12, 10), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }), piv, V3(0, -L - 0.6, 0));
+    glow(c, 7, V3(0, -L, 0), piv, 0.55);
+    slug(c, piv, V3(0, -L - 1.05, 0), 0.8);
+    piv.userData.sway = { p: rnd(0, PI * 2), a: 0.05 }; animated.push(piv);
+  });
+  tanks.push({ name: 'Lantern Orbs', short: 'Hanging lamps with a slug', note: 'Glass orbs hung from the ceiling on chains. Each slug lights its own orb, so the tanks double as the shop lamps.', target: MS(0, 12.5, 2.5), cam: MS(0, 5.5, 12.5) });
+}
+// 6. Slug tube run
+{
+  const curve = new THREE.CatmullRomCurve3([V3(-11, 8.4, 6), V3(-10.5, 12, 1), V3(-6, 14.2, -6.5), V3(0, 14.8, -8.6), V3(6, 14.2, -6.5), V3(11.5, 11.5, -2.5), V3(13, 10.2, -1)]);
+  mesh(new THREE.TubeGeometry(curve, 80, 0.6, 12), glass, interior, null, 0.04);
+  [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+    const p = curve.getPointAt(t), tg = curve.getTangentAt(t);
+    const r = mesh(new THREE.TorusGeometry(0.7, 0.12, 6, 16), brass, interior, p, 0.03);
+    r.lookAt(p.clone().add(tg));
+  });
+  const s = slug(SLUGS[0], interior, curve.getPointAt(0), 0.7);
+  s.userData.tube = { curve, t: 0 };
+  tanks.push({ name: 'Slug Tube Run', short: 'Glass tubes join the tanks', note: 'Glass tubes run along the walls and link the tanks, so slugs travel around the shop. Makes the room feel alive.', target: MS(0, 13, -5), cam: MS(0, 6.5, 11) });
+}
+
+// ---------- camera ----------
+const camera = new THREE.PerspectiveCamera(60, 1, 0.2, 900);
+const target = V3(0, 14, 0);
+const sph = new THREE.Spherical();
+function placeFromSph() { camera.position.copy(target).add(V3(0, 0, 0).setFromSpherical(sph)); camera.lookAt(target); }
+function setSph(pos) { sph.setFromVector3(pos.clone().sub(target)); }
+let tween = null;
+function flyTo(pos, tgt, instant) {
+  if (instant) { target.copy(tgt); setSph(pos); placeFromSph(); return; }
+  tween = { t: 0, p0: camera.position.clone(), p1: pos.clone(), q0: target.clone(), q1: tgt.clone() };
+}
+
+const views = [
+  { id: 'approach', label: 'Approach', pos: V3(0, 6, 62), tgt: V3(0, 14, 0) },
+  { id: 'overview', label: 'Overview', pos: V3(78, 58, 98), tgt: V3(0, 16, -6) },
+  { id: 'canopy', label: 'Canopy', pos: V3(-6, 4.5, 30), tgt: V3(0, 52, -12) },
+  { id: 'pit', label: 'Into the pit', pos: V3(24, 5, 34), tgt: V3(0, -60, 2) },
+  { id: 'floor', label: 'Shop floor', pos: V3(0, 6, 13.5), tgt: V3(0, 6, -6) },
+  { id: 'counter', label: 'Counter', pos: V3(3, 6.2, 3), tgt: V3(0, 7.5, -9) }
+];
+
+const viewsEl = document.getElementById('views'), tanksEl = document.getElementById('tanks'), noteEl = document.getElementById('note');
+const allBtns = [];
+function press(btn) { allBtns.forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false')); }
+views.forEach(v => {
+  const b = document.createElement('button'); b.type = 'button'; b.id = 'view-' + v.id; b.textContent = v.label; b.setAttribute('aria-pressed', 'false');
+  b.onclick = () => { press(b); flyTo(v.pos, v.tgt); };
+  viewsEl.appendChild(b); allBtns.push(b);
+});
+tanks.forEach((t, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.id = 'tank-' + (i + 1); b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<b>${i + 1}. ${t.name}</b><span>${t.short}</span>`;
+  b.onclick = () => { press(b); noteEl.textContent = t.note; flyTo(t.cam, t.target); };
+  tanksEl.appendChild(b); allBtns.push(b);
+});
+flyTo(views[0].pos, views[0].tgt, true); press(allBtns[0]);
+
+// Orbit: drag rotates, wheel and pinch zoom.
+const ptrs = new Map(); let pinch0 = 0;
+canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); tween = null; });
+canvas.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 1) {
+    sph.theta -= (e.clientX - prev.x) * 0.006;
+    sph.phi = THREE.MathUtils.clamp(sph.phi - (e.clientY - prev.y) * 0.006, 0.05, PI - 0.05);
+  } else if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch0) sph.radius = THREE.MathUtils.clamp(sph.radius * pinch0 / d, 1.5, 280);
+    pinch0 = d;
+  }
+});
+const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = 0; };
+canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+canvas.addEventListener('wheel', e => { e.preventDefault(); tween = null; sph.radius = THREE.MathUtils.clamp(sph.radius * Math.exp(e.deltaY * 0.0012), 1.5, 280); }, { passive: false });
+
+// ---------- options ----------
+let motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const optMotion = document.getElementById('opt-motion'); optMotion.checked = motion;
+optMotion.onchange = () => { motion = optMotion.checked; };
+document.getElementById('opt-ink').onchange = e => inks.forEach(o => { o.visible = e.target.checked; });
+document.getElementById('opt-mist').onchange = e => mistLayers.forEach(m => { m.visible = e.target.checked; });
+const panel = document.getElementById('panel'), tp = document.getElementById('toggle-panel');
+tp.onclick = () => { const c = panel.classList.toggle('collapsed'); tp.textContent = c ? 'Show' : 'Hide'; tp.setAttribute('aria-expanded', String(!c)); };
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize); resize();
+
+// ---------- loop ----------
+const clock = new THREE.Clock(); let time = 0;
+const local = new THREE.Vector3();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (tween) {
+    tween.t = Math.min(1, tween.t + dt / 1.3);
+    const k = tween.t < 0.5 ? 4 * tween.t ** 3 : 1 - Math.pow(-2 * tween.t + 2, 3) / 2;
+    target.lerpVectors(tween.q0, tween.q1, k);
+    camera.position.lerpVectors(tween.p0, tween.p1, k); camera.lookAt(target);
+    if (tween.t >= 1) { setSph(tween.p1); tween = null; }
+  } else placeFromSph();
+
+  if (motion) {
+    time += dt;
+    for (const o of animated) {
+      const u = o.userData;
+      if (u.sway) { o.rotation.z = Math.sin(time * 0.7 + u.sway.p) * u.sway.a; o.rotation.x = Math.cos(time * 0.55 + u.sway.p) * u.sway.a * 0.6; }
+      if (u.bubble) { o.position.y += u.bubble.v * dt; if (o.position.y > 6.9) o.position.y = 1.3; }
+      if (u.hop) {
+        if (u.tube) {
+          u.tube.t = (u.tube.t + dt * 0.06) % 2; const t = u.tube.t > 1 ? 2 - u.tube.t : u.tube.t;
+          const p = u.tube.curve.getPointAt(t), tg = u.tube.curve.getTangentAt(t).multiplyScalar(u.tube.t > 1 ? -1 : 1);
+          o.position.copy(p).y -= 0.42; o.lookAt(o.position.clone().add(tg));
+        } else if (u.hop.float) {
+          o.position.y = u.hop.base + Math.sin(time * 1.4 + u.hop.p) * 0.5; o.rotation.y += dt * 0.4;
+        } else {
+          const h = Math.max(0, Math.sin(time * 2.2 + u.hop.p));
+          o.scale.y = o.scale.x * (1 + 0.06 * Math.sin(time * 4.4 + u.hop.p));
+          o.position.y = u.hop.base + h * h * 0.12;
+        }
+      }
+    }
+    mistLayers.forEach(m => { m.rotation.y += m.userData.spin * dt; });
+  }
+
+  // Inside the main pod, hide the outer pods and trunk that poke into it.
+  local.copy(camera.position);
+  const q = ((local.x - MAIN.c.x) / MAIN.r.x) ** 2 + ((local.y - MAIN.c.y) / MAIN.r.y) ** 2 + ((local.z - MAIN.c.z) / MAIN.r.z) ** 2;
+  const inside = q < 1;
+  outerOnly.forEach(o => { o.visible = !inside; });
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>

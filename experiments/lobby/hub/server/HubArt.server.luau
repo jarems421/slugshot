@@ -23,6 +23,9 @@ local groveTrees =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_trees")) :: any
 local groveSlugs =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("grove_slugs")) :: any
+-- The gun side's knoll and canopy hole, in world studs (tools/lobby/gun_side_sites.py).
+local gunSide =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("gun_side")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 local FloppyAppearance = require(script.Parent:WaitForChild("FloppyAppearance")) :: any
 local InfernoAppearance = require(script.Parent:WaitForChild("InfernoAppearance")) :: any
@@ -338,6 +341,8 @@ local SOLID: { [string]: { string } } = {
 	["hub-volcano"] = { "Pool", "Flows", "VolcanoFront", "VolcanoBack" },
 	["hub-grove-ground"] = { "Ground", "Bed" },
 	["hub-grove-rocks"] = { "Stones", "Runes" },
+	-- The shop's pods and trunk are solid, so its closed door can't be walked through; the cap stays passable.
+	["hub-gun-shop"] = { "Pods", "Trunk" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -571,6 +576,16 @@ local function hideBlockOut()
 	for _, item in root:GetDescendants() do
 		if item:IsA("BillboardGui") then
 			item.MaxDistance = 90
+		end
+	end
+	local gunBlockOut = root:FindFirstChild("GunSide")
+	if gunBlockOut then
+		for _, item in gunBlockOut:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Transparency = 1
+			elseif item:IsA("BillboardGui") then
+				item.Enabled = false
+			end
 		end
 	end
 	local shore = root:FindFirstChild("Shore")
@@ -1879,6 +1894,9 @@ local FLORA_KEYS: { [number]: string } = {
 	[2] = "hub-flora-lantern",
 	[3] = "hub-flora-plant",
 	[4] = "hub-flora-grass",
+	-- The gun side's own star flowers, magenta and cyan.
+	[5] = "hub-flora-gunstar-a",
+	[6] = "hub-flora-gunstar-b",
 }
 
 local function groveProps()
@@ -1897,12 +1915,15 @@ local function groveProps()
 		y: number,
 		z: number,
 		turn: number,
-		tall: number
+		tall: number,
+		frame: CFrame?
 	): Model
 		local copy = source:Clone()
 		local lo, hi = paintedBounds(copy)
 		copy:ScaleTo(copy:GetScale() * tall / (hi.Y - lo.Y))
-		copy:PivotTo(CFrame.new(GROVE * Vector3.new(x, y, z)) * CFrame.Angles(0, turn, 0))
+		copy:PivotTo(
+			CFrame.new((frame or GROVE) * Vector3.new(x, y, z)) * CFrame.Angles(0, turn, 0)
+		)
 		copy.Parent = parent
 		return copy
 	end
@@ -1942,6 +1963,86 @@ local function groveProps()
 			plant(source, crystals, site.x, site.y, site.z, index * 2.3, site.height)
 		end
 	end
+	-- The gun side: the knoll's forest, and the canopy rising out of the hole from its floor far below. Only the
+	-- knoll's big stems are solid; nobody can reach the canopy.
+	local knoll = Instance.new("Model")
+	knoll.Name = "KnollTrees"
+	knoll.Parent = art
+	for index, site in gunSide.trees do
+		local small = site.height < SMALL_TREE
+		local source =
+			template(TREE_COLOURS[site.colour] .. (if small then "-s" else ""), TREE_GLOW)
+		if source then
+			local tree = plant(
+				source,
+				knoll,
+				site.x,
+				site.y,
+				site.z,
+				index * 2.7,
+				site.height,
+				CFrame.identity
+			)
+			if not small then
+				for _, part in tree:GetDescendants() do
+					if part:IsA("MeshPart") and part.Name == "Stem" then
+						table.insert(solidQueue, part)
+					end
+				end
+				if site.height > 30 then
+					pointLight(
+						Vector3.new(site.x, site.y + site.height * 0.62, site.z),
+						TREE_LIGHTS[site.colour],
+						0.22,
+						site.height * 0.8
+					)
+				end
+			end
+		end
+	end
+	local canopy = Instance.new("Model")
+	canopy.Name = "HoleCanopy"
+	canopy.Parent = art
+	for index, site in gunSide.canopy do
+		local source = template(TREE_COLOURS[site.colour], TREE_GLOW)
+		if source then
+			plant(source, canopy, site.x, site.y, site.z, index * 1.7, site.height, CFrame.identity)
+			-- Only the top layer of caps carries a light, so the hole glows without a crowd of lights.
+			if site.height > 70 then
+				pointLight(
+					Vector3.new(site.x, site.y + site.height * 0.9, site.z),
+					TREE_LIGHTS[site.colour],
+					0.3,
+					site.height * 0.6
+				)
+			end
+		end
+	end
+	-- The cavern's crystals (owner, 2026-11-04: our own designs), leaning out from the wall, spire or floor they grow on.
+	for index, site in gunSide.crystals do
+		local source = template(site.key, 1)
+		if source then
+			local copy = plant(
+				source,
+				crystals,
+				site.x,
+				site.y,
+				site.z,
+				index * 1.9,
+				site.height,
+				CFrame.identity
+			)
+			local lean = Vector3.new(site.lx, 0, site.lz)
+			if site.tilt > 0 and lean.Magnitude > 0 then
+				local axis = Vector3.yAxis:Cross(lean.Unit)
+				copy:PivotTo(
+					CFrame.new(site.x, site.y, site.z)
+						* CFrame.fromAxisAngle(axis, site.tilt)
+						* CFrame.Angles(0, index * 1.9, 0)
+				)
+			end
+		end
+	end
 	for _, model in cache do
 		model:Destroy()
 	end
@@ -1957,13 +2058,13 @@ local function groveProps()
 			plants[kind] = model
 		end
 	end
-	for _, site in groveFlora do
+	local function placePlant(site: { number }, frame: CFrame)
 		local source = plants[site[1]]
 		if source then
 			local copy = source:Clone()
 			copy:ScaleTo(copy:GetScale() * site[5])
 			copy:PivotTo(
-				CFrame.new(GROVE * Vector3.new(site[2], site[3], site[4]))
+				CFrame.new(frame * Vector3.new(site[2], site[3], site[4]))
 					* CFrame.Angles(0, site[6], 0)
 			)
 			copy.Parent = flora
@@ -1974,9 +2075,181 @@ local function groveProps()
 			end
 		end
 	end
+	for _, site in groveFlora do
+		placePlant(site, GROVE)
+	end
+	for _, site in gunSide.flora do
+		placePlant(site, CFrame.identity)
+	end
 	for _, model in plants do
 		model:Destroy()
 	end
+end
+
+-- The gun side's art (docs/art/general-shop.md): concept units are 5 studs round the canopy hole's centre, with the hub
+-- toward the concept's -z, which is the world's +x from the hole.
+local GUN = CFrame.new(gunSide.hole.centre[1], 0, gunSide.hole.centre[2])
+	* CFrame.Angles(0, -math.pi / 2, 0)
+local GUN_KEYS =
+	{ "hub-gun-ground", "hub-gun-path", "hub-gun-mat", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop", "hub-gun-trim", "hub-gun-sign" }
+
+-- The cavern's pieces (owner, 2026-11-04): roots, shelves, side mushrooms and hanging vines, each modelled once and placed
+-- round the hole's wall from gun_side.json, facing out of the rock (each piece's +z runs into it).
+local function gunCavern()
+	local folder = Instance.new("Model")
+	folder.Name = "HoleWall"
+	folder.Parent = art
+	local sources: { [string]: Model } = {}
+	for _, site in gunSide.wall do
+		local source = sources[site.key]
+		if source == nil then
+			local loaded = loadPiece(site.key)
+			if not loaded then
+				continue
+			end
+			loaded.WorldPivot = CFrame.identity
+			sources[site.key] = loaded
+			source = loaded
+		end
+		local copy = (source :: Model):Clone()
+		copy:ScaleTo(copy:GetScale() * site.s)
+		local at = Vector3.new(site.x, site.y, site.z)
+		copy:PivotTo(CFrame.lookAt(at, at - Vector3.new(site.ox, 0, site.oz)))
+		copy.Parent = folder
+		for _, part in copy:GetDescendants() do
+			if part:IsA("MeshPart") and isInk(part) then
+				CollectionService:AddTag(part, "HubDistantInk")
+			end
+		end
+	end
+	for _, source in sources do
+		source:Destroy()
+	end
+end
+
+-- The hole's mist (owner): layers at five depths, thick but see-through, drifting; and purple spores rising off the velvet.
+local function gunSideEffects()
+	local hole = gunSide.hole
+	local centre = Vector3.new(hole.centre[1], 0, hole.centre[2])
+	local folder = Instance.new("Folder")
+	folder.Name = "GunSideEffects"
+	folder.Parent = art
+	local count = #hole.radii
+	for layer = 0, 4 do
+		local y = (-3 - layer * 4.3) * 5
+		for k = 0, 7 do
+			local t = (k + 0.5) / 8 * 2 * math.pi + layer * 0.4
+			local r = hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1]
+				* (0.35 + 0.25 * (k % 3) / 2)
+			local at = centre + Vector3.new(math.cos(t), 0, math.sin(t)) * r + Vector3.new(0, y, 0)
+			local source = holder("Mist", at, Vector3.new(36, 2, 36))
+			source.Parent = folder
+			local e = Instance.new("ParticleEmitter")
+			e.Texture = fxTexture("mist")
+			e.Rate = 0.8
+			e.Lifetime = NumberRange.new(14, 20)
+			e.Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 26),
+				NumberSequenceKeypoint.new(1, 44),
+			})
+			e.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.3, 0.82),
+				NumberSequenceKeypoint.new(0.7, 0.85),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			e.Color =
+				ColorSequence.new(Color3.fromRGB(150, 120, 210), Color3.fromRGB(110, 100, 180))
+			e.LightEmission = 0.25
+			e.Speed = NumberRange.new(0.6, 1.4)
+			e.SpreadAngle = Vector2.new(180, 8)
+			e.EmissionDirection = Enum.NormalId.Right
+			e.Rotation = NumberRange.new(0, 360)
+			e.RotSpeed = NumberRange.new(-3, 3)
+			e.Parent = source
+		end
+	end
+	-- Spores over the whole velvet, not just round the hole (owner, 2026-11-04: too few).
+	for angle = gunSide.from + 5, gunSide.to - 5, 8 do
+		for radius = 112, 292, 22 do
+			local rad = math.rad(angle)
+			local at = Vector3.new(math.sin(rad) * radius, 1, -math.cos(rad) * radius)
+			local offset = Vector3.new(at.X - centre.X, 0, at.Z - centre.Z)
+			local t = math.atan2(offset.Z, offset.X) % (2 * math.pi)
+			if offset.Magnitude < hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1] + 8 then
+				continue
+			end
+			local source = holder("Spores", at, Vector3.new(22, 1, 22))
+			source.Parent = folder
+			local e = Instance.new("ParticleEmitter")
+			e.Texture = fxTexture("spore")
+			e.Rate = 5
+			e.Lifetime = NumberRange.new(6, 9)
+			e.Size = NumberSequence.new(0.45)
+			e.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.15, 0.2),
+				NumberSequenceKeypoint.new(0.75, 0.3),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			e.Color = ColorSequence.new(Color3.fromRGB(190, 90, 255))
+			e.LightEmission = 1
+			e.Speed = NumberRange.new(1.5, 2.6)
+			e.SpreadAngle = Vector2.new(12, 12)
+			e.EmissionDirection = Enum.NormalId.Top
+			e.Parent = source
+		end
+	end
+end
+
+local function buildGunSide()
+	for _, key in GUN_KEYS do
+		local model = place(key)
+		if model then
+			model:PivotTo(GUN * model:GetPivot())
+		end
+	end
+	gunCavern()
+	gunSideEffects()
+end
+
+-- Flat stone slabs in a row along each line between lobby zones (owner, 2026-11-04), so each section is set apart.
+-- They lie low enough to walk straight over.
+local ZONE_LINES = { 41, -41, 135, -135 }
+local function zoneSlabs()
+	local source = loadPiece("hub-zone-slab")
+	if not source then
+		return
+	end
+	local folder = Instance.new("Model")
+	folder.Name = "ZoneSlabs"
+	folder.Parent = art
+	local lo, hi = paintedBounds(source)
+	source.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
+	for line, angle in ZONE_LINES do
+		local index = 0
+		for r = 112, 292, 10.5 do
+			index += 1
+			local seed = line * 31 + index
+			local rad = math.rad(angle)
+			local along = Vector3.new(math.sin(rad), 0, -math.cos(rad))
+			local at = along * r - Vector3.new(0, 0.5, 0)
+			local copy = source:Clone()
+			copy:ScaleTo(copy:GetScale() * (0.85 + 0.3 * ((seed * 0.618) % 1)))
+			local yaw = math.atan2(along.X, along.Z)
+				+ math.pi / 2
+				+ math.rad(((seed * 0.37) % 1 - 0.5) * 8)
+			copy:PivotTo(CFrame.new(at) * CFrame.Angles(0, yaw, 0))
+			copy.Parent = folder
+			for _, part in copy:GetDescendants() do
+				if part:IsA("MeshPart") and not isInk(part) then
+					part.CanCollide = true
+					part.CanQuery = true
+				end
+			end
+		end
+	end
+	source:Destroy()
 end
 
 local function buildGrove()
@@ -2041,6 +2314,8 @@ buildPortals()
 buildVolcano()
 buildArch()
 buildGrove()
+buildGunSide()
+zoneSlabs()
 buildCollision(function()
 	retireBlockOut()
 	workspace:SetAttribute("HubSolid", true)

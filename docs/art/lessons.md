@@ -10,6 +10,12 @@ Owner's close-up exposed the 256-square lava material as jagged and low quality.
 
 **Implemented/verified:** initial vertex tint did not visibly affect SurfaceAppearance. The first image resize used the default center pivot at zero, copying only a quarter and rendering white despite passing pixel-change tests. Center the target pivot, require over 90% opaque coverage on mapped texels, then inspect corrected native captures. Wait for HubSolid and the material's actual SlugshotMaterial name, rather than assuming the tag and child replicate together. [Evidence and API limits](../evidence/2026-11-03-integrated-lava-material.json).
 
+### Shop study 03 rejected (2026-11-03)
+
+- **Owner:** "very bad, horrible". It didn't fit the lobby map and didn't use any existing assets; it generated its own.
+- **Lesson:** design lobby pieces in the lobby's real coordinates and with the approved library (giant mushroom v2, grove plants, crystals, Floppies, rope bridge). Only model what doesn't exist yet. Check the layout with the owner on a to-scale plan before building art.
+- **Owner's layout (Confirmed):** remove the lava ravine. The gun-side rope bridge lands on a place with a small mushroom forest; a second, substantial bridge crosses a big hole full of mushroom canopy to the shop. [Plan](https://claude.ai/artifact/DEmM21QCY21ykLjvw93HUr).
+
 ### Pod-house shop feedback (2026-11-02)
 
 - **Confirmed:** "like the houses" referred to clustered rounded pods around an organic tree/fungal silhouette, not another arched retailer or a palette swap. Owner-provided screenshots resolved the ambiguity.
@@ -375,3 +381,12 @@ Owner could not see the intended lava motion after a texture-speed increase. The
 
 - **Problem:** the arena's walls looked huge and close until the client's void fog applied, and reused lobby crystal sets put sprouts on the lanes. Scale walls for the distance and judge them only with the zone's real fog; reuse set dressing by group, not whole assets.
 - **Limits:** one-client Studio only. [Record](training-arena.md).
+
+## 2026-11-04 - Roblox caps every map at 1024: huge pieces blur, thin detail collapses
+
+**Owner, on the gun side in Studio:** the velvet and cobbles looked low resolution and unoutlined, the cavern's roots like flat sticks, the vines just glow with no substance, cuts in the side mushrooms' caps, sloppy shop windows and outlines, and you walked through the ground. **Causes:** Roblox shrinks every uploaded image to 1024, so the 2048 maps planned for pieces covering thousands of square studs gave about 9 texels per stud. Thin, repeated things (vines 0.25 studs across, 0.7-stud beads, cupped shelves) baked into one whole-wall mesh at 12,000 triangles decimated into shards and smears of glow. The art's ground stood up to 1.25 studs above the flat block-out you actually stand on. **Rules now:** big ground uses small maps repeating every few studs (`tile` parts in `hub_mesh.py`, painted by `velvet_maps`, `cobble_maps`, `kerb_maps`), seams drawn by true distance to the cell edge, as the nearest-two-points gap smudged at corners. Art ground stays within a fifth of a stud of the floor it covers, or is made solid. Small repeated things are modelled once each with their own budget and placed many times (`hub-gun-root-*`, `-shelves-*`, `-sideshroom-*`, `-vine-*`), and existing approved designs (crystals) are placed as templates rather than redrawn. Preview every new piece in Blender with its painted maps before uploading. **Checking:** `build_hub.py --gun` and `gun_check.ps1` give a camera tour of the gun side with a capture per view. Send Play as a plain F5 (no repeat-count or key-up flags in the message): the flagged message opened the Roblox menu over every capture.
+
+## 2026-11-04 - Why a check place sat in Edit mode
+
+Three tour runs never entered Play. Force-closing a check window leaves Studio auto-recovery copies (`AutoSaves/<place>_AutoRecovery_*.rbxl`); the next open of that place asks to restore, and the prompt swallowed the posted F5. `gun_check.ps1` now deletes the throwaway place's recovery copies before opening it, reads only the log that names its own place (other sessions' Studio windows write the same `server foundation ready` line, which once made it think Play had started), and if a plain F5 hasn't started Play after 45 seconds, brings its own window forward and presses again.
+
