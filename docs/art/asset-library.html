@@ -6352,6 +6352,38 @@ float chSlab(vec3 q, float r, float th, float seed) {
   float box = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - 0.12;
   return box + 0.03*(noise3(q*4.0 + seed) - 0.5);
 }
+// Two or three fissures running in from a stone's rim and narrowing to nothing (owner, 2026-11-04: like the spawn
+// island's cracks but smaller, with depth). Plain trig, so the shape and its paint agree. Negative inside a crack.
+float chStoneCrack(vec2 q, float r, float fi) {
+  float best = 1e3;
+  for (int k = 0; k < 3; k++) {
+    float fk = float(k);
+    if (k == 2 && mod(fi, 2.0) > 0.5) break;
+    float a = 0.6 + fk*2.25 + fi*0.83;
+    vec2 dir = vec2(cos(a), sin(a)), side = vec2(-dir.y, dir.x);
+    vec2 prev = dir*r*1.08;
+    for (int s = 1; s <= 4; s++) {
+      float u = float(s)/4.0;
+      vec2 cur = dir*r*(1.08 - 0.6*u) + side*0.11*r*sin(u*5.0 + fk*2.0 + fi);
+      float h;
+      float dd = sdSeg2(q, prev, cur, h);
+      best = min(best, dd - mix(0.065, 0.004, (float(s) - 1.0 + h)/4.0));
+      prev = cur;
+    }
+  }
+  return best;
+}
+// Which stone a point belongs to, in its own turned frame, and its crack distance; 1e3 if none.
+float chStoneCrackAt(vec3 p) {
+  for (int i = 0; i < CH_STONES; i++) {
+    vec4 st = chStone(i);
+    vec3 q = p - st.xyz;
+    if (length(q.xz) > st.w + 0.3 || abs(q.y) > 0.4) continue;
+    q.xz = rot(float(i)*1.3)*q.xz;
+    return chStoneCrack(q.xz, st.w, float(i));
+  }
+  return 1e3;
+}
 void chPathway(vec3 p, inout vec2 res) {
   if (p.z > -4.5 || p.z < -16.5 || abs(p.x) > 4.5 || p.y > 2.5 || p.y < -2.5) return;
   for (int i = 0; i < CH_STONES; i++) {
@@ -6360,7 +6392,11 @@ void chPathway(vec3 p, inout vec2 res) {
     if (length(q.xz) > st.w + 0.6 || q.y > 0.6 || q.y < -1.2) continue;
     q.xz = rot(float(i)*1.3)*q.xz;
     float th = 0.45 + 0.1*hash1(float(i)*4.0);
-    chKeep(chSlab(q, st.w, th, float(i)*2.7)*0.85, q.y > -0.06 ? 114.0 : 115.0, res);
+    float d = chSlab(q, st.w, th, float(i)*2.7)*0.85;
+    // A V-shaped groove, deepest where the crack is widest.
+    float crack = chStoneCrack(q.xz, st.w, float(i));
+    d = smax(d, -max(crack - 0.5*q.y, -0.11 - q.y), 0.008);
+    chKeep(d, q.y > -0.06 || (crack < 0.03 && q.y > -0.2) ? 114.0 : 115.0, res);
   }
 }
 // Rubble like the spawn island's (owner): the same angular chunks as debrisStone, a few bigger among many small, in tight
@@ -6478,12 +6514,13 @@ void chPod(int i, out vec3 c, out vec3 r) {
   c = vec3(0.0, -10.0, 0.0); r = vec3(0.1);
   if (uPlaza < 0.5) {
     // Clustered pods, as in the owner's picture: a big main pod in front, smaller ones heaped round the trunk.
+    // Mirrored left and right (owner, 2026-11-04: no real symmetry).
     if (i == 0) { c = vec3(0.0, 1.5, 0.4); r = vec3(3.5, 2.8, 3.2); }
-    else if (i == 1) { c = vec3(-3.1, 2.3, 1.8); r = vec3(1.9, 1.7, 1.9); }
-    else if (i == 2) { c = vec3(3.0, 1.9, 2.1); r = vec3(2.0, 1.8, 2.0); }
-    else if (i == 3) { c = vec3(0.5, 4.2, 2.0); r = vec3(2.4, 1.9, 2.2); }
-    else if (i == 4) { c = vec3(-1.9, 4.7, 2.9); r = vec3(1.4, 1.2, 1.4); }
-    else if (i == 5) { c = vec3(2.4, 4.6, 3.0); r = vec3(1.3, 1.15, 1.3); }
+    else if (i == 1) { c = vec3(-3.05, 2.1, 1.95); r = vec3(1.95, 1.75, 1.95); }
+    else if (i == 2) { c = vec3(3.05, 2.1, 1.95); r = vec3(1.95, 1.75, 1.95); }
+    else if (i == 3) { c = vec3(0.0, 4.2, 2.0); r = vec3(2.4, 1.9, 2.2); }
+    else if (i == 4) { c = vec3(-2.15, 4.65, 2.95); r = vec3(1.35, 1.18, 1.35); }
+    else if (i == 5) { c = vec3(2.15, 4.65, 2.95); r = vec3(1.35, 1.18, 1.35); }
   } else if (uPlaza < 1.5) {
     // Stacked pods climbing round the trunk in a rising spiral.
     if (i == 0) { c = vec3(0.0, 1.4, 0.3); r = vec3(3.3, 2.6, 3.0); }
@@ -6506,14 +6543,22 @@ void chPod(int i, out vec3 c, out vec3 r) {
   // Forward toward the path so the back pods stay on the platform (owner).
   c.z -= 0.8;
 }
-const vec3 CH_CAP = vec3(0.3, 7.3, 0.7);
-const float CH_SIGN_TILT = 0.62;
+const vec3 CH_CAP = vec3(0.0, 7.3, 0.7);
+// The sign's face looks about 17 degrees up (owner, 2026-11-04: it pointed down). Its bottom edge sits just off the main
+// pod above the door; the block behind it runs back into the pod, so it stays attached as the pod curves away.
+const float CH_SIGN_UP = 0.3;
 vec3 chSignPos() {
   vec3 c, r;
   chPod(0, c, r);
-  float y = 3.0;
-  float k = (y - c.y)/r.y;
-  return vec3(0.0, y, c.z - r.z*sqrt(max(1.0 - k*k, 0.0)) - 0.2);
+  float y = 2.95;
+  float k = (y - 0.255*cos(CH_SIGN_UP) - c.y)/r.y;
+  float zs = c.z - r.z*sqrt(max(1.0 - k*k, 0.0));
+  return vec3(0.0, y, zs - 0.06 + 0.255*sin(CH_SIGN_UP) + 0.085*cos(CH_SIGN_UP));
+}
+// Across the sign, up its face, and into the pod.
+vec3 chSignLocal(vec3 p) {
+  vec3 sq = p - chSignPos();
+  return vec3(sq.x, dot(sq, vec3(0.0, cos(CH_SIGN_UP), sin(CH_SIGN_UP))), -dot(sq, vec3(0.0, sin(CH_SIGN_UP), -cos(CH_SIGN_UP))));
 }
 const float CH_CAP_R = 6.8;
 // The shop's one huge cap: the giant mushroom's cap, flattened so its top sits level with the tallest rim trees.
@@ -6533,14 +6578,18 @@ void chBigCap(vec3 p, vec3 top, float capR, inout vec2 res) {
 void chWindowAt(int i, int k, out vec3 pos, out vec3 n, out float rad) {
   vec3 c, r;
   chPod(i, c, r);
-  float fk = float(k);
-  // The main pod's windows flank the door, facing the path, with one at the back.
-  float a = i == 0 ? (k == 0 ? -0.62 : k == 1 ? 0.62 : 3.0) : -0.6 + fk*1.1 + float(i);
-  vec3 d = normalize(vec3(sin(a), 0.18 + 0.1*fk, -cos(a)));
+  // Angle round the pod from the front (-z), how far up, and size; a size of 0 is no window.
+  vec3 w = vec3(0.0);
+  if (i == 0) w = k == 0 ? vec3(-0.62, 0.18, 0.7) : k == 1 ? vec3(0.62, 0.18, 0.7) : w;
+  else if (i == 1) w = k == 0 ? vec3(-0.85, 0.2, 0.48) : k == 1 ? vec3(-1.85, 0.2, 0.42) : w;
+  else if (i == 2) w = k == 0 ? vec3(0.85, 0.2, 0.48) : k == 1 ? vec3(1.85, 0.2, 0.42) : w;
+  else if (i == 3) w = k == 0 ? vec3(0.0, 0.9, 0.6) : w;
+  else if (i == 4) w = k == 0 ? vec3(-0.75, 0.45, 0.36) : w;
+  else if (i == 5) w = k == 0 ? vec3(0.75, 0.45, 0.36) : w;
+  vec3 d = normalize(vec3(sin(w.x), w.y, -cos(w.x)));
   n = normalize(d/r);
-  pos = c + d*r;
-  rad = i == 0 ? 0.7 : 0.42 + 0.08*hash1(float(i) + fk);
-  if (i == 3 && k == 0) rad = 0.95;
+  pos = w.z > 0.01 ? c + d*r : vec3(0.0, -50.0, 0.0);
+  rad = max(w.z, 0.01);
 }
 // A real window: a round opening in the shell, a metal rim round it, glowing glass set back inside, and a cross of bars.
 float chWindowCut(vec3 p, vec3 pos, vec3 n, float rad) {
@@ -6595,10 +6644,9 @@ void chShop(vec3 p, inout vec2 res) {
   // A frame round the doorway.
   float frame = max(abs(arch + 0.11) - 0.11, abs(dq.z - 0.02) - 0.16) - 0.03;
   // The sign: smaller, centred just above the arch, tilted back to sit on the pod's curve, the shop's name on its face.
-  vec3 sq = p - chSignPos();
-  sq.yz = rot(-CH_SIGN_TILT)*sq.yz;
-  float plate = sdBox(sq, vec3(0.86, 0.22, 0.05)) - 0.035;
-  chKeep(plate, sq.z < -0.06 ? 121.0 : 118.0, res);
+  vec3 sq = chSignLocal(p);
+  float plate = sdBox(sq - vec3(0.0, 0.0, 0.25), vec3(0.86, 0.22, 0.3)) - 0.035;
+  chKeep(plate, sq.z < -0.06 ? 121.0 : 123.0, res);
   chKeep(max(frame, -p.y), 118.0, res);
 
   // Small mushrooms growing on the upper pods.
@@ -6663,11 +6711,8 @@ void chShop(vec3 p, inout vec2 res) {
   vec3 mq = p - vec3(0.0, 0.0, -4.45);
   if (abs(mq.x) < 1.8 && abs(mq.z) < 1.2 && p.y < 0.5) {
     float edge = length(mq.xz/vec2(1.3, 0.85)) - 1.0 + 0.1*(noise3(p*2.5) - 0.5);
-    vec2 cid;
-    vec2 cells = chCells(p.xz*2.6 + 9.0, cid);
-    float dome = (0.05 + 0.04*hash1(cid.x*1.7 + cid.y*3.1))*(1.0 - cells.x*cells.x);
-    float top = 0.13 + dome*smoothstep(0.0, 0.08, cells.y);
-    chKeep(max(max(p.y - top, edge*0.8), -0.25 - p.y)*0.7, 113.0, res);
+    // Flat, a little above the velvet; its cobbles are a repeating map in the game (owner: low quality).
+    chKeep(max(max(p.y - 0.06, edge*0.8), -0.25 - p.y)*0.7, 113.0, res);
   }
 }
 // The clearing from the rope bridge: a lane of flat path stones set into the velvet, kept clear of plants.
@@ -6985,6 +7030,189 @@ vec2 chTerrain(vec3 p) {
   res.x = max(res.x, chWedge(p));
   return res;
 }
+// The game's ground (owner, 2026-11-04: low resolution, and you walked through it): nearly flat, just above the block-out's
+// floor that you stand on. Its velvet cells and specks, and the path's cobbles, are repeating maps in the game.
+float chGroundH(vec2 xz) { return 0.025 + 0.02*noise3(vec3(xz*0.15, 2.0)); }
+void chPathGame(vec3 p, inout vec2 res) {
+  if (abs(p.x) > 1.9 || p.z > -chHoleR(0.0) + 0.4 || p.z < -27.0 || p.y > 0.6) return;
+  bool kerb = abs(p.x) > 1.3;
+  float top = kerb ? 0.065 - 0.3*max(abs(p.x) - 1.6, 0.0) : 0.04;
+  float d = max(p.y - top, max(abs(p.x) - 1.75, -0.3 - p.y));
+  chKeep(d*0.7, kerb ? 116.0 : 113.0, res);
+}
+vec2 chTerrainGame(vec3 p) {
+  float r = length(p.xz), t = chT(p.xz);
+  float wallR = chWallR(t, p.y);
+  float holeR = chHoleR(t);
+  float h = chInPath(p.xz) ? 0.0 : chGroundH(p.xz);
+  float ground = max((p.y - h)*0.6, (wallR - r)*0.7);
+  ground = max(ground, chWedge(p));
+  ground = max(ground, (-0.8 - p.y) - 30.0*(1.0 - smoothstep(1.5, 3.0, r - holeR)));
+  float floorS = max((p.y - chFloorH(p.xz))*0.7, r - wallR - 1.0);
+  float spire = max((r - chSpireR(p.y) - 0.3*noise3(vec3(cos(t)*2.0, p.y*0.5, sin(t)*2.0)))*0.7, p.y - chGroundH(p.xz));
+  float solid = min(min(ground, floorS), spire);
+  solid = max(solid, CH_FLOOR - 4.0 - p.y);
+  // Velvet only on top: the rim's edge below it is rock, as a repeating map seen side-on would streak.
+  vec2 res = vec2(solid, p.y > -0.08 && (r > wallR - 0.2 || r < CH_PLAT - 0.1) ? 101.0 : 100.0);
+  chPathGame(p, res);
+  res.x = max(res.x, chWedge(p));
+  return res;
+}
+
+// ---- The cavern's pieces (owner, 2026-11-04: the roots looked low quality and the vines mushed into glow). Each is
+// modelled once and placed many times round the hole by HubArt, from gun_side.json. Local frame: the origin on the
+// wall's face, +z into the rock, -z out over the hole, y up, x along the wall.
+const float CH_VINE_R = 0.055, CH_BEAD_R = 0.1;
+// A bead vine from a to c, sagging: a clear strand with beads strung along it.
+void chVine(vec3 p, vec3 a, vec3 c, float sag, inout vec2 res) {
+  vec3 m0 = (a + c)*0.5;
+  if (length(p - m0) > length(a - c)*0.6 + sag + 0.5) return;
+  vec3 m = m0 + vec3(0.0, -sag, 0.0);
+  vec2 fq = sdBezier(p, a, m, c);
+  chKeep(fq.x - CH_VINE_R, 105.0, res);
+  float count = max(floor(length(a - c)*1.5), 3.0);
+  float slot = floor(fq.y*count + 0.5)/count;
+  if (slot > 0.04 && slot < 0.96) chKeep(length(p - chQuad(a, m, c, slot)) - CH_BEAD_R, 104.0, res);
+}
+// Where a root runs at s (0 at its top, 1 at its tip): kind 0 meanders, 1 is a braided pair (strand -1 or 1), 2 bursts
+// out lower down and is shorter. Diving in and out of the rock, and sunk deep at both ends so no end ever shows.
+vec3 chRootPath(float kind, float s, float strand) {
+  float len = kind < 0.5 ? 14.0 : kind < 1.5 ? 12.0 : 8.0;
+  float y = -s*len;
+  float x = kind < 0.5 ? 0.45*sin(s*7.0 + 0.4) + 0.15*sin(s*19.0) : 0.25*sin(s*5.0 + 1.0);
+  // The rock's face lies within a quarter unit of z = 0, so dives past 0.7 take the root fully under it.
+  float z = 0.12 + 0.72*sin(s*len*0.55 + 0.8) + 0.14*sin(s*len*1.7);
+  if (kind > 0.5 && kind < 1.5) {
+    x += strand*0.24*sin(s*len*1.6);
+    z += strand*0.16*cos(s*len*1.6);
+  }
+  z = mix(z, 0.95, smoothstep(0.86, 1.0, s));
+  z = mix(kind > 1.5 ? 0.95 : 0.6, z, smoothstep(0.0, kind > 1.5 ? 0.12 : 0.05, s));
+  return vec3(x, y, z);
+}
+float chRootR(float kind, float s) {
+  float r0 = kind < 0.5 ? 0.42 : kind < 1.5 ? 0.27 : 0.36;
+  return r0*(1.0 - 0.45*s)*(1.0 + 0.18*sin(s*23.0 + kind));
+}
+void chRootPiece(vec3 p, float kind, inout vec2 res) {
+  // Bark grooves running along the root.
+  float bark = 0.025*(noise3(vec3(p.x*7.0, p.y*1.2, p.z*7.0)) - 0.5);
+  for (int si = 0; si < 2; si++) {
+    if (si == 1 && (kind < 0.5 || kind > 1.5)) break;
+    float strand = si == 0 ? 1.0 : -1.0;
+    vec3 prev = chRootPath(kind, 0.0, strand);
+    for (int k = 1; k <= 28; k++) {
+      float s = float(k)/28.0;
+      vec3 cur = chRootPath(kind, s, strand);
+      if (min(prev.y, cur.y) - 1.0 < p.y && max(prev.y, cur.y) + 1.0 > p.y)
+        chKeep(chSeg(p, prev, cur, chRootR(kind, s - 1.0/28.0), chRootR(kind, s)) + bark, 102.0, res);
+      prev = cur;
+    }
+  }
+  // The meander puts out a rootlet that curls off sideways and back into the rock.
+  if (kind < 0.5) {
+    vec3 a = chRootPath(kind, 0.36, 1.0);
+    vec2 bz = sdBezier(p, a, a + vec3(1.3, -0.6, -0.5), a + vec3(1.9, -2.2, 0.9));
+    chKeep(bz.x - mix(0.2, 0.08, bz.y) + bark, 102.0, res);
+  }
+  // Bead vines: draped from the root across to the rock beside it, and a strand or two hanging free.
+  float len = kind < 0.5 ? 14.0 : kind < 1.5 ? 12.0 : 8.0;
+  for (int k = 0; k < 4; k++) {
+    float fk = float(k);
+    float s = 0.14 + fk*0.22;
+    if (s > 0.85) break;
+    vec3 a = chRootPath(kind, s, 1.0);
+    a.z = min(a.z, -0.05);
+    float side = mod(fk, 2.0) < 0.5 ? 1.0 : -1.0;
+    chVine(p, a, vec3(side*1.5, a.y - 0.7 - 0.3*fk, 0.3), 0.75 + 0.15*fk, res);
+    if (k == 1 || k == 3) {
+      vec3 b = chRootPath(kind, s + 0.08, 1.0);
+      b.z = min(b.z, -0.1);
+      chVine(p, b, b + vec3(-0.25*side, -2.2 - 0.4*fk, -0.45), 0.2, res);
+    }
+  }
+}
+// Cupped shelves off one knot in the rock: kind 0 two of them, kind 1 three.
+void chShelfPiece(vec3 p, float kind, inout vec2 res) {
+  vec3 o = vec3(0.0, 0.0, -1.0);
+  chShelf(p, vec3(0.0, 0.0, 0.15), o, 0.95, res);
+  chShelf(p, vec3(0.42, -0.85, 0.15), o, 0.68, res);
+  if (kind > 0.5) chShelf(p, vec3(-0.45, -1.45, 0.15), o, 0.52, res);
+}
+// A giant mushroom at about 70% size growing sideways out of the wall and curving up, a bead vine spiralling clear round
+// its stem (owner: the vine was lost in the bark, and the caps had cuts in them). colour picks the cap from the bank.
+void chSideShroom(vec3 p, float colour, inout vec2 res) {
+  vec3 s0 = vec3(0.0, 0.0, 0.35), s1 = vec3(0.0, -0.15, -1.75), s2 = vec3(0.0, 2.25, -2.05);
+  if (length(p - (s0 + s2)*0.5) > 5.0) return;
+  vec2 bz = sdBezier(p, s0, s1, s2);
+  float stemR = mix(0.42, 0.22, smoothstep(0.0, 0.7, bz.y));
+  chKeep((bz.x - stemR - 0.02*(noise3(p*vec3(6.0, 1.5, 6.0)) - 0.5))*0.85, 103.0, res);
+  chCap(p, s2 + vec3(0.0, 0.1, 0.0), 1.25, colour, res);
+  vec3 side = vec3(1.0, 0.0, 0.0);
+  vec3 prev = vec3(0.0);
+  for (int k = 0; k <= 30; k++) {
+    float tt = 0.06 + 0.82*float(k)/30.0;
+    vec3 cc = chQuad(s0, s1, s2, tt);
+    vec3 tg = normalize(2.0*(1.0 - tt)*(s1 - s0) + 2.0*tt*(s2 - s1));
+    vec3 n2 = cross(tg, side);
+    float th = tt*3.0*6.2831853;
+    vec3 h = cc + (side*cos(th) + n2*sin(th))*(mix(0.42, 0.22, smoothstep(0.0, 0.7, tt)) + 0.1);
+    if (k > 0) chKeep(chSeg(p, prev, h, CH_VINE_R, CH_VINE_R), 105.0, res);
+    if (mod(float(k), 3.0) < 0.5 && k > 0) chKeep(length(p - h) - CH_BEAD_R, 104.0, res);
+    prev = h;
+  }
+}
+// A bead strand hanging free from the rock: kind 0 short, 1 long.
+void chHangVine(vec3 p, float kind, inout vec2 res) {
+  float len = kind < 0.5 ? 2.6 : 4.2;
+  chVine(p, vec3(0.0, 0.0, 0.3), vec3(0.2, -len, -0.55), 0.15, res);
+  chKeep(length(p - vec3(0.2, -len - 0.05, -0.55)) - CH_BEAD_R*1.4, 104.0, res);
+}
+// The spire, as in chSpire, with the cavern pieces' vines and no crystals: the approved crystals are placed by HubArt.
+void chSpireGame(vec3 p, inout vec2 res) {
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i);
+    vec3 prev = vec3(0.0);
+    for (int k = 0; k <= 30; k++) {
+      float fk = float(k);
+      vec3 cur;
+      if (k <= 24) {
+        float y = -0.5 - fk*1.0;
+        float aa = fi*0.8976 + fk*(0.24 + 0.1*hash1(fi*2.0)) + 0.15*sin(fk*0.8 + fi);
+        float out_ = 0.15 + 0.6*sin(fk*0.55 + fi*2.1) + 0.12*sin(fk*1.9 + fi);
+        if (k == 0) out_ = -0.9;
+        else if (k == 1) out_ = min(out_, -0.2);
+        cur = vec3(cos(aa), 0.0, sin(aa))*(chSpireR(max(y, CH_FLOOR + 2.6)) + out_) + vec3(0.0, y, 0.0);
+      } else {
+        float e = fk - 24.0;
+        float aa = fi*0.8976 + 24.0*0.3 + 0.15*sin(24.0*0.8 + fi) + 0.16*e;
+        float rad = chSpireR(CH_FLOOR + 1.0) + e*1.4;
+        cur = vec3(cos(aa)*rad, 0.0, sin(aa)*rad);
+        cur.y = chFloorH(cur.xz) + 0.1;
+      }
+      float rs = (0.35 + 0.22*hash1(fi*5.0))*(1.0 + 0.25*sin(fk*1.3 + fi));
+      if (k > 0 && abs(p.y - cur.y) < 3.0) {
+        float bark = 0.025*(noise3(vec3(p.x*7.0, p.y*1.2, p.z*7.0)) - 0.5);
+        chKeep(chSeg(p, prev, cur, rs*(1.0 - 0.008*fk), rs*(1.0 - 0.008*(fk + 1.0))) + bark, 102.0, res);
+        if (k <= 22 && mod(fk + fi, 3.0) < 0.5) {
+          float a2 = (fi + 1.0)*0.8976 + (fk + 1.0)*0.3;
+          vec3 nxt = vec3(cos(a2), 0.0, sin(a2))*(chSpireR(cur.y - 1.0) + 0.3) + vec3(0.0, cur.y - 1.0, 0.0);
+          chVine(p, cur, nxt, 0.7, res);
+        } else if (k <= 22 && mod(fk + fi, 5.0) < 0.5) {
+          chVine(p, cur, cur + normalize(vec3(cur.x, 0.0, cur.z))*0.5 + vec3(0.0, -2.4, 0.0), 0.2, res);
+        }
+      }
+      prev = cur;
+    }
+  }
+  for (int i = 0; i < 26; i++) {
+    float fi = float(i);
+    float aa = fi*2.39996 + 0.3*hash1(fi*9.0), y = -1.5 - (fi + 0.5)/26.0*20.0 + 0.5*(hash1(fi*4.7) - 0.5);
+    vec3 o = vec3(cos(aa), 0.0, sin(aa));
+    chShelf(p, o*(chSpireR(y) + 0.2) + vec3(0.0, y, 0.0), o, 0.42 + 0.18*hash1(fi), res);
+  }
+}
+
 // The flat stone slab between lobby zones (owner, 2026-11-04: flat and a bit wider): a low grey flagstone with an
 // uneven rounded outline and a gently bumped top; its cracks are painted. Origin at the foot, about 8.5 studs along x, 6.5
 // across z and 1 thick.
@@ -7033,15 +7261,22 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     emit = c*0.05;
     return c*(0.55 + 0.45*deep);
   }
-  if (id < 104.5) { vec3 c = vec3(1.0, 0.4, 0.85); emit = c*1.6; return c; }
-  if (id < 105.5) return mix(vec3(0.03, 0.06, 0.07), vec3(0.06, 0.1, 0.12), 0.5 + 0.4*g);
+  if (id < 104.5) {
+    // Glowing, but held back so each bead keeps its shape and outline rather than smearing into light.
+    vec3 c = vec3(1.0, 0.45, 0.88);
+    emit = c*0.9;
+    return c*0.75;
+  }
+  if (id < 105.5) return mix(vec3(0.05, 0.15, 0.14), vec3(0.1, 0.26, 0.23), 0.5 + 0.4*g);
   if (id < 106.5) {
     vec3 c = mix(vec3(0.08, 0.04, 0.17), vec3(0.2, 0.12, 0.34), 0.35 + 0.35*g);
     emit = c*0.14;
     return c*(0.6 + 0.4*deep);
   }
   if (id < 107.5) {
-    float lines = 0.5 + 0.5*sin(atan(p.z - 1.5, p.x - 0.3)*60.0);
+    // Round the shop's cap when under it (owner: the lines were wavy); elsewhere, the shelf or cap it belongs to.
+    vec2 gc = p.y > 5.0 ? CH_CAP.xz : vec2(0.0, 0.0);
+    float lines = 0.5 + 0.5*sin(atan(p.z - gc.y, p.x - gc.x)*48.0);
     vec3 c = mix(vec3(0.25, 0.4, 0.8), vec3(0.4, 0.6, 0.95), lines);
     emit = c*0.25;
     return c*0.35;
@@ -7060,10 +7295,9 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     float grain = noise3(p*14.0) + 0.5*noise3(p*31.0);
     c *= 0.82 + 0.28*grain;
     c = mix(c, c*1.25, smoothstep(0.72, 0.9, noise3(p*3.2 + 7.0))*0.5);
-    vec2 cid;
-    vec2 cells = chCells(p.xz*1.3 + 17.0, cid);
-    float crack = (1.0 - smoothstep(0.0, 0.035, cells.y + 0.02*(noise3(p*9.0) - 0.5)))*smoothstep(0.45, 0.6, noise3(p*1.1 + 4.0));
-    c = mix(c, vec3(0.03, 0.03, 0.04), crack*0.85);
+    // The cut cracks: near black inside, with a crisp dark edge round each so they read as drawn.
+    float cd = chStoneCrackAt(p);
+    c = mix(c, vec3(0.025, 0.025, 0.035), 1.0 - smoothstep(0.0, 0.012, cd));
     emit = c*0.05;
     return c;
   }
@@ -7086,7 +7320,7 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     emit = c*0.16;
     return c;
   }
-  if (id > 117.5 && id < 118.5) {
+  if ((id > 117.5 && id < 118.5) || (id > 122.5 && id < 123.5)) {
     // Rims and frames: dark teal metal.
     vec3 c = mix(vec3(0.1, 0.2, 0.22), vec3(0.18, 0.32, 0.34), 0.5 + 0.4*g);
     emit = c*0.06;
@@ -7095,8 +7329,7 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   if (id > 118.5 && id < 119.5) { vec3 c = vec3(0.45, 0.95, 1.0); emit = c*1.2; return c*0.6; }
   if (id > 120.5 && id < 121.5) {
     // The sign's face: dark teal with the shop's name in glowing gold.
-    vec3 sq = p - chSignPos();
-    sq.yz = rot(-CH_SIGN_TILT)*sq.yz;
+    vec3 sq = chSignLocal(p);
     float d = chSignText(vec2(-sq.x, sq.y)/0.06);
     float letter = 1.0 - smoothstep(0.35, 0.6, d);
     vec3 c = mix(vec3(0.06, 0.14, 0.16), vec3(1.0, 0.82, 0.45), letter);
@@ -8010,7 +8243,7 @@ void main() {
     if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 3.5 && hitId > 2.3 && hitId < 2.5) || (hitId > 29.5 && hitId < 31.5)) { crease = 0.0; idEdge *= 0.6; }
     if (hitId > 55.5 && hitId < 58.5 || hitId > 39.5 && hitId < 42.5) { crease = 0.0; idEdge = 0.0; }
     // The shop's smooth pod shells and their windows and door: clean outlines only, no crease smudges (owner).
-    if (uAsset > 14.5 && hitId > 116.5 && hitId < 122.5) crease = 0.0;
+    if (uAsset > 14.5 && hitId > 116.5 && hitId < 123.5) crease = 0.0;
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
     // Ink 3: silhouettes where a nearer form grazes the ray before it hits something behind.
     if (graze) { ink = max(ink, fade); inkC = INK(grazeId); }

@@ -1909,10 +1909,11 @@ local function groveProps()
 			end
 		end
 	end
+	-- The cavern's crystals (owner, 2026-11-04: our own designs), leaning out from the wall, spire or floor they grow on.
 	for index, site in gunSide.crystals do
 		local source = template(site.key, 1)
 		if source then
-			plant(
+			local copy = plant(
 				source,
 				crystals,
 				site.x,
@@ -1922,6 +1923,15 @@ local function groveProps()
 				site.height,
 				CFrame.identity
 			)
+			local lean = Vector3.new(site.lx, 0, site.lz)
+			if site.tilt > 0 and lean.Magnitude > 0 then
+				local axis = Vector3.yAxis:Cross(lean.Unit)
+				copy:PivotTo(
+					CFrame.new(site.x, site.y, site.z)
+						* CFrame.fromAxisAngle(axis, site.tilt)
+						* CFrame.Angles(0, index * 1.9, 0)
+				)
+			end
 		end
 	end
 	for _, model in cache do
@@ -1971,8 +1981,41 @@ end
 -- toward the concept's -z, which is the world's +x from the hole.
 local GUN = CFrame.new(gunSide.hole.centre[1], 0, gunSide.hole.centre[2])
 	* CFrame.Angles(0, -math.pi / 2, 0)
-local GUN_KEYS =
-	{ "hub-gun-ground", "hub-gun-wall", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop" }
+local GUN_KEYS = { "hub-gun-ground", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop" }
+
+-- The cavern's pieces (owner, 2026-11-04): roots, shelves, side mushrooms and hanging vines, each modelled once and placed
+-- round the hole's wall from gun_side.json, facing out of the rock (each piece's +z runs into it).
+local function gunCavern()
+	local folder = Instance.new("Model")
+	folder.Name = "HoleWall"
+	folder.Parent = art
+	local sources: { [string]: Model } = {}
+	for _, site in gunSide.wall do
+		local source = sources[site.key]
+		if source == nil then
+			local loaded = loadPiece(site.key)
+			if not loaded then
+				continue
+			end
+			loaded.WorldPivot = CFrame.identity
+			sources[site.key] = loaded
+			source = loaded
+		end
+		local copy = (source :: Model):Clone()
+		copy:ScaleTo(copy:GetScale() * site.s)
+		local at = Vector3.new(site.x, site.y, site.z)
+		copy:PivotTo(CFrame.lookAt(at, at - Vector3.new(site.ox, 0, site.oz)))
+		copy.Parent = folder
+		for _, part in copy:GetDescendants() do
+			if part:IsA("MeshPart") and isInk(part) then
+				CollectionService:AddTag(part, "HubDistantInk")
+			end
+		end
+	end
+	for _, source in sources do
+		source:Destroy()
+	end
+end
 
 -- The hole's mist (owner): layers at five depths, thick but see-through, drifting; and purple spores rising off the velvet.
 local function gunSideEffects()
@@ -2016,32 +2059,36 @@ local function gunSideEffects()
 			e.Parent = source
 		end
 	end
-	for k = 0, 11 do
-		local t = (k + 0.5) / 12 * 2 * math.pi
-		if math.abs(t - math.pi) > 2.6 then
-			continue
+	-- Spores over the whole velvet, not just round the hole (owner, 2026-11-04: too few).
+	for angle = gunSide.from + 5, gunSide.to - 5, 8 do
+		for radius = 112, 292, 22 do
+			local rad = math.rad(angle)
+			local at = Vector3.new(math.sin(rad) * radius, 1, -math.cos(rad) * radius)
+			local offset = Vector3.new(at.X - centre.X, 0, at.Z - centre.Z)
+			local t = math.atan2(offset.Z, offset.X) % (2 * math.pi)
+			if offset.Magnitude < hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1] + 8 then
+				continue
+			end
+			local source = holder("Spores", at, Vector3.new(22, 1, 22))
+			source.Parent = folder
+			local e = Instance.new("ParticleEmitter")
+			e.Texture = fxTexture("spore")
+			e.Rate = 5
+			e.Lifetime = NumberRange.new(6, 9)
+			e.Size = NumberSequence.new(0.45)
+			e.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.15, 0.2),
+				NumberSequenceKeypoint.new(0.75, 0.3),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			e.Color = ColorSequence.new(Color3.fromRGB(190, 90, 255))
+			e.LightEmission = 1
+			e.Speed = NumberRange.new(1.5, 2.6)
+			e.SpreadAngle = Vector2.new(12, 12)
+			e.EmissionDirection = Enum.NormalId.Top
+			e.Parent = source
 		end
-		local r = hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1] + 30
-		local at = centre + Vector3.new(math.cos(t), 0, math.sin(t)) * r + Vector3.new(0, 1, 0)
-		local source = holder("Spores", at, Vector3.new(40, 1, 40))
-		source.Parent = folder
-		local e = Instance.new("ParticleEmitter")
-		e.Texture = fxTexture("spore")
-		e.Rate = 4
-		e.Lifetime = NumberRange.new(6, 9)
-		e.Size = NumberSequence.new(0.35)
-		e.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 1),
-			NumberSequenceKeypoint.new(0.15, 0.2),
-			NumberSequenceKeypoint.new(0.75, 0.3),
-			NumberSequenceKeypoint.new(1, 1),
-		})
-		e.Color = ColorSequence.new(Color3.fromRGB(190, 90, 255))
-		e.LightEmission = 1
-		e.Speed = NumberRange.new(1.5, 2.6)
-		e.SpreadAngle = Vector2.new(12, 12)
-		e.EmissionDirection = Enum.NormalId.Top
-		e.Parent = source
 	end
 end
 
@@ -2052,6 +2099,7 @@ local function buildGunSide()
 			model:PivotTo(GUN * model:GetPivot())
 		end
 	end
+	gunCavern()
 	gunSideEffects()
 end
 

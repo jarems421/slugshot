@@ -332,24 +332,18 @@ GUN_ITEM = "canopy-hole-1"
 GUN_SHOP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 117.0); chShop(p, res); return res; }\n"
 
 
-GUN_GROUND = "vec2 assetMap(vec3 p) { return chTerrain(p); }\n"
-GUN_WALL = """vec2 assetMap(vec3 p) {
-  vec2 res = vec2(1e3, 102.0);
-  float r = length(p.xz), t = chT(p.xz), wallR = chWallR(t, p.y);
-  if (p.y < 0.6 && p.y > CH_FLOOR - 1.0 && abs(r - wallR) < 3.2) chOuterWall(p, t, res);
-  return res;
-}
-"""
+# The ground is nearly flat, at the floor you stand on; its velvet and cobbles are repeating maps (owner, 2026-11-04).
+GUN_GROUND = "vec2 assetMap(vec3 p) { return chTerrainGame(p); }\n"
+# The spire's roots, vines and shelves; its crystals and the floor's are the approved designs, placed by HubArt.
 GUN_SPIRE = """vec2 assetMap(vec3 p) {
   vec2 res = vec2(1e3, 102.0);
   float r = length(p.xz);
-  if (p.y < 0.6 && p.y > CH_FLOOR - 1.0) {
-    if (r < chSpireR(p.y) + 3.0 || (p.y < CH_FLOOR + 3.0 && r < 14.0)) chSpire(p, res);
-    if (p.y < CH_FLOOR + 6.0 && r < chWallR(chT(p.xz), p.y)) chFloorLife(p, res);
-  }
+  if (p.y < 0.6 && p.y > CH_FLOOR - 1.0 && (r < chSpireR(p.y) + 3.0 || (p.y < CH_FLOOR + 3.0 && r < 14.0))) chSpireGame(p, res);
   return res;
 }
 """
+# The cavern's wall pieces, each placed many times round the hole: cut flat inside the rock, where nothing shows.
+GUN_PIECE = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 102.0); CALL; res.x = max(res.x, p.z - 0.45); return res; }\n"
 GUN_STONES = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 115.0); chPathway(p, res); chRubble(p, res); return res; }\n"
 GUN_STAR = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 110.0); chFlowerC(p, vec3(0.0), 0.6, 1.0, COL, res); return res; }\n"
 ZONE_SLAB = "vec2 assetMap(vec3 p) { return chZoneSlab(p); }\n"
@@ -369,6 +363,14 @@ def gun_floor_rock(ids, c):
 
 def gun_trees(ids, c):
     return (np.abs(ids - 103.0) < 0.1) | ((ids > 108.95) & (ids < 109.6))
+
+
+def gun_walls(lo, hi):
+    return lambda ids, c: (c[:, 0] >= lo) & (c[:, 0] < hi)
+
+
+def gun_spire_roots(high):
+    return lambda ids, c: (c[:, 1] > -12.0) == high
 
 
 def gun_stones_top(ids, c):
@@ -746,58 +748,133 @@ PIECES = {
     # The mesh is the flat-faced "shell"; the layered rock in "map" is baked onto it as colour and normals, so it can be run on (owner).
     "hub-gun-shop": {
         "item": GUN_ITEM, "map": GUN_SHOP, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
-        "lo": (-9.0, -0.7, -9.5), "hi": (9.6, 9.6, 9.0), "step": 0.025, "normalH": 0.004,
+        "lo": (-9.0, -0.7, -9.5), "hi": (9.6, 9.6, 9.0), "step": 0.02, "normalH": 0.004,
         "parts": [
-            part("Cap", shop_cap, 9000, 2048, PROP_INK*2.0, 1.0, cage=0.05),
-            part("Trunk", by_id((101.9, 102.1)), 4000, 1024, PROP_INK*1.2, 1.0, cage=0.03),
-            part("Shrooms", by_id((102.9, 103.1), (106.9, 107.1), (108.95, 109.6)), 2500, 512, FINE_INK*1.5, 1.0, cage=0.02),
-            part("Windows", by_id((117.9, 122.5)), 4500, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.02),
-            part("Mat", by_id((112.9, 113.1)), 1500, 512, FINE_INK, 1.0, cage=0.02),
-            part("Pods", everything, 9000, 2048, PROP_INK, 1.0, cage=0.04),
+            # Owner, 2026-11-04: sloppy outlines, windows cut off, low resolution. Each part its own map, more triangles.
+            part("Cap", shop_cap, 10000, 1024, PROP_INK*2.0, 1.0, cage=0.05),
+            part("Trunk", by_id((101.9, 102.1)), 5000, 1024, PROP_INK*1.2, 1.0, cage=0.03),
+            part("Shrooms", by_id((102.9, 103.1), (106.9, 107.1), (108.95, 109.6)), 3500, 512, FINE_INK*1.5, 1.0, cage=0.02),
+            part("Sign", by_id((120.9, 121.1), (122.9, 123.1)), 1200, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
+            part("Glass", by_id((118.9, 119.1)), 1500, 512, cage=0.015),
+            part("Door", by_id((119.9, 120.1)), 600, 512, cage=0.015),
+            part("Vents", by_id((121.9, 122.1)), 800, 512, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
+            part("Rims", by_id((117.9, 118.1)), 5000, 1024, FINE_INK*1.5, 1.0, hard=True, cage=0.015),
+            part("Mat", by_id((112.9, 113.1)), 400, 512, tile=2.5),
+            part("Pods", everything, 16000, 1024, PROP_INK, 1.0, cage=0.04),
         ],
     },
     "hub-gun-ground": {
         "item": GUN_ITEM, "map": GUN_GROUND, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.6,
         "lo": (-47.0, -28.5, -27.5), "hi": (43.0, 1.2, 21.0), "step": 0.06, "normalH": 0.006,
         "parts": [
-            part("Path", by_id((112.9, 113.1), (115.9, 116.1)), 3000, 1024, FINE_INK, 1.0, cage=0.04),
-            part("VelvetA", gun_velvet(-99.0, -15.0), 7000, 2048, cage=0.06),
-            part("VelvetB", gun_velvet(-15.0, 15.0), 7000, 2048, cage=0.06),
-            part("VelvetC", gun_velvet(15.0, 99.0), 7000, 2048, cage=0.06),
+            # Owner, 2026-11-04: the velvet and cobbles looked low resolution. Flat, with maps repeating every few studs.
+            part("Path", by_id((112.9, 113.1)), 800, 1024, tile=2.5),
+            part("Kerb", by_id((115.9, 116.1)), 1200, 1024, FINE_INK, 1.0, tile=2.5),
+            part("VelvetA", gun_velvet(-99.0, -15.0), 4000, 1024, tile=6.0),
+            part("VelvetB", gun_velvet(-15.0, 15.0), 4000, 1024, tile=6.0),
+            part("VelvetC", gun_velvet(15.0, 99.0), 4000, 1024, tile=6.0),
             part("Spire", gun_spire_rock, 5000, 1024, ROCK_INK, 0.7, cage=0.08),
             part("HoleFloor", gun_floor_rock, 4000, 1024, cage=0.08),
-            part("Walls", everything, 14000, 2048, ROCK_INK, 0.7, cage=0.08),
-        ],
-    },
-    "hub-gun-wall": {
-        "item": GUN_ITEM, "map": GUN_WALL, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
-        "lo": (-24.0, -25.0, -24.0), "hi": (24.0, 1.0, 24.0), "step": 0.025, "normalH": 0.004,
-        "parts": [
-            part("Beads", by_id((103.9, 104.1)), 4000, 512, FINE_INK, 1.0, cage=0.015),
-            part("Vines", by_id((104.9, 105.1)), 5000, 512, FINE_INK, 1.0, cage=0.015),
-            part("Trees", gun_trees, 6000, 1024, PROP_INK, 1.0, cage=0.03),
-            part("Crystals", by_id((107.95, 108.95)), 5000, 1024, PROP_INK, 1.0, hard=True, cage=0.02),
-            part("Shelves", by_id((105.9, 107.1)), 6000, 1024, FINE_INK*1.5, 1.0, cage=0.02),
-            part("Roots", everything, 12000, 2048, PROP_INK, 1.0, cage=0.03),
+            part("WallsA", gun_walls(-99.0, -6.0), 8000, 1024, ROCK_INK, 0.7, cage=0.08),
+            part("WallsB", gun_walls(-6.0, 6.0), 8000, 1024, ROCK_INK, 0.7, cage=0.08),
+            part("WallsC", everything, 8000, 1024, ROCK_INK, 0.7, cage=0.08),
         ],
     },
     "hub-gun-spire": {
         "item": GUN_ITEM, "map": GUN_SPIRE, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
-        "lo": (-21.0, -25.0, -21.0), "hi": (21.0, 0.6, 21.0), "step": 0.025, "normalH": 0.004,
+        "lo": (-15.0, -25.0, -15.0), "hi": (15.0, 0.6, 15.0), "step": 0.016, "normalH": 0.003,
         "parts": [
-            part("Beads", by_id((103.9, 104.1)), 2000, 512, FINE_INK, 1.0, cage=0.015),
-            part("Vines", by_id((104.9, 105.1)), 2000, 512, FINE_INK, 1.0, cage=0.015),
-            part("Shrooms", gun_trees, 4000, 1024, PROP_INK, 1.0, cage=0.03),
-            part("Crystals", by_id((107.95, 108.95)), 5000, 1024, PROP_INK, 1.0, hard=True, cage=0.02),
-            part("Shelves", by_id((105.9, 107.1)), 3000, 1024, FINE_INK*1.5, 1.0, cage=0.02),
-            part("Roots", everything, 6000, 1024, PROP_INK, 1.0, cage=0.03),
+            part("Beads", by_id((103.9, 104.1)), 4500, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 3200, 512, FINE_INK, 1.0, cage=0.012),
+            part("Shelves", by_id((105.9, 107.1)), 4500, 1024, FINE_INK*1.5, 1.0, cage=0.02),
+            part("RootsHi", gun_spire_roots(True), 7000, 1024, PROP_INK, 1.0, cage=0.03),
+            part("RootsLo", everything, 7000, 1024, PROP_INK, 1.0, cage=0.03),
+        ],
+    },
+    # The cavern (owner, 2026-11-04: roots low quality, vines mushed into glow, cuts in the side mushrooms' caps): each
+    # piece modelled once on its own, with the detail it needs, and placed round the hole by HubArt from gun_side.json.
+    "hub-gun-root-a": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chRootPiece(p, 0.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-2.0, -15.6, -1.7), "hi": (2.8, 0.9, 0.5), "step": 0.012, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 1300, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 1000, 512, FINE_INK, 1.0, cage=0.012),
+            part("Roots", everything, 2000, 1024, PROP_INK, 1.0, cage=0.03),
+        ],
+    },
+    "hub-gun-root-b": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chRootPiece(p, 1.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-2.0, -13.4, -1.7), "hi": (2.0, 0.9, 0.5), "step": 0.012, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 1300, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 1000, 512, FINE_INK, 1.0, cage=0.012),
+            part("Roots", everything, 2400, 1024, PROP_INK, 1.0, cage=0.03),
+        ],
+    },
+    "hub-gun-root-c": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chRootPiece(p, 2.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-2.0, -9.4, -1.7), "hi": (2.0, 0.9, 0.5), "step": 0.012, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 900, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 700, 512, FINE_INK, 1.0, cage=0.012),
+            part("Roots", everything, 1400, 1024, PROP_INK, 1.0, cage=0.03),
+        ],
+    },
+    "hub-gun-shelves-a": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chShelfPiece(p, 0.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-1.7, -2.0, -2.2), "hi": (1.9, 1.0, 0.5), "step": 0.007, "normalH": 0.003,
+        "parts": [
+            part("Shelves", everything, 1100, 512, FINE_INK*1.5, 1.0, cage=0.015),
+        ],
+    },
+    "hub-gun-shelves-b": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chShelfPiece(p, 1.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-1.7, -2.4, -2.2), "hi": (1.9, 1.0, 0.5), "step": 0.007, "normalH": 0.003,
+        "parts": [
+            part("Shelves", everything, 1400, 512, FINE_INK*1.5, 1.0, cage=0.015),
+        ],
+    },
+    "hub-gun-sideshroom-a": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chSideShroom(p, 0.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-2.0, -0.9, -3.8), "hi": (2.0, 3.3, 0.5), "step": 0.009, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 800, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 700, 512, FINE_INK, 1.0, cage=0.012),
+            part("Stem", by_id((102.9, 103.1)), 1200, 512, PROP_INK, 1.0, cage=0.02),
+            part("Cap", everything, 2600, 1024, PROP_INK, 1.0, cage=0.02),
+        ],
+    },
+    "hub-gun-sideshroom-b": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chSideShroom(p, 2.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-2.0, -0.9, -3.8), "hi": (2.0, 3.3, 0.5), "step": 0.009, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 800, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 700, 512, FINE_INK, 1.0, cage=0.012),
+            part("Stem", by_id((102.9, 103.1)), 1200, 512, PROP_INK, 1.0, cage=0.02),
+            part("Cap", everything, 2600, 1024, PROP_INK, 1.0, cage=0.02),
+        ],
+    },
+    "hub-gun-vine-a": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chHangVine(p, 0.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-0.4, -3.2, -1.0), "hi": (0.7, 0.3, 0.5), "step": 0.005, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 450, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 350, 512, FINE_INK, 1.0, cage=0.012),
+        ],
+    },
+    "hub-gun-vine-b": {
+        "item": GUN_ITEM, "map": GUN_PIECE.replace("CALL", "chHangVine(p, 1.0, res)"), "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.5,
+        "lo": (-0.4, -4.8, -1.0), "hi": (0.7, 0.3, 0.5), "step": 0.005, "normalH": 0.003,
+        "parts": [
+            part("Beads", by_id((103.9, 104.1)), 650, 512, FINE_INK*0.8, 1.0, cage=0.012),
+            part("Vines", by_id((104.9, 105.1)), 450, 512, FINE_INK, 1.0, cage=0.012),
         ],
     },
     "hub-gun-stones": {
         "item": GUN_ITEM, "map": GUN_STONES, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.4,
-        "lo": (-5.5, -4.6, -16.6), "hi": (5.5, 1.8, -3.8), "step": 0.015, "normalH": 0.003,
+        "lo": (-5.5, -4.6, -16.6), "hi": (5.5, 1.8, -3.8), "step": 0.012, "normalH": 0.003,
         "parts": [
-            part("Stones", gun_stones_top, 4000, 1024, ROCK_INK, 0.7, cage=0.03),
+            part("Stones", gun_stones_top, 9000, 1024, ROCK_INK, 0.7, cage=0.03),
             part("Rubble", everything, 3000, 512, ROCK_INK, 0.7, cage=0.02),
         ],
     },
@@ -1348,7 +1425,142 @@ def mesh(key):
 
 EVEN_GLOW = {"Plant", "Glow", "Sprouts", "Caps", "WellGlow", "CeilGems", "CollarGems", "BorderGems"}
 # Set by eye in Roblox: above about 1 blooms. The keystone and juice washed out to white at their measured strengths.
-EMIT_STRENGTH = {"Pads": 0.55, "Plant": 1.1, "CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+EMIT_STRENGTH = {"Beads": 0.8, "Pads": 0.55, "Plant": 1.1, "CollarGems": 2.2, "BorderGems": 2.2, "Ring": 1.4, "Pendants": 1.4, "Cracks": 2.0, "Minis": 1.9, "CeilGems": 2.2, "Pool": 1.5, "Flows": 1.5, "ArchBits": 1.0, "VolcanoFront": 1.0, "Cracks": 1.6, "Pylons": 1.2, "ArchL": 1.4, "ArchR": 1.4, "Pillars": 1.4, "Base": 1.0, "Crown": 1.3, "Ring": 1.2, "Cave0": 1.0, "Cave1": 1.0, "Cave2": 1.0, "Cave3": 1.0, "Glow": 2.6, "Sprouts": 1.8, "Caps": 1.5, "WellGlow": 2.2, "Juice": 0.55, "Key": 1.3, "Pool0": 0.55, "Pool1": 0.55, "Pool2": 0.55, "Pool3": 0.55}
+
+
+def periodic_cells(n, cells_u, cells_v, seed):
+    """Cells repeating seamlessly across an n by n map: distance to the cell's own point and to its nearest edge (true
+    distance, so seams are even all round), both in cell widths, and the cell's id."""
+    rng = np.random.default_rng(seed)
+    jitter = rng.uniform(0.15, 0.85, (cells_v, cells_u, 2))
+    v, u = np.mgrid[0:n, 0:n]/n
+    fu, fv = u*cells_u, v*cells_v
+    iu, iv = np.floor(fu).astype("i4"), np.floor(fv).astype("i4")
+    best, ids = np.full((n, n), 9.0), np.zeros((n, n), "i4")
+    near = np.zeros((n, n, 2))
+    for dv in (-1, 0, 1):
+        for du in (-1, 0, 1):
+            cu, cv = iu + du, iv + dv
+            o = jitter[cv % cells_v, cu % cells_u]
+            r = np.dstack([cu + o[..., 0] - fu, cv + o[..., 1] - fv])
+            d = np.hypot(r[..., 0], r[..., 1])
+            closer = d < best
+            near = np.where(closer[..., None], r, near)
+            ids = np.where(closer, (cv % cells_v)*cells_u + cu % cells_u, ids)
+            best = np.minimum(best, d)
+    edge = np.full((n, n), 9.0)
+    for dv in range(-2, 3):
+        for du in range(-2, 3):
+            cu, cv = iu + du, iv + dv
+            o = jitter[cv % cells_v, cu % cells_u]
+            r = np.dstack([cu + o[..., 0] - fu, cv + o[..., 1] - fv])
+            diff = r - near
+            length = np.hypot(diff[..., 0], diff[..., 1])
+            other = length > 1e-6
+            mid = 0.5*(near + r)
+            dist = (mid[..., 0]*diff[..., 0] + mid[..., 1]*diff[..., 1])/np.maximum(length, 1e-6)
+            edge = np.where(other, np.minimum(edge, dist), edge)
+    return best, edge, ids
+
+
+def soft_noise(n, radius, seed):
+    kernel = np.exp(-(np.arange(-radius*3, radius*3 + 1)/radius)**2)
+    kernel /= kernel.sum()
+    noise = np.random.default_rng(seed).random((n, n))
+    spectrum = np.fft.fft(kernel, n)
+    noise = np.fft.ifft(np.fft.fft(noise, axis=0)*spectrum[:, None], axis=0).real
+    noise = np.fft.ifft(np.fft.fft(noise, axis=1)*spectrum[None, :], axis=1).real
+    return (noise - noise.min())/(noise.max() - noise.min())
+
+
+def save_tile(out, g, colour, height, studs, emit=None, strength=0.0, bump=1.0):
+    """colour linear 0..1; height in studs over a map `studs` across. Writes the maps and fills in the group's entry."""
+    name = g["name"]
+    textures = out/"textures"
+    Image.fromarray((to_srgb(np.clip(colour, 0, 1))*255 + 0.5).astype("u1")).save(textures/f"{name}-color.png")
+    n = height.shape[0]
+    texel = studs/n
+    dx = (np.roll(height, -1, 1) - np.roll(height, 1, 1))/(2*texel)
+    dy = (np.roll(height, -1, 0) - np.roll(height, 1, 0))/(2*texel)
+    normal = np.dstack([-dx*bump, dy*bump, np.ones_like(dx)])
+    normal /= np.linalg.norm(normal, axis=2, keepdims=True)
+    Image.fromarray(((normal*0.5 + 0.5)*255 + 0.5).astype("u1")).save(textures/f"{name}-normal.png")
+    g["color"], g["normal"] = f"textures/{name}-color.png", f"textures/{name}-normal.png"
+    if emit is not None:
+        Image.fromarray((np.clip(emit, 0, 1)*255 + 0.5).astype("u1")).save(textures/f"{name}-emit.png")
+        g["emit"], g["emissiveStrength"] = f"textures/{name}-emit.png", strength
+    print(f"{name}: repeating map, {n} texels over {studs:.1f} studs", flush=True)
+
+
+def smooth_rise(a, b, v):
+    t = np.clip((v - a)/(b - a), 0, 1)
+    return t*t*(3 - 2*t)
+
+
+def velvet_maps(out, g, gain):
+    """The spore velvet as the concept paints it (canopyHolePaint, id 101): purple cushions split by near-black seams, each
+    its own shade, with glowing magenta specks. Cells 1.5 per unit, so a 6-unit tile holds 9 across."""
+    n, cells = 1024, 9
+    d1, gap, ids = periodic_cells(n, cells, cells, 101)
+    shade = np.random.default_rng(7).random(cells*cells)[ids]
+    g1, g2 = soft_noise(n, 30, 11), soft_noise(n, 6, 12)
+    tops = np.stack([np.interp(shade, [0, 1], [a, b]) for a, b in ((0.045, 0.085), (0.022, 0.04), (0.1, 0.16))], axis=-1)
+    seam = smooth_rise(0.012, 0.09, gap)
+    colour = np.array([0.012, 0.008, 0.03]) + (tops - np.array([0.012, 0.008, 0.03]))*seam[..., None]
+    colour = colour*(0.8 + 0.35*(0.6*g1 + 0.4*g2))[..., None]
+    # Specks: small round glowing dots, sparse, away from the seams.
+    rng = np.random.default_rng(13)
+    speck = np.zeros((n, n))
+    w = np.arange(-6, 7)
+    for _ in range(700):
+        cx, cy, rad = rng.uniform(0, n), rng.uniform(0, n), rng.uniform(1.6, 3.2)
+        cols, rows = (int(cx) + w) % n, (int(cy) + w) % n
+        dx, dy = np.meshgrid(int(cx) + w - cx, int(cy) + w - cy)
+        dot = 1 - smooth_rise(rad*0.6, rad, np.hypot(dx, dy))
+        speck[np.ix_(rows, cols)] = np.maximum(speck[np.ix_(rows, cols)], dot)
+    speck *= seam
+    pink = np.array([1.0, 0.4, 0.85])
+    emit = colour*0.1 + pink*speck[..., None]*0.6
+    base = np.clip((colour*0.85 + emit*0.9)*gain, 0, 1)
+    studs = g["tile"]*5.0
+    height = 0.7*smooth_rise(0.0, 0.16, gap)*(1 - np.clip(d1, 0, 1)**2)
+    save_tile(out, g, base, height, studs, emit=speck, strength=1.4, bump=1.0)
+
+
+def cobble_maps(out, g, gain):
+    """The path's cobbles (id 113): worn grey-violet stones, each its own shade, domed, with dark joints. 2.4 per unit."""
+    n, cells = 1024, 6
+    d1, gap, ids = periodic_cells(n, cells, cells, 113)
+    shade = np.random.default_rng(3).random(cells*cells)[ids]
+    g1, g2 = soft_noise(n, 24, 21), soft_noise(n, 4, 22)
+    stone = np.stack([np.interp(shade, [0, 1], [a, b]) for a, b in ((0.15, 0.27), (0.14, 0.25), (0.2, 0.33))], axis=-1)
+    stone = stone*(0.8 + 0.25*g1 + 0.12*(g2 - 0.5))[..., None]
+    # Worn edges: each stone darker toward its joints, so it reads as rounded.
+    stone = stone*(0.72 + 0.28*smooth_rise(0.0, 0.22, gap))[..., None]
+    joint = smooth_rise(0.014, 0.05, gap)
+    colour = np.array([0.03, 0.025, 0.05]) + (stone - np.array([0.03, 0.025, 0.05]))*joint[..., None]
+    base = np.clip((colour*0.85 + colour*0.05*0.9)*gain, 0, 1)
+    height = 0.35*smooth_rise(0.0, 0.08, gap)*(1 - np.clip(d1, 0, 1)**2) + 0.03*g2
+    save_tile(out, g, base, height, g["tile"]*5.0)
+
+
+def kerb_maps(out, g, gain):
+    """The kerb (id 116): larger, darker stones, longer along the path. 1.6 across by 1.2 along per unit."""
+    n = 1024
+    d1, gap, ids = periodic_cells(n, 4, 3, 116)
+    shade = np.random.default_rng(5).random(12)[ids]
+    g1, g2 = soft_noise(n, 24, 31), soft_noise(n, 4, 32)
+    stone = np.stack([np.interp(shade, [0, 1], [a, b]) for a, b in ((0.1, 0.19), (0.095, 0.18), (0.14, 0.24))], axis=-1)
+    stone = stone*(0.8 + 0.3*g1 + 0.12*(g2 - 0.5))[..., None]
+    stone = stone*(0.72 + 0.28*smooth_rise(0.0, 0.2, gap))[..., None]
+    joint = smooth_rise(0.014, 0.05, gap)
+    colour = np.array([0.025, 0.02, 0.04]) + (stone - np.array([0.025, 0.02, 0.04]))*joint[..., None]
+    base = np.clip(colour*0.89*gain, 0, 1)
+    height = 0.3*smooth_rise(0.0, 0.07, gap) + 0.03*g2
+    save_tile(out, g, base, height, g["tile"]*5.0)
+
+
+TILE_MAPS = {"Velvet": velvet_maps, "Path": cobble_maps, "Mat": cobble_maps, "Kerb": kerb_maps}
 
 
 def magma_maps(out, g):
@@ -1414,7 +1626,11 @@ def paint(key):
         for field in ("emit", "emissiveStrength"):
             g.pop(field, None)
         if g.get("tile"):
-            magma_maps(out, g)
+            painter = next((f for prefix, f in TILE_MAPS.items() if g["name"].startswith(prefix)), None)
+            if painter:
+                painter(out, g, PIECES[key].get("gain", 1.0))
+            else:
+                magma_maps(out, g)
             continue
         px = np.load(out/g["positions"])[::-1]
         valid = np.abs(px[..., :3]).sum(axis=2) > 0
