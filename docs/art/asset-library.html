@@ -6438,33 +6438,37 @@ float chGlyph(int c, vec2 q) {
     d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 2.2))); d = min(d, chSeg2(q, vec2(0.0, 2.2), vec2(1.0, 3.0)));
     d = min(d, chSeg2(q, vec2(1.0, 3.0), vec2(2.0, 2.2))); d = min(d, chSeg2(q, vec2(2.0, 2.2), vec2(2.0, 0.0)));
     d = min(d, chSeg2(q, vec2(0.0, 1.3), vec2(2.0, 1.3)));
+  } else if (c == 12) { // U
+    d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 0.0))); d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(2.0, 0.0)));
+    d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 3.0)));
+  } else if (c == 13) { // W
+    d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 0.0))); d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(1.0, 1.3)));
+    d = min(d, chSeg2(q, vec2(1.0, 1.3), vec2(2.0, 0.0))); d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 3.0)));
+  } else if (c == 14) { // O
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(2.0, 0.0))); d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 3.0)));
+    d = min(d, chSeg2(q, vec2(2.0, 3.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(0.0, 3.0), vec2(0.0, 0.0)));
+  } else if (c == 15) { // K
+    d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(2.0, 3.0), vec2(0.0, 1.3)));
+    d = min(d, chSeg2(q, vec2(0.7, 1.75), vec2(2.0, 0.0)));
   } else if (c == 11) { // H
     d = min(d, chSeg2(q, vec2(0.0, 0.0), vec2(0.0, 3.0))); d = min(d, chSeg2(q, vec2(2.0, 0.0), vec2(2.0, 3.0)));
     d = min(d, chSeg2(q, vec2(0.0, 1.5), vec2(2.0, 1.5)));
   }
   return d;
 }
-// "SLINGER'S" over "STASH". Codes: 1 S, 2 L, 3 I, 4 N, 5 G, 6 E, 7 R, 8 ', 9 T, 10 A, 11 H.
-int chSignChar(int line, int i) {
-  if (line == 0) {
-    if (i == 0) return 1; if (i == 1) return 2; if (i == 2) return 3; if (i == 3) return 4; if (i == 4) return 5;
-    if (i == 5) return 6; if (i == 6) return 7; if (i == 7) return 8; if (i == 8) return 1; return 0;
-  }
-  if (i == 0) return 1; if (i == 1) return 9; if (i == 2) return 10; if (i == 3) return 1; if (i == 4) return 11; return 0;
+// The shop's name on one line: SLUGWORKS. Codes: 1 S, 2 L, 5 G, 7 R, 12 U, 13 W, 14 O, 15 K.
+int chSignChar(int i) {
+  if (i == 0) return 1; if (i == 1) return 2; if (i == 2) return 12; if (i == 3) return 5; if (i == 4) return 13;
+  if (i == 5) return 14; if (i == 6) return 7; if (i == 7) return 15; if (i == 8) return 1; return 0;
 }
-// Distance to the lettering in the sign's own coordinates (x across, y up, in sign units).
+// Distance to the lettering in the sign's own coordinates (x across, y up, in sign units), centred on the plate.
 float chSignText(vec2 uv) {
-  float best = 1e3;
-  for (int line = 0; line < 2; line++) {
-    int count = line == 0 ? 9 : 5;
-    float adv = 2.9;
-    float x0 = -float(count)*adv*0.5 + 0.45;
-    vec2 q = uv - vec2(x0, line == 0 ? 0.75 : -3.75);
-    int i = int(floor(q.x/adv));
-    if (i < 0 || i >= count) continue;
-    best = min(best, chGlyph(chSignChar(line, i), q - vec2(float(i)*adv, 0.0)));
-  }
-  return best;
+  const int count = 9;
+  float adv = 2.9;
+  vec2 q = uv - vec2(-float(count)*adv*0.5 + 0.45, -1.5);
+  int i = int(floor(q.x/adv));
+  if (i < 0 || i >= count) return 1e3;
+  return chGlyph(chSignChar(i), q - vec2(float(i)*adv, 0.0));
 }
 // ---- The shop. The door faces -z, where the rock path arrives. Pods are ellipsoids: centre and radii.
 void chPod(int i, out vec3 c, out vec3 r) {
@@ -6496,8 +6500,10 @@ void chPod(int i, out vec3 c, out vec3 r) {
       r = vec3(1.45, 1.3, 1.45);
     }
   }
+  // Forward toward the path so the back pods stay on the platform (owner).
+  c.z -= 0.8;
 }
-const vec3 CH_CAP = vec3(0.3, 7.3, 1.5);
+const vec3 CH_CAP = vec3(0.3, 7.3, 0.7);
 const float CH_SIGN_TILT = 0.62;
 vec3 chSignPos() {
   vec3 c, r;
@@ -6553,7 +6559,7 @@ void chWindow(vec3 p, vec3 pos, vec3 n, float rad, inout vec2 res) {
   chKeep(max(max(bars, abs(h + 0.14) - 0.04), radial - rad), 118.0, res);
 }
 void chShop(vec3 p, inout vec2 res) {
-  if (length(p.xz - vec2(0.3, 1.5)) > 9.6 || p.y < -0.6 || p.y > 10.5) return;
+  if (length(p.xz - vec2(0.3, 0.7)) > 9.6 || p.y < -0.6 || p.y > 10.5) return;
   float pods = 1e3;
   for (int i = 0; i < 6; i++) {
     vec3 c, r;
@@ -6588,7 +6594,7 @@ void chShop(vec3 p, inout vec2 res) {
   // The sign: smaller, centred just above the arch, tilted back to sit on the pod's curve, the shop's name on its face.
   vec3 sq = p - chSignPos();
   sq.yz = rot(-CH_SIGN_TILT)*sq.yz;
-  float plate = sdBox(sq, vec3(0.78, 0.33, 0.05)) - 0.035;
+  float plate = sdBox(sq, vec3(0.86, 0.22, 0.05)) - 0.035;
   chKeep(plate, sq.z < -0.06 ? 121.0 : 118.0, res);
   chKeep(max(frame, -p.y), 118.0, res);
 
@@ -6651,9 +6657,9 @@ void chShop(vec3 p, inout vec2 res) {
     chKeep(bq.x - mix(0.3, 0.14, bq.y), 102.0, res);
   }
   chBigCap(p, CH_CAP, CH_CAP_R, res);
-  vec3 mq = p - vec3(0.0, 0.0, -4.0);
-  if (abs(mq.x) < 1.8 && abs(mq.z) < 1.6 && p.y < 0.5) {
-    float edge = length(mq.xz/vec2(1.45, 1.25)) - 1.0 + 0.12*(noise3(p*2.5) - 0.5);
+  vec3 mq = p - vec3(0.0, 0.0, -4.45);
+  if (abs(mq.x) < 1.8 && abs(mq.z) < 1.2 && p.y < 0.5) {
+    float edge = length(mq.xz/vec2(1.3, 0.85)) - 1.0 + 0.1*(noise3(p*2.5) - 0.5);
     vec2 cid;
     vec2 cells = chCells(p.xz*2.6 + 9.0, cid);
     float dome = (0.05 + 0.04*hash1(cid.x*1.7 + cid.y*3.1))*(1.0 - cells.x*cells.x);

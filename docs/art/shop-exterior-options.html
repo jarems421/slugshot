@@ -1,4 +1,4 @@
-<title>Slinger's Stash Exterior</title>
+<title>Slugworks Exterior</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
@@ -22,7 +22,7 @@ h2 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 0; 
 @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
 .view { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .big { width: 100%; max-width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; background: #05070a; }
-.thumbs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.thumbs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
 @media (max-width: 560px) { .thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .thumbs button { padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: none; cursor: pointer; display: flex; flex-direction: column; }
 .thumbs img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; display: block; }
@@ -38,9 +38,9 @@ dd { margin: 0; }
 
 <main>
   <header>
-    <p class="eyebrow">Gun side · the shop · outside · round 5</p>
-    <h1>Slinger's Stash, outside</h1>
-    <p class="lede">Your pick, clustered pods, with your notes in: the rock path now lines up with the doorway, a small uneven cobble mat leads from the last stone to the door, the cap is whole and a little higher, and the trunk climbs further and fans out wide beneath it. The pods are now smooth, clean shells: no metal bands, no painted lines, finer outlines, a single clean trim round the door, and the sign plate above it. Every porthole is now a real window: an opening in the shell with a metal rim, glowing glass set back inside and a cross of bars, two of them flanking the door. The stray marks by the door and the black smudges where the pods meet are gone; only clean outlines remain. The sign is smaller, centred just above the arch, and carries the shop's name, Slinger's Stash, in glowing gold. The blank walls now have small mushrooms growing on the upper pods, round vent hatches on the side pods, and violet moss creeping up the pods' bases. On the spire, the roots now come out of the rock under the platform and dive in and out on the way down.</p>
+    <p class="eyebrow">Gun side · the shop · outside · round 6</p>
+    <h1>Slugworks, outside</h1>
+    <p class="lede">Your pick, clustered pods, with your notes in: the rock path now lines up with the doorway, a small uneven cobble mat leads from the last stone to the door, the cap is whole and a little higher, and the trunk climbs further and fans out wide beneath it. The pods are now smooth, clean shells: no metal bands, no painted lines, finer outlines, a single clean trim round the door, and the sign plate above it. Every porthole is now a real window: an opening in the shell with a metal rim, glowing glass set back inside and a cross of bars, two of them flanking the door. The stray marks by the door and the black smudges where the pods meet are gone; only clean outlines remain. The sign is smaller, centred just above the arch, and carries the shop's one-word name, SLUGWORKS, on one line in glowing gold. The whole shop sits about 4 studs further forward so its back pods stay on the platform. The blank walls now have small mushrooms growing on the upper pods, round vent hatches on the side pods, and violet moss creeping up the pods' bases. On the spire, the roots now come out of the rock under the platform and dive in and out on the way down.</p>
   </header>
 
   <div class="tabs" role="tablist" id="tabs"></div>
@@ -70,10 +70,10 @@ dd { margin: 0; }
   const OPTIONS = [
     { key: "a", name: "Clustered pods (chosen)", lead: "A big main pod in front with smaller pods heaped round the trunk, as in your picture.", points: ["Path lined up with the door, cobble mat at the door", "Trunk flaring wide under the cap", "Spire roots coming out of the rock"] }
   ];
-  const VIEWS = [["sign", "The sign"], ["front", "From the last stone"], ["door", "At the door"], ["three", "From the side"], ["far", "From the clearing"], ["spire", "The spire roots"]];
+  const VIEWS = [["sign", "The sign"], ["front", "From the last stone"], ["door", "At the door"], ["three", "From the side"], ["back", "From behind"], ["far", "From the clearing"], ["spire", "The spire roots"]];
   const tabs = document.getElementById("tabs"), big = document.getElementById("big"), thumbs = document.getElementById("thumbs");
   let current = 0, view = "sign";
-  function src(o, v) { return v === "sign" ? "sign.jpg" : `${v}-${OPTIONS[o].key}.jpg`; }
+  function src(o, v) { return v === "sign" || v === "back" ? `${v}.jpg` : `${v}-${OPTIONS[o].key}.jpg`; }
   function render() {
     const o = OPTIONS[current];
     [...tabs.children].forEach((b, i) => b.setAttribute("aria-selected", String(i === current)));
