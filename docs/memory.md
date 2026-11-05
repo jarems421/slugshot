@@ -1,5 +1,93 @@
 # Project memory
 
+Historical evidence, in date order. Search it for why something was decided; do not read it through at the start of a task. The current position is in [status](status.md).
+
+## 2026-11-04 - preserve approved Ice Wall; simpler mains
+
+**Confirmed feedback, 2026-11-04 - simpler Frostcrawler impact abilities:** Ice Wall is “perfect” and preserved. The owner rejected Prismfang/Ice Echo/Hailbreak as overcomplicated and asked for a good familiar ice impact ability, avoiding another Arachnet-style movement bind. **Considering:** Iceburst (immediate local shard splash), Brittle (one-hit damage vulnerability), Frostguard (small temporary shooter armour). No main selected. [Record](slugs/catalog/frostcrawler.md); [roster distinction rule](slugs/ability-planning.md#confirmed---useful-distinctions-not-novelty-for-its-own-sake-2026-11-04).
+
+**Implemented locally:** prior viewer/source checkpointed at `checkpoints/before-simple-ice`; new main comparison in the same artifact. No native gameplay or accepted model changes.
+
+**Implemented/verified locally, 2026-11-04 - simpler mains:** `check-simple-ice.mjs` passed 432 finite samples, immediate splash/spread, one-hit vulnerability/expiry, temporary armour/absorption/expiry, no movement locks, preserved Ice Wall cover/flank, prior confirmed pairs, controls and 390-pixel layout. Report/captures: `build/slugs/inferno/ability-concepts-20261104/qa-simple-ice/`. Main/cover desktop captures inspected. The Ice Wall render block matches its approved checkpoint exactly. Authored browser demonstrations are not native gameplay/physics/Studio evidence.
+
+## 2026-11-04 - Frostcrawler Ice Wall selected; mains replaced
+
+**Confirmed feedback, 2026-11-04 - Frostcrawler:** owner rejected all six initial alternatives as basic and selected a small **jagged Ice Wall passive** for physical cover from floor/wall/ceiling hits. **Considering:** replacement mains Prismfang (one-use banked firing lane), Ice Echo (breakable damage relay), Hailbreak (delayed overhead strike). None freezes or slows the target. Only Ice Wall remains in the passive tab; its balance/orientation/durability are open. [Current record](slugs/catalog/frostcrawler.md).
+
+**Implemented locally:** same artifact, prior source/viewer checkpointed in `checkpoints/before-icewall`. Original browser geometry and neutral forms; no native gameplay or accepted model changes.
+
+**Implemented/verified locally, 2026-11-04 - Ice Wall revision:** `check-icewall.mjs` passed 432 finite scene samples; stationary bank evasion, ice-copy damage relay/destruction, fixed overhead strike/dodge, covered versus flanking fire on floor/wall/ceiling, selected prior pairs, controls and a 390-pixel layout. Evidence: `build/slugs/inferno/ability-concepts-20261104/qa-icewall/`. Desktop captures inspected; key main beats show effects before consumption. This is authored browser motion, not physics, native collision or Studio verification. Ice Wall lifetime/durability/placement and all three mains remain subject to the recorded approval states.
+
+## 2026-11-04 - Arachnet accepted; Frostcrawler ability alternatives
+
+**Current concept artifact, 2026-11-04 - Frostcrawler:** owner approved Arachnet’s Silkline and asked for the next random slug and alternatives. Snapbind/Silkline are retained as confirmed cores. **Considering:** Frostcrawler mains Rimebite, Shattermark, Skidshock; passives Blackice, Ice Shelf, Frostmine. Viewer opens on Frostcrawler. [Record](slugs/catalog/frostcrawler.md). No Frostcrawler choice, final art or native implementation approved.
+
+**Implemented/verified locally:** `check-frost.mjs` passed 576 finite scene samples, all six solo effects/counterplay assertions, floor/wall/ceiling cases, confirmed prior pairs, controls and 390-pixel layout. Desktop scene captures were inspected. Report and images: `build/slugs/inferno/ability-concepts-20261104/qa-frostcrawler/`. Authored browser movement is not physics/Studio evidence. Earlier viewer/source checkpointed in `checkpoints/before-frostcrawler`; no native gameplay or accepted model changes.
+
+## 2026-11-04 - Arachnet Snapbind selected; movement passive requested
+
+- **Confirmed:** owner selected Snapbind as the main after reconsidering the alternatives. Retain damage and a short cuttable leg bind; exact balance remains open. Other main options removed from the active comparison.
+- **Confirmed direction:** passive surface hits should enable pulling the shooter and swinging through the environment. **Considering:** Silkline working name, reeling versus swinging, momentum-preserving release, a grounded pull from low anchors, visible destructible-anchor counterplay and detailed inputs/rules.
+- **Implemented locally:** same artifact now opens on the movement passive and compares direct pull / swing and release across floor/wall/ceiling. Neutral forms retained; old six-option source/viewer checkpointed in `checkpoints/before-silkline`. [Arachnet record](slugs/catalog/arachnet.md). No native gameplay or model changes.
+
+**Implemented/verified locally, 2026-11-04 - Silkline revision:** `check-silkline.mjs` passed 288 finite samples, confirmed Snapbind visibility/binding/cut response, high-anchor pull, attached wall/ceiling swing, release detachment and continued forward motion, grounded floor pull, selected Inferno/Aquabeek pairs, controls and 390-pixel layout. Report/captures are in `qa-silkline/` under the artifact directory; the ceiling swing capture was visually inspected. This is authored browser motion, not a physics simulation or Studio verification. Anchor destruction and game input rules are proposed, not implemented in this comparison.
+
+## 2026-11-04 - Aquabeek abilities final; Arachnet concept comparison
+
+- **Confirmed:** owner said "that's final" / "Make those final" for Aquabeek's **Crashwave main and Mistbank passive** (spoken "Crushwave" / "Miss Bank"). Those ability cores are final, not merely prototype preferences. Other Aquabeek options are no longer active. Exact numbers, final forms, production effects and native implementation remain open.
+- **Confirmed scope:** owner requested the next slug, same artifact procedure. Assistant chose Arachnet from the approved 14-slug bank. **Considering:** Snapbind, Reelshot, Anchorline mains; Tripweb, Catchnet, Springweb passives. No Arachnet ability or art selected.
+- **Implemented locally:** artifact opens on Arachnet, with neutral forms, three main/three passive options, surface and counterplay controls. Aquabeek shows only Crashwave/Mistbank, and Inferno's pair remains. Original selected water-effect rendering source preserved unchanged; prior viewer checkpointed in `checkpoints/aquabeek-final-selection`. Current evidence goes to `qa-arachnet/`. [Arachnet record](slugs/catalog/arachnet.md), [final Aquabeek decision](slugs/catalog/aquabeek.md). No native gameplay or accepted model changes.
+
+- **Verified locally:** 480 finite scene samples, six Arachnet mechanics/counterplay, selected-pair visibility, controls and 390-pixel layout passed; desktop captures reviewed. Evidence: qa-arachnet/report.json under the artifact folder. Water-effect renderer matches its checkpoint byte-for-byte. Browser evidence only; no Studio or final art approval.
+
+## 2026-11-04 - Lobby map fixes: zone strips, ring edge, bare pylons, shop pod, mountain maps
+
+- **Confirmed (owner):** clean connected dark slabs on each zone boundary; nothing but the cobble path crosses the ring by the bridges; pylon crystals removed, tops bare; the shop's main pod extended backwards; the grove mountain should look sharper close up.
+- **Implemented/verified (one-client Studio camera tour, foundation checks pass):** `chZoneSlab` rows on four lines; `chWedge` ground from 104.5 studs, ending at -40.8/-135.25 degrees; `chPodLocal` stretch; mountain in thirteen balanced blocks plus a buried part, tighter packing and 2x supersampled paint. `gun_check.ps1` Play detection fixed (case-sensitive match). Installed moderngl and scikit-image (MIT, BSD-3), the mesh pipeline's documented requirements, which were missing from this machine's Python.
+- **Unresolved:** owner verdict; mountain still soft very close up; uncommitted on `integration/lobby-all`. [Details](art/lobby-hub.md#zone-strips-ring-edge-pylon-tops-shop-and-mountain-owner-2026-11-04).
+
+## 2026-11-04 - Inferno passive preview and new Aquabeek main/passive alternatives
+
+- **Confirmed request/feedback:** model Inferno's surface fire on the artifact and redo Aquabeek's main abilities plus add passive choices. Spillover is too complex, Waterline is disliked, and Undertide depends too much on another slug. The owner corrected the initial blanket complexity concern; the presentation must also show outcomes clearly. Solo utility must come before optional combinations.
+- **Implemented (browser-only):** main/passive and floor/wall/ceiling controls. Inferno retains confirmed Backdraft and Surface Fire. Aquabeek compares Pressure Orb (pressure damage/slow), Crashwave (direct hit plus travelling damage), Geyser Strike (damage/lift); passives Rainwell (local soaking slow), Pressure Vent (surface-directed pulse), Mistbank (sight control). All Aquabeek choices and partner rules remain Considering. Health bars are relative illustrations, not damage tuning.
+- **Preserved:** earlier viewer/source in `build/slugs/inferno/ability-concepts-20261104/checkpoints/before-direct-passive`; earlier reports remain separate. Current viewer and old HTML alias updated; evidence belongs in `qa-direct-passive/`. [Current record](slugs/catalog/aquabeek.md). No native gameplay or accepted model edits.
+- **Verified locally:** 384 finite geometry/pose samples, main/passive/species/surface/playback controls and 390-pixel layout pass. Scripted checks verify standalone main damage, orb break/secondary wave escape, geyser lift, exposure/avoidance for Inferno fire on all three surfaces and the passive slow/displacement/obscuring outcomes. Captures reviewed; report in `qa-direct-passive/`. No native gameplay or balance/art approval claim.
+
+## 2026-11-04 - Inferno passive surface fire confirmed
+
+- **Confirmed (owner follow-up):** Inferno/Burpy hitting a floor, wall or ceiling creates fire on that struck surface and burns players exposed to it. This promotes the earlier surface-fire example/direction to the selected passive behaviour. Backdraft remains the selected player-hit effect.
+- **Unresolved:** footprint, duration, burn damage, exposure/reach, attachment technique and spread/propagation. No detailed behaviour for other species is selected by this decision.
+- **Implemented (documentation):** updated [ability planning](slugs/ability-planning.md#confirmed---player-hit-effect-and-passive-surface-ability), Inferno's record and current status. This pass does not implement native gameplay or change the viewer.
+
+## 2026-11-04 - Player-hit abilities and passive surface abilities
+
+- **Confirmed:** owner requested recording the distinction between an ability activated by hitting a person and a **passive ability** activated by hitting terrain, explicitly including floors/ground, walls and ceilings. The shot's hit target determines the outcome; passive here means surface-triggered, not always-on or a manually selected mode. This clarifies/expands the older one-ability wording.
+- **Confirmed direction:** Inferno's player-hit effect remains Backdraft. Its environmental example is fire on the struck surface; entering the floor fire area sets a player on fire. **Unresolved:** radius/shape, lifetime, damage, wall/ceiling reach, attachment and propagation. Fire is Inferno's element, not a universal passive for every species. Other kits remain unselected.
+- **Implemented (documentation):** [shared rule](slugs/ability-planning.md#confirmed---player-hit-effect-and-passive-surface-ability), catalogue, Inferno/Aquabeek context, vision and status. Future proposals must cover both player-hit and passive floor/wall/ceiling outcomes. The viewer and native gameplay were not changed.
+
+## 2026-11-04 - Aquabeek needs a water-specific identity
+
+- **Confirmed feedback:** owner liked Undertow and Breakwater but questioned their fit for Aquabeek: gathering could be a tornado/wind idea, and the defensive screen felt too basic or suited to another slug. No ability was assigned to Tormato.
+- **Confirmed scope:** explore Undertide, Spillover and Waterline using the existing neutral small/large placeholders. **Considering:** carried water shed by jumping/dashing; finite water redistributed by a later impact; terrain-dependent downhill runoff. All kits, numeric values and partner interactions remain unselected. Inferno's Backdraft core stays confirmed.
+- **Implemented (local concept preview):** three replacement Aquabeek studies, each with tactical/counterplay branches and optional proposed follow-ups. Old four-study viewer/source/evidence checkpointed under `build/slugs/inferno/ability-concepts-20261104/checkpoints/before-water-identity`. The current self-contained viewer and its old HTML alias are updated. [Current proposals, feedback and limits](slugs/catalog/aquabeek.md). No native gameplay or accepted asset edits.
+- **Verified locally:** browser controls/species selection and 390-pixel page width pass; 96 geometry/pose samples are finite. Scenario checks pass for takeoff shedding/off-route drops, aligned transfer versus ground spill, normalized finite water shares, descending authored runoff route points and dry high ground. `qa-water-identity/report.json`, captures and 192 motion frames are retained beside the viewer. This is scripted concept evidence, not native fluid simulation or balance approval.
+
+## 2026-11-04 - Backdraft chosen; four Aquabeek ability studies
+
+- **Confirmed:** owner explicitly chose Backdraft for Inferno ("Let's set that in stone") and requested removing the other Inferno options from the concept viewer. Selected core: impact burn, visible compression, delayed shot-directed pressure vent and displacement. Exact balance and production effects remain open; this supersedes the earlier unselected-candidate state below.
+- **Confirmed:** owner requested several Aquabeek ideas using blank small/transformed forms because its visual designs do not exist yet. **Considering:** Undertow (gathering basin), Slipstream (shared directional current), Breakwater (projectile-slowing screen), Washout (cleansing surge). Possible partner effects and all kits are proposals, not selections.
+- **Implemented (local preview/documentation):** updated viewer at `build/slugs/inferno/ability-concepts-20261104/Slugshot-ability-lab.html`; old HTML path remains compatible. Earlier viewer preserved in a checkpoint. Added [Aquabeek record](slugs/catalog/aquabeek.md), confirmed [Backdraft decision](slugs/ability-planning.md#confirmed---inferno-uses-backdraft) and current discovery/status links. No native gameplay or accepted asset edits.
+- **Verified locally:** offline model/placeholder loading, Backdraft-only Inferno selection, four water studies with two branches and proposed follow-ups, 120 finite samples, playback/beat/speed/camera/species controls and mobile page width pass in the browser. `qa/report.json` and captures remain beside the viewer. Added local documentation links/anchors resolve; whitespace checks pass. No Studio runtime claim.
+
+## 2026-11-04 - Owner records roster-wide ability direction and provisional examples
+
+- **Confirmed:** owner explicitly requested saving this discussion, superseding the earlier instruction not to take notes during exploration. Intended bank/release target is 14: Floppy, Inferno, Rammstone, Tazerling, Frostcrawler, Aquabeek, Arachnet, Boon Doc, Tormato, Vinedrill, Phosphoro, Flatulorhinkus, Hop Rock and Frightgeist. A 12-slug launch is acceptable if production takes longer; no deferrals chosen.
+- **Confirmed:** plan provisional abilities across all/most of the roster before committing Inferno's signature effect. One versatile ability per slug should support intelligent sequential chains and elemental, positional and terrain interactions. Direct damage and support roles also belong; class names are unchosen. Twin-blast fusion is a separate future idea. Inferno's alternatives share an impact-burn baseline.
+- **Considering, not approved kits:** approach fire breath/impact/burn; Rammstone route-blocking destruction or falling rubble; pool electricity with impact-distance falloff; gas followed by Inferno knockback; water patches/orbs followed by electricity; water grouping followed by multi-target electricity. The owner wants other examples/alternatives first: these may be used if they fit, but stronger proposals should replace them where appropriate.
+- **Considering:** owner liked Cinderwake, Backdraft and Ash Bloom but found Cinderwake somewhat basic. The assistant recommended Backdraft; the owner paused selection for roster planning. No signature ability was approved.
+- **Implemented (documentation):** [canonical planning note](slugs/ability-planning.md), catalogue/discovery links, Inferno context, vision and status. Evidence is the owner's conversation dated 2026-11-04. No gameplay or asset changes; runtime tests are not applicable to this notes-only pass.
+- **Verified (documentation):** 14 distinct roster entries; all 13 added local links/anchors resolve; `git diff --check` passes. Unrelated concurrent lobby edits are preserved.
+
 ## 2026-11-03 - Owner rejects lava quality; final attempt discarded
 
 - **Confirmed:** owner's 15:34 screenshot shows unacceptable jagged patches. Prior map/pixel checks did not establish visual quality. The 1024-to-256 map reduction damaged the packed UV atlas and normal/glow detail.
@@ -2075,4 +2163,20 @@
 - **Confirmed (owner):** stop testing guns in a separate range; one place with all the final work (lobby, portal to the real range, guns, slugs, inspections, settings, loading screen), one for testing. Burpee work declared done by the owner.
 - **Implemented/verified:** uncommitted work in four worktrees reviewed and committed, then merged with `lobby/shop` onto `main`. Conflicts: the inspect animation (the pipeline's current, owner-reviewed version kept over the earlier backflip rework), Inferno's motion step and grove behaviour (both kept), Floppy's idle (pipeline side), settings glyphs (main's encoding fix), the grove crystal effects (moved into the shared `libraryPiece` so the pylon crystals get them too), notes (both). Game place `tools/training/build_game.py`; see [status](status.md).
 - **Confirmed (owner, 2026-11-04):** the volcano's slow lava gloop animation is approved; the current inspection is flip up, inspect, flip to catch down (the pipeline's version). All branches merged into `main`; other Studio windows closed, only the game place left open.
+
+## 2026-11-04 - Far side cave and the cavern wall
+
+- **Confirmed (owner):** the last lobby pieces are a look-only misty cave beyond a cliff on the far side, and the walls. Picked from the [plan](https://claude.ai/artifact/RrouNnPUQBZHGGttm6SG6B): a great mouth, made big; the approved rock wall's masses for the wall; the canopy hole's mist; an invisible barrier over the whole mouth. Artifact first, our own assets, new extras designed on their own first.
+- **Implemented:** library assets 16 (`far-cave`) and 17 (`cave-spire`), [study page](https://claude.ai/artifact/Ggdo5sXqcyxQWz7SajHiap). The spire was rebuilt sharp and jagged like the grove mountain on the owner's note. Owner's pick of A, B or C pending; no Roblox build yet. Lessons: [art lessons](art/lessons.md).
+- **Confirmed (owner):** option C, mushroom depths; the spires' thick black lines down them removed; each piece on its own page: [cave spire](https://claude.ai/artifact/Rd4tzdc4jwnGj3hDrh66ax), [cavern wall](https://claude.ai/artifact/KdgpejJ9tavykNd21oSj5c), [cave and mouth](https://claude.ai/artifact/Ggdo5sXqcyxQWz7SajHiap).
+- **Owner, round 4:** walls too basic, rounded and repetitive; spires too spirally (like tusks). **Implemented:** reshaped spires and two new sharp wall options, broken blocks and fused crags ([spire](https://claude.ai/artifact/Rd4tzdc4jwnGj3hDrh66ax), [wall](https://claude.ai/artifact/KdgpejJ9tavykNd21oSj5c)). Pick pending.
+- **Owner, round 5:** spires too uniformly coney; now on a different Claude account, so earlier artifacts can't be opened. **Implemented:** broken, non-conical spires and fresh pages on that account ([spire](https://claude.ai/artifact/Rd4tzdc4jwnGj3hDrh66ax), [wall](https://claude.ai/artifact/KdgpejJ9tavykNd21oSj5c)). Wall pick pending.
+- **Owner, round 6:** spires flat on two sides; wall a mix of A and B with more textures; use our own crystals. **Implemented:** see [lobby hub](art/lobby-hub.md#far-side-cave-and-the-cavern-wall-owner-2026-11-04) and the pages ([spire](https://claude.ai/artifact/Rd4tzdc4jwnGj3hDrh66ax), [wall](https://claude.ai/artifact/KdgpejJ9tavykNd21oSj5c), [cave](https://claude.ai/artifact/Ggdo5sXqcyxQWz7SajHiap)). Verdict pending; no Roblox build yet.
+
+## 2026-11-04 - Animation production system and documentation layers
+
+- **Owner request:** implement two pasted reviews (animation tooling; skills and docs optimisation), leaving out anything disagreed with and reporting it. See [ADR 0031](decisions/0031-motion-production-and-knowledge-layers.md).
+- **Implemented:** `slugshot-animation-director` and `slugshot-procedural-animation` skills; `MotionKit` with a browser twin; three-way motion preview with real-speed video and technical report; [motion review](slugs/motion-review.md), [motion library](slugs/motion-library.md) and [lesson index](lessons-index.md). `status.md` is now a short snapshot, its text moved unchanged to [status history](status-history.md). Skill routing split into a short page and the [full audit](slugs/skill-audit.md). `AGENTS.md` rewritten around the integrated game with a decision precedence. `check_skill_routing.py` also checks links, sizes, descriptions and stale wording. Real-task routing benchmark in `tests/skill-evals`.
+- **Finding:** in the browser study of a full-charge shot, Inferno's swap happens about 42 studs from the shooter and the final form fills under 0.2% of the frame at the reveal. The study has no aura image or arms, so this is a prompt to check in Studio, not a verdict.
+- **Left out, with reasons in the ADR:** a Blender pose asset file, external animation services, a third Blender MCP, the Animation Graph Editor, editing the pinned quality gate.
 

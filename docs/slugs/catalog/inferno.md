@@ -1,5 +1,19 @@
 # Slug design record: Inferno
 
+**Current, 2026-11-04:** final design, both forms. In the merged game place: loadout slot 2, the approved Playful Flame inspect, and the shared transformation (feel verdict pending). Backdraft and surface fire are chosen but not implemented. Older sections below that describe Inferno as display-only are history.
+
+## Confirmed - Backdraft ability, 2026-11-04
+
+The owner explicitly selected **Backdraft**: "Let's set that in stone as the inferno ability." Impact burns the target; a visible compression warns of a delayed pressure vent along the incoming shot direction, damaging/pushing opponents who remain in its path. Aim and shot angle create positional follow-ups. The local viewer now retains only Backdraft for Inferno.
+
+The core ability is confirmed. Exact damage, burn duration, delay, cone, push strength and production VFX remain to be tuned; no native combat implementation is added by this decision. Other slugs' kits and the gas/knockback example remain provisional. See [roster planning](../ability-planning.md#confirmed---inferno-uses-backdraft) and [Aquabeek studies](aquabeek.md).
+
+**Passive ability confirmed, owner, 2026-11-04:** hitting a **floor, wall or ceiling** creates fire on the struck surface that **burns players exposed to it**. This is the chosen passive behaviour. **Player-hit effect:** Backdraft remains confirmed. Exact footprint, damage, duration, exposure/reach, attachment technique and propagation are unresolved. [Shared terminology and scope](../ability-planning.md#confirmed---player-hit-effect-and-passive-surface-ability). This records the ability decision; native gameplay and the concept viewer have not been changed in this notes pass.
+
+**Local artifact update, owner-requested, 2026-11-04:** the viewer now has separate main/passive tabs. Backdraft remains the sole Inferno main choice; Surface Fire demonstrates an attached, connected 3D flame patch on floors, walls and the underside of ceilings, with exposure/burn and avoidance cases. Relative health and effect timing are illustrative. The implementation is browser-only; native gameplay, damage values and final art approval remain open. Current viewer: `build/slugs/inferno/ability-concepts-20261104/Slugshot-ability-lab.html`.
+
+**Verified locally:** the artifact's passive activation and exposure/avoidance scenarios pass for floor, wall and ceiling, with outward surface normals `(0,1,0)`, `(0,0,1)` and `(0,-1,0)`. The current browser report and reviewed captures are under `build/slugs/inferno/ability-concepts-20261104/qa-direct-passive/`. This is concept evidence, not native collision/burn implementation or approval of exact reach and appearance.
+
 ## Final design — owner, 2026-11-03
 
 **Confirmed:** "Make them the final designs" for Inferno and Floppy. Both Inferno forms are final as they stand in `tools/slugs/build_inferno.py`.
@@ -543,6 +557,8 @@ A bigger form with a compact curving body, an arched neck, a short soft snout, a
 **Face rebuild, 2026-11-02 (owner verdict pending):** the owner found the lids looked glued on and cut through the face, the grin had no bottom edge, and the mouth change cut rather than transitioned. Overlays were dropped. As on Floppy, each eye is now its own mesh behind the skin and the upper lid is the skin stretching over it. The mouth is one mesh on 20 lip bones that morphs from grin to gritted, with ink all the way round. This supersedes every earlier lid and mouth note.
 
 ## Considering — not approved
+
+**Historical alternatives, updated 2026-11-04:** the owner liked Cinderwake, Backdraft and Ash Bloom, but found Cinderwake somewhat basic. Backdraft is now selected as recorded at the top of this page. The older terrain/player/water proposal below and all example chains remain inspiration, not approved alternate abilities. Keep planning relationships across the [14-slug roster](../ability-planning.md).
 
 **Shot numbers.** These are first proposals for the shared `Combat.Slugs` table on `main`, for owner playtest. Nothing has been changed there.
 

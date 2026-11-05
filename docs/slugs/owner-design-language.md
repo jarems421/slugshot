@@ -1,8 +1,30 @@
 # Owner design language and working lessons
 
-Read this before any creature, blaster or animation task. It translates how the owner phrases feedback into what actually satisfied them in recorded rounds, so the next slug starts from what was learned on Floppy instead of rediscovering it. Each entry cites a recorded round; it is a starting interpretation, not a rule. When a phrase is ambiguous for the task in hand, show one option and ask.
+It translates how the owner phrases feedback into what actually satisfied them in recorded rounds, so the next slug starts from what was learned on Floppy instead of rediscovering it. Each entry cites a recorded round; it is a starting interpretation, not a rule. When a phrase is ambiguous for the task in hand, show one option and ask.
 
 Sources: [Floppy catalogue entry](catalog/flopper-inspired.md), [Blender lessons](blender-lessons.md), [blaster refinement](blaster-refinement.md), [chamber repair](floppy-chamber-repair.md), and the 2026-10-31 draw/holster session (code on `experiment/rocklock-unified`, notes in that branch's `docs/memory.md`).
+
+## Start here
+
+**Don't read this whole file for a task.** Find what you need by symptom in the [lesson index](../lessons-index.md), or use the map below. Sections are dated and later ones win; many entries are specific to one slug, so transfer the principle and not its numbers.
+
+**Universal principles, from everything below:**
+
+- Accepted means stop. A correction to an approved thing is one small change, not a redesign.
+- Agree a real, rotatable preview first. Show several candidates for a new design or performance, and one direct fix otherwise.
+- Judge at real speed, from the camera the player has, on the instance they see.
+- A passing check says nothing about whether it looks right.
+- When the owner points at something existing, reuse it first.
+- Soft-looking comes from shape and articulated motion, not jiggle. One designed shape beats many small effects.
+
+| Looking for | Section |
+| --- | --- |
+| How the owner gives feedback | [How the owner works](#how-the-owner-works), [dictation slips](#voice-dictation-slips-this-chat) |
+| A phrase's meaning | [Phrases](#what-phrases-have-meant), [Inferno phrases](#what-phrases-have-meant-inferno-concept-2026-11-02), [how big "a bit" is](#how-big-a-bit-has-been-this-chat) |
+| Motion and acting | [Inspect acting](#inspect-flip-and-creature-acting-2026-11-02), [hopping](#exhibition-hopping-and-size-2026-11-03), [Inferno fluidity](#inferno-inspect-fluidity-2026-11-03), [transformation](#transformation-effects-2026-11-03) |
+| Runtime and first person | [Runtime lessons](#animation-and-roblox-runtime-lessons-drawholster-2026-10-31), [combat](#combat-and-first-person-2026-10-31-experimentrocklock-unified-see-its-docscombatmd) |
+| Environment | [Environment](#environment-and-art-direction-2026-10-31-to-11-01) |
+| Floppy only | [Happy, tired Floppy](#happy-tired-floppy-2026-11-03), [restoration](#original-floppy-means-restoration-2026-11-04) |
 
 ## How the owner works
 

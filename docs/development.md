@@ -23,7 +23,7 @@ VS Code recommendations and tasks are checked in. The Luau extension can provide
 1. Read current status, inspect Git changes and find the approved task.
 2. Update source and the smallest useful test/check within the approved task. Keep the foundation probe-only; authorized movement work belongs in its dedicated experiment project.
 3. Run `python tools/verify.py`. For runtime changes, also use [the Studio checklist](testing.md).
-4. Update relevant notes, status and dated memory with actual evidence and unverified items.
+4. Update the relevant note, replace the affected lines in [status](status.md), and add dated memory with actual evidence and unverified items. Long evidence goes in [status history](status-history.md).
 5. Review `git diff --check`, then stage and commit intentional files. Keep builds, secrets and personal configuration out of Git.
 
 **Confirmed (owner, 2026-10-30):** after a change intended for the owner to playtest, close Studio, rebuild the appropriate movement lab, then reopen Studio with the updated place so it is ready to test. Preserve any unrelated unsaved work. Studio does not reload a rebuilt file automatically, and saving on close can overwrite a build made before closing.

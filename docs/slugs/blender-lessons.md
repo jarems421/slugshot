@@ -1,4 +1,6 @@
-# Blender creature lessons — first development cycle
+# Blender creature lessons
+
+The full stories, in rough date order. Start from the [lesson index](../lessons-index.md), which is searchable by symptom and links back here. Add new lessons at the end and give each a row in the index.
 
 Updated 2026-10-31. This is a working record, not a redesign of the pipeline or approval of the creature. [Current design and verification](catalog/flopper-inspired.md). Preserve the owner’s feedback, the model source and the render that produced it; do not equate a passing script with a good design. For what the owner's phrases have meant in practice (e.g. "squishy", "stuck on", "muddy spots") and the draw/holster runtime lessons, see [owner design language](owner-design-language.md).
 

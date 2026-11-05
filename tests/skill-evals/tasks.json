@@ -1,0 +1,53 @@
+{
+  "purpose": "Real Slugshot requests, for comparing instructions before and after a change. Routing is measured; output quality still needs a person.",
+  "tasks": [
+    {
+      "id": "new-motion-concept",
+      "prompt": "Inferno needs a new taunt he does when a player walks past him in the lobby. We don't have anything like it yet. What's the plan?",
+      "expect": ["slugshot-animation-director"],
+      "reject": []
+    },
+    {
+      "id": "stiff-landing",
+      "prompt": "Floppy's landing after a hop in the grove looks stiff, like he just stops. Fix it.",
+      "expect": ["slugshot-procedural-animation"],
+      "reject": ["slugshot-animation-director"]
+    },
+    {
+      "id": "tune-approved",
+      "prompt": "The Playful Flame inspect is great but the smile at the end should hold a tad longer.",
+      "expect": ["slugshot-procedural-animation"],
+      "reject": ["slugshot-animation-director"]
+    },
+    {
+      "id": "malformed-face",
+      "prompt": "Inferno's left eyelid has a jagged notch in the Blender model when he's angry. Sort out the mesh.",
+      "expect": ["slugshot-creature-production", "roble3-blender-modeling", "el4cteo-blender-facial-shapekeys", "slugshot-blender-orchestrator"],
+      "reject": ["slugshot-animation-director"]
+    },
+    {
+      "id": "fbx-export",
+      "prompt": "A new slug's FBX imports into Studio but the idle clip has disappeared. Diagnose it.",
+      "expect": ["el4cteo-blender-export-pipelines"],
+      "reject": ["slugshot-animation-director"]
+    },
+    {
+      "id": "shop-environment",
+      "prompt": "The shop's windows look sloppy in the lobby. Tidy them up.",
+      "expect": [],
+      "reject": ["slugshot-creature-production", "slugshot-animation-director", "slugshot-procedural-animation"]
+    },
+    {
+      "id": "transformation-invisible",
+      "prompt": "When I fire Inferno I can barely see him transform at normal speed. Why is that and what should we do?",
+      "expect": ["slugshot-animation-director", "slugshot-procedural-animation"],
+      "reject": []
+    },
+    {
+      "id": "blender-keyframes",
+      "prompt": "Key a looping 2 second Blender action for Floppy's antennae on his rig and check the loop has no pop.",
+      "expect": ["el4cteo-blender-animation"],
+      "reject": ["slugshot-animation-director"]
+    }
+  ]
+}
