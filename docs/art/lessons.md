@@ -390,3 +390,34 @@ Owner could not see the intended lava motion after a texture-speed increase. The
 
 Three tour runs never entered Play. Force-closing a check window leaves Studio auto-recovery copies (`AutoSaves/<place>_AutoRecovery_*.rbxl`); the next open of that place asks to restore, and the prompt swallowed the posted F5. `gun_check.ps1` now deletes the throwaway place's recovery copies before opening it, reads only the log that names its own place (other sessions' Studio windows write the same `server foundation ready` line, which once made it think Play had started), and if a plain F5 hasn't started Play after 45 seconds, brings its own window forward and presses again.
 
+
+## 2026-11-04 - Spend texels where they're seen; supersample painted lines
+
+**Owner:** the grove mountain looked low resolution close up. **Causes:** the three 2048 maps arrived at 1024, 38% of the mesh area was the flat underside below the ground, and smart projection left about a third of each map empty: 2 to 4 texels a stud. Each texel was painted from one sample, so hard-edged lines stair-stepped when magnified. **Rules now:** measure texels a stud from the exported mesh before judging; split big pieces into blocks of equal *visible* area, give hidden faces their own tiny map, and paint at twice the size and average down (`supersample`). **Checking:** `gun_check.ps1` matched `GUNCHECK` case-insensitively, so Studio's own "open place ...SlugshotLobbyGunCheck" line counted as Play having started and Play was never retried; it now matches case-sensitively. **Limits:** one-client desktop Studio. [Notes](lobby-hub.md#zone-strips-ring-edge-pylon-tops-shop-and-mountain-owner-2026-11-04).
+
+## 2026-11-04 - Steep relief needs a scaled field; the library camera is narrow
+
+- **Problem:** in the far side cave study, distant spires came out as horizontal stripes and the cave walls speckled. Raising the march budget did nothing.
+- **Cause:** the cave walls' rocky folds (`smoothstep` on `abs(noise)` times 3.2) bent the distance field about three times steeper than a true distance, so rays skipped through thin parts. **Fix:** scale that field (here by 0.4); the shape is unchanged. Check a new relief term's slope before blaming the step count.
+- **Camera:** the library's views have a narrow field of view, so a steep look-down from a cliff shows only the floor in front. Stand at the edge and look out a little downward instead.
+- **Owner on the spire:** stacked rounded masses read as soft; the owner wanted the grove mountain's sharp, jagged look. Reuse the mountain's construction (star ridges, flat faces between jittered corners, ink on the smooth form's ridges) for any new rock that should feel related.
+- **Layered mist cuts thin columns into floating boxes** when seen from just above it; frame spires so their tips stand clear of the layers.
+- **Ink down the spires:** ridge lines painted from the smooth form's curvature, plus the renderer's valley creases, ran straight down every spire, and the owner found them too thick and empty. On tall ridged forms, keep the outline and a few thin facet edges.
+- **Round arcs of ink on big masses:** the shared `chunk` returns its bounding sphere outside 0.4 units, and at cavern scale neighbouring masses blend inside that sphere, so the field kinks and the crease ink draws arcs. Use the full shape (`fcChunk`) for masses this large.
+- **Cutaways:** a cave cut out of infinite rock shows as grey slabs; keep a shell of rock round it instead. Mist that only rock hid must then be limited to the cave itself.
+
+## 2026-11-04 - Faceting round a column reads as a spiral
+
+- **Owner:** the faceted spires looked "too spirally", like narwhal tusks. **Causes, in order found:** ridges twisted with height; a ridge-depth pattern of angle plus height, which is a helix; the mountain's sheared triangle grid, which wraps a cylinder as a helix; and one shared split diagonal, which lines face edges into a slanted grain. **Fix:** straight ridges with per-ridge patterns, rows offset alternately (zigzag), and a random diagonal per square. The mountain's grid is fine on a plane, not round an axis.
+- **Walls:** scaling up the approved small rock wall gave rounded, repeating pillows. Heightfield facets over shallow relief read as crumpled low-poly paper, and big planar wedges as plain slabs. Solid pieces with strong relief and two sizes (broken blocks, fused crags) read as rock at cavern scale.
+- **render_still.py takes the variant's index, not its option number.** Removing a variant shifted every later index, and two option renders came out labelled as each other. Check a render's look against its label after editing the variant list.
+
+## 2026-11-04 - A ridged taper is still a cone
+
+Ridges, facets and shoulders on one even taper still read as a cone (owner: "too uniformly coney"). What changed the read was the silhouette: non-monotonic width with hard kinks, a broad body with a short broken top, flattened tiers turned different ways, fracture planes that move the summit off-centre, and notches. Check the outline first; surface detail can't fix it. Don't shade faces by a quantised normal: the numerical normal jitters across a rounding boundary and draws contour bands.
+
+## 2026-11-04 - Big cuts make flat sides; use the real crystals; watch the GPU log
+
+- **Flat sides:** SDF plane cuts break a silhouette but leave blank sheets, and the owner saw detail on two sides only. Apply breaks to the facet corners instead, spread evenly by angle, and check a turntable of four sides.
+- **Stand-ins:** `chCrystal` was the canopy hole's generated stand-in, not an approved design. Check `CRYSTALS` in the library and use those layouts and colours. Big-scene convex ink only marks a crystal's corners, as dark stars: shade its facets instead.
+- **GPU resets:** an unexplained exit 127 from `render_still.py` with no output was a GPU reset, shown as `nvlddmkm` event 153 in the System log. Check that log and that files exist after heavy renders, set `LOBBY_BANDS` higher for heavy scenes, and cut per-pixel cost (here: costly surface searches for dressing that couldn't reach the point).

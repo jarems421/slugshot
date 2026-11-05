@@ -1,0 +1,427 @@
+<title>Far Side Cave Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the map and section break wider; option sketches sit in a three-up grid that stacks. */
+:root {
+  --bg: #eef0f4; --panel: #ffffff; --fg: #1b1e29; --muted: #59607a; --line: #d3d7e2;
+  --accent: #1f7f86; --violet: #6a4fb0; --warm: #b4572a;
+  --zone-portal: rgba(122,104,92,.42); --zone-slug: rgba(92,124,108,.42); --zone-far: rgba(96,100,124,.55); --zone-gun: rgba(128,108,84,.40);
+  --pit: #2b6f8f; --rock: #6d6a75; --cave: rgba(31,127,134,.16); --mist: #9fb8c8;
+  --display: "Alegreya Sans SC", "Gill Sans", "Trebuchet MS", sans-serif;
+  --body: "Alegreya Sans", "Gill Sans", "Trebuchet MS", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11131b; --panel: #191c27; --fg: #e3e5ee; --muted: #9ba1b8; --line: #2b3042;
+  --accent: #7fd3d8; --violet: #ac93e6; --warm: #e58b5a;
+  --zone-portal: rgba(122,104,92,.38); --zone-slug: rgba(92,124,108,.38); --zone-far: rgba(110,116,150,.5); --zone-gun: rgba(128,108,84,.36);
+  --pit: #2f7fa3; --rock: #4f4c58; --cave: rgba(127,211,216,.12); --mist: #6f8796; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11131b; --panel: #191c27; --fg: #e3e5ee; --muted: #9ba1b8; --line: #2b3042;
+  --accent: #7fd3d8; --violet: #ac93e6; --warm: #e58b5a;
+  --zone-portal: rgba(122,104,92,.38); --zone-slug: rgba(92,124,108,.38); --zone-far: rgba(110,116,150,.5); --zone-gun: rgba(128,108,84,.36);
+  --pit: #2f7fa3; --rock: #4f4c58; --cave: rgba(127,211,216,.12); --mist: #6f8796; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font: 400 17px/1.55 var(--body); }
+main { max-width: 1060px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 56px; }
+section { display: grid; gap: 18px; min-width: 0; }
+.prose { max-width: 66ch; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; letter-spacing: .02em; text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(34px, 5vw, 52px); }
+h2 { font-size: 27px; }
+h3 { font-size: 20px; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 20px; color: var(--fg); max-width: 60ch; }
+.muted { color: var(--muted); }
+.num { font-family: var(--mono); font-size: .92em; font-variant-numeric: tabular-nums; }
+
+.figure { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; overflow-x: auto; }
+.figure svg { display: block; width: 100%; min-width: 520px; height: auto; }
+.mapRow { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 760px) { .mapRow { grid-template-columns: 1fr; } }
+.legend { display: grid; gap: 10px; font-size: 15.5px; margin: 0; padding: 0; list-style: none; }
+.legend li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; }
+.sw { height: 4px; border-radius: 2px; }
+.sw.box { height: 14px; border-radius: 3px; }
+
+/* SVG classes */
+.map .zPortal { fill: var(--zone-portal); } .map .zSlug { fill: var(--zone-slug); }
+.map .zFar { fill: var(--zone-far); } .map .zGun { fill: var(--zone-gun); }
+.map .rim { fill: var(--rock); opacity: .55; } .map .pit { fill: var(--pit); } .map .rock { fill: var(--rock); stroke: var(--fg); stroke-width: 1; }
+.map .bridge { stroke: var(--warm); stroke-width: 4; }
+.map .hole { fill: var(--bg); stroke: var(--muted); stroke-width: 1.2; }
+.map .shop { fill: var(--panel); stroke: var(--muted); }
+.map .peak { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.map .portal { fill: var(--violet); opacity: .8; }
+.map .cave { fill: var(--cave); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 3 4; }
+.map .wallHidden { fill: none; stroke: var(--muted); stroke-width: 4; stroke-dasharray: 2 6; }
+.map .wallBuild { fill: none; stroke: var(--violet); stroke-width: 7; stroke-linecap: round; }
+.map .cliff { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+.map .walk { stroke: var(--fg); stroke-width: 1.4; stroke-dasharray: 4 5; opacity: .6; }
+.map .zoneLine { stroke: var(--fg); stroke-width: 1.4; opacity: .35; }
+.map text, .section text { fill: var(--fg); font-family: var(--mono); }
+.map .lbl { font-size: 13px; letter-spacing: .1em; font-weight: 500; }
+.map .small, .section .small { font-size: 11px; fill: var(--muted); }
+.map .cave + text, .map text.cave, .section text.cave { fill: var(--accent); font-size: 12px; }
+.map .scale line { stroke: var(--fg); stroke-width: 1.2; } .map .scale text { font-size: 11px; fill: var(--muted); }
+.section .mist { fill: var(--mist); }
+.section .ceiling { fill: var(--rock); opacity: .75; }
+.section .wallSec { fill: var(--violet); opacity: .85; }
+.section .sil1 { fill: var(--rock); opacity: .65; } .section .sil2 { fill: var(--rock); opacity: .42; } .section .sil3 { fill: var(--rock); opacity: .24; }
+.section .ground { fill: var(--rock); } .section .water { fill: var(--pit); opacity: .8; }
+.section .rockSec { fill: var(--rock); stroke: var(--fg); stroke-width: .8; }
+.section .bridgeSec { fill: none; stroke: var(--warm); stroke-width: 2.5; }
+.section .barrier { stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.section .player { fill: var(--warm); }
+.section .tick { stroke: var(--muted); } .section .tickLbl { font-size: 11px; fill: var(--muted); }
+
+.options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 860px) { .options { grid-template-columns: 1fr; } }
+.opt { display: grid; grid-template-rows: auto auto 1fr; gap: 10px; min-width: 0; }
+.opt canvas { width: 100%; aspect-ratio: 16 / 10; max-width: 100%; display: block; border-radius: 6px; background: #0b0d14; }
+.opt .tag { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.pill { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--accent); color: var(--accent); }
+.opt p { font-size: 15.5px; }
+.opt dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 14.5px; }
+.opt dt { color: var(--muted); }
+.opt dd { margin: 0; }
+.note { font-size: 14px; color: var(--muted); }
+
+.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 760px) { .rules { grid-template-columns: 1fr; } }
+.rules li { border-top: 1px solid var(--line); padding-top: 10px; font-size: 15.5px; min-width: 0; }
+.rules b { font-weight: 700; display: block; }
+
+.asks { display: grid; gap: 12px; margin: 0; padding-left: 1.4em; }
+.asks li { padding-left: 4px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:14px">
+    <p class="eyebrow">Slugshot lobby · last two pieces · plan for owner sign-off · 2026-11-04</p>
+    <h1>Far side cave and the cavern wall</h1>
+    <p class="lede">The far side becomes a cliff at the edge of the ring, looking out into a misty cave that nobody can enter. Then the cavern wall goes all the way round, where it still shows the block-out panels.</p>
+  </header>
+
+  <section>
+    <h2>Where it goes</h2>
+    <div class="mapRow">
+      <div class="figure" style="padding:8px"><svg viewBox="-370 -360 740 740" role="img" aria-labelledby="mapTitle" class="map">
+<title id="mapTitle">Top-down lobby map to scale, with the far side cave and the wall plan</title>
+<path class="zPortal" d="M-192.8,-229.8 L-184.7,-236.4 L-176.3,-242.7 L-167.8,-248.7 L-159.0,-254.4 L-150.0,-259.8 L-140.8,-264.9 L-131.5,-269.6 L-122.0,-274.1 L-112.4,-278.2 L-102.6,-281.9 L-92.7,-285.3 L-82.7,-288.4 L-72.6,-291.1 L-62.4,-293.4 L-52.1,-295.4 L-41.8,-297.1 L-31.4,-298.4 L-20.9,-299.3 L-10.5,-299.8 L0.0,-300.0 L10.5,-299.8 L20.9,-299.3 L31.4,-298.4 L41.8,-297.1 L52.1,-295.4 L62.4,-293.4 L72.6,-291.1 L82.7,-288.4 L92.7,-285.3 L102.6,-281.9 L112.4,-278.2 L122.0,-274.1 L131.5,-269.6 L140.8,-264.9 L150.0,-259.8 L159.0,-254.4 L167.8,-248.7 L176.3,-242.7 L184.7,-236.4 L192.8,-229.8 L66.8,-79.7 L64.0,-82.0 L61.1,-84.1 L58.2,-86.2 L55.1,-88.2 L52.0,-90.1 L48.8,-91.8 L45.6,-93.5 L42.3,-95.0 L39.0,-96.4 L35.6,-97.7 L32.1,-98.9 L28.7,-100.0 L25.2,-100.9 L21.6,-101.7 L18.1,-102.4 L14.5,-103.0 L10.9,-103.4 L7.3,-103.7 L3.6,-103.9 L0.0,-104.0 L-3.6,-103.9 L-7.3,-103.7 L-10.9,-103.4 L-14.5,-103.0 L-18.1,-102.4 L-21.6,-101.7 L-25.2,-100.9 L-28.7,-100.0 L-32.1,-98.9 L-35.6,-97.7 L-39.0,-96.4 L-42.3,-95.0 L-45.6,-93.5 L-48.8,-91.8 L-52.0,-90.1 L-55.1,-88.2 L-58.2,-86.2 L-61.1,-84.1 L-64.0,-82.0 L-66.8,-79.7Z"/>
+<path class="zSlug" d="M192.8,-229.8 L202.2,-221.6 L211.2,-213.1 L219.9,-204.1 L228.1,-194.8 L236.0,-185.2 L243.5,-175.3 L250.5,-165.0 L257.2,-154.5 L263.3,-143.7 L269.1,-132.7 L274.3,-121.4 L279.1,-110.0 L283.4,-98.3 L287.3,-86.5 L290.6,-74.5 L293.4,-62.4 L295.8,-50.2 L297.6,-37.9 L298.9,-25.5 L299.7,-13.1 L300.0,-0.7 L299.8,11.8 L299.0,24.2 L297.8,36.6 L296.0,48.9 L293.7,61.1 L290.9,73.2 L287.6,85.2 L283.9,97.1 L279.6,108.7 L274.9,120.2 L269.6,131.5 L264.0,142.6 L257.8,153.4 L251.2,163.9 L244.2,174.2 L236.8,184.2 L229.0,193.8 L220.7,203.2 L212.1,212.1 L73.5,73.5 L76.5,70.4 L79.4,67.2 L82.1,63.8 L84.7,60.4 L87.1,56.8 L89.4,53.2 L91.5,49.4 L93.5,45.6 L95.3,41.7 L96.9,37.7 L98.4,33.6 L99.7,29.5 L100.9,25.4 L101.8,21.2 L102.6,16.9 L103.2,12.7 L103.7,8.4 L103.9,4.1 L104.0,-0.2 L103.9,-4.5 L103.6,-8.8 L103.2,-13.1 L102.5,-17.4 L101.7,-21.6 L100.7,-25.8 L99.6,-30.0 L98.3,-34.1 L96.8,-38.1 L95.1,-42.1 L93.3,-46.0 L91.3,-49.8 L89.1,-53.6 L86.8,-57.2 L84.4,-60.8 L81.8,-64.2 L79.1,-67.5 L76.2,-70.8 L73.2,-73.9 L70.1,-76.8 L66.8,-79.7Z"/>
+<path class="zFar" d="M212.1,212.1 L203.6,220.3 L194.8,228.1 L185.7,235.6 L176.3,242.7 L166.7,249.4 L156.7,255.8 L146.6,261.7 L136.2,267.3 L125.6,272.4 L114.8,277.2 L103.8,281.5 L92.7,285.3 L81.4,288.7 L70.0,291.7 L58.5,294.2 L46.9,296.3 L35.3,297.9 L23.5,299.1 L11.8,299.8 L0.0,300.0 L-11.8,299.8 L-23.5,299.1 L-35.3,297.9 L-46.9,296.3 L-58.5,294.2 L-70.0,291.7 L-81.4,288.7 L-92.7,285.3 L-103.8,281.5 L-114.8,277.2 L-125.6,272.4 L-136.2,267.3 L-146.6,261.7 L-156.7,255.8 L-166.7,249.4 L-176.3,242.7 L-185.7,235.6 L-194.8,228.1 L-203.6,220.3 L-212.1,212.1 L-73.5,73.5 L-70.6,76.4 L-67.5,79.1 L-64.4,81.7 L-61.1,84.1 L-57.8,86.5 L-54.3,88.7 L-50.8,90.7 L-47.2,92.7 L-43.5,94.4 L-39.8,96.1 L-36.0,97.6 L-32.1,98.9 L-28.2,100.1 L-24.3,101.1 L-20.3,102.0 L-16.3,102.7 L-12.2,103.3 L-8.2,103.7 L-4.1,103.9 L0.0,104.0 L4.1,103.9 L8.2,103.7 L12.2,103.3 L16.3,102.7 L20.3,102.0 L24.3,101.1 L28.2,100.1 L32.1,98.9 L36.0,97.6 L39.8,96.1 L43.5,94.4 L47.2,92.7 L50.8,90.7 L54.3,88.7 L57.8,86.5 L61.1,84.1 L64.4,81.7 L67.5,79.1 L70.6,76.4 L73.5,73.5Z"/>
+<path class="zGun" d="M-212.1,212.1 L-220.7,203.2 L-229.0,193.8 L-236.8,184.2 L-244.2,174.2 L-251.2,163.9 L-257.8,153.4 L-264.0,142.6 L-269.6,131.5 L-274.9,120.2 L-279.6,108.7 L-283.9,97.1 L-287.6,85.2 L-290.9,73.2 L-293.7,61.1 L-296.0,48.9 L-297.8,36.6 L-299.0,24.2 L-299.8,11.8 L-300.0,-0.7 L-299.7,-13.1 L-298.9,-25.5 L-297.6,-37.9 L-295.8,-50.2 L-293.4,-62.4 L-290.6,-74.5 L-287.3,-86.5 L-283.4,-98.3 L-279.1,-110.0 L-274.3,-121.4 L-269.1,-132.7 L-263.3,-143.7 L-257.2,-154.5 L-250.5,-165.0 L-243.5,-175.3 L-236.0,-185.2 L-228.1,-194.8 L-219.9,-204.1 L-211.2,-213.1 L-202.2,-221.6 L-192.8,-229.8 L-66.8,-79.7 L-70.1,-76.8 L-73.2,-73.9 L-76.2,-70.8 L-79.1,-67.5 L-81.8,-64.2 L-84.4,-60.8 L-86.8,-57.2 L-89.1,-53.6 L-91.3,-49.8 L-93.3,-46.0 L-95.1,-42.1 L-96.8,-38.1 L-98.3,-34.1 L-99.6,-30.0 L-100.7,-25.8 L-101.7,-21.6 L-102.5,-17.4 L-103.2,-13.1 L-103.6,-8.8 L-103.9,-4.5 L-104.0,-0.2 L-103.9,4.1 L-103.7,8.4 L-103.2,12.7 L-102.6,16.9 L-101.8,21.2 L-100.9,25.4 L-99.7,29.5 L-98.4,33.6 L-96.9,37.7 L-95.3,41.7 L-93.5,45.6 L-91.5,49.4 L-89.4,53.2 L-87.1,56.8 L-84.7,60.4 L-82.1,63.8 L-79.4,67.2 L-76.5,70.4 L-73.5,73.5Z"/>
+<path class="cave" d="M92.7,285.3 L86.7,287.2 L80.7,288.9 L74.6,290.6 L68.5,292.1 L62.4,293.4 L56.2,294.7 L50.0,295.8 L43.8,296.8 L37.6,297.6 L31.4,298.4 L25.1,298.9 L18.8,299.4 L12.6,299.7 L6.3,299.9 L0.0,300.0 L-6.3,299.9 L-12.6,299.7 L-18.8,299.4 L-25.1,298.9 L-31.4,298.4 L-37.6,297.6 L-43.8,296.8 L-50.0,295.8 L-56.2,294.7 L-62.4,293.4 L-68.5,292.1 L-74.6,290.6 L-80.7,288.9 L-86.7,287.2 L-92.7,285.3 L-236.7,507.5 L-224.4,520.2 L-211.3,531.9 L-197.3,542.0 L-182.3,550.0 L-166.3,555.5 L-149.6,558.5 L-132.5,559.0 L-115.1,557.4 L-97.7,554.3 L-80.6,550.3 L-63.8,546.3 L-47.5,542.8 L-31.5,540.5 L-15.7,539.8 L0.0,540.8 L15.8,543.5 L31.9,547.5 L48.3,552.3 L65.1,557.2 L82.2,561.5 L99.5,564.4 L116.8,565.4 L133.7,564.0 L150.1,560.0 L165.7,553.5 L180.5,544.6 L194.4,534.0 L207.4,522.1 L219.9,509.8 L232.1,497.7Z"/>
+<circle class="rim" r="104"/><circle class="pit" r="85"/><circle class="rock" r="35"/>
+<line class="bridge" x1="0.0" y1="-35.0" x2="0.0" y2="-104.0"/>
+<line class="bridge" x1="35.0" y1="-0.0" x2="104.0" y2="-0.0"/>
+<line class="bridge" x1="0.0" y1="35.0" x2="0.0" y2="104.0"/>
+<line class="bridge" x1="-35.0" y1="-0.0" x2="-104.0" y2="-0.0"/>
+<path class="hole" d="M-125.2,0.0 L-124.9,4.9 L-124.7,9.9 L-125.2,14.9 L-126.6,19.7 L-128.7,24.2 L-131.3,28.5 L-134.3,32.4 L-137.7,36.0 L-140.9,39.5 L-143.2,43.6 L-144.5,48.7 L-145.1,54.9 L-146.1,61.4 L-148.4,67.3 L-152.3,71.4 L-157.6,73.5 L-163.4,74.3 L-169.1,74.6 L-174.4,75.5 L-179.4,77.0 L-184.3,78.7 L-189.5,79.9 L-194.7,80.3 L-200.0,80.2 L-205.3,80.1 L-210.6,80.6 L-216.2,81.4 L-221.9,81.8 L-227.5,81.0 L-232.7,78.9 L-237.5,76.0 L-242.3,73.3 L-247.7,71.4 L-253.9,70.2 L-260.4,68.8 L-266.3,66.3 L-270.6,61.9 L-272.6,55.7 L-272.5,48.5 L-271.1,41.0 L-269.1,34.1 L-267.0,27.7 L-264.7,22.0 L-262.1,16.6 L-259.3,11.8 L-257.0,7.5 L-255.9,3.7 L-256.7,0.0 L-258.8,-3.9 L-261.3,-8.1 L-262.8,-12.5 L-262.8,-16.8 L-261.4,-20.8 L-259.6,-24.7 L-258.4,-28.8 L-258.3,-33.6 L-258.9,-39.3 L-259.2,-45.5 L-258.6,-51.4 L-256.7,-56.7 L-253.8,-61.4 L-250.4,-65.7 L-246.8,-70.1 L-243.1,-74.6 L-238.8,-78.7 L-233.9,-82.0 L-228.6,-84.2 L-223.0,-86.0 L-217.5,-88.2 L-212.0,-91.4 L-206.3,-95.5 L-200.0,-99.3 L-193.4,-101.4 L-186.7,-100.7 L-180.7,-96.9 L-175.6,-91.0 L-171.4,-84.3 L-167.8,-77.7 L-164.7,-71.7 L-161.9,-66.0 L-159.7,-60.3 L-158.0,-54.7 L-156.5,-49.6 L-154.7,-45.3 L-152.0,-42.1 L-148.5,-39.5 L-144.8,-36.9 L-141.8,-33.6 L-139.8,-29.7 L-138.7,-25.4 L-137.5,-21.2 L-135.3,-17.3 L-131.8,-13.6 L-128.3,-9.4 L-126.0,-4.8Z"/>
+<circle class="shop" cx="-200.0" cy="-0.0" r="26.0"/>
+<circle class="peak" cx="0.0" cy="-268.0" r="72"/>
+<ellipse class="peak" cx="250.0" cy="-0.0" rx="120" ry="185"/>
+<circle class="portal" cx="-62.6" cy="-152.7" r="10.0"/>
+<circle class="portal" cx="0.0" cy="-161.0" r="15.0"/>
+<circle class="portal" cx="62.6" cy="-152.7" r="10.0"/>
+<path class="wallHidden" d="M236.4,-184.7 L239.6,-180.5 L242.7,-176.3 L245.7,-172.1 L248.7,-167.8 L251.6,-163.4 L254.4,-159.0 L257.2,-154.5 L259.8,-150.0 L262.4,-145.4 L264.9,-140.8 L267.3,-136.2 L269.6,-131.5 L271.9,-126.8 L274.1,-122.0 L276.2,-117.2 L278.2,-112.4 L280.1,-107.5 L281.9,-102.6 L283.7,-97.7 L285.3,-92.7 L286.9,-87.7 L288.4,-82.7 L289.8,-77.6 L291.1,-72.6 L292.3,-67.5 L293.4,-62.4 L294.5,-57.2 L295.4,-52.1 L296.3,-46.9 L297.1,-41.8 L297.8,-36.6 L298.4,-31.4 L298.9,-26.1 L299.3,-20.9 L299.6,-15.7 L299.8,-10.5 L300.0,-5.2 L300.0,-0.0 L300.0,5.2 L299.8,10.5 L299.6,15.7 L299.3,20.9 L298.9,26.1 L298.4,31.4 L297.8,36.6 L297.1,41.8 L296.3,46.9 L295.4,52.1 L294.5,57.2 L293.4,62.4 L292.3,67.5 L291.1,72.6 L289.8,77.6 L288.4,82.7 L286.9,87.7 L285.3,92.7 L283.7,97.7 L281.9,102.6 L280.1,107.5 L278.2,112.4 L276.2,117.2 L274.1,122.0 L271.9,126.8 L269.6,131.5 L267.3,136.2 L264.9,140.8 L262.4,145.4 L259.8,150.0 L257.2,154.5 L254.4,159.0 L251.6,163.4 L248.7,167.8 L245.7,172.1 L242.7,176.3 L239.6,180.5 L236.4,184.7"/>
+<path class="wallBuild" d="M-212.1,212.1 L-215.8,208.4 L-219.4,204.6 L-222.9,200.7 L-226.4,196.8 L-229.8,192.8 L-233.1,188.8 L-236.4,184.7 L-239.6,180.5 L-242.7,176.3 L-245.7,172.1 L-248.7,167.8 L-251.6,163.4 L-254.4,159.0 L-257.2,154.5 L-259.8,150.0 L-262.4,145.4 L-264.9,140.8 L-267.3,136.2 L-269.6,131.5 L-271.9,126.8 L-274.1,122.0 L-276.2,117.2 L-278.2,112.4 L-280.1,107.5 L-281.9,102.6 L-283.7,97.7 L-285.3,92.7 L-286.9,87.7 L-288.4,82.7 L-289.8,77.6 L-291.1,72.6 L-292.3,67.5 L-293.4,62.4 L-294.5,57.2 L-295.4,52.1 L-296.3,46.9 L-297.1,41.8 L-297.8,36.6 L-298.4,31.4 L-298.9,26.1 L-299.3,20.9 L-299.6,15.7 L-299.8,10.5 L-300.0,5.2 L-300.0,-0.0 L-300.0,-5.2 L-299.8,-10.5 L-299.6,-15.7 L-299.3,-20.9 L-298.9,-26.1 L-298.4,-31.4 L-297.8,-36.6 L-297.1,-41.8 L-296.3,-46.9 L-295.4,-52.1 L-294.5,-57.2 L-293.4,-62.4 L-292.3,-67.5 L-291.1,-72.6 L-289.8,-77.6 L-288.4,-82.7 L-286.9,-87.7 L-285.3,-92.7 L-283.7,-97.7 L-281.9,-102.6 L-280.1,-107.5 L-278.2,-112.4 L-276.2,-117.2 L-274.1,-122.0 L-271.9,-126.8 L-269.6,-131.5 L-267.3,-136.2 L-264.9,-140.8 L-262.4,-145.4 L-259.8,-150.0 L-257.2,-154.5 L-254.4,-159.0 L-251.6,-163.4 L-248.7,-167.8 L-245.7,-172.1 L-242.7,-176.3 L-239.6,-180.5 L-236.4,-184.7 L-233.1,-188.8 L-229.8,-192.8 L-226.4,-196.8 L-222.9,-200.7 L-219.4,-204.6 L-215.8,-208.4 L-212.1,-212.1 L-208.4,-215.8 L-204.6,-219.4 L-200.7,-222.9 L-196.8,-226.4 L-192.8,-229.8 L-188.8,-233.1 L-184.7,-236.4 L-180.5,-239.6 L-176.3,-242.7 L-172.1,-245.7 L-167.8,-248.7 L-163.4,-251.6 L-159.0,-254.4 L-154.5,-257.2 L-150.0,-259.8 L-145.4,-262.4 L-140.8,-264.9 L-136.2,-267.3 L-131.5,-269.6 L-126.8,-271.9 L-122.0,-274.1 L-117.2,-276.2 L-112.4,-278.2 L-107.5,-280.1 L-102.6,-281.9 L-97.7,-283.7 L-92.7,-285.3 L-87.7,-286.9 L-82.7,-288.4 L-77.6,-289.8 L-72.6,-291.1 L-67.5,-292.3 L-62.4,-293.4 L-57.2,-294.5 L-52.1,-295.4 L-46.9,-296.3 L-41.8,-297.1 L-36.6,-297.8 L-31.4,-298.4 L-26.1,-298.9 L-20.9,-299.3 L-15.7,-299.6 L-10.5,-299.8 L-5.2,-300.0 L0.0,-300.0 L5.2,-300.0 L10.5,-299.8 L15.7,-299.6 L20.9,-299.3 L26.1,-298.9 L31.4,-298.4 L36.6,-297.8 L41.8,-297.1 L46.9,-296.3 L52.1,-295.4 L57.2,-294.5 L62.4,-293.4 L67.5,-292.3 L72.6,-291.1 L77.6,-289.8 L82.7,-288.4 L87.7,-286.9 L92.7,-285.3 L97.7,-283.7 L102.6,-281.9 L107.5,-280.1 L112.4,-278.2 L117.2,-276.2 L122.0,-274.1 L126.8,-271.9 L131.5,-269.6 L136.2,-267.3 L140.8,-264.9 L145.4,-262.4 L150.0,-259.8 L154.5,-257.2 L159.0,-254.4 L163.4,-251.6 L167.8,-248.7 L172.1,-245.7 L176.3,-242.7 L180.5,-239.6 L184.7,-236.4 L188.8,-233.1 L192.8,-229.8 L196.8,-226.4 L200.7,-222.9 L204.6,-219.4 L208.4,-215.8 L212.1,-212.1 L215.8,-208.4 L219.4,-204.6 L222.9,-200.7 L226.4,-196.8 L229.8,-192.8 L233.1,-188.8 L236.4,-184.7"/>
+<path class="wallBuild" d="M236.4,184.7 L233.1,188.8 L229.8,192.8 L226.4,196.8 L222.9,200.7 L219.4,204.6 L215.8,208.4 L212.1,212.1 L208.4,215.8 L204.6,219.4 L200.7,222.9 L196.8,226.4 L192.8,229.8 L188.8,233.1 L184.7,236.4 L180.5,239.6 L176.3,242.7 L172.1,245.7 L167.8,248.7 L163.4,251.6 L159.0,254.4 L154.5,257.2 L150.0,259.8 L145.4,262.4 L140.8,264.9 L136.2,267.3 L131.5,269.6 L126.8,271.9 L122.0,274.1 L117.2,276.2 L112.4,278.2 L107.5,280.1 L102.6,281.9 L97.7,283.7 L92.7,285.3"/>
+<path class="wallBuild" d="M-92.7,285.3 L-97.7,283.7 L-102.6,281.9 L-107.5,280.1 L-112.4,278.2 L-117.2,276.2 L-122.0,274.1 L-126.8,271.9 L-131.5,269.6 L-136.2,267.3 L-140.8,264.9 L-145.4,262.4 L-150.0,259.8 L-154.5,257.2 L-159.0,254.4 L-163.4,251.6 L-167.8,248.7 L-172.1,245.7 L-176.3,242.7 L-180.5,239.6 L-184.7,236.4 L-188.8,233.1 L-192.8,229.8 L-196.8,226.4 L-200.7,222.9 L-204.6,219.4 L-208.4,215.8 L-212.1,212.1"/>
+<path class="cliff" d="M106.2,262.7 L103.2,270.1 L94.9,263.6 L87.7,259.0 L84.3,265.8 L78.9,266.5 L71.0,257.7 L66.1,259.2 L63.3,270.1 L57.9,270.2 L51.5,264.8 L47.3,271.3 L43.1,278.4 L36.6,270.7 L30.5,263.6 L25.9,269.5 L20.9,271.3 L15.1,262.4 L10.1,262.8 L5.3,274.0 L0.0,274.9 L-5.1,268.0 L-10.5,272.1 L-16.1,278.9 L-20.9,271.1 L-25.3,262.4 L-30.9,267.5 L-36.6,270.7 L-40.6,262.6 L-45.7,261.8 L-53.0,272.5 L-58.7,273.9 L-62.3,265.8 L-68.1,267.3 L-75.3,273.2 L-78.7,265.9 L-81.2,256.1 L-88.0,259.9 L-95.0,263.9 L-98.0,256.5 L-102.7,254.1"/>
+<line class="walk" x1="0.0" y1="104.0" x2="0.0" y2="262.0"/>
+<line class="zoneLine" x1="68.6" y1="-78.8" x2="197.0" y2="-226.2"/>
+<line class="zoneLine" x1="-68.3" y1="-79.1" x2="-196.0" y2="-227.1"/>
+<line class="zoneLine" x1="73.9" y1="73.9" x2="212.1" y2="212.1"/>
+<line class="zoneLine" x1="-73.6" y1="74.2" x2="-211.2" y2="213.1"/>
+<text class="lbl" x="0.0" y="-205.0" text-anchor="middle">PORTALS</text>
+<text class="small" x="0.0" y="-320.0" text-anchor="middle">volcano</text>
+<text class="lbl" x="145.0" y="-0.0" text-anchor="middle">SLUG GROVE</text>
+<text class="small" x="310.1" y="-112.9" text-anchor="start">mountain hides the wall</text>
+<text class="lbl" x="-118.0" y="-0.0" text-anchor="middle">GUN SIDE</text>
+<text class="small" x="-200.0" y="-0.0" text-anchor="middle">hole + shop</text>
+<text class="lbl" x="0.0" y="160.0" text-anchor="middle">FAR SIDE</text>
+<text class="cave" x="0.0" y="410.0" text-anchor="middle">misty cave, look only</text>
+<text class="small" x="0.0" y="330.0" text-anchor="middle">mouth, about 185 wide</text>
+<text class="small" x="0.0" y="0.0" text-anchor="middle">spawn</text>
+<g class="scale"><line x1="210" y1="335" x2="310" y2="335"/><line x1="210" y1="330" x2="210" y2="340"/><line x1="310" y1="330" x2="310" y2="340"/><text x="260" y="328" text-anchor="middle">100 studs</text></g>
+</svg></div>
+      <div style="display:grid;gap:18px;min-width:0">
+        <p class="prose">This is the real map from <span class="num">layout.json</span>, to scale. The far side runs from <span class="num">135°</span> to <span class="num">225°</span>, straight across from the portals. Its rope bridge lands in the middle, so from spawn the bridge already points at the cave.</p>
+        <ul class="legend">
+          <li><span class="sw" style="background:var(--accent)"></span><span>Cliff edge, with a low rock lip and an invisible barrier</span></li>
+          <li><span class="sw box" style="background:var(--cave);outline:1px dashed var(--accent)"></span><span>The cave beyond the wall. Look only, out to about <span class="num">560</span> studs from the centre</span></li>
+          <li><span class="sw" style="background:var(--violet)"></span><span>Wall to build, about <span class="num">220°</span> of the circle and <span class="num">225</span> studs high</span></li>
+          <li><span class="sw" style="background:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 8px)"></span><span>Wall already hidden by the grove mountain (<span class="num">52°</span> to <span class="num">128°</span>)</span></li>
+        </ul>
+        <p class="note">The mountain and volcano outlines are approximate. The map shows option B's mouth, which is the one I recommend.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Side view along the far bridge</h2>
+    <p class="prose">Drawn to scale, from the Maelstrom out to the cave. The orange mark is a player. You walk about <span class="num">185</span> studs from the bridge to the edge. The ground drops away under the lip, and mist hides the bottom. Rock spires stand at a few depths, each layer fainter, so the cave reads as deep without being modelled to the end.</p>
+    <div class="figure"><svg viewBox="-10 -270 730 610" role="img" aria-labelledby="secTitle" class="section">
+<title id="secTitle">Side section along the far bridge, to scale</title>
+<path class="ceiling" d="M100.0,-225.0 L300.0,-225.0 L300.0,-150.0 L318.0,-150.0 L360.0,-205.0 L470.0,-240.0 L720.0,-255.0 L720.0,-270.0 L100.0,-270.0Z"/>
+<path class="wallSec" d="M300.0,-225.0 L312.0,-225.0 L318.0,-150.0 L300.0,-150.0Z"/>
+<path class="sil1" d="M350.0,340.0 L363.5,10.0 L374.0,-40.0 L387.5,-10.0 L398.0,50.0 L410.0,340.0Z"/>
+<path class="sil1" d="M392.0,-262.0 L404.0,-185.0 L410.0,-165.0 L416.0,-195.0 L425.0,-262.0Z"/>
+<path class="sil2" d="M423.0,340.0 L441.9,-45.0 L456.6,-95.0 L475.5,-65.0 L490.2,-5.0 L507.0,340.0Z"/>
+<path class="sil2" d="M469.8,-262.0 L486.6,-205.0 L495.0,-185.0 L503.4,-215.0 L516.0,-262.0Z"/>
+<path class="sil3" d="M524.0,340.0 L540.2,-10.0 L552.8,-60.0 L569.0,-30.0 L581.6,30.0 L596.0,340.0Z"/>
+<path class="sil3" d="M568.4,-262.0 L582.8,-220.0 L590.0,-200.0 L597.2,-230.0 L608.0,-262.0Z"/>
+<path class="sil3" d="M600.0,340.0 L622.5,-60.0 L640.0,-110.0 L662.5,-80.0 L680.0,-20.0 L700.0,340.0Z"/>
+<path class="sil3" d="M650.0,-262.0 L670.0,-230.0 L680.0,-210.0 L690.0,-240.0 L705.0,-262.0Z"/>
+<rect class="mist" x="296" y="-40.0" width="424" height="90" opacity="0.16"/>
+<rect class="mist" x="296" y="30.0" width="424" height="90" opacity="0.26"/>
+<rect class="mist" x="296" y="120.0" width="424" height="90" opacity="0.38"/>
+<rect class="mist" x="296" y="220.0" width="424" height="90" opacity="0.55"/>
+<path class="ground" d="M85.0,0.0 L288.0,0.0 L290.0,-3.0 L293.0,-2.0 L296.0,18.0 L291.0,60.0 L299.0,120.0 L293.0,200.0 L302.0,290.0 L300.0,340.0 L85.0,340.0Z"/>
+<path class="water" d="M-10.0,50.0 L85.0,50.0 L85.0,340.0 L-10.0,340.0Z"/>
+<path class="rockSec" d="M-10.0,-4.0 L35.0,-4.0 L28.0,20.0 L10.0,44.0 L-10.0,44.0Z"/>
+<path class="bridgeSec" d="M35.0,-4.0 Q60.0,3.0 85.0,0.0"/>
+<line class="barrier" x1="288.0" y1="-3.0" x2="288.0" y2="-63.0"/>
+<text class="small" x="282.0" y="-66.0" text-anchor="end">invisible barrier, 60 high</text>
+<rect class="player" x="279.0" y="-5.0" width="2" height="5"/>
+<text class="small" x="276.0" y="-30.0" text-anchor="end">player</text>
+<text class="small" x="180.0" y="-14.0" text-anchor="middle">far side floor, about 185 to walk</text>
+<text class="small" x="200.0" y="-213.0" text-anchor="middle">ceiling 225</text>
+<text class="small" x="322.0" y="-140.0">mouth, 150 high</text>
+<text class="cave" x="520.0" y="130.0" text-anchor="middle">mist hides the bottom</text>
+<text class="small" x="30.0" y="-100.0" text-anchor="middle">Maelstrom</text>
+<line class="tick" x1="0" y1="330.0" x2="0" y2="338.0"/><text class="tickLbl" x="0" y="326.0" text-anchor="middle">0</text>
+<line class="tick" x1="100" y1="330.0" x2="100" y2="338.0"/><text class="tickLbl" x="100" y="326.0" text-anchor="middle">100</text>
+<line class="tick" x1="200" y1="330.0" x2="200" y2="338.0"/><text class="tickLbl" x="200" y="326.0" text-anchor="middle">200</text>
+<line class="tick" x1="300" y1="330.0" x2="300" y2="338.0"/><text class="tickLbl" x="300" y="326.0" text-anchor="middle">300</text>
+<line class="tick" x1="400" y1="330.0" x2="400" y2="338.0"/><text class="tickLbl" x="400" y="326.0" text-anchor="middle">400</text>
+<line class="tick" x1="500" y1="330.0" x2="500" y2="338.0"/><text class="tickLbl" x="500" y="326.0" text-anchor="middle">500</text>
+<line class="tick" x1="600" y1="330.0" x2="600" y2="338.0"/><text class="tickLbl" x="600" y="326.0" text-anchor="middle">600</text>
+<line class="tick" x1="700" y1="330.0" x2="700" y2="338.0"/><text class="tickLbl" x="700" y="326.0" text-anchor="middle">700</text>
+</svg></div>
+  </section>
+
+  <section>
+    <h2>The cave: three shapes</h2>
+    <p class="prose">These are rough sketches of the view from the cliff edge, to compare shapes. They are not the art. After you pick one, I'll make it as a proper 3D study in the asset library with the approved rock, crystals and mist, and you'll choose again before anything goes into Roblox.</p>
+    <div class="options">
+      <article class="opt">
+        <canvas id="caveA" width="480" height="300" aria-label="Sketch of option A: a wide opening with no wall across the far side"></canvas>
+        <div class="tag"><h3>A · Wide opening</h3></div>
+        <div style="display:grid;gap:8px">
+          <p>No wall across the far side. The cliff runs the full <span class="num">90°</span> and the cavern simply carries on into mist, with the ceiling continuing over it.</p>
+          <dl><dt>Feel</dt><dd>The biggest, most open view</dd><dt>Cost</dt><dd>Highest. A <span class="num">470</span>-stud-wide view needs a lot of cave behind it</dd></dl>
+        </div>
+      </article>
+      <article class="opt">
+        <canvas id="caveB" width="480" height="300" aria-label="Sketch of option B: a great arched cave mouth in the wall"></canvas>
+        <div class="tag"><h3>B · Great mouth</h3><span class="pill">Recommended</span></div>
+        <div style="display:grid;gap:8px">
+          <p>The wall stays at the sides. One huge rough arch, about <span class="num">185</span> wide and <span class="num">150</span> high, opens on the bridge's line. You stand at the threshold and look down into a misty cave beyond.</p>
+          <dl><dt>Feel</dt><dd>Reads at once as a cave, framed like a picture</dd><dt>Cost</dt><dd>Lowest. The arch limits how much cave has to exist</dd></dl>
+        </div>
+      </article>
+      <article class="opt">
+        <canvas id="caveC" width="480" height="300" aria-label="Sketch of option C: a ledge overlooking a chasm with a cave mouth in the far wall"></canvas>
+        <div class="tag"><h3>C · Overlook across a chasm</h3></div>
+        <div style="display:grid;gap:8px">
+          <p>The cliff comes in to about <span class="num">230</span> studs. Mist rises from a chasm between you and the wall, and the cave mouth sits in the far wall, across the gap.</p>
+          <dl><dt>Feel</dt><dd>More distant and mysterious, with less floor</dd><dt>Cost</dt><dd>Medium. The gap keeps close-up views away from the cave</dd></dl>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>The wall: three shapes</h2>
+    <p class="prose">The wall is the one thing visible from everywhere, so it should sit back and frame the zones, not compete with them. All three start from the approved rock wall v6: its rounded masses, ink fractures, carved glowing cracks and moss, scaled up to the cavern. Each zone gets its own dressing at the foot of the wall (ember tones by the portals, moss and mushrooms by the grove, plum roots and bead vines on the gun side), and the top joins the ceiling's hanging rock curtain.</p>
+    <div class="options">
+      <article class="opt">
+        <canvas id="wallA" width="480" height="300" aria-label="Sketch of wall option 1: stacked rounded boulders"></canvas>
+        <div class="tag"><h3>1 · Stacked masses</h3><span class="pill">Recommended</span></div>
+        <div style="display:grid;gap:8px">
+          <p>The approved wall's big rounded masses, stacked to the ceiling, with crystal clusters and cupped-shelf mushrooms in the hollows. This is the closest to work you've already approved.</p>
+        </div>
+      </article>
+      <article class="opt">
+        <canvas id="wallB" width="480" height="300" aria-label="Sketch of wall option 2: tall rock buttresses with glowing recesses"></canvas>
+        <div class="tag"><h3>2 · Buttresses</h3></div>
+        <div style="display:grid;gap:8px">
+          <p>Tall rounded rock columns rising into the ceiling, with deep recesses between them glowing with crystals. Gives the room a rhythm and makes it feel taller.</p>
+        </div>
+      </article>
+      <article class="opt">
+        <canvas id="wallC" width="480" height="300" aria-label="Sketch of wall option 3: rock mostly covered by roots, mushrooms and vines"></canvas>
+        <div class="tag"><h3>3 · Overgrown</h3></div>
+        <div style="display:grid;gap:8px">
+          <p>The rock mostly hidden by giant roots, sideways mushrooms and vines climbing to the ceiling, like the gun side's hole wall but all the way round. The richest, and the heaviest for phones.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rules I'm carrying over</h2>
+    <ul class="rules">
+      <li><b>Can't go in</b>An invisible barrier <span class="num">60</span> studs high along the edge, as round the gun side's hole, so nobody lands in the cave and sees it up close. The camera and wall-runs don't catch on it.</li>
+      <li><b>Reuse what's approved</b>Rock wall v6, the Cyan cluster and Violet spire crystals, giant mushroom v2, cupped shelves, bead vines, and the hole's five drifting mist layers. Only the cliff, arch and spires are new.</li>
+      <li><b>Mist stays local</b>The style guide keeps fog and exposure the same in every zone, so the mist lives inside the cave and the drop. It never fogs the hub.</li>
+      <li><b>No horizontal strata</b>You turned down carved bands across the rock wall before, so the tall wall avoids rows and rings of lines.</li>
+      <li><b>Far side ground</b>It's still block-out. My proposal is pale, weathered stone with damp moss in the hollows and a few small crystals near the edge, kept sparse so the view is the star.</li>
+      <li><b>Phones</b>The lobby is already over budget, at about <span class="num">1.3M</span> triangles against <span class="num">200k</span>. I'll aim for under <span class="num">40k</span> for the cave and <span class="num">120k</span> for the whole wall, by repeating a few wall pieces round the circle.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What I need from you</h2>
+    <ol class="asks prose">
+      <li>Which cave: <b>A</b> wide opening, <b>B</b> great mouth, or <b>C</b> overlook across a chasm?</li>
+      <li>Which wall: <b>1</b> stacked masses, <b>2</b> buttresses, or <b>3</b> overgrown? And should each zone dress its stretch of wall in its own colours?</li>
+      <li>Is a barrier right, or should players be able to fall off and respawn, like the Maelstrom?</li>
+      <li>Do you have reference pictures for the misty cave? If not, I'll work from the Slugterra cavern research.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+  function setup(id) {
+    const cv = document.getElementById(id); const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = 480 * dpr; cv.height = 300 * dpr; const g = cv.getContext("2d"); g.scale(dpr, dpr); return g;
+  }
+  const INK = "#07080d";
+  function sky(g, top, bottom) { const gr = g.createLinearGradient(0, 0, 0, 300); gr.addColorStop(0, top); gr.addColorStop(1, bottom); g.fillStyle = gr; g.fillRect(0, 0, 480, 300); }
+  function mist(g, y, h, a) { const gr = g.createLinearGradient(0, y - h, 0, y + h); gr.addColorStop(0, "rgba(170,205,220,0)"); gr.addColorStop(.5, `rgba(170,205,220,${a})`); gr.addColorStop(1, "rgba(170,205,220,0)"); g.fillStyle = gr; g.fillRect(0, y - h, 480, h * 2); }
+  function spires(g, r, x0, x1, base, hMin, hMax, color, ink) {
+    let x = x0;
+    while (x < x1) {
+      const w = 18 + r() * 34, h = hMin + r() * (hMax - hMin);
+      g.beginPath(); g.moveTo(x, base); g.lineTo(x + w * .3, base - h * .7); g.lineTo(x + w * .45, base - h); g.lineTo(x + w * .62, base - h * .78); g.lineTo(x + w, base); g.closePath();
+      g.fillStyle = color; g.fill(); if (ink) { g.strokeStyle = ink; g.lineWidth = 1.2; g.stroke(); }
+      x += w * (.6 + r() * .7);
+    }
+  }
+  function drips(g, r, x0, x1, top, hMin, hMax, color, ink) {
+    let x = x0;
+    while (x < x1) {
+      const w = 10 + r() * 22, h = hMin + r() * (hMax - hMin);
+      g.beginPath(); g.moveTo(x, top); g.lineTo(x + w * .5, top + h); g.lineTo(x + w, top); g.closePath();
+      g.fillStyle = color; g.fill(); if (ink) { g.strokeStyle = ink; g.lineWidth = 1; g.stroke(); }
+      x += w * (.7 + r() * .8);
+    }
+  }
+  function glows(g, r, n, x0, x1, y0, y1, colors, size) {
+    for (let i = 0; i < n; i++) {
+      const x = x0 + r() * (x1 - x0), y = y0 + r() * (y1 - y0), c = colors[i % colors.length], s = size * (.6 + r() * .8);
+      const gr = g.createRadialGradient(x, y, 0, x, y, s * 3); gr.addColorStop(0, c); gr.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = gr; g.fillRect(x - s * 3, y - s * 3, s * 6, s * 6);
+    }
+  }
+  function depthLayers(g, r, x0, x1, base) {
+    spires(g, r, x0 - 20, x1, base - 40, 60, 150, "#36506a"); mist(g, base - 60, 40, .35);
+    glows(g, r, 6, x0, x1, base - 120, base - 50, ["rgba(130,230,240,.55)", "rgba(190,150,255,.5)"], 2.2);
+    spires(g, r, x0 - 30, x1, base - 10, 70, 170, "#263a50", "rgba(7,8,13,.35)"); mist(g, base - 20, 34, .4);
+    spires(g, r, x0 - 30, x1, base + 25, 90, 190, "#1a2738", INK); mist(g, base + 30, 40, .5);
+  }
+  function cliffFront(g, r) {
+    g.beginPath(); g.moveTo(0, 300); g.lineTo(0, 262);
+    for (let x = 0; x <= 480; x += 24) g.lineTo(x, 258 + r() * 10 - (x > 160 && x < 320 ? 4 : 0));
+    g.lineTo(480, 300); g.closePath(); g.fillStyle = "#3d3a46"; g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+    g.fillStyle = "rgba(120,170,120,.45)"; for (let x = 10; x < 480; x += 40 + r() * 30) { g.beginPath(); g.ellipse(x, 264, 14, 3, 0, 0, Math.PI * 2); g.fill(); }
+    // player for scale
+    g.fillStyle = "#e58b5a"; g.fillRect(232, 238, 5, 18);
+  }
+
+  function caveA() {
+    const g = setup("caveA"), r = rng(11);
+    sky(g, "#0d1420", "#3b5266");
+    g.fillStyle = "#151a24"; g.fillRect(0, 0, 480, 26); drips(g, r, -10, 490, 24, 10, 46, "#151a24", INK);
+    depthLayers(g, r, 0, 480, 230); cliffFront(g, r);
+  }
+  function caveB() {
+    const g = setup("caveB"), r = rng(23);
+    sky(g, "#0e1522", "#3f5869"); depthLayers(g, r, 90, 390, 230);
+    g.fillStyle = "#2a2733";
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(480, 0); g.lineTo(480, 300); g.lineTo(392, 300); g.lineTo(386, 220); g.lineTo(392, 150); g.lineTo(372, 90); g.lineTo(340, 52); g.lineTo(296, 36); g.lineTo(240, 30); g.lineTo(186, 38); g.lineTo(140, 58); g.lineTo(108, 96); g.lineTo(92, 150); g.lineTo(96, 220); g.lineTo(88, 300); g.lineTo(0, 300); g.closePath();
+    g.fill(); g.strokeStyle = INK; g.lineWidth = 2.4; g.stroke();
+    drips(g, r, 150, 330, 34, 8, 30, "#2a2733", INK);
+    // masses on the frame
+    g.strokeStyle = "rgba(7,8,13,.8)"; g.lineWidth = 1.4;
+    [[40, 60, 34], [36, 170, 40], [54, 252, 30], [440, 70, 36], [446, 180, 40], [428, 256, 30], [240, 12, 30], [130, 18, 28], [350, 16, 30]].forEach(([x, y, s]) => { g.beginPath(); g.ellipse(x, y, s, s * .8, r(), 0, Math.PI * 2); g.stroke(); });
+    glows(g, r, 5, 20, 80, 90, 280, ["rgba(130,230,240,.6)", "rgba(190,150,255,.55)"], 3);
+    glows(g, r, 5, 400, 470, 90, 280, ["rgba(190,150,255,.55)", "rgba(130,230,240,.6)"], 3);
+    cliffFront(g, r);
+  }
+  function caveC() {
+    const g = setup("caveC"), r = rng(37);
+    sky(g, "#0c111b", "#2c3d4e");
+    g.fillStyle = "#24222d"; g.fillRect(0, 0, 480, 210);
+    g.save(); g.beginPath(); g.moveTo(170, 210); g.lineTo(168, 140); g.lineTo(190, 104); g.lineTo(240, 92); g.lineTo(292, 104); g.lineTo(312, 140); g.lineTo(310, 210); g.closePath(); g.clip();
+    sky(g, "#101a28", "#4c6676"); depthLayers(g, r, 170, 310, 200); g.restore();
+    g.beginPath(); g.moveTo(170, 210); g.lineTo(168, 140); g.lineTo(190, 104); g.lineTo(240, 92); g.lineTo(292, 104); g.lineTo(312, 140); g.lineTo(310, 210); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+    glows(g, r, 10, 0, 480, 40, 190, ["rgba(130,230,240,.5)", "rgba(190,150,255,.45)"], 2.4);
+    mist(g, 214, 34, .7); mist(g, 236, 26, .5);
+    g.beginPath(); g.moveTo(0, 300); g.lineTo(0, 248); for (let x = 0; x <= 480; x += 20) g.lineTo(x, 250 + r() * 8); g.lineTo(480, 300); g.closePath();
+    g.fillStyle = "#3d3a46"; g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+    g.fillStyle = "#e58b5a"; g.fillRect(232, 232, 4, 15);
+  }
+
+  function rockBase(g, r) {
+    sky(g, "#1c1a24", "#2a2733");
+    g.fillStyle = "#14121a"; g.fillRect(0, 0, 480, 22); drips(g, r, -10, 490, 20, 8, 34, "#14121a", INK);
+    g.fillStyle = "#2f3a2c"; g.fillRect(0, 270, 480, 30);
+  }
+  function wallA() {
+    const g = setup("wallA"), r = rng(5); rockBase(g, r);
+    for (let row = 0; row < 6; row++) for (let i = 0; i < 7; i++) {
+      const x = i * 76 + (row % 2) * 38 + r() * 16 - 8, y = 255 - row * 44 + r() * 8, s = 30 + r() * 14;
+      g.beginPath(); g.ellipse(x, y, s * 1.15, s * .82, r() * .6 - .3, 0, Math.PI * 2);
+      g.fillStyle = ["#4a4554", "#433f4d", "#3c3846"][(row + i) % 3]; g.fill(); g.strokeStyle = INK; g.lineWidth = 1.6; g.stroke();
+      if (r() < .35) { g.strokeStyle = "rgba(130,230,240,.75)"; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x - s * .4, y - s * .2); g.lineTo(x, y + s * .1); g.lineTo(x + s * .3, y - s * .1); g.stroke(); }
+      if (r() < .3) { g.fillStyle = "rgba(110,160,100,.6)"; g.beginPath(); g.ellipse(x, y - s * .7, s * .7, s * .16, 0, 0, Math.PI * 2); g.fill(); }
+    }
+    glows(g, r, 9, 10, 470, 60, 260, ["rgba(130,230,240,.7)", "rgba(190,150,255,.65)"], 3);
+    g.fillStyle = "#e58b5a"; g.fillRect(236, 252, 4, 16);
+  }
+  function wallB() {
+    const g = setup("wallB"), r = rng(9); rockBase(g, r);
+    g.fillStyle = "#18161f"; g.fillRect(0, 20, 480, 252);
+    glows(g, r, 16, 0, 480, 60, 260, ["rgba(130,230,240,.75)", "rgba(190,150,255,.7)"], 3.4);
+    for (let x = -10; x < 490; x += 62 + r() * 16) {
+      const w = 38 + r() * 16;
+      g.beginPath(); g.moveTo(x, 272); g.bezierCurveTo(x - 6, 180, x + 4, 90, x + w * .2, 22); g.lineTo(x + w * .8, 22); g.bezierCurveTo(x + w + 2, 90, x + w + 8, 180, x + w, 272); g.closePath();
+      g.fillStyle = "#46414f"; g.fill(); g.strokeStyle = INK; g.lineWidth = 1.8; g.stroke();
+      g.strokeStyle = "rgba(7,8,13,.55)"; g.lineWidth = 1; g.beginPath(); g.moveTo(x + w * .45, 40); g.lineTo(x + w * .52, 140); g.lineTo(x + w * .4, 230); g.stroke();
+    }
+    g.fillStyle = "#e58b5a"; g.fillRect(236, 252, 4, 16);
+  }
+  function wallC() {
+    const g = setup("wallC"), r = rng(17); rockBase(g, r);
+    for (let i = 0; i < 9; i++) { const x = i * 58 + r() * 20; g.beginPath(); g.ellipse(x, 140 + r() * 60, 44, 110, 0, 0, Math.PI * 2); g.fillStyle = "#3c3846"; g.fill(); }
+    for (let i = 0; i < 6; i++) {
+      let x = r() * 480, y = 272; g.beginPath(); g.moveTo(x, y);
+      for (let k = 0; k < 6; k++) { x += r() * 50 - 25; y -= 40; g.lineTo(x, y); }
+      g.strokeStyle = "#5e3d5a"; g.lineWidth = 9; g.lineCap = "round"; g.lineJoin = "round"; g.stroke(); g.strokeStyle = INK; g.lineWidth = 1.2; g.stroke();
+    }
+    for (let i = 0; i < 7; i++) { const x = 30 + r() * 420, y = 70 + r() * 170, s = 16 + r() * 12;
+      g.strokeStyle = "#cbbfa8"; g.lineWidth = 3; g.beginPath(); g.moveTo(x - (r() < .5 ? 20 : -20), y + 10); g.quadraticCurveTo(x, y + 8, x, y); g.stroke();
+      g.beginPath(); g.ellipse(x, y, s, s * .4, 0, Math.PI, 0); g.fillStyle = ["#5a9aa6", "#8a6ac0", "#5aa07a"][i % 3]; g.fill(); g.strokeStyle = INK; g.lineWidth = 1.4; g.stroke(); }
+    for (let x = 12; x < 480; x += 26 + r() * 20) { const len = 40 + r() * 120; g.strokeStyle = "rgba(120,200,190,.7)"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, 22); g.quadraticCurveTo(x + 8, 22 + len / 2, x - 2, 22 + len); g.stroke();
+      for (let b = 30; b < len; b += 18) { g.fillStyle = "rgba(160,240,230,.8)"; g.beginPath(); g.arc(x + 3, 22 + b, 1.6, 0, Math.PI * 2); g.fill(); } }
+    glows(g, r, 8, 10, 470, 80, 260, ["rgba(130,230,240,.6)", "rgba(190,150,255,.6)"], 3);
+    g.fillStyle = "#e58b5a"; g.fillRect(236, 252, 4, 16);
+  }
+  [caveA, caveB, caveC, wallA, wallB, wallC].forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
+  void reduce;
+})();
+</script>

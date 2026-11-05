@@ -6013,7 +6013,7 @@ vec3 innerFloorPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   return c;
 }
 #endif
-#if ASSET == 15
+#if ASSET >= 15
 // ---------- 15: the whole canopy hole, everything chosen so far in place. 1 unit = 5 studs. The hole's outline is the
 // lobby's own (experiments/lobby/scale/shared/gun_side.json), t = 0 toward the hub at -z; the canopy mushrooms stand at the
 // layout's sites. Spore velvet round the rim; the outer wall with winding and braided plum roots, bead vines, cupped
@@ -6581,6 +6581,16 @@ void chPod(int i, out vec3 c, out vec3 r) {
   // Forward toward the path so the back pods stay on the platform (owner).
   c.z -= 0.8;
 }
+// The main pod reaches back over the platform (owner, 2026-11-04: fill out the back of the shop), stretched behind its
+// middle so its front, door, sign and windows stay where they are.
+const float CH_POD_BACK = 1.6;
+vec3 chPodLocal(int i, vec3 p, out vec3 r) {
+  vec3 c;
+  chPod(i, c, r);
+  vec3 q = p - c;
+  if (i == 0 && uPlaza < 0.5) q.z -= clamp(q.z, 0.0, CH_POD_BACK);
+  return q;
+}
 const vec3 CH_CAP = vec3(0.0, 7.3, 0.7);
 // The sign's face looks about 17 degrees up (owner, 2026-11-04: it pointed down). Its bottom edge sits just off the main
 // pod above the door; the block behind it runs back into the pod, so it stays attached as the pod curves away.
@@ -6655,9 +6665,10 @@ void chShopBody(vec3 p, inout vec2 res) {
     vec3 c, r;
     chPod(i, c, r);
     if (c.y < -5.0) continue;
+    vec3 q = chPodLocal(i, p, r);
     // A gentle ripple round each pod, faded out toward its top and bottom, where its seven lobes would meet in a star.
-    float wave = 0.02*sin(atan(p.z - c.z, p.x - c.x)*7.0)*smoothstep(0.25, 0.7, length((p.xz - c.xz)/r.xz));
-    pods = smin(pods, sdEll(p - c, r) + wave, 0.15);
+    float wave = 0.02*sin(atan(q.z, q.x)*7.0)*smoothstep(0.25, 0.7, length(q.xz/r.xz));
+    pods = smin(pods, sdEll(q, r) + wave, 0.15);
   }
   // Seams round each pod are painted; the base sits into the platform.
   pods = max(pods, -p.y - 0.05);
@@ -7053,11 +7064,13 @@ float chMist(vec3 q) {
 // gun side, -135 to -40 degrees and 102 to 302 studs from the hub. World offset from the hub, in studs: the hole's centre
 // is at (-200, 0) and the concept's -z points at the hub.
 vec2 chWorldXZ(vec3 p) { return vec2(-200.0 - 5.0*p.z, 5.0*p.x); }
+// The gun side's share of the lobby floor. It starts where the hub's rim art ends (104 studs out), so only the path
+// crosses that ring, and stops on the lines between zones, under the middle of their slab strips (owner, 2026-11-04).
 float chWedge(vec3 p) {
   vec2 w = chWorldXZ(p);
   float rw = length(w), aw = degrees(atan(w.x, -w.y));
-  float da = max(-135.5 - aw, aw + 39.5);
-  return max(max(102.0 - rw, rw - 302.0)/5.0, radians(da)*rw/5.0);
+  float da = max(-135.25 - aw, aw + 40.8);
+  return max(max(104.5 - rw, rw - 302.0)/5.0, radians(da)*rw/5.0);
 }
 // The knoll, the hole's walls, its floor and the spire, as one rock. Away from the hole the rock is only a few studs thick.
 vec2 chTerrain(vec3 p) {
@@ -7333,20 +7346,20 @@ void chSpireGame(vec3 p, inout vec2 res) {
   }
 }
 
-// The flat stone slab between lobby zones (owner, 2026-11-04: flat and a bit wider): a low grey flagstone with an
-// uneven rounded outline and a gently bumped top; its cracks are painted. Origin at the foot, about 8.5 studs along x, 6.5
-// across z and 1 thick.
+// The stone strip between lobby zones (owner, 2026-11-04: clean, connected dark slabs lying on the boundary, not loose
+// grey flagstones): a row of four flush slabs along z with tight joints and a small bevel. HubArt lays the rows end to
+// end along each line. Origin at the foot of the row's middle; 8 studs across, 24.75 along, its top 0.3 studs up.
+const float ZS_PITCH = 1.2375, ZS_JOINT = 0.04, ZS_HALF = 0.8, ZS_TOP = 0.06, ZS_BEVEL = 0.025;
+float chZoneSlabIndex(vec3 p) { return clamp(floor(p.z/ZS_PITCH + 2.0), 0.0, 3.0); }
 vec2 chZoneSlab(vec3 p) {
-  vec3 q = p - vec3(0.0, 0.1, 0.0);
-  float a = atan(q.z, q.x);
-  vec2 hb = vec2(0.85, 0.65)*(1.0 + 0.05*sin(a*3.0 + 1.3) + 0.035*sin(a*5.0 + 0.4));
-  vec2 e = abs(q.xz) - (hb - 0.22);
-  float d2 = length(max(e, 0.0)) + min(max(e.x, e.y), 0.0) - 0.22;
-  float top = 0.1 + 0.014*(noise3(vec3(q.xz*3.0, 1.0)) - 0.5) - 0.04*smoothstep(-0.12, 0.0, d2);
-  vec2 w = vec2(d2, q.y > 0.0 ? q.y - top : -q.y - 0.1);
-  float d = min(max(w.x, w.y), 0.0) + length(max(w, 0.0));
-  d += 0.008*(noise3(q*12.0) - 0.5);
-  return vec2(d*0.8, q.y > top - 0.03 ? 114.0 : 115.0);
+  float d = 1e3, k0 = chZoneSlabIndex(p);
+  vec3 b = vec3(ZS_HALF, (ZS_TOP + 0.12)*0.5, (ZS_PITCH - ZS_JOINT)*0.5) - ZS_BEVEL;
+  for (int j = -1; j <= 1; j++) {
+    float k = clamp(k0 + float(j), 0.0, 3.0);
+    d = min(d, sdBox(p - vec3(0.0, (ZS_TOP - 0.12)*0.5, (k - 1.5)*ZS_PITCH), b) - ZS_BEVEL);
+  }
+  d += 0.002*(noise3(p*9.0) - 0.5);
+  return vec2(d, p.y > ZS_TOP - 0.015 ? 125.0 : 126.0);
 }
 
 vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
@@ -7428,6 +7441,18 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
     emit = c*0.05;
     return c;
   }
+  if (id > 124.5 && id < 126.5) {
+    // The zone strip: dark slate, each slab its own shade, finely grained, a touch lighter where its bevel catches the
+    // light; the sides darker still. No moss and no cracks, so the strip reads clean.
+    float k = chZoneSlabIndex(p);
+    vec3 c = mix(vec3(0.034, 0.034, 0.042), vec3(0.068, 0.066, 0.08), 0.2 + 0.6*hash1(k*7.3 + 1.0) + 0.2*(g - 0.75));
+    c *= 0.9 + 0.16*(noise3(p*16.0) + 0.5*noise3(p*37.0) - 0.75);
+    c *= 1.0 + 0.25*smoothstep(0.7, 0.85, noise3(p*2.6 + 3.0));
+    if (id > 125.5) c *= 0.6;
+    else c *= 1.0 + 0.35*smoothstep(0.02, 0.15, 1.0 - n.y);
+    emit = c*0.06;
+    return c;
+  }
   if (id > 116.5 && id < 117.5) {
     // Pod shells: pale cream, smooth, with a soft seam band round each pod and a cool tint from the cap's glow above.
     // Smooth pale shell: a soft mottle, lighter toward the top, a cool tint from the cap above. No painted lines.
@@ -7440,7 +7465,7 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
       vec3 pc, pr;
       chPod(i, pc, pr);
       if (pc.y < -5.0) continue;
-      float d = sdEll(p - pc, pr);
+      float d = sdEll(chPodLocal(i, p, pr), pr);
       if (d < near0) { near1 = near0; near0 = d; } else if (d < near1) near1 = d;
     }
     float seam = (1.0 - smoothstep(0.018, 0.04, near1 - near0))*(1.0 - smoothstep(0.15, 0.3, near1));
@@ -7516,6 +7541,685 @@ vec3 canopyHolePaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
   return c*(0.6 + 0.4*deep);
 }
 #endif
+#if ASSET == 16 || ASSET == 17
+// ---------- 16: the far side's cave (owner, 2026-11-04: a great mouth, and quite big; an invisible barrier over the whole
+// opening; mushroom depths; the wall a mix of broken blocks and fused crags, with more texture, and our own crystals).
+// 1 unit = 5 studs, origin the hub's centre, +z the far side (180 degrees). The cavern wall stands at 60 (300 studs). One even
+// arch on the bridge's line, 56 wide and 37 high (280 by 185 studs). The far side's stone floor ends in a cliff at its
+// threshold, and the look-only cave beyond drops away into the canopy hole's layered mist. uPlaza: 0 bare spires, 1 crystal
+// spires, 2 mushroom depths, 3 and 4 option C cut away, 5 the wall alone. 17: the cave spire on its own (new asset).
+// Ids 130 cave and ceiling rock, 131 far-side floor, 132 spire, 134 wall blocks, 135 and 136 our cyan and violet crystals
+// (the fraction is height up the crystal), 137 wall crags; 103-109 are the canopy hole's own pieces.
+const float FC_WALL = 60.0, FC_CEIL = 45.0, FC_HALF = 28.0, FC_TOP = 37.0, FC_EDGE = 57.6, FC_PIT = 17.0;
+const float FC_S = 2.0;      // the approved cracks are drawn for rocks about 2.5 studs across; here they're bigger
+const float FC_DEEP = -45.0; // spires start here, well under the mist
+vec2 map(vec3 p);
+
+// The great mouth: an even, slightly squared arch in the wall's face, open below the floor so the cliff drops straight into
+// the cave. Negative inside the opening.
+float fcArch(vec3 p, float hw, float top) {
+  float u = abs(p.x), v = max(p.y, 0.0);
+  float e = pow(pow(u/hw, 2.4) + pow(v/top, 2.4), 1.0/2.4);
+  return (e - 1.0)*min(hw, top)*0.8;
+}
+float fcMouth(vec3 p) { return fcArch(p, FC_HALF, FC_TOP) + 0.35*sin(p.y*0.4 + 1.0)*sin(p.x*0.25); }
+// The cave hall beyond: wider and taller than the mouth, ending far out in the mist.
+float fcHallW(float z) { return mix(FC_HALF + 1.0, 52.0, clamp((z - 62.0)/40.0, 0.0, 1.0)); }
+float fcHallTop(float z) { return mix(FC_TOP + 1.0, 56.0, clamp((z - 62.0)/40.0, 0.0, 1.0)); }
+float fcHall(vec3 p) {
+  float d = fcArch(p, fcHallW(p.z), fcHallTop(p.z));
+  d = max(d, 62.0 - p.z);
+  d = max(d, p.z - 136.0 + 0.012*p.x*p.x);
+  d = max(d, -60.0 - p.y);
+  float fold = abs(noise3(p*vec3(0.11, 0.05, 0.11)) - 0.5);
+  // Scaled down: the folds bend the field steeply, and a full-size step would skip through them.
+  return (d + 3.0*(noise3(p*0.08) - 0.5) - 3.2*smoothstep(0.0, 0.18, fold) + 1.2*(noise3(p*0.3) - 0.5))*0.4;
+}
+// Everywhere the cave is open: the mouth through the wall and the hall beyond.
+float fcCavity(vec3 p) { return min(max(max(fcMouth(p), -60.0 - p.y), max(48.0 - p.z, p.z - 70.0)), fcHall(p)); }
+bool fcWallOnly() { return uPlaza > 4.5; }
+// Negative where a cutaway view takes the scene away: the cave's roof, or its +x half.
+float fcClipO(vec3 p) {
+  if (uPlaza < 2.5 || uPlaza > 4.5) return 1e5;
+  if (uPlaza < 3.5) return min(max(30.0 - p.y, 66.0 - p.z), 60.0 - p.y);
+  return -p.x;
+}
+
+// The far side's floor: broken plates of weathered stone, damp moss in the hollows between them.
+vec2 fcPlates(vec2 x, out float cid) {
+  vec2 i = floor(x), f = fract(x);
+  float d1 = 8.0, d2 = 8.0;
+  vec2 best = i;
+  for (int a = -1; a <= 1; a++) for (int b = -1; b <= 1; b++) {
+    vec2 g = vec2(float(a), float(b));
+    vec2 rr = g + 0.15 + 0.7*chHash22(i + g) - f;
+    float d = dot(rr, rr);
+    if (d < d1) { d2 = d1; d1 = d; best = i + g; } else if (d < d2) d2 = d;
+  }
+  cid = best.x*7.13 + best.y*13.37;
+  return vec2(sqrt(d2) - sqrt(d1), sqrt(d1));
+}
+// How far the floor reaches along this direction: to the cliff inside the mouth, under the wall everywhere else. Below the
+// surface the cliff face is broken up and undercut a little as it drops.
+float fcEdge(vec3 p) {
+  float inMouth = p.z > 0.0 && !fcWallOnly() ? 1.0 - smoothstep(FC_HALF - 4.0, FC_HALF + 2.0, abs(p.x)) : 0.0;
+  float lip = FC_EDGE + 0.8*sin(p.x*0.45) + 0.5*sin(p.x*1.3 + 2.0);
+  float face = smoothstep(-0.5, -4.0, p.y)*(1.6*(noise3(vec3(p.x*0.18, p.y*0.1, 3.0)) - 0.5) - min(-p.y*0.012, 0.8));
+  return mix(FC_WALL + 6.0, lip + face, inMouth);
+}
+float fcGroundH(vec2 xz) {
+  float cid;
+  // A low broken rim, up to about 2 studs, along the cliff edge inside the mouth.
+  vec3 at = vec3(xz.x, 0.0, xz.y);
+  float rim = xz.y > 40.0 ? smoothstep(4.5, 0.4, fcEdge(at) - length(xz))*(1.0 - smoothstep(FC_HALF - 6.0, FC_HALF - 2.0, abs(xz.x))) : 0.0;
+  float rimH = rim*(0.12 + 0.25*smoothstep(0.35, 0.7, noise3(vec3(xz*0.45, 11.0))));
+  vec2 e = fcPlates(xz*0.22, cid);
+  return 0.06 + 0.035*smoothstep(0.0, 0.1, e.x) + 0.18*noise3(vec3(xz*0.12, 3.0)) + 0.05*noise3(vec3(xz*0.5, 7.0)) + rimH;
+}
+
+// Our own crystals (owner: not the canopy hole's stand-in): the approved Cyan cluster and Violet spire, without their rock
+// pedestals because they root in the wall. Same layouts as `crystals` and `crystalVariant`, in the design's own studs.
+float fcCyanCluster(vec3 q) {
+  float d = crystal(q, vec3(0.0, 0.3, 0.0), 0.0, 0.05, 4.7, 0.72);
+  d = min(d, crystal(q, vec3(0.35, 0.3, 0.15), 0.8, 0.48, 3.3, 0.55));
+  d = min(d, crystal(q, vec3(-0.3, 0.3, 0.3), 2.6, 0.5, 2.6, 0.5));
+  d = min(d, crystal(q, vec3(-0.2, 0.3, -0.35), 4.0, 0.36, 3.6, 0.58));
+  d = min(d, crystal(q, vec3(0.6, 0.2, -0.3), 1.7, 0.72, 1.8, 0.4));
+  d = min(d, crystal(q, vec3(-0.6, 0.2, -0.1), 5.2, 0.66, 2.1, 0.42));
+  return min(d, crystal(q, vec3(0.1, 0.2, 0.7), 3.3, 0.82, 1.3, 0.3));
+}
+float fcVioletSpire(vec3 q) {
+  float d = 1e5;
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i), k = (fi + 0.5)/7.0, th = fi*2.39996 + 11.0;
+    float rad = i == 0 ? 0.0 : 1.1*sqrt(k);
+    float h = mix(7.0, 1.6, k)*(0.85 + 0.3*hash1(fi + 11.0));
+    vec3 base = vec3(rad*cos(th), 0.25 + 0.3*hash1(fi*7.3 + 11.0), rad*sin(th));
+    d = min(d, crystal(q, base, th + PI, mix(0.08, 0.65, rad/1.1), h, 0.85*(0.7 + 0.5*(1.0 - k))));
+  }
+  return d;
+}
+// A crystal `tall` units high growing out of the rock at base along n. kind 0 cyan, 1 violet.
+void fcOurCrystal(vec3 p, vec3 base, vec3 n, float tall, float kind, float spin, inout vec2 res) {
+  float bd = length(p - base - n*tall*0.45) - tall*0.95;
+  if (bd > 0.5) { res.x = min(res.x, bd); return; }
+  float s = tall/(kind < 0.5 ? 5.0 : 7.6);
+  vec3 ax = normalize(cross(abs(n.y) < 0.95 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0), n)), az = cross(n, ax), l = p - base;
+  vec3 q = vec3(dot(l, ax), dot(l, n), dot(l, az))/s;
+  q.xz = rot(spin)*q.xz;
+  float d = (kind < 0.5 ? fcCyanCluster(q) : fcVioletSpire(q))*0.75*s;
+  chKeep(d, (kind < 0.5 ? 135.0 : 136.0) + 0.9*clamp(q.y/(kind < 0.5 ? 4.7 : 7.0), 0.0, 1.0), res);
+}
+
+// The cave spire (new asset, designed on its own first). Owner, 2026-11-04: sharp and jagged like the grove mountain; no thick
+// lines down it; not spirally like a tusk; not uniformly coney; not flat on some sides. One broken form of flat triangular
+// faces between jittered corners. All its breaks are worked into those corners, all the way round, so every side keeps the
+// same faceted detail. dir 1 rises from base to the tip at tipY; dir -1 hangs down to it.
+float fcRidgeStar(float a, float count, float seed) {
+  float w = a + 0.5*sin(a + seed) + 0.22*sin(a*2.0 + seed*1.7);
+  return 1.0 - abs(fract(w*count/6.28318 + seed)*2.0 - 1.0);
+}
+// The form: radius at angle a, a share s of the way to the tip.
+float fcSpireR(float a, float s, float rad, float seed) {
+  float count = 3.0 + mod(floor(seed*3.7), 3.0);
+  float main = fcRidgeStar(a, count, seed);
+  float side = fcRidgeStar(a, count*2.0 + 1.0, seed + 2.3)*(1.0 - smoothstep(0.15, 0.6, s));
+  // Ridges swell and fade at different heights, each on its own pattern.
+  float ridge = floor((a + 0.5*sin(a + seed) + 0.22*sin(a*2.0 + seed*1.7))*count/6.28318 + seed);
+  float depth = 0.35 + 0.3*smoothstep(-0.3, 0.6, sin(s*7.0 + hash1(ridge*3.7 + seed)*6.28));
+  float lump = (0.62 + depth*main + 0.16*side)*(1.0 + 0.2*cos(a - seed*2.9));
+  // Width from random control heights with hard kinks: it pinches and bulges, a broad body and a short broken top.
+  float t = clamp(s, 0.0, 1.0);
+  float k1 = 0.2 + 0.1*hash1(seed + 71.0), k2 = 0.46 + 0.14*hash1(seed + 72.0), k3 = 0.76 + 0.12*hash1(seed + 73.0);
+  float w1 = 0.8 + 0.4*hash1(seed + 74.0), w2 = 0.6 + 0.45*hash1(seed + 75.0), w3 = 0.34 + 0.4*hash1(seed + 76.0);
+  float prof = t < k1 ? mix(1.25, w1, t/k1) : t < k2 ? mix(w1, w2, (t - k1)/(k2 - k1)) : t < k3 ? mix(w2, w3, (t - k2)/(k3 - k2)) : mix(w3, 0.0, (t - k3)/(1.0 - k3));
+  // Each tier a little out of round, turned its own way.
+  float tier = floor(t*4.0 + hash1(seed + 77.0));
+  float e = 1.04 + 0.22*hash1(tier*5.3 + seed), th = a - hash1(tier*2.9 + seed)*3.14159;
+  float blade = 1.0/sqrt(pow(cos(th)/e, 2.0) + pow(sin(th)*e, 2.0));
+  return rad*1.8*prof*lump*blade;
+}
+// Its breaks, spread evenly round it. Shears: flanks sliced back above a height, which moves the summit off-centre. Gouges:
+// notches at many heights. Worked on each corner, they break into faces instead of leaving a big flat sheet on one side.
+float fcSpireBreaks(float R, float a, float along, float len, float rad, float seed) {
+  for (int k = 0; k < 5; k++) {
+    float fk = float(k);
+    float ang = (fk + 0.7*hash1(seed + 81.0 + fk))*1.25664;
+    float c = cos(a - ang);
+    if (c < 0.15) continue;
+    float h = len*(0.4 + 0.5*hash1(seed + 84.0 + fk)), off = rad*(0.5 + 0.9*hash1(seed + 87.0 + fk));
+    float slope = (1.0 + hash1(seed + 90.0 + fk))*rad/max(len, 1.0);
+    R = min(R, max(off - (along - h)*slope, 0.0)/c);
+  }
+  for (int k = 0; k < 7; k++) {
+    float fk = float(k);
+    float ang = fk*2.39996 + seed;
+    float hk = len*(0.1 + 0.8*(fk + hash1(seed + 93.0 + fk))/7.0);
+    float width = len*0.035 + rad*0.4;
+    float across = max(cos(a - ang), 0.0);
+    R *= 1.0 - (0.3 + 0.3*hash1(seed + 96.0 + fk))*max(1.0 - abs(along - hk)/width, 0.0)*across*across;
+  }
+  return R;
+}
+const float FC_NA = 13.0, FC_DY = 2.6;   // faces round the spire, and rows up it (13 studs)
+float fcSpireVtx(vec2 sv, float len, float rad, float seed) {
+  float gx = mod(sv.x + 0.5*mod(sv.y, 2.0), FC_NA), along = sv.y*FC_DY;
+  float k = gx*17.3 + sv.y*91.7 + seed*7.1, a = gx/FC_NA*6.28318;
+  float R = fcSpireR(a, clamp(along/len, 0.0, 1.0), rad, seed)*(1.0 + 0.2*(hash1(k) - 0.5));
+  return fcSpireBreaks(R, a, along, len, rad, seed);
+}
+// Radius of the faceted surface at angle a and height along; face is the triangle's id, edge how near its border.
+float fcSpireFacet(float a, float along, float len, float rad, float seed, out float face, out float edge) {
+  vec2 g = vec2(a/6.28318*FC_NA, along/FC_DY);
+  // Each row's corners sit half a face over from the row below, alternately left and right, so the faces zigzag up.
+  float row = floor(g.y), fy = g.y - row;
+  float s0 = 0.5*mod(row, 2.0), s1 = 0.5*mod(row + 1.0, 2.0);
+  float X = g.x - s0 - (s1 - s0)*fy;
+  vec2 sv = vec2(floor(X), row), f = vec2(X - sv.x, fy);
+  float v00 = fcSpireVtx(sv, len, rad, seed), v10 = fcSpireVtx(sv + vec2(1.0, 0.0), len, rad, seed);
+  float v01 = fcSpireVtx(sv + vec2(0.0, 1.0), len, rad, seed), v11 = fcSpireVtx(sv + vec2(1.0, 1.0), len, rad, seed);
+  float cell = mod(sv.x, FC_NA)*2.0 + sv.y*41.0;
+  // Each square splits along its own random diagonal; one diagonal everywhere lined the edges up into a slanted grain.
+  if (hash1(cell*0.37 + seed) < 0.5) {
+    if (f.x + f.y < 1.0) {
+      face = cell; edge = min(min(f.x, f.y), 1.0 - f.x - f.y);
+      return v00 + (v10 - v00)*f.x + (v01 - v00)*f.y;
+    }
+    face = cell + 1.0; edge = min(min(1.0 - f.x, 1.0 - f.y), f.x + f.y - 1.0);
+    return v11 + (v01 - v11)*(1.0 - f.x) + (v10 - v11)*(1.0 - f.y);
+  }
+  if (f.x > f.y) {
+    face = cell; edge = min(min(f.y, 1.0 - f.x), f.x - f.y);
+    return v00 + (v10 - v00)*f.x + (v11 - v10)*f.y;
+  }
+  face = cell + 1.0; edge = min(min(f.x, 1.0 - f.y), f.y - f.x);
+  return v00 + (v11 - v01)*f.x + (v01 - v00)*f.y;
+}
+vec2 fcSpireLean(float along, float len, float rad, float seed) {
+  return vec2(cos(seed*4.1), sin(seed*4.1))*rad*0.9*pow(clamp(along/max(len, 1.0), 0.0, 1.0), 2.0);
+}
+float fcSpire(vec3 p, vec3 base, float tipY, float rad, float seed, float dir) {
+  float len = abs(tipY - base.y);
+  vec3 l = p - base;
+  float along = l.y*dir;
+  l.xz -= fcSpireLean(along, len, rad, seed);
+  float rr = length(l.xz);
+  float bound = max(rr - rad*5.6, max(-along - 1.0, along - len - 1.0));
+  if (bound > 1.0) return bound;
+  float face, edge;
+  float R = fcSpireFacet(mod(atan(l.z, l.x), 6.28318), along, len, rad, seed, face, edge);
+  return max(max((rr - R)*0.6, -along*0.6), along - len);
+}
+const float FC_DRESSED = 1.0;   // the game's spire pieces turn the cave's dressing off (hub_mesh.py); it's placed as approved pieces
+// Rising spires (x, z, tip height, radius) and hanging ones (x, z, tip height, radius) in the cave.
+const vec4 FC_SPIRES[9] = vec4[9](vec4(-14.0, 76.0, 4.0, 3.6), vec4(17.0, 81.0, 13.0, 4.2), vec4(-31.0, 90.0, 21.0, 4.8),
+  vec4(3.0, 95.0, -3.0, 3.2), vec4(29.0, 99.0, 25.0, 5.0), vec4(-11.0, 106.0, 31.0, 5.0), vec4(13.0, 115.0, 17.0, 4.2),
+  vec4(-37.0, 114.0, 9.0, 4.6), vec4(38.0, 122.0, 34.0, 5.6));
+const vec4 FC_DRIPS[7] = vec4[7](vec4(-6.0, 70.0, 24.0, 3.0), vec4(22.0, 74.0, 28.0, 3.4), vec4(-24.0, 82.0, 30.0, 3.8),
+  vec4(7.0, 88.0, 27.0, 3.2), vec4(-38.0, 98.0, 34.0, 4.0), vec4(25.0, 108.0, 36.0, 4.4), vec4(-3.0, 121.0, 38.0, 4.0));
+// Mushrooms sprouting out of the spires and curving up (owner, 2026-11-04: not on long stems): the approved sideways mushroom,
+// scaled up. Spire index, height, the direction it grows (radians round y, 4.71 faces the hub), scale. tools/lobby/far_side_sites.py
+// holds the same list for the game.
+const vec4 FC_SPROUTS[9] = vec4[9](vec4(0.0, -6.0, 5.72, 3.2), vec4(1.0, -1.0, 3.79, 3.8), vec4(2.0, 5.0, 5.87, 4.4),
+  vec4(4.0, 6.0, 3.56, 4.4), vec4(5.0, 13.0, 5.36, 4.6), vec4(5.0, 2.0, 3.70, 3.8), vec4(6.0, -1.0, 5.50, 4.0),
+  vec4(7.0, -3.0, 5.84, 4.0), vec4(8.0, 14.0, 3.29, 4.8));
+
+void fcCaveLife(vec3 p, inout vec2 res) {
+  float option = uPlaza*FC_DRESSED;
+  for (int i = 0; i < 9; i++) {
+    vec4 s = FC_SPIRES[i];
+    if (length(p.xz - s.xy) > s.w*6.8 + 2.5) continue;
+    float fi = float(i);
+    chKeep(fcSpire(p, vec3(s.x, FC_DEEP, s.y), s.z, s.w, fi*5.3 + 1.0, 1.0), 132.0, res);
+    // On most, a smaller shard fused at the foot.
+    if (hash1(fi*8.3) > 0.35) {
+      vec2 off = vec2(cos(fi*2.4), sin(fi*2.4))*s.w*1.15;
+      chKeep(fcSpire(p, vec3(s.x + off.x, FC_DEEP, s.y + off.y), mix(FC_DEEP, s.z, 0.55 + 0.2*hash1(fi*2.2)), s.w*0.62, fi*5.3 + 31.0, 1.0), 132.0, res);
+    }
+    if (option > 0.5 && option < 1.5) {
+      vec3 side = normalize(vec3(-s.x, 0.0, 60.0 - s.y));
+      fcOurCrystal(p, vec3(s.x, s.z - 2.5, s.y), vec3(0.0, 1.0, 0.0), 6.0, mod(fi, 2.0), fi, res);
+      fcOurCrystal(p, vec3(s.x, s.z - 14.0, s.y) + side*s.w, normalize(side + vec3(0.0, 0.5, 0.0)), 4.5, mod(fi + 1.0, 2.0), fi*2.0, res);
+    }
+  }
+  for (int i = 0; i < 7; i++) {
+    vec4 s = FC_DRIPS[i];
+    if (length(p.xz - s.xy) > s.w*6.8 + 3.0 || (uPlaza > 2.5 && uPlaza < 3.5)) continue;
+    float fi = float(i);
+    vec3 base = vec3(s.x, fcHallTop(s.y) + 4.0, s.y);
+    chKeep(fcSpire(p, base, s.z, s.w, fi*7.1 + 40.0, -1.0), 132.0, res);
+    if (option > 0.5 && option < 1.5) fcOurCrystal(p, vec3(s.x, s.z + 2.0, s.y), vec3(0.0, -1.0, 0.0), 4.5, mod(fi, 2.0), fi, res);
+    if (option > 1.5) {
+      // Bead vines hanging from the tips.
+      for (int k = 0; k < 3; k++) {
+        float fk = float(k);
+        vec3 a = vec3(s.x + (fk - 1.0)*0.9, s.z + 1.5, s.y + 0.4*sin(fk + fi));
+        chVine(p, a, a + vec3(0.3*sin(fi + fk), -6.0 - 5.0*hash1(fi*3.0 + fk), 0.2), 0.3, res);
+      }
+    }
+  }
+  if (option > 1.5) {
+    for (int i = 0; i < 9; i++) {
+      vec4 m = FC_SPROUTS[i];
+      vec4 sp = FC_SPIRES[int(m.x)];
+      float fi = float(i);
+      vec3 dir = vec3(cos(m.z), 0.0, sin(m.z));
+      vec3 root = vec3(sp.x, m.y, sp.y) + dir*sp.w*0.8;
+      float bd = length(p - root - dir*m.w*1.2 - vec3(0.0, m.w*0.8, 0.0)) - m.w*3.0;
+      if (bd > 1.0) { res.x = min(res.x, bd); continue; }
+      vec3 l = p - root, side = vec3(-dir.z, 0.0, dir.x);
+      vec2 t = vec2(1e3, 103.0);
+      chSideShroom(vec3(dot(l, side), l.y, -dot(l, dir))/m.w, mod(fi, 4.0), t);
+      chKeep(t.x*m.w, t.y, res);
+    }
+  }
+}
+
+// ---- The cavern wall (owner, 2026-11-04: a mix of broken blocks and fused crags). Long uneven stretches of each: blocks make
+// up the body of the wall, crags burst through them in groups, and taller shards behind and hanging ones above run everywhere.
+float fcCragMask(float u) { return smoothstep(0.4, 0.6, noise3(vec3(u*0.05, 7.0, 3.0))); }
+vec2 fcBlockCrack(vec3 q, vec3 hs, float k) { return massCracks(q.xy/FC_S, hs/FC_S, k*1.3, 0.0)*FC_S; }
+// Broken blocks of two sizes, each tilted its own way, standing out by different amounts, with a corner snapped off. Half of
+// the big ones carry the approved carved cracks. Sharp joins between them.
+float fcBlocks(vec3 p, out float id, out vec3 qOut, out vec3 hsOut, out float big) {
+  float r = length(p.xz);
+  float d = FC_WALL + 2.5 - r;
+  id = 0.0; qOut = p; hsOut = vec3(1.0); big = 0.0;
+  if (d > 13.0) return d - 11.0;
+  float u = atan(p.x, p.z)*FC_WALL;
+  for (int layer = 0; layer < 2; layer++) {
+    vec2 cs = layer == 0 ? vec2(15.0, 11.0) : vec2(6.5, 5.0);
+    float row0 = floor(p.y/cs.y);
+    for (int j = -1; j <= 1; j++) {
+      float row = row0 + float(j);
+      float shift = hash1(row*7.7 + float(layer)*3.0)*cs.x;
+      float c0 = floor((u - shift)/cs.x);
+      for (int i = -1; i <= 1; i++) {
+        float c = c0 + float(i);
+        float k = c*17.3 + row*61.7 + float(layer)*131.0;
+        if (layer == 1 && hash1(k + 7.0) < 0.55) continue;
+        float cu = (c + 0.5)*cs.x + shift + (hash1(k + 1.0) - 0.5)*cs.x*0.3;
+        // Where the crags take over, most blocks give way to them.
+        if (hash1(k + 14.0) < fcCragMask(cu)*0.8) continue;
+        float cv = (row + 0.5)*cs.y + (hash1(k + 2.0) - 0.5)*cs.y*0.3;
+        vec3 hs = vec3(cs.x*(0.42 + 0.14*hash1(k + 3.0)), cs.y*(0.42 + 0.14*hash1(k + 4.0)), 2.0 + 3.0*hash1(k + 5.0));
+        float stand = layer == 0 ? 0.6 + 4.2*hash1(k + 6.0) : 1.5 + 2.5*hash1(k + 6.0);
+        float a = cu/FC_WALL;
+        vec3 T = vec3(cos(a), 0.0, -sin(a)), O = vec3(sin(a), 0.0, cos(a));
+        vec3 l = p - O*(FC_WALL + 2.5 - stand + hs.z) - vec3(0.0, cv, 0.0);
+        vec3 q = vec3(dot(l, T), l.y, dot(l, O));
+        q.xy = rot((hash1(k + 8.0) - 0.5)*0.35)*q.xy;
+        q.xz = rot((hash1(k + 9.0) - 0.5)*0.4)*q.xz;
+        q.yz = rot((hash1(k + 10.0) - 0.5)*0.3)*q.yz;
+        float b = sdBox(q, hs - 0.25) - 0.25;
+        vec3 n = normalize(vec3(hash1(k + 11.0) - 0.5, hash1(k + 12.0) - 0.3, -0.6));
+        b = max(b, dot(q, n) - length(hs*abs(n))*(0.55 + 0.25*hash1(k + 13.0)));
+        if (layer == 0 && b < 1.5 && hash1(k + 15.0) < 0.5) {
+          vec2 cl = fcBlockCrack(q, hs, k);
+          float below = clamp(-b/(0.3*FC_S), 0.0, 1.0);
+          b = max(b, -max(max(cl.x + cl.y*below, -b - 0.3*FC_S), q.z + 0.3*hs.z));
+        }
+        if (b < d) { d = b; id = k; qOut = q; hsOut = hs; big = layer == 0 ? 1.0 : 0.0; }
+      }
+    }
+  }
+  return d;
+}
+// Fused crags, from the cave spire: a front row where the mask brings them through the blocks, a taller row set further in that
+// reaches the ceiling, and crags hanging from it.
+float fcCrags(vec3 p, out vec3 base, out float tipY, out float rad, out float seed, out float dir) {
+  float r = length(p.xz), d = FC_WALL + 2.0 - r;
+  base = vec3(0.0); tipY = 0.0; rad = 1.0; seed = 0.0; dir = 1.0;
+  if (d > 16.0) return d - 14.0;
+  float au = atan(p.x, p.z)*FC_WALL;
+  float c0 = floor(au/8.0);
+  for (int i = -2; i <= 2; i++) {
+    float c = c0 + float(i), k = c*11.3 + 5.0;
+    float cu = (c + 0.5 + 0.4*(hash1(k) - 0.5))*8.0;
+    if (hash1(k + 5.0) > 0.12 + 0.88*fcCragMask(cu)) continue;
+    float a = cu/FC_WALL;
+    vec3 b = vec3(sin(a), 0.0, cos(a))*(FC_WALL + 2.5) + vec3(0.0, -6.0, 0.0);
+    float t = mix(16.0, 60.0, hash1(k + 1.0)), rd = 2.6 + 2.2*hash1(k + 2.0), sd = k*0.37 + 2.0;
+    float e = fcSpire(p, b, t, rd, sd, 1.0);
+    if (e < d) { d = e; base = b; tipY = t; rad = rd; seed = sd; dir = 1.0; }
+  }
+  float c1 = floor(au/7.0);
+  for (int i = -1; i <= 1; i++) {
+    float c = c1 + float(i), k = c*7.9 + 300.0;
+    float a = (c + 0.5 + 0.4*(hash1(k) - 0.5))*7.0/FC_WALL;
+    vec3 b = vec3(sin(a), 0.0, cos(a))*(FC_WALL + 6.0) + vec3(0.0, -6.0, 0.0);
+    float t = mix(48.0, 66.0, hash1(k + 1.0)), rd = 3.2 + 1.8*hash1(k + 2.0), sd = k*0.41 + 9.0;
+    float e = fcSpire(p, b, t, rd, sd, 1.0);
+    if (e < d) { d = e; base = b; tipY = t; rad = rd; seed = sd; dir = 1.0; }
+    float a2 = a + 3.5/FC_WALL;
+    vec3 b2 = vec3(sin(a2), 0.0, cos(a2))*(FC_WALL + 3.0) + vec3(0.0, FC_CEIL + 6.0, 0.0);
+    float t2 = mix(22.0, 36.0, hash1(k + 3.0)), rd2 = 2.4 + 1.6*hash1(k + 4.0), sd2 = k*0.53 + 21.0;
+    e = fcSpire(p, b2, t2, rd2, sd2, -1.0);
+    if (e < d) { d = e; base = b2; tipY = t2; rad = rd2; seed = sd2; dir = -1.0; }
+  }
+  return d;
+}
+float fcBlocksD(vec3 p) { float id, big; vec3 q, hs; return fcBlocks(p, id, q, hs, big)*0.8; }
+float fcCragsD(vec3 p) { vec3 b; float t, rd, sd, dr; return fcCrags(p, b, t, rd, sd, dr); }
+float fcWallD(vec3 p) { return min(fcBlocksD(p), fcCragsD(p)); }
+// The wall's dressing, from our own pieces, each set onto the rock's real surface: the approved crystals, the canopy hole's
+// small glowing mushrooms on what's flat enough, and its bead vines hanging down.
+void fcWallLife(vec3 p, inout vec2 res) {
+  float u = atan(p.x, p.z)*FC_WALL;
+  vec2 cell = floor(vec2(u/9.0, p.y/7.0));
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    vec2 c = cell + vec2(float(i), float(j));
+    if (c.y < 0.0 || c.y > 5.0) continue;
+    float k = c.x*7.7 + c.y*31.3;
+    float pick = hash1(k);
+    if (pick > 0.42) continue;
+    float su = (c.x + 0.2 + 0.6*hash1(k + 1.0))*9.0, sv = (c.y + 0.2 + 0.6*hash1(k + 2.0))*7.0 + 1.0;
+    float a = su/FC_WALL;
+    vec3 O = vec3(sin(a), 0.0, cos(a));
+    vec3 q = O*(FC_WALL - 16.0) + vec3(0.0, sv, 0.0);
+    if (length(vec2(u - su, max(p.y - sv, (sv - p.y)*0.6))) > 8.0) continue;
+    if (!fcWallOnly() && abs(q.x) < FC_HALF + 6.0 && q.z > 0.0 && q.y < FC_TOP + 6.0) continue;   // not in the mouth's opening
+    for (int s = 0; s < 6; s++) q += O*fcWallD(q);
+    if (pick < 0.18) {
+      fcOurCrystal(p, q + O*0.3, normalize(-O + vec3(0.0, 0.5, 0.0)), 4.0 + 3.0*hash1(k + 3.0), step(0.5, hash1(k + 4.0)), k, res);
+    } else if (pick < 0.3) {
+      // Down onto the nearest ledge below this spot, then a few mushrooms.
+      vec3 t = q - O*1.8;
+      for (int s = 0; s < 6; s++) t.y -= fcWallD(t);
+      if (t.y > 0.3 && t.y > q.y - 9.0) {
+        for (int m = 0; m < 3; m++) {
+          float fm = float(m);
+          chSmallShroom(p, t + vec3(cos(fm*2.1 + k), -0.1, sin(fm*2.1 + k))*0.8*fm, 1.0 + 0.7*hash1(k + fm*3.0), k + fm*5.0, res);
+        }
+      }
+    } else {
+      vec3 v = q - O*0.2;
+      chVine(p, v, v + vec3(0.3*sin(k), -4.0 - 7.0*hash1(k + 5.0), 0.0) - O*0.4, 0.25, res);
+    }
+  }
+  // Bead vines from the arch's head, across its middle.
+  if (!fcWallOnly() && p.z > 50.0 && p.z < 64.0 && abs(p.x) < FC_HALF*0.85 && p.y > 14.0 && p.y < FC_TOP + 2.0) {
+    float slot = floor(p.x/2.6 + 0.5);
+    for (int k = -1; k <= 1; k++) {
+      float sk = slot + float(k);
+      float x = sk*2.6 + 0.6*(hash1(sk*3.1) - 0.5);
+      if (abs(x) > FC_HALF*0.8) continue;
+      float v = FC_TOP*pow(max(1.0 - pow(abs(x)/FC_HALF, 2.4), 0.0), 1.0/2.4);
+      vec3 a = vec3(x, v + 0.8, 59.5 + 1.5*hash1(sk*5.3));
+      chVine(p, a, a + vec3(0.3*sin(sk), -4.0 - 9.0*hash1(sk*7.7), -0.4), 0.25, res);
+    }
+  }
+}
+// The arch's frame: broken blocks along its outline, so its edge is rock and it stays even.
+float fcArchFrame(vec3 p) {
+  if (p.z < 50.0 || p.z > 70.0 || abs(fcMouth(p)) > 10.0) return 1e5;
+  float phi = atan(max(p.y, 0.0)/FC_TOP, p.x/FC_HALF);
+  float idx = floor(phi/(3.14159/14.0) + 0.5), d = 1e5;
+  for (int i = -1; i <= 1; i++) {
+    float ik = idx + float(i);
+    if (ik < 0.0 || ik > 14.0) continue;
+    float ph = ik*3.14159/14.0 + 0.06*(hash1(ik*2.7) - 0.5);
+    float cc = cos(ph), ss = sin(ph);
+    vec2 at = vec2(FC_HALF*sign(cc)*pow(abs(cc), 2.0/2.4), FC_TOP*pow(abs(ss), 2.0/2.4));
+    vec2 o = normalize(vec2(at.x/FC_HALF, at.y/FC_TOP) + 1e-4);
+    vec3 hs = vec3(3.2 + 1.2*hash1(ik*3.1), 4.8 + 1.8*hash1(ik*4.7), 3.5 + 2.5*hash1(ik*5.9));
+    vec3 l = p - vec3(at + o*(hs.x - 0.6), 58.5 + 2.5*hash1(ik*7.3));
+    vec3 q = vec3(dot(l.xy, o), dot(l.xy, vec2(-o.y, o.x)), l.z);
+    q.xy = rot((hash1(ik*8.9) - 0.5)*0.3)*q.xy;
+    q.xz = rot((hash1(ik*9.7) - 0.5)*0.3)*q.xz;
+    float b = sdBox(q, hs - 0.2) - 0.2;
+    vec3 n = normalize(vec3(hash1(ik*2.1) - 0.5, hash1(ik*3.3) - 0.5, -0.7));
+    d = min(d, max(b, dot(q, n) - length(hs*abs(n))*(0.6 + 0.25*hash1(ik*4.9))));
+  }
+  return d*0.8;
+}
+
+vec2 farCave(vec3 p) {
+  float r = length(p.xz);
+  float cave = fcWallOnly() ? 10.0 : fcCavity(p);
+  float blocks = r > FC_WALL - 16.0 ? fcBlocksD(p) : (FC_WALL - 15.0 - r)*0.8;
+  float crags = r > FC_WALL - 16.0 ? fcCragsD(p) : (FC_WALL - 15.0 - r);
+  float roofD = FC_CEIL - p.y + 1.2*(noise3(p*0.12) - 0.5);
+  float wall = min(blocks, crags);
+  float rock = max(min(wall, roofD), -cave);
+  float id = -cave > min(wall, roofD) || roofD < wall ? 130.0 : crags < blocks ? 137.0 : 134.0;
+  if (!fcWallOnly()) {
+    float frame = fcArchFrame(p);
+    if (frame < rock) { rock = frame; id = 134.0; }
+  }
+  vec2 res = vec2(rock, id);
+  // The floor, ending in the cliff at the mouth's threshold.
+  float ground = max(p.y - fcGroundH(p.xz), r - fcEdge(p));
+  ground = max(max(ground, FC_PIT - r), -60.0 - p.y);
+  // The cutaway views keep only a shell of rock round the cave, about 35 studs thick, and the piece of wall round the mouth,
+  // so the cave shows as one rock form.
+  bool cutaway = uPlaza > 2.5 && uPlaza < 4.5;
+  if (cutaway) ground = max(ground, max(abs(p.x) - FC_HALF - 10.0, 44.0 - p.z));
+  chKeep(ground, 131.0, res);
+  if (p.z > 55.0 && p.y < 60.0 && !fcWallOnly()) fcCaveLife(p, res);
+  if (r > FC_WALL - 17.0 && p.y < FC_CEIL) {
+    if (res.x > 9.0) res.x -= 8.0; else fcWallLife(p, res);
+  }
+  if (cutaway) res.x = max(res.x, min(cave - 3.0, max(max(abs(p.x) - FC_HALF - 16.0, 44.0 - p.z), max(p.z - 64.0, p.y - FC_TOP - 8.0))));
+  res.x = max(res.x, -fcClipO(p));
+  return res;
+}
+
+// The wall and mouth with no dressing, and the far side's floor nearly flat, just above the block-out's floor you walk on.
+vec2 fcGameRock(vec3 p) {
+  float blocks = fcBlocksD(p), crags = fcCragsD(p), wall = min(blocks, crags), cave = fcCavity(p), frame = fcArchFrame(p);
+  float rock = max(wall, -cave);
+  float id = -cave > wall ? 130.0 : crags < blocks ? 137.0 : 134.0;
+  if (frame < rock) { rock = frame; id = 134.0; }
+  return vec2(max(rock, p.y - 49.0), id);
+}
+vec2 fcGameGround(vec3 p) {
+  float r = length(p.xz);
+  float rim = smoothstep(4.5, 0.4, fcEdge(vec3(p.x, 0.0, p.z)) - r)*(1.0 - smoothstep(FC_HALF - 6.0, FC_HALF - 2.0, abs(p.x)))*step(40.0, p.z);
+  float h = 0.03 + 0.02*noise3(vec3(p.xz*0.3, 3.0)) + rim*(0.1 + 0.2*smoothstep(0.35, 0.7, noise3(vec3(p.xz*0.45, 11.0))));
+  float angle = abs(atan(p.x, p.z));
+  float wedge = (angle - 0.7854)*r;
+  float d = max(max(p.y - h, r - fcEdge(p)), max(20.9 - r, wedge));
+  return vec2(max(d, -60.0 - p.y), 131.0);
+}
+vec2 fcGameSpires(vec3 p) { vec2 res = vec2(1e3, 132.0); fcCaveLife(p, res); return vec2(max(res.x, -32.0 - p.y), res.y); }
+
+// 17: the cave spire on its own: a lineup of different ones rising out of the mist, and one hanging from a piece of roof.
+const vec4 FC_LINEUP[4] = vec4[4](vec4(-30.0, -8.0, 20.0, 5.0), vec4(-48.0, 4.0, 6.0, 3.8), vec4(28.0, -10.0, 8.0, 4.4), vec4(46.0, 6.0, 24.0, 5.2));
+vec2 caveSpireStudy(vec3 p) {
+  vec2 res = vec2(fcSpire(p, vec3(-10.0, -34.0, 0.0), 16.0, 4.6, 6.3, 1.0), 132.0);
+  chKeep(fcSpire(p, vec3(-15.0, -34.0, 2.5), 0.0, 2.9, 36.3, 1.0), 132.0, res);
+  for (int i = 0; i < 4; i++) {
+    vec4 s = FC_LINEUP[i];
+    chKeep(fcSpire(p, vec3(s.x, -34.0, s.y), s.z, s.w, float(i)*9.7 + 3.0, 1.0), 132.0, res);
+  }
+  chKeep(max(fcSpire(p, vec3(10.0, 46.0, 0.0), 33.0, 10.0, 12.9, -1.0), p.y - 44.0), 132.0, res);
+  chKeep(fcSpire(p, vec3(10.0, 38.0, 0.0), 6.0, 4.0, 47.1, -1.0), 132.0, res);
+  return res;
+}
+
+// Mist in the cave (owner: the canopy hole's mist): the same five drifting layers with gaps over a faint haze, here under
+// the cliff, plus a deepening floor of mist that hides the bottom and a veil that hides the hall's far end.
+float fcMist(vec3 q) {
+#if ASSET == 17
+  if (q.y > 4.0 || q.y < -40.0) return 0.0;
+  float inside = 1.0 - smoothstep(45.0, 85.0, length(q.xz));
+#else
+  if (q.z < 50.0 || q.y > 34.0 || q.y < -60.0 || fcWallOnly() || fcClipO(q) < 0.0) return 0.0;
+  float inside = 1.0 - smoothstep(fcHallW(q.z) - 5.0, fcHallW(q.z) + 1.0, abs(q.x));
+  // In the cutaways the rock round the cave is gone, so the mist keeps to the cave itself.
+  if (uPlaza > 2.5 && uPlaza < 4.5) inside *= 1.0 - smoothstep(-0.5, 0.5, fcCavity(q));
+#endif
+  float d = 0.0015;
+  for (int k = 0; k < 5; k++) {
+    float fk = float(k);
+    float level = -2.5 - fk*5.0;
+    float band = exp(-pow((q.y - level - 0.6*sin(q.x*0.12 + uT*0.2 + fk))/1.5, 2.0));
+#if ASSET == 16
+    band += 0.35*exp(-pow((q.y - 7.0 - 9.0*fk - 1.0*sin(q.z*0.1 + uT*0.15 + fk))/2.2, 2.0))*step(fk, 1.5)*smoothstep(64.0, 80.0, q.z);
+#endif
+    if (band < 0.01) continue;
+    vec2 drift = vec2(cos(fk*1.9), sin(fk*1.9))*uT*(0.2 + 0.08*fk);
+    float n = noise3(vec3((q.xz + drift)*0.16, fk*7.0)) + 0.5*noise3(vec3((q.xz - drift*1.3)*0.4, fk*3.0 + uT*0.05));
+    d += band*smoothstep(0.55, 1.05, n)*(0.09 + 0.02*fk);
+  }
+  d += 0.07*smoothstep(-24.0, -42.0, q.y);
+#if ASSET == 16
+  d += 0.012*smoothstep(104.0, 136.0, q.z)*(0.6 + 0.4*noise3(vec3(q.xy*0.08, uT*0.05)));
+#endif
+  return d*inside;
+}
+vec3 fcMistColour(vec3 q) { return mix(vec3(0.34, 0.24, 0.6), vec3(0.22, 0.2, 0.42), clamp((q.y + 30.0)/30.0, 0.0, 1.0)); }
+// The game's mist is a few drifting particles, so the depth it hides is painted onto the rock (hub_mesh.py turns this on).
+const float FC_BAKE_FOG = 0.0;
+vec3 fcFog(vec3 c, vec3 p) {
+  float deep = smoothstep(-8.0, -36.0, p.y), far = 0.75*smoothstep(90.0, 134.0, p.z);
+  return mix(c, fcMistColour(p)*0.9, FC_BAKE_FOG*max(deep, far));
+}
+
+// ---- Rock paint: only the surface textures the owner has approved. Slate with warm and cool patches; mottling and fine grain;
+// the grove mountain's small broken facets; worn pale edges, dark grime and comic hatching in the crevices; the rock wall's
+// inked cracks with their pale chipped lip; moss on what faces up; light in flat cut-out steps.
+float fcSmallFacets(vec3 q) {
+  vec2 g = vec2(q.x + 0.37*q.y, (q.z + 0.29*q.y)/0.866)/1.15;
+  vec2 uv = vec2(g.x + 0.5*g.y, g.y), s = floor(uv), f = uv - s;
+  float a = hash1(s.x*17.3 + s.y*91.7), b = hash1((s.x + 1.0)*17.3 + s.y*91.7), c = hash1(s.x*17.3 + (s.y + 1.0)*91.7), d = hash1((s.x + 1.0)*17.3 + (s.y + 1.0)*91.7);
+  return f.x + f.y < 1.0 ? a + (b - a)*f.x + (c - a)*f.y : d + (c - d)*(1.0 - f.x) + (b - d)*(1.0 - f.y);
+}
+vec3 fcRockTex(vec3 p, vec3 n, float shade, float mossy, float lap) {
+  vec3 c = mix(vec3(0.12, 0.125, 0.16), vec3(0.32, 0.325, 0.38), shade);
+  c = mix(c, c*vec3(1.3, 1.1, 0.86), 0.55*smoothstep(0.45, 0.72, noise3(p*0.11 + vec3(4.0, 1.0, 2.0))));
+  c = mix(c, c*vec3(0.86, 0.94, 1.2), 0.45*smoothstep(0.5, 0.75, noise3(p*0.17 + 9.0)));
+  c *= 1.0 + 0.5*(noise3(p*0.9) - 0.5);
+  c *= 1.0 + 0.32*(noise3(p*2.6) - 0.5);
+  c *= 0.8 + 0.4*fcSmallFacets(p*1.3);
+  c *= 0.86 + 0.28*(noise3(p*14.0) + 0.5*noise3(p*31.0))/1.5;
+  // Curvature (from the caller's shape): pale wear on what sticks out, grime and hatching in what's sunk in.
+  c = mix(c, c*1.5 + vec3(0.05), 0.75*smoothstep(0.25, 1.0, lap));
+  float crev = smoothstep(0.2, 0.9, -lap);
+  c *= 1.0 - 0.55*crev;
+  float hatch = 1.0 - smoothstep(0.08, 0.13, abs(fract(dot(p, vec3(0.35, 0.35, 0.1))*5.0) - 0.5));
+  c *= 1.0 - 0.45*hatch*crev*step(0.38, noise3(p*1.25));
+  float moss = mossy*smoothstep(0.35, 0.72, n.y)*smoothstep(0.38, 0.58, noise3(p*0.5 + 5.0));
+  c = mix(c, mix(vec3(0.03, 0.08, 0.06), vec3(0.07, 0.17, 0.1), noise3(p*2.2)), moss*0.88);
+  float lit = dot(n, normalize(vec3(-0.45, 0.72, -0.53)));
+  c *= mix(0.55, 1.0, smoothstep(-0.12, -0.02, lit))*mix(0.84, 1.12, smoothstep(0.28, 0.38, lit));
+  return c*mix(1.0, 0.65, smoothstep(0.0, -40.0, p.y));
+}
+// Inked crack with a pale chipped lip, from the distance to its edge (the rock wall's own).
+vec3 fcCrackPaint(vec3 c, float dist) {
+  c *= 1.0 + 0.45*(smoothstep(0.0, 0.04, dist) - smoothstep(0.06, 0.18, dist));
+  return mix(c, vec3(0.012, 0.012, 0.016), 1.0 - smoothstep(-0.03, 0.02, dist));
+}
+// The spire a point belongs to (the nearest), for paint.
+void fcSpireNear(vec3 p, out vec3 base, out float tipY, out float rad, out float seed, out float dir) {
+#if ASSET == 17
+  base = vec3(-10.0, -34.0, 0.0); tipY = 16.0; rad = 4.6; seed = 6.3; dir = 1.0;
+  float best = fcSpire(p, base, tipY, rad, seed, dir);
+  for (int i = 0; i < 4; i++) {
+    vec4 s = FC_LINEUP[i];
+    float e = fcSpire(p, vec3(s.x, -34.0, s.y), s.z, s.w, float(i)*9.7 + 3.0, 1.0);
+    if (e < best) { best = e; base = vec3(s.x, -34.0, s.y); tipY = s.z; rad = s.w; seed = float(i)*9.7 + 3.0; dir = 1.0; }
+  }
+  float d = fcSpire(p, vec3(-15.0, -34.0, 2.5), 0.0, 2.9, 36.3, 1.0);
+  if (d < best) { best = d; base = vec3(-15.0, -34.0, 2.5); tipY = 0.0; rad = 2.9; seed = 36.3; dir = 1.0; }
+  d = fcSpire(p, vec3(10.0, 38.0, 0.0), 6.0, 4.0, 47.1, -1.0);
+  if (d < best) { best = d; base = vec3(10.0, 38.0, 0.0); tipY = 6.0; rad = 4.0; seed = 47.1; dir = -1.0; }
+  d = fcSpire(p, vec3(10.0, 46.0, 0.0), 33.0, 10.0, 12.9, -1.0);
+  if (d < best) { base = vec3(10.0, 46.0, 0.0); tipY = 33.0; rad = 10.0; seed = 12.9; dir = -1.0; }
+#else
+  float best = 1e5;
+  base = vec3(0.0); tipY = 0.0; rad = 1.0; seed = 0.0; dir = 1.0;
+  for (int i = 0; i < 9; i++) {
+    vec4 s = FC_SPIRES[i];
+    float fi = float(i);
+    float d = fcSpire(p, vec3(s.x, FC_DEEP, s.y), s.z, s.w, fi*5.3 + 1.0, 1.0);
+    if (d < best) { best = d; base = vec3(s.x, FC_DEEP, s.y); tipY = s.z; rad = s.w; seed = fi*5.3 + 1.0; dir = 1.0; }
+    if (hash1(fi*8.3) > 0.35) {
+      vec2 off = vec2(cos(fi*2.4), sin(fi*2.4))*s.w*1.15;
+      vec3 b = vec3(s.x + off.x, FC_DEEP, s.y + off.y);
+      float tp = mix(FC_DEEP, s.z, 0.55 + 0.2*hash1(fi*2.2));
+      d = fcSpire(p, b, tp, s.w*0.62, fi*5.3 + 31.0, 1.0);
+      if (d < best) { best = d; base = b; tipY = tp; rad = s.w*0.62; seed = fi*5.3 + 31.0; dir = 1.0; }
+    }
+  }
+  for (int i = 0; i < 7; i++) {
+    vec4 s = FC_DRIPS[i];
+    vec3 b = vec3(s.x, fcHallTop(s.y) + 4.0, s.y);
+    float d = fcSpire(p, b, s.z, s.w, float(i)*7.1 + 40.0, -1.0);
+    if (d < best) { best = d; base = b; tipY = s.z; rad = s.w; seed = float(i)*7.1 + 40.0; dir = -1.0; }
+  }
+#endif
+}
+#define FC_LAP(F) ((F(p + vec3(0.14, -0.14, -0.14)) + F(p + vec3(-0.14, -0.14, 0.14)) + F(p + vec3(-0.14, 0.14, -0.14)) + F(p + vec3(0.14, 0.14, 0.14)) - 4.0*F(p))/0.14)
+float fcHallD(vec3 p) { return -fcCavity(p); }
+vec3 fcSpirePaintAt(vec3 p, vec3 n, vec3 base, float tipY, float rad, float seed, float dir, float lap) {
+  vec3 l = p - base;
+  float len = abs(tipY - base.y), along = l.y*dir, face, edge;
+  l.xz -= fcSpireLean(along, len, rad, seed);
+  float a = mod(atan(l.z, l.x), 6.28318);
+  fcSpireFacet(a, along, len, rad, seed, face, edge);
+  vec3 c = fcRockTex(p, n, 0.3 + 0.5*hash1(face*1.37 + seed), 1.0, lap);
+  // Thin lines on a few of the faces' own edges; no ridge or valley ink (owner: the thick lines down them were too much).
+  c = mix(c, vec3(0.004, 0.004, 0.007), (1.0 - smoothstep(0.0, 0.012, edge))*step(0.8, hash1(face*0.73 + seed))*0.55);
+  // The approved cracks on some of it, laid out round the spire.
+  vec2 uv = vec2(a*rad*1.4, along)/9.0, tile = floor(uv);
+  float k = tile.x*7.3 + tile.y*13.1 + seed;
+  if (hash1(k) < 0.45) {
+    vec2 cl = massCracks((uv - tile - 0.5)*9.0/1.6, vec3(2.3, 2.3, 1.0), k, 0.0);
+    c = fcCrackPaint(c, cl.x*1.6);
+  }
+  return c;
+}
+vec3 fcPaint(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
+  emit = vec3(0.0);
+  spec = 0.05;
+  if (id > 134.5 && id < 136.95) {
+    // Our crystals' own colours: deep at the root to bright at the tips, pulsing gently.
+    bool violet = id > 135.95;
+    float h = clamp((id - (violet ? 136.0 : 135.0))/0.9, 0.0, 1.0);
+    vec3 c = mix(violet ? vec3(0.08, 0.02, 0.16) : vec3(0.02, 0.09, 0.15), violet ? vec3(0.78, 0.55, 1.0) : vec3(0.42, 0.93, 1.0), h*h);
+    // Each flat facet its own shade, so the crystal's shape reads through its glow.
+    float facet = 0.68 + 0.42*(0.5 + 0.5*dot(n, normalize(vec3(-0.45, 0.55, -0.7))));
+    emit = c*(0.2 + 0.85*h)*facet*uTr1.z*(0.85 + 0.15*sin(uT*0.9 + p.y*0.8));
+    spec = 0.6;
+    return c*0.6*facet;
+  }
+  if (id < 130.5) return fcFog(fcRockTex(p, n, 0.32 + 0.3*noise3(p*0.2), 1.0, FC_LAP(fcHallD)), p);
+  if (id < 131.5) {
+    if (n.y < 0.55) return fcFog(fcRockTex(p, n, 0.35, 1.0, 0.0), p);
+    // Weathered stone in broken plates: dark joints, damp moss in the hollows.
+    float cid;
+    vec2 e = fcPlates(p.xz*0.22, cid);
+    vec3 c = fcRockTex(p, n, 0.5 + 0.2*hash1(cid), 0.0, 0.0);
+    float damp = (1.0 - smoothstep(0.0, 0.09, e.x) + 0.6*smoothstep(0.55, 0.75, noise3(p*0.22 + 2.0)))*smoothstep(0.3, 0.6, noise3(p*0.6 + 2.0));
+    c = mix(c, vec3(0.06, 0.14, 0.1), 0.85*clamp(damp, 0.0, 1.0));
+    return mix(c, vec3(0.02, 0.02, 0.03), (1.0 - smoothstep(0.0, 0.012, e.x))*smoothstep(0.42, 0.55, noise3(p*0.25 + 1.0)));
+  }
+  if (id < 132.5) {
+    vec3 base; float tipY, rad, seed, dir;
+    fcSpireNear(p, base, tipY, rad, seed, dir);
+    float lap = 0.0;
+    vec2 e = vec2(0.14, -0.14);
+    lap = (fcSpire(p + e.xyy, base, tipY, rad, seed, dir) + fcSpire(p + e.yyx, base, tipY, rad, seed, dir) + fcSpire(p + e.yxy, base, tipY, rad, seed, dir) + fcSpire(p + e.xxx, base, tipY, rad, seed, dir) - 4.0*fcSpire(p, base, tipY, rad, seed, dir))/0.14;
+    return fcFog(fcSpirePaintAt(p, n, base, tipY, rad, seed, dir, lap), p);
+  }
+  if (id > 136.95) {
+    vec3 base; float tipY, rad, seed, dir;
+    fcCrags(p, base, tipY, rad, seed, dir);
+    return fcSpirePaintAt(p, n, base, tipY, rad, seed, dir, FC_LAP(fcWallD));
+  }
+  // A wall block: each face its own shade within its block, and the approved cracks on its front.
+  float k, big;
+  vec3 q, hs;
+  fcBlocks(p, k, q, hs, big);
+  vec3 f = abs(q)/hs;
+  float side = f.x > f.y && f.x > f.z ? 1.0 : f.y > f.z ? 2.0 : 3.0;
+  vec3 c = fcRockTex(p, n, 0.25 + 0.55*hash1(k*1.37 + side*5.0), 1.0, FC_LAP(fcWallD));
+  if (big > 0.5 && hash1(k + 15.0) < 0.5 && q.z < -0.3*hs.z) c = fcCrackPaint(c, fcBlockCrack(q, hs, k).x);
+  return c;
+}
+#endif
 vec2 map(vec3 p) {
   vec2 r;
 #if ASSET == 0
@@ -7546,6 +8250,10 @@ vec2 map(vec3 p) {
   r = innerWall(p);
 #elif ASSET == 15
   r = canopyHole(p);
+#elif ASSET == 16
+  r = farCave(p);
+#elif ASSET == 17
+  r = caveSpireStudy(p);
 #else
   r = portal(p/GS); r.x *= GS;
 #endif
@@ -7574,7 +8282,7 @@ vec2 map(vec3 p) {
 // Living Comic's light inner lines so the ink doesn't swallow them.
 float group(float id) {
   if (uMode < 2.5) return uMode;
-  if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5 || abs(id - 43.0) < 0.5 || abs(id - 61.0) < 0.5 || abs(id - 73.0) < 0.5 || abs(id - 80.0) < 0.5 || abs(id - 90.0) < 0.5 || abs(id - 100.0) < 0.5) return 0.0;
+  if (id < 1.5 || abs(id - 6.0) < 0.5 || abs(id - 11.0) < 0.5 || abs(id - 43.0) < 0.5 || abs(id - 61.0) < 0.5 || abs(id - 73.0) < 0.5 || abs(id - 80.0) < 0.5 || abs(id - 90.0) < 0.5 || abs(id - 100.0) < 0.5 || (id > 129.5 && id < 134.5) || abs(id - 137.0) < 0.5) return 0.0;
   return 1.0;
 }
 bool metalDetail(float id) { return uMode > 2.5 && (abs(id - 7.0) < 0.5 || abs(id - 8.0) < 0.5 || abs(id - 13.0) < 0.5); }
@@ -7602,7 +8310,10 @@ bool emissive(float id) {
 #if ASSET == 13 || ASSET == 14
   if (id >= 90.0) return id > 95.5 && id < 98.95;
 #endif
-#if ASSET == 15
+#if ASSET >= 16
+  if (id > 134.5 && id < 136.95) return true;
+#endif
+#if ASSET >= 15
   if (id >= 100.0) return abs(id - 104.0) < 0.5 || (id > 106.5 && id < 108.95) || (id > 111.95 && id < 112.5) || (id > 118.5 && id < 121.5) || (id > 123.5 && id < 124.5);
 #endif
 #if ASSET == 9
@@ -7630,7 +8341,7 @@ float inkWidth(float id) {
     if (id > 17.5) w = 0.035;
     if (abs(id - 13.0) < 0.5 || (id > 14.5 && id < 15.69)) w = 0.01;
     if (id >= 40.0) {
-      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : id < 116.5 ? 0.012 : id < 117.5 ? 0.02 : id < 118.5 ? 0.012 : id < 120.5 ? 0.0 : 0.01) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
+      w = id >= 99.5 ? (id < 100.5 ? 0.02 : id < 101.5 ? 0.006 : id < 102.5 ? 0.014 : id < 103.5 ? 0.014 : id < 104.5 ? 0.008 : id < 105.5 ? 0.006 : id < 106.5 ? 0.012 : id < 107.5 ? 0.0 : id < 108.95 ? 0.014 : id < 109.95 ? 0.016 : id < 110.5 ? 0.004 : id < 111.95 ? 0.006 : id < 112.5 ? 0.0 : id < 113.5 ? 0.006 : id < 114.5 ? 0.012 : id < 115.5 ? 0.016 : id < 116.5 ? 0.012 : id < 117.5 ? 0.02 : id < 118.5 ? 0.012 : id < 120.5 ? 0.0 : id > 129.5 && id < 134.5 ? (id < 130.5 ? 0.02 : id < 131.5 ? 0.012 : id < 132.5 ? 0.02 : id < 133.5 ? 0.014 : 0.016) : id > 136.95 ? 0.02 : id > 134.5 ? 0.03 : 0.01) : id >= 89.5 ? (id < 90.5 ? 0.02 : id < 91.5 ? 0.006 : id < 92.5 ? 0.014 : id < 93.5 ? 0.014 : id < 94.5 ? 0.01 : id < 95.5 ? 0.01 : id < 96.5 ? 0.0 : 0.014) : id >= 79.5 ? (id < 80.5 ? 0.02 : id < 81.5 ? 0.006 : id < 82.5 ? 0.012 : id < 83.5 ? 0.008 : 0.01) : id >= 69.5 ? (id < 70.5 ? 0.006 : id < 71.5 ? 0.01 : id < 72.5 ? 0.012 : 0.02) : id < 41.5 ? 0.008 : id < 44.5 ? (abs(id - 43.0) < 0.5 ? 0.03 : 0.0) : id < 46.5 ? 0.012 : id < 47.9 ? 0.016 : id < 48.9 ? 0.02 : id < 55.5 ? 0.004 : id < 58.5 ? 0.003 : id < 59.5 ? 0.008 : id > 62.5 ? 0.004 : 0.014;
     }
   }
   return w*TR(id).x;
@@ -7771,7 +8482,10 @@ vec3 albedo(float id, vec3 p, vec3 n, out vec3 emit, out float spec) {
 #if ASSET == 13 || ASSET == 14
   if (id >= 90.0) return innerFloorPaint(id, p, n, emit, spec);
 #endif
-#if ASSET == 15
+#if ASSET == 16 || ASSET == 17
+  if (id > 129.5 && id < 137.5) return fcPaint(id, p, n, emit, spec);
+#endif
+#if ASSET >= 15
   if (id >= 100.0) return canopyHolePaint(id, p, n, emit, spec);
   if (id > 49.5 && id < 65.0) return chFloraPaint(id, p, n, emit, spec);
 #endif
@@ -8256,19 +8970,26 @@ void main() {
 #if ASSET == 9
   bg = mix(vec3(0.006, 0.03, 0.03), vec3(0.004, 0.012, 0.02), smoothstep(-0.05, 0.5, rd.y));
 #endif
-#if ASSET >= 10 && ASSET <= 15
+#if ASSET >= 10
   bg = mix(vec3(0.012, 0.012, 0.03), vec3(0.004, 0.006, 0.016), smoothstep(-0.05, 0.5, rd.y));
+#endif
+#if ASSET >= 16
+  bg = mix(vec3(0.06, 0.05, 0.12), vec3(0.015, 0.012, 0.035), smoothstep(-0.3, 0.6, rd.y));   // the cave's own mist, so far rock fades into it
 #endif
   float t = 0.0, hitId = 0.0, prevH = 1e5, prevId = 0.0, minH = 1e5, minId = 0.0, glowAcc = 0.0;
   bool graze = false; float grazeId = 0.0;
-#if ASSET >= 4
+#if ASSET == 16 || ASSET == 17
+  for (int i = 0; i < 420; i++) {   // long rays grazing the cave's walls on the way to its far end
+#elif ASSET >= 4
   for (int i = 0; i < 260; i++) {
 #else
   for (int i = 0; i < 120; i++) {
 #endif
     vec3 pp = ro + rd*t;
     vec2 h = map(pp);
-#if ASSET >= 4
+#if ASSET == 16 || ASSET == 17
+    if (h.x < 0.0015*t) { hitId = h.y; break; }
+#elif ASSET >= 4
     if (h.x < 0.0005*t) { hitId = h.y; break; }
 #else
     if (h.x < 0.002*t) { hitId = h.y; break; }
@@ -8279,7 +9000,11 @@ void main() {
     if (h.x > prevH && prevH < inkWidth(prevId) && !graze && t > 0.5) { graze = true; grazeId = prevId; }
     prevH = h.x; prevId = h.y;
     t += h.x*0.85;
+#if ASSET == 16 || ASSET == 17
+    if (t > 330.0) break;   // the cave reaches far past the other concepts, and its cutaways stand far back
+#else
     if (t > 110.0) break;
+#endif
   }
   vec3 col = bg;
   float ink = 0.0, inkClear = 0.0;
@@ -8307,7 +9032,7 @@ void main() {
 #if ASSET == 9
     key *= vec3(0.95, 1.15, 0.85)*0.8;   // soft green daylight from the opening
 #endif
-#if ASSET >= 10 && ASSET <= 15
+#if ASSET >= 10
     key *= vec3(0.8, 0.88, 1.15)*0.55;   // cool light: the gun side is bluer and colder than the grove
 #endif
     vec3 warm = vec3(1.0, 0.6, 0.3)*0.42*max(dot(n, lw), 0.0);
@@ -8333,7 +9058,9 @@ void main() {
     if (abs(hitId - 9.0) < 0.5) emit *= 0.36;   // the gate's energy holds its colour among the fires
 #endif
     col += emit;
-#if ASSET >= 4
+#if ASSET == 16 || ASSET == 17
+    float fade = uPlaza > 2.5 && uPlaza < 4.5 ? smoothstep(330.0, 260.0, t) : smoothstep(200.0, 140.0, t);
+#elif ASSET >= 4
     float fade = smoothstep(108.0, 72.0, t);
 #else
     float fade = smoothstep(70.0, 30.0, t);
@@ -8378,6 +9105,7 @@ void main() {
     }
     if (abs(hitId - 9.0) < 0.5 || abs(hitId - 17.0) < 0.5 || (uAsset > 3.5 && abs(hitId - 13.0) < 0.5) || (uAsset > 3.5 && hitId > 2.3 && hitId < 2.5) || (hitId > 29.5 && hitId < 31.5)) { crease = 0.0; idEdge *= 0.6; }
     if (hitId > 55.5 && hitId < 58.5 || hitId > 39.5 && hitId < 42.5) { crease = 0.0; idEdge = 0.0; }
+    if ((hitId > 131.5 && hitId < 132.5) || hitId > 134.5) crease = 0.0;   // the spires' valleys drew thick lines down them (owner)
     // The shop's smooth pod shells and their windows and door: clean outlines only, no crease smudges (owner).
     if (uAsset > 14.5 && hitId > 116.5 && hitId < 124.5) crease = 0.0;
     ink = max(clamp(crease, 0.0, 1.0)*step(0.01, inkWidth(hitId)), idEdge)*fade;
@@ -8493,6 +9221,26 @@ void main() {
     col += vec3(0.72, 0.32, 1.0)*spore*1.2;
   }
 #endif
+#if ASSET == 16 || ASSET == 17
+  {
+    // The canopy hole's mist, marched through the cave so it hangs between the camera and everything behind it.
+    float tEndM = hitId > 0.0 ? t : 330.0, t0 = 0.0;
+#if ASSET == 16
+    if (ro.z < 50.0) t0 = rd.z > 1e-3 ? (50.0 - ro.z)/rd.z : 1e5;
+#endif
+    if (t0 < tEndM) {
+      float t1 = min(tEndM, t0 + (ASSET == 17 || (uPlaza > 2.5 && uPlaza < 4.5) ? 200.0 : 120.0)), stepL = (t1 - t0)/72.0, trans = 1.0;
+      vec3 acc = vec3(0.0);
+      for (int i = 0; i < 72; i++) {
+        vec3 q = ro + rd*(t0 + (float(i) + 0.5)*stepL);
+        float a = 1.0 - exp(-fcMist(q)*stepL);
+        acc += trans*a*fcMistColour(q);
+        trans *= 1.0 - a;
+      }
+      col = col*trans + acc;
+    }
+  }
+#endif
 #if ASSET == 13
   {
     // Mist: marched through the scene, so it hangs between the camera and everything behind it.
@@ -8530,7 +9278,7 @@ void main() {
     col += vec3(0.72, 0.32, 1.0)*spore*1.4;
   }
 #endif
-#if ASSET == 4
+#if ASSET == 4 || ASSET == 16
   glowAcc *= 0.3;   // many small glowing things here; the full value drew rings in the air around them
 #endif
   col += glowAcc*uTreat.w*(uAsset > 2.5 ? uGateCore*0.9 : vec3(0.5, 0.9, 0.85));
@@ -8834,6 +9582,26 @@ void main() {
     ],
     core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, -9, 0], dist: 50, figure: [0, -100, 0], glow: [0, -10, 0], glowCol: [0.06, 0.05, 0.12],
     notes: [["Status", "Composite v1, 3 Nov 2026: every chosen piece in the real hole's outline, without the bridge and shop."]]
+  });
+  ASSETS.push({
+    id: "cave-spire", name: "Cave spire", kind: "New asset · far side cave", size: "30 to 55 studs thick, up to about 400 tall, rising out of the mist or hanging from the cave's roof", version: "v1", concept: true, noLive: true, shader: 17,
+    core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, 4, 0], dist: 70, figure: [0, -100, 0], glow: [0, -10, 0], glowCol: [0.06, 0.05, 0.12],
+    notes: [["Design", "Owner, 4 Nov 2026: sharp and jagged like the grove mountain; no thick lines down it; not spirally; not uniformly coney; not flat on some sides. One broken form of flat triangular faces, with shears and gouges worked into the faces all the way round. Rock textures: mottling, grain, small broken facets, worn pale edges, crevice hatching, the approved cracks, moss."],
+      ["Status", "Study v1, 4 Nov 2026: a new asset for the far side's cave, shown on its own before it is placed."]]
+  });
+  ASSETS.push({
+    id: "far-cave", name: "The far side cave", kind: "Composite · far side", size: "a mouth 280 studs wide and 185 high in the cavern wall, the cave beyond about 380 deep", version: "v1", concept: true, noLive: true, shader: 16,
+    variantLabel: "Cave",
+    variants: [
+      { name: "A · Bare spires", option: 0, camera: { target: [0, 12, 75], dist: 54.5, pitch: -0.2 } },
+      { name: "B · Crystal spires", option: 1, camera: { target: [0, 12, 75], dist: 54.5, pitch: -0.2 } },
+      { name: "C · Mushroom depths", option: 2, camera: { target: [0, 12, 75], dist: 54.5, pitch: -0.2 } },
+      { name: "Cave and mouth, roof off", option: 3, camera: { target: [0, -10, 95], dist: 120, pitch: 0.75 } },
+      { name: "Cave and mouth, cut in half", option: 4, camera: { target: [0, -5, 95], dist: 110, pitch: 0.1 } },
+      { name: "The wall on its own", option: 5, camera: { target: [0, 20, 60], dist: 45, pitch: -0.3 } }
+    ],
+    core: [0.72, 0.32, 1.0], crG: [0, 2, 0], target: [0, 12, 75], dist: 54.5, figure: [4, 0.1, 55], glow: [0, 5, 100], glowCol: [0.06, 0.05, 0.12],
+    notes: [["Status", "Composite v1, 4 Nov 2026 (owner: option B, a great mouth, quite big; wall option 1; the hole's mist; an invisible barrier over the whole mouth)."]]
   });
   const PLANNED = ["Little volcano", "Lava ravine", "Waterfall mountain", "Spiralling cavern pieces", "Slug habitat", "Blaster display stand", "Slug workshop", "Bounty and duel board", "Glowing pond", "Slug murals", "Energy lamps"];
   const TREAT = [

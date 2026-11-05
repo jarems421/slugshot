@@ -13,7 +13,7 @@ Where the lobby stands after the four main areas, written so a new chat can pick
 | Portal side | Built | Three portals, Titan's Arch, the volcano, cracked lava floor |
 | Slug side | **Complete** | Slug Grove: mountain, stream, pond, mushrooms, plants, crystals, Floppies |
 | Gun side | **Next** | Still the block-out's shop box |
-| Far side | Open | The spiral route and cave entrance were removed; what replaces them is undecided |
+| Far side | Study 1 | A great mouth over a look-only misty cave, and the cavern wall; [study](https://claude.ai/artifact/Ggdo5sXqcyxQWz7SajHiap) awaiting the owner's pick |
 
 "The four main areas" is the agent's grouping of the owner's "four main assets", from the table's first four rows.
 
@@ -63,7 +63,7 @@ Everything runs from the repository root. Python needs the venv with moderngl, n
 - **Phone cost:** about 1.3M triangles and 270 MB of textures with the grove in view on desktop, against starting budgets of 200k and 100 MB. The estimate hasn't been re-run since before the grove. Lighter Floppies, fewer plants and baking small props together are the likely savings. This has to happen before the real phone and iPad tests.
 - **Not tried by hand:** running and climbing the mountain, the pond's splashes at real speed, the slugs' hopping and glancing. Collision stands up to 13 studs above the rock at one tested point.
 - **Inferno:** 5 grove slugs are Inferno, built 2026-11-03 on `lobby/grove-inferno`. Awaiting the owner's look in Studio.
-- **Far side:** undecided. The bounty board is still block-out, and other biomes aren't designed.
+- **Far side:** cave and wall in study (see [lobby hub](lobby-hub.md#far-side-cave-and-the-cavern-wall-owner-2026-11-04)). The bounty board is still block-out.
 - **Log noise:** `Failed to upload TexturePack` recurs with several Studio windows open, and isn't traced.
 
 ## Next: the shop
