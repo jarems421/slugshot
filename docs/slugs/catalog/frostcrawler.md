@@ -1,5 +1,9 @@
 # Slug design record: Frostcrawler
 
+## Confirmed - Iceburst and Ice Wall, 2026-11-04
+
+**Owner:** "Okay, let's do ice burst. Let's do that one", then asked for the next slug. **Iceburst is the selected main** (direct hit plus a smaller immediate ice-shard splash very close to impact) and **Ice Wall the selected passive**. Brittle and Frostguard are no longer active options. Exact numbers, production effects, final forms and native implementation remain open. Older sections below that call the main undecided are history.
+
 ## Confirmed - scope, 2026-11-04
 
 The owner requested the next slug from the approved 14-slug bank, using the same artifact procedure: generate alternatives, then let the owner rate and refine them. The assistant picked Frostcrawler. This choice does not approve a main, passive or final visual design. Neutral small/transformed placeholders remain appropriate for this comparison.

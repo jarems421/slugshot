@@ -1,5 +1,7 @@
 # Slug design record: Arachnet
 
+**Confirmed, 2026-11-05:** Boon Doc's Mending Shot clears Snapbind.
+
 ## Confirmed - Silkline approved, 2026-11-04
 
 After seeing the pull/swing/release study, the owner said "that's good" and requested the next slug using the same procedure. **Snapbind main and Silkline passive are now selected cores.** Preserve the approved surface-anchor movement identity, direct pull, high-anchor swing and momentum-preserving release. Exact balance, controls, anchor durability, collision, ally access and production art remain open. This acceptance does not confirm all proposed counterplay/partner rules. The viewer retains this pair as confirmed references and now opens on [Frostcrawler](frostcrawler.md).

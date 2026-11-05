@@ -15,7 +15,7 @@ Read [status](status.md) first, then only this row. Add to it only if the task n
 | Blender clip or keyframes | `el4cteo-blender-animation` | [Rig contract](slugs/rig-specification.md) |
 | Motion looks wrong | [Motion review](slugs/motion-review.md) | [Lesson index](lessons-index.md) by symptom |
 | Transformation | Director or procedural | [Transformation](slugs/transformation-system.md) |
-| Slug abilities | None | [Ability planning](slugs/ability-planning.md), slug's record |
+| Slug abilities | None | [Ability playbook](slugs/ability-playbook.md), [ability planning](slugs/ability-planning.md), slug's record, [ability lab](../tools/slugs/ability-lab/README.md) |
 | Slug import or Roblox playback | `el4cteo-blender-export-pipelines` | [Studio import](slugs/studio-import.md) |
 | Lobby or environment | None | [Lobby checkpoint](art/lobby-checkpoint.md), [style guide](art/style-guide.md) |
 | Training arena or the game place | None | [Training arena](art/training-arena.md) |
@@ -51,6 +51,7 @@ Read [status](status.md) first, then only this row. Add to it only if the task n
 - [General shop concept](art/general-shop.md), [shop reference research](research/slugterra-shops.md) and [reusable curled cave fern](art/curled-cave-fern.md)
 - [Slug asset pipeline](slugs/pipeline.md), [rig contract](slugs/rig-specification.md), [species guide](slugs/species-guide.md), [transformation API](slugs/transformation-system.md), [Studio import](slugs/studio-import.md) and [evidence](slugs/verification.md)
 - [Slug design catalogue and records](slugs/catalog/index.md)
+- [Ability playbook](slugs/ability-playbook.md): what has worked when proposing abilities.
 - [Slug roster and ability planning](slugs/ability-planning.md): confirmed 14-slug bank, Inferno decisions and [Aquabeek's final abilities](slugs/catalog/aquabeek.md); [Arachnet’s confirmed Snapbind/Silkline](slugs/catalog/arachnet.md) and current [Frostcrawler studies](slugs/catalog/frostcrawler.md), sequential combinations and provisional examples.
 - [Inferno inspect: approved Playful Flame and native evidence](slugs/inferno-inspect-studies.md), [ADR 0025](decisions/0029-inferno-inspect-surface.md)
 - [Confirmed slug recovery and Floppy burrow sequence](slugs/recovery.md), [ADR 0018](decisions/0018-local-slug-recovery.md)

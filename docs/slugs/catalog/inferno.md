@@ -1,8 +1,40 @@
 # Slug design record: Inferno
 
-**Current, 2026-11-04:** final design, both forms. In the merged game place: loadout slot 2, the approved Playful Flame inspect, and the shared transformation (feel verdict pending). Backdraft and surface fire are chosen but not implemented. Older sections below that describe Inferno as display-only are history.
+**Current, 2026-11-04:** final design, both forms. In the merged game place: loadout slot 2, the approved Playful Flame inspect, and the shared transformation (feel verdict pending). Dragon's Breath and Fire Curtain are chosen but not built; see below. Older sections below that describe Inferno as display-only are history.
 
-## Confirmed - Backdraft ability, 2026-11-04
+## Confirmed - Dragon's Breath and Fire Curtain, 2026-11-05
+
+**Owner's vision:** "area control. Plus like a fire damage ability."
+
+- **Main - Dragon's Breath:** "When you hit it, it hits the opponent and then does a further fire breath that tracks the opponent." Cover breaks the stream.
+- **Passive - Fire Curtain:** "you can shoot it and whilst it's flying it will bring up like a curtain of fire", in the manner of a Valorant flame wall ability (the owner said Blaze, which is Phoenix's). Anyone can walk through it and be burned. This is an original implementation of a familiar idea, and it supersedes the earlier note that a basic firewall along the flight path was unwanted.
+
+**Confirmed, 2026-11-05:** water puts out fire (Crashwave and Mistbank clear Fire Curtain and burns), and Mending Shot clears burns.
+
+**Unresolved:** whether the curtain also appears on a shot that hits a player; how it follows the ground under a shot flying through the air, and over gaps; how long the breath tracks; final production effects and native implementation. The dragon must stay after impact to breathe, while today his transformed form ends on the hit. Tracking is the harder part to build; the assistant raised that, and the owner chose it.
+
+## History - abilities reworked, 2026-11-05
+
+**Owner, on Burpee (Inferno):** "we'll just rework burpee because I feel like its abilities are too basic for burpee anyways. And it's quite similar to other ones we've done, which suit these characters more anyways." **This supersedes Backdraft and surface fire,** including the "set in stone" entries below, which are now history. Nothing replaces them yet.
+
+**Owner's feedback on the proposals below, 2026-11-05:** "my vision for Burpee is to be like area control. Plus like a fire damage ability." None of the passives appeal, mainly because they seem hard to do properly. Dragon's Breath is the most liked main, not definite, and the owner wondered about breathing while flying. Settled in the section above.
+
+**Considered and not selected, except Dragon's Breath.** All lean on his cocky character and dragon form:
+
+| Option | Kind | What it does | Answer |
+| --- | --- | --- | --- |
+| Victory Lap | Main | Hit burns the target; the dragon banks round and dives back for a second hit | Move or take cover as it comes round |
+| Dragon's Breath | Main | Hit burns the target; the dragon hovers and breathes a stream that follows them | Break line of sight |
+| Flashpoint | Main | Hit sets the target alight; the next hit from anyone sets off a burst | Hide until the fire goes out |
+| Perch | Passive | Clings to the surface in dragon form, spitting fireballs at enemies he can see | Shoot him off or stay out of sight |
+| Thermal | Passive | Rising hot air carries anyone upward, on either team | Walk round it or ride it |
+| Flamejet | Passive | A vent blasts a jet of flame straight out, on and off | Time the gap or go round |
+
+**Assistant's view:** Victory Lap + Perch suit him best and repeat no other slug's job. Flamejet is closest to Livewire. These would change how his transformed form ends: today it ends on impact. Studies are in the [ability lab](../../../tools/slugs/ability-lab/README.md); browser demonstrations are not physics, balance or Studio evidence.
+
+## Superseded - Backdraft ability, 2026-11-04
+
+**Superseded by the rework above, 2026-11-05.**
 
 The owner explicitly selected **Backdraft**: "Let's set that in stone as the inferno ability." Impact burns the target; a visible compression warns of a delayed pressure vent along the incoming shot direction, damaging/pushing opponents who remain in its path. Aim and shot angle create positional follow-ups. The local viewer now retains only Backdraft for Inferno.
 

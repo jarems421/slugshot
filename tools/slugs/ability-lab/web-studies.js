@@ -1,0 +1,100 @@
+import * as T from 'three';
+
+const idea=(name,kind,tagline,impact,clever,answer,pairing)=>({name,slug:'arachnet',kind,role:'ARACHNET / '+(kind==='main'?'MAIN / WEB CONTROL':'PASSIVE / SURFACE WEB'),tagline,impact,clever,answer,pairing,short:name,visual:'Connected pale silk strands, clear anchor points and a neutral slug/transformed placeholder. Relative health and timings are illustrative.',choice:kind==='main'?'Watch the effect, then try the response.':'Compare contact with the web and the alternative route.',use:'The target stays in the affected line or touches the web. The ability has its own useful result.',counter:'The opponent responds to the visible strands, weak point or open route. The landed main hit still counts.',beats:['A neutral small slug approaches the target.','A blank larger form opens during the spin.','Contact activates the chosen web effect.','Watch the bind, pull, tether or surface response.'],counterbeat:'Visible threads and short durations give a response.',chainAt:5.6,chainTitle:'Optional follow-up opportunity.',chainText:pairing});
+const previousWebConcepts=[
+ {...idea('Snapbind','main','A direct hit briefly binds the legs, leaving aim free.','Impact deals damage and a short web binding catches the lower body. Movement is briefly held while the target can still aim and fire. Shooting the strands breaks the hold early.','Stop a rush or buy time for your own next shot. It works as a single-target hit and short control effect without another slug.','Fire back while bound, cut the visible strands, or have a teammate cut them. The bind also expires quickly; no silence or indefinite root is proposed.','Confirmed Crashwave could exploit a held lineup; Inferno could attack the same position. Those pairings do not select extra Arachnet powers.'),counterbeat:'The target cuts the strands and moves away early.'},
+ {...idea('Reelshot','main','A silk line gives the struck target one short pull.','The hit deals damage and a brief taut thread pulls the opponent toward the shooter, then releases. This is a physical link to one target, not an area suction field.','Pull someone out of a useful angle or bring them into your own short-range aim. Pulling a dangerous opponent closer is also a risk.','Break the line with solid cover during the short pull, or return fire toward the shooter. The tether has limited range and duration.','A target could be pulled toward an earlier Inferno fire patch. That is an optional setup; the direct hit and pull already work alone.'),counterbeat:'The opponent uses the nearby cover to break the line before the full pull.'},
+ {...idea('Anchorline','main','A hit tethers the target to a visible ground anchor.','Impact deals damage and leaves a short silk leash between the opponent and the impact anchor. They can move and shoot within the slack, but the taut line limits a longer retreat until cut or expired.','Keep someone from immediately abandoning a contested position while you keep aiming. Unlike Snapbind, this allows movement inside a small space.','Shoot the visible anchor, have an ally cut the line, or fight within its slack until it expires. The target retains aim and firing.','An earlier fire patch or an advancing Crashwave could threaten the anchored space. The anchor still has standalone positional value.'),counterbeat:'The target breaks the weak anchor, then retreats beyond the original slack.'},
+ {...idea('Tripweb','passive','A visible web patch catches the next player who touches it.','Surface impact arms a small sticky web. Floor contact catches a crossing; wall contact catches close traversal; ceiling contact catches a jump into the hanging strands. The brief hold ends after one catch.','Set a readable trap on a route or a wall-run contact. It catches by itself without needing a later element to activate.','Avoid the silk, shoot it before entering, or cut free after the catch. It is visible and short-lived, with no invisible whole-room trap.','A catch could set up a direct shot or Crashwave. Whether fire destroys the web, and other elemental rules, remain proposals.'),counterbeat:'The opponent avoids the contact area, so the armed web does not catch them.'},
+ {...idea('Catchnet','passive','A small web canopy catches one incoming shot.','Impact builds a short-lived, surface-anchored net. It catches one projectile and tears away. Floor, wall and ceiling hits orient the canopy around the impact location. It does not reflect the shot.','Screen a crossing or protect an exposed angle for one attack. It is a fixed, consumable interception rather than a permanent shield.','Spend a weak shot to consume it, follow with another, or use an open side. The preview shows a second shot passing after the first is caught.','A net could cover a rotation through Mistbank or a teammate’s recovery. Neither is required for it to intercept its one shot.'),counterbeat:'The first shot spends the net. The next shot goes through the cleared space.'},
+ {...idea('Springweb','passive','An elastic surface web rebounds whoever touches it.','Impact places springy webbing. Floor contact rebounds upward, wall contact rebounds outward, and ceiling contact rebounds down. The strands visibly stretch before the response.','Use a surface as a temporary launch or redirect an opponent’s movement. Either team could exploit the clearly marked pad; no new button is required.','Take a route that avoids contact, or deliberately use the rebound yourself. Strength, team rules and repeat limits remain proposals.','A rebound could create a new firing angle for Crashwave or Backdraft. The movement utility works alone.'),counterbeat:'The opponent stays clear of the elastic patch and keeps their original route.'}
+];
+
+export const webConcepts=[
+ {...previousWebConcepts[0],confirmed:true,webIndex:1},
+ {...idea('Silkline','passive','Anchor a surface. Pull yourself in or swing past it.',
+ 'A surface hit fixes a visible silk anchor and connects it to the shooter. Reel in for a direct pull, or keep slack and carry your approach into a swing. Release the line to carry momentum onward. This moves the shooter; it does not drag opponents.',
+ 'Use a high wall or ceiling to cross a gap, swing around cover or take a new firing angle. Low floor anchors offer a grounded pull. Anchor placement and your approach determine the route.',
+ 'The visible anchor and tether reveal the route. Enemies can shoot the anchor to cut the traversal short; the user can release deliberately. Range, lifetime, steering and input bindings remain open.',
+ 'Reposition for Snapbind, cross an exposed area behind Mistbank, or swing over a fire patch. These are optional sequential plays, not fusion powers.'),webIndex:7,confirmed:true,
+ choice:'Compare two uses of the same anchor.',use:'Direct pull: reel toward the struck surface. Floor anchors pull along the ground; higher anchors gain height.',counter:'Swing and release: a high anchor redirects your approach into an arc. Release carries the tangent momentum onward. A low floor anchor still pulls along the ground.',
+ beats:['The shooter fires at a surface, not an opponent.','The neutral slug spins and transforms in flight.','Surface impact fixes a silk anchor and links the shooter.','Watch the shooter reel in, or swing and release.'],counterbeat:'Release the tether while moving to carry momentum onward.'}
+];
+
+export function createWebStudy({scene,mesh,box,line,mat,label,walk}){
+ const clamp=T.MathUtils.clamp,mix=T.MathUtils.lerp,up=new T.Vector3(0,1,0),TAU=Math.PI*2,s=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+ const root=new T.Group();scene.add(root);
+ const silk=new T.MeshStandardMaterial({color:0xe9dfc7,emissive:0x514658,emissiveIntensity:.15,roughness:.66});
+ function blank(big){const group=new T.Group();scene.add(group);const geometry=new T.SphereGeometry(1,32,24),p=geometry.attributes.position;for(let i=0;i<p.count;i++)p.setXYZ(i,p.getX(i)*(big?.48:.30),p.getY(i)*(big?.44:.50),p.getZ(i)*(big?.95:.40));geometry.computeVertexNormals();mesh(geometry,mat(0xb9c5c9,.5),group,true);return group;}
+ const small=blank(false),large=blank(true);
+ const wall=box(root,1.4,1.4,-.43,4.5,2.8,.18,mat(0x354550,.9));
+ const ceiling=box(root,1.4,2.82,0,4.5,.14,3.4,new T.MeshStandardMaterial({color:0x506772,transparent:true,opacity:.16,depthWrite:false,side:T.DoubleSide}),false);
+ for(const z of [-1.7,1.7])box(ceiling,0,0,z,4.5,.06,.035,mat(0x82959e),false);
+ const blocker=box(root,-.10,.65,-1.20,.6,1.3,.5,mat(0x384854));
+ const surfaceLabel=label('FLOOR','#c7c3d4',2),shooterLabel=label('SHOOTER','#a9d5cb',1.7),responseLabel=label('VISIBLE STRANDS / TIMING ILLUSTRATIVE','#c8c1d5',3.1);root.add(surfaceLabel,shooterLabel,responseLabel);
+ function setSurfaceText(value){if(surfaceLabel.userData.text===value)return;const canvas=surfaceLabel.material.map.image,ctx=canvas.getContext('2d');ctx.clearRect(0,0,512,80);ctx.font='600 25px Segoe UI';ctx.textAlign='center';ctx.fillStyle='#c7c3d4';ctx.fillText(value==='ceiling'?'CEILING / CUTAWAY':value.toUpperCase(),256,45);surfaceLabel.material.map.needsUpdate=true;surfaceLabel.userData.text=value;}
+ function net(){const group=new T.Group();root.add(group);const strands=[];for(let k=1;k<=4;k++){const r=k/4,points=[];for(let j=0;j<=64;j++){const a=j/64*TAU;points.push([Math.cos(a)*r,.60*(1-r*r),Math.sin(a)*r]);}strands.push(line(group,points,0xe9dfc7,k===4?.018:.011));}for(let k=0;k<12;k++){const a=k/12*TAU,points=[];for(let j=0;j<=16;j++){const r=j/16;points.push([Math.cos(a)*r,.60*(1-r*r),Math.sin(a)*r]);}strands.push(line(group,points,0xe9dfc7,.011));}const skin=mesh(new T.SphereGeometry(1,40,20,0,TAU,0,Math.PI/2),new T.MeshBasicMaterial({color:0x9a8baf,transparent:true,opacity:.07,side:T.DoubleSide,depthWrite:false}),group);skin.scale.y=.6;for(const strand of strands){strand.material.transparent=true;strand.material.opacity=.92;}return {group,strands,skin};}
+ const surfaceNet=net();
+ const binding=new T.Group();root.add(binding);for(let k=0;k<4;k++){const band=mesh(new T.TorusGeometry(.39,.017,6,40),silk,binding);band.rotation.x=Math.PI/2;band.position.y=.33+k*.2;}for(let k=0;k<5;k++){const a=k/5*TAU;line(binding,[[Math.cos(a)*.4,.28,Math.sin(a)*.4],[Math.cos(a+.8)*.4,.60,Math.sin(a+.8)*.4],[Math.cos(a+1.3)*.4,.98,Math.sin(a+1.3)*.4]],0xe9dfc7,.014);}
+ const tether=new T.Group();root.add(tether);const rope=mesh(new T.CylinderGeometry(.018,.018,1,8),silk,tether);rope.position.y=.5;
+ function join(start,end){const delta=end.clone().sub(start);tether.position.copy(start);tether.quaternion.setFromUnitVectors(up,delta.clone().normalize());tether.scale.set(1,Math.max(.001,delta.length()),1);}
+ const anchor=net();anchor.group.scale.set(.28,.18,.28);
+ const anchorCore=mesh(new T.OctahedronGeometry(.105),new T.MeshStandardMaterial({color:0xbea1c3,emissive:0x4f3e5c,emissiveIntensity:.2}),anchor.group);anchorCore.position.y=.2;
+ const shot=mesh(new T.SphereGeometry(.085,12,10),new T.MeshBasicMaterial({color:0xebd59e}),root);
+ const weakShot=mesh(new T.SphereGeometry(.055,12,10),new T.MeshBasicMaterial({color:0xe5d5bb}),root);
+ const hpCanvas=document.createElement('canvas');hpCanvas.width=192;hpCanvas.height=32;const hpTexture=new T.CanvasTexture(hpCanvas),hp=new T.Sprite(new T.SpriteMaterial({map:hpTexture,transparent:true,depthTest:false}));hp.scale.set(.85,.14,1);root.add(hp);
+ function health(target,damage){hp.position.copy(target.position).add(new T.Vector3(0,1.98,0));const ctx=hpCanvas.getContext('2d');ctx.clearRect(0,0,192,32);ctx.fillStyle='#18232b';ctx.fillRect(0,0,192,32);ctx.fillStyle='#963f35';ctx.fillRect(5,5,182,22);ctx.fillStyle='#b2cd9b';ctx.fillRect(5,5,182*(1-clamp(damage,0,.95)),22);hpTexture.needsUpdate=true;}
+ const effects={surfaceNet:surfaceNet.group,binding,tether,anchor:anchor.group,shot,weakShot,blocker};let last={};
+ function render({t,index,surface='floor',counter,chain,defender,ally,secondary}){
+  root.visible=index>0;small.visible=false;large.visible=false;for(const g of Object.values(effects))g.visible=false;wall.visible=false;ceiling.visible=false;surfaceLabel.visible=false;shooterLabel.visible=false;responseLabel.visible=index>0;hp.visible=index>0;if(index===0)return;
+  const passive=index>3,after=Math.max(0,t-3),birth=s(after/.25),fade=1-s((after-3.6)/.9),grow=s((t-.75)/.8),gone=1-s((t-3)/.28);
+  const point=surface==='wall'?new T.Vector3(1.4,1.3,-.32):surface==='ceiling'?new T.Vector3(1.4,2.73,0):new T.Vector3(1.4,.045,0),normal=surface==='wall'?new T.Vector3(0,0,1):surface==='ceiling'?new T.Vector3(0,-1,0):up.clone();
+  const actor=new T.Vector3(mix(-6.3,.02,clamp(t/3,0,1)),passive?mix(1.24,point.y,s((t-2)/1)):1.24,passive?mix(0,point.z,s((t-2)/1)):0);
+  small.visible=t<1.3;large.visible=t>.83&&t<3.28;small.position.copy(actor);large.position.copy(actor);small.rotation.set(0,-Math.PI/2+TAU*s((t-.3)/1),0);large.rotation.copy(small.rotation);small.scale.setScalar((1-.8*grow)*.95);large.scale.setScalar((.15+1.2*grow)*Math.max(.001,gone));
+  defender.position.set(1.4,0,0);defender.rotation.set(0,0,0);ally.visible=false;secondary.visible=false;walk(defender,0,t);responseLabel.position.set(1.0,3.45,-.2);
+  let damage=passive?0:.20*birth,bound=false,pulled=false,taut=false,broken=false,caught=false,intercepted=false,consumed=false,bounced=false;
+  if(index===1){broken=counter&&after>1.0;bound=after>0&&after<(counter?1.0:2.1);binding.visible=bound;binding.scale.setScalar(birth);if(broken){defender.position.x+=1.5*s((after-1)/.9);walk(defender,after<2?1:0,t);}if(counter&&after>.5&&after<1.0){shot.visible=true;shot.position.copy(defender.position).add(new T.Vector3(0,mix(1.2,.35,s((after-.5)/.5)),.12));}}
+  if(index===2){ally.visible=true;ally.position.set(-4.25,0,0);ally.rotation.y=Math.PI/2;shooterLabel.visible=true;shooterLabel.position.set(-4.25,2.2,0);blocker.visible=counter;const pull=s((after-.25)/(counter?.65:1.1));defender.position.x=1.4-(counter?.8:2.15)*pull;defender.position.z=counter?-1.6*pull:0;broken=counter&&after>.95;pulled=after>.25&&!broken;tether.visible=after>0&&after<1.8&&!broken;join(new T.Vector3(-4.05,1.12,0),defender.position.clone().add(new T.Vector3(0,1.0,0)));walk(defender,after>.25&&after<1.5?.5:0,t);}
+  if(index===3){const released=counter&&after>1.0;broken=released;const retreat=s((after-.25)/1.5);defender.position.x=1.4+(released?2.7*s((after-1)/1.2):1.1*retreat);anchor.group.visible=after>0&&!released;anchor.group.position.set(1.4,.05,-.1);tether.visible=after>0&&after<3.3&&!released;join(new T.Vector3(1.4,.13,-.1),defender.position.clone().add(new T.Vector3(0,.95,0)));taut=!released&&after>1.2&&after<3.3;if(after>3.3){anchor.group.visible=false;tether.visible=false;}if(counter&&after>.55&&after<1.0){shot.visible=true;shot.position.copy(defender.position).add(new T.Vector3(-.3*s((after-.55)/.45),mix(1.1,.1,s((after-.55)/.45)),0));}walk(defender,after>.25&&after<2.2?.6:0,t);}
+  if(passive){wall.visible=surface==='wall';ceiling.visible=surface==='ceiling';surfaceLabel.visible=true;setSurfaceText(surface);surfaceLabel.position.copy(point).add(new T.Vector3(-2.05,.5,0));surfaceNet.group.visible=after>0;surfaceNet.group.position.copy(point);surfaceNet.group.quaternion.setFromUnitVectors(up,normal);surfaceNet.group.scale.set(1.25*birth,(index===5?3.2:.35)*birth,1.25*birth);surfaceNet.skin.material.opacity=.07*fade;
+   if(surface==='floor')defender.position.set(mix(3.6,counter?2.9:1.4,s((after-.3)/1)),0,counter?1.85:0);
+   if(surface==='wall')defender.position.set(mix(3.6,1.4,s((after-.3)/1)),0,counter?1.1:.10);
+   if(surface==='ceiling')defender.position.set(1.4,counter?0:.70*Math.sin(Math.PI*clamp((after-.4)/1.25,0,1)),0);
+   const contact=after>1.0&&!counter;
+   if(index===4){caught=contact&&after<2.3;bound=caught;binding.visible=caught;if(caught){defender.position.set(1.4,surface==='ceiling'?.62:0,surface==='wall'?.10:0);surfaceNet.group.scale.y=.14;}if(after>2.6)surfaceNet.group.visible=false;}
+   if(index===5){defender.position.set(1.4,0,surface==='wall'?.10:0);intercepted=after>1.2;consumed=intercepted;const visibility=(1-s((after-1.2)/.35))*fade;for(const strand of surfaceNet.strands)strand.material.opacity=.92*visibility;surfaceNet.skin.material.opacity=.07*visibility;surfaceNet.group.visible=after>0&&visibility>.01;const first=s((after-.5)/.7);shot.visible=after>.5&&after<1.25;shot.position.copy(point).addScaledVector(normal,mix(3.0,.5,first));if(counter){const second=s((after-1.75)/.7);weakShot.visible=after>1.75&&after<2.5;weakShot.position.copy(point).addScaledVector(normal,mix(3.0,.1,second));damage=.18*s((after-2.35)/.2);}}
+   if(index===6){bounced=contact;const p=s((after-1.0)/.55),flight=Math.sin(Math.PI*clamp((after-1)/1.6,0,1));if(bounced){if(surface==='floor')defender.position.y=1.4*flight;if(surface==='wall')defender.position.z=.10+1.6*p;if(surface==='ceiling')defender.position.y=Math.max(0,.70*(1-p));}surfaceNet.group.scale.y=(.35+.4*flight)*birth;}
+   if(index!==5)for(const strand of surfaceNet.strands)strand.material.opacity=.92*fade;
+  }
+  let movement=null;
+  if(index===7){
+   defender.visible=false;ally.visible=true;hp.visible=false;binding.visible=false;surfaceNet.group.visible=false;
+   const high=surface!=='floor',swing=counter&&high;
+   const fixed=surface==='floor'?new T.Vector3(2.6,.06,0):surface==='wall'?new T.Vector3(1.4,4.25,-.32):new T.Vector3(1.4,4.25,0);
+   wall.position.set(1.4,2.15,-.43);wall.scale.y=1.54;ceiling.position.y=4.34;
+   surfaceLabel.position.copy(fixed).add(new T.Vector3(-2.05,.5,0));
+   responseLabel.position.set(-1,5.25,0);
+   const start=new T.Vector3(-3.6,0,0),elapsed=Math.max(0,after-.18),progress=clamp(elapsed/1.8,0,1);
+   let released=false;
+   ally.position.copy(start);
+   if(swing){
+    const radius=3.6,first=-.88,last=.62,theta=mix(first,last,progress);
+    const arc=new T.Vector3(fixed.x+radius*Math.sin(theta),fixed.y-radius*Math.cos(theta),fixed.z+.8);
+    const entry=s(elapsed/.25);ally.position.copy(start).lerp(arc,entry);
+    if(progress>=1){released=true;const dt=elapsed-1.8;ally.position.set(fixed.x+radius*Math.sin(last)+2.0*Math.cos(last)*dt,Math.max(0,fixed.y-radius*Math.cos(last)+2.0*Math.sin(last)*dt-1.8*dt*dt),fixed.z+.8);}
+   }else{
+    const end=fixed.clone().addScaledVector(normal,high?.85:.0);end.y=Math.max(0,end.y-1.0);
+    ally.position.lerp(end,s(progress));released=elapsed>2.25;
+   }
+   ally.rotation.set(swing?-.12*Math.sin(progress*Math.PI):0,Math.PI/2,0);walk(ally,high?0:.7*(progress<1),t);
+   anchor.group.visible=after>0&&after<3.7;anchor.group.position.copy(fixed);anchor.group.quaternion.setFromUnitVectors(up,normal);anchor.group.scale.set(.36,.24,.36);
+   tether.visible=after>0&&!released;join(fixed,ally.position.clone().add(new T.Vector3(0,1.05,0)));
+   shooterLabel.visible=true;shooterLabel.position.copy(ally.position).add(new T.Vector3(0,2.2,0));
+   const flight=clamp(t/3,0,1);small.position.set(mix(-3.6,fixed.x,flight),mix(1.24,fixed.y,s((t-1.4)/1.6)),mix(0,fixed.z,flight));large.position.copy(small.position);
+   movement={mode:swing?'swing':'pull',shooter:ally.position.toArray(),anchor:fixed.toArray(),attached:tether.visible,released,damagesOpponent:false};
+  }else{wall.position.set(1.4,1.4,-.43);wall.scale.y=1;ceiling.position.y=2.82;}
+  binding.position.copy(defender.position);if(index!==7)health(defender,damage);
+  last={movement,index,kind:passive?'passive':'main',surface,normal:normal.toArray(),relativeDamage:damage,bound,pulled,taut,broken,caught,intercepted,consumed,bounced,defender:defender.position.toArray(),visible:Object.entries(effects).filter(([name,g])=>g.visible).map(([name])=>name)};
+ }
+ return {root,small,large,render,metrics:()=>last};
+}

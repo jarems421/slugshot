@@ -1,0 +1,29 @@
+import {spawn} from 'node:child_process';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const out=path.resolve('build/slugs/inferno/ability-concepts-20261104'),qa=path.join(out,'qa');await mkdir(qa,{recursive:true});
+const profile=path.join(qa,'browser-'+Date.now());await mkdir(profile);
+const browser=spawn('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',['--headless=new','--remote-debugging-port=0','--no-first-run','--no-default-browser-check','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-background-timer-throttling','--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:'ignore'});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));let socket;
+try{let port;for(let i=0;i<60;i++){try{port=+(await readFile(path.join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await sleep(250);}}if(!port)throw Error('Browser failed to start');
+ const tabs=await(await fetch(`http://127.0.0.1:${port}/json`)).json();socket=new WebSocket(tabs.find(t=>t.type==='page').webSocketDebuggerUrl);await new Promise((r,j)=>{socket.onopen=r;socket.onerror=j;});
+ let next=1;const pending=new Map(),exceptions=[];socket.onmessage=e=>{const m=JSON.parse(e.data);if(m.id){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(m.error):p.resolve(m.result);}else if(m.method==='Runtime.exceptionThrown')exceptions.push(m.params.exceptionDetails.text);};
+ const call=(method,params={})=>new Promise((resolve,reject)=>{const id=next++;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));});
+ const evaluate=async expression=>{const r=await call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(JSON.stringify(r.exceptionDetails));return r.result.value;};
+ await call('Runtime.enable');await call('Page.enable');await call('Emulation.setDeviceMetricsOverride',{width:1480,height:1130,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:pathToFileURL(path.join(out,'Inferno-five-abilities.html')).href});
+ let ready=false;for(let i=0;i<100;i++){ready=await evaluate('!!window.abilityPreview?.ready');if(ready)break;await sleep(200);}if(!ready)throw Error('Preview not ready: '+await evaluate('document.querySelector("#error").textContent'));
+ await evaluate('abilityPreview.state.playing=false');const stats=[];
+ for(let index=0;index<5;index++){for(const counter of [false,true]){const metrics=await evaluate(`abilityPreview.sample(5.2,${index},${counter})`);stats.push(metrics);await sleep(60);const shot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});await writeFile(path.join(qa,`${index}-${counter?'counter':'tactical'}.png`),Buffer.from(shot.data,'base64'));}
+  await evaluate(`abilityPreview.sample(1.72,${index},false)`);const data=await evaluate('abilityPreview.capture()');await writeFile(path.join(qa,`${index}-transform.png`),Buffer.from(data.split(',')[1],'base64'));
+ }
+ const sweep=await evaluate(`(()=>{let finite=true,errors=[];for(let k=0;k<5;k++)for(const c of [false,true])for(const t of [0,.45,.9,1.3,1.8,2.8,3.02,3.25,3.9,4.7,5.8,7.8]){const m=abilityPreview.sample(t,k,c);finite=finite&&m.finite;errors.push(...m.errors)}return {finite,errors,samples:120};})()`);
+ const controls=await evaluate(`(()=>{document.querySelectorAll('nav button')[2].click();const selected=abilityPreview.state.index===2;document.querySelector('[data-time="3.08"]').click();const beat=!abilityPreview.state.playing&&abilityPreview.state.time===3.08;document.querySelector('#counter').click();const counter=abilityPreview.state.counter;document.querySelector('#speed').click();const speed=abilityPreview.state.speed===.5;document.querySelector('#camera').click();const camera=abilityPreview.state.overhead;document.querySelector('#reset').click();const reset=!abilityPreview.state.overhead;document.querySelector('#replay').click();const replay=abilityPreview.state.playing;document.querySelector('#play').click();return {selected,beat,counter,speed,camera,reset,replay};})()`);
+ await evaluate('abilityPreview.sample(1.72,0,false)');const screen=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});await writeFile(path.join(out,'preview.png'),Buffer.from(screen.data,'base64'));
+ await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await evaluate('abilityPreview.sample(5.2,2,false)');await sleep(80);const mobile=await evaluate('({width:innerWidth,scroll:document.documentElement.scrollWidth})');const mshot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true});await writeFile(path.join(qa,'mobile.png'),Buffer.from(mshot.data,'base64'));
+ const report={stats,sweep,controls,mobile,exceptions};await writeFile(path.join(qa,'report.json'),JSON.stringify(report,null,2));
+ if(exceptions.length||!sweep.finite||sweep.errors.length||mobile.scroll>mobile.width||Object.values(controls).some(x=>!x))throw Error('QA failed: '+JSON.stringify(report));
+ console.log('PASS: offline model loading; five concepts × two branches; 120 finite pose/geometry samples; replay, pause, speed, timeline beats and camera; mobile width.');
+ if(process.argv.includes('--motion')){await call('Emulation.setDeviceMetricsOverride',{width:1240,height:950,deviceScaleFactor:1,mobile:false});await mkdir(path.join(qa,'motion'),{recursive:true});
+  for(let k=0;k<5;k++)for(let i=0;i<48;i++){await evaluate(`abilityPreview.sample(${i/6},${k},false)`);const data=await evaluate('abilityPreview.capture()');await writeFile(path.join(qa,'motion',`${k}-${String(i).padStart(3,'0')}.png`),Buffer.from(data.split(',')[1],'base64'));}console.log('Saved five 48-frame motion sequences.');}
+}finally{if(socket)socket.close();browser.kill();}

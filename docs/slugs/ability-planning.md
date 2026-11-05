@@ -1,6 +1,6 @@
 # Slug roster and ability planning
 
-Source: owner discussion and explicit request to preserve it, 2026-11-04. This note governs future ability proposals alongside the [catalogue's ability rule](catalog/index.md#ability-rule). It distinguishes confirmed choices from inspiration. Inferno's Backdraft/Surface Fire and Aquabeek's Crashwave/Mistbank are selected; Arachnet also has confirmed Snapbind/Silkline; other kits and all numerical balance remain open. The player-hit/passive surface split below applies across the roster. This note does not implement combat.
+**Current picks are in the table below.** Source: owner discussion and explicit request to preserve it, 2026-11-04. This note governs future ability proposals alongside the [catalogue's ability rule](catalog/index.md#ability-rule). It distinguishes confirmed choices from inspiration. Aquabeek's Crashwave/Mistbank are selected; Arachnet also has confirmed Snapbind/Silkline; other kits and all numerical balance remain open. The player-hit/passive surface split below applies across the roster. This note does not implement combat.
 
 ## Confirmed - intended roster bank
 
@@ -11,13 +11,13 @@ Names below normalize the owner's spoken list to the Slugterra reference species
 | Slug / reference species | Current planning state |
 | --- | --- |
 | Floppy | Existing creature; [individual record](catalog/flopper-inspired.md). Include its current behaviour when planning the roster. |
-| Inferno | Existing fire creature; **Backdraft selected by the owner, 2026-11-04**. [Individual record](catalog/inferno.md). Runtime implementation and balance remain open. |
-| Rammstone | Confirmed future roster choice; rock/ramming reference. Earlier spoken names include Ramstone and Brimstone. |
-| Tazerling | Confirmed future roster choice; electricity reference. Sparky is the owner's earlier working name for the electric slug. |
-| Frostcrawler | **Ice Wall passive selected**; [three replacement main proposals](catalog/frostcrawler.md). Initial six options rejected. |
+| Inferno | Existing fire creature; **Dragon's Breath main + Fire Curtain passive selected by owner, 2026-11-05**, superseding Backdraft and surface fire. [Record](catalog/inferno.md). |
+| Rammstone | **Shove Punch main, with a passive that raises rock cover and breaks map features.** [Record](catalog/rammstone.md); passive's name and plain-surface rule open. Earlier spoken names include Ramstone and Brimstone. |
+| Tazerling | **Chain Lightning main + Livewire passive selected by owner, 2026-11-05.** [Record](catalog/tazerling.md). Sparky is the owner's earlier working name. |
+| Frostcrawler | **Iceburst main + Ice Wall passive selected by owner, 2026-11-04.** [Record](catalog/frostcrawler.md). |
 | Aquabeek | **Crashwave main + Mistbank passive finalized by owner, 2026-11-04.** [Record](catalog/aquabeek.md). Neutral visual placeholders; final forms and numeric balance remain open. |
 | Arachnet | **Snapbind main + Silkline passive selected**; [record](catalog/arachnet.md). Detailed rules and visual design remain open. |
-| Boon Doc | Confirmed future roster choice; healing reference. |
+| Boon Doc | **Mending Shot main + Healing Spring passive selected by owner, 2026-11-05.** [Record](catalog/boon-doc.md). |
 | Tormato | Confirmed future roster choice; wind reference. |
 | Vinedrill | Confirmed future roster choice; plant/vine reference. |
 | Phosphoro | Confirmed future roster choice; light reference. |
@@ -27,7 +27,46 @@ Names below normalize the owner's spoken list to the Slugterra reference species
 
 ## Confirmed - useful distinctions, not novelty for its own sake, 2026-11-04
 
-Owner feedback on Frostcrawler: a familiar, good impact ability is preferable to a complicated unprecedented mechanic. Compare actual outcomes across the roster, not just different elements or visuals. Arachnet already owns a brief movement bind; avoid adding more ground-sticking/freezing mains by default. This is a roster-diversity constraint, not a blanket ban on every slow or future ice effect. Frostcrawler's Ice Wall is approved; its main remains open after two rejected comparisons. Proposals must remain proposals until rated/selected.
+Owner feedback on Frostcrawler: a familiar, good impact ability is preferable to a complicated unprecedented mechanic. Compare actual outcomes across the roster, not just different elements or visuals. Arachnet already owns a brief movement bind; avoid adding more ground-sticking/freezing mains by default. This is a roster-diversity constraint, not a blanket ban on every slow or future ice effect. Frostcrawler's Iceburst and Ice Wall are selected. Proposals must remain proposals until rated/selected.
+
+**Read the [ability playbook](ability-playbook.md) before proposing.**
+
+## Confirmed - concepts first, maps follow abilities, 2026-11-05
+
+**Owner:** the current job is to settle base ability concepts. Damage, balance and numbers are sorted out later, so do not frame proposals around them. **Maps will be modelled around the abilities**, not the other way round, so an ability may assume map features such as breakable arches and spires. **Owner, same day:** ideas also need to be realistic to build well; several Inferno proposals were turned down as seeming hard to bring to life. Rocklock V2 was a test: do not design around it or treat its destruction system as a requirement.
+
+## Confirmed - abilities interact, 2026-11-05
+
+**Owner:** "stuff like mending should clear burns and binds. Same with like the water slug should clear out fire stuff. Electric slug should amplify water stuff. Stuff like that, you know what I mean? Add those type of levels." Exact strength comes later; these are concept rules. Look for one with every new slug.
+
+| Rule | What it means now | Status |
+| --- | --- | --- |
+| Healing clears burns and binds | Mending Shot frees a teammate from Snapbind and removes burns from Dragon's Breath and Fire Curtain | Confirmed |
+| Water clears fire | Crashwave and Mistbank put out Fire Curtain and burns | Confirmed |
+| Electricity amplifies water | Chain Lightning and Livewire get stronger on wet targets or in water effects | Confirmed idea; exact effect open |
+| Fire melts ice | Fire Curtain and Dragon's Breath wear Ice Wall down | Considering |
+| Rock breaks ice | Rubble and Rockbreak shatter Ice Wall | Considering |
+| Wind carries things | A tornado picks up fire, mist or sparks it passes through | Considering |
+
+## Who already does what
+
+Check a proposal against this before offering it. Two slugs doing the same job is the failure the owner keeps flagging, whatever their element. **Confirmed (owner, 2026-11-05):** abilities should be skill-based and intertwine, so players can find techs between them.
+
+| Job | Taken by | Room left |
+| --- | --- | --- |
+| Hold someone in place | Snapbind | None by default; no more binds or freezes |
+| Hit a group | Crashwave (a line), Iceburst (a small radius), Chain Lightning (jumps between people) | Full; no more group-hitting mains by default |
+| Deny an area with damage | Livewire (a contact patch), Fire Curtain (a wall along the shot) | Full; no more by default |
+| Keep hurting after the hit | Dragon's Breath | Its tracking stream |
+| Move an enemy | Shove Punch (instant, short) | Open: Tormato |
+| Block sight | Mistbank | Others may interact with it rather than repeat it |
+| Physical cover | Ice Wall, Rammstone's rock wall (owner's choice) | Rammstone also changes routes; no more cover passives by default |
+| Break or reshape the map | Rammstone | Its own job; others can use what it leaves |
+| Move yourself | Silkline (pull and swing) | Boosts differ from anchors |
+| Reveal enemies | Nobody yet | Phosphoro (light) seems the natural owner |
+| Heal or support | Boon Doc (Mending Shot, Healing Spring) | No second healer by default |
+
+Job names here are planning shorthand, not fixed classes.
 
 ## Confirmed - design abilities across the roster
 
@@ -65,7 +104,9 @@ This clarification supersedes treating a slug's player-hit and terrain outcomes 
 | A water slug makes a patch of water or an orb around a player, followed by an electric shot. | An elemental state created by one slug changes what another can do. | Puddle versus orb, containment, conductivity and added damage are not selected. |
 | A water effect gathers several opponents, then an electric shot affects the group. | Positioning can expand the number of targets an attack threatens. | Gathering/pulling, multi-target electricity, limits and escape options are not selected. |
 
-## Confirmed - Inferno uses Backdraft
+## Superseded - Inferno uses Backdraft
+
+**Superseded, owner, 2026-11-05:** Inferno now uses Dragon's Breath and Fire Curtain; Backdraft and surface fire were too basic and too similar to others. The rest of this section, and other Backdraft and surface fire mentions in this note, are history.
 
 **Owner, 2026-11-04:** "backdraft. Let's set that in stone as the inferno ability." This supersedes the earlier pause on selecting Inferno's signature effect.
 

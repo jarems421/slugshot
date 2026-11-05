@@ -2180,3 +2180,15 @@ Historical evidence, in date order. Search it for why something was decided; do 
 - **Finding:** in the browser study of a full-charge shot, Inferno's swap happens about 42 studs from the shooter and the final form fills under 0.2% of the frame at the reveal. The study has no aura image or arms, so this is a prompt to check in Studio, not a verdict.
 - **Left out, with reasons in the ADR:** a Blender pose asset file, external animation services, a third Blender MCP, the Animation Graph Editor, editing the pinned quality gate.
 
+## 2026-11-05 - Frostcrawler final, Tazerling, ability lab in the repo
+
+- **Confirmed (owner, in the 2026-11-04 Codex session, recovered 2026-11-05):** Iceburst + Ice Wall for Frostcrawler. Codex's Tazerling work had not been checked or recorded.
+- **Confirmed (owner):** abilities should be skill-based and intertwine so players can find techs; slugs must not repeat each other's jobs. Roster map added to [ability planning](slugs/ability-planning.md#who-already-does-what).
+- **Implemented/verified locally:** ability lab source moved from ignored `build/` to `tools/slugs/ability-lab`, with a Tazerling check (952 finite samples). [Tazerling record](slugs/catalog/tazerling.md). Tazerling's pick is pending.
+- **Confirmed (owner):** Tazerling uses Chain Lightning + Livewire; the Static Mark combo was proposed and withdrawn in the same message. Livewire resembles surface fire, accepted because the owner plans to change Inferno's passive. **Implemented/verified locally:** [Rammstone proposals](slugs/catalog/rammstone.md) in the lab (1,088 finite samples); pick pending.
+- **Confirmed (owner):** rejected all six Rammstone proposals and gave the direction: basic strong punch, with a passive that punches up rock cover and breaks arches and spires. Ability work is base concepts first, numbers later; maps are built around abilities; Rocklock V2 was only a test. [Planning](slugs/ability-planning.md#confirmed---concepts-first-maps-follow-abilities-2026-11-05).
+- **Confirmed (owner):** Rammstone's main is Shove Punch. Inferno's abilities get reworked as too basic and too like others, superseding Backdraft and surface fire. **Implemented/verified locally:** six new Inferno proposals in the lab (1,224 finite samples); pick pending.
+- **Confirmed (owner):** Inferno uses a tracking Dragon's Breath and Fire Curtain, a flame wall rising along his flight path. Lab updated (see [record](slugs/catalog/inferno.md)).
+- **Confirmed (owner):** learn from each round so abilities land sooner. **Implemented:** [ability playbook](slugs/ability-playbook.md) from all picks and rejections; [Boon Doc proposals](slugs/catalog/boon-doc.md) written to it.
+- **Confirmed (owner):** Boon Doc uses Mending Shot (heal a teammate, or hit an enemy to heal yourself) and a weaker Healing Spring. First round using the playbook; the pick came in one round. [Record](slugs/catalog/boon-doc.md).
+- **Confirmed (owner):** element rules (healing clears burns and binds, water clears fire, electricity amplifies water); Rammstone's plain-surface rubble and knocking wall-runners off; Chain Lightning arcs need a visible target.

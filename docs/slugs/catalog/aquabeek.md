@@ -1,5 +1,7 @@
 # Slug design record: Aquabeek
 
+**Confirmed, 2026-11-05:** water clears fire, so Crashwave and Mistbank put out Fire Curtain and burns. Electricity amplifies water effects.
+
 ## Confirmed - final ability choices, 2026-11-04
 
 **Owner:** "that's final" and "Make those final", referring to **Crashwave** as the main and **Mistbank** as the passive (spoken as "Crushwave" / "Miss Bank"). These are final ability selections, not merely preferred prototype candidates.
