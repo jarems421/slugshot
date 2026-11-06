@@ -579,6 +579,56 @@ Owner-answered question rounds, 2026-11-06. Fright is immune to elements; the co
 
 Reasoning: movement passives are short (Silkline, Updraft), cover, anti-heal and healing passives are long, and mains that remove control (Snapbind, Tornado, Dragon's Breath) are the longest.
 
+## Shared combat rules, 2026-11-06
+
+From an outside review the owner shared, checked against these specs and the code, then the owner's choices. Durations and numbers are starting values for playtesting.
+
+### Control effects
+
+**Confirmed, owner, 2026-11-06:** "there should just be a slight cooldown before it can affect you again. So maybe we'll do like a 2-second cooldown. That gives, or 3-second cooldown, which would give you enough time to hide to return behind cover. But not just not working again." This replaces the assistant's split into lockdown, vision and weaken groups.
+
+- **Control effects:** Snapbind, Tangle, Flash, Jump Scare and Nausea.
+- **When one ends, you are immune to all of them for 3 s** (2 s is the alternative to try in playtesting), long enough to get back behind cover. Then they work on you again as normal. This also covers Snapbind's own re-bind immunity.
+- Slows and forced movement are not control effects; they have their own rules below.
+
+| Type | Abilities | Rule | Status |
+| --- | --- | --- | --- |
+| Slows | Iceburst (50%), Bramble (60%), Tornado (half speed) | Only the strongest applies; they never add up. Nobody goes below **50%** speed | Confirmed, owner, 2026-11-06 |
+| Forced movement | Tornado pull, Silkline pull, Shove Punch, Sticky Bomb push, Updraft | One at a time; the newest replaces the old. Big knockbacks (Shove Punch, Sticky Bomb, Updraft) end a Snapbind and move the player. Pulls (Tornado, Silkline) cannot move a bound player. Example: Shove Punch hitting someone mid-Silkline ends the pull and knocks them back | Confirmed, owner, 2026-11-06 |
+
+### Transformation and arming
+
+- **Every shot transforms in flight**, except slugs that never transform, such as Floppy. Arming adds the ability; it does not decide the transformation. Nausea is the exception: sick players' slugs do not transform. **Confirmed, owner, 2026-11-06:** Nausea stays half damage, half speed and no transform for 3.5 s.
+- Charge mainly changes speed and accuracy. Only abilities that say so scale with charge, such as Shove Punch. Ranges stay as specified.
+- Armed slugs show a small glow that enemies can see up close, and the HUD confirms it for you.
+- Switching slug, unequipping or dying cancels the arming. Arming costs nothing; the cooldown starts when the armed shot fires.
+- **Keys, confirmed 2026-11-06:** Q arms the main, E arms the passive, and **Inventory moves from E to F**. Phones and controllers get their own buttons calling the same actions. The code change waits until abilities are built ([KeybindDefinitions.luau](../../experiments/movement/shared/KeybindDefinitions.luau) still has Inventory on E).
+
+### Placed objects and Decoy
+
+- A Mine, Livewire, Lantern or other object disappears when the surface under it disappears, such as a melting Ice Wall or a fallen spire.
+- Every object is cleaned up when it expires, is destroyed, its owner leaves, or the match ends.
+- Objects keep their element's colour, with a team-coloured marker or outline.
+- Each ability keeps its own cap, plus a team-wide budget for objects, tuned in playtests.
+- **Decoy, confirmed 2026-11-06:** counts as an enemy for Chain Lightning arcs, Mine triggers and armed abilities, which are spent on it. It never counts for kills, healing or objectives.
+
+### Element additions
+
+| Abilities | What happens | Status |
+| --- | --- | --- |
+| Crashwave and Stink Cloud | No interaction | Confirmed, owner, 2026-11-06 |
+| Explosions and Mistbank | No interaction; blasts do not clear or fade the mist | Confirmed, owner, 2026-11-06 |
+| Tornado and Silkline | No interaction | Confirmed, owner, 2026-11-06 |
+| Livewire on Ice Wall | Works as a patch on that surface; the wall does not conduct | Confirmed, owner, 2026-11-06 |
+
+### Match rules
+
+- **Health regeneration, confirmed 2026-11-06:** **2 HP per second** after **6 s** without taking damage. Health is 100.
+- Kill credit goes to whoever caused the lethal damage. In a chain reaction, whoever set it off gets the kill and the others an assist. For example, igniting someone's Stink Cloud gives the igniter the kill and the cloud's owner an assist.
+- A team can have duplicate slugs, including two Boon Docs. Identical healing does not stack.
+- Five loadout slots, one of each species per player.
+- Fusion, classes and rarities come later. Rarity never changes damage or health.
+
 ## Template
 
 | Field | What to define |
