@@ -2,6 +2,8 @@
 
 **Current, 2026-11-04:** final design, both forms. In the merged game place: loadout slot 2, the approved Playful Flame inspect, and the shared transformation (feel verdict pending). Dragon's Breath and Fire Curtain are chosen but not built; see below. Older sections below that describe Inferno as display-only are history.
 
+**Confirmed, 2026-11-06:** full spec in [ability specs](../ability-specs.md#inferno---confirmed-spec-2026-11-06). Fire Curtain runs from the gun for 20 to 25 studs, then the slug drops.
+
 ## Confirmed - Dragon's Breath and Fire Curtain, 2026-11-05
 
 **Owner's vision:** "area control. Plus like a fire damage ability."

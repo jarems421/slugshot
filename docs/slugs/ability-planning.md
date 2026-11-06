@@ -10,7 +10,7 @@ Names below normalize the owner's spoken list to the Slugterra reference species
 
 | Slug / reference species | Current planning state |
 | --- | --- |
-| Floppy | Existing creature; [individual record](catalog/flopper-inspired.md). Include its current behaviour when planning the roster. |
+| Floppy | Existing creature; [individual record](catalog/flopper-inspired.md). **No abilities (owner, 2026-11-05):** "the floppy doesn't have a transformational abilities." |
 | Inferno | Existing fire creature; **Dragon's Breath main + Fire Curtain passive selected by owner, 2026-11-05**, superseding Backdraft and surface fire. [Record](catalog/inferno.md). |
 | Rammstone | **Shove Punch main, with a passive that raises rock cover and breaks map features.** [Record](catalog/rammstone.md); passive's name and plain-surface rule open. Earlier spoken names include Ramstone and Brimstone. |
 | Tazerling | **Chain Lightning main + Livewire passive selected by owner, 2026-11-05.** [Record](catalog/tazerling.md). Sparky is the owner's earlier working name. |
@@ -18,12 +18,12 @@ Names below normalize the owner's spoken list to the Slugterra reference species
 | Aquabeek | **Crashwave main + Mistbank passive finalized by owner, 2026-11-04.** [Record](catalog/aquabeek.md). Neutral visual placeholders; final forms and numeric balance remain open. |
 | Arachnet | **Snapbind main + Silkline passive selected**; [record](catalog/arachnet.md). Detailed rules and visual design remain open. |
 | Boon Doc | **Mending Shot main + Healing Spring passive selected by owner, 2026-11-05.** [Record](catalog/boon-doc.md). |
-| Tormato | Confirmed future roster choice; wind reference. |
-| Vinedrill | Confirmed future roster choice; plant/vine reference. |
-| Phosphoro | Confirmed future roster choice; light reference. |
-| Flatulorhinkus | Confirmed future roster choice; the stinky/gas slug. |
-| Hop Rock | Confirmed future roster choice; explosive reference. |
-| Frightgeist | Confirmed future roster choice; fear/illusion reference, normalized from the owner's spoken "Frightfest". |
+| Tormato | **Tornado main + Updraft passive selected by owner, 2026-11-05.** [Record](catalog/tormato.md). |
+| Vinedrill | **Tangle main + Bramble passive selected by owner, 2026-11-05.** [Record](catalog/vinedrill.md). |
+| Phosphoro | **Flash main + Lantern passive (owner's idea), 2026-11-05.** [Record](catalog/phosphoro.md). |
+| Flatulorhinkus | **Nausea main (owner's idea) + Stink Cloud passive, 2026-11-05.** [Record](catalog/flatulorhinkus.md). Nausea will be made different from Tangle. |
+| Hop Rock | **Sticky Bomb main + Mine passive selected by owner, 2026-11-05.** [Record](catalog/hop-rock.md). |
+| Frightgeist | Fear/illusion reference, normalized from the owner's spoken "Frightfest"; **Jump Scare main + Decoy passive, owner, 2026-11-05** (Jump Scare replaced Terrify). [Record](catalog/frightgeist.md). |
 
 ## Confirmed - useful distinctions, not novelty for its own sake, 2026-11-04
 
@@ -37,6 +37,8 @@ Owner feedback on Frostcrawler: a familiar, good impact ability is preferable to
 
 ## Confirmed - abilities interact, 2026-11-05
 
+**Superseded, 2026-11-05:** the confirmed [element chart](ability-specs.md#element-chart---confirmed-2026-11-05) replaces the table below, which is kept as history.
+
 **Owner:** "stuff like mending should clear burns and binds. Same with like the water slug should clear out fire stuff. Electric slug should amplify water stuff. Stuff like that, you know what I mean? Add those type of levels." Exact strength comes later; these are concept rules. Look for one with every new slug.
 
 | Rule | What it means now | Status |
@@ -47,6 +49,12 @@ Owner feedback on Frostcrawler: a familiar, good impact ability is preferable to
 | Fire melts ice | Fire Curtain and Dragon's Breath wear Ice Wall down | Considering |
 | Rock breaks ice | Rubble and Rockbreak shatter Ice Wall | Considering |
 | Wind carries things | A tornado picks up fire, mist or sparks it passes through | Considering |
+| Fire burns plants | Fire clears Vinedrill's growths | Considering |
+| Water grows plants | Water makes Vinedrill's growths bigger | Considering |
+| Light dispels illusions | Phosphoro's light breaks Frightgeist's illusions | Dropped: light and fright are immune to elements (owner, 2026-11-05) |
+| Fire ignites gas | Fire turns Flatulorhinkus's gas into a burst | Considering |
+| Explosions break cover | Hop Rock's blasts break Ice Wall and rock cover and set off gas | Considering |
+| Wind blows gas away | Tormato clears Flatulorhinkus's gas | Considering |
 
 ## Who already does what
 
@@ -55,16 +63,23 @@ Check a proposal against this before offering it. Two slugs doing the same job i
 | Job | Taken by | Room left |
 | --- | --- | --- |
 | Hold someone in place | Snapbind | None by default; no more binds or freezes |
-| Hit a group | Crashwave (a line), Iceburst (a small radius), Chain Lightning (jumps between people) | Full; no more group-hitting mains by default |
+| Hit a group | Crashwave (a line), Iceburst (a small radius), Chain Lightning (jumps between people), Sticky Bomb (around the target, owner's choice) | Full |
 | Deny an area with damage | Livewire (a contact patch), Fire Curtain (a wall along the shot) | Full; no more by default |
 | Keep hurting after the hit | Dragon's Breath | Its tracking stream |
-| Move an enemy | Shove Punch (instant, short) | Open: Tormato |
+| Move an enemy | Shove Punch (instant, short), Tornado (a drag toward the spot) | Taken |
 | Block sight | Mistbank | Others may interact with it rather than repeat it |
 | Physical cover | Ice Wall, Rammstone's rock wall (owner's choice) | Rammstone also changes routes; no more cover passives by default |
 | Break or reshape the map | Rammstone | Its own job; others can use what it leaves |
-| Move yourself | Silkline (pull and swing) | Boosts differ from anchors |
-| Reveal enemies | Nobody yet | Phosphoro (light) seems the natural owner |
+| Move yourself | Silkline (pull and swing), Updraft (lift, anyone can ride) | Ground boosts and dashes still open |
+| Reveal enemies | Lantern (anyone who looks at it) | Taken |
+| Traps | Mine | Taken |
+| Scare | Jump Scare (like a flash, but a scare; owner accepted the closeness to Flash) | Taken |
+| Fool the enemy | Decoy | Taken |
 | Heal or support | Boon Doc (Mending Shot, Healing Spring) | No second healer by default |
+| Weaken an enemy's attack | Tangle and Nausea (their next slug is weak and cannot transform; owner accepted the overlap for now) | Taken; to be separated in the [specs](ability-specs.md) |
+| Blind | Flash | Taken |
+| Slow an area without damage | Bramble | Taken |
+| Stop healing | Stink Cloud | Taken |
 
 Job names here are planning shorthand, not fixed classes.
 

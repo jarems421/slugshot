@@ -1,5 +1,7 @@
 # Slug design record: Arachnet
 
+**Confirmed, 2026-11-06:** full spec in [ability specs](../ability-specs.md#arachnet---confirmed-spec-2026-11-06). Snapbind now stops aiming and firing too, and Silkline is a straight pull only; the earlier aim-while-bound and swing are history.
+
 **Confirmed, 2026-11-05:** Boon Doc's Mending Shot clears Snapbind.
 
 ## Confirmed - Silkline approved, 2026-11-04

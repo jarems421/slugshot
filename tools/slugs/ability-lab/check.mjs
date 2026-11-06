@@ -1,4 +1,4 @@
-// Checks the built ability lab in a disposable headless Edge and captures Boon Doc's kit for review.
+// Checks the built ability lab in a disposable headless Edge and captures every Tormato option for review.
 // node tools/slugs/ability-lab/check.mjs   (browser demonstrations only: not physics, balance or Studio evidence)
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -30,49 +30,42 @@ try {
   for (let i = 0; i < 200; i++) { ready = await evaluate('!!window.abilityPreview?.ready'); if (ready) break; await sleep(250); }
   if (!ready) throw new Error('Lab not ready: ' + await evaluate('document.querySelector("#error")?.textContent') + exceptions.join(' | '));
   await evaluate('abilityPreview.state.playing=false');
-  const concepts = await evaluate('abilityPreview.concepts.map((c,index)=>({index,name:c.name,slug:c.slug,kind:c.kind,boon:c.boonIndex||0,confirmed:!!c.confirmed}))');
+  const concepts = await evaluate('abilityPreview.concepts.map((c,index)=>({index,name:c.name,slug:c.slug,kind:c.kind,fresh:c.frightIndex===1?1:0,confirmed:!!c.confirmed}))');
   const opensOn = await evaluate('abilityPreview.concepts[abilityPreview.state.index].slug');
   const sweep = await evaluate(`(()=>{let finite=true,errors=[],samples=0;for(const c of abilityPreview.concepts){const surfaces=c.kind==='main'?['floor']:['floor','wall','ceiling'];const index=abilityPreview.concepts.indexOf(c);for(const surface of surfaces){abilityPreview.state.surface=surface;for(const counter of [false,true])for(let t=0;t<=8;t+=.5){const m=abilityPreview.sample(t,index,counter);finite=finite&&m.finite!==false;samples++;}}}return {finite,samples,errors:abilityPreview.errors}})()`);
   const runOn = (key, value, time, counter = false, surface = 'floor') => evaluate(`(()=>{const index=abilityPreview.concepts.findIndex(c=>c.${key}===${value});abilityPreview.state.surface=${JSON.stringify(surface)};return abilityPreview.sample(${time},index,${counter}).study})()`);
-  const fire = (...args) => runOn('infernoIndex', ...args), run = (...args) => runOn('boonIndex', ...args);
+  const run = (...args) => runOn('vineIndex', ...args), light = (...args) => runOn('lightIndex', ...args), gas = (...args) => runOn('gasIndex', ...args), hop = (...args) => runOn('hopIndex', ...args), fright = (...args) => runOn('frightIndex', ...args);
   const mechanics = {
-    breathTracks: (await fire(2, 4.5)).breathing === true,
-    coverBlocksBreath: (await fire(2, 4.5, true)).blocked === true,
-    curtainRisesInFlight: (await fire(7, 2)).curtainUp === true,
-    curtainBurnsOut: (await fire(7, 7.8)).curtainUp === false,
-    crossingBurns: (await fire(7, 5.5)).relativeDamage > 0,
-    goingRoundAvoids: (await fire(7, 6, true)).relativeDamage === 0,
-    mendingHealsTeammate: (await run(1, 4)).friendHealth > 0.9,
-    mendingHitsEnemyAndHealsSelf: (await run(1, 5.5)).shooterHealed === true && (await run(1, 5.5)).enemyHealth < 1,
-    coverBlocksTeammateHeal: (await run(1, 4, true)).healed === false,
-    dodgingHealsNobody: (await run(1, 5.5, true)).shooterHealed === false,
-    springHealsFloor: (await run(3, 6, false, 'floor')).friendHealth > 0.9,
-    springHealsWall: (await run(3, 6, false, 'wall')).inPool === true,
-    springHealsCeiling: (await run(3, 6, false, 'ceiling')).inPool === true,
-    leavingStopsHealing: (await run(3, 7, true)).inPool === false,
+    tangleStillWorks: (await run(2, 4.6)).returnWeak === true,
+    lanternStillReveals: (await light(8, 4.6)).revealed === true,
+    nauseaStillWorks: (await gas(8, 4.6)).replyWeak === true,
+    stickyBombHitsTeammate: (await hop(2, 4.8)).teammateHit === true,
+    runningAwaySparesTeammate: (await hop(2, 4.8, true)).teammateHit === false,
+    mineTriggers: (await hop(3, 5)).triggered === true,
+    mineOnWall: (await hop(3, 5, false, 'wall')).triggered === true,
+    mineOnCeiling: (await hop(3, 5, false, 'ceiling')).triggered === true,
+    mineAvoided: (await hop(3, 5, true)).triggered === false,
+    jumpScareScares: (await fright(1, 3.6)).scared === true,
+    jumpScareWearsOff: (await fright(1, 5.2)).scared === false,
+    jumpScareDodged: (await fright(1, 3.6, true)).scared === false,
+    decoyDrawsFire: (await fright(5, 4.6)).enemyFooled === true,
+    decoyOnWall: (await fright(5, 4.6, false, 'wall')).decoyUp === true,
+    decoySeenThrough: (await fright(5, 4.6, true)).enemyFooled === false,
   };
-  const confirmedOnly = ['boon', 'inferno', 'frost', 'arachnet', 'tazer', 'rock'].every(slug => concepts.filter(c => c.slug === slug).length === 2);
-  // Stills for looking at: every Boon Doc option, used well and then countered.
+  const confirmedOnly = ['gas', 'hop', 'fright', 'light', 'vine', 'tormato', 'boon', 'inferno', 'frost', 'arachnet', 'tazer', 'rock'].every(slug => concepts.filter(c => c.slug === slug).length === 2);
+  // Stills for looking at: the newest change (Jump Scare), used well and then countered.
   const shots = [];
-  for (const c of concepts.filter(c => c.boon)) {
+  for (const c of concepts.filter(c => c.fresh)) {
     for (const [label, counter] of [['use', false], ['counter', true]]) {
-      for (const [surface, time] of c.kind === 'main' ? [['floor', 3.6], ['floor', 5.4]] : [['floor', 4.6], ['wall', 4.6], ['ceiling', 4.6]]) {
+      for (const [surface, time] of c.kind === 'main' ? [['floor', 3.5], ['floor', 4.6]] : [['floor', 4.6], ['wall', 4.6], ['ceiling', 4.6]]) {
         await evaluate(`abilityPreview.state.surface='${surface}';abilityPreview.sample(${time},${c.index},${counter})`);
         await sleep(60);
         const shot = await call('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1480, height: 1230, scale: 0.6 } });
-        const name = `${c.boon}-${label}-${surface}-${time}.png`;
+        const name = `${c.slug}-${c.fresh}-${label}-${surface}-${time}.png`;
         await writeFile(path.join(qa, name), Buffer.from(shot.data, 'base64'));
         shots.push(name);
       }
     }
-  }
-  // The newest confirmed passive too: it has to read in flight, not only after landing.
-  const curtain = await evaluate('abilityPreview.concepts.findIndex(c=>c.infernoIndex===7)');
-  for (const [label, counter, time] of [['use', false, 1.5], ['use', false, 2.6], ['use', false, 5.4], ['counter', true, 5.4]]) {
-    await evaluate(`abilityPreview.state.surface='floor';abilityPreview.sample(${time},${curtain},${counter})`);
-    await sleep(60);
-    const shot = await call('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1480, height: 1230, scale: 0.6 } });
-    await writeFile(path.join(qa, `curtain-${label}-${time}.png`), Buffer.from(shot.data, 'base64'));
   }
   await call('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await sleep(100);
@@ -80,8 +73,8 @@ try {
   const report = { opensOn, concepts, sweep, mechanics, confirmedOnly, mobile, exceptions, shots, limit: 'Browser demonstration only' };
   await writeFile(path.join(qa, 'report.json'), JSON.stringify(report, null, 2));
   const failed = Object.entries(mechanics).filter(([, ok]) => !ok).map(([name]) => name);
-  if (exceptions.length || !sweep.finite || sweep.errors.length || failed.length || !confirmedOnly || opensOn !== 'boon' || mobile.scroll > mobile.width) throw new Error('QA failed: ' + JSON.stringify({ exceptions, sweep, failed, confirmedOnly, opensOn, mobile }));
-  console.log(`PASS: ${sweep.samples} finite samples; Inferno's and Boon Doc's kits, with counterplay; confirmed slugs show only their pair; opens on Boon Doc; 390-pixel layout`);
+  if (exceptions.length || !sweep.finite || sweep.errors.length || failed.length || !confirmedOnly || opensOn !== 'hop' || mobile.scroll > mobile.width) throw new Error('QA failed: ' + JSON.stringify({ exceptions, sweep, failed, confirmedOnly, opensOn, mobile }));
+  console.log(`PASS: ${sweep.samples} finite samples; every kit, with counterplay; confirmed slugs show only their pair; opens on Hop Rock; 390-pixel layout`);
 } catch (error) {
   console.error(error);
   process.exitCode = 1;

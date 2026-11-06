@@ -12,6 +12,12 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 | Frostcrawler (ice reference) | **Iceburst main + Ice Wall passive** (owner, 2026-11-04); balance and final forms open | [Decision and history](frostcrawler.md) |
 | Tazerling (electric reference) | **Chain Lightning main + Livewire passive** (owner, 2026-11-05); balance and final forms open | [Decision and history](tazerling.md) |
 | Boon Doc (healing reference) | **Mending Shot main + Healing Spring passive** (owner, 2026-11-05); not built | [Decision and history](boon-doc.md) |
+| Frightgeist (fear reference) | **Jump Scare main + Decoy passive, owner, 2026-11-05** | [Ability studies](frightgeist.md) |
+| Hop Rock (explosive reference) | **Sticky Bomb main + Mine passive selected by owner, 2026-11-05** | [Ability studies](hop-rock.md) |
+| Flatulorhinkus (gas reference) | **Nausea main (owner's idea) + Stink Cloud passive, 2026-11-05** | [Ability studies](flatulorhinkus.md) |
+| Phosphoro (light reference) | **Flash main + Lantern passive (owner's idea), 2026-11-05** | [Ability studies](phosphoro.md) |
+| Vinedrill (plant reference) | **Tangle main + Bramble passive selected by owner, 2026-11-05** | [Ability studies](vinedrill.md) |
+| Tormato (wind reference) | **Tornado main + Updraft passive selected by owner, 2026-11-05**; shown in the [ability lab](../../../tools/slugs/ability-lab/README.md) | [Ability studies](tormato.md) |
 | Rammstone (rock reference) | **Shove Punch main + rock cover and map-breaking passive** (owner, 2026-11-05); passive's name and plain-surface rule open | [Decision and history](rammstone.md) |
 | Arachnet (web reference) | **Snapbind main + Silkline passive confirmed**; balance, controls and final forms open | [Ability studies](arachnet.md) |
 
@@ -22,6 +28,8 @@ The owner wants **14 slugs total**, including Floppy and Inferno, with a possibl
 Read [roster and ability planning](../ability-planning.md) before proposing or building an ability. It records the owner's cross-slug interaction direction, naming context and examples. **Examples are inspiration, not approved kits: propose alternatives and choose a better fit where available.** Preserve the owner's confirmed Inferno cores and **Aquabeek's finalized Crashwave/Mistbank pair**. Preserve Arachnet's confirmed Snapbind/Silkline cores; detailed rules remain open. Frostcrawler's jagged Ice Wall passive is confirmed; Iceburst, Brittle and Frostguard mains remain unselected; second-pass gimmicks were rejected.
 
 ## Ability rule
+
+**Current, owner, 2026-11-06:** abilities are armed before the shot: Q for the main, E for the passive, double-tap to disarm and fire a normal slug. This supersedes the 2026-11-04 rule below that the hit target chooses automatically with no pre-shot selection. Details in [ability specs](../ability-specs.md#how-abilities-activate).
 
 **Inferno now uses Dragon's Breath and Fire Curtain (owner, 2026-11-05); references to Backdraft and surface fire below are history.**
 

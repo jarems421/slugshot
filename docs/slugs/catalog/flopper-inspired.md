@@ -1,5 +1,7 @@
 # First slug: Flopper-inspired creature
 
+**Confirmed, owner, 2026-11-05:** Floppy has no abilities, because it never transforms: "the floppy doesn't have a transformational abilities."
+
 **Final design, confirmed by the owner 2026-11-03:** "Make them the final designs". This is the model described under [Final in Roblox](#final-in-roblox-2026-11-02): clean lids, eased blink and glowing eye rings. On `main` it runs with the shooting work's inspect acting, render timing and blaster behaviour. The earlier notes below are history.
 
 **Confirmed permanent for Floppy (owner, 2026-11-01):** 1 stud tall outside the gun, about 18% up from 0.85, and the current design including its folded underside. This is Floppy's own value, not a rule for other slugs. Loaded size and hit radius are separate.

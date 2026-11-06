@@ -1,5 +1,7 @@
 # Slug design record: Rammstone
 
+**Confirmed, 2026-11-06:** full spec in [ability specs](../ability-specs.md#rammstone---confirmed-spec-2026-11-06). Shove Punch's knockback grows with charge; rock cover is 8 wide, takes 8 hits, is immune to fire, one at a time.
+
 ## Confirmed - owner's direction, 2026-11-05
 
 **Owner:** a basic, strong punching slug. On a player "it would just more so punch you. Like that would literally just be it." Its usefulness comes from the passive:

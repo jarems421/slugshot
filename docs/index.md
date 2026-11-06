@@ -15,7 +15,7 @@ Read [status](status.md) first, then only this row. Add to it only if the task n
 | Blender clip or keyframes | `el4cteo-blender-animation` | [Rig contract](slugs/rig-specification.md) |
 | Motion looks wrong | [Motion review](slugs/motion-review.md) | [Lesson index](lessons-index.md) by symptom |
 | Transformation | Director or procedural | [Transformation](slugs/transformation-system.md) |
-| Slug abilities | None | [Ability playbook](slugs/ability-playbook.md), [ability planning](slugs/ability-planning.md), slug's record, [ability lab](../tools/slugs/ability-lab/README.md) |
+| Slug abilities | None | [Ability specs](slugs/ability-specs.md), [ability playbook](slugs/ability-playbook.md), [ability planning](slugs/ability-planning.md), slug's record, [ability lab](../tools/slugs/ability-lab/README.md) |
 | Slug import or Roblox playback | `el4cteo-blender-export-pipelines` | [Studio import](slugs/studio-import.md) |
 | Lobby or environment | None | [Lobby checkpoint](art/lobby-checkpoint.md), [style guide](art/style-guide.md) |
 | Training arena or the game place | None | [Training arena](art/training-arena.md) |

@@ -10,21 +10,21 @@ Last reviewed 2026-11-04. The short, current truth: **replace lines here when th
 
 | Area | Decision | Record |
 | --- | --- | --- |
-| Floppy | Final design; never transforms | [Catalogue](slugs/catalog/flopper-inspired.md) |
+| Floppy | Final design; never transforms, so it has no abilities | [Catalogue](slugs/catalog/flopper-inspired.md) |
 | Inferno | Final design, both forms | [Catalogue](slugs/catalog/inferno.md) |
 | Inferno inspect | Playful Flame | [Studies](slugs/inferno-inspect-studies.md) |
 | Inspection | Flip the gun up, the slug's act, flip to catch it down | [Briefs](slugs/catalog/inspect-profiles.md) |
 | Slug roster | 14 slugs (12 acceptable at launch) | [Planning](slugs/ability-planning.md) |
-| Abilities | Player-hit effect plus a surface passive, skill-based and intertwining, with [element rules](slugs/ability-planning.md#confirmed---abilities-interact-2026-11-05). Inferno: Dragon's Breath and Fire Curtain. Aquabeek: Crashwave and Mistbank. Arachnet: Snapbind and Silkline. Frostcrawler: Iceburst and Ice Wall. Tazerling: Chain Lightning and Livewire. Rammstone: Shove Punch and a rock cover and map-breaking passive. Boon Doc: Mending Shot and Healing Spring. None built in the game yet | [Catalogue](slugs/catalog/index.md) |
+| Abilities | A main (Q) and a passive (E) per slug, armed for the next shot, skill-based and intertwining, with an [element chart](slugs/ability-specs.md#element-chart---confirmed-2026-11-05). [Specs](slugs/ability-specs.md). Inferno: Dragon's Breath and Fire Curtain. Aquabeek: Crashwave and Mistbank. Arachnet: Snapbind and Silkline. Frostcrawler: Iceburst and Ice Wall. Tazerling: Chain Lightning and Livewire. Rammstone: Shove Punch and a rock cover and map-breaking passive. Boon Doc: Mending Shot and Healing Spring. Tormato: Tornado and Updraft. Vinedrill: Tangle and Bramble. Phosphoro: Flash and Lantern. Flatulorhinkus: Nausea and Stink Cloud. Hop Rock: Sticky Bomb and Mine. Frightgeist: Jump Scare and Decoy. None built in the game yet | [Catalogue](slugs/catalog/index.md) |
 | Lobby | Slug Grove complete; slow lava gloop approved | [Checkpoint](art/lobby-checkpoint.md) |
 | Art direction | Living Comic-Book Fantasy | [Style guide](art/style-guide.md) |
 
 ## Open with the owner
 
 - **Far side cave and cavern wall** (library studies on `integration/lobby-all`, uncommitted): option C (mushroom depths) chosen; verdict on the wall and spires pending; no Roblox build yet. [Lobby hub](art/lobby-hub.md#far-side-cave-and-the-cavern-wall-owner-2026-11-04).
-- **Inferno's Fire Curtain:** whether it also appears when the shot hits a player. [Record](slugs/catalog/inferno.md).
-- **Rammstone:** the passive's name. [Record](slugs/catalog/rammstone.md).
-- **Remaining kits:** six more slugs, and Floppy's. Read the [ability playbook](slugs/ability-playbook.md) first.
+- **Rammstone:** the passive's name, and rock cover's lifetime and height. [Spec](slugs/ability-specs.md#rammstone---confirmed-spec-2026-11-06).
+- **Ability specs:** every slug's main and passive defined and confirmed (2026-11-06), with the element chart, Q/E arming, cooldowns and caps. Next: classes and rarities. [Specs](slugs/ability-specs.md).
+- **Remaining kits:** none; every other slug has a main and a passive. Floppy has no abilities. Read the [ability playbook](slugs/ability-playbook.md) first.
 - **Ability planning rule:** base concepts first with numbers later; maps get built around the abilities; Rocklock V2 was only a test.
 - **Shared transformation:** the glow, twirl and reveal are in; the owner's verdict on feel is pending. [Transformation](slugs/transformation-system.md).
 - **Animation tooling** (2026-11-04): director and procedural skills, motion preview and motion review are new and unproven on a real slug task. [Library](slugs/motion-library.md).
