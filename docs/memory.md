@@ -2229,3 +2229,13 @@ Historical evidence, in date order. Search it for why something was decided; do 
 - **2026-11-06, Confirmed (owner):** shared combat rules from a reviewed outside proposal: control types with no chaining, strongest slow only, knockbacks end binds, every shot transforms (Nausea excepted and kept as specified), Decoy fools targeting and traps, 2 HP/s regen after 6 s, Inventory moves to F. [Rules](slugs/ability-specs.md#shared-combat-rules-2026-11-06).
 - **2026-11-06, Confirmed (owner):** no interaction for Crashwave and Stink Cloud, explosions and Mistbank, Tornado and Silkline; Ice Wall does not conduct Livewire. Slow and forced-movement rules confirmed.
 - **2026-11-06, Confirmed (owner):** one shared immunity after any control effect (Snapbind, Tangle, Flash, Jump Scare, Nausea): 3 s (2 s to try), not per-group rules.
+- **2026-11-06, Confirmed (owner):** three classes, Attacker, Defender and Controller, no Support; some slugs are a mix. Rarity decided later. Proposed per-slug classes in [specs](slugs/ability-specs.md#classes---2026-11-06).
+- **2026-11-06, Confirmed (owner):** attack-and-defend slugs are called Vanguard (Frostcrawler, Rammstone, Hop Rock).
+- **2026-11-06, Confirmed (owner):** class names Slinger (damage), Gunker (control), Vanguard (attack and defend), Warden (attack and control); Boon Doc's class open.
+- **2026-11-06, Confirmed (owner):** plain class names: Attacker, Controller, Defender (Boon Doc), Vanguard, Warden.
+- **2026-11-06, Confirmed (owner):** slugs unlock through exploration (later) and matches; match rewards give coins to buy slugs or chests with random slug cards, enough cards unlock a slug. Coins versus chests undecided.
+- **2026-11-06, Confirmed (owner):** choose coins or a chest after every match, scaled by performance; duplicate cards become coins; start with Floppy plus one common of your choice; Robux decided later.
+- **2026-11-06, Confirmed (owner):** no rarity tiers; slugs level up instead. Replaces "rarity never changes power".
+- **2026-11-06, Confirmed (owner):** levels give small stat and ability boosts, cost cards plus coins; 20 cards unlock a slug; normal matches ignore levels, ranked caps them.
+- **2026-11-06, Confirmed (owner):** five levels per slug; each level the player picks one small boost (base 3 to 5% such as damage or speed, or an ability boost: damage, range, duration or a slight cooldown cut). Costs per level follow chest weights later.
+- **2026-11-06, Confirmed (owner):** level choices can be swapped for coins; coins can be bought with Robux. Per-level menus later.

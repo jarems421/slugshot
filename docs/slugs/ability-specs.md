@@ -627,7 +627,69 @@ From an outside review the owner shared, checked against these specs and the cod
 - Kill credit goes to whoever caused the lethal damage. In a chain reaction, whoever set it off gets the kill and the others an assist. For example, igniting someone's Stink Cloud gives the igniter the kill and the cloud's owner an assist.
 - A team can have duplicate slugs, including two Boon Docs. Identical healing does not stack.
 - Five loadout slots, one of each species per player.
-- Fusion, classes and rarities come later. Rarity never changes damage or health.
+- Fusion comes later. There are no rarity tiers; slugs level up instead (owner, 2026-11-06).
+
+## Classes - 2026-11-06
+
+**Confirmed, owner, 2026-11-06:** three classes, **Attacker, Defender and Controller**, with no Support class, because Boon Doc would be "alone in that". Rammstone and Frostcrawler are "a mix of both". A class is a label that tells players what a slug does; it never changes power. Rarity is decided later, together with how players unlock slugs.
+
+**Considering - assistant's proposal:** each slug shows one or two classes, taken from what its main and passive do. Defender means protecting your team or holding ground: cover, healing and traps.
+
+| Slug | Main | Passive | Classes |
+| --- | --- | --- | --- |
+| Aquabeek | Crashwave: attack | Mistbank: control | Attacker / Controller |
+| Arachnet | Snapbind: control | Silkline: movement | Controller |
+| Frostcrawler | Iceburst: attack | Ice Wall: defend | Vanguard |
+| Tazerling | Chain Lightning: attack | Livewire: attack | Attacker |
+| Rammstone | Shove Punch: attack | Rock cover: defend | Vanguard |
+| Inferno | Dragon's Breath: attack | Fire Curtain: control | Attacker / Controller |
+| Boon Doc | Mending Shot: defend | Healing Spring: defend | Defender |
+| Tormato | Tornado: control | Updraft: movement | Controller |
+| Vinedrill | Tangle: control | Bramble: control | Controller |
+| Phosphoro | Flash: control | Lantern: control | Controller |
+| Flatulorhinkus | Nausea: control | Stink Cloud: control | Controller |
+| Hop Rock | Sticky Bomb: attack | Mine: defend | Vanguard |
+| Frightgeist | Jump Scare: control | Decoy: control | Controller |
+
+Floppy has no class, because it has no abilities.
+
+**Confirmed, owner, 2026-11-06:** slugs that both attack and defend are **Vanguard**: Frostcrawler, Rammstone and Hop Rock.
+
+**Confirmed, owner, 2026-11-06 - class names:** "let's just do all basic names. Attacker, defender, vanguard, warden, let's just slap boondock in defender, because that's just where he feels more natural". This replaces the slug-themed Slinger and Gunker. Controller keeps its plain name; the owner's list left it out, assumed by oversight.
+
+| Class | Meaning | Slugs |
+| --- | --- | --- |
+| **Attacker** | Pure damage | Tazerling |
+| **Controller** | Binds, blinds, slows, pulls | Arachnet, Tormato, Vinedrill, Phosphoro, Flatulorhinkus, Frightgeist |
+| **Defender** | Keeps the team alive | Boon Doc |
+| **Vanguard** | Attacks and defends | Frostcrawler, Rammstone, Hop Rock |
+| **Warden** | Attacks and controls | Aquabeek, Inferno |
+
+Floppy has no class. Class is only a label; it never changes power. There are no rarity tiers; slugs level up instead. Rejected themed names: Slinger, Gunker, Splatshot, Stinger, Slimer, Mucker, Shellback, Hardshell, Splatter, Smudger, Oozer, Slicker, Squelcher, Fogger, Gloopstorm.
+
+## Unlocking slugs and rarity - 2026-11-06
+
+**Owner, 2026-11-06:** "there's going to be two ways. The first way is through exploring the [world]. I haven't fully decided how that all's going to work out. But that's for later. The way that's important for right now is that you can unlock them through matches. So you can play matches and then you can at the end of the match you get chests or you get coins. I'm not too sure which one yet, and then you can use either the coins that you get to work towards buying slugs, or you can open the chests and it's more RNG based, and you get random items and it might include different slugs, and then when you acquire enough cards for the slug, then you unlock the full thing."
+
+- **Confirmed:** slugs unlock through exploration (designed later) and through matches.
+- **Confirmed:** match rewards lead either to coins that buy slugs or to chests with random items, including slug cards; enough cards unlock the slug.
+- **Confirmed, 2026-11-06:** at the end of every match the player **chooses coins or a chest**. Their **performance** sets how many coins, or how good the chest's contents are.
+- **Confirmed:** cards for a slug you already own turn into coins once it is at its top level; before that they level it.
+- **Confirmed:** new players start with **Floppy plus one common slug of their choice**.
+- **Robux:** coins can be bought with Robux (2026-11-06); anything else decided later. Roblox has rules for paid random items, such as showing the odds; check the current policy before chests could be bought.
+- **Confirmed, owner, 2026-11-06: no rarity tiers, but slugs level up.** The owner: "if rarity doesnt dictate powerr theres no point in having it". The earlier line "rarity never changes damage or health" came from an outside review and is replaced.
+- **Confirmed, 2026-11-06 - levels:**
+  - A level gives **small stat and ability boosts**.
+  - Levels cost **cards of that slug plus coins**. Duplicate cards stop becoming coins until the slug is at its top level.
+  - **20 cards** unlock any slug.
+  - **Normal matches ignore levels; a future ranked mode caps them** so everyone is equal.
+- **Confirmed, owner, 2026-11-06 - five levels per slug:** "for every slug let's do 5 levels ... for the base damage, it should be like a three to 5% increase. And then for abilities, I guess a boost would just be like for damage and range and time it lasts. And for cooldown reductions ... it won't do all of them at once ... the user can choose on level one upgrade they can choose, oh, +5% damage, +3% speed, whatever. And then for the ability they can choose +radius, whatever."
+  - Each level gives **one small boost the player chooses** from that slug's options, so a slug at level 5 reflects the player's picks.
+  - Base boosts: about **3 to 5%**, such as damage or speed.
+  - Ability boosts: damage, range or radius, duration, or a slight cooldown cut.
+  - Cards and coins per level are worked out later from the chest weights.
+- **Confirmed, 2026-11-06:** a level choice can be **swapped later for coins**, and players can buy coins with Robux. Note: Robux then indirectly buys progression; ranked's level cap keeps that fair. If coins could ever buy chests, Roblox's paid-random-item rules would apply.
+- **Later:** each slug's menu of choices per level (owner: "that's not really important right now"); coin prices. 
 
 ## Template
 
