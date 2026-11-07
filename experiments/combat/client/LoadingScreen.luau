@@ -313,7 +313,10 @@ local function build(): Built
 			})
 		)
 	end
-	-- A bar's colour is fixed when it is made, so each place has its own, all made now.
+	-- A bar's colour is fixed when it is made, so each place has its own, all made now. Its surface is drawn in columns
+	-- about 3 screen px wide whatever the screen: 6 design px came out as 9 px steps at 1080p (owner, 2026-11-07: the
+	-- loading bar's slime very pixelated).
+	local fine = math.clamp(math.round(3 / scale), 2, 6)
 	local bars = {}
 	for name, place in LoadingScreen.Places do
 		local frame = Theme.new("Frame", {
@@ -326,10 +329,13 @@ local function build(): Built
 		})
 		local bar = GooBar.new(frame, Vector2.new(BAR_X - 3, BAR_Y - 3), BAR_W, BAR_H, {
 			col = 6,
+			fine = fine,
 			colour = place.colour,
 			empty = Fx.Blank,
 			drips = false,
 			lost = false,
+			-- It fills a little every frame: each was a hit's kick at its front, which roughened the surface.
+			dragged = true,
 			active = function(): boolean
 				return gui.Enabled and frame.Visible
 			end,

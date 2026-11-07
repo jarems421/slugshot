@@ -13,11 +13,16 @@ local GooBar = {}
 export type Bar = { set: (share: number) -> () }
 export type Options = {
 	col: number?, -- wider columns cost less; a slider does not need the health bar's detail
+	-- Draws the surface in columns this wide while it moves as at col: a bar shown large stepped visibly from column to
+	-- column (owner, 2026-11-07: the loading bar's slime very pixelated).
+	fine: number?,
 	colour: Color3?, -- a fixed colour; otherwise health colours, coral when low
 	empty: Color3?,
 	drips: boolean?,
 	lost: boolean?, -- flash what was just lost
-	dragged: boolean?, -- moved by hand: slosh away from the direction of travel, in proportion to it
+	-- Moved by hand, or filled steadily: slosh away from the direction of travel, in proportion to it, instead of the
+	-- kick of a hit.
+	dragged: boolean?,
 	behindMark: boolean?, -- the end never passes the value, so it stays under a slider's knob (owner, 2026-11-02)
 	active: (() -> boolean)?, -- nothing runs while this is false
 }
@@ -65,6 +70,7 @@ function GooBar.new(
 ): Bar
 	local settings: Options = options or {}
 	local col = settings.col or COL
+	local drawn = settings.fine or col
 	local emptyColour = settings.empty or EMPTY
 	local fixed = settings.colour
 	local withLost = settings.lost ~= false
@@ -81,9 +87,10 @@ function GooBar.new(
 		ZIndex = 1,
 		Parent = parent,
 	})
-	local back = Goo.strip(inner, "barBack", Goo.Bar, BACK_COL, 0, 0, width, 2)
-	local front = Goo.strip(inner, "barFront", Goo.Bar, col, 0, 0, width, 3)
-	local shine = Goo.strip(inner, "barShine", Goo.Bar, col, 0, 0, width, 4)
+	local backCol = if settings.fine then math.min(settings.fine, BACK_COL) else BACK_COL
+	local back = Goo.strip(inner, "barBack", Goo.Bar, backCol, 0, 0, width, 2)
+	local front = Goo.strip(inner, "barFront", Goo.Bar, drawn, 0, 0, width, 3)
+	local shine = Goo.strip(inner, "barShine", Goo.Bar, drawn, 0, 0, width, 4)
 	Goo.tint(shine, SHINE)
 
 	local function cover(name: string, colour: Color3, z: number): (ImageLabel, Frame)

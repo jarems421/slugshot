@@ -150,6 +150,9 @@ local function consider(item: Instance)
 		and not item:FindFirstAncestor("SlugShots")
 		-- The holstered copy on the hip is too small to show teeth too.
 		and not item:FindFirstAncestor("BlasterHolsterVisual")
+		-- Nor the lobby's display slugs: the grove's five each kept a live mesh, which filled Roblox's EditableMesh budget
+		-- at the start of a game-place session, so Burpy's inspection never got ready (lobby session's check, 2026-11-07).
+		and not item:FindFirstAncestor("HubArt")
 	then
 		prepare(item)
 	end

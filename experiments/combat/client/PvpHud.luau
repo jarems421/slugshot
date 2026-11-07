@@ -101,8 +101,8 @@ local function canister(row: Frame, index: number, slugId: string?): Slot
 	Theme.corner(glass, 3)
 	Theme.edge(glass, 2)
 	Theme.new("UIGradient", { Color = GLASS, Parent = glass })
-	-- Reflections down the tube.
-	for _, streak in { { 6, 4, 0.6 }, { GLASS_W - 9, 2, 0.78 } } do
+	-- Reflections down the tube, both thin (owner, 2026-11-07: the left was twice as wide as the right).
+	for _, streak in { { 6, 2, 0.6 }, { GLASS_W - 9, 2, 0.78 } } do
 		local shine = Theme.new("Frame", {
 			Position = UDim2.fromOffset(streak[1], 7),
 			Size = UDim2.new(0, streak[2], 1, -14),
