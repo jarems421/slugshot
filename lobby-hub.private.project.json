@@ -13,7 +13,7 @@
     "Lighting": {
       "$className": "Lighting",
       "$properties": {
-        "Technology": "ShadowMap",
+        "Technology": "Future",
         "GlobalShadows": false
       }
     },

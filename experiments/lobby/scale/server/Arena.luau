@@ -636,6 +636,19 @@ local function holeRadius(t: number): number
 	return a + (b - a) * frac
 end
 
+-- Where the drawn ground actually ends round the hole (lip in gun_side.json, measured from the exported ground): between 0.8
+-- and 4.2 studs inside the recorded edge, so the barrier follows it rather than the edge (owner, 2026-11-05: you could fall
+-- through the barrier at some angles).
+local function holeLip(t: number): number
+	local lip = hole.lip or hole.radii
+	local count = #lip
+	local f = (t % (2 * math.pi)) / (2 * math.pi) * count
+	local i = math.floor(f)
+	local frac = f - i
+	i %= count
+	return lip[i + 1] + (lip[(i + 1) % count + 1] - lip[i + 1]) * frac
+end
+
 local function holeEdge(t: number, extra: number): Vector3
 	local r = holeRadius(t) + extra
 	return HOLE_CENTRE + (HOLE_IN * math.cos(t) + HOLE_ACROSS * math.sin(t)) * r
@@ -659,22 +672,58 @@ local function edgeAlong(angle: number, inside: number, outside: number): number
 	return (inside + outside) / 2
 end
 
--- An invisible wall from a to b: it stops players, never the camera or a wall run.
-local function barrier(parent: Instance, a: Vector3, b: Vector3, height: number)
+-- An invisible wall from a to b: it stops players, never the camera, and can't be wall-run, wall-jumped or mantled. Roblox
+-- ignores CanQuery while a part collides, so the movement's rays do hit it; NoParkour is what turns the moves off.
+-- With away, the side nobody should reach, it is 4 studs thick on that side, its near face where the 1-stud one's was, so
+-- a fast slide or flip can't pass through it (owner, 2026-11-05: you could fall through the shop's at some angles).
+local function barrier(parent: Instance, a: Vector3, b: Vector3, height: number, away: Vector3?)
 	local length = (b - a).Magnitude
 	if length < 0.05 then
 		return
 	end
+	local frame = CFrame.lookAt((a + b) / 2, b) + Vector3.new(0, height / 2, 0)
+	local thick = 1
+	if away then
+		local side = frame.RightVector * (if frame.RightVector:Dot(away) >= 0 then 1 else -1)
+		thick = 4
+		frame += side * 1.5
+	end
 	local part = block(
 		parent,
 		"Barrier",
-		Vector3.new(1, height, length + 0.6),
-		CFrame.lookAt((a + b) / 2, b) + Vector3.new(0, height / 2, 0),
+		Vector3.new(thick, height, length + 0.6),
+		frame,
 		LIGHT,
 		{ transparency = 1 }
 	)
 	part.CanQuery = false
 	part.CanTouch = false
+	part:SetAttribute("NoParkour", true)
+end
+
+-- How far out the far side's cliff edge is across the mouth, in the cave concept's units of 5 studs (fcEdge in
+-- docs/art/asset-library.html): a wavy lip inside the mouth, running out under the cavern wall at its sides.
+local function farEdge(x: number): number
+	local t = math.clamp((math.abs(x) - 24) / 6, 0, 1)
+	local inMouth = 1 - t * t * (3 - 2 * t)
+	local lip = 57.6 + 0.8 * math.sin(x * 0.45) + 0.5 * math.sin(x * 1.3 + 2)
+	return 66 + (lip - 66) * inMouth
+end
+
+-- The far side's mouth (owner, 2026-11-04): an invisible wall over the whole opening, floor to ceiling, so nobody can walk,
+-- jump or wall-run into the cave, which is look only. Owner, 2026-11-05: it stood well short of the cliff, so you couldn't
+-- reach the edge to look down. It now follows the lip a stud beyond it, ending inside the wall at both sides.
+local function buildFarBarrier(root: Instance)
+	local parent = folder(root, "FarBarrier")
+	local points = {}
+	for x = -31, 31, 0.5 do
+		local r = farEdge(x) + 0.2
+		table.insert(points, Vector3.new(x * 5, -12, math.sqrt(r * r - x * x) * 5))
+	end
+	for i = 1, #points - 1 do
+		local middle = (points[i] + points[i + 1]) / 2
+		barrier(parent, points[i], points[i + 1], 252, Vector3.new(middle.X, 0, middle.Z))
+	end
 end
 
 -- The gun side (owner, 2026-11-03): a mushroom knoll fills it and wraps round an uneven hole full of canopy. A big bridge
@@ -741,8 +790,17 @@ local function buildGunSide(root: Instance)
 	end
 
 	-- The hole: rock walls round its edge, a dark floor far below, and a barrier all round except where the bridge leaves.
+	-- Owner, 2026-11-05: like the far side's, so you can stand at the edge and can't get over it. Its line is just on the
+	-- ground behind the drawn lip and its 4-stud thickness reaches out over the hole, so there's no gap at the lip to fall
+	-- into; from under the floor to the ceiling.
 	local walls = folder(parent, "HoleWalls")
 	local seal = folder(parent, "Seal")
+	local BELOW = Vector3.new(0, 12, 0)
+	local function onLip(t: number): Vector3
+		return HOLE_CENTRE
+			+ (HOLE_IN * math.cos(t) + HOLE_ACROSS * math.sin(t)) * (holeLip(t) + 0.3)
+	end
+	local tall = layout.cavern.ceilingY + BELOW.Y
 	local count = #hole.radii
 	local half = bridge.width / 2
 	local function onDeck(at: Vector3): boolean
@@ -762,9 +820,10 @@ local function buildGunSide(root: Instance)
 			ROCK
 		)
 		if not (onDeck(p1) or onDeck(p2)) then
-			barrier(seal, p1, p2, hole.barrier)
-			table.insert(kept, p1)
-			table.insert(kept, p2)
+			local q1, q2 = onLip(t1), onLip(t2)
+			barrier(seal, q1 - BELOW, q2 - BELOW, tall, HOLE_CENTRE - (q1 + q2) / 2)
+			table.insert(kept, q1)
+			table.insert(kept, q2)
 		end
 	end
 	local across = 0
@@ -817,7 +876,7 @@ local function buildGunSide(root: Instance)
 	for _, sign in { -1, 1 } do
 		local offset = side * sign * (half + 0.5)
 		local a, b = near + offset - (far - near).Unit * 4, far + offset
-		barrier(seal, a, b, hole.barrier)
+		barrier(seal, a - BELOW, b - BELOW, tall, offset)
 		-- Close the corner between the bridge's wall and the nearest stretch of the hole's barrier.
 		local best, bestDistance = nil, math.huge
 		for _, point in kept do
@@ -827,7 +886,7 @@ local function buildGunSide(root: Instance)
 			end
 		end
 		if best then
-			barrier(seal, a, best, hole.barrier)
+			barrier(seal, a - BELOW, best - BELOW, tall, HOLE_CENTRE - (a + best) / 2)
 		end
 	end
 
@@ -842,7 +901,7 @@ local function buildGunSide(root: Instance)
 		local p2 = HOLE_CENTRE
 			+ (HOLE_IN * math.cos(t2) + HOLE_ACROSS * math.sin(t2)) * (platform + 0.5)
 		if not (onDeck(p1) or onDeck(p2)) then
-			barrier(seal, p1, p2, hole.barrier)
+			barrier(seal, p1 - BELOW, p2 - BELOW, tall, (p1 + p2) / 2 - HOLE_CENTRE)
 		end
 	end
 	label(parent, "SHOP  pods to come", HOLE_CENTRE + Vector3.new(0, 14, 0))
@@ -974,6 +1033,7 @@ function Arena.create(): Model
 	buildBridges(model)
 	buildMaelstrom(model)
 	buildCavern(model)
+	buildFarBarrier(model)
 	buildPortals(model)
 	buildGunSide(model)
 	buildPond(model)

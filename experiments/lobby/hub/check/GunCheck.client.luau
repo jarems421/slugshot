@@ -35,6 +35,20 @@ local STOPS: { { name: string, from: Vector3, at: Vector3 } } = {
 	{ name = "overview", from = Vector3.new(-86, 64, 96), at = Vector3.new(-200, -10, 0) },
 	{ name = "zoneSlabsA", from = Vector3.new(-62, 22, -58), at = Vector3.new(-150, 0, -172) },
 	{ name = "zoneSlabsB", from = Vector3.new(-84, 20, 66), at = Vector3.new(-160, 0, 158) },
+	-- Owner, 2026-11-04: the slabs on the line to the portal side, the ring by the bridges, the pylons' crystals, the
+	-- shop's back and the grove mountain close up.
+	{ name = "slabLine", from = Vector3.new(-62, 9, -88), at = Vector3.new(-150, 0, -185) },
+	{ name = "slabClose", from = Vector3.new(-86, 6, -96), at = Vector3.new(-98, 0, -118) },
+	{ name = "ringPortal", from = Vector3.new(-40, 14, -70), at = Vector3.new(-75, 0, -80) },
+	{ name = "ringTop", from = Vector3.new(-70, 45, -70), at = Vector3.new(-66, 0, -82) },
+	{ name = "ringGrove", from = Vector3.new(70, 14, -30), at = Vector3.new(72, 0, -78) },
+	{ name = "pylonsNear", from = Vector3.new(-10, 40, -95), at = Vector3.new(-31, 34, -114.5) },
+	{ name = "pylonsAll", from = Vector3.new(0, 52, -70), at = Vector3.new(0, 36, -110) },
+	{ name = "shopBack", from = Vector3.new(-235, 18, 34), at = Vector3.new(-205, 8, 0) },
+	{ name = "shopBackHigh", from = Vector3.new(-226, 34, 30), at = Vector3.new(-200, 6, 0) },
+	{ name = "mountainClose", from = Vector3.new(206, 18, -38), at = Vector3.new(240, 24, -30) },
+	{ name = "mountainSide", from = Vector3.new(180, 12, 40), at = Vector3.new(230, 35, 60) },
+	{ name = "mountainNear", from = Vector3.new(200, 22, -30), at = Vector3.new(262, 40, 0) },
 }
 
 task.spawn(function()

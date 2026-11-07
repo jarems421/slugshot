@@ -1,6 +1,8 @@
 # Opens the gun-side check place (build_hub.py --gun), presses Play, captures each logged view, then
 # closes the window it opened. Takes focus only if Play has not started from a plain F5. Other Studio windows are never touched.
-param([Parameter(Mandatory = $true)][string]$OutDir, [int]$Timeout = 320)
+# -Unfocused hands focus back to VS Code once the tour starts, so Studio runs as it does in the background (15 frames a
+# second) and Roblox's automatic graphics level falls: the lighting check compares this with a focused run.
+param([Parameter(Mandatory = $true)][string]$OutDir, [int]$Timeout = 320, [switch]$Unfocused)
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
 using System;
@@ -10,6 +12,8 @@ public static class Win {
     [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr dc, uint flags);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
     public struct RECT { public int L, T, R, B; }
 }
 "@
@@ -22,15 +26,24 @@ Remove-Item "$env:LOCALAPPDATA\Roblox\RobloxStudio\AutoSaves\SlugshotLobbyGunChe
 $started = Get-Date
 $proc = Start-Process $exe -ArgumentList "`"$place`"" -PassThru
 $hwnd = [IntPtr]::Zero
-for ($i = 0; $i -lt 40; $i++) {
+for ($i = 0; $i -lt 120; $i++) {
     Start-Sleep -Seconds 1
     $live = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
     if ($live -and $live.MainWindowTitle -like "*SlugshotLobbyGunCheck*") { $hwnd = $live.MainWindowHandle; break }
 }
 if ($hwnd -eq [IntPtr]::Zero) { Write-Output "Studio did not open the place"; Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue; exit 1 }
 Write-Output "Studio $($proc.Id) open after $([int]((Get-Date) - $started).TotalSeconds)s"
+# A minimized window renders nothing and takes no keys: restore it (this check's own window only).
+[Win]::ShowWindow($hwnd, 9) | Out-Null
 
 function Capture($name) {
+    # A minimized window captures as a 160 x 28 strip (seen once at a forced low graphics level): restore it first.
+    if ([Win]::IsIconic($hwnd)) {
+        [Win]::ShowWindow($hwnd, 9) | Out-Null
+        [Win]::SetForegroundWindow($hwnd) | Out-Null
+        Start-Sleep -Milliseconds 1500
+        Write-Output "restored the minimized window before $name"
+    }
     $rect = New-Object Win+RECT
     [Win]::GetWindowRect($hwnd, [ref]$rect) | Out-Null
     $w = $rect.R - $rect.L; $h = $rect.B - $rect.T
@@ -46,7 +59,7 @@ function Capture($name) {
 function PressPlay([bool]$focus = $false) {
     # A plain F5 posted to the window, which Studio takes when its window is active. If that hasn't started Play, the
     # retry brings this check's own window forward first (Studio ignored unfocused key messages in some runs).
-    if ($focus) { [Win]::SetForegroundWindow($hwnd) | Out-Null; Start-Sleep -Milliseconds 300 }
+    if ($focus) { [Win]::ShowWindow($hwnd, 9) | Out-Null; [Win]::SetForegroundWindow($hwnd) | Out-Null; Start-Sleep -Milliseconds 300 }
     [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x74, [IntPtr]0) | Out-Null
     Start-Sleep -Milliseconds 60
     [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x74, [IntPtr]0) | Out-Null
@@ -71,13 +84,26 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
         if ($content -notmatch "SlugshotLobbyGunCheck") { continue }
         foreach ($line in ($content -split "`n")) {
             if ($line -match "server foundation ready") { $running = $true }
-            if ($line -match "GUNCHECK|CreatorError" -and $line -notmatch "Failed to upload TexturePack") {
+            # Case-sensitive: the place's own name, SlugshotLobbyGunCheck, appears in Studio's "open place" line and once
+            # counted as the tour having started, so Play was never pressed again.
+            if ($line -cmatch "GUNCHECK|CreatorError" -and $line -notmatch "Failed to upload TexturePack") {
                 $key = $log.Name + $line
                 if (-not $seen.ContainsKey($key)) {
                     $seen[$key] = $true
-                    if ($line -match "GUNCHECK") { $running = $true }
-                    if ($line -match "GUNCHECK shot (\S+)") { Capture $Matches[1] }
-                    elseif ($line -match "GUNCHECK ground") { Write-Output ($line.Trim() -replace "^.*?GUNCHECK", "GUNCHECK") }
+                    if ($line -cmatch "GUNCHECK") { $running = $true }
+                    if ($Unfocused -and $line -cmatch "GUNCHECK tour starts") {
+                        $code = Get-Process Code -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero } | Select-Object -First 1
+                        if ($code) { Write-Output "focus to VS Code: $([Win]::SetForegroundWindow($code.MainWindowHandle))" }
+                    }
+                    if ($line -cmatch "GUNCHECK shot (\S+)") { Capture $Matches[1] }
+                    elseif ($line -cmatch "GUNCHECK menu open") {
+                        # Roblox's menu opened over the view (seen at low graphics levels): Escape, to this window only.
+                        [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x1B, [IntPtr]0) | Out-Null
+                        Start-Sleep -Milliseconds 60
+                        [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x1B, [IntPtr]0) | Out-Null
+                        Write-Output "closed Roblox's menu"
+                    }
+                    elseif ($line -cmatch "GUNCHECK (ground|light)") { Write-Output ($line.Trim() -replace "^.*?GUNCHECK", "GUNCHECK") }
                     elseif ($line -match "FLog::") { Write-Output ($line.Trim() -replace "^.*?\[FLog::[A-Za-z]+\] ", "") }
                 }
             }

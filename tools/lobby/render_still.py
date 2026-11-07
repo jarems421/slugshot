@@ -3,9 +3,11 @@
     render_still.py <asset-id> <out-dir> <width> <height> <name:variant:yaw:pitch:dist:tx:ty:tz> ...
 """
 import json
+import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import moderngl
@@ -15,7 +17,8 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 from render_library import desktop_glsl, extract  # noqa: E402
 
-BANDS = 24
+# A heavy scene needs more: a band that runs past about 2 seconds makes Windows reset the GPU (nvlddmkm event 153).
+BANDS = int(os.environ.get("LOBBY_BANDS", "24"))
 
 
 def main():
@@ -57,6 +60,7 @@ process.stdout.write(JSON.stringify({ bank: L.BANK, shader: L.shaderIndex(i), sh
             ctx.scissor = (0, b*band, w, band if b < BANDS - 1 else h - b*band)
             vao.render()
             ctx.finish()
+            time.sleep(0.005)
         ctx.scissor = None
         img = Image.frombytes("RGB", (w, h), fbo.read(components=3)).transpose(Image.FLIP_TOP_BOTTOM)
         img.save(out/f"{shot['name']}.jpg", quality=88)

@@ -26,6 +26,9 @@ local groveSlugs =
 -- The gun side's knoll and canopy hole, in world studs (tools/lobby/gun_side_sites.py).
 local gunSide =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("gun_side")) :: any
+-- The cavern wall's and far side cave's dressing, in world studs (tools/lobby/far_side_sites.py).
+local farSide =
+	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("far_side")) :: any
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 local FloppyAppearance = require(script.Parent:WaitForChild("FloppyAppearance")) :: any
 local InfernoAppearance = require(script.Parent:WaitForChild("InfernoAppearance")) :: any
@@ -52,15 +55,17 @@ local FALL_FOOT_Y = -51 -- the juice's surface where the falls land
 local BASIN_Y = -2.25 -- the pools' surface, in units
 local BASIN_R = 1.7 -- the basin's radius, in units
 local BASIN_CENTRE = -0.7 -- in units, from the cliff's edge
-local FALL_SPACING = 24 -- degrees between strips of the overflow
-local FALL_FAN = { -72, -48, -24, 0, 24, 48, 72 }
+-- The overflow spills over a shallow front arc of its basin as one sheet (owner, 2026-11-07: the falls looked weird; spilling
+-- over 144 degrees of the round basin, from -72 to 72, made each a half-cylinder, a pipe of water seen from above).
+local FALL_SPACING = 20 -- degrees between strips of the overflow
+local FALL_FAN = { -40, -20, 0, 20, 40 }
 
 -- Pieces that glow more than the painted brightness suits under Roblox's bloom.
 local GLOW: { [string]: number } = {
 	["hub-portal-pvp"] = 0.75,
 	["hub-portal-training"] = 0.75,
 	["hub-portal-veylume"] = 0.75,
-	["hub-storm"] = 0.7,
+	["hub-storm"] = 1.4, -- HubMotion's STORM_GLOW
 	-- Mushroom caps in the whirlpool and on the spawn rock glow more (owner).
 	["hub-pit-flora"] = 1.8,
 	-- Their colour goes pale at any more.
@@ -70,6 +75,19 @@ local GLOW: { [string]: number } = {
 	["hub-flora-plant"] = 0.5,
 	["hub-flora-grass"] = 0.5,
 	["hub-rock-dress"] = 1.4,
+	-- The shop's velvet ground glows purple, spores and all (owner, 2026-11-07: too dim, bring its glow back; then the cushions
+	-- themselves, not only the specks: their glow map covers them now).
+	["hub-gun-ground"] = 1.6,
+	-- The runes round the storm (owner, 2026-11-07: the ring round the storm too plain and dark).
+	["hub-well-rock"] = 1.6,
+}
+-- Caps alone, on top of that: the side mushrooms sprouting from the rock and the cave's spires and curving up (owner,
+-- 2026-11-06: their tops need a good glow, like the mushroom trees'), from 0.93 to about the trees' 4.
+local CAP_ONLY_GLOW: { [string]: number } = {
+	["hub-gun-sideshroom-a"] = 4,
+	["hub-gun-sideshroom-b"] = 4,
+	-- The shop's great cap (owner, 2026-11-07: it should glow like the other mushrooms).
+	["hub-gun-shop"] = 3,
 }
 
 -- Pieces whose ink a phone can skip: far away or small on screen (HubMotion.client decides).
@@ -79,7 +97,6 @@ local DISTANT = {
 	"hub-portal-veylume",
 	"hub-well-rock",
 	"hub-well-glow",
-	"hub-ceiling-gems",
 	"hub-ceiling-vines",
 	"hub-arch",
 	"hub-volcano",
@@ -92,6 +109,31 @@ local DISTANT = {
 	"hub-pit-flora",
 	"hub-cliff",
 	"hub-rock",
+	"hub-cavern-00",
+	"hub-cavern-01",
+	"hub-cavern-02",
+	"hub-cavern-03",
+	"hub-cavern-04",
+	"hub-cavern-05",
+	"hub-cavern-06",
+	"hub-cavern-07",
+	"hub-cavern-08",
+	"hub-cavern-09",
+	"hub-cavern-10",
+	"hub-cavern-11",
+	"hub-roof-00",
+	"hub-roof-01",
+	"hub-roof-02",
+	"hub-roof-03",
+	"hub-roof-04",
+	"hub-roof-05",
+	"hub-roof-06",
+	"hub-roof-07",
+	"hub-roof-08",
+	"hub-roof-09",
+	"hub-roof-10",
+	"hub-roof-11",
+	"hub-cave-spires",
 	"Bridge0",
 	"Bridge1",
 	"Bridge2",
@@ -117,8 +159,49 @@ local function paintedBounds(model: Model): (Vector3, Vector3)
 	return lo, hi
 end
 
+-- What blocks light (owner, 2026-11-06: shader-style light from somewhere): rock with its runes, wood, stems and stone; never
+-- an ink shell or what holds or is a light, as a crystal or glowing cap would shut in the light set inside it.
+local GLOWING_PARTS = {
+	"Lantern",
+	"Energy",
+	"Pool",
+	"Flows",
+	"Lava",
+	"Falls",
+	"Pond",
+	"Juice",
+	"Glow",
+	"Storm",
+	"Cap",
+	"Gem",
+	"Key",
+	"Glass",
+	"Sprouts",
+	"Minis",
+}
+local function castsShadow(key: string, part: MeshPart): boolean
+	if string.sub(key, 1, 9) == "crystals-" or string.sub(part.Name, -4) == "_Ink" then
+		return false
+	end
+	-- Mushroom caps shade the ground under them in the storm's light (owner, 2026-11-07: shadows of everything that makes
+	-- sense); a tree's own light hangs below its cap. The canopy's lights sit inside theirs (buildGunSide turns those off).
+	if
+		part.Name == "Cap"
+		and (string.sub(key, 1, 9) == "mushroom-" or string.sub(key, 1, 18) == "hub-gun-sideshroom")
+	then
+		return true
+	end
+	for _, word in GLOWING_PARTS do
+		if string.find(part.Name, word, 1, true) then
+			return false
+		end
+	end
+	return true
+end
+
 -- One of the asset library's pieces (LobbyAssets), styled in the look pack and pivoted at the middle of its foot. Look
--- only: anchored, with no collision or shadow. nil if it doesn't load.
+-- only: anchored, with no collision; it casts shadows as castsShadow says (the mushrooms' stems, owner, 2026-11-06: no
+-- shadows to be seen). nil if it doesn't load.
 local function libraryPiece(key: string, glow: number): Model?
 	local lobby = require(ServerStorage:WaitForChild("LobbyAssets")) :: any
 	local info = lobby.assets[key]
@@ -143,7 +226,7 @@ local function libraryPiece(key: string, glow: number): Model?
 		if part:IsA("MeshPart") then
 			part.Anchored = true
 			part.CanCollide, part.CanQuery, part.CanTouch = false, false, false
-			part.CastShadow = false
+			part.CastShadow = castsShadow(key, part)
 		end
 	end
 	local lo, hi = paintedBounds(model)
@@ -168,10 +251,7 @@ local function libraryPiece(key: string, glow: number): Model?
 			for name, spec in info.groups do
 				local part = model:FindFirstChild(name)
 				if part and part:IsA("MeshPart") then
-					err += (
-						(part.Position - centre)
-						- (spec.center - info.center) * flip * scale
-					).Magnitude
+					err += ((part.Position - centre) - (spec.center - info.center) * flip * scale).Magnitude
 				end
 			end
 			if err < bestError then
@@ -265,12 +345,21 @@ local function loadPiece(key: string): Model?
 			{ ink = part.ink, emissive = part.emissive, center = (part.min + part.max) / 2 }
 	end
 	LookPack.styleModel(model, key, groups, templates, GLOW[key] or 1.0)
+	local capGlow = CAP_ONLY_GLOW[key]
+	if capGlow then
+		for _, part in model:GetDescendants() do
+			local surface = part:FindFirstChild("SlugshotMaterial")
+			if part:IsA("MeshPart") and part.Name == "Cap" and surface then
+				(surface :: SurfaceAppearance).EmissiveStrength *= capGlow
+			end
+		end
+	end
 	for _, part in model:GetDescendants() do
 		if part:IsA("MeshPart") then
 			part.CanCollide = false
 			part.CanQuery = false
 			part.CanTouch = false
-			part.CastShadow = false
+			part.CastShadow = castsShadow(key, part)
 			part.Massless = true
 		elseif part:IsA("BasePart") then
 			part.Anchored = true
@@ -324,7 +413,7 @@ end
 -- What is solid, exactly as drawn: players stand on it and wall-run it, and the camera stops at it because it is
 -- visible and queryable. Ink, glow, water, lava pools, foliage and anything that moves stay passable.
 local CLIFF = { "Cliff0", "Cliff1", "Cliff2", "Cliff3", "Cliff4", "Cliff5", "Cliff6", "Cliff7" }
-local GATE, PORTAL = { "Stone", "Key" }, { "Stone", "Iron" }
+local GATE, PORTAL = { "StoneA", "StoneB", "Lintel", "Key" }, { "Stone", "Iron" }
 local SOLID: { [string]: { string } } = {
 	["hub-rock"] = { "Top", "Upper", "Lower", "Cracks" },
 	["hub-rock-dress"] = { "Roots" },
@@ -343,6 +432,38 @@ local SOLID: { [string]: { string } } = {
 	["hub-grove-rocks"] = { "Stones", "Runes" },
 	-- The shop's pods and trunk are solid, so its closed door can't be walked through; the cap stays passable.
 	["hub-gun-shop"] = { "Pods", "Trunk" },
+	-- The cavern wall, as high as anyone can reach; the block-out's wall stays behind it.
+	["hub-cavern-00"] = { "Low", "Mid" },
+	["hub-cavern-01"] = { "Low", "Mid" },
+	["hub-cavern-02"] = { "Low", "Mid" },
+	["hub-cavern-03"] = { "Low", "Mid" },
+	["hub-cavern-04"] = { "Low", "Mid" },
+	["hub-cavern-05"] = { "Low", "Mid" },
+	["hub-cavern-06"] = { "Low", "Mid" },
+	["hub-cavern-07"] = { "Low", "Mid" },
+	["hub-cavern-08"] = { "Low", "Mid" },
+	["hub-cavern-09"] = { "Low", "Mid" },
+	["hub-cavern-10"] = { "Low", "Mid" },
+	["hub-cavern-11"] = { "Low", "Mid" },
+	["hub-far-ground"] = {
+		"FloorNearL",
+		"FloorNearM",
+		"FloorNearR",
+		"FloorMidL",
+		"FloorMidM",
+		"FloorMidR",
+		"FloorFarL",
+		"FloorFarM",
+		"FloorFarR",
+		"Rubble",
+		"Pools",
+		"Shards",
+	},
+	["hub-lantern-post"] = { "Post" },
+	-- The cave mouth's frame (owner, 2026-11-06): its low slabs stand on the floor beside the mouth.
+	["hub-mouth-slabs"] = { "LowL", "LowR", "HighL", "HighR", "Top" },
+	-- The rocks beside the cobble path (owner, 2026-11-07), walked round.
+	["hub-path-rocks"] = { "RocksL", "RocksR" },
 }
 
 -- Collision builds beside the art, a few at a time, so a server start isn't held up; the block-out holds the ground
@@ -430,13 +551,42 @@ local function holder(name: string, position: Vector3, size: Vector3): Part
 	return part
 end
 
-local function pointLight(position: Vector3, color: Color3, brightness: number, range: number)
+-- Lamps and glows light pools round them (owner, 2026-11-06: light from somewhere, not from nowhere). With less ambient
+-- light and Future lighting, every placed light is brighter and reaches further than it was first set at.
+local LIGHT_GAIN, LIGHT_REACH = 1.8, 1.5
+
+local function pointLight(
+	position: Vector3,
+	color: Color3,
+	brightness: number,
+	range: number
+): PointLight
+	local light = Instance.new("PointLight")
+	light.Color = color
+	light.Brightness = brightness * LIGHT_GAIN
+	light.Range = math.min(range * LIGHT_REACH, 60)
+	light.Shadows = false
+	light.Parent = holder("Light", position, Vector3.one)
+	return light
+end
+
+-- A soft pool of coloured light on the rock round something that glows (owner, 2026-11-07: crystals high on the walls glowed
+-- but lit nothing round them, and it should be smooth, not choppy or blocky): no shadows, so it falls off evenly over every
+-- facet, and shadeLights leaves it as it is.
+local function softGlow(
+	position: Vector3,
+	color: Color3,
+	brightness: number,
+	range: number
+): PointLight
 	local light = Instance.new("PointLight")
 	light.Color = color
 	light.Brightness = brightness
-	light.Range = range
+	light.Range = math.min(range, 120)
 	light.Shadows = false
-	light.Parent = holder("Light", position, Vector3.one)
+	light:SetAttribute("Soft", true)
+	light.Parent = holder("SoftGlow", position, Vector3.one)
+	return light
 end
 
 local function fxTexture(name: string): string
@@ -555,14 +705,16 @@ local function hideBlockOut()
 	end
 	local cavern = root:FindFirstChild("Cavern")
 	if cavern then
-		-- The mountain's back passes through the wall here. The dark beyond it is the backdrop, and players can climb over.
+		-- The cavern wall's art replaces the block-out's wall all round. The mountain's back passes through it from 52 to 128,
+		-- where players can climb over; the art's wall stands back in an alcove there from 53 to 126 (owner, 2026-11-05), so
+		-- the block-out's would be an invisible wall in front of it.
 		for _, item in cavern:GetChildren() do
 			if item:IsA("BasePart") and item.Name == "Wall" then
 				local angle = zoneAngle(item.Position)
+				item.Transparency = 1
+				item.CanQuery = false
 				if angle > 52 and angle < 128 then
-					item.Transparency = 1
-					item.CanCollide = angle <= 58 or angle >= 122
-					item.CanQuery = false
+					item.CanCollide = angle <= 53 or angle >= 126
 				end
 			end
 		end
@@ -604,10 +756,12 @@ local function hideBlockOut()
 			if item:IsA("BasePart") and item.Name == "Surface" then
 				local at = item.Position
 				local angle = math.abs(math.deg(math.atan2(at.X, -at.Z)))
+				-- The far side's art replaces its ground too, which also stays to walk on.
 				if
 					item.Color == portalGround
 					or (item.Color == growthGround and angle < 39)
 					or onSlugSide(at)
+					or angle > 134
 				then
 					item.Transparency = 1
 				end
@@ -622,11 +776,14 @@ local function hideBlockOut()
 	end
 end
 
+-- The look of shader packs (owner, 2026-11-06: like Minecraft shaders, light from somewhere, scenic, everything popping;
+-- docs/art/lobby-hub.md, round 7): real shadows, light pouring in through the one opening and nowhere else, lamps and glows
+-- lighting the rock round them in their own colours with the air glowing round them, a wide soft bloom, and colour from the
+-- lights rather than a grade that lifts or darkens anything.
 local function lighting()
 	LookPack.applyBase()
-	-- Phone first: no shadows and no voxel-heavy lamps, so every device gets the same look. The concepts' shading is
-	-- painted in; a soft light from the Sky Well brings out the normal maps.
-	Lighting.GlobalShadows = false
+	-- Real shadows from every lamp and glow: their light stops at the rock instead of passing through it.
+	Lighting.GlobalShadows = true
 	-- As dark as the cavern. Roblox stops drawing far parts at lower graphics levels, and the bright default sky then
 	-- showed through wherever the far wall dropped out (phones especially).
 	local sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
@@ -636,20 +793,293 @@ local function lighting()
 	sky.CelestialBodiesShown = false
 	sky.StarCount = 0
 	sky.Parent = Lighting
+	-- The storm's light from overhead, a little off straight down, with shadows (owner, 2026-11-07: too dark and gloomy
+	-- everywhere; no shadows of the rocks above or of the character; no mist to be seen). The roof and walls are shells facing
+	-- in, which Roblox's shadows don't take from behind, so it reaches every floor at every graphics level alike (round 7's
+	-- flood at level 1 came from a cover shutting it out at full graphics only); what it adds is shadows under everything
+	-- that stands in it, the rubble's on the island among them, and light for the mist, which Roblox lights by the sun (with
+	-- none in round 7 and 8 the mist went black and out of sight). At latitude 12 it stands 11.5 degrees off overhead
+	-- (measured), so the rubble's shadows land on the island and a character's falls just behind it.
 	Lighting.ClockTime = 12
-	Lighting.GeographicLatitude = 35
-	Lighting.Brightness = 0.9
-	Lighting.Ambient = Color3.fromRGB(138, 136, 150)
-	Lighting.OutdoorAmbient = Color3.fromRGB(138, 136, 150)
-	Lighting.EnvironmentDiffuseScale = 0
-	Lighting.EnvironmentSpecularScale = 0.2
+	Lighting.GeographicLatitude = 12
+	Lighting.Brightness = 1.2
+	Lighting.ColorShift_Top = Color3.fromRGB(175, 180, 255)
+	Lighting.ShadowSoftness = 0.2
+	-- Saturation only (owner, 2026-11-06: make everything pop). No contrast or brightness (owner, 2026-11-05: looking up lit
+	-- the cavern up): Roblox's automatic graphics level falls on heavy views such as the ceiling and can drop post effects,
+	-- and the old grade's contrast went with it, lifting every dark wall. Losing this only greys the colours a little.
+	local grade = Lighting:FindFirstChild("SlugshotGrade") :: ColorCorrectionEffect?
+	if grade then
+		grade.Enabled = true
+		grade.Brightness, grade.Contrast, grade.Saturation = 0, 0, 0.22
+		grade.TintColor = Color3.new(1, 1, 1)
+	end
+	-- Little light from nowhere: dark blue-violet where no lamp reaches. The same indoors and out, as where Roblox reckons
+	-- the sky shows changes with the graphics level. The darkness is in the light itself, so it holds at every level.
+	Lighting.Ambient = Color3.fromRGB(82, 78, 110)
+	Lighting.OutdoorAmbient = Color3.fromRGB(82, 78, 110)
+	Lighting.EnvironmentDiffuseScale = 0.3
+	Lighting.EnvironmentSpecularScale = 0.7
 	Lighting.ExposureCompensation = 0
+	-- A wide soft glow round everything that glows: lanterns, lava, crystals, caps and runes. Only what glows: at 0.9 a
+	-- character lit by a lamp bloomed too and looked blurred (owner, 2026-11-06: the character too glowy).
+	local bloom = Lighting:FindFirstChild("SlugshotBloom") :: BloomEffect?
+	if bloom then
+		bloom.Intensity, bloom.Size, bloom.Threshold = 1.3, 50, 1.15
+	end
+	-- A light violet mist through the whole cavern (owner, 2026-11-06; 2026-11-07: a small hint of it, visible, not
+	-- overpowering, not the main feature as in the far cave): the far walls fade into it.
 	local atmosphere = Lighting:FindFirstChild("SlugshotAtmosphere") :: Atmosphere?
 	if atmosphere then
-		atmosphere.Density = 0.16
-		atmosphere.Haze = 1
-		atmosphere.Color = Color3.fromRGB(34, 36, 56)
-		atmosphere.Decay = Color3.fromRGB(26, 26, 44)
+		atmosphere.Density = 0.32
+		atmosphere.Haze = 2
+		atmosphere.Color = Color3.fromRGB(118, 106, 178)
+		atmosphere.Decay = Color3.fromRGB(62, 54, 112)
+	end
+end
+
+-- Light where the eye goes (owner, 2026-11-07: walls, mountain and the ring round the storm too dark; walls well lit, the
+-- mountain well visible): broad coloured washes up the cavern wall from its foot, the grove mountain lit from the grove and
+-- the stone ring round the storm lit from below. The volcano and portals keep their colouring (owner); the plaza in front of
+-- them is lit by the portals and the lava cracks (buildPortals, buildArch). No shadows from these: they reach far, and the
+-- sun and the lamps carry the shadows.
+local WASH_COLOURS = {
+	Color3.fromRGB(150, 120, 255),
+	Color3.fromRGB(90, 200, 230),
+	Color3.fromRGB(120, 150, 255),
+}
+local function spotAt(
+	name: string,
+	from: Vector3,
+	aim: Vector3,
+	colour: Color3,
+	brightness: number,
+	angle: number,
+	range: number
+)
+	local source = holder(name, from, Vector3.one)
+	source.CFrame = CFrame.lookAt(from, aim)
+	local light = Instance.new("SpotLight")
+	light.Face = Enum.NormalId.Front
+	light.Angle = angle
+	light.Range = range
+	light.Brightness = brightness
+	light.Color = colour
+	light.Shadows = false
+	light:SetAttribute("Shadowed", false)
+	light.Parent = source
+	CollectionService:AddTag(light, "HubLamp")
+end
+
+local function sceneLights()
+	-- Round the wall every 15 degrees, from the floor at its foot up its face; not across the cave's mouth, which has its own
+	-- slabs lit below, nor behind the mountain, which is lit instead.
+	local index = 0
+	for degrees = 0, 345, 15 do
+		local mouth = degrees >= 160 and degrees <= 200
+		local mountain = degrees >= 60 and degrees <= 120
+		if not mouth and not mountain then
+			index += 1
+			local a = math.rad(degrees)
+			local out = Vector3.new(math.sin(a), 0, -math.cos(a))
+			spotAt(
+				"WallWash",
+				out * 262 + Vector3.new(0, 4, 0),
+				out * 300 + Vector3.new(0, 75, 0),
+				WASH_COLOURS[index % 3 + 1],
+				1.5,
+				80,
+				120
+			)
+		end
+	end
+	-- The wall's upper half and the roof's underside, which those can't reach (owner, 2026-11-07: the lower wall lit nicely,
+	-- the upper area too dark; the whole top of the map too dark). The wall stands at about 295 studs out up to 150, then the
+	-- roof curves in to about 200 studs out at 235 (measured from its meshes). Two more rings: one from 95 studs up lighting
+	-- the wall from 105 to 165, over the mouth and the edges of the mountain's alcove too; one from 168, close under the
+	-- roof, lighting its underside, over the mountain too. Brighter than the foot's, as the mist dims what is high and far.
+	index = 0
+	for degrees = 0, 345, 15 do
+		if degrees >= 75 and degrees <= 105 then
+			continue
+		end
+		index += 1
+		local a = math.rad(degrees + 7.5)
+		local out = Vector3.new(math.sin(a), 0, -math.cos(a))
+		spotAt(
+			"WallWashHigh",
+			out * 250 + Vector3.new(0, 95, 0),
+			out * 300 + Vector3.new(0, 165, 0),
+			WASH_COLOURS[(index + 1) % 3 + 1],
+			2.4,
+			80,
+			120
+		)
+	end
+	index = 0
+	for degrees = 0, 340, 20 do
+		index += 1
+		local a = math.rad(degrees)
+		local out = Vector3.new(math.sin(a), 0, -math.cos(a))
+		spotAt(
+			"RoofWash",
+			out * 240 + Vector3.new(0, 168, 0),
+			out * 272 + Vector3.new(0, 218, 0),
+			WASH_COLOURS[(index + 2) % 3 + 1],
+			2.6,
+			95,
+			100
+		)
+	end
+	-- The mouth's slabs, from either side of the path.
+	for _, side in { -1, 1 } do
+		spotAt(
+			"MouthWash",
+			Vector3.new(side * 60, 6, 235),
+			Vector3.new(side * 40, 110, 290),
+			Color3.fromRGB(170, 150, 255),
+			1.6,
+			75,
+			120
+		)
+	end
+	-- The grove mountain, from the grove in front of it: its faces, ledges and peaks.
+	for _, at in
+		{ { 175, 8, -70, 285, 70, -30 }, { 175, 8, 70, 285, 70, 40 }, { 205, 30, 0, 300, 120, 0 } }
+	do
+		spotAt(
+			"MountainWash",
+			Vector3.new(at[1], at[2], at[3]),
+			Vector3.new(at[4], at[5], at[6]),
+			Color3.fromRGB(120, 230, 200),
+			1.6,
+			70,
+			120
+		)
+	end
+	-- Its peaks (owner, 2026-11-07: the top of the mountain darker): the summit stands at (299, 165, 0), 164 studs from the
+	-- washes in the grove, past a light's 120-stud reach. Two more from in front of it, within reach of every peak.
+	for _, z in { -32, 32 } do
+		spotAt(
+			"PeakWash",
+			Vector3.new(225, 105, z),
+			Vector3.new(300, 150, z * 0.4),
+			Color3.fromRGB(120, 230, 200),
+			1.5,
+			75,
+			120
+		)
+	end
+	-- The alcove's wall above and behind the mountain, which the washes round the foot leave out. Within reach of it
+	-- (lights reach 120 studs); without shadows, a light inside the mountain's peaks still lights the wall.
+	for _, z in { -55, 55 } do
+		spotAt(
+			"AlcoveWash",
+			Vector3.new(320, 175, z),
+			Vector3.new(400, 190, z * 1.6),
+			Color3.fromRGB(140, 130, 255),
+			1.6,
+			80,
+			120
+		)
+	end
+	-- The alcove's back wall above the mountain and its ceiling (owner, 2026-11-07: from the island the lighting only
+	-- lasts half the screen). Between 60 and 120 degrees the wall stands about 400 studs out, a hundred behind the rest, up
+	-- to 180, under a ceiling from 250 to 410 studs out (measured from its meshes); the rings round the wall pass in front
+	-- of it and the alcove's two washes light its sides. A light inside the mountain's back still lights the wall.
+	for k, degrees in { 68, 84, 100, 116 } do
+		local a = math.rad(degrees)
+		local out = Vector3.new(math.sin(a), 0, -math.cos(a))
+		local colour = WASH_COLOURS[k % 3 + 1]
+		spotAt(
+			"AlcoveBack",
+			out * 330 + Vector3.new(0, 135, 0),
+			out * 405 + Vector3.new(0, 175, 0),
+			colour,
+			2.4,
+			85,
+			120
+		)
+		spotAt(
+			"AlcoveRoof",
+			out * 320 + Vector3.new(0, 170, 0),
+			out * 345 + Vector3.new(0, 235, 0),
+			colour,
+			2.4,
+			90,
+			100
+		)
+	end
+	-- The stone ring round the storm, from below.
+	for k = 0, 7 do
+		local a = k * math.pi / 4 + 0.2
+		local at = Vector3.new(math.cos(a) * 135, 150, math.sin(a) * 135)
+		spotAt(
+			"RingWash",
+			at,
+			at + Vector3.new(math.cos(a) * 25, 100, math.sin(a) * 25),
+			Color3.fromRGB(185, 175, 255),
+			1.8,
+			100,
+			110
+		)
+	end
+	-- The storm, from inside its funnel below the clouds (owner, 2026-11-07: even the storm very dark). With its own glow
+	-- raised (HubMotion's STORM_GLOW), this lights the clouds' undersides so their swirl reads.
+	for k = 0, 3 do
+		local a = k * math.pi / 2 + 0.6
+		local at = Vector3.new(math.cos(a) * 45, 175, math.sin(a) * 45)
+		spotAt(
+			"StormWash",
+			at,
+			Vector3.new(-math.cos(a) * 25, 260, -math.sin(a) * 25),
+			Color3.fromRGB(175, 160, 255),
+			1.3,
+			100,
+			110
+		)
+	end
+end
+
+-- Every lamp and glow, once placed: warm ones brighter still, all casting shadows, and the air round each glowing in its
+-- colour as the mist would scatter it. Low detail drops the glow and the lamps' shadows (HubMotion). Not too bright up
+-- close (owner, 2026-11-06: a character walking past a lamp lit up until it looked blurred): 1.3 and 1.2 times, from 1.6
+-- and 1.4, and the glow drawn behind whatever stands at the lamp, so it surrounds a character instead of covering it.
+local function shadeLights()
+	local halos = Instance.new("Folder")
+	halos.Name = "Halos"
+	halos.Parent = art
+	for _, light in art:GetDescendants() do
+		if not light:IsA("PointLight") or light:GetAttribute("Soft") then
+			continue
+		end
+		local warm = light.Color.R > light.Color.G + 0.2
+		light.Brightness *= if warm then 1.3 else 1.2
+		light.Shadows = true
+		CollectionService:AddTag(light, "HubLamp")
+		local at = light.Parent
+		if light.Range >= 12 and at and (at:IsA("BasePart") or at:IsA("Attachment")) then
+			local position = if at:IsA("BasePart")
+				then at.Position
+				else (at :: Attachment).WorldPosition
+			local glow = holder("Halo", position, Vector3.one)
+			glow.Parent = halos
+			local e = Instance.new("ParticleEmitter")
+			e.Texture = fxTexture("flash")
+			e.Color = ColorSequence.new(light.Color)
+			e.LightEmission = 1
+			e.LightInfluence = 0
+			e.Size = NumberSequence.new(light.Range * 0.75)
+			local strength = if warm then 0.84 else 0.9
+			e.Transparency = fade({ { 0, 1 }, { 0.3, strength }, { 0.7, strength }, { 1, 1 } })
+			e.Lifetime = NumberRange.new(5, 6)
+			e.Rate = 0.5
+			e.Speed = NumberRange.new(0)
+			e.Rotation = NumberRange.new(0, 360)
+			e.ZOffset = -light.Range * 0.45
+			e.Parent = glow
+			CollectionService:AddTag(e, "HubHalo")
+		end
 	end
 end
 
@@ -681,8 +1111,9 @@ end
 
 local function buildRock()
 	place("hub-rock")
+	-- Its old crystals' twinkles went with them (owner, 2026-11-07: old designs); the approved ones under the rock are
+	-- far_side.json's.
 	place("hub-rock-dress")
-	addTwinkles("hub-rock-dress", 1.5)
 	place("hub-gems")
 	addTwinkles("hub-gems", 1.3)
 	local debris = place("hub-rock-debris")
@@ -711,6 +1142,13 @@ local function buildRock()
 end
 
 -- One bridge mesh shared by all four: its bones are moved per bridge on the client.
+-- The bridge's three hanging lanterns' cores, in its own studs (the library's lanternAt: 2.55 studs a unit, x along the
+-- bridge, its rails' sag from railY).
+local BRIDGE_LANTERNS = {
+	Vector3.new(-13.77, -0.23, 6.04),
+	Vector3.new(1.79, -1.21, -6.04),
+	Vector3.new(14.28, -0.16, 6.04),
+}
 local function buildBridges()
 	local source = loadPiece("hub-bridge")
 	if not source then
@@ -735,6 +1173,11 @@ local function buildBridges()
 		bridge:SetAttribute("Frame", frame)
 		bridge.Parent = art
 		CollectionService:AddTag(bridge, "HubBridge")
+		-- Each hanging lantern lights the planks and ropes round it, as the path's lanterns do (owner, 2026-11-07: the
+		-- bridges' lanterns didn't glow like those).
+		for _, core in BRIDGE_LANTERNS do
+			pointLight(frame * core, Color3.fromRGB(255, 168, 86), 0.7, 17)
+		end
 	end
 	source:Destroy()
 end
@@ -762,7 +1205,8 @@ local function ribbon(
 	local b = Instance.new("Beam")
 	b.Attachment0, b.Attachment1 = a0, a1
 	b.CurveSize0, b.CurveSize1 = 4.5, 16
-	b.Width0, b.Width1 = width, width * 0.85
+	-- It spreads a little as it falls; narrowing made a tapered pipe.
+	b.Width0, b.Width1 = width, width * 1.25
 	b.FaceCamera = false
 	b.Segments = 14
 	b.Texture = texture
@@ -784,7 +1228,9 @@ local function buildFall(angle: number)
 	local inward = -flat
 	local radius = BASIN_R * UNIT
 	local centre = flat * (rim + BASIN_CENTRE * UNIT)
-	local melt = fade({ { 0, 0 }, { 0.82, 0 }, { 1, 1 } })
+	-- A little see-through, more at the sheet's two edges, melting into the foam at the foot.
+	local melt = fade({ { 0, 0.05 }, { 0.5, 0.18 }, { 0.82, 0.25 }, { 1, 1 } })
+	local edge = fade({ { 0, 0.3 }, { 0.5, 0.45 }, { 0.8, 0.55 }, { 1, 1 } })
 	for index, side in FALL_FAN do
 		local turn = math.rad(side)
 		local outward = inward * math.cos(turn) + across * math.sin(turn)
@@ -800,13 +1246,13 @@ local function buildFall(angle: number)
 			width,
 			fxTexture("flow"),
 			Color3.new(1, 1, 1),
-			melt,
+			if math.abs(side) >= 40 then edge else melt,
 			46,
 			0.42 + index * 0.015,
 			0
 		)
 		-- Faster, brighter bands over the top, so it never reads as one solid surface.
-		if index % 3 == 1 then
+		if index % 2 == 0 then
 			ribbon(
 				from + Vector3.new(0, 0.05, 0),
 				to,
@@ -822,6 +1268,25 @@ local function buildFall(angle: number)
 			)
 		end
 	end
+	-- Spray where it tips over the lip, so the top reads as water going over an edge.
+	local lipAt = centre + inward * (radius + 0.5) + Vector3.new(0, BASIN_Y * UNIT + 1, 0)
+	local lip = holder("FallLip", lipAt, Vector3.new(10, 0.5, 1.5))
+	lip.CFrame = CFrame.lookAt(lipAt, lipAt + inward)
+	local spray = Instance.new("ParticleEmitter")
+	spray.Name = "Spray"
+	spray.Texture = fxTexture("mist")
+	spray.EmissionDirection = Enum.NormalId.Front
+	spray.Color = ColorSequence.new(Color3.fromRGB(215, 255, 250))
+	spray.LightEmission = 0.4
+	spray.LightInfluence = 0
+	spray.Size = NumberSequence.new(1.6, 4.5)
+	spray.Transparency = fade({ { 0, 1 }, { 0.15, 0.45 }, { 1, 1 } })
+	spray.Lifetime = NumberRange.new(0.6, 1.1)
+	spray.Rate = 9
+	spray.Speed = NumberRange.new(2.5, 4.5)
+	spray.SpreadAngle = Vector2.new(25, 35)
+	spray.Acceleration = Vector3.new(0, -9, 0)
+	spray.Parent = lip
 	local foot = centre + inward * radius + Vector3.new(0, FALL_FOOT_Y, 0)
 	-- Where it lands: ripples spreading over the juice, foam churning, and foam carried off along the swirl's own direction.
 	local landing = holder("FallFoot", foot + Vector3.new(0, 1.4, 0), Vector3.new(11, 0.5, 11))
@@ -949,11 +1414,9 @@ end
 
 local function buildSkyWell()
 	placeUnderCeiling("hub-well-rock")
-	placeUnderCeiling("hub-well-glow")
-	addTwinkles("hub-well-glow", 6, CEILING_DROP)
-	placeUnderCeiling("hub-ceiling-vines")
-	placeUnderCeiling("hub-ceiling-gems")
-	addTwinkles("hub-ceiling-gems", 7, CEILING_DROP)
+	-- The opening's own crystals, the ceiling's, and the vines of the inner circle are gone (owner, 2026-11-05: packed,
+	-- unlit, not our designs; the old ceiling's poked through the roof's ring; no vines there). A ring of the library's
+	-- crystals hangs round the storm instead (far_side.json), and the green vines went to the walls.
 	local isles = placeUnderCeiling("hub-well-isles")
 	if isles then
 		for index = 0, 4 do
@@ -980,7 +1443,8 @@ local function buildSkyWell()
 			end
 		end
 	end
-	-- Light falling from the mouth, spreading and fading with no edge: a few soft camera-facing sheets.
+	-- Light falling from the mouth, spreading and fading with no edge: a few soft camera-facing sheets, strong enough to
+	-- read as the storm's light in the mist (owner, 2026-11-06: shader-style light).
 	for index = 0, 3 do
 		local angle = index * math.pi / 2 + 0.4
 		local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * 16
@@ -992,7 +1456,7 @@ local function buildSkyWell()
 			170,
 			fxTexture("softbeam"),
 			Color3.fromRGB(150, 190, 225),
-			fade({ { 0, 1 }, { 0.22, 0.84 }, { 0.55, 0.9 }, { 1, 1 } }),
+			fade({ { 0, 1 }, { 0.2, 0.66 }, { 0.6, 0.8 }, { 1, 1 } }),
 			0,
 			1
 		)
@@ -1054,6 +1518,17 @@ local function buildPortals()
 				spec.color,
 				1.4,
 				11 * spec.scale
+			)
+			-- Its colour spilling onto the plaza in front of it (owner, 2026-11-07: the area in front of the portals too dark;
+			-- then a little too glowy, from 0.9).
+			spotAt(
+				"PortalSpill",
+				base + frame.LookVector * 3 + Vector3.new(0, 9 * spec.scale, 0),
+				base + frame.LookVector * 40,
+				spec.color,
+				0.7,
+				80,
+				70
 			)
 			-- The opening's true width: the middle one of the sheet's thickness, width and height.
 			local energy = model:FindFirstChild("Energy", true) :: MeshPart
@@ -1147,7 +1622,6 @@ end
 local PLAZA = CFrame.new(0, 0, -157) * CFrame.Angles(0, math.pi, 0)
 local VOLCANO_Z = 111 -- studs behind the plaza's origin
 local VOLCANO_SCALE = 1.15
-local PYLON_CRYSTAL = 7 -- studs tall, about the height of the fire it replaces
 -- Lava gloop layers: tile size in studs across and along the flow, and speed in studs a second (the waterfall runs at
 -- about 19, so this is a slow ooze). Textures from tools/lobby/hub_mesh.py fx. Warm streaks only: dark crust plates
 -- cut the lava up with black lines (owner, 2026-11-03), and strong contrast showed the joins between projections.
@@ -1393,6 +1867,42 @@ local function buildVolcano()
 	smoke.SpreadAngle = Vector2.new(30, 30)
 	CollectionService:AddTag(smoke, "HubMist")
 	pointLight(top + Vector3.new(0, 6, 0), Color3.fromRGB(255, 120, 50), 1.2, 45)
+	-- Over the volcano no crags hang (owner, 2026-11-05), and the roof looked blank there (owner, 2026-11-06): the lava lights
+	-- it from below, warm and slowly breathing with the crater's pool, round the ring of warm crystals hanging from it
+	-- (far_side.json), and the smoke spreads out flat under it.
+	for k = 0, 2 do
+		local a = k * math.pi * 2 / 3 + 0.5
+		local glow = pointLight(
+			Vector3.new(top.X + math.cos(a) * 30, 192, top.Z + math.sin(a) * 30),
+			Color3.fromRGB(255, 104, 36),
+			1.4,
+			40
+		)
+		glow:SetAttribute("PulseRate", 0.55)
+		glow:SetAttribute("PulseDepth", 0.25)
+		glow:SetAttribute("Phase", k * 0.7)
+		CollectionService:AddTag(glow, "HubPulse")
+	end
+	local pall = holder("SmokePall", Vector3.new(top.X, 214, top.Z), Vector3.new(70, 6, 70))
+	local spread = Instance.new("ParticleEmitter")
+	spread.Name = "Pall"
+	spread.Texture = fxTexture("mist")
+	spread.Color = ColorSequence.new(Color3.fromRGB(122, 74, 58), Color3.fromRGB(66, 52, 66))
+	spread.LightEmission = 0.15
+	spread.LightInfluence = 0.4
+	spread.Size = fade({ { 0, 36 }, { 1, 80 } })
+	spread.Transparency = fade({ { 0, 1 }, { 0.25, 0.78 }, { 0.7, 0.82 }, { 1, 1 } })
+	spread.Lifetime = NumberRange.new(16, 22)
+	spread.Rate = 0.9
+	spread:SetAttribute("HighRate", 0.9)
+	spread.Speed = NumberRange.new(1.5, 3)
+	spread.SpreadAngle = Vector2.new(180, 6)
+	spread.EmissionDirection = Enum.NormalId.Right
+	spread.Rotation = NumberRange.new(0, 360)
+	spread.RotSpeed = NumberRange.new(-4, 4)
+	spread.Shape = Enum.ParticleEmitterShape.Box
+	spread.Parent = pall
+	CollectionService:AddTag(spread, "HubMist")
 end
 
 local function buildArch()
@@ -1433,46 +1943,39 @@ local function buildArch()
 			)
 			halo:SetAttribute("Phase", index * 1.9)
 			CollectionService:AddTag(halo, "HubLavaGlow")
+			-- A warm pool on the plaza round each crack (owner, 2026-11-07: the area in front of the portals too dark; then a
+			-- little too glowy to the eye): soft, without a lamp's glow in the air over it, a quarter less light.
+			local from = PLAZA * Vector3.new(side * crack[1] * 5, 1, crack[2] * 5)
+			local to = PLAZA * Vector3.new(side * crack[3] * 5, 1, crack[4] * 5)
+			softGlow((from + to) / 2 + Vector3.new(0, 4, 0), Color3.fromRGB(255, 110, 40), 0.6, 30)
 		end
 	end
 	local arch = placeInPlaza("hub-arch")
 	if arch then
 		shorten(arch)
 		setMotion(arch, "ArchBits", 0, 1.3, 0.55, 0)
-	end
-	-- Orange crystals on the pylons, the library's own crystals-11 (owner, 2026-11-03: the fire there didn't match the
-	-- look). Each lights the plaza warmly and breathes slowly, like every crystal; never a flicker.
-	local pylonCrystal = libraryPiece("crystals-11", 1)
-	if pylonCrystal then
-		local crystals = Instance.new("Model")
-		crystals.Name = "PylonCrystals"
-		crystals.Parent = art
-		local index = 0
-		for _, spot in { { 6.2, -8.5, 8 }, { 14, -11, 10 } } do
-			for _, side in { -1, 1 } do
-				index += 1
-				local top = PLAZA
-					* Vector3.new(side * spot[1] * 5, spot[3] * 5 * PLAZA_HEIGHT, spot[2] * 5)
-				local copy = pylonCrystal:Clone()
-				local lo, hi = paintedBounds(copy)
-				copy:ScaleTo(copy:GetScale() * PYLON_CRYSTAL / (hi.Y - lo.Y))
-				copy:PivotTo(
-					CFrame.new(top - Vector3.new(0, 0.3, 0)) * CFrame.Angles(0, index * 2.1, 0)
-				)
-				copy.Parent = crystals
-				for _, part in copy:GetDescendants() do
-					if part:IsA("MeshPart") and part.Name == "Crystal" then
-						part:SetAttribute("PulseRate", 0.6)
-						part:SetAttribute("PulseDepth", 0.25)
-						part:SetAttribute("Phase", index * 1.7)
-						CollectionService:AddTag(part, "HubPulse")
-					end
-				end
-				pointLight(top + Vector3.new(0, 4, 0), Color3.fromRGB(255, 160, 60), 0.6, 18)
+		-- The runes carved on the arch's stones and round its pillars light the stone round them, as the other runes do
+		-- (owner, 2026-11-07). In the concept's units (5 studs): the stones' centres on the arch (radius 21 from its
+		-- springing at 12), four on one side and three on the other, just in front of their faces toward the hub; and two
+		-- round each pillar's front, either side of its molten slot.
+		local runeGlow = Color3.fromRGB(255, 140, 50)
+		local function archGlow(x: number, y: number, z: number, range: number)
+			-- 1.15, from 1.4 (owner, 2026-11-07: the area in front of the portals a little too glowy).
+			softGlow(PLAZA * Vector3.new(x * 5, y * 5 * PLAZA_HEIGHT, z * 5), runeGlow, 1.15, range)
+		end
+		for _, side in { -1, 1 } do
+			local last = if side < 0 then 3 else 2
+			for k = 0, last do
+				local mid = (k + 0.5) * math.pi / 14
+				archGlow(side * 21 * math.cos(mid), 12 + 21 * math.sin(mid), -3.2, 32)
+			end
+			for _, turn in { -0.9, 0.9 } do
+				local a = -math.pi / 2 + turn
+				archGlow(side * 21 + math.cos(a) * 5.5, 6.5, 0.8 + math.sin(a) * 5.5, 26)
 			end
 		end
-		pylonCrystal:Destroy()
 	end
+	-- The pylons' tops stay bare (owner, 2026-11-04: the crystals there, like the fires before them, didn't suit them).
 	-- Embers across the whole area.
 	local air = holder("PlazaEmbers", PLAZA * Vector3.new(0, 3, 30), Vector3.new(230, 4, 180))
 	local embers = Instance.new("ParticleEmitter")
@@ -1887,6 +2390,10 @@ local TREE_LIGHTS = {
 	[3] = Color3.fromRGB(110, 165, 255),
 }
 local TREE_GLOW = 0.3 -- caps are far bigger on screen here than in the look test, and blow out to white at full strength
+-- The caps' own glow on top of that (owner, 2026-11-06: the tops of the mushroom trees very dim, they need a good glow);
+-- the stems stay as they were.
+-- Round 9: their cap paint has its own glowing ring now, which blooms white at more than this.
+local CAP_GLOW = 1.6
 local SMALL_TREE = 20
 local FLORA_KEYS: { [number]: string } = {
 	[0] = "hub-flora-star",
@@ -1902,7 +2409,22 @@ local FLORA_KEYS: { [number]: string } = {
 local function groveProps()
 	local cache: { [string]: Model } = {}
 	local function template(key: string, glow: number): Model?
-		local model = cache[key] or libraryPiece(key, glow)
+		local model = cache[key]
+		if not model then
+			model = libraryPiece(key, glow)
+			if model and string.sub(key, 1, 9) == "mushroom-" then
+				for _, part in model:GetDescendants() do
+					local surface = part:FindFirstChild("SlugshotMaterial")
+					if
+						part:IsA("MeshPart")
+						and (part.Name == "Cap" or part.Name == "GlowCap")
+						and surface
+					then
+						(surface :: SurfaceAppearance).EmissiveStrength *= CAP_GLOW
+					end
+				end
+			end
+		end
 		if model then
 			cache[key] = model
 		end
@@ -1930,10 +2452,17 @@ local function groveProps()
 	local trees = Instance.new("Model")
 	trees.Name = "GroveTrees"
 	trees.Parent = art
+	-- The mountain bare but for the mushrooms curving out of its faces (owner, 2026-11-07: plain, with only the mushrooms
+	-- that come out and go up; far_side.json places those): nothing standing on its ledges, which start 10 studs up, while
+	-- the grove's floor and banks lie below 6.
+	local ON_MOUNTAIN = 10
 	for index, site in groveTrees do
+		if site.y > ON_MOUNTAIN then
+			continue
+		end
 		local small = site.height < SMALL_TREE
-		local source =
-			template(TREE_COLOURS[site.colour] .. (if small then "-s" else ""), TREE_GLOW)
+		local colour = site.colour
+		local source = template(TREE_COLOURS[colour] .. (if small then "-s" else ""), TREE_GLOW)
 		if source then
 			local tree =
 				plant(source, trees, site.x, site.y, site.z, site.turn or index * 1.9, site.height)
@@ -1946,7 +2475,7 @@ local function groveProps()
 				if site.height > 20 then
 					pointLight(
 						GROVE * Vector3.new(site.x, site.y + site.height * 0.62, site.z),
-						TREE_LIGHTS[site.colour],
+						TREE_LIGHTS[colour],
 						0.22,
 						site.height * 0.8
 					)
@@ -1958,6 +2487,9 @@ local function groveProps()
 	crystals.Name = "GroveCrystals"
 	crystals.Parent = art
 	for index, site in groveCrystals do
+		if site.y > ON_MOUNTAIN then
+			continue
+		end
 		local source = template(site.key, 1)
 		if source then
 			plant(source, crystals, site.x, site.y, site.z, index * 2.3, site.height)
@@ -2006,7 +2538,21 @@ local function groveProps()
 	for index, site in gunSide.canopy do
 		local source = template(TREE_COLOURS[site.colour], TREE_GLOW)
 		if source then
-			plant(source, canopy, site.x, site.y, site.z, index * 1.7, site.height, CFrame.identity)
+			local tree = plant(
+				source,
+				canopy,
+				site.x,
+				site.y,
+				site.z,
+				index * 1.7,
+				site.height,
+				CFrame.identity
+			)
+			for _, part in tree:GetDescendants() do
+				if part:IsA("MeshPart") and part.Name == "Cap" then
+					part.CastShadow = false
+				end
+			end
 			-- Only the top layer of caps carries a light, so the hole glows without a crowd of lights.
 			if site.height > 70 then
 				pointLight(
@@ -2019,9 +2565,22 @@ local function groveProps()
 		end
 	end
 	-- The cavern's crystals (owner, 2026-11-04: our own designs), leaning out from the wall, spire or floor they grow on.
-	for index, site in gunSide.crystals do
+	local crystalSites = table.clone(gunSide.crystals)
+	table.move(farSide.crystals, 1, #farSide.crystals, #crystalSites + 1, crystalSites)
+	local shapes: { [string]: number } = {}
+	local wallGlows = 0
+	for index, site in crystalSites do
 		local source = template(site.key, 1)
 		if source then
+			-- How tall the design is for its widest side: a wide one is made smaller, so no side runs past the site's size
+			-- by more than a tenth.
+			local share = shapes[site.key]
+			if not share then
+				local lo, hi = paintedBounds(source)
+				local size = hi - lo
+				share = math.min(1, size.Y * 1.1 / math.max(size.X, size.Z))
+				shapes[site.key] = share
+			end
 			local copy = plant(
 				source,
 				crystals,
@@ -2029,7 +2588,7 @@ local function groveProps()
 				site.y,
 				site.z,
 				index * 1.9,
-				site.height,
+				site.height * share,
 				CFrame.identity
 			)
 			local lean = Vector3.new(site.lx, 0, site.lz)
@@ -2041,8 +2600,37 @@ local function groveProps()
 						* CFrame.Angles(0, index * 1.9, 0)
 				)
 			end
+			-- On walls, ceilings and high up, a soft pool of its colour on the rock round it: its own light sits at its tip,
+			-- 20 or 30 studs out from the rock, and reaches 14 at most. Those on the floor have the floor's light round them.
+			-- A site may ask for less where many grow close together (glow, a share of the usual).
+			local glow = if site.glow ~= nil then site.glow else 1
+			if (site.tilt > 0.5 or site.y > 15) and glow > 0 then
+				local size = site.height * share
+				local grows = if lean.Magnitude > 0
+					then Vector3.yAxis * math.cos(site.tilt) + lean.Unit * math.sin(site.tilt)
+					else Vector3.yAxis
+				local brightest: PointLight? = nil
+				for _, light in copy:GetDescendants() do
+					if
+						light:IsA("PointLight")
+						and (not brightest or light.Brightness > brightest.Brightness)
+					then
+						brightest = light
+					end
+				end
+				if brightest then
+					softGlow(
+						Vector3.new(site.x, site.y, site.z) + grows * size * 0.3,
+						brightest.Color,
+						1.5 * glow,
+						math.clamp(size * 1.6, 20, 50)
+					)
+					wallGlows += 1
+				end
+			end
 		end
 	end
+	print(`HubArt: {wallGlows} crystals light the rock round them`)
 	for _, model in cache do
 		model:Destroy()
 	end
@@ -2090,17 +2678,25 @@ end
 -- toward the concept's -z, which is the world's +x from the hole.
 local GUN = CFrame.new(gunSide.hole.centre[1], 0, gunSide.hole.centre[2])
 	* CFrame.Angles(0, -math.pi / 2, 0)
-local GUN_KEYS =
-	{ "hub-gun-ground", "hub-gun-path", "hub-gun-mat", "hub-gun-spire", "hub-gun-stones", "hub-gun-shop", "hub-gun-trim", "hub-gun-sign" }
+local GUN_KEYS = {
+	"hub-gun-ground",
+	"hub-gun-path",
+	"hub-gun-mat",
+	"hub-gun-spire",
+	"hub-gun-stones",
+	"hub-gun-shop",
+	"hub-gun-trim",
+	"hub-gun-sign",
+}
 
 -- The cavern's pieces (owner, 2026-11-04): roots, shelves, side mushrooms and hanging vines, each modelled once and placed
 -- round the hole's wall from gun_side.json, facing out of the rock (each piece's +z runs into it).
-local function gunCavern()
+local function placeOnRock(name: string, sites: { any })
 	local folder = Instance.new("Model")
-	folder.Name = "HoleWall"
+	folder.Name = name
 	folder.Parent = art
 	local sources: { [string]: Model } = {}
-	for _, site in gunSide.wall do
+	for _, site in sites do
 		local source = sources[site.key]
 		if source == nil then
 			local loaded = loadPiece(site.key)
@@ -2125,6 +2721,10 @@ local function gunCavern()
 	for _, source in sources do
 		source:Destroy()
 	end
+end
+
+local function gunCavern()
+	placeOnRock("HoleWall", gunSide.wall)
 end
 
 -- The hole's mist (owner): layers at five depths, thick but see-through, drifting; and purple spores rising off the velvet.
@@ -2176,7 +2776,10 @@ local function gunSideEffects()
 			local at = Vector3.new(math.sin(rad) * radius, 1, -math.cos(rad) * radius)
 			local offset = Vector3.new(at.X - centre.X, 0, at.Z - centre.Z)
 			local t = math.atan2(offset.Z, offset.X) % (2 * math.pi)
-			if offset.Magnitude < hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1] + 8 then
+			if
+				offset.Magnitude
+				< hole.radii[math.floor(t / (2 * math.pi) * count) % count + 1] + 8
+			then
 				continue
 			end
 			local source = holder("Spores", at, Vector3.new(22, 1, 22))
@@ -2211,11 +2814,204 @@ local function buildGunSide()
 	end
 	gunCavern()
 	gunSideEffects()
+	-- The velvet's purple light over its cobbles (owner, 2026-11-07: the cobble stone too dark in the shop area): the path
+	-- and the shop's mat stand in the hole's shade with no lamp, while the velvet round them glows by itself. Soft, high
+	-- enough over the path that a character walking under it isn't lit up. Concept units: the path runs from -23.6 to the
+	-- hole's rim at -14.4, the mat lies in front of the door.
+	for _, at in { Vector3.new(0, 2.4, -21.5), Vector3.new(0, 2.4, -16.8), Vector3.new(0, 2.4, -4.4) } do
+		softGlow(GUN * (at * UNIT), Color3.fromRGB(190, 150, 255), 1.1, 32)
+	end
 end
 
--- Flat stone slabs in a row along each line between lobby zones (owner, 2026-11-04), so each section is set apart.
--- They lie low enough to walk straight over.
-local ZONE_LINES = { 41, -41, 135, -135 }
+-- The far side (owner, 2026-11-04): the cavern wall round the whole circle, one great mouth in it, and a look-only cave beyond.
+local FAR_KEYS = {
+	"hub-cavern-00",
+	"hub-cavern-01",
+	"hub-cavern-02",
+	"hub-cavern-03",
+	"hub-cavern-04",
+	"hub-cavern-05",
+	"hub-cavern-06",
+	"hub-cavern-07",
+	"hub-cavern-08",
+	"hub-cavern-09",
+	"hub-cavern-10",
+	"hub-cavern-11",
+	"hub-roof-00",
+	"hub-roof-01",
+	"hub-roof-02",
+	"hub-roof-03",
+	"hub-roof-04",
+	"hub-roof-05",
+	"hub-roof-06",
+	"hub-roof-07",
+	"hub-roof-08",
+	"hub-roof-09",
+	"hub-roof-10",
+	"hub-roof-11",
+	"hub-cave-hall",
+	"hub-cave-spires",
+	"hub-far-ground",
+	"hub-far-path",
+	"hub-mouth-slabs",
+	"hub-path-rocks",
+}
+
+-- The canopy hole's mist (owner): the same drifting see-through layers, under the cliff and thinner higher up in the cave.
+local function farCaveMist()
+	local folder = Instance.new("Folder")
+	folder.Name = "FarCaveMist"
+	folder.Parent = art
+	local function layer(y: number, count: number, faint: boolean, seed: number)
+		for k = 1, count do
+			local across = ((k * 0.618 + seed * 0.37) % 1 - 0.5) * 400
+			local depth = 300 + ((k * 0.381 + seed * 0.53) % 1) * 340
+			local width = math.min(145 + (depth - 310) * 0.6, 250)
+			local at = Vector3.new(math.clamp(across, -width, width), y, depth)
+			local source = holder("Mist", at, Vector3.new(80, 3, 80))
+			source.Parent = folder
+			local e = Instance.new("ParticleEmitter")
+			e.Texture = fxTexture("mist")
+			e.Rate = if faint then 0.35 else 0.7
+			e.Lifetime = NumberRange.new(16, 24)
+			e.Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 55),
+				NumberSequenceKeypoint.new(1, 100),
+			})
+			local peak = if faint then 0.9 else 0.8
+			e.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.3, peak),
+				NumberSequenceKeypoint.new(0.7, peak + 0.03),
+				NumberSequenceKeypoint.new(1, 1),
+			})
+			e.Color =
+				ColorSequence.new(Color3.fromRGB(150, 120, 210), Color3.fromRGB(110, 100, 180))
+			e.LightEmission = 0.25
+			e.Speed = NumberRange.new(0.8, 1.8)
+			e.SpreadAngle = Vector2.new(180, 8)
+			e.EmissionDirection = Enum.NormalId.Right
+			e.Rotation = NumberRange.new(0, 360)
+			e.RotSpeed = NumberRange.new(-3, 3)
+			e.Parent = source
+			CollectionService:AddTag(e, "HubMist")
+		end
+	end
+	for k = 0, 4 do
+		layer((-2.5 - k * 5) * 5, 11, false, k)
+	end
+	layer(35, 6, true, 7)
+	layer(80, 5, true, 11)
+	-- Below the drifting layers, sheets of mist, thickening downward to a solid one in the colour the rock is painted
+	-- fading into, well above the cave's floor. They run into the rock all round, so no edge shows.
+	for _, sheet in
+		{
+			{ -128, 0.55, Color3.fromRGB(92, 78, 156) },
+			{ -146, 0.3, Color3.fromRGB(74, 64, 130) },
+			{ -165, 0, Color3.fromRGB(56, 51, 107) },
+		}
+	do
+		local part = Instance.new("Part")
+		part.Name = "MistSheet"
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.CastShadow = false
+		part.Material = Enum.Material.SmoothPlastic
+		part.Size = Vector3.new(560, 1, 430)
+		part.Position = Vector3.new(0, sheet[1], 500)
+		part.Transparency = sheet[2]
+		part.Color = sheet[3]
+		part.Parent = folder
+	end
+	layer(-125, 9, false, 13)
+	layer(-142, 9, false, 17)
+end
+
+-- A lantern post either side of the far side's cobble path (owner, 2026-11-05), each with a warm light in its lantern.
+-- hub-lantern-post's arm reaches over its +x, and the lantern's core hangs at (3.6, 9.9, -0.1) studs from its foot.
+local LANTERN_CORE = Vector3.new(3.6, 9.9, -0.1)
+local function farLanterns()
+	local source = loadPiece("hub-lantern-post")
+	if not source then
+		return
+	end
+	source.WorldPivot = CFrame.identity
+	local folder = Instance.new("Model")
+	folder.Name = "FarLanterns"
+	folder.Parent = art
+	for _, site in farSide.lanterns do
+		local frame = CFrame.new(site.x, site.y, site.z) * CFrame.Angles(0, site.yaw, 0)
+		local copy = source:Clone()
+		copy:PivotTo(frame)
+		copy.Parent = folder
+		makeSolid(copy, "hub-lantern-post")
+		-- A warm pool on the path round each lantern.
+		pointLight(frame * LANTERN_CORE, Color3.fromRGB(255, 168, 86), 0.7, 17)
+	end
+	source:Destroy()
+end
+
+-- A light mist over the whole hub (owner, 2026-11-06: just a light mist, nothing crazy; 2026-11-07: a small hint that you can
+-- see, not overpowering), lit by the storm's light now it is back: a few big faint sprites drifting
+-- low round the ring of floor between the island and the wall, and over the island. Half as many in Low detail (HubMotion).
+local MIST_RATE = 0.15
+local function hubMist()
+	local folder = Instance.new("Folder")
+	folder.Name = "HubMist"
+	folder.Parent = art
+	for k = 0, 39 do
+		local angle = (k + 0.5) * math.pi * 2 / 40
+		local island = k % 10 == 4
+		local radius = if island then 55 elseif k % 2 == 0 then 150 else 235
+		local source = holder(
+			"Mist",
+			Vector3.new(
+				math.sin(angle) * radius,
+				if island then 14 else 5,
+				-math.cos(angle) * radius
+			),
+			Vector3.new(60, 4, 60)
+		)
+		source.Parent = folder
+		local e = Instance.new("ParticleEmitter")
+		e.Texture = fxTexture("mist")
+		e.Rate = MIST_RATE
+		e.Lifetime = NumberRange.new(22, 30)
+		e.Size = NumberSequence.new(40, 70)
+		e.Transparency = fade({ { 0, 1 }, { 0.3, 0.86 }, { 0.7, 0.87 }, { 1, 1 } })
+		e.Color = ColorSequence.new(Color3.fromRGB(190, 175, 235), Color3.fromRGB(150, 138, 215))
+		e.LightEmission = 0.25
+		e.Speed = NumberRange.new(0.5, 1)
+		e.SpreadAngle = Vector2.new(180, 8)
+		e.EmissionDirection = Enum.NormalId.Right
+		e.Rotation = NumberRange.new(0, 360)
+		e.RotSpeed = NumberRange.new(-3, 3)
+		e:SetAttribute("HighRate", MIST_RATE)
+		e.Parent = source
+		CollectionService:AddTag(e, "HubMist")
+	end
+end
+
+local function buildFarSide()
+	for _, key in FAR_KEYS do
+		place(key)
+	end
+	placeOnRock("FarDressing", farSide.wall)
+	farLanterns()
+	farCaveMist()
+end
+
+-- A strip of dark stone slabs on each line between lobby zones (owner, 2026-11-04: clean and connected, lying on the
+-- boundary itself rather than on one zone). Each line is where the two grounds meet: the gun side's velvet stops at
+-- -40.8 and -135.25 degrees (chWedge), the grove at 41.05 (the middle of its overlap with the portal floor) and 135.
+-- Each copy of hub-zone-slab is a row of four slabs, laid end to end from where the zones start to the cavern wall.
+-- Low enough to walk straight over.
+local ZONE_LINES = { 41.05, -40.8, 135, -135.25 }
+local ZONE_FROM, ZONE_TO = 104.5, 300 -- from where the hub's rim art ends to the cavern wall
+local ZONE_ROW = 24.75 -- studs per row of four, joint included (ZS_PITCH in the concept)
+local ZONE_TOP = 0.3 -- studs the slabs' tops stand above the floor
 local function zoneSlabs()
 	local source = loadPiece("hub-zone-slab")
 	if not source then
@@ -2225,21 +3021,20 @@ local function zoneSlabs()
 	folder.Name = "ZoneSlabs"
 	folder.Parent = art
 	local lo, hi = paintedBounds(source)
-	source.WorldPivot = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
-	for line, angle in ZONE_LINES do
-		local index = 0
-		for r = 112, 292, 10.5 do
-			index += 1
-			local seed = line * 31 + index
-			local rad = math.rad(angle)
-			local along = Vector3.new(math.sin(rad), 0, -math.cos(rad))
-			local at = along * r - Vector3.new(0, 0.5, 0)
+	source.WorldPivot = CFrame.new((lo.X + hi.X) / 2, hi.Y - ZONE_TOP, (lo.Z + hi.Z) / 2)
+	-- The row runs along its longer side; turn it so that lies along the line.
+	local turn = if hi.X - lo.X > hi.Z - lo.Z
+		then CFrame.Angles(0, math.pi / 2, 0)
+		else CFrame.identity
+	local rows = math.ceil((ZONE_TO - ZONE_FROM) / ZONE_ROW)
+	for _, angle in ZONE_LINES do
+		local rad = math.rad(angle)
+		local along = Vector3.new(math.sin(rad), 0, -math.cos(rad))
+		for row = 1, rows do
+			local at = along * (ZONE_FROM + ZONE_ROW * (row - 0.5))
 			local copy = source:Clone()
-			copy:ScaleTo(copy:GetScale() * (0.85 + 0.3 * ((seed * 0.618) % 1)))
-			local yaw = math.atan2(along.X, along.Z)
-				+ math.pi / 2
-				+ math.rad(((seed * 0.37) % 1 - 0.5) * 8)
-			copy:PivotTo(CFrame.new(at) * CFrame.Angles(0, yaw, 0))
+			-- Every other row end for end, so the four slabs' shades don't repeat down the line.
+			copy:PivotTo(CFrame.lookAt(at, at + along * (if row % 2 == 0 then -1 else 1)) * turn)
 			copy.Parent = folder
 			for _, part in copy:GetDescendants() do
 				if part:IsA("MeshPart") and not isInk(part) then
@@ -2257,6 +3052,15 @@ local function buildGrove()
 		local model = place(key)
 		if model then
 			model:PivotTo(GROVE * model:GetPivot())
+		end
+	end
+	-- The dressing's bushes and vines all sit on the mountain, which is bare now (groveProps); its lily pads stay.
+	local dress = art:FindFirstChild("hub-grove-dress")
+	if dress then
+		for _, part in dress:GetDescendants() do
+			if part:IsA("MeshPart") and (string.find(part.Name, "^Bushes") or string.find(part.Name, "^Vines")) then
+				part:Destroy()
+			end
 		end
 	end
 	groveProps()
@@ -2315,7 +3119,11 @@ buildVolcano()
 buildArch()
 buildGrove()
 buildGunSide()
+buildFarSide()
+hubMist()
 zoneSlabs()
+sceneLights()
+shadeLights()
 buildCollision(function()
 	retireBlockOut()
 	workspace:SetAttribute("HubSolid", true)

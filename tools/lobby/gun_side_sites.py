@@ -9,12 +9,16 @@ plants and crystals, and Floppies.
 
 Writes experiments/lobby/scale/shared/gun_side.json in world studs (the hub's centre at the origin, gun side at -x).
 The block-out (Arena.luau) builds its floor, walls and barriers from the same hole, and HubArt places the props.
+The hole's crystals are set onto the exported rock (build/lobby/meshes/hub-gun-ground), so mesh that first.
 """
 
 import json
 import math
 import random
 from pathlib import Path
+
+import numpy as np
+from scipy.spatial import cKDTree
 
 OUT = Path("experiments/lobby/scale/shared/gun_side.json")
 LAYOUT = json.loads(Path("experiments/lobby/scale/shared/layout.json").read_text(encoding="utf-8"))
@@ -82,6 +86,24 @@ def hole_dir(t):
 
 
 RADII = hole_shape()
+
+
+def hole_rock():
+    """The hole's walls, spire and floor as exported (concept units round the hole's centre, the hub toward -z), as face
+    centres in world studs with their normals out of the rock, and a tree to find the nearest."""
+    centres, normals = [], []
+    for name in ("WallsA", "WallsB", "WallsC", "Spire", "HoleFloor"):
+        data = np.load(Path("build/lobby/meshes/hub-gun-ground")/f"{name}.npz")
+        v, f = data["verts"], data["faces"]
+        a, b, c = v[f[:, 0]], v[f[:, 1]], v[f[:, 2]]
+        n = np.cross(b - a, c - a)
+        n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-9)
+        m = (a + b + c)/3.0
+        # HubArt's frame: the hole's centre, turned a quarter so the concept's -z faces the hub (+x here).
+        centres.append(np.stack([CX - m[:, 2]*5.0, m[:, 1]*5.0, CZ + m[:, 0]*5.0], axis=1))
+        normals.append(np.stack([-n[:, 2], n[:, 1], n[:, 0]], axis=1))
+    centres, normals = np.concatenate(centres), np.concatenate(normals)
+    return centres, normals, cKDTree(centres)
 
 
 def hole_radius(t):
@@ -160,7 +182,38 @@ def spire_radius(y):
     return 5.0*(r + 2.4*ease(CH_FLOOR + 3.0, CH_FLOOR, yu))
 
 
-def cavern(hash1, crystals, trees):
+def hole_lip():
+    """Where the drawn ground actually ends round the hole, at each of its radii, from the exported velvet (owner,
+    2026-11-05: you could fall through the barrier; it stood a little past the recorded edge, which the drawn lip doesn't
+    follow exactly)."""
+    tops = []
+    for name in ("VelvetA", "VelvetB", "VelvetC"):
+        v = np.load(Path("build/lobby/meshes/hub-gun-ground")/f"{name}.npz")["verts"]
+        tops.append(v[v[:, 1] > -0.15])
+    v = np.concatenate(tops)
+    d = np.stack([-v[:, 2]*5.0, v[:, 0]*5.0], axis=1)
+    ux, uz = -OUT_DIR[0], -OUT_DIR[1]
+    t = np.arctan2(d[:, 0]*-uz + d[:, 1]*ux, d[:, 0]*ux + d[:, 1]*uz) % (2*math.pi)
+    r = np.hypot(d[:, 0], d[:, 1])
+    lip = []
+    for i, radius in enumerate(RADII):
+        ti = i/len(RADII)*2*math.pi
+        near = (np.abs((t - ti + math.pi) % (2*math.pi) - math.pi) < math.pi/len(RADII)) & (r > radius - 25.0)
+        lip.append(round(float(r[near].min()), 2) if near.any() else radius)
+    return lip
+
+
+def crystal_share(key):
+    """How tall a design is shown for the size it's given: HubArt makes a wide one smaller, so no side runs past the size by
+    more than a tenth (owner, 2026-11-05: the Amber fan came out huge)."""
+    folder = Path("build/lobby/meshes")/key
+    meta = json.loads((folder/"meta.json").read_text())
+    v = np.concatenate([np.load(folder/f"{g['name']}.npz")["verts"] for g in meta["groups"]])
+    size = v.max(axis=0) - v.min(axis=0)
+    return min(1.0, size[1]*1.1/max(size[0], size[2]))
+
+
+def cavern(hash1, crystals, trees, canopy=()):
     """The cavern's pieces round the hole (owner, 2026-11-04): roots, shelves, side mushrooms and hanging vines on the
     wall, each with the direction into the rock; and the approved cyan and violet crystals on the wall, the spire and the
     floor, leaning out from what they grow on. The wall's face is taken a stud or so inside the hole's edge."""
@@ -208,12 +261,72 @@ def cavern(hash1, crystals, trees):
         t = hash1(k*17.3 + 3.0)*2*math.pi
         on_wall(t, -(4.0 + 76.0*hash1(k*5.9 + 1.0)), "hub-gun-vine-" + ("a" if k % 3 == 0 else "b"), 0.9 + 0.4*hash1(k*7.7))
 
-    # The approved crystal designs that read plainly as crystals (owner, 2026-11-04): the cyan cluster and violet spire.
-    keys = ("crystals-1-s", "crystals-2-s")
+    # The library's designs in turn (owner, 2026-11-05: a wider variety, not the same two): Cyan cluster, Amber fan, Violet
+    # spire, Rose crown, Frost spires, Aurora urchin, Emerald spray.
+    keys = ("crystals-1-s", "crystals-3-s", "crystals-2-s", "crystals-4-s", "crystals-6-s", "crystals-14-s", "crystals-5-s")
+    share = {key: crystal_share(key) for key in keys}
+    rock, normals, tree = hole_rock()
+    pieces = []
+
+    def occupied():
+        """What's already in the hole, as spheres in studs: the wall's pieces, and the mushrooms' caps and stems."""
+        if pieces:
+            return pieces
+        for w in wall:
+            s, key = w["s"], w["key"]
+            at, out = np.array([w["x"], w["y"], w["z"]]), -np.array([w["ox"], 0.0, w["oz"]])
+            if "sideshroom" in key:
+                pieces.append((at + out*5.0*s, 7.0*s))
+            elif "shelves" in key:
+                pieces.append((at + out*3.0*s, 6.0*s))
+            elif "root" in key:
+                pieces.extend((at - np.array([0.0, f*s, 0.0]), 5.0*s) for f in (0.0, 12.0, 24.0, 36.0))
+            else:
+                pieces.extend((at - np.array([0.0, f*20.0*s, 0.0]), 3.5) for f in (0.2, 0.5, 0.8))
+        for m in list(trees) + list(canopy):
+            h, base = m["height"], np.array([m["x"], m["y"], m["z"]])
+            pieces.append((base + np.array([0.0, 0.85*h, 0.0]), 0.45*h))
+            pieces.append((base + np.array([0.0, 0.4*h, 0.0]), 0.12*h))
+        return pieces
+
+    why = {"stones": 0, "rock": 0, "pieces": 0, "placed": 0}
 
     def crystal(x, y, z, lean, tilt, k, tall):
-        crystals.append({"x": round(x, 2), "y": round(y, 2), "z": round(z, 2), "height": round(tall, 1), "key": keys[k % len(keys)],
-                         "lx": round(lean[0], 4), "lz": round(lean[1], 4), "tilt": round(tilt, 3)})
+        """Set onto the real rock near the planned spot, growing straight out of it along the rock's average facing over the
+        base's width, the base sunk a fifth of its shown height in (owner, 2026-11-05: they perched on corners). Where it would
+        cut into another piece or the rock, the nearest clear spot along the wall is taken, a size smaller if need be; none by
+        the stepping stones (one poked up under the first)."""
+        key = keys[k % len(keys)]
+        ox, oz = x - CX, z - CZ
+        for dt, dy, scale in ((0.0, 0.0, 1.0), (0.03, 0.0, 1.0), (-0.03, 0.0, 1.0), (0.0, -6.0, 1.0), (0.06, -3.0, 1.0),
+                              (-0.06, -3.0, 1.0), (0.0, 6.0, 0.8), (0.09, 0.0, 0.8), (-0.09, 0.0, 0.8), (0.0, -12.0, 0.8)):
+            c, s = math.cos(dt), math.sin(dt)
+            px, pz, py = CX + ox*c - oz*s, CZ + ox*s + oz*c, y + dy
+            d = math.hypot(px - CX, pz - CZ)
+            if py > -45.0 and ((px - CX)*-OUT_DIR[0] + (pz - CZ)*-OUT_DIR[1])/max(d, 1e-6) > math.cos(0.5):
+                why["stones"] += 1
+                continue
+            shown = tall*scale*share[key]
+            _, i = tree.query([px, py, pz])
+            near = tree.query_ball_point(rock[i], max(0.3*shown, 1.5))
+            n = normals[near].mean(axis=0)
+            n /= np.linalg.norm(n)
+            root = rock[i] - n*0.2*shown
+            if any(tree.query(root + n*shown*f)[0] < 0.2*shown for f in (0.45, 0.75, 1.0)):
+                why["rock"] += 1
+                continue
+            centre = root + n*0.5*shown
+            if any(np.linalg.norm(centre - q) < 0.55*shown + r for q, r in occupied()):
+                why["pieces"] += 1
+                continue
+            side = np.array([n[0], n[2]])
+            lean = side/np.linalg.norm(side) if np.linalg.norm(side) > 0.05 else np.array(lean)
+            pieces.append((centre, 0.55*shown))
+            why["placed"] += 1
+            crystals.append({"x": round(float(root[0]), 2), "y": round(float(root[1]), 2), "z": round(float(root[2]), 2), "height": round(tall*scale, 1),
+                             "key": key, "lx": round(float(lean[0]), 4), "lz": round(float(lean[1]), 4),
+                             "tilt": round(math.acos(float(np.clip(n[1], -1.0, 1.0))), 3)})
+            return
 
     # On the wall, growing out over the hole.
     for k in range(12):
@@ -261,6 +374,7 @@ def cavern(hash1, crystals, trees):
             crystal(x, floor_y, z, (dx, dz), 0.15, len(taken), 5.0 + 5.0*hash1(k*2.1))
         else:
             trees.append({"x": round(x, 2), "y": floor_y, "z": round(z, 2), "height": round(6.0 + 8.0*hash1(k*3.3), 1), "colour": int(hash1(k*5.5)*4)})
+    print(f"hole crystals: {why}")
     return wall
 
 
@@ -351,12 +465,12 @@ def main():
             taken.append((x, z, cap))
             canopy.append({"x": round(x, 2), "y": HOLE_FLOOR, "z": round(z, 2), "height": round(tall*0.75, 1), "colour": rng.randrange(4)})
             placed += 1
-    wall = cavern(hash1, crystals, trees)
+    wall = cavern(hash1, crystals, trees, canopy)
     data = {
         "note": "Generated by tools/lobby/gun_side_sites.py. World studs; the hole's radii run round its centre from the hub-ward side.",
         "from": FROM, "to": TO,
         "hole": {"centre": [round(CX, 2), round(CZ, 2)], "out": [round(OUT_DIR[0], 4), round(OUT_DIR[1], 4)],
-                 "radii": RADII, "floor": HOLE_FLOOR, "barrier": 60.0},
+                 "radii": RADII, "lip": hole_lip(), "floor": HOLE_FLOOR, "barrier": 60.0},
         "bridge": BRIDGE, "platform": PLATFORM, "spawnBridge": SPAWN_BRIDGE,
         "trees": trees, "canopy": canopy, "flora": flora, "crystals": crystals, "slugs": slugs, "wall": wall,
     }

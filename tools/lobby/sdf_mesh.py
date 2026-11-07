@@ -11,6 +11,7 @@ Requires Node, moderngl, numpy and scikit-image.
 """
 
 import argparse
+import os
 import json
 import sys
 from pathlib import Path
@@ -153,7 +154,8 @@ class Gpu:
         t0, t1 = self.ctx.texture((w, h), 4, dtype="f4"), self.ctx.texture((w, h), 4, dtype="f4")
         fbo = self.ctx.framebuffer(color_attachments=[t0, t1])
         out0, out1 = np.empty((h, w, 4), "f4"), np.empty((h, w, 4), "f4")
-        band = 128  # bands of rows keep each draw short on the GPU
+        # Bands of rows keep each draw short on the GPU; a heavy shader needs thinner ones, or Windows resets the GPU.
+        band = int(os.environ.get("LOBBY_PAINT_BAND", "128"))
         for y in range(0, h, band):
             fbo.use()
             self.ctx.scissor = (0, y, w, min(band, h - y))

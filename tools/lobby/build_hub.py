@@ -2,7 +2,9 @@
 
 Reuses the scale place's movement adapter, then runs Rojo on the private hub project.
 Output: build/SlugshotLobbyHub.rbxlx. With --gun it also builds build/SlugshotLobbyGunCheck.rbxlx, a camera tour of the gun side from
-experiments/lobby/hub/check/GunCheck.client.luau for tools/lobby/gun_check.ps1. With --check it also builds build/SlugshotLobbyHubCheck.rbxlx, which adds the
+experiments/lobby/hub/check/GunCheck.client.luau for tools/lobby/gun_check.ps1. With --far it builds that same place with the far side's
+tour instead (experiments/lobby/hub/check/FarCheck.client.luau), with --light the lighting check (LightCheck.client.luau), and with
+--look a camera tour of the built look (LookCheck.client.luau). With --check it also builds build/SlugshotLobbyHubCheck.rbxlx, which adds the
 performance probe and camera tour from experiments/lobby/hub/check. With --phone it also builds
 build/SlugshotLobbyPhoneTest.rbxlx, for a private published copy: the self-running test from experiments/lobby/hub/phone,
 and only the original movement clips, so the owner's private clips stay off Roblox. With --mobile it also builds
@@ -58,6 +60,34 @@ def main():
         rebase(tree)
         check = "../../experiments/lobby/hub/check"
         tree["StarterPlayer"]["StarterPlayerScripts"]["GunCheck"] = {"$path": f"{check}/GunCheck.client.luau"}
+        GUN_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
+        rojo_build(GUN_PROJECT, GUN_PLACE)
+    if "--far" in sys.argv:
+        project = json.loads(PROJECT.read_text(encoding="utf-8"))
+        project["name"] = "SlugshotLobbyGunCheck"
+        tree = project["tree"]
+        rebase(tree)
+        check = "../../experiments/lobby/hub/check"
+        tree["StarterPlayer"]["StarterPlayerScripts"]["FarCheck"] = {"$path": f"{check}/FarCheck.client.luau"}
+        tree["ServerScriptService"]["FarCheckTeleport"] = {"$path": f"{check}/FarCheckTeleport.server.luau"}
+        GUN_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
+        rojo_build(GUN_PROJECT, GUN_PLACE)
+    if "--light" in sys.argv:
+        project = json.loads(PROJECT.read_text(encoding="utf-8"))
+        project["name"] = "SlugshotLobbyGunCheck"
+        tree = project["tree"]
+        rebase(tree)
+        check = "../../experiments/lobby/hub/check"
+        tree["StarterPlayer"]["StarterPlayerScripts"]["LightCheck"] = {"$path": f"{check}/LightCheck.client.luau"}
+        GUN_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
+        rojo_build(GUN_PROJECT, GUN_PLACE)
+    if "--look" in sys.argv:
+        project = json.loads(PROJECT.read_text(encoding="utf-8"))
+        project["name"] = "SlugshotLobbyGunCheck"
+        tree = project["tree"]
+        rebase(tree)
+        check = "../../experiments/lobby/hub/check"
+        tree["StarterPlayer"]["StarterPlayerScripts"]["LookCheck"] = {"$path": f"{check}/LookCheck.client.luau"}
         GUN_PROJECT.write_text(json.dumps(project, indent=2), encoding="utf-8")
         rojo_build(GUN_PROJECT, GUN_PLACE)
     if "--phone" in sys.argv:

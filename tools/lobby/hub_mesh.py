@@ -37,6 +37,8 @@ from sdf_mesh import Gpu  # noqa: E402
 BLENDER = os.environ.get("BLENDER", "C:/Users/runni/slugshot/.tools/blender-5.2.3-windows-x64/blender.exe")
 PAGE = Path("docs/art/asset-library.html")
 
+ROBLOX_TEX = 1024  # Roblox shrinks every uploaded map to this size
+
 # Ink widths in studs (look-pack.md): rock 0.077, props 0.119. The hub is seen from further away than the look test.
 ROCK_INK, PROP_INK, FINE_INK = 0.1, 0.09, 0.05
 
@@ -197,7 +199,9 @@ def maelstrom_maps(fs):
     solid = solid.replace(basin, "")
     water = slice_between(body, "  float spin = uT*ORBIT, wy", "  // Falls of glowing energy")
     falls = slice_between(body, "  // Falls of glowing energy", "  // Greenery:")
-    flora = slice_between(body, "  treeShrooms(p, res);", "  vec2 hb = hookedBridges(p);")
+    # Without the concept's five tree mushrooms (owner, 2026-11-07: old designs): the approved side mushroom grows from the
+    # pit's cliff in their place (far_side_sites.py --dressing).
+    flora = slice_between(body, "  treeShrooms(p, res);", "  vec2 hb = hookedBridges(p);").replace("  treeShrooms(p, res);\n", "")
     return {
         # Clipped outward and below the juice: the rest would never be seen.
         "cliff": f"vec2 assetMap(vec3 p) {{\n{head}{solid}  res.x = max(res.x, max(rr - 21.0, -12.0 - p.y));\n  return res;\n}}\n",
@@ -211,16 +215,19 @@ def well_maps(fs):
     body = slice_between(fs, "vec2 skyWell(vec3 p) {", "// A distant storm wheeling")
     head = "  float rr = length(p.xz), a = atan(p.z, p.x), s, k0;\n"
     solid = slice_between(body, "  float holeR", "  // Crystals line the opening")
-    solid = solid.replace("  float s = PI*2.0/20.0, k0 = floor(a/s);", "  s = PI*2.0/20.0; k0 = floor(a/s);")
-    glow = slice_between(body, "  // Crystals line the opening", "  // Mini islands")
+    # Without the mouth's broken blocks: the ring of crystals round the storm hangs from its rim unbroken (owner, 2026-11-05:
+    # the crystals belong on the inner circle outlining the storm, not interrupted by rocks).
+    solid = solid.replace(slice_between(solid, "  // The mouth is broken cliff", "  ceilingFeatures(p, rr, a, res);"), "")
+    # Only the vines trailing from the rim. The opening's crystals are replaced in the game by an even ring of the approved
+    # ones (owner, 2026-11-05: packed, no glow, not our crystals, rocks poking through); the shaft's were behind the storm.
+    glow = slice_between(body, "  // Vines trailing", "  // Mini islands")
     glow = glow.replace("  ceilingCrystals(p, res);\n  ceilingVines(p, res);\n", "")  # their own pieces
-    # The shaft's crystals are behind the storm in the game, or would stick through it.
-    glow = glow.replace(slice_between(glow, "  s = PI*2.0/13.0", "  // Vines trailing"), "")
     isles = slice_between(body, "  // Mini islands", "  // Loose debris")
     bits = slice_between(body, "  // Loose debris", "  // The spawn rock at true scale")
     return {
-        # Clipped at the block-out's cavern wall and just above where the storm's rim meets it.
-        "rock": f"vec2 assetMap(vec3 p) {{\n{head}{solid}  res.x = max(res.x, max(rr - 31.0, p.y - 30.0));\n  return res;\n}}\n",
+        # Clipped where the cavern roof's ring begins (210 studs; owner, 2026-11-05: the old ceiling poked through it) and
+        # just above where the storm's rim meets it.
+        "rock": f"vec2 assetMap(vec3 p) {{\n{head}{solid}  res.x = max(res.x, max(rr - 21.0, p.y - 30.0));\n  return res;\n}}\n",
         "glow": f"vec2 assetMap(vec3 p) {{\n{head}  vec2 res = vec2(1e3, 18.0);\n{glow}  return res;\n}}\n",
         "isles": f"vec2 assetMap(vec3 p) {{\n{head}  vec2 res = vec2(1e3, 1.0);\n{isles}  return res;\n}}\n",
         "bits": f"vec2 assetMap(vec3 p) {{\n{head}  vec2 res = vec2(1e3, 1.0);\n{bits}  return res;\n}}\n",
@@ -236,8 +243,8 @@ ROCK_DRESS = """vec2 assetMap(vec3 p) {
   float rf = rootField(w)*0.85;
   if (rf < res.x) res = vec2(rf, 4.0);
   rockVines(q, res);
-  rockCrystals(q, res);
-  rockSmallCrystals(q, res);
+  // The concept's crystals under the rock gave way to the approved ones at the same spots (owner, 2026-11-07: old designs;
+  // far_side_sites.py --dressing).
   rockSprouts(q, res);
   // Nothing buried: it would only spend triangles and texture on what can't be seen.
   res.x = max(res.x, -rockBody(q) - 0.04);
@@ -318,9 +325,10 @@ PLAZA_FLOOR = """vec2 assetMap(vec3 p) {
   return r;
 }
 """
-CEILING_VINES = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 12.0); ceilingVines(p, res); return res; }
+# Only the crown's vines: the rest hung from the old ceiling under the roof's ring, and a clip there would cut them through.
+CEILING_VINES = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 12.0); ceilingVines(p, res); res.x = max(res.x, length(p.xz) - 18.5); return res; }
 """
-CEILING_GEMS = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 18.0); ceilingCrystals(p, res); return res; }
+CEILING_GEMS = """vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 18.0); ceilingCrystals(p, res); res.x = max(res.x, length(p.xz) - 21.9); return res; }
 """
 BRIDGE = """vec2 assetMap(vec3 p) { return ropeBridge(p, 0.0, true); }
 """
@@ -328,6 +336,11 @@ PORTAL = """vec2 assetMap(vec3 p) { vec2 r = portal(p/GS); r.x *= GS; return r; 
 """
 # The gun side's shop, Slugworks (docs/art/general-shop.md), from the canopy hole composite (asset 15, option A, clustered
 # pods). Concept units are 5 studs; the hole's centre is the origin and the hub lies toward -z.
+FAR_ITEM = "far-cave-3"
+FAR_ROCK = "vec2 assetMap(vec3 p) { return fcGameRock(p); }\n"
+FAR_GROUND = "vec2 assetMap(vec3 p) { return fcGameGround(p); }\n"
+FAR_ROOF = "vec2 assetMap(vec3 p) { return fcGameRoof(p); }\n"
+FAR_SPIRES = "vec2 assetMap(vec3 p) { return fcGameSpires(p); }\n"
 GUN_ITEM = "canopy-hole-1"
 GUN_SHOP = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 117.0); chShopBody(p, res); return res; }\n"
 
@@ -347,6 +360,10 @@ GUN_PIECE = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 102.0); CALL; res.x = 
 GUN_STONES = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 115.0); chPathway(p, res); chRubble(p, res); return res; }\n"
 GUN_STAR = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 110.0); chFlowerC(p, vec3(0.0), 0.6, 1.0, COL, res); return res; }\n"
 ZONE_SLAB = "vec2 assetMap(vec3 p) { return chZoneSlab(p); }\n"
+# The Sky Well's leafy green vine (rockStrand) on its own, to hang on the cavern wall (owner, 2026-11-05: more greenery, in
+# place of some of the bead vines). Built with the well's own item so it's the same weight as the ceiling's; it hangs from the
+# piece's origin, gripping the rock toward +z.
+GREEN_VINE = "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 12.0); rockStrand(p, vec3(0.0), vec3(0.0, 0.06, 0.3), LEN, PH, res); return res; }\n"
 
 
 def gun_velvet(lo, hi):
@@ -555,22 +572,125 @@ def grove_chunk(x0, x1, z0, z1):
     return lambda _ids, c: (c[:, 0] >= x0) & (c[:, 0] < x1) & (c[:, 2] >= z0) & (c[:, 2] < z1)
 
 
-def grove_middle(_ids, c):
-    return (np.abs(c[:, 0]) < 13.0) & (c[:, 2] < 30.0)
+def grove_block(x0, x1, y0, y1):
+    """A block of the mountain, front to back, with its own map (owner, 2026-11-04: low resolution close up)."""
+    return lambda _ids, c: (c[:, 0] >= x0) & (c[:, 0] < x1) & (c[:, 1] >= y0) & (c[:, 1] < y1)
 
 
-def grove_side(sign):
-    return lambda _ids, c: (c[:, 0]*sign >= 13.0) & (c[:, 2] < 30.0)
+# The mountain's blocks in concept units, x then height, each about 11,000 square studs of rock that can be seen
+# (measured from the dense surface), so every map lands at about 8 to 9 texels a stud. Below GROVE_BURIED is the flat
+# underside and the foot under the grove's ground: 38% of the surface, which no one sees.
+GROVE_BURIED = -0.7
+GROVE_BLOCKS = (
+    ("FarB", -99.0, -26.0, GROVE_BURIED, 12.0),
+    ("BLow", -26.0, -13.0, GROVE_BURIED, 4.53),
+    ("BMid", -26.0, -13.0, 4.53, 12.0),
+    ("LLow", -13.0, -4.3, GROVE_BURIED, 6.64),
+    ("LMid", -13.0, -4.3, 6.64, 12.0),
+    ("PeakL", -26.0, -4.3, 12.0, 99.0),
+    ("MLow", -4.3, 4.3, GROVE_BURIED, 12.0),
+    ("Peak", -4.3, 4.3, 12.0, 99.0),
+    ("RLow", 4.3, 13.0, GROVE_BURIED, 12.0),
+    ("PeakR", 4.3, 26.0, 12.0, 99.0),
+    ("ALow", 13.0, 26.0, GROVE_BURIED, 6.04),
+    ("AMid", 13.0, 26.0, 6.04, 12.0),
+    ("FarA", 26.0, 99.0, GROVE_BURIED, 12.0),
+)
+
+
+# The cavern wall (owner, 2026-11-04), unique rock all the way round in sections of 30 degrees, behind the grove mountain too.
+# Angles as in layout.json: 0 is -z, 90 is +x, in concept units of 5 studs.
+FAR_SECTIONS = tuple((108.0 + 30.0*i, 108.0 + 30.0*(i + 1)) for i in range(12))
+FAR_BANDS = (("Low", -9.0, 14.0, 4500), ("Mid", 14.0, 30.0, 4500), ("High", 30.0, 99.0, 3000))
+
+
+def far_angle(c):
+    return np.degrees(np.arctan2(c[:, 0], -c[:, 2])) % 360.0
+
+
+def far_recess(deg):
+    """How far back the wall stands behind the grove mountain, in units (fcRecessAt in the library's far cave)."""
+    def smooth(e0, e1, x):
+        s = np.clip((x - e0)/(e1 - e0), 0.0, 1.0)
+        return s*s*(3.0 - 2.0*s)
+    deg = np.asarray(deg) % 360.0
+    return 20.0*smooth(53.0, 68.0, deg)*(1.0 - smooth(114.0, 126.0, deg))
+
+
+def far_reach(a0, a1):
+    return float(far_recess(np.linspace(a0 - 1.0, a1 + 1.0, 61)).max())
+
+
+def far_block(a0, a1, y0, y1):
+    """A band of height in one section, with its own map, overlapping the next section a little so no crack shows."""
+    def test(_ids, c):
+        along = (far_angle(c) - a0 + 0.4) % 360.0
+        return (along < a1 - a0 + 0.8) & (c[:, 1] >= y0) & (c[:, 1] < y1) & (np.hypot(c[:, 0], c[:, 2]) < 66.0 + far_recess(far_angle(c)))
+    return test
+
+
+def far_section(a0, a1):
+    reach = far_reach(a0, a1)
+    angles = np.radians(np.linspace(a0 - 1.0, a1 + 1.0, 9))
+    xs = [r*np.sin(angles) for r in (43.0, 67.0 + reach)]
+    zs = [-r*np.cos(angles) for r in (43.0, 67.0 + reach)]
+    # Behind the mountain the wall has an alcove's sides as well as its back, so more triangles.
+    more = 1.4 if reach > 0.0 else 1.0
+    return {
+        "item": FAR_ITEM, "map": FAR_ROCK, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5, "pack": True, "supersample": True,
+        "lo": (float(min(x.min() for x in xs)), -1.6, float(min(z.min() for z in zs))),
+        "hi": (float(max(x.max() for x in xs)), 49.5, float(max(z.max() for z in zs))), "step": 0.09, "normalH": 0.006,
+        "parts": [part(name, far_block(a0, a1, y0, y1), int(tris*more), 2048, ROCK_INK*2.2, 0.5, hard=True, cage=0.4) for name, y0, y1, tris in FAR_BANDS],
+    }
+
+
+def far_roof(a0, a1):
+    def test(_ids, c):
+        return ((far_angle(c) - a0 + 0.4) % 360.0) < a1 - a0 + 0.8
+    return test
+
+
+def far_roof_section(a0, a1):
+    reach = far_reach(a0, a1)
+    angles = np.radians(np.linspace(a0 - 1.0, a1 + 1.0, 9))
+    xs = [r*np.sin(angles) for r in (38.0, 66.0 + reach)]
+    zs = [-r*np.cos(angles) for r in (38.0, 66.0 + reach)]
+    return {
+        "item": FAR_ITEM, "map": FAR_ROOF, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5, "pack": True, "supersample": True,
+        "lo": (float(min(x.min() for x in xs)), 26.0, float(min(z.min() for z in zs))),
+        "hi": (float(max(x.max() for x in xs)), 47.0, float(max(z.max() for z in zs))), "step": 0.09, "normalH": 0.006,
+        "parts": [part("Roof", far_roof(a0, a1), 5000 if reach > 0.0 else 3800, 2048, ROCK_INK*2.2, 0.5, hard=True, cage=0.4)],
+    }
+
+
+def in_hall(c):
+    """The cave's rock: past the cavern wall's reach (66 out), and the mouth's side walls below the floor, which the wall's
+    sections, sampled from just under the floor, never reach (owner, 2026-11-05: a slot at each corner of the mouth)."""
+    return (np.hypot(c[:, 0], c[:, 2]) >= 65.8) | ((c[:, 1] < -1.5) & (c[:, 2] > 46.0))
+
+
+def far_floor(x0, x1, z0, z1):
+    return lambda ids, c: (ids < 131.5) & (c[:, 1] > -0.3) & (c[:, 0] >= x0) & (c[:, 0] < x1) & (c[:, 2] >= z0) & (c[:, 2] < z1)
+
+
+def far_cliff(_ids, c):
+    return (c[:, 1] <= -0.3) & (np.abs(c[:, 0]) < 33.0) & (c[:, 2] > 40.0)
 
 
 def gate_piece(direction, r):
     lo, hi = {0: ((-3.7, 11.8, -r - 1.25), (3.7, 16.3, -r + 1.25)), 1: ((r - 1.25, 11.8, -3.7), (r + 1.25, 16.3, 3.7)),
               2: ((-3.7, 11.8, r - 1.25), (3.7, 16.3, r + 1.25)), 3: ((-r - 1.25, 11.8, -3.7), (-r + 1.25, 16.3, 3.7))}[direction]
+    across = 0 if direction in (0, 2) else 2
+    stone = by_id((0.5, 1.9))
+    # Each stone and the lintel its own map, painted at twice the size and averaged down (owner, 2026-11-05: blurry and low
+    # resolution up close; all three once shared one small map). The lintel sits above the stones' tops (MARK_TOP).
     return {
         "item": "spawn-rock-1", "map": GATE, "scale": 5.0, "origin": (0.0, 13.0, 0.0), "lo": lo, "hi": hi, "step": 0.022,
-        "normalH": 0.004, "gain": 1.45,
+        "normalH": 0.004, "gain": 1.45, "pack": True, "supersample": True,
         "parts": [
-            part("Stone", by_id((0.5, 1.9)), 2000, 512, PROP_INK, 0.6, cage=0.03),
+            part("Lintel", lambda ids, c: stone(ids, c) & (c[:, 1] > 15.3), 1000, 2048, PROP_INK, 0.6, cage=0.03),
+            part("StoneA", lambda ids, c: stone(ids, c) & (c[:, across] < 0.0), 1200, 2048, PROP_INK, 0.6, cage=0.03),
+            part("StoneB", stone, 1200, 2048, PROP_INK, 0.6, cage=0.03),
             part("Rope", by_id((1.9, 3.0)), 2600, 1024, 0.0, cage=0.012),
             part("Key", by_id((15.9, 16.5)), 300, 1024, FINE_INK, 1.0, hard=True, cage=0.02),
         ],
@@ -623,6 +743,56 @@ def portal_piece(item, scale):
 
 # Budgets are painted triangles. Roblox's automatic LOD lowers distant parts further.
 PIECES = {
+    **{f"hub-cavern-{i:02d}": far_section(a0, a1) for i, (a0, a1) in enumerate(FAR_SECTIONS)},
+    **{f"hub-roof-{i:02d}": far_roof_section(a0, a1) for i, (a0, a1) in enumerate(FAR_SECTIONS)},
+    # The cave beyond the mouth. Look only and further from the camera, so coarser. Depth is painted in (FC_BAKE_FOG). From
+    # 46 along the cave: the mouth's side walls belonged to neither this nor the cavern wall, and showed as a slot at each
+    # corner (owner, 2026-11-05); see in_hall.
+    "hub-cave-hall": {
+        "item": FAR_ITEM, "map": FAR_ROCK, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5,
+        "lo": (-64.0, -61.0, 46.0), "hi": (64.0, 66.0, 146.0), "step": 0.14, "normalH": 0.008, "pack": True,
+        "parts": [
+            part("HallNearL", lambda _ids, c: (in_hall(c)) & (c[:, 2] < 98.0) & (c[:, 0] < 0.0), 7000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.5),
+            part("HallNearR", lambda _ids, c: (in_hall(c)) & (c[:, 2] < 98.0), 7000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.5),
+            part("HallFarL", lambda _ids, c: (in_hall(c)) & (c[:, 0] < 0.0), 6000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.5),
+            part("HallFarR", lambda _ids, c: in_hall(c), 6000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.5),
+        ],
+    },
+    "hub-cave-spires": {
+        "item": FAR_ITEM, "map": FAR_SPIRES, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5, "pack": True,
+        "lo": (-62.0, -32.5, 60.0), "hi": (62.0, 58.0, 134.0), "step": 0.12, "normalH": 0.006,
+        "parts": [
+            part("SpiresNear", lambda _ids, c: c[:, 2] < 88.0, 10000, 1024, ROCK_INK*2.2, 0.5, hard=True, cage=0.4),
+            part("SpiresMid", lambda _ids, c: c[:, 2] < 108.0, 9000, 1024, ROCK_INK*2.2, 0.5, hard=True, cage=0.4),
+            part("SpiresFar", everything, 7000, 1024, ROCK_INK*2.2, 0.5, hard=True, cage=0.4),
+        ],
+    },
+    # The far side's floor (owner, 2026-11-05: a cave's floor): water-worn bedrock masses in beds of grit, in nine parts so it
+    # holds up close; loose rubble and the puddles' still water as their own parts; the stalagmites; and the cliff under the mouth.
+    "hub-far-ground": {
+        "item": FAR_ITEM, "map": FAR_GROUND, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5,
+        "lo": (-50.0, -60.5, 8.0), "hi": (50.0, 10.0, 64.0), "step": 0.06, "normalH": 0.005, "pack": True, "supersample": True,
+        "parts": [
+            *[part(f"Floor{row}{side}", far_floor(x0, x1, z0, z1), 4200, 2048, hard=True, cage=0.2)
+              for row, z0, z1 in (("Near", 0.0, 32.0), ("Mid", 32.0, 45.0), ("Far", 45.0, 99.0))
+              for side, x0, x1 in (("L", -99.0, -12.0), ("M", -12.0, 12.0), ("R", 12.0, 99.0))],
+            part("Rubble", by_id((141.9, 142.1)), 9000, 1024, ROCK_INK*1.6, 0.6, hard=True, cage=0.05),
+            part("Pools", by_id((142.9, 143.1)), 900, 1024, cage=0.05),
+            part("Shards", by_id((140.9, 141.1)), 6000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.2),
+            part("Cliff", far_cliff, 9000, 1024, hard=False, cage=0.3),
+        ],
+    },
+    # Rock outcrops either side of the cobble path (owner, 2026-11-07: plain there), the floor's stalagmites' form and paint.
+    "hub-path-rocks": {
+        "item": FAR_ITEM, "map": "vec2 assetMap(vec3 p) { return vec2(fcPathRocksD(p), 141.0); }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5, "pack": True,
+        # The box holds every rock whole (owner, 2026-11-07: a rock cut at the top; the box also sliced the outer ones' feet).
+        "lo": (-23.0, -2.0, 12.5), "hi": (23.0, 7.0, 57.0), "step": 0.035, "normalH": 0.004,
+        "parts": [
+            part("RocksL", lambda _ids, c: c[:, 0] < 0.0, 5000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.08),
+            part("RocksR", everything, 5000, 1024, ROCK_INK*2.2, 0.4, hard=True, cage=0.08),
+        ],
+    },
     "hub-rock": {
         "item": "spawn-rock-1", "map": ROCK_BODY, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
         "lo": (-9.8, 4.4, -9.8), "hi": (9.8, 13.3, 9.8), "step": 0.03, "normalH": 0.006, "overlap": 3,
@@ -635,10 +805,10 @@ PIECES = {
     },
     "hub-rock-dress": {
         "item": "spawn-rock-1", "map": ROCK_DRESS, "scale": 5.0, "origin": (0.0, 13.0, 0.0),
-        "lo": (-10.5, 3.0, -10.5), "hi": (10.5, 14.5, 10.5), "step": 0.022, "normalH": 0.004, "sparkle": "Glow",
+        "lo": (-10.5, 3.0, -10.5), "hi": (10.5, 14.5, 10.5), "step": 0.022, "normalH": 0.004,
         "parts": [
             part("Roots", by_id((3.5, 4.5)), 4500, 1024, PROP_INK*0.7, 0.7, cage=0.02),
-            part("Glow", by_id((15.69, 16.0), (17.5, 20.0), (3.0, 3.5)), 4000, 1024, PROP_INK*1.1, 1.0, cage=0.02),
+            # Its Glow part and twinkles went with the concept's crystals (owner, 2026-11-07).
             part("Flora", everything, 4500, 1024, FINE_INK, 1.0, cage=0.015),
         ],
     },
@@ -670,7 +840,6 @@ PIECES = {
         "item": "maelstrom-1", "map": "flora", "scale": 5.0, "origin": (0.0, 0.0, 0.0),
         "lo": (-21.5, -13.0, -21.5), "hi": (21.5, 1.5, 21.5), "step": 0.028, "normalH": 0.004,
         "parts": [
-            part("Caps", by_id((15.6, 16.0)), 3000, 1024, PROP_INK, 0.5, cage=0.03),
             part("Bushes", in_rim_bushes, 5500, 1024, FINE_INK*1.2, 0.8, cage=0.02),
             part("Flora", everything, 4500, 1024, FINE_INK, 1.0, cage=0.02),
         ],
@@ -864,6 +1033,48 @@ PIECES = {
             part("Vines", by_id((104.9, 105.1)), 450, 512, FINE_INK, 1.0, cage=0.012),
         ],
     },
+    **{f"hub-green-vine-{name}": {
+        "item": "sky-well-1", "map": GREEN_VINE.replace("LEN", f"{length:.1f}").replace("PH", f"{phase:.2f}"), "scale": 10.0,
+        "origin": (0.0, 0.0, 0.0), "gain": 1.5, "lo": (-1.3, -length - 0.6, -1.3), "hi": (1.3, 0.45, 1.3), "step": 0.012,
+        "normalH": 0.003,
+        "parts": [part("Vine", everything, 1000, 1024, FINE_INK*1.6, 1.0, cage=0.012)],
+    } for name, length, phase in (("a", 3.2, 1.3), ("b", 4.4, 4.1))},
+
+    # The mouth's frame (owner, 2026-11-06: big slabs outlining the mouth where the glowing vines were) and the lining inside
+    # it (owner, round 8: to look cleaner), laid out against the rock by tools/lobby/mouth_slabs.py. The low ones are walked up
+    # to, so they get the most texture; a heavier outline.
+    "hub-mouth-slabs": {
+        "item": FAR_ITEM, "map": "vec2 assetMap(vec3 p) { float which; return vec2(fcSlabs(p, which), 144.0); }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 2, "gain": 1.5, "pack": True, "supersample": True,
+        "lo": (-39.5, -4.5, 32.5), "hi": (39.5, 47.5, 68.5), "step": 0.07, "normalH": 0.004,
+        "parts": [
+            part("LowL", lambda _ids, c: (c[:, 1] < 16.0) & (c[:, 0] < 0.0), 4500, 2048, ROCK_INK*3.0, 0.6, hard=True, cage=0.1),
+            part("LowR", lambda _ids, c: c[:, 1] < 16.0, 4500, 2048, ROCK_INK*3.0, 0.6, hard=True, cage=0.1),
+            part("HighL", lambda _ids, c: c[:, 0] < -12.0, 4500, 2048, ROCK_INK*3.0, 0.6, hard=True, cage=0.1),
+            part("HighR", lambda _ids, c: c[:, 0] > 12.0, 4500, 2048, ROCK_INK*3.0, 0.6, hard=True, cage=0.1),
+            part("Top", everything, 4500, 2048, ROCK_INK*3.0, 0.6, hard=True, cage=0.1),
+        ],
+    },
+    # The far side's cobble path (owner, 2026-11-05: like the shop's, from the bridge to the cliff), on the bridge's line.
+    "hub-far-path": {
+        "item": FAR_ITEM, "map": "vec2 assetMap(vec3 p) { vec2 res = vec2(1e3, 113.0); fcPathGame(p, res); return res; }\n",
+        "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 1, "gain": 1.6,
+        "lo": (-2.1, -0.36, 20.4), "hi": (2.1, 0.3, 55.9), "step": 0.012, "normalH": 0.002,
+        "parts": [
+            part("Kerb", by_id((115.9, 116.1)), 6000, 1024, FINE_INK*1.2, 1.0, cage=0.012),
+            *[part(f"Path{i}", (lambda z1: lambda ids, c: c[:, 2] < z1)(z1), 8000, 1024, cage=0.01)
+              for i, z1 in enumerate((29.6, 38.3, 47.0, 99.0))],
+        ],
+    },
+    # A lantern post either side of that path: the bridge's timber post and hanging lantern. Its arm reaches over +x.
+    "hub-lantern-post": {
+        "item": "bridge-1", "map": "vec2 assetMap(vec3 p) { return lanternPost(p); }\n", "scale": 3.0, "origin": (0.0, 0.0, 0.0),
+        "lo": (-0.6, -0.6, -0.6), "hi": (1.7, 4.8, 0.6), "step": 0.012, "normalH": 0.003,
+        "parts": [
+            part("Lantern", by_id((2.5, 2.7), (13.7, 13.9)), 900, 512, FINE_INK, 1.0, hard=True, cage=0.015),
+            part("Post", everything, 1400, 1024, FINE_INK*1.2, 1.0, cage=0.02),
+        ],
+    },
     # The cobble path (owner, 2026-11-04): real cobbles, raised kerb stones, running on to the rope bridge and breaking up
     # there. Its own piece so it can be sampled finely; the ground under it dips.
     "hub-gun-path": {
@@ -924,17 +1135,22 @@ PIECES = {
     },
     "hub-zone-slab": {
         "item": GUN_ITEM, "map": ZONE_SLAB, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "gain": 1.4,
-        "lo": (-1.0, -0.05, -0.8), "hi": (1.0, 0.3, 0.8), "step": 0.008, "normalH": 0.003,
-        "parts": [part("Slab", everything, 700, 512, ROCK_INK, 0.7, cage=0.02)],
+        "lo": (-0.9, -0.16, -2.56), "hi": (0.9, 0.1, 2.56), "step": 0.008, "normalH": 0.002,
+        "parts": [part("Slab", everything, 1400, 1024, ROCK_INK, 1.0, hard=True, cage=0.02)],
     },
     "hub-grove-mountain": {
         "item": GROVE_ITEM, "map": GROVE_MOUNTAIN, "shell": GROVE_SHELL, "shellStep": 0.2, "scale": 5.0, "origin": (0.0, 0.0, 0.0), "overlap": 3,
         "gain": 3.0, "bakeEmit": True, "lo": (-50.0, -1.2, -1.0), "hi": (50.0, 38.0, 60.0), "step": 0.06, "normalH": 0.004,
+        # Roblox shrinks every map to 1024, so the rock you can see comes in thirteen blocks of about equal area with one
+        # map each, tightly packed, instead of three 2048 maps that arrived at a quarter of their texels and spent over a
+        # third of them on the hidden underside (owner, 2026-11-04: low resolution close up). Each is painted at 2048 and
+        # averaged to 1024 (supersample), so its lines keep smooth edges.
+        "pack": True, "supersample": True,
         "parts": [
-            part("MountainM", grove_middle, 9000, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
-            part("MountainA", grove_side(1), 6000, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
-            part("MountainB", grove_side(-1), 6000, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
-            part("MountainBack", everything, 1500, 1024, hard=True, cage=0.7),
+            part("MountainBuried", lambda _ids, c: c[:, 1] < GROVE_BURIED, 800, 256, hard=True, cage=0.7),
+            *[part(f"Mountain{name}", grove_block(x0, x1, y0, y1), 1800, 2048, ROCK_INK*2.2, 1.0, hard=True, cage=0.7)
+              for name, x0, x1, y0, y1 in GROVE_BLOCKS],
+            part("MountainRest", everything, 600, 512, ROCK_INK*2.2, 1.0, hard=True, cage=0.7),
         ],
     },
     # What players touch on the mountain, hidden just under its surface. One shape over the whole mountain makes Roblox's collision
@@ -1031,8 +1247,8 @@ PIECES = {
     },
     "hub-well-glow": {
         "item": "sky-well-1", "map": "glow", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
-        "lo": (-16.0, 15.0, -16.0), "hi": (16.0, 37.0, 16.0), "step": 0.035, "normalH": 0.005, "sparkle": "WellGlow",
-        "parts": [part("WellGlow", everything, 4000, 1024, PROP_INK*1.3, 0.8, cage=0.03)],
+        "lo": (-13.0, 15.0, -13.0), "hi": (13.0, 27.0, 13.0), "step": 0.035, "normalH": 0.005,
+        "parts": [part("WellGlow", everything, 1500, 512, PROP_INK*1.3, 0.8, cage=0.03)],
     },
     "hub-well-isles": {
         "item": "sky-well-1", "map": "isles", "scale": 10.0, "origin": (0.0, 1.0, 0.0),
@@ -1051,6 +1267,8 @@ PIECES = {
 
 # The library's soft light lifts crack floors and rope that the game has to paint brighter or crisper.
 GAME_PAINT = (
+    ("const float FC_BAKE_FOG = 0.0;", "const float FC_BAKE_FOG = 1.0;"),
+    ("const float FC_DRESSED = 1.0;", "const float FC_DRESSED = 0.0;"),
     ("float far = 1.0 - smoothstep(chHoleR(chT(p.xz)) + 3.0, chHoleR(chT(p.xz)) + 10.0, length(p.xz));", "float far = 1.0;"),
     ("vec3 c = mix(gEdge, gCore, sw*0.75 + sw2*0.25);\n    c = mix(c, gHot, smoothstep(3.0, 0.0, r)*0.5);", "vec3 c = gEdge;"),
     ("emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth);", "emit += vec3(0.75, 1.0, 0.96)*gloss*(1.0 - 0.55*depth)*0.16;"),
@@ -1471,7 +1689,8 @@ def mesh(key):
         print(f"  {spec['name']:10s} {len(sel):9d} dense faces -> {spec['tris']} tris", flush=True)
     if "sparkle" in piece:
         sparkle_points(gpu, key, out)
-    meta = {"key": key, "scale": piece["scale"], "origin": list(piece["origin"]), "groups": groups, "rig": piece.get("rig")}
+    meta = {"key": key, "scale": piece["scale"], "origin": list(piece["origin"]), "groups": groups, "rig": piece.get("rig"),
+            "pack": piece.get("pack", False)}
     (out/"meta.json").write_text(json.dumps(meta, indent=1))
 
 
@@ -1576,7 +1795,10 @@ def velvet_maps(out, g, gain):
     base = np.clip((colour*0.85 + emit*0.9)*gain, 0, 1)
     studs = g["tile"]*5.0
     height = 0.7*smooth_rise(0.0, 0.16, gap)*(1 - np.clip(d1, 0, 1)**2)
-    save_tile(out, g, base, height, studs, emit=speck, strength=1.4, bump=1.0)
+    # Each cushion glows purple from within, its dark seam the outline between them (owner, 2026-11-07: the floor itself
+    # should glow purple, not only its specks; it made the area more vibrant). The glow takes the colour map's purple.
+    glow = np.maximum(speck, 0.5*smooth_rise(0.05, 0.3, gap))
+    save_tile(out, g, base, height, studs, emit=glow, strength=1.4, bump=1.0)
 
 
 def cobble_maps(out, g, gain):
@@ -1746,6 +1968,15 @@ def paint(key):
         if black > 0.5:
             print(f"WARNING {g['name']}: {black:.0%} of texels are ink black", flush=True)
         print(f"{g['name']}: {int(valid.sum())} texels" + (f", glow x{g['emissiveStrength']}" if "emit" in g else ""), flush=True)
+        if PIECES[key].get("supersample") and g["tex"] > ROBLOX_TEX:
+            # Painted at twice the size and averaged down here: four samples a texel give painted lines smooth edges
+            # instead of the stair steps one sample left, which read as low resolution close up (owner, 2026-11-04).
+            for kind in ("color", "normal", "emit"):
+                if kind in g:
+                    path = out/g[kind]
+                    image = Image.open(path)
+                    if image.width > ROBLOX_TEX:
+                        image.resize((ROBLOX_TEX, ROBLOX_TEX), Image.Resampling.BOX).save(path)
     (out/"build.json").write_text(json.dumps(report, indent=1))
 
 

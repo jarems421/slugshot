@@ -91,6 +91,17 @@ def build_plate(name, data):
     return low
 
 
+def repack(obj):
+    """Pack the islands by their real outlines, turned to fit: smart projection's box packing left about 40% of a map
+    empty on a big faceted piece, at a 1024 cap that matters."""
+    base.select_only(obj)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.select_all(action="SELECT")
+    bpy.ops.uv.pack_islands(shape_method="CONCAVE", rotate=True, margin_method="FRACTION", margin=0.004)
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+
 def tile_uv(obj, size):
     """Straight down in world space, repeating every `size` units, so a small map stays crisp over a big area."""
     mesh = obj.data
@@ -193,6 +204,8 @@ def main():
             planar_uv(low, g["half"])
         else:
             low = decimated(dense, name, g["tris"], g["hard"])
+        if meta.get("pack") and not g.get("tile"):
+            repack(low)
         if g.get("tile"):
             tile_uv(low, g["tile"])
         elif not g.get("flat"):
