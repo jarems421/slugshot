@@ -13,7 +13,7 @@ Where the lobby stands after the four main areas, written so a new chat can pick
 | Portal side | Built | Three portals, Titan's Arch, the volcano, cracked lava floor |
 | Slug side | **Complete** | Slug Grove: mountain, stream, pond, mushrooms, plants, crystals, Floppies |
 | Gun side | **Next** | Still the block-out's shop box |
-| Far side | Study 1 | A great mouth over a look-only misty cave, and the cavern wall; [study](https://claude.ai/artifact/Ggdo5sXqcyxQWz7SajHiap) awaiting the owner's pick |
+| Far side | Built, awaiting verdict | The cave behind a great mouth, the cavern wall round the lobby, a water-worn floor with a cobble path and lanterns to the cliff; [lobby hub](lobby-hub.md#round-3-in-roblox-lighting-floor-barrier-sky-well-vines-moss-gateways-mountain-owner-2026-11-05) |
 
 "The four main areas" is the agent's grouping of the owner's "four main assets", from the table's first four rows.
 

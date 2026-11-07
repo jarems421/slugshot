@@ -27,6 +27,8 @@
 
 **Verified, one client in Studio:** shown 1.42-1.45 s on every crossing; setup 0.6 ms; captures inspected for Training and Lobby. **Open:** a 0.3-1 s frame from the world move or the arena's first render, sometimes after the screen has lifted on the first entry; Inferno's image was still in Roblox review at upload.
 
+**2026-11-07 (owner: the loading bar's slime very pixelated):** its surface was drawn in columns 6 design px wide, 9 screen px at 1080p, each raised or lowered as a block, and every frame of filling kicked a hit's ripple at its front, so neighbouring columns stood far apart. **Implemented/verified in the training check** (`build/training/check-r11/loading-enter-again.png` against `check/`): `GooBar`'s `fine` option draws the surface in columns about 3 screen px wide (2 to 6 design px by screen size) while the liquid moves as before, and the bar fills with the sliders' steady slosh (`dragged`); the health bar and sliders are unchanged. **Unresolved:** in that check run the first crossings failed before any loading screen showed: the arena was not built in time while the lobby's solid art took 123 s.
+
 **Considering:** background ideas for the loading screen and settings menu (cavern depths, stalactites, glow-cap grove, slug burrows): https://claude.ai/artifact/Uu9gCSbdLQsTSVe1vYEwtH (private).
 
 ## Revision 4: void, bigger rock, station (2026-11-03)

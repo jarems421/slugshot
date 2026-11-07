@@ -421,3 +421,96 @@ Ridges, facets and shoulders on one even taper still read as a cone (owner: "too
 - **Flat sides:** SDF plane cuts break a silhouette but leave blank sheets, and the owner saw detail on two sides only. Apply breaks to the facet corners instead, spread evenly by angle, and check a turntable of four sides.
 - **Stand-ins:** `chCrystal` was the canopy hole's generated stand-in, not an approved design. Check `CRYSTALS` in the library and use those layouts and colours. Big-scene convex ink only marks a crystal's corners, as dark stars: shade its facets instead.
 - **GPU resets:** an unexplained exit 127 from `render_still.py` with no output was a GPU reset, shown as `nvlddmkm` event 153 in the System log. Check that log and that files exist after heavy renders, set `LOBBY_BANDS` higher for heavy scenes, and cut per-pixel cost (here: costly surface searches for dressing that couldn't reach the point).
+
+## 2026-11-05 - A painted light direction breaks round a ring
+
+The cavern wall faces every direction, so a fixed painted light lit half of it and shaded the rest; the owner saw it at once, and it matched the paint's direction, not the sun. Turn painted light with the surface on anything that wraps round the hub. Measure sections from the same relative view instead of judging by eye.
+
+Also: covering a floor gap with art leaves the fall (probe the floor with a character-sized spherecast); a height clip meant for one piece can cut another that shares its field (the cave's roof); and `| tail` after a script that starts Studio can hang forever, because a Studio helper holds the pipe, so redirect to a file.
+
+## 2026-11-05 - Looking up lit the cavern: Roblox drops the colour grade on heavy views
+
+- **Symptom (owner):** the same spot looked darker looking level and lighter looking up at the ceiling.
+- **Cause:** Studio and the player default to an automatic graphics level that falls when frames slow, and the ceiling is the heaviest view. The lower level dropped the lobby's `ColorCorrectionEffect` (contrast 0.14), lifting every dark wall by about 10. A capture with the grade off predicted the owner's lighter screenshot closely; the Atmosphere was not it (without it the gap stayed).
+- **Fix:** no grade; the darkness comes from a lower ambient (100, 98, 112), which every level renders. Means matched the graded look within 1.
+- **Rule:** never put a scene's overall darkness or contrast in a post effect. **Testing:** a script can't set the player's graphics level (`SavedQualityLevel` needs `RobloxScript`) and Studio didn't take an edited `QualityLevel` in `GlobalSettings_13.xml`; an unfocused Studio window runs at 15 frames a second, which does drop the level. Our own Detail toggle also drops itself under 24 frames a second, so read its label before comparing.
+
+Also: `CanQuery = false` does nothing on a part that collides, so the movement's rays hit the invisible barrier; set `NoParkour` instead. A new paint id needs the page's `fcPaint` dispatch range widened, or its maps bake near white. Overlapping slabs that all cover the floor read as one smooth sheet; leave beds between them.
+
+## 2026-11-05 - Crystals perched on corners
+
+- **Symptom (owner):** crystals pointed up from a corner with half their base over nothing, and every one was the same two designs.
+- **Cause:** sites took any face facing out, gave every crystal the same tilt, and the shop cavern's sat on a formula a stud off the wall.
+- **Fix:** grow each along the rock's own facing, averaged over its base's width; sink the base a fifth of its height; take only rock even enough for the base; cycle the library's designs (light copies are the design's mesh re-exported at 2,000 triangles). On ceilings use the Pearl cluster, which hangs from its own lid, or turn the others over.
+
+## 2026-11-05 - Barriers, coverage and size checks that lied
+
+- **Barrier from an average offset:** the shop hole's drawn lip wanders 0.8 to 4.2 studs from its recorded edge, so a line at a fixed offset left a body-wide gap in places. Measure the lip at every point from the exported ground, stand the barrier on the ground just behind it, and make it thick toward the drop so it spans the lip.
+- **Testing with teleports:** the movement server undoes any move whose straight path crosses a solid part, so a test that hops along a rim past mushroom stems, or back up past a barrier, silently stays put and reports nonsense. Move up, across in open air, then down, and respawn after a fall. Balls thrown at a barrier test it without the movement in the way.
+- **Pieces that split a shape:** the cavern wall keeps rock inside 66 and above its sampled box, the cave keeps rock beyond 66 from z 60; the mouth's corners were in neither, and showed as slots. Where pieces meet, check that the bounds and tests leave nothing between them.
+- **Size by the widest side:** a crystal sized by height came out 2.6 times as wide when the design is a fan.
+
+## 2026-11-06 - Light from somewhere, ink on groups, and a site file older than its meshes
+
+- **"Light coming from nowhere" (owner):** an even ambient plus a bright sun at an angle lit every upward face the same, under the roof as much as in the open. Lower the ambient (100 to 78), turn the sun straight down the Sky Well and dim it (0.4), make every placed light brighter and wider (x1.8, x1.5 reach), and use Future lighting so those lights shade the normal maps. Lanterns then light their path and crystals their rock. Raising the sun instead (1.3) only bleached every floor.
+- **Stronger outlines without a rebake:** a `Highlight` on a whole group (outline only, `Occluded`) draws a constant-width line round what shows of it, on top of each piece's ink shell. Roblox draws at most 31 at once, slugs' own included, so outline groups, not pieces; leave out tiny plants (they become black scribble) and make them on the client so Low detail can turn them off.
+- **Mist tests:** `Emit` to fill new emitters for a capture shows far more than the steady state; at five times the final sprite count the view went solid violet. Judge mist after it has filled at its own rate.
+- **Site files drift from their meshes:** `far_side.json` was made before the cave and wall pieces were last rebaked, so rerunning `far_side_sites.py` reshuffled the whole far side's dressing. To change one thing, trim the existing file; regenerate only right after the rebake it depends on.
+- **CRLF files:** `asset-library.html` uses CRLF; patch with the line endings normalised and restored, or a multi-line match finds nothing.
+
+## 2026-11-06 - Shader-style light: what holds at every graphics level, and outlines over fog
+
+- **What "Minecraft shaders" means (owner):** light from sources, not from nowhere. Real shadows with nothing leaking through rock, light entering only through openings, each lamp lighting its surroundings in its own colour with a falloff, glow in the air and bloom round bright things, vivid colour. In Roblox: shadows on every placed light and piece, low ambient, glow sprites round lights, wide bloom, saturation only.
+- **Shells don't block light from behind:** the cavern's roof and walls are one-sided shells facing in, and Roblox's shadows skip a surface seen from its back, so a sun above passed straight through the roof. An unseen opaque cover above it works.
+- **Roblox's noon sun at latitude 0 is 23.5 degrees off overhead** (direction 0, 0.917, -0.399). Latitude 23.5 puts it straight overhead.
+- **Never let a shadowed sun set the scene's brightness:** at graphics level 1 Roblox drops shadows, and a sun the roof shut out lit every floor (a view's mean went from 41 to 94). Local lights hold at every level. Lights reach 60 studs at most and fade well before, so a spotlight 50 studs up barely lit the floor; hang them low and bright. Keep OutdoorAmbient equal to Ambient, as where Roblox reckons the sky shows changes with the level.
+- **A light inside a glowing mesh:** once pieces cast shadows, a crystal or mushroom cap shuts in the light set inside it. Exclude light-holding parts from casting.
+- **Highlights are drawn over the fog:** a group's outline showed at any distance through the mist. Give a small pool of highlights to the nearest pieces, fading with distance, and end the fade at the nearest piece left without one, so no line pops.
+- **Testing a low graphics level:** with Studio closed, back up and set `QualityLevel` and `EditQualityLevel` in `GlobalSettings_13.xml` and `SavedQualityLevel` and `GraphicsQualityLevel` in `GlobalBasicSettings_13_Studio.xml` to 1, run the tour, then restore. The window may minimize itself and Roblox's menu open (`gun_check.ps1` restores the window and closes the menu). The window's size also changes between runs, so compare brightness only within one run.
+
+## 2026-11-06 - Characters blurred by bloom, shadows washed out, and lights now reach 120
+
+- **A lit character blurred (owner):** with the bloom threshold under 1 (0.9), anything a lamp lit brightly bloomed, characters included, into a haze. Keep the threshold above lit surfaces (1.15) so only what glows blooms, keep lamps from being too strong up close, and draw a lamp's glow sprite behind what stands at the lamp (`ParticleEmitter.ZOffset` negative).
+- **Shadows nobody sees:** several shadow-casting lights round one spot (four lamps over the island) fill each other's shadows in; use one key light with unshadowed fills. Roblox also softens a light's shadows with its distance from what it lights: a key light 75 or 112 studs up threw none to be seen, 45 up a soft one, and a light a few studs from a post or character a crisp one. A surface that glows by itself (painted emissive) hides shadows further.
+- **Every loader:** turning shadows on in one loader (`loadPiece`) left a second (`libraryPiece`, the mushrooms) with every part's shadow off. Search for every `CastShadow` set before judging.
+- **Light range:** Roblox now accepts a light `Range` up to 120 (asked 200, got 120; it was 60). Lights still fade long before their range ends.
+- **Character captures:** the camera script fades the character when a script moves the camera close to it; set `LocalTransparencyModifier` to 0 on its parts every frame while capturing.
+- **Outlines for characters:** give characters their own small pool of highlights, so the art never takes a player's line; with the art's pool and the slugs' own, stay a few under Roblox's 31.
+- **Runs while the owner uses the PC:** the check's Studio window was minimized and Roblox's menu then stayed open over every shot. Restore the window before a capture, and expect slow (15 frames a second) runs when it isn't in front.
+- **A glow you can't turn up:** raising a part's glow strength only brightens what its glow map already lights. The side mushrooms' map lit the rim band and underside only, so their tops stayed dark at any strength; the paint had to change. Look at the `-emit` map before tuning strength.
+
+## 2026-11-07 - No sun means no mist and no shadows from high up
+
+- **Roblox lights its Atmosphere by the sun:** with `Brightness` 0 the mist went black and out of sight in a dark cavern. Keep some sun if the mist must show.
+- **Only a sun throws shadows from far up:** lights reach 120 studs at most and soften their shadows with distance, so nothing hanging high (the floating rocks) can shade the floor except the sun.
+- **A sun under a roof of one-sided shells lights every floor at every graphics level alike;** what drops at low levels is only the shadows under things. That is safe. What isn't is a cover that shuts the sun out at full graphics only (round 7).
+- **A light's reach is a hard limit:** a wash aimed at a wall 140 studs away left it dark; measure the distance before placing a light.
+- **Brighter cap glow blooms white over painted detail:** with a new glowing ring in the paint, the old extra glow hid it. Lower the strength when the paint gains glow.
+- **Python on Windows:** `write_text` without `newline="\n"` writes CRLF; a `\n` inside a shell heredoc's Python became a real line break in written source. Write source through the editor, or pass `newline`.
+
+## 2026-11-07 - A glow that lights nothing
+
+- **Painted glow lights nothing:** an emissive map or Neon makes a surface glow and bloom, but lights no surface round it. Where something glowing should light its surroundings (runes on stone, crystals on rock), place a light at it.
+- **Where a light sits matters more than its strength:** a crystal's light at its tip, 20 to 30 studs out, with a 14-stud reach, never touched the wall it grew from. Put the light near the root, a little out along the growth, with a reach of about 1.6 times the crystal.
+- **Smooth pools:** lights without shadows fall off evenly over a faceted wall; shadowed ones on low-poly rock can look blocky.
+- **Glow maps cut low values:** the hub painter starts a part's glow at 0.15 of emission; anything painted fainter (the velvet's cushions at 0.016) shows no glow at any strength.
+
+## 2026-11-07 - Short spires end flat, and the game mesh loses the flat
+
+- **Facet rows decide where a spire's point is:** the cave spire form narrows to a point only a whole number of its 2.6-unit rows above its foot; a rock whose height falls between rows ends in a flat sheet. Sink the foot to the next whole row and keep the tip.
+- **Mesh simplification can drop a small flat sheet:** the hole in a piece with an ink shell shows solid black. Before uploading a rebuilt piece, count the open edges above the ground in its GLB.
+- **A sampling box slices whatever crosses it:** size it from each shape's full reach, not its centre.
+- **High places need lights up there:** lights reach 120 studs at most, so a wall 150 studs tall and a roof at 235 need lights placed near them, a little brighter than the foot's, as the mist dims what is high and far.
+- **Tours:** typing in another window during a tour drops Studio to background frame rates and a lower graphics level; the log's frames a second say which shots to discard.
+
+## 2026-11-07 - UI goo steps when its columns are wide on screen
+
+- **Columns, not texture, make it look pixelated:** the goo is a row of columns each moved as a block, so its edge steps once per column; keep columns about 3 screen px wide for the screen's scale (`GooBar` `fine`), and keep the simulation's spacing where it was so the motion doesn't change.
+- **A bar that fills every frame is not hit every frame:** feed a steadily rising bar the proportional slosh of a dragged slider; a hit's minimum kick each frame roughened the surface.
+
+## 2026-11-07 - Revamping a concept area with approved pieces
+
+- **Swap like for like at the concept's own spots:** the pit's concept tree mushrooms were the side mushroom's form, so the approved side mushroom grows where each stem left the cliff; the rock's concept crystals became library crystals at the same sites and directions. Rebuild the concept piece without them rather than hiding parts at runtime.
+- **An emptied part breaks the build:** when a piece loses everything in one part, take the part (and anything reading it, such as sparkle points) out of the spec.
+- **Many soft glows close together wash out:** give such sites a share of the usual glow.
+- **A round basin spilling all round reads as a pipe:** spill over a shallow front arc and let the sheet widen as it falls.
