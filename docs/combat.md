@@ -1,5 +1,13 @@
 # Slug shooting (experiment)
 
+## Flatter Floppy and a farther empty-space aim (2026-11-07, current)
+
+**Confirmed, owner, 2026-11-07:** shots, Floppy especially and even in first person, "shoot so high up into the air" and feel inaccurate "even though it might be accurate"; in third person a shot went "all the way up into the far right" of the crosshair.
+
+**Cause:** at 85/100/115 studs/s, gravity 70 and drag 0.35 a tap could not reach 75 studs, so the solver lobbed to the farthest reachable point, and a full charge at 100 studs peaked 11 studs over the crosshair's line. Over empty space the aim point was 60 studs along the line; past it a third-person shot, which leaves the gun below and beside the camera, kept going on a line that left the crosshair.
+
+**Implemented/verified:** Floppy now flies at **120 / 145 / 170 studs/s, gravity 35, drag 0.2**: reach 237/300/361 studs, peak about 1 stud over the line at 60 studs and 2 to 4 at 100. Damage, levels and partial correction (0.86/0.95) are unchanged; it is still the slowest slug and still drops at long range. Empty space now aims 100 studs out (`AIR_ZERO_DISTANCE`). Range self-tests pass (the out-of-reach check now uses 300 studs); real-mouse third-person tap and full charge arrived on the crosshair. **Unresolved:** owner's feel verdict; the training arena's black walls are invisible to rays, so there more shots use the empty-space aim.
+
 ## Shot consistency and distinct Floppy powers (2026-11-02, current)
 
 **Delivery:** owner authorized delivery to `main` with documentation. Shooting implementation `6d3253d` and the preceding loadout/inspect/pose work are integrated with main hit reactions (`9e7a41c`) in `020c60c`. Post-merge combat/movement/foundation and creature checks pass; a fresh one-client Studio run passes the distance sweep, nine moving shots, two cover shots, shoulder fallback and shared flight/collision regressions. Owner feel and multiplayer limits below remain open.
@@ -93,7 +101,7 @@ Newer entries below explain how each value was reached; earlier values are histo
 | Recoil | Kick up (22-32° gun, default) or Flip & catch in Settings | Owner moved on without further complaint; not explicit approval |
 | Floppy strength | 7 damage; 65-115 studs/s; drag 1, gravity unchanged. Flat shots reach about 17-20% further, angled shots about 30-35% | Owner direction; verdict pending |
 | Shot levels and accuracy | **Owner's mechanic, 2026-11-01.** Level 1: tap or up to the second kick, 65 studs/s, 30% droop correction. Level 2: second kick, 88 studs/s, 60%. Level 3: third kick, 115 studs/s, lands on the crosshair within reach (within about 0.12 studs measured). The arc uses the real surface only within range (62 studs at full charge, less at lower levels). Otherwise it crosses the crosshair's line at a set distance (45 at full), because aiming the arc at a far surface was a big lob that overshot whenever the crosshair left a close target. The gun points along the crosshair, never the arc, so it cannot jump. Rewards full charges without making taps useless. Damage stays 7 at every level | Owner direction; feel verdict pending |
-| Slug size outside the gun | **1.3 studs for fired, recovering and map Floppies (owner, 2026-11-02; was 1 and 0.92)**; loaded size and 0.3 hit radius unchanged. The range's big Floppy stays 3x, so it is now 3.9 | Owner direction; verdict pending |
+| Slug size outside the gun | **1.3 studs for fired and landed slugs (`Combat.ShotSlugSize`, owner, 2026-11-07: "big enough to notice, but not big"; 1.5 the same day was still too big); 2 studs only for slugs living in the lobby (`Combat.WorldSlugSize`).** Was 2 for both (2026-11-03), 1.3 (2026-11-02), 1 and 0.92. Loaded size and 0.3 hit radius unchanged; the range's big Floppy is 3x | Owner direction; verdict pending |
 | Recovery | 1.5 s from impact: belly skid, wiggly roll to back, hop, screwing head-first dig with moving ground and debris | **Owner likes the burrow animation** |
 | Floppy underside | Rounded, body colour, soft folds straight across | Dark version rejected; new one pending |
 

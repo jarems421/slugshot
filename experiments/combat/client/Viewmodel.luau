@@ -177,6 +177,10 @@ local function build(character: Model, tool: Tool?, camera: Camera): Rig
 		for _, source in tool:GetDescendants() do
 			if source:IsA("BasePart") then
 				local copy = source:Clone()
+				-- A clone carries the source's revision but not always its edited mesh, so
+				-- place() must apply it again (Burpy showed as a red block, 2026-11-07).
+				copy:SetAttribute("InspectMeshRevision", nil)
+				copy:SetAttribute("InspectMaterialRevision", nil)
 				local originals, descendants = source:GetDescendants(), copy:GetDescendants()
 				local bones: { { source: Bone, copy: Bone } } = {}
 				for i, item in descendants do
@@ -423,7 +427,7 @@ local function place(current: Rig, torso: BasePart, camera: Camera, dt: number)
 				-(fullSize.Y - source.Size.Y / 2 + T.gripRelease - 0.28 * inspectWeight),
 				0
 			)
-			local presented = Inspect.viewGun(inspectTime)
+			local presented = Inspect.viewGun(inspectTime, canisterOffset)
 			local reach = presented * armToHandle:Inverse() * handShift:Inverse()
 			target = target:Lerp(reach, inspectWeight)
 		end

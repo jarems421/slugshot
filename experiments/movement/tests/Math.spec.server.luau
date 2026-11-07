@@ -25,39 +25,14 @@ assert(not mathUtils.finite(0 / 0), "NaN must be rejected")
 assert(not mathUtils.finite(math.huge), "Infinity must be rejected")
 print("[Movement tests] PASS: 30/60/144 Hz convergence, no overshoot and finite input checks")
 
--- Regressions: sustained climbing, height taps, release/re-press and deliberate kicks.
+-- Wall runs are a straight line (owner, 2026-11-06): level while running, a drag down when stopped along the wall.
 local run = require(shared.Config).Traversal.WallRun
-for _, fps in { 30, 60, 144 } do
-	local vy = 0
-	for frame = 1, fps * 12 do
-		local target = mathUtils.wallRunVerticalTarget(run.Speed, true, 0, false, run)
-		vy = mathUtils.approach(vy, target, run.VerticalAccel, 1 / fps)
-		assert(vy > 0, `Held climb must stay upward at {frame / fps} seconds`)
-	end
-	assert(vy == run.Climb, "Long hold must retain full climb speed")
-	for _, duration in { 0.05, 0.15, 0.3, 0.8 } do
-		local target = mathUtils.wallRunVerticalTarget(run.Speed, true, 0, false, run)
-		local lift = mathUtils.approach(-run.Slide, target, run.VerticalAccel, duration)
-		assert(lift > -run.Slide, "A height tap must immediately increase upward velocity")
-		assert(
-			mathUtils.wallRunVerticalTarget(run.Speed, false, 0, false, run) == -run.Slide,
-			"Release resumes slide"
-		)
-		assert(
-			mathUtils.wallRunVerticalTarget(run.Speed, true, 0, false, run) == run.Climb,
-			"Re-press restores climb"
-		)
-	end
-end
-assert(mathUtils.wallRunVerticalTarget(run.Speed, true, 0, true, run) == 0, "Top edge holds height")
+assert(mathUtils.wallRunVerticalTarget(run.Speed, run) == 0, "A running wall run holds its height")
 assert(
-	mathUtils.wallRunVerticalTarget(0, true, 0, false, run) == -run.Cling.Drag,
-	"Stopped cling still drags"
+	mathUtils.wallRunVerticalTarget(run.Cling.Below, run) == 0,
+	"Running at the cling threshold stays level"
 )
-assert(
-	mathUtils.wallRunVerticalTarget(run.Speed, false, 100, false, run) == -run.SlideMax,
-	"Released slide caps downward speed"
-)
+assert(mathUtils.wallRunVerticalTarget(0, run) == -run.Cling.Drag, "Stopped cling still drags")
 for _, away in { -1, -0.8, 0 } do
 	assert(not mathUtils.wallRunKickIntent(away, run.KickAway), "No outward input must not kick")
 end
@@ -73,12 +48,9 @@ for _, away in { 0.5, math.sqrt(0.5), 1 } do
 end
 assert(
 	not mathUtils.wallRunKickIntent(1, run.KickAway, true),
-	"Plain corner-following height tap stays attached"
+	"A plain corner-following press does not kick"
 )
-assert(
-	not mathUtils.wallRunMantleIntent(0, run.MantleInto),
-	"Along-wall height tap must not mantle"
-)
+assert(not mathUtils.wallRunMantleIntent(0, run.MantleInto), "An along-wall press must not mantle")
 assert(
 	not mathUtils.wallRunMantleIntent(-0.3, run.MantleInto),
 	"A little inward drift must not mantle"
@@ -92,7 +64,7 @@ assert(
 	"An inward diagonal can deliberately mantle"
 )
 print(
-	"[Movement tests] PASS: sustained climb, height taps, diagonal kicks and deliberate mantle intent"
+	"[Movement tests] PASS: level wall run, cling drag, diagonal kicks and deliberate mantle intent"
 )
 
 assert(

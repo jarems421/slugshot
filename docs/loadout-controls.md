@@ -1,5 +1,11 @@
 # Loadout controls and slug inspect
 
+## Current: first-person inspect view (2026-11-07)
+
+**Confirmed, owner, 2026-11-07:** both inspections must work in the game, at the same size, and the slug must be bigger and noticeable. Of three options (camera moves in, first-person inspect, bigger canister) the owner chose first-person inspect.
+
+**Implemented/verified in Studio (combat range, real key presses):** pressing R in third person switches to first person for the act and back after the catch; pressing V during the act keeps the player's choice (`CombatClient`). First person holds the gun 0.7 times as far away (`SlugInspect.ViewNear`), moved along the line through the canister so the slug keeps its place on screen and reads about 1.4 times bigger. Floppy and Inferno read the same size in the canister (same loaded fit). The game build was missing Inferno's inspect and teeth scripts; `build_game.py` now copies them. This tree's private Inferno asset file lacked the wing-fire keys, so every Inferno model failed to build and the HUD showed a ball; it was refreshed from `slugshot-slug-pipeline`. **Unresolved:** owner's verdict on the view swap and size; not yet tried in the game place's arena by hand; phone and controller.
+
 **Confirmed, owner, 2026-11-02:** use the existing five-slot HUD and settings. Keep 1–5 for slug selection; add the wheel. V toggles first person instead of wheel zoom. Inspect raises the blaster with one hand and gives each slug its own response. Saving/loading is the next task, not part of this pass.
 
 **Implemented:** `feature/loadout-controls`, isolated in `C:/Users/runni/slugshot-loadout-controls`, based on main `344fcf4`. No SFX, lobby or concurrent creature source is changed.

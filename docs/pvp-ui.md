@@ -5,10 +5,11 @@ The match HUD, inventory, settings and keybinds. **Confirmed by the owner, 2026-
 ## What the owner chose
 
 - **Look:** "Steady Ink": Oswald titles over Nunito text, ink outlines, no tilted or floating comic elements. The match HUD uses the neutral **Moonlight** accent, chosen because it sits beside any slug. The settings menu has a colour per tab (crystal teal, goo lime, amethyst) on deep indigo. Above all it must feel like Slugterra, with original art only.
-- **Slug bar:** bottom centre, raised 36 px, **five** slots (`Combat.SlotCount`), 13 slugs in total (`Combat.SlugTotal`).
-- **Health bar:** top left under Roblox's buttons, as dripping goo with a number beside it. The number can be Always, On change or Off. Hover cannot be used for it: the cursor is locked in first person and shift lock.
+- **Slug bar (owner, 2026-11-07):** five separate canisters like the blaster's own, not a generic hotbar: a ribbed cap the same size as the threaded base, teal glass with the slug standing still inside (at 60% of the glass), and the key number on the base. The selected canister stands 6 px higher with brighter glass; a fired slug leaves the glass until it is back. Revised the same day: no inner white outline (the owner found it weird), smaller slugs, no idle animation, health bar higher. Bottom centre, raised 24 px; `Combat.SlotCount` slots, 13 slugs in total (`Combat.SlugTotal`). Was one rounded bar of square slots, raised 36 px (2026-11-02).
+- **Health bar (owner, 2026-11-07):** on top of the canisters so it is noticed, 1.3 times its old size, as dripping goo with a number beside it; drips fall behind the canisters. The number can be Always, On change or Off. Hover cannot be used for it: the cursor is locked in first person and shift lock. Was top left under Roblox's buttons (2026-11-02).
+- **Ability chips:** Q left of the canisters and E right of them, inside the HUD so they hide with it in the lobby.
 - **Settings:** a small cog beside Roblox's buttons, with no coloured outline on hover. Tabs: Controls, Gameplay, Crosshair.
-- **Inventory:** E. A small panel expands up out of the slug bar, which is the loadout. Choosing which slug sits in which slot comes with the second slug.
+- **Inventory:** F (E until 2026-11-06, when E became the passive). A small panel expands up out of the slug bar, above the health bar; the canisters are the loadout. Choosing which slug sits in which slot comes with the second slug.
 - **Sprint:** Toggle by default, with Always on and Hold; double-tapping any direction also sprints.
 
 ## How the goo stays smooth
@@ -32,7 +33,7 @@ Every kick used to scale to zero while aiming, leaving a slow zoom that the owne
 
 ## Checking it
 
-`python tools/build_pvp_ui_check.py`, then `tools/studio/pvp_ui_check.ps1 -OutDir <dir>`, opens its own Studio window, presses Play, sends a real E, captures the health bar through three hits, the inventory and all tabs, then closes that window. It takes under a minute and needs no Studio MCP. It captures stills only and does not drive the mouse, so hover, dragging and feel remain the owner's judgement.
+`python tools/build_pvp_ui_check.py`, then `tools/studio/pvp_ui_check.ps1 -OutDir <dir>`, opens its own Studio window, presses Play, sends a real F, captures the health bar through three hits, the inventory and all tabs, then closes that window. It takes under a minute and needs no Studio MCP. It captures stills only and does not drive the mouse, so hover, dragging and feel remain the owner's judgement.
 
 ## Taste rules from the owner's feedback
 

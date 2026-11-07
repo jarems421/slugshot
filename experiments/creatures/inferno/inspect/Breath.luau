@@ -4,10 +4,8 @@
 local AssetService = game:GetService("AssetService")
 local Breath = {}
 
-function Breath.new(rig: any): any
+function Breath.new(rig: any, mesh: EditableMesh): any
 	local part = rig.body :: MeshPart
-	local mesh =
-		AssetService:CreateEditableMeshAsync(Content.fromUri(part.MeshId), { FixedSize = true })
 	local centre, scale = mesh:GetCenter(), part.Size / part.MeshSize
 	local root = rig.bones.root[1].bone
 	local head = rig.bones.head[1].bone
@@ -21,8 +19,9 @@ function Breath.new(rig: any): any
 		local u = at:Dot(rig.up) / height
 		local envelope = math.sin(math.pi * math.clamp((u - 0.06) / 0.72, 0, 1)) ^ 2
 		if envelope > 0.001 then
+			-- 1.5 times the 2026-11-04 swell, so the inhale reads (owner, 2026-11-07).
 			local offset = (
-				rig.side * at:Dot(rig.side) * 0.32 + rig.front * at:Dot(rig.front) * 0.44
+				rig.side * at:Dot(rig.side) * 0.48 + rig.front * at:Dot(rig.front) * 0.66
 			) * envelope
 			table.insert(points, {
 				id = id,

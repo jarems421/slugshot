@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
+local Abilities = require(ReplicatedStorage:WaitForChild("Combat"):WaitForChild("Abilities"))
 local Recovery = require(script.Parent.FloppyRecovery)
 local Transformation = require(script.Parent.SlugTransformation)
 local movement = game:GetService("Players").LocalPlayer.PlayerScripts
@@ -211,9 +212,10 @@ function Visuals.launch(launch: Launch)
 	end
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
-	local exclude: { Instance } = { workspace.CurrentCamera }
-	if launch.shooter.Character then
-		table.insert(exclude, launch.shooter.Character)
+	-- Slugs pass through the shooter and their teammates, as on the server.
+	local exclude = Abilities.passThrough(launch.shooter, launch.slugId)
+	if workspace.CurrentCamera then
+		table.insert(exclude, workspace.CurrentCamera)
 	end
 	params.FilterDescendantsInstances = exclude
 	Transformation.timeScale = Tuning.values.shotSlowMo

@@ -251,6 +251,25 @@ function Keybinds.apply(saved: { [string]: { any } })
 			binds[action] = { if pair[1] then pair[1] else nil, if pair[2] then pair[2] else nil }
 		end
 	end
+	-- Actions added since the save keep their default keys; a saved binding on one of them gives way, and an
+	-- action left with no key takes its own current default (2026-11-06: E moved from Inventory to the passive).
+	for action, row in rows do
+		if not saved[action] then
+			for _, input in { row.main, row.second } do
+				for other, pair in binds do
+					if other ~= action and input and (pair[1] == input or pair[2] == input) then
+						binds[other] = {
+							if pair[1] ~= input then pair[1] else nil,
+							if pair[2] ~= input then pair[2] else nil,
+						}
+						if not binds[other][1] and not binds[other][2] then
+							binds[other] = { rows[other].main, rows[other].second }
+						end
+					end
+				end
+			end
+		end
+	end
 	refresh()
 end
 

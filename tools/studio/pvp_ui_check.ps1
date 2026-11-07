@@ -72,12 +72,12 @@ while (((Get-Date) - $started).TotalSeconds -lt $Timeout) {
                     if ($line -match "UICHECK shot (\S+)") { Capture $Matches[1] }
                     elseif ($line -match "UICHECK reaction (.+)") { Write-Output "reaction $($Matches[1].Trim())" }
                     elseif ($line -match "UICHECK key result (.+)") { Write-Output "key result: $($Matches[1].Trim())" }
-                    elseif ($line -match "UICHECK key E") {
+                    elseif ($line -match "UICHECK key F") {
                         [Win]::SetForegroundWindow($hwnd) | Out-Null
                         Start-Sleep -Milliseconds 100
-                        [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x45, [IntPtr]1) | Out-Null
+                        [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x46, [IntPtr]1) | Out-Null
                         Start-Sleep -Milliseconds 60
-                        [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x45, [IntPtr]0xC0000001L) | Out-Null
+                        [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x46, [IntPtr]0xC0000001L) | Out-Null
                     }
                     elseif ($line -match "FLog::") { Write-Output ($line.Trim() -replace "^.*?\[FLog::[A-Za-z]+\] ", "") }
                 }

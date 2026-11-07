@@ -52,15 +52,16 @@ def movement_limits():
     sprint = config_number(athletic, r"SprintSpeed = ([\d.]+)")
     double = config_number(text, r"DoubleJump = ([\d.]+)")
     mantle = config_number(text, r"MinHeight = 0\.7.*?MaxHeight = ([\d.]+)")
+    # Wall runs hold their height (owner, 2026-11-06); a wall is climbed by hopping up it, catching it again higher,
+    # up to the per-airtime hop limit, then mantling the top.
     wall = text[text.index("WallRun = {"):]
-    climb = config_number(wall, r"Climb = ([\d.]+)")
-    # Held climbing now lasts while the wall remains connected; geometry still gates it.
-    climb_time = math.inf
+    hop_up = config_number(wall, r"Hop = \{ Up = ([\d.]+)")
+    hops = config_number(text, r"MaxHops = ([\d.]+)")
     height = jump * jump / (2 * GRAVITY)
     air = 2 * jump / GRAVITY
     return {"jump_height": height, "double_height": height + double * double / (2 * GRAVITY),
             "mantle": mantle, "run_jump": run_speed * air, "sprint_jump": sprint * air,
-            "climb_reach": climb * climb_time + mantle, "climb": climb}
+            "climb_reach": hops * hop_up * hop_up / (2 * GRAVITY) + mantle, "climb": 0}
 
 
 def reachable(edges, start):

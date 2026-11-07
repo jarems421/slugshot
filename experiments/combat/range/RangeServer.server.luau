@@ -5,6 +5,7 @@
 -- first/last hit times (a session ends after IdleReset seconds without a hit, when
 -- the dummy also heals). At 0 HP a dummy counts a knock-out and resets.
 local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -148,6 +149,25 @@ local spawnZ = Arena.Spawn.Z
 for index, lane in Arena.Lanes do
 	dummy(`Dummy{index} ({lane.distance} studs)`, Vector3.new(lane.side, 0, spawnZ - lane.distance))
 end
+-- Ability lab (docs/slugs/ability-specs.md): players join the Blue team beside a Blue teammate dummy, and a lane
+-- of dummies tests Crashwave: one to hit, two in line behind, one out of line and one beyond the wave's reach.
+if workspace:GetAttribute("SlugshotAbilityLab") == true then
+	local function join(player: Player)
+		player:SetAttribute("SlugshotTeam", "Blue")
+	end
+	Players.PlayerAdded:Connect(join)
+	for _, player in Players:GetPlayers() do
+		join(player)
+	end
+	local laneX = 45
+	dummy("Wave target", Vector3.new(laneX, 0, spawnZ - 20))
+	dummy("Wave behind (8 studs)", Vector3.new(laneX, 0, spawnZ - 28))
+	dummy("Wave behind (16 studs)", Vector3.new(laneX + 2, 0, spawnZ - 36))
+	dummy("Wave out of line", Vector3.new(laneX + 8, 0, spawnZ - 28))
+	dummy("Wave beyond reach", Vector3.new(laneX, 0, spawnZ - 52))
+	dummy("Teammate", Vector3.new(laneX - 5, 0, spawnZ - 12)):SetAttribute("SlugshotTeam", "Blue")
+end
+
 local tower = Arena.Tower
 dummy(
 	`Tower dummy ({tower.distance} studs)`,

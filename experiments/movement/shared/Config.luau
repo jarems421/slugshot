@@ -108,6 +108,9 @@ return table.freeze({
 			MinOut = 0.5,
 			UpInto = 0.85,
 			Up = { Speed = 58, Away = 3, Carry = 0.3 },
+			-- Smoother kicks (owner, 2026-11-06): when the kick hands back control, steering eases from the kick's
+			-- direction to the keys held over Time seconds at Rate instead of snapping round at once.
+			HandBack = { Time = 0.35, Rate = 5 },
 		},
 		-- Jumping into a thin, low obstacle at speed kong-vaults over it.
 		Vault = {
@@ -160,19 +163,13 @@ return table.freeze({
 			-- heading. It can attach this soon after leaving the ground (MinHeight still keeps
 			-- it off the floor), keeping more of the jump's rise.
 			GroundDelay = 0.03,
-			Rise = { Min = 4, Max = 20, Carry = 0.55 }, -- upward speed on attach: Carry of the jump's, clamped
-			-- Jump holds and taps adjust height without a climb timeout or release kick.
-			-- To kick off, press Jump with an outward component, including a diagonal.
+			-- Owner (2026-11-06): a wall run is a straight line at the height it attached. Space jumps up off the
+			-- wall (Hop) to land back on it higher; Space with an outward key kicks off (KickAway).
 			KickAway = 0.35,
 			MantleInto = 0.65, -- wall-run mantles require deliberate input into the wall
-			-- Studs above the root that must still be beside the wall to keep climbing; above
-			-- this the run holds its height along the top edge.
-			TopMargin = 1,
-			Climb = 11,
-			Slide = 1.5, -- downward speed once Jump is released, growing by SlideGrow per second since
-			SlideGrow = 5,
-			SlideMax = 20,
-			VerticalAccel = 40, -- studs/s^2 toward the climb or slide speed
+			Hop = { Up = 40, Away = 4, Carry = 1 }, -- up speed, out from the wall, and run speed kept
+			VerticalAccel = 40, -- studs/s^2 back to level after a cling
+			LineHold = 8, -- per second: how hard the run returns to its line's height
 			Pull = { Rate = 12, Max = 14, Away = 12 }, -- anticipate shallow protrusions without moving the root through them
 			Release = 8, -- push away from the wall when dropping off
 			Reattach = 0.45, -- seconds before the same wall can be run again

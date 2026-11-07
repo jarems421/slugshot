@@ -51,6 +51,8 @@ def main():
     project["name"] = "SlugshotLobbyTraining"
     tree = project["tree"]
     tree["Workspace"]["$properties"]["FallenPartsDestroyHeight"] = -2000
+    # Slugs whose abilities are being built (Aquabeek) join the loadout here too (owner, 2026-11-06).
+    tree["Workspace"].setdefault("$attributes", {})["SlugshotAbilityLab"] = True
 
     shared = tree["ReplicatedStorage"]
     for name in ("Combat", "GooArt", "FloppyAsset", "InfernoAsset"):
@@ -71,7 +73,8 @@ def main():
     }
 
     scripts = tree["StarterPlayer"]["StarterPlayerScripts"]
-    for name in ("RocklockBlaster", "FloppyIdle", "Combat", "FloppyFace", "InfernoMotion"):
+    for name in ("RocklockBlaster", "FloppyIdle", "Combat", "FloppyFace", "InfernoMotion", "InfernoInspect",
+                 "InfernoTeeth"):
         scripts[name] = range_tree["StarterPlayer"]["StarterPlayerScripts"][name]
     scripts["Training"] = {PATH: "experiments/training/client"}
 

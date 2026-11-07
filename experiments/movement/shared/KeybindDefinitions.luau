@@ -28,6 +28,8 @@ return {
 			{ id = "nextSlug", label = "Next slug", main = "WheelDown" },
 			{ id = "previousSlug", label = "Previous slug", main = "WheelUp" },
 			{ id = "inspect", label = "Inspect slug", main = "R" },
+			{ id = "armMain", label = "Arm main ability", main = "Q" },
+			{ id = "armPassive", label = "Arm passive ability", main = "E" },
 			{ id = "slug1", label = "Slug 1", main = "One" },
 			{ id = "slug2", label = "Slug 2", main = "Two" },
 			{ id = "slug3", label = "Slug 3", main = "Three" },
@@ -38,7 +40,7 @@ return {
 	{
 		name = "Other",
 		rows = {
-			{ id = "inventory", label = "Inventory", main = "E" },
+			{ id = "inventory", label = "Inventory", main = "F" }, -- E arms the passive (owner, 2026-11-06)
 			{ id = "settings", label = "Settings", main = "M" },
 			{ id = "firstPerson", label = "First person", main = "V" },
 		},

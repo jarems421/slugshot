@@ -46,7 +46,10 @@ local TRAIL_ANGLE = 0.1
 local SQUASH_UPPER, SQUASH_HEAD, SQUASH_FLANK = 0.38, 0.03, 0.28
 local STRETCH_FLANK_SHARE = 0.6
 local SWAY_UPPER = 0.07
-local PITCH_HEAD, PITCH_UPPER = math.rad(22), math.rad(6)
+-- Looking up bends mostly from the waist. Tilting the head alone shears the cheek, which is part
+-- head-weighted, against the fully head-bound lids and smears his dark under-eyes into streaks
+-- (owner, 2026-11-03 in the lobby; 2026-11-07 in the gun and the HUD). Was head 22, upper 6.
+local PITCH_HEAD, PITCH_UPPER = math.rad(6), math.rad(14)
 local FLOP_ANGLE = 0.12
 
 local function setup(model: Model)

@@ -691,6 +691,16 @@ Floppy has no class. Class is only a label; it never changes power. There are no
 - **Confirmed, 2026-11-06:** a level choice can be **swapped later for coins**, and players can buy coins with Robux. Note: Robux then indirectly buys progression; ranked's level cap keeps that fair. If coins could ever buy chests, Roblox's paid-random-item rules would apply.
 - **Later:** each slug's menu of choices per level (owner: "that's not really important right now"); coin prices. 
 
+## Built so far - 2026-11-06
+
+**Implemented/verified in Studio (range and game place):** the shared ability system and Aquabeek.
+
+- **Code:** `experiments/combat/shared/Abilities.luau` (definitions, teams, pass-through, slows), `AbilityRuntime.luau` (server: arming, cooldowns, statuses, placed objects with caps and cleanup, Crashwave and Mistbank), `client/AbilityClient.client.luau` (Q/E, ability bar, mist murk), `client/NameTags.client.luau` (themed name tags that hide in mist), `range/AbilitySelfTest.server.luau`.
+- **Places:** Aquabeek is slot 3 in places with the workspace attribute `SlugshotAbilityLab`: the range and the game place.
+- **Evidence:** the range's 21 ability checks and the combat self-test pass in Studio. Real input in the range: 3 then Q armed Crashwave, a click hit a dummy for 20 and the wave rolled on, with the 6 s cooldown shown; E then a click made a Mistbank, with the 4 s cooldown shown. The game place starts with no script errors.
+- **Placeholders:** a blue box for the wave, a two-layer white ball for the mist, fog particles round the camera inside it, a point light for the armed glow, drip particles for soaked.
+- **Not yet:** controller and phone buttons, movement reading the slow (`SpeedScale`), two-player tests of name tags and teammates, and the other twelve kits.
+
 ## Template
 
 | Field | What to define |

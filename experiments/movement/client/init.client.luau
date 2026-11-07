@@ -39,6 +39,7 @@ local root: BasePart? = nil
 local sprinting, aiming = false, false
 local sprintTapped, sprintLatched, sprintKeyHeld = false, false, false
 local speed, move = 0, Vector3.zero
+local handBackUntil = 0 -- after a wall kick, steering eases back to the keys until then
 local sequence, pendingAction = 0, 0
 local airUsed = false
 local acro: any = nil
@@ -790,8 +791,8 @@ local function tryWallRun(now: number, input: Vector3): boolean
 		part = hit.Instance,
 		contact = hit.Position,
 		speed = if running then run.Speed else 0,
-		-- Keep part of the jump's rise; Jump held then climbs, released slides down.
-		vy = math.clamp(velocity.Y * run.Rise.Carry, run.Rise.Min, run.Rise.Max),
+		vy = 0, -- a straight line at the height it caught the wall
+		line = root.Position.Y, -- the height the run holds; a cling's drag lowers it
 	}
 	if not aiming then
 		root.CFrame = CFrame.lookAt(root.Position, root.Position + direction)
@@ -800,16 +801,23 @@ local function tryWallRun(now: number, input: Vector3): boolean
 	return true
 end
 
--- Leave the wall: Jump kicks off it; otherwise drop away from it.
-local function endWallRun(now: number, jump: boolean, input: Vector3?)
+-- Leave the wall. A kick goes off it where the keys point. A hop jumps up beside it, keeping the run speed, to
+-- catch the same wall again higher up (owner, 2026-11-06). Otherwise drop away from it.
+local function endWallRun(now: number, how: "drop" | "kick" | "hop", input: Vector3?)
 	local wall = acro
 	if not wall or wall.kind ~= "WallRun" or not root then
 		return
 	end
 	acro = nil
-	lastWallPart, lastWallTime = wall.part, os.clock()
 	local run = Trav.WallRun
-	if jump then
+	if how == "hop" then
+		-- Not marked as the last wall run, so the run can catch it again on the way up.
+		local launch = wall.direction * wall.speed * run.Hop.Carry + wall.away * run.Hop.Away
+		kickOff(now, launch, run.Hop.Up, wall.away, wall.contact, wall.direction)
+		return
+	end
+	lastWallPart, lastWallTime = wall.part, os.clock()
+	if how == "kick" then
 		mantleBlockedForJump = true
 		jumpWindow = 0
 		local launch, up, face = kickLaunch(
@@ -853,8 +861,8 @@ local function onJumpPress()
 		endSlide() -- slide cancel: the jump (or mantle) carries the slide's speed
 	end
 	if acro and acro.kind == "WallRun" then
-		-- Outward keys/diagonals jump immediately; only deliberate into-wall input
-		-- can mantle. Plain along-wall height taps stay attached, including near the lip.
+		-- Outward keys/diagonals kick off; deliberate into-wall input mantles when the top is in reach; any
+		-- other press hops up to catch the wall higher.
 		local wanted, lateral = jumpMoveIntent()
 		local corner = acro.corner
 		local followingCorner = false
@@ -868,9 +876,11 @@ local function onJumpPress()
 		end
 		local outward = if wanted then wanted:Dot(acro.away) else 0
 		if Math.wallRunKickIntent(outward, Trav.WallRun.KickAway, followingCorner, lateral) then
-			endWallRun(now, true, wanted)
-		elseif Math.wallRunMantleIntent(outward, Trav.WallRun.MantleInto) then
-			mantleFromWall(now)
+			endWallRun(now, "kick", wanted)
+		elseif
+			not (Math.wallRunMantleIntent(outward, Trav.WallRun.MantleInto) and mantleFromWall(now))
+		then
+			endWallRun(now, "hop")
 		end
 		return
 	end
@@ -1207,7 +1217,13 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	end
 	desired = if desired.Magnitude > 1 then desired.Unit else desired
 	local settings = profile()
-	move = move:Lerp(desired, Math.alpha(settings.TurnRate, dt))
+	move = move:Lerp(
+		desired,
+		Math.alpha(
+			if os.clock() < handBackUntil then Trav.WallHop.HandBack.Rate else settings.TurnRate,
+			dt
+		)
+	)
 	if sprintTapped and raw.Magnitude < 0.1 then
 		sprintTapped = false -- a double-tap or gamepad sprint ends when movement stops
 	end
@@ -1291,16 +1307,6 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		elseif now - (acro.surfaceAt or acro.start) <= run.Surface.Grace then
 			away = acro.away
 		end
-		-- Near the top (nothing beside the head): the climb holds the height and runs
-		-- along the top edge. Owner (2026-10-30): it used to mantle over by itself; a
-		-- fresh press mantles instead (see onJumpPress).
-		acro.atTop = away
-			and workspace:Raycast(
-					root.Position + Vector3.new(0, run.TopMargin, 0),
-					-acro.away * (run.Reach + 0.6),
-					rays
-				)
-				== nil
 		-- Steering (owner, 2026-10-30: once running there was no control but Space).
 		-- Input along the wall sets the run speed, and pushing into the wall counts as
 		-- forward; no input stops into a drag;
@@ -1332,7 +1338,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		end
 		acro.speed = signed
 		if not away or onGround then
-			endWallRun(now, false)
+			endWallRun(now, "drop")
 			kind = nil
 		elseif not aiming then
 			-- Turns round smoothly rather than snapping when the run reverses.
@@ -1343,8 +1349,11 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 		end
 	elseif kind == "WallHop" and (now - acro.start > acro.duration or onGround) then
 		local velocity = root.AssemblyLinearVelocity
-		-- Keep the kick's momentum; it bleeds in the air (Slide.AirDecay) and brakes on landing.
+		-- Keep the kick's momentum; it bleeds in the air (Slide.AirDecay) and brakes on landing. Steering starts
+		-- from the kick's direction and eases round to the keys rather than snapping.
 		speed = math.min(Vector3.new(velocity.X, 0, velocity.Z).Magnitude, Trav.WallHop.MaxCarry)
+		move = acro.direction
+		handBackUntil = os.clock() + Trav.WallHop.HandBack.Time
 		acro, kind = nil, nil
 	end
 	if (not acro or acro.kind == "Flip") and not onGround then
@@ -1583,7 +1592,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Input.Value + 1, funct
 	)
 	label.Visible = player:GetAttribute("PvpHud") ~= true
 	label.Text = string.format(
-		"SLUGSHOT / MOVEMENT LAB v7.39   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  C or double-tap sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (hold/tap Space: up, steer away + Space: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
+		"SLUGSHOT / MOVEMENT LAB v7.41   |   %s   |   %s\nWASD move  /  Ctrl shift lock  /  C or double-tap sprint  /  Shift slide (works in the air: slides on landing; jump out of it to keep the speed)  /  Space jump  /  Space again in the air: double-jump flip toward the keys held\nSpace into a ledge: mantle (low wall at speed: vault)  /  jump onto a wall running along it: wall run (Space: hop up and catch it higher, steer away + Space: kick off)  /  by a wall in the air: wall jump\n%sH test hit reaction  /  R reset  /  scroll in: first person  /  M settings\nSpeed %.1f   |   %s   |   %sLast flip: %s   |   Last rejected: %s   |   Corrections: %d",
 		player:GetAttribute("MovementProfile") or "Athletic",
 		if privateClips > 0 then `original + {privateClips} private clips` else "original clips",
 		if Config.Lab.Aim then "RMB aim Â· Click marker Â· " else "",
@@ -1605,35 +1614,13 @@ RunService.PreSimulation:Connect(function(dt)
 		end
 	end
 	if acro and acro.kind == "WallRun" and root then
-		-- Along the wall at the Hug distance: Jump keeps climbing for as long as
-		-- it is held; releasing only resumes the slide, never a wall kick.
+		-- Along the wall at the Hug distance, level (owner, 2026-11-06: a straight line). Stopping along the
+		-- wall clings and drags straight down.
 		local run = Trav.WallRun
-		local elapsed = workspace:GetServerTimeNow() - acro.start
-		if jumpHeld then
-			acro.releasedAt = nil
-		else
-			acro.releasedAt = acro.releasedAt or elapsed
-		end
-		-- Not running along the wall (Space held or not): the wall slide drags straight
-		-- down (owner: stopping a run must slide at once; holding Space had kept it
-		-- climbing for seconds).
 		local sliding = acro.speed < run.Cling.Below
-		local target = Math.wallRunVerticalTarget(
-			acro.speed,
-			jumpHeld,
-			elapsed - (acro.releasedAt or elapsed),
-			acro.atTop == true,
-			run
-		)
-		if acro.atTop and jumpHeld and not sliding then
-			-- At the top: stop rising and run along the edge.
-			target = 0
-			acro.vy = math.min(acro.vy, 0)
-		end
-		-- The wall slide drops straight to its drag speed (owner: directly down).
 		acro.vy = Math.approach(
 			acro.vy,
-			target,
+			Math.wallRunVerticalTarget(acro.speed, run),
 			if sliding then run.Cling.Accel else run.VerticalAccel,
 			dt
 		)
@@ -1647,9 +1634,14 @@ RunService.PreSimulation:Connect(function(dt)
 		local travelSpeed = if acro.corner
 			then math.min(acro.speed, run.Surface.CornerRate * hug)
 			else acro.speed
+		-- Gravity acts through the physics steps after this, so setting vy alone sinks about
+		-- 1.6 studs/s (owner, 2026-11-07: "you slowly descend"). Cancel its share of the frame
+		-- and steer back to the line.
+		acro.line += acro.vy * dt
+		local hold = (acro.line - root.Position.Y) * run.LineHold
 		root.AssemblyLinearVelocity = acro.direction * travelSpeed
 			- acro.away * pull
-			+ Vector3.new(0, acro.vy, 0)
+			+ Vector3.new(0, acro.vy + workspace.Gravity * dt / 2 + hold, 0)
 		return
 	end
 	if acro and acro.kind == "Slide" and root and character and humanoid then
@@ -1763,7 +1755,6 @@ if RunService:IsStudio() then
 			ready = true,
 			jumpHeld = jumpHeld,
 			wallSpeed = if acro and acro.kind == "WallRun" then acro.speed else nil,
-			wallAtTop = if acro and acro.kind == "WallRun" then acro.atTop == true else false,
 			wallNormal = if acro and acro.kind == "WallRun" then acro.away else nil,
 			shiftLocked = shiftLocked,
 			position = root.Position,

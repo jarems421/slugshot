@@ -8,6 +8,9 @@
       "$className": "Workspace",
       "$properties": {
         "FallenPartsDestroyHeight": -60
+      },
+      "$attributes": {
+        "SlugshotAbilityLab": true
       }
     },
     "Lighting": {
@@ -132,6 +135,9 @@
         },
         "CombatSelfTest": {
           "$path": "experiments/combat/range/CombatSelfTest.server.luau"
+        },
+        "AbilitySelfTest": {
+          "$path": "experiments/combat/range/AbilitySelfTest.server.luau"
         }
       },
       "SettingsPersistence": {

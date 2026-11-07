@@ -163,49 +163,68 @@ function Rig.step(rig: any, t: number, weight: number): any
 	local cheek = ease((t - Flow.End) / 0.62) * a.looking
 	local preparation = ease((t - Flow.Inhale) / 0.32) * (1 - ease((t - Flow.End) / 0.32))
 	local unit = 1 / Flow.GameScale
+	-- Owner, 2026-11-07: a deeper, more visible inhale and real strain. The inhale lifts the chest
+	-- and chin further after a small gathering dip; the blow pushes forward with squeezed lids and
+	-- a shudder. Was head 0.045/0.14, chest 0.045/0.045, strain 0.013/0.08 and 0.020/0.040.
+	local shudder = a.tremble * a.effort
 	drive(
 		rig,
 		"head",
-		Vector3.new(0, (-0.14 * a.press + 0.045 * a.inhale - 0.013 * a.effort) * unit, 0),
-		0.14 * a.inhale - 0.08 * a.effort + 0.09 * a.lift - 0.035 * cheek + 0.12 * a.breathHop,
-		0.10 * a.looking + 0.13 * lag + 0.04 * cheek,
-		0.09 * a.smug + 0.014 * math.sin((t - Flow.Start) * 6) * a.exhale + 0.045 * a.inhale
+		Vector3.new(
+			0,
+			(-0.14 * a.press + 0.075 * a.inhale - 0.030 * a.effort - 0.030 * a.gather) * unit,
+			0
+		),
+		0.22 * a.inhale
+			- 0.14 * a.effort
+			+ 0.09 * a.lift
+			- 0.035 * cheek
+			+ 0.12 * a.breathHop
+			- 0.06 * a.gather,
+		0.10 * a.looking + 0.13 * lag + 0.04 * cheek + 0.03 * shudder,
+		0.09 * a.smug + 0.03 * shudder + 0.06 * a.inhale
 	)
 	drive(
 		rig,
 		"body_upper",
-		Vector3.new(0, (-0.12 * a.press + 0.045 * a.inhale - 0.020 * a.effort) * unit, 0),
-		0.045 * a.inhale - 0.040 * a.effort - 0.05 * a.lift + 0.16 * a.breathHop,
+		Vector3.new(
+			0,
+			(-0.12 * a.press + 0.080 * a.inhale - 0.035 * a.effort - 0.035 * a.gather) * unit,
+			0
+		),
+		0.07 * a.inhale - 0.09 * a.effort - 0.05 * a.lift + 0.16 * a.breathHop,
 		-0.07 * lag,
-		-0.045 * a.smug
+		-0.045 * a.smug + 0.02 * shudder
 	)
 	drive(rig, "body_lower", zero, 0, -0.05 * lag, 0)
 	for _, tag in { "L", "R" } do
+		-- Ears perk up as the air comes in and pin back through the blow.
 		local follow = 0.028 * math.sin(t * 3.4 - 0.35)
-			+ 0.06 * a.inhale
-			- 0.09 * a.exhale
+			+ 0.13 * a.inhale
+			- 0.16 * a.exhale
 			+ 0.12 * a.press
 			- 0.08 * a.lift
+			+ 0.04 * shudder
 		drive(rig, "antenna_" .. tag, zero, 0, 0, (if tag == "L" then 1 else -1) * follow)
 		drive(rig, "antenna_tip_" .. tag, zero, 0.08 * math.sin(t * 3.4 - 0.85) + 0.08 * a.press)
 	end
 	drive(
 		rig,
 		"lid_L",
-		Vector3.new(-0.008 * a.effort, 0.023 * a.inhale - 0.043 * a.effort + 0.004 * cheek, 0)
+		Vector3.new(-0.010 * a.effort, 0.030 * a.inhale - 0.060 * a.effort + 0.004 * cheek, 0)
 			* unit,
 		0,
 		0,
-		0.15 * a.effort
+		0.20 * a.effort
 	)
 	drive(
 		rig,
 		"lid_R",
-		Vector3.new(0.008 * a.effort, 0.020 * a.inhale - 0.045 * a.effort - 0.014 * a.smug, 0)
+		Vector3.new(0.010 * a.effort, 0.027 * a.inhale - 0.062 * a.effort - 0.014 * a.smug, 0)
 			* unit,
 		0,
 		0,
-		-0.14 * a.effort
+		-0.19 * a.effort
 	)
 	local opening = t < Flow.End
 	local width = ease(a.mouth)
@@ -218,7 +237,7 @@ function Rig.step(rig: any, t: number, weight: number): any
 			local theta = math.pi
 				+ (if string.sub(name, 7, 7) == "t" then -1 else 1) * k / 8 * math.pi
 			local circle = Vector3.new(
-				0.008 + (0.038 + 0.021 * a.inhale + 0.008 * a.effort) * math.cos(theta),
+				0.008 + (0.038 + 0.030 * a.inhale + 0.008 * a.effort) * math.cos(theta),
 				0.067 + (0.042 + 0.014 * a.inhale - 0.005 * a.effort) * math.sin(theta),
 				0.278 - 0.006 * a.effort + 0.004 * math.sin(k / 8 * math.pi)
 			)

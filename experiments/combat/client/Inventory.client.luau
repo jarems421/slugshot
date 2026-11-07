@@ -1,5 +1,5 @@
 --!strict
--- The inventory (owner, 2026-11-02): small, opened with E, expanding up out of the slug bar. The bar below it is
+-- The inventory (owner, 2026-11-02): small, opened with F (E until 2026-11-06), expanding up out of the slug bar. The bar below it is
 -- the loadout, so this only shows every slug found so far and details for the selected one, and the game stays
 -- in view around it. Choosing which slug sits in which slot comes with the second slug.
 local Players = game:GetService("Players")

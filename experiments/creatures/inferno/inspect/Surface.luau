@@ -5,9 +5,34 @@ local Rig = require(script.Parent.Rig)
 local Surface = {}
 local LENGTH, SIDES = 28, 14
 
-function Surface.fire(): any
-	local mesh = AssetService:CreateEditableMesh()
-	assert(mesh, "Inferno inspect: editable mesh memory unavailable")
+-- Every editable mesh the inspect needs, made before any part changes. Past Roblox's memory
+-- budget a mesh comes back nil; a half-prepared rig showed broken parts (2026-11-07).
+function Surface.reserve(ink: MeshPart, lip: MeshPart, body: MeshPart): { [string]: EditableMesh }?
+	local sources: { [string]: MeshPart } = { ink = ink, lip = lip, body = body }
+	local made: { [string]: EditableMesh } = {}
+	for _, name in { "ink", "lip", "body", "inkSurface", "lipSurface", "fire" } do
+		local source = sources[name]
+		local ok, mesh = pcall(function(): EditableMesh?
+			if source then
+				return AssetService:CreateEditableMeshAsync(
+					Content.fromUri(source.MeshId),
+					{ FixedSize = name == "body" }
+				)
+			end
+			return AssetService:CreateEditableMesh()
+		end)
+		if not ok or not mesh then
+			for _, other in made do
+				other:Destroy()
+			end
+			return nil
+		end
+		made[name] = mesh
+	end
+	return made
+end
+
+function Surface.fire(mesh: EditableMesh): any
 	local vertices, colours = {}, {}
 	-- Unreferenced bounds keep the part origin and scale stable as the flame flows.
 	for _, x in { -1.5, 1.5 } do
@@ -137,7 +162,13 @@ function Surface.step(
 	fire.part.Transparency = 1 - 0.96 * alpha
 end
 
-local function skin(rig: any, part: MeshPart, mesh: EditableMesh, points: any): any
+local function skin(
+	rig: any,
+	part: MeshPart,
+	mesh: EditableMesh,
+	points: any,
+	surface: EditableMesh
+): any
 	local centre = mesh:GetCenter()
 	local scale = part.Size / part.MeshSize
 	local rest = rig.parts[part]
@@ -164,8 +195,6 @@ local function skin(rig: any, part: MeshPart, mesh: EditableMesh, points: any): 
 	end
 	-- Bake the same skin on the client. Imported mouth bindings produce folded
 	-- corners under large lip translations; a rigid editable surface avoids that.
-	local surface = AssetService:CreateEditableMesh()
-	assert(surface, "Inferno inspect: face surface memory unavailable")
 	-- Keep the render origin fixed while the expression narrows and the head
 	-- compresses/turns. Bounds must not follow the changing mouth silhouette.
 	local half = mesh:GetSize() / 2 + Vector3.one * 0.8
@@ -183,7 +212,7 @@ local function skin(rig: any, part: MeshPart, mesh: EditableMesh, points: any): 
 		point.id = id
 	end
 	for _, id in mesh:GetUVs() do
-		uvs[id] = surface:AddUV(mesh:GetUV(id))
+		uvs[id] = surface:AddUV(mesh:GetUV(id) :: Vector2)
 	end
 	for _, id in mesh:GetFaces() do
 		local v = mesh:GetFaceVertices(id)
@@ -209,12 +238,8 @@ local function skin(rig: any, part: MeshPart, mesh: EditableMesh, points: any): 
 	}
 end
 
-function Surface.ink(rig: any, part: MeshPart, lip: MeshPart, lipInInk: CFrame): any
-	local mesh =
-		AssetService:CreateEditableMeshAsync(Content.fromUri(part.MeshId), { FixedSize = false })
-	local mouth =
-		AssetService:CreateEditableMeshAsync(Content.fromUri(lip.MeshId), { FixedSize = false })
-	assert(mesh and mouth, "Inferno inspect: mouth mesh memory unavailable")
+function Surface.ink(rig: any, part: MeshPart, lip: MeshPart, lipInInk: CFrame, meshes: any): any
+	local mesh, mouth = meshes.ink :: EditableMesh, meshes.lip :: EditableMesh
 	local positions = {}
 	local inkScale = part.Size / part.MeshSize
 	local lipScale = lip.Size / lip.MeshSize
@@ -244,8 +269,8 @@ function Surface.ink(rig: any, part: MeshPart, lip: MeshPart, lipInInk: CFrame):
 		local p = mouth:GetPosition(id)
 		table.insert(lipPoints, { id = id, rest = p, thin = p })
 	end
-	local result = skin(rig, part, mesh, points)
-	result.lip = skin(rig, lip, mouth, lipPoints)
+	local result = skin(rig, part, mesh, points, meshes.inkSurface)
+	result.lip = skin(rig, lip, mouth, lipPoints, meshes.lipSurface)
 	return result
 end
 

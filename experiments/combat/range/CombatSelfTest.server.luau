@@ -129,7 +129,7 @@ check(
 	"impossible full-charge target is explicit"
 )
 local nearReach =
-	Combat.launchDirection(MUZZLE, MUZZLE + Vector3.new(110, 0, 0), floppy, 1 / 3, 0.86)
+	Combat.launchDirection(MUZZLE, MUZZLE + Vector3.new(300, 0, 0), floppy, 1 / 3, 0.86)
 check(
 	nearReach.Y > 0 and math.abs(nearReach.Magnitude - 1) < 1e-5,
 	"out-of-reach weak shot keeps a finite raised arc"

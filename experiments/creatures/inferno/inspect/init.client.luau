@@ -16,6 +16,7 @@ local firstModule = movement:FindFirstChild("FirstPerson")
 local First = if firstModule then (require :: any)(firstModule) else nil
 local states: { [Model]: any } = {}
 local pending: { [Model]: boolean } = {}
+local RETRY = 4 -- seconds before asking again when the mesh memory budget is full
 
 local function setup(model: Model)
 	if states[model] or pending[model] then
@@ -29,6 +30,7 @@ local function setup(model: Model)
 	pending[model] = true
 	task.spawn(function()
 		local state: any = nil
+		local short = false
 		local ok, problem = xpcall(function(): any
 			-- The model can replicate before its skeleton and chamber attributes.
 			local deadline = os.clock() + 15
@@ -47,6 +49,13 @@ local function setup(model: Model)
 			local rig = Rig.new(model, handle)
 			local lip = model:FindFirstChild("InfernoMouth", true) :: MeshPart
 			local ink = model:FindFirstChild("InfernoMouthInk", true) :: MeshPart
+			-- Nothing on the model changes until every mesh is held, so a full budget leaves
+			-- Burpy whole and still, and the next try starts clean.
+			local meshes = Surface.reserve(ink, lip, rig.body)
+			if not meshes then
+				short = true
+				return nil
+			end
 			state = {
 				rig = rig,
 				tool = tool,
@@ -55,9 +64,10 @@ local function setup(model: Model)
 				surface = lip:FindFirstChildOfClass("SurfaceAppearance"),
 				active = false,
 			}
-			state.ink = Surface.ink(rig, ink, lip, rig.parts[ink]:ToObjectSpace(rig.parts[lip]))
-			state.breath = Breath.new(rig)
-			state.fire = Surface.fire()
+			state.ink =
+				Surface.ink(rig, ink, lip, rig.parts[ink]:ToObjectSpace(rig.parts[lip]), meshes)
+			state.breath = Breath.new(rig, meshes.body)
+			state.fire = Surface.fire(meshes.fire)
 			state.fire.part.Parent = workspace.CurrentCamera
 			if not model:IsDescendantOf(game) then
 				error("model removed while preparing")
@@ -67,7 +77,13 @@ local function setup(model: Model)
 			return nil
 		end, debug.traceback)
 		pending[model] = nil
-		if not ok then
+		if short then
+			task.delay(RETRY, function()
+				if model:IsDescendantOf(game) then
+					setup(model)
+				end
+			end)
+		elseif not ok then
 			if state then
 				if state.fire then
 					state.fire.part:Destroy()
@@ -155,7 +171,7 @@ RunService:BindToRenderStep(
 						)
 				)
 				Surface.stepInk(state.ink, Flow.ease(action.mouth))
-				Breath.step(state.breath, action.inhale)
+				Breath.step(state.breath, action.inhale + 0.14 * action.resting)
 				if state.line then
 					state.line.Transparency = 0.15 + 0.85 * Flow.ease(action.mouth / 0.45)
 				end

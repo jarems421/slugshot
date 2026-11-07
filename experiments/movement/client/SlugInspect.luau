@@ -10,6 +10,9 @@ Inspect.ReturnCatch = Inspect.Lower + 0.32
 Inspect.InfernoLower = 4.12
 Inspect.InfernoDuration = Inspect.InfernoLower + Inspect.Duration - Inspect.Lower
 Inspect.ThirdToss = 1.6
+-- First person holds the gun's canister this much nearer than before, so the slug reads
+-- bigger (owner, 2026-11-07).
+Inspect.ViewNear = 0.7
 local TAU = 2 * math.pi
 local TOSS = Vector3.new(-0.35, 1.45, -0.55)
 -- The hand drops to wind up, flicks through its release height, drifts down, then
@@ -249,17 +252,19 @@ function Inspect.armFromGun(): CFrame
 	return CFrame.fromMatrix(Vector3.zero, right, up, right:Cross(up))
 end
 
-function Inspect.viewGun(t: number): CFrame
+-- chamber is the canister's offset in the gun's frame: the gun comes nearer along the line
+-- through it, so the slug keeps its place on screen and only grows.
+function Inspect.viewGun(t: number, chamber: Vector3?): CFrame
 	local carry = pulse(t, 0, Inspect.Catch + 0.16)
 	local rise = Inspect.handRise(t) + Inspect.holdLift(t)
 	-- The return blends into the live carry pose while the second toss is airborne.
 	local entry = 1 - smooth(t / 0.2)
 	local lowCatch = 0.24 * smooth((t - Inspect.Lower) / (Inspect.ReturnCatch - Inspect.Lower))
-	return CFrame.new(
-		0.25,
-		-0.68 - lowCatch - 0.1 * carry + rise - 2.8 * entry,
-		-2.8 - 0.55 * carry
-	) * CFrame.Angles(0.5 * rise, 0, 0) * Inspect.gunRotation(t)
+	local hold = Vector3.new(0.25, -0.68 - lowCatch - 0.1 * carry + rise, -2.8 - 0.55 * carry)
+	local rotation = CFrame.Angles(0.5 * rise, 0, 0) * Inspect.gunRotation(t)
+	local offset = rotation:VectorToWorldSpace(chamber or Vector3.zero)
+	return CFrame.new((hold + offset) * Inspect.ViewNear - offset - Vector3.yAxis * 2.8 * entry)
+		* rotation
 end
 
 -- Third-person shoulder pitch for the same hand curve on a rigid R6 arm.

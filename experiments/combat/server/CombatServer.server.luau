@@ -10,6 +10,9 @@ local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
+local CombatModule = ReplicatedStorage:WaitForChild("Combat")
+local Abilities = require(CombatModule:WaitForChild("Abilities"))
+local AbilityRuntime = require(CombatModule:WaitForChild("AbilityRuntime"))
 
 local remote = Instance.new("RemoteEvent")
 remote.Name = "SlugshotCombat"
@@ -195,6 +198,7 @@ type Shot = {
 	t: number,
 	started: number,
 	params: RaycastParams,
+	ability: Abilities.Kind?, -- armed with Q or E for this shot
 }
 type Shooter = {
 	ready: { [number]: number },
@@ -267,6 +271,9 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 			then
 				return
 			end
+			if state.selected ~= payload then
+				AbilityRuntime.cancel(player)
+			end
 			state.selected = payload
 			character:SetAttribute("SlugInspectAt", nil)
 			character:SetAttribute("SelectedSlugSlot", payload)
@@ -280,6 +287,14 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		then
 			state.inspected = os.clock()
 			character:SetAttribute("SlugInspectAt", workspace:GetServerTimeNow())
+		end
+		return
+	end
+	if kind == "Arm" then
+		if payload == false then
+			AbilityRuntime.arm(player, nil, nil)
+		elseif payload == "main" or payload == "passive" then
+			AbilityRuntime.arm(player, Combat.Loadout[stateOf(player).selected], payload)
 		end
 		return
 	end
@@ -377,8 +392,9 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 	end)
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
-	params.FilterDescendantsInstances = { character }
+	params.FilterDescendantsInstances = Abilities.passThrough(player, slugId)
 	local velocity = direction.Unit * Combat.speed(slug, charge)
+	local ability = AbilityRuntime.consume(player, slugId)
 	table.insert(shots, {
 		shooter = player,
 		id = id,
@@ -389,6 +405,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		t = 0,
 		started = now,
 		params = params,
+		ability = ability,
 	})
 	remote:FireAllClients("Shot", {
 		recoil = if payload.recoil == "Flip" then "Flip" else "Kick",
@@ -399,21 +416,59 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		slot = slot,
 		origin = origin,
 		velocity = velocity,
+		ability = ability,
 	})
 end)
+
+-- Damage from a slug or an ability's effect, with the hit reaction and the range's statistics.
+local function hurt(
+	shooter: Player?,
+	victim: Model,
+	humanoid: Humanoid,
+	damage: number,
+	direction: Vector3,
+	distance: number
+)
+	-- For the hit reaction (movement Presentation): which way the shot was travelling.
+	victim:SetAttribute("HitDirection", direction)
+	victim:SetAttribute("HitTime", workspace:GetServerTimeNow())
+	humanoid:TakeDamage(damage)
+	if shooter then
+		hitFeed:Fire(shooter, victim, damage, distance)
+	end
+end
+
+AbilityRuntime.init({
+	remote = remote,
+	damage = function(owner, victim, humanoid, amount, position, direction)
+		local root = owner.model and owner.model:FindFirstChild("HumanoidRootPart")
+		local distance = if root and root:IsA("BasePart")
+			then (position - root.Position).Magnitude
+			else 0
+		hurt(owner.player, victim, humanoid, amount, direction, distance)
+	end,
+})
 
 local function impact(shot: Shot, hit: RaycastResult)
 	local victim, humanoid = Combat.victim(hit.Instance)
 	local damage = 0
 	local distance = (hit.Position - shot.origin).Magnitude
+	local enemy: Model? = nil
 	if victim and humanoid and victim ~= shot.shooter.Character and humanoid.Health > 0 then
 		damage = shot.slug.Damage
-		-- For the hit reaction (movement Presentation): which way the shot was travelling.
-		victim:SetAttribute("HitDirection", shot.velocity.Unit)
-		victim:SetAttribute("HitTime", workspace:GetServerTimeNow())
-		humanoid:TakeDamage(damage)
-		hitFeed:Fire(shot.shooter, victim, damage, distance)
+		hurt(shot.shooter, victim, humanoid, damage, shot.velocity.Unit, distance)
+		enemy = victim
 	end
+	AbilityRuntime.impact({
+		owner = AbilityRuntime.ownerOf(shot.shooter),
+		slugId = shot.slugId,
+		ability = shot.ability,
+		position = hit.Position,
+		instance = hit.Instance,
+		victim = enemy,
+		direction = shot.velocity.Unit,
+		damage = shot.slug.Damage,
+	})
 	remote:FireAllClients("Impact", {
 		shooter = shot.shooter,
 		id = shot.id,

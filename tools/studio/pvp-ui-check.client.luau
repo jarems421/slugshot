@@ -20,8 +20,8 @@ for hit = 1, 3 do
 	task.wait(0.12)
 	shot(`hud-hit{hit}`, 2.5)
 end
--- A real key press, sent by the capture script.
-print("UICHECK key E")
+-- A real key press, sent by the capture script (F opens the inventory since 2026-11-06).
+print("UICHECK key F")
 task.wait(1.5)
 print(`UICHECK key result {player:GetAttribute("PvpMenu") or "nothing opened"}`)
 if player:GetAttribute("PvpMenu") ~= "Inventory" then

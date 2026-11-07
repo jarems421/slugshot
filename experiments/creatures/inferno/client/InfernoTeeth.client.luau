@@ -56,6 +56,11 @@ local function prepare(part: MeshPart)
 					Content.fromUri(id),
 					{ FixedSize = false }
 				) :: EditableMesh
+				-- Loading yields; a short-lived copy can be gone by now.
+				if not part:IsDescendantOf(workspace) then
+					mesh:Destroy()
+					return nil
+				end
 				local centre, half = mesh:GetCenter(), mesh:GetSize()
 				local scale = part.Size / part.MeshSize
 				local left, right = top[1].WorldPosition, top[9].WorldPosition
@@ -130,7 +135,7 @@ local function prepare(part: MeshPart)
 		end, debug.traceback)
 		pending[part] = nil
 		if not ok then
-			warn("Inferno tooth divider: " .. tostring(problem))
+			warn(`Inferno tooth divider on {part:GetFullName()}: {problem}`)
 		end
 	end)
 end
@@ -140,6 +145,11 @@ local function consider(item: Instance)
 		and item:IsDescendantOf(workspace)
 		and string.sub(item.Name, 1, 7) == "Inferno"
 		and string.sub(item.Name, -9) == "MouthLine"
+		-- A shot is gone in a second and too small to show teeth; each one's meshes ran Roblox out of
+		-- EditableMesh memory, which broke the inspect (2026-11-07).
+		and not item:FindFirstAncestor("SlugShots")
+		-- The holstered copy on the hip is too small to show teeth too.
+		and not item:FindFirstAncestor("BlasterHolsterVisual")
 	then
 		prepare(item)
 	end

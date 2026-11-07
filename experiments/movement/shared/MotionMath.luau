@@ -30,24 +30,9 @@ end
 
 type WallRunSettings = typeof(require(script.Parent.Config).Traversal.WallRun)
 
-function MotionMath.wallRunVerticalTarget(
-	speed: number,
-	jumpHeld: boolean,
-	releasedFor: number,
-	atTop: boolean,
-	settings: WallRunSettings
-): number
-	-- Stopping still enters the existing cling/drag; running plus Jump sustains climb.
-	if speed < settings.Cling.Below then
-		return -settings.Cling.Drag
-	end
-	if jumpHeld then
-		return if atTop then 0 else settings.Climb
-	end
-	return -math.min(
-		settings.Slide + settings.SlideGrow * math.max(0, releasedFor),
-		settings.SlideMax
-	)
+-- A wall run holds its height (owner, 2026-11-06: a straight line); stopping along the wall clings and drags down.
+function MotionMath.wallRunVerticalTarget(speed: number, settings: WallRunSettings): number
+	return if speed < settings.Cling.Below then -settings.Cling.Drag else 0
 end
 
 return table.freeze(MotionMath)

@@ -17,8 +17,15 @@ function Flow.sample(t: number): any
 	local mouth = ease((t - Flow.Open) / 0.72) * (1 - ease((t - Flow.End) / 0.32))
 	local exhale = ease((t - Flow.Start) / 0.25) * (1 - ease((t - Flow.End) / 0.30))
 	local inhale = ease((t - Flow.Inhale) / 0.82) * (1 - ease((t - Flow.Start) / 0.28))
-	local breathHop = 0.32 * math.sin(math.pi * math.clamp((t - Flow.Start) / 0.50, 0, 1)) ^ 2
+	local breathHop = 0.42 * math.sin(math.pi * math.clamp((t - Flow.Start) / 0.50, 0, 1)) ^ 2
 	local effort = exhale * (0.88 + 0.06 * math.sin((t - Flow.Start) * 8) ^ 2)
+	-- Owner, 2026-11-07: the breath and the strain must read bigger and more alive. A small
+	-- gathering dip before the inhale, and a shudder through the blow.
+	local gather = math.sin(math.pi * math.clamp((t - Flow.Inhale + 0.24) / 0.36, 0, 1)) ^ 2
+	local tremble = exhale
+		* (0.6 * math.sin((t - Flow.Start) * 41) + 0.4 * math.sin((t - Flow.Start) * 29 + 1.3))
+	-- A slow resting breath whenever he isn't drawing in or blowing.
+	local resting = (1 - inhale) * (1 - exhale) * (0.5 + 0.5 * math.sin(t * 2.6 - 1.2))
 	local elapsed = (t - Flow.Return) * 1.12 / 0.76
 	local press, lift, turn = 0, 0, 0
 	if elapsed >= 0 and elapsed < 0.22 then
@@ -48,6 +55,9 @@ function Flow.sample(t: number): any
 		inhale = inhale,
 		breathHop = breathHop,
 		effort = effort,
+		gather = gather,
+		tremble = tremble,
+		resting = resting,
 		press = press,
 		lift = lift,
 		turn = turn,

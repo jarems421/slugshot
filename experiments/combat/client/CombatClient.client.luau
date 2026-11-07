@@ -35,6 +35,10 @@ local readyAt = 0 -- predicted; the server owns cooldowns
 local cooldowns: { [number]: number } = {}
 local pending: { [number]: { slot: number, ready: number } } = {}
 local Inspect = (require :: any)(movement:WaitForChild("SlugInspect"))
+-- Inspecting from third person shows the act in first person, then goes back (owner,
+-- 2026-11-07). While the server has yet to start it, this is when to give up; once it has
+-- started, 0, so its end swaps back.
+local inspectView: number? = nil
 local nextId = 0
 local aimDirection = Vector3.new(0, 0, -1)
 local pointUntil = 0
@@ -156,6 +160,10 @@ local function beginInspect(): boolean
 		return false
 	end
 	remote:FireServer("Inspect")
+	if not FirstPerson.active() then
+		FirstPerson.setActive(true)
+		inspectView = os.clock() + 1
+	end
 	return true
 end
 Keybinds.on("inspect", function(pressed: boolean)
@@ -181,8 +189,9 @@ type AimFrame = {
 }
 -- Empty space is a sight zero, not an imaginary target beyond Floppy's reach.
 -- A rising camera can clear a dummy for one frame; solving toward 300 studs
--- then selected a maximum-range lob and sent that release over the target.
-local AIR_ZERO_DISTANCE = 60
+-- then selected a maximum-range lob and sent that release over the target. At 60 a third-person
+-- shot past it ran off up and to the side of what lay under the crosshair (owner, 2026-11-07).
+local AIR_ZERO_DISTANCE = 100
 local renderedAim: AimFrame? = nil
 RunService:BindToRenderStep(
 	"SlugshotRenderedAim",
@@ -655,6 +664,16 @@ RunService.RenderStepped:Connect(function()
 		or humanoid.Health <= 0
 	then
 		cancelInspect()
+	end
+	if inspectView then
+		if not FirstPerson.active() then
+			inspectView = nil -- the player picked a view during the act
+		elseif character and Inspect.elapsed(character) then
+			inspectView = 0
+		elseif now > inspectView then
+			FirstPerson.setActive(false)
+			inspectView = nil
+		end
 	end
 	Ads.step(spiralDt, action == nil or action == "Slide")
 	if Ads.wanted() and not charging then

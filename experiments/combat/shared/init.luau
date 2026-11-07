@@ -31,7 +31,8 @@ export type Slug = {
 	Blurb: string, -- one line for the inventory
 }
 
-Combat.WorldSlugSize = 2 -- owner, 2026-11-03: every slug outside the gun
+Combat.WorldSlugSize = 2 -- owner, 2026-11-03: slugs living in the lobby
+Combat.ShotSlugSize = 1.3 -- owner, 2026-11-07: fired and landed slugs, noticeable, not big (1.5 was too big)
 Combat.MaxHealth = 100
 Combat.Cooldown = 1.5 -- from the moment of firing, hit or miss
 -- Local creature recovery finishes naturally, independently of ammo readiness.
@@ -62,8 +63,11 @@ Combat.OriginGrace = 0.25 -- bounded wait for character physics to catch up with
 Combat.CooldownTolerance = 0.15
 Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 
--- Slot order; switching between slots comes with the second slug.
-Combat.Loadout = { "Floppy", "Inferno" }
+-- Slot order; switching between slots comes with the second slug. Places that set the workspace attribute
+-- SlugshotAbilityLab (the target range) also carry slugs whose abilities are being built.
+Combat.Loadout = if workspace:GetAttribute("SlugshotAbilityLab") == true
+	then { "Floppy", "Inferno", "Aquabeek" }
+	else { "Floppy", "Inferno" }
 Combat.SlotCount = 5 -- owner, 2026-11-02: five carried slugs
 Combat.SlugTotal = 13 -- owner, 2026-11-01: Floppy plus twelve planned models
 
@@ -73,12 +77,15 @@ Combat.Slugs = {
 	Floppy = {
 		Label = "Floppy",
 		Damage = 7,
-		Speed = { 85, 100, 115 },
-		Gravity = 70,
-		Drag = 0.35,
+		-- Owner, 2026-11-07: shots "shoot so high up into the air" and feel inaccurate. Was 85/100/115,
+		-- gravity 70, drag 0.35: a tap could not reach 75 studs, so it lobbed, and a full charge at 100
+		-- studs peaked 11 studs over the line. Now reach is 237/300/361 and the peak 2-4 at 100.
+		Speed = { 120, 145, 170 },
+		Gravity = 35,
+		Drag = 0.2,
 		Radius = 0.3,
 		Tumble = 2,
-		Size = Combat.WorldSlugSize,
+		Size = Combat.ShotSlugSize,
 		Transforms = false,
 		ExactFrom = 3,
 		Blurb = "A drowsy, soft little slug.",
@@ -93,12 +100,27 @@ Combat.Slugs = {
 		Drag = 0.05,
 		Radius = 0.3,
 		Tumble = 0,
-		Size = Combat.WorldSlugSize,
+		Size = Combat.ShotSlugSize,
 		Transforms = true,
 		Transformation = { Spin = 0.15, Flash = 0.05, Cruise = 0.4, Slowdown = 0.04 },
 		Expires = Combat.Cooldown, -- gone as the next shot is ready; about 310 studs at full charge
 		ExactFrom = 2,
 		Blurb = "A cocky little menace. Fast, hot and hits hard.",
+	},
+	-- Placeholder flight for building Crashwave and Mistbank (docs/slugs/ability-specs.md); no model yet, so it
+	-- draws the stand-in and does not transform.
+	Aquabeek = {
+		Label = "Aquabeek",
+		Damage = 20,
+		Speed = { 200, 260, 320 },
+		Gravity = 30,
+		Drag = 0.1,
+		Radius = 0.3,
+		Tumble = 0,
+		Size = Combat.ShotSlugSize,
+		Transforms = false,
+		ExactFrom = 2,
+		Blurb = "Placeholder water slug. Q: Crashwave. E: Mistbank.",
 	},
 } :: { [string]: Slug }
 

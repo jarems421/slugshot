@@ -326,7 +326,9 @@ local floppyBaseFit = math.min(
 		* 0.9
 		/ (Vector2.new(SOURCE_SIZE.X, SOURCE_SIZE.Z).Magnitude + 0.2)
 )
-local floppyIncrease = loadedSizeIncrease
+-- The fit above allows for any turn in the glass, so he sat about 20% shorter than Inferno (0.21 against
+-- 0.27 studs) and looked smaller in the inspection (owner, 2026-11-07).
+local floppyIncrease = loadedSizeIncrease * 1.2
 local target = floppyBaseFit * floppyIncrease
 local shrink = target / current
 floppy:ScaleTo(floppy:GetScale() * shrink)
