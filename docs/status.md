@@ -22,6 +22,7 @@ Last reviewed 2026-11-04. The short, current truth: **replace lines here when th
 ## Open with the owner
 
 - **Lobby rounds 3 to 12** (in main and the game place): lit cavern, far side, plain mountain, revamped pit; owner's verdict, hand tests and phone cost pending. [Lobby hub](art/lobby-hub.md).
+- **Aquabeek look** (2026-11-12, branch `concept/aquabeek-prototypes`): prototype B (Gillbeak) base form reworked on Inferno's body with a sculpted face; transformed form not yet redrawn; owner verdict pending. [Record](slugs/catalog/aquabeek.md).
 - **Rammstone:** the passive's name, and rock cover's lifetime and height. [Spec](slugs/ability-specs.md#rammstone---confirmed-spec-2026-11-06).
 - **Ability system** (2026-11-06, in main): shared system plus Aquabeek built and checked in Studio; Q/E arming, Inventory on F, themed name tags. Movement v7.40: straight wall runs with a hop up, smoother kicks; owner feel pending. [Built so far](slugs/ability-specs.md#built-so-far---2026-11-06).
 - **Inspection and shot size** (2026-11-07, in main): R in third person shows the act in first person, with the canister held nearer so the slug reads about 1.4 times bigger; Inferno's flame inspection now in the game place; fired slugs 1.3 studs, lobby slugs stay 2. Owner verdict pending. [Inspect note](loadout-controls.md#current-first-person-inspect-view-2026-11-07).
