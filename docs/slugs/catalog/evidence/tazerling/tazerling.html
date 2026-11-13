@@ -1,0 +1,1046 @@
+<title>Tazerling</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one large turntable stage with view controls; design notes beside it, stacking on phones. */
+:root {
+  --bg: #e6e8f0;
+  --paper: #f4f5f9;
+  --ink: #1b1f30;
+  --muted: #5a6078;
+  --rule: #cdd1de;
+  --accent: #3048c0;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12141d; --paper: #1a1d2a; --ink: #e6e8f2; --muted: #9ca2bb; --rule: #2e3346; --accent: #ffd23f; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12141d; --paper: #1a1d2a; --ink: #e6e8f2; --muted: #9ca2bb; --rule: #2e3346; --accent: #ffd23f; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(36px, 6vw, 56px); line-height: 1; margin: 6px 0 0; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 0; }
+p { margin: 0; }
+.lede { max-width: 62ch; color: var(--muted); margin-top: 10px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: grid; gap: 12px; min-width: 0; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden; border: 1px solid var(--rule); background: #10121c; touch-action: none; cursor: grab; }
+.canvas-box:active { cursor: grabbing; }
+.canvas-box img, .canvas-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #e6e8f2; background: rgba(16,18,28,.7); padding: 3px 8px; border-radius: 6px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font-family: var(--mono); font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.notes { display: grid; gap: 18px; min-width: 0; }
+dl { margin: 0; display: grid; gap: 12px; }
+dt { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; }
+.pick { display: grid; gap: 6px; }
+.pick-label { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.caveat { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+body.render { padding: 0; background: #000; }
+body.render .wrap { display: none; }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Slugshot · electric slug · base form · concept for review</div>
+    <h1>Tazerling</h1>
+    <p class="lede">The electric slug on Inferno's body, with glowing lightning eyes and a sculpted grin. Short, soft feelers that crackle with electricity.</p>
+  </div>
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" id="box">
+        <img id="still" alt="Rendered turntable of the Tazerling concept" draggable="false">
+        <div class="hint" id="hint">Drag to turn</div>
+      </div>
+      <div class="pick" hidden>
+        <span class="pick-label" id="ant-label">Antennae</span>
+        <div class="controls" role="group" aria-labelledby="ant-label"><button data-ant="4" aria-pressed="true">Feelers</button></div>
+      </div>
+      <div class="pick" hidden>
+        <span class="pick-label" id="mouth-label">Mouth</span>
+        <div class="controls" role="group" aria-labelledby="mouth-label"><button data-mouth="2" aria-pressed="true">Grin</button></div>
+      </div>
+      <div class="pick">
+        <span class="pick-label" id="view-label">View</span>
+        <div class="controls" role="group" aria-labelledby="view-label">
+          <button data-frame="0">Front</button>
+          <button data-frame="2">Three-quarter</button>
+          <button data-frame="4">Side</button>
+          <button data-frame="8">Back</button>
+          <button data-frame="close">Face close-up</button>
+          <button id="live" aria-pressed="false">Live 3D</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>Antennae and mouth</h2>
+      <dl data-ant-note="4"><div><dt>Antennae · Feelers</dt><dd>Short, soft feelers in Tazerling's own blue, slim all the way with rounded ends rather than horn points. They bend and whip along their length as he moves (Live 3D). The tips themselves glow electric yellow, white-hot at the very end, and small yellow sparks crawl up each feeler toward the tip, leaping off the skin and back.</dd></div></dl>
+      <dl data-mouth-note="2"><div><dt>Mouth · Grin</dt><dd>The open lopsided grin, about 18% wider and deeper than before, sculpted like Aquabeek's: rolled lips, dimples, a row of top teeth with a fang toward each corner, and a tongue.</dd></div></dl>
+      <h2>The rest of the design</h2>
+      <dl><div><dt>Eyes</dt><dd>Set into the head like Aquabeek's, never bulging, with no lid, set wide apart: sharp, angled almonds whose outer corners sweep up to a point, the top edge a straight line sloping toward the nose. No pupils: each eye burns electric blue, brightest in the middle, with a pale cyan core and faint crackling veins. A glowing gold line runs along the top edge, blue light spills onto the skin, and every couple of seconds a clean spark shoots from an outer corner and fades (Live 3D shows them firing).</dd></div><div><dt>Body</dt><dd>Inferno's body plan: upright, a slight forward lean, no arms or feet, pooling onto the floor in uneven lobes, and a short, stubby tail with a sharp yellow spike standing up from its very end, white-hot at the point.</dd></div><div><dt>Head</dt><dd>A broad head shaped like Aquabeek's: a wide dome with a rounded crown on a slimmer neck, and a slim muzzle tucked under the eyes so nothing bulges out as cheeks.</dd></div><div><dt>Back</dt><dd>Three sharp lightning bolts bulging out of the skin down the spine, biggest at the back of the head: electric yellow, white-hot along their raised middle, with a thin ink edge, on a midnight-indigo back.</dd></div><div><dt>Belly</dt><dd>Pale ice blue, following the body's curve, stopping well below the mouth and widening into the base, with zigzag lightning edges, a warm hint of yellow down the middle, and stacked pale-yellow chevrons pointing down it like a charge meter.</dd></div><div><dt>Familiar from the original</dt><dd>The royal-blue body and pale belly, yellow lightning on the head and a toothy grin.</dd></div><div><dt>Its own</dt><dd>Inferno's body with a round head, glowing lightning eyes, crackling feelers, raised lightning bolts down the back, a chevron charge-meter belly, a spiked tail, and no buck-tooth gap or arms.</dd></div></dl>
+      <p class="caveat">A concept render, not the game model. Like Inferno, the agreed version gets rebuilt in Blender from this same maths. Sparks and glow will use Roblox's own beams and emissive surfaces in game. The transformed form follows once the base form is agreed.</p>
+    </div>
+  </div>
+</div>
+
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes;
+uniform float uT;
+uniform vec3 uRo, uRight, uUp, uFwd;
+
+const vec3 LKEY = vec3(-0.56, 0.68, 0.46);
+const vec3 LRIM = vec3(0.55, 0.45, -0.70);
+
+// Palette, linear. Royal blue body, midnight-indigo back, pale ice belly, electric yellow accents.
+const vec3 BODYC  = vec3(0.030, 0.075, 0.600);  // #344FCA royal blue
+const vec3 BACKC  = vec3(0.012, 0.020, 0.210);  // #1D277C midnight indigo
+const vec3 BELLYC = vec3(0.470, 0.600, 0.920);  // #B6CBF5 pale ice blue
+const vec3 BUTTER = vec3(0.960, 0.800, 0.300);  // pale butter yellow for the belly chevrons
+const vec3 VOLT   = vec3(1.000, 0.640, 0.030);  // #FFD232 electric yellow
+const vec3 HOT    = vec3(1.000, 0.930, 0.700);  // white-hot
+const vec3 INK    = vec3(0.006, 0.008, 0.030);  // deep indigo ink
+const vec3 MOUTHC = vec3(0.050, 0.010, 0.040);
+const vec3 TONGUE = vec3(0.520, 0.090, 0.160);
+const vec3 TEETHC = vec3(0.930, 0.940, 0.900);
+
+float hash1(float n) { return fract(sin(n)*43758.5453); }
+// An electric flicker: steps rather than a smooth pulse.
+float crackle() { return 0.78 + 0.22*hash1(floor(uT*12.0)*1.37); }
+
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+float sdEll(vec3 p, vec3 r) { float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/k1; }
+float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float seg2(vec2 p, vec2 a, vec2 b, float ra, float rb) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float tri(float x) { return abs(fract(x) - 0.5)*2.0; }   // 1 at whole numbers, 0 halfway
+// One edge of a polygon's signed distance (iq's method): nearest distance and inside/outside parity.
+void polyEdge(vec2 p, vec2 a, vec2 b, inout float d, inout float s) {
+  vec2 e = b - a, w = p - a;
+  vec2 q = w - e*clamp(dot(w, e)/dot(e, e), 0.0, 1.0);
+  d = min(d, dot(q, q));
+  bvec3 c = bvec3(p.y >= a.y, p.y < b.y, e.x*w.y > e.y*w.x);
+  if (all(c) || all(not(c))) s = -s;
+}
+// A classic sharp lightning bolt, about one unit tall, pointing down: slanted top, a notch on each
+// side, and a needle point at the bottom.
+float boltShape(vec2 p) {
+  float d = 1e9, s = 1.0;
+  vec2 A = vec2(-0.08, 0.44), B = vec2(0.28, 0.54), C = vec2(0.05, 0.10), D = vec2(0.24, 0.12);
+  vec2 E = vec2(-0.18, -0.52), F = vec2(-0.02, -0.04), G = vec2(-0.22, -0.06);
+  polyEdge(p, A, B, d, s); polyEdge(p, B, C, d, s); polyEdge(p, C, D, d, s); polyEdge(p, D, E, d, s);
+  polyEdge(p, E, F, d, s); polyEdge(p, F, G, d, s); polyEdge(p, G, A, d, s);
+  return s*sqrt(d);
+}
+// The back bolts in coordinates wrapped round the body: x is distance round from the spine.
+float backBolts(vec3 p) {
+  vec2 q = vec2(atan(p.x, -p.z)*0.46, p.y);
+  const vec2 K = vec2(1.30, 1.0);   // bolts drawn a bit broader than the unit shape
+  float d = boltShape((q - vec2(0.0, 1.68))/(0.62*K))*0.62;
+  d = min(d, boltShape((q - vec2(0.0, 1.03))/(0.50*K))*0.50);
+  d = min(d, boltShape((q - vec2(0.0, 0.51))/(0.37*K))*0.37);
+  return d;
+}
+const float BOLT_H = 0.040;   // how far the back bolts bulge out of the skin
+
+// ---------------------------------------------------------------- body
+const float LEAN = 0.14;
+// A springy idle with a faint buzz in it.
+vec3 deform(vec3 p) {
+  float b = sin(uT*2.4);
+  float up = smoothstep(0.0, 2.0, p.y);
+  p.y /= 1.0 + 0.016*b*up;
+  p.xz /= 1.0 - 0.012*b*(1.0 - 0.6*up);
+  p.x -= 0.020*sin(uT*1.6)*smoothstep(0.8, 1.9, p.y);
+  p.z -= LEAN*smoothstep(0.3, 1.9, p.y);
+  return p;
+}
+float lobes(float th, float phase) { return 1.0 + 0.06*sin(3.0*th + 0.7 + phase) + 0.04*sin(5.0*th - 1.3 + phase*0.6); }
+
+// ---------------------------------------------------------------- eyes
+// Set into the head like Aquabeek's, never bulging, but with no lid: the glowing eye runs right
+// up to its gold edge. The top edge is a straight line sloping down toward the nose: a glare.
+const vec3 EYE_C = vec3(0.370, 1.680, 0.530);
+const float EW = 0.270; const float ETOP = 0.155; const float EBOT = 0.095; const float ETILT = 0.06;
+const vec3 LID = vec3(0.44, 0.15, 0.22);   // a nearly straight lid edge that slopes down toward the nose
+vec3 eyeCentre(float s) { return vec3(s*EYE_C.x, EYE_C.y, EYE_C.z); }
+vec3 eyeAxis(float s) { return normalize(vec3(s*0.48, 0.03, 1.0)); }
+vec3 eyeLocal(vec3 p, float s) {
+  vec3 ax = eyeAxis(s);
+  vec3 u = normalize(cross(vec3(0.0, 1.0, 0.0), ax));
+  vec3 w = cross(ax, u);
+  vec3 q = p - eyeCentre(s);
+  // x runs from the inner corner (-) to the outer corner (+) on both eyes.
+  return vec3(s*dot(q, u), dot(q, w), dot(q, ax));
+}
+const float CURL = 0.060;
+float eyeMid(float x) { float o = max(x, 0.0)/EW; return ETILT*x + CURL*o*o; }
+float eyeOpen(float x) { float u = x/EW; return pow(max(0.0, 1.0 - u*u), x > 0.0 ? 0.85 : 0.60); }
+float eyeDist(vec3 p, float s) {
+  vec3 l = eyeLocal(p, s);
+  float a = eyeOpen(l.x);
+  float y = l.y - eyeMid(l.x);
+  return max(max(y - ETOP*a, -EBOT*a - y), (abs(l.x/EW) - 1.0)*EW);
+}
+float lidLine(float x) { return eyeMid(x) + ETOP*(LID.x + LID.y*eyeOpen(x)) + LID.z*x; }
+const float LID_W = 0.042;
+float lidOpen(vec3 l, float ed) { return max(ed, l.y - lidLine(l.x)); }
+// Height of the eye above the head surface: the eye sits a touch below the skin with a crisp
+// edge and a gentle dome, and the brow skin above it is left plain (no lid).
+float eyeRelief(vec3 l, float ed) {
+  float open = lidOpen(l, ed);
+  float dome = 0.008*smoothstep(0.0, -0.07, open) - 0.010;
+  return dome*(1.0 - smoothstep(-0.004, 0.002, open));
+}
+
+// ---------------------------------------------------------------- mouth
+// Three mouths to compare, chosen by MOUTHV, all sculpted like Aquabeek's: lips that roll,
+// cheeks the expression pushes up, a hollow above the chin.
+#ifndef MOUTHV
+#define MOUTHV 2
+#endif
+#if MOUTHV == 0
+const vec2 MOUTH = vec2(0.020, 1.300); const float MW = 0.205; const float MDEEP = 0.0; const float MTILT = 0.14;
+#elif MOUTHV == 1
+const vec2 MOUTH = vec2(0.010, 1.300); const float MW = 0.235; const float MDEEP = 0.092; const float MTILT = 0.04;
+#else
+const vec2 MOUTH = vec2(0.020, 1.292); const float MW = 0.300; const float MDEEP = 0.128; const float MTILT = 0.10;
+#endif
+const float TH = 0.052;
+vec2 mouthCoord(vec3 p) { float x = p.x - MOUTH.x; return vec2(x, p.y - MOUTH.y - MTILT*x); }
+float mouthTop(float x) { return 0.50*x*x; }
+float mouthBot(float x) { float k = (MDEEP + 0.50*MW*MW)/(MW*MW); return -MDEEP + k*x*x*(0.55 + 0.45*x*x/(MW*MW)); }
+float mouthDist(vec3 p) { vec2 g = mouthCoord(p); return max(max(g.y - mouthTop(g.x), mouthBot(g.x) - g.y), abs(g.x) - MW); }
+float mouthBack(float x) { return 0.490 - 0.95*x*x; }
+// The smirk's fang: a small point under the upper lip near the high corner.
+float fangMask(vec2 g) {
+  float fx = (g.x - MW*0.52)/0.020;
+  return (1.0 - smoothstep(0.85, 1.0, abs(fx) + max(mouthTop(g.x) - g.y, 0.0)/0.038))*step(g.y, mouthTop(g.x) + 0.002);
+}
+// Height above the surface (negative = carved in).
+float mouthRelief(vec3 p) {
+  vec2 g = mouthCoord(p);
+  float h = 0.0;
+#if MOUTHV == 0
+  // Lips pressed into one deep crease rising to the right, a fuller lower lip, the high corner
+  // pushing a cheek up, and a fang peeking from under the lip.
+  float env = 1.0 - smoothstep(MW - 0.03, MW + 0.02, abs(g.x));
+  float dy = g.y - mouthTop(g.x);
+  h -= 0.026*exp(-dy*dy/0.00008)*env;
+  h += 0.010*exp(-pow((dy - 0.026)/0.014, 2.0))*env;
+  h += 0.017*exp(-pow((dy + 0.032)/0.018, 2.0))*env;
+  vec2 ch = g - vec2(MW + 0.040, mouthTop(MW) + 0.050);
+  h += 0.032*exp(-dot(ch, ch)/0.006);
+  vec2 dh = g - vec2(MW + 0.006, mouthTop(MW) + 0.006), dl = g - vec2(-MW - 0.006, mouthTop(MW));
+  h -= 0.016*exp(-dot(dh, dh)/0.0005) + 0.008*exp(-dot(dl, dl)/0.0004);
+  h += 0.006*fangMask(g);
+#elif MOUTHV == 1
+  // A wide recess filled by clenched teeth, lips rolled back round it, both cheeks pushed up.
+  float md = mouthDist(p);
+  h -= 0.020*(1.0 - smoothstep(-0.012, 0.004, md));
+  float roll = exp(-pow((max(md, 0.0) - 0.012)/0.012, 2.0));
+  h += 0.018*roll*(1.0 - smoothstep(MW - 0.02, MW + 0.03, abs(g.x)));
+  vec2 ch = g - vec2(MW + 0.050, mouthTop(MW) + 0.050), cl = g - vec2(-MW - 0.050, mouthTop(MW) + 0.050);
+  h += 0.024*(exp(-dot(ch, ch)/0.006) + exp(-dot(cl, cl)/0.006));
+#else
+  // Lip rolls round the hollow and dimples at the corners; no cheek bumps.
+  float md = mouthDist(p);
+  float upper = step(0.0, g.y - mouthTop(g.x)*0.5 + 0.02);
+  float roll = exp(-pow((max(md, 0.0) - 0.012)/0.012, 2.0));
+  h += roll*mix(0.018, 0.010, upper)*(1.0 - smoothstep(MW - 0.02, MW + 0.03, abs(g.x)));
+  vec2 dh = g - vec2(MW + 0.012, mouthTop(MW) + 0.010), dl = g - vec2(-MW - 0.010, mouthTop(MW) + 0.004);
+  h -= 0.014*exp(-dot(dh, dh)/0.0006) + 0.008*exp(-dot(dl, dl)/0.0005);
+#endif
+  // A soft hollow between the lower lip and the chin.
+  vec2 cn = (g - vec2(0.0, -MDEEP - 0.075))/vec2(0.14, 0.024);
+  h -= 0.007*exp(-dot(cn, cn));
+  return h;
+}
+
+// ---------------------------------------------------------------- antennae
+// Four designs to compare, chosen by ANT. Each is built for the right side (the left mirrors it)
+// and returns (distance, t), t running from 0 at the root to 1 at the tip for colouring.
+#ifndef ANT
+#define ANT 0
+#endif
+vec2 segT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return vec2(length(pa - ba*h) - mix(ra, rb, h), h);
+}
+#if ANT == 0
+// Taser: a horn swept back like Inferno's that splits into two straight electrode prongs.
+const vec3 A0 = vec3(0.30, 1.98, 0.00); const vec3 A1 = vec3(0.47, 2.36, -0.10); const vec3 A2 = vec3(0.62, 2.54, -0.34);
+const vec3 PA = vec3(0.94, 2.80, -0.50); const vec3 PB = vec3(0.86, 2.50, -0.72);
+vec2 antDist(vec3 p, float s) {
+  vec3 q = vec3(p.x*s, p.y, p.z);
+  vec2 a = segT(q, A0, A1, 0.115, 0.078);
+  vec2 b = segT(q, A1, A2, 0.078, 0.050);
+  float d = smin(a.x, b.x, 0.04);
+  float t = a.x < b.x ? a.y*0.35 : 0.35 + b.y*0.35;
+  vec3 F = A2 - (A2 - A1)*0.08;
+  vec2 c = segT(q, F, PA, 0.040, 0.026);
+  vec2 e = segT(q, F, PB, 0.040, 0.026);
+  float pr = min(c.x, e.x);
+  if (pr < d) t = 0.70 + 0.30*(c.x < e.x ? c.y : e.y);
+  return vec2(smin(d, pr, 0.025), t);
+}
+vec3 antTip(float s, float k) { vec3 T = k < 0.5 ? PA : PB; return vec3(s*T.x, T.y, T.z); }
+#elif ANT == 1
+// Frozen lightning: thin rigid horns of sharp angled segments, like a strike frozen in place.
+const vec3 J0 = vec3(0.30, 1.98, 0.00); const vec3 J1 = vec3(0.45, 2.36, -0.08); const vec3 J2 = vec3(0.60, 2.40, -0.24);
+const vec3 J3 = vec3(0.70, 2.68, -0.40); const vec3 J4 = vec3(0.86, 2.70, -0.56); const vec3 J5 = vec3(0.98, 2.98, -0.74);
+vec2 antDist(vec3 p, float s) {
+  vec3 q = vec3(p.x*s, p.y, p.z);
+  vec2 r = segT(q, J0, J1, 0.100, 0.060);
+  float d = r.x, t = r.y*0.2;
+  vec2 c;
+  c = segT(q, J1, J2, 0.060, 0.050); if (c.x < d) t = 0.2 + c.y*0.2; d = smin(d, c.x, 0.010);
+  c = segT(q, J2, J3, 0.050, 0.040); if (c.x < d) t = 0.4 + c.y*0.2; d = smin(d, c.x, 0.010);
+  c = segT(q, J3, J4, 0.040, 0.030); if (c.x < d) t = 0.6 + c.y*0.2; d = smin(d, c.x, 0.010);
+  c = segT(q, J4, J5, 0.030, 0.004); if (c.x < d) t = 0.8 + c.y*0.2; d = smin(d, c.x, 0.010);
+  return vec2(d, t);
+}
+vec3 antTip(float s, float k) { return vec3(s*J5.x, J5.y, J5.z); }
+#elif ANT == 2
+// Lightning crest: one flat jagged fin over the crown with three peaks raked back. No side antennae.
+vec2 antDist(vec3 p, float s) {
+  float z0 = 0.30, z1 = -0.60;
+  float u = clamp((z0 - p.z)/(z0 - z1), 0.0, 1.0);
+  float f = fract(u*3.0);
+  float k = floor(u*3.0);
+  float H = 0.50 + 0.12*(1.0 - abs(k - 1.0)) - 0.10*step(2.0, k);
+  float top = 2.08 + H*pow(f, 0.9)*(1.0 - smoothstep(0.96, 1.0, f));
+  float d2 = max(max(p.y - top, 1.95 - p.y), max(p.z - z0, z1 - p.z))*0.35;
+  float th = mix(0.075, 0.016, clamp((p.y - 2.12)/0.60, 0.0, 1.0));
+  return vec2(max(d2, abs(p.x) - th), clamp((p.y - 2.10)/0.62, 0.0, 1.0));
+}
+vec3 antTip(float s, float k) { return vec3(0.0, 2.08 + 0.62*0.99, 0.30 - 0.90*(1.99/3.0)); }
+#elif ANT >= 4
+// Soft, body-coloured antennae on Inferno's own ear-antenna shape: broad at the root, narrowing
+// and drooping back, bending and bobbing along their length. Each ends in a small spark orb.
+// ANT 4 adds three raised glowing coil rings; ANT 5 lets the last stretch glow as if charged.
+vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
+  vec3 a = B - A, b = A - 2.0*B + C, c = a*2.0, d = A - pos;
+  float kk = 1.0/dot(b, b);
+  float kx = kk*dot(a, b);
+  float ky = kk*(2.0*dot(a, a) + dot(d, b))/3.0;
+  float kz = kk*dot(d, a);
+  vec2 res;
+  float p = ky - kx*kx, p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
+  if (h >= 0.0) {
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q)/2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
+    vec3 e = d + (c + b*t)*t;
+    res = vec2(dot(e, e), t);
+  } else {
+    float z = sqrt(-p);
+    float v = acos(q/(p*z*2.0))/3.0;
+    float m = cos(v), n = sin(v)*1.732050808;
+    vec3 t = clamp(vec3(m + m, -n - m, n - m)*z - kx, 0.0, 1.0);
+    vec3 e1 = d + (c + b*t.x)*t.x;
+    vec3 e2 = d + (c + b*t.y)*t.y;
+    res = vec2(dot(e1, e1), t.x);
+    float dis = dot(e2, e2);
+    if (dis < res.x) res = vec2(dis, t.y);
+  }
+  res.x = sqrt(res.x);
+  return res;
+}
+void antenna(float s, out vec3 A, out vec3 B, out vec3 C) {
+  // Short, soft feelers that bend and whip along their length: the middle lags, the tip swings most.
+  float t = uT*2.2 + s*1.3;
+  float mid = sin(t - 0.5)*0.035;
+  float end = sin(t - 1.3)*0.085 + 0.030*sin(t*2.7 + s);
+  A = vec3(s*0.30, 2.06, 0.02);
+  B = vec3(s*(0.40 + mid*0.5), 2.46 + mid, -0.06);
+  C = vec3(s*(0.62 + end*0.5), 2.44 + end, -0.40 + end*0.5);
+}
+const float EAR_FLAT = 1.25;  // only slightly flattened: a soft feeler, not a blade
+vec3 antPoint(float s, float u) { vec3 A, B, C; antenna(s, A, B, C); return mix(mix(A, B, u), mix(B, C, u), u); }
+vec2 antDist(vec3 p, float s) {
+  vec3 A, B, C; antenna(s, A, B, C);
+  vec3 k = vec3(1.0, 1.0, EAR_FLAT);
+  vec2 bz = sdBezier(p*k, A*k, B*k, C*k);
+  // Slim all the way, with a soft rounded end rather than a horn's point.
+  float r = mix(0.095, 0.042, pow(bz.y, 0.9));
+  return vec2((bz.x - r)/EAR_FLAT, bz.y);
+}
+vec3 antTip(float s, float k) { vec3 A, B, C; antenna(s, A, B, C); return C; }
+#else
+// Static spikes: three short, sharp, flat spikes on each side, fanning back like charged hair.
+vec2 spike(vec3 q, vec3 root, vec3 dir, float len, float w) {
+  vec3 k = vec3(1.0, 1.0, 1.9);
+  vec2 r = segT(q*k, root*k, (root + normalize(dir)*len)*k, w, 0.004);
+  return vec2(r.x/1.9, r.y);
+}
+vec2 antDist(vec3 p, float s) {
+  vec3 q = vec3(p.x*s, p.y, p.z);
+  vec2 a = spike(q, vec3(0.20, 2.04, 0.04), vec3(0.40, 0.88, -0.30), 0.68, 0.085);
+  vec2 b = spike(q, vec3(0.36, 1.98, -0.04), vec3(0.72, 0.62, -0.38), 0.56, 0.080);
+  vec2 c = spike(q, vec3(0.48, 1.86, -0.12), vec3(0.82, 0.30, -0.55), 0.44, 0.070);
+  float d = smin(smin(a.x, b.x, 0.03), c.x, 0.03);
+  float t = a.x < b.x ? (a.x < c.x ? a.y : c.y) : (b.x < c.x ? b.y : c.y);
+  return vec2(d, t);
+}
+vec3 antTip(float s, float k) { vec3 T = vec3(0.20, 2.04, 0.04) + normalize(vec3(0.40, 0.88, -0.30))*0.68; return vec3(s*T.x, T.y, T.z); }
+#endif
+// A zigzag lightning ridge down the back: four peaks, sharp points, V valleys.
+float ridge(vec3 p) {
+  float y0 = 0.34, y1 = 1.66;
+  float t = clamp((p.y - y0)/(y1 - y0), 0.0, 1.0);
+  float zb = -0.34 - 0.05*t;
+  float env = pow(sin(3.14159*pow(t, 0.85)), 0.6);
+  float hh = 0.26*env*(0.22 + 0.78*tri(t*4.0 + 0.5));
+  float zo = zb - 0.06 - hh;
+  float d2 = max(max(zo - p.z, p.z - zb), max(y0 - p.y, p.y - y1));
+  float th = mix(0.048, 0.010, clamp((zb - p.z)/(0.06 + hh + 0.001), 0.0, 1.0));
+  return max(d2*0.55, abs(p.x) - th);
+}
+
+// Skin without the mouth carved: used for the teeth, which sit just inside it.
+// The old back ridge (ridge()) is no longer used; the back is now a painted lightning strike.
+float body(vec3 p) {
+  vec3 q = p - vec3(0.0, 0.0, -0.02);
+  float th = atan(q.z, q.x);
+  float k = lobes(th, 0.0);
+  // Inferno's accepted body stack: pooled lobed base, body, neck, then head, muzzle and crown.
+  float d = sdEll(vec3(q.x/k, q.y - 0.24, q.z/k), vec3(0.56, 0.30, 0.58))*min(k, 1.0);
+  d = smin(d, sdEll(p - vec3(0.0, 0.80, 0.02), vec3(0.45, 0.70, 0.42)), 0.42);
+  d = smin(d, sdEll(p - vec3(0.0, 1.22, 0.02), vec3(0.48, 0.46, 0.44)), 0.26);
+  float k2 = lobes(th, 1.4);
+  d = smin(d, sdEll(vec3(q.x/k2, q.y - 0.02, q.z/k2), vec3(0.67, 0.06, 0.69))*min(k2, 1.0), 0.28);
+  // A broad head like Aquabeek's: a wide dome, a rounded crown so the top domes rather than
+  // sitting flat, and a slim muzzle under the eyes that stays inside the head's outline (no cheeks).
+  d = smin(d, sdEll(p - vec3(0.0, 1.68, 0.05), vec3(0.72, 0.47, 0.56)), 0.24);
+  d = smin(d, sdEll(p - vec3(0.0, 1.88, 0.00), vec3(0.50, 0.36, 0.46)), 0.20);
+  d = smin(d, sdEll(p - vec3(0.0, 1.38, 0.18), vec3(0.44, 0.30, 0.42)), 0.28);
+  // Short, low tail with a sharp spike standing up from its very end (no longer than before).
+  d = smin(d, capT(p, vec3(0.0, 0.10, -0.44), vec3(0.0, 0.07, -0.70), 0.19, 0.065), 0.18);
+  d = smin(d, capT(p, vec3(0.0, 0.09, -0.69), vec3(0.0, 0.47, -0.82), 0.090, 0.004), 0.05);
+  if (p.z < 0.05 && p.y > 0.25 && p.y < 2.05) {
+    // Raised back bolts: a rounded bulge rising steeply from a crisp outline.
+    d -= BOLT_H*smoothstep(0.0, -0.045, backBolts(p));
+  }
+  d *= mix(1.0, 0.75, smoothstep(0.05, -0.05, p.z));   // steeper field on the back: march more carefully
+  if (p.y > 1.7) {
+    d = smin(d, antDist(p, -1.0).x, 0.06);
+#if ANT != 2
+    d = smin(d, antDist(p, 1.0).x, 0.06);
+#endif
+  }
+  if (p.z > 0.0 && abs(p.y - 1.68) < 0.40) {
+    for (int i = 0; i < 2; i++) {
+      float s = i == 0 ? -1.0 : 1.0;
+      vec3 l = eyeLocal(p, s);
+      d -= eyeRelief(l, eyeDist(p, s))*smoothstep(-0.30, -0.10, l.z);
+    }
+  }
+  return d;
+}
+
+// x = distance, y = part: 1 skin, 3 teeth.
+vec2 parts(vec3 p) {
+  float b = body(p);
+  float d = b;
+  bool nearMouth = p.z > 0.15 && abs(p.y - 1.27) < 0.24;
+  if (nearMouth) {
+    d -= mouthRelief(p);
+#if MOUTHV == 2
+    // The grin: a hollow cut straight into the muzzle.
+    vec2 g = mouthCoord(p);
+    d = smax(d, -max(mouthDist(p), mouthBack(g.x) - p.z), 0.014);
+#endif
+  }
+  d = smax(d, -p.y, 0.012);
+  vec2 res = vec2(d, 1.0);
+#if MOUTHV == 2
+  if (nearMouth) {
+    // One solid row of top teeth just behind the lip, with a short fang toward each corner.
+    vec2 g = mouthCoord(p);
+    float fang = 0.040*max(0.0, 1.0 - abs(abs(g.x) - 0.178)/0.030);
+    float band = max(g.y - (mouthTop(g.x) + 0.04), (mouthTop(g.x) - TH - fang) - g.y);
+    float teeth = max(max(band, abs(g.x) - (MW - 0.030)), b + 0.020);
+    teeth = max(teeth, mouthBack(g.x) + 0.02 - p.z);
+    if (teeth < res.x) res = vec2(teeth, 3.0);
+  }
+#endif
+  return res;
+}
+
+vec2 map(vec3 p) { return parts(deform(p)); }
+
+vec3 normalAt(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  float h = 0.0015;
+  return normalize(k.xyy*map(p + k.xyy*h).x + k.yyx*map(p + k.yyx*h).x + k.yxy*map(p + k.yxy*h).x + k.xxx*map(p + k.xxx*h).x);
+}
+float shadow(vec3 ro, vec3 rd) {
+  float res = 1.0, t = 0.03;
+  for (int i = 0; i < 24; i++) {
+    float h = map(ro + rd*t).x;
+    res = min(res, 9.0*h/t);
+    t += clamp(h*0.8, 0.02, 0.25);
+    if (res < 0.001 || t > 4.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+float ao(vec3 p, vec3 n) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 5; i++) {
+    float h = 0.03*float(i);
+    o += (h - map(p + n*h).x)*s; s *= 0.75;
+  }
+  return clamp(1.0 - 2.2*o, 0.0, 1.0);
+}
+vec3 sky(vec3 d) { return mix(vec3(0.020, 0.022, 0.045), vec3(0.12, 0.13, 0.22), smoothstep(-0.2, 0.9, d.y)); }
+
+// ---------------------------------------------------------------- colour
+// Eye: no pupil. It burns white-hot at the centre, fading to electric blue at the rim, with a
+// pale cyan core and faint crackling veins, like the owner's reference.
+const vec3 ARC = vec3(0.30, 0.80, 1.00);   // electric blue glow
+vec3 eyeShade(vec3 dp, float s, out vec3 glow) {
+  vec3 l = eyeLocal(dp, s);
+  float ed = eyeDist(dp, s);
+  vec2 q = l.xy - vec2(-0.010, eyeMid(-0.010) - 0.008);
+  // Distance in from the rim, 0 at the edge and 1 deep inside.
+  float inside = clamp(-ed/0.060, 0.0, 1.0);
+  float core = exp(-dot(q/vec2(0.085, 0.040), q/vec2(0.085, 0.040)));
+  vec3 c = mix(ARC*0.35, ARC*0.85, smoothstep(0.0, 0.6, inside));
+  c = mix(c, vec3(0.62, 0.92, 1.0), core);
+  // Faint crackling veins running out from the core.
+  float an = atan(q.y, q.x);
+  float sector = 6.2832/7.0;
+  float k = floor(an/sector + 0.5);
+  float jag = 0.18*(tri(length(q)*45.0 + k*0.37)*2.0 - 1.0);
+  float vd = abs(an - k*sector - 0.3*sin(k*2.1) - jag)*length(q);
+  float vein = (1.0 - smoothstep(0.003, 0.007, vd))*smoothstep(0.03, 0.06, length(q))*(1.0 - core);
+  c = mix(c, vec3(0.85, 0.97, 1.0), vein*0.7);
+  float fl = crackle();
+  glow = (ARC*0.30 + vec3(0.40, 0.65, 0.80)*core + ARC*vein*0.4)*fl;
+  // The lid casts a little shade over the top edge.
+  c *= 1.0 - 0.30*smoothstep(-0.04, 0.0, l.y - lidLine(l.x));
+  glow *= 1.0 - 0.40*smoothstep(-0.04, 0.0, l.y - lidLine(l.x));
+  return c;
+}
+
+vec3 skinAlbedo(vec3 dp, out vec3 glow) {
+  glow = vec3(0.0);
+  float fl = crackle();
+  float ax = abs(dp.x);
+  vec3 col = BODYC;
+  // Midnight-indigo back, fading round to the royal-blue front.
+  col = mix(col, BACKC, 0.75*smoothstep(-0.02, -0.34, dp.z));
+  // Pale belly following the body's curve, with zigzag lightning edges.
+  float ang = abs(atan(dp.x, dp.z));
+  float yb = clamp(dp.y, 0.0, 1.3);
+  float span = 0.40 + 0.42*pow(1.0 - smoothstep(0.05, 1.20, yb), 1.2) + 0.32*(tri(dp.y*2.5) - 0.5);
+  float top = 0.98 - 0.30*(ang/0.40)*(ang/0.40);
+  float bel = (1.0 - smoothstep(span - 0.012, span + 0.012, ang))*(1.0 - smoothstep(top - 0.03, top + 0.02, dp.y));
+  vec3 bc = mix(BELLYC, BUTTER, 0.22*(1.0 - smoothstep(0.0, 0.45, ang)));
+  float cv = (dp.y - 0.34*ang)*6.0;                 // stacked chevrons pointing down
+  float stripe = 1.0 - smoothstep(0.24, 0.36, abs(fract(cv) - 0.5)*2.0);
+  stripe *= smoothstep(0.30, 0.42, dp.y)*(1.0 - smoothstep(0.84, 0.94, dp.y))*(1.0 - smoothstep(span*0.55, span*0.92, ang));
+  bc = mix(bc, BUTTER, stripe*0.75);
+  col = mix(col, bc, bel);
+  glow += VOLT*stripe*bel*0.06*fl;
+  // Back bolts: electric yellow, white-hot along their raised middle, a thin ink edge at the base.
+  if (dp.z < 0.05 && dp.y > 0.25 && dp.y < 2.05) {
+    float bb = backBolts(dp);
+    float on = 1.0 - smoothstep(-0.002, 0.002, bb);
+    float ridge = 1.0 - smoothstep(-0.034, -0.016, bb);
+    float edge = (1.0 - smoothstep(0.002, 0.009, bb))*(1.0 - on);
+    col = mix(col, INK, edge*0.7);
+    col = mix(col, mix(VOLT, HOT, ridge*0.6), on);
+    glow += (VOLT*on*0.40 + HOT*ridge*0.25)*fl;
+  }
+  // The pooled base catches a lighter blue.
+  col = mix(col, mix(col, BELLYC, 0.45), (1.0 - smoothstep(0.02, 0.09, dp.y))*0.6*(1.0 - bel));
+  // Antennae: blue at the root, electric yellow, white-hot at the point.
+#if ANT >= 4
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    vec3 A, B, C; antenna(s, A, B, C);
+    vec3 k = vec3(1.0, 1.0, EAR_FLAT);
+    vec2 bz = sdBezier(dp*k, A*k, B*k, C*k);
+    float on = 1.0 - smoothstep(0.11, 0.16, bz.x);
+    float tip = on*smoothstep(0.62, 0.92, bz.y);
+    float hot = on*smoothstep(0.88, 1.0, bz.y);
+    col = mix(col, VOLT, tip);
+    col = mix(col, HOT, hot);
+    glow += (VOLT*tip*0.7 + HOT*hot*0.7)*fl;
+  }
+#else
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    vec2 b = antDist(dp, s);
+    float on = (1.0 - smoothstep(0.0, 0.02, b.x))*smoothstep(0.11, 0.125, b.y);
+    vec3 bc = mix(mix(VOLT*vec3(1.0, 0.80, 0.55), VOLT*vec3(1.0, 0.90, 0.65), smoothstep(0.15, 0.40, b.y)), HOT, smoothstep(0.86, 1.0, b.y));
+    col = mix(col, bc, on);
+    glow += mix(VOLT, HOT, b.y)*on*(0.25 + 0.9*pow(b.y, 3.0))*fl;
+  }
+#endif
+  // Tail spike: yellow from the base, white-hot at the point, with a thin ink edge at its root.
+  {
+    vec3 ta = vec3(0.0, 0.09, -0.69), tb = vec3(0.0, 0.47, -0.82);
+    vec3 pa = dp - ta, ba = tb - ta;
+    float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+    float r = length(pa - ba*h) - mix(0.090, 0.004, h);
+    float on = (1.0 - smoothstep(0.004, 0.018, r))*smoothstep(0.02, 0.10, h);
+    float edge = (1.0 - smoothstep(0.018, 0.030, r))*(1.0 - on)*smoothstep(0.0, 0.10, h);
+    col = mix(col, INK, edge*0.6);
+    col = mix(col, mix(VOLT, HOT, smoothstep(0.55, 0.95, h)), on);
+    glow += (VOLT*0.55 + HOT*0.5*smoothstep(0.7, 1.0, h))*on*fl;
+  }
+  if (dp.z > 0.1) {
+    // Form shadow round the eyes and under the jaw, tinted indigo rather than grey.
+    vec2 sk = (vec2(ax, dp.y) - eyeCentre(1.0).xy)/vec2(0.34, 0.26);
+    float jaw = smoothstep(1.05, 1.13, dp.y)*smoothstep(1.20, 1.14, dp.y)*smoothstep(0.50, 0.18, ax)*(1.0 - bel);
+    col = mix(col, col*vec3(0.60, 0.62, 0.90), max(0.25*exp(-dot(sk, sk)*1.2), 0.35*jaw));
+    // Eyes: the glow runs right up to a bold gold line along the top edge, heaviest at the outer
+    // end, with a fine one underneath. No lid band.
+    for (int i = 0; i < 2; i++) {
+      float s = i == 0 ? -1.0 : 1.0;
+      vec3 l = eyeLocal(dp, s);
+      float ed = eyeDist(dp, s);
+      float open = lidOpen(l, ed);
+      float above = smoothstep(-0.015, 0.025, l.y - eyeMid(l.x));
+      float vis = 1.0 - smoothstep(-0.002, 0.002, open);
+      vec3 eg;
+      vec3 ec = eyeShade(dp, s, eg);
+      col = mix(col, ec, vis);
+      glow += eg*vis;
+      float taper = mix(0.35, 1.0, smoothstep(-EW, EW*0.8, l.x));
+      float upper = (1.0 - smoothstep(0.0, 0.024*taper, open))*step(-0.002, open)*above*smoothstep(-EW*1.02, -EW*0.92, l.x);
+      float lower = (1.0 - smoothstep(0.0, 0.005, abs(open)))*(1.0 - above)*smoothstep(-EW*0.95, -EW*0.5, l.x);
+      float gold = max(upper, lower*0.75);
+      col = mix(col, VOLT, gold);
+      glow += VOLT*gold*0.45*crackle();
+      // Blue light spilling from the eye onto the skin round it.
+      glow += ARC*exp(-max(ed, 0.0)/0.035)*(1.0 - vis)*0.30*crackle();
+    }
+  }
+  // Mouth colour.
+  if (dp.z > 0.2 && abs(dp.y - 1.27) < 0.24) {
+    vec2 g = mouthCoord(dp);
+#if MOUTHV == 0
+    // Ink in the crease, hooking up at the high corner; the fang white with a fine outline.
+    float env = 1.0 - smoothstep(MW - 0.01, MW + 0.01, abs(g.x));
+    float crease = (1.0 - smoothstep(0.0035, 0.0070, abs(g.y - mouthTop(g.x))))*env;
+    float hookR = seg2(g, vec2(MW - 0.010, mouthTop(MW)), vec2(MW + 0.038, mouthTop(MW) + 0.040), 0.0065, 0.0015);
+    float hookL = seg2(g, vec2(-MW + 0.010, mouthTop(MW)), vec2(-MW - 0.020, mouthTop(MW) + 0.010), 0.0045, 0.0015);
+    float fm = fangMask(g);
+    col = mix(col, TEETHC, fm);
+    col = mix(col, col*vec3(0.62, 0.66, 0.88), (1.0 - smoothstep(0.0, 0.040, mouthTop(g.x) - g.y))*step(g.y, mouthTop(g.x))*env*(1.0 - fm)*0.5);
+    col = mix(col, INK, max(crease, 1.0 - smoothstep(0.0, 0.004, min(hookR, hookL))));
+#elif MOUTHV == 1
+    // Clenched teeth meeting in a zigzag seam, shadowed under the upper lip and at the corners.
+    float md = mouthDist(dp);
+    float inside = 1.0 - smoothstep(-0.004, 0.002, md);
+    float ys = 0.5*(mouthTop(g.x) + mouthBot(g.x)) + 0.012*(tri(g.x*16.0)*2.0 - 1.0);
+    vec3 tc = TEETHC*mix(0.70, 1.0, smoothstep(0.0, 0.030, mouthTop(g.x) - g.y));
+    tc = mix(tc, MOUTHC, smoothstep(MW*0.80, MW*0.98, abs(g.x)));
+    tc = mix(tc, INK, 1.0 - smoothstep(0.0025, 0.0060, abs(g.y - ys)));
+    col = mix(col, tc, inside);
+    float edge = abs(md) - 0.0035;
+    float hookR = seg2(g, vec2(MW - 0.010, mouthTop(MW)), vec2(MW + 0.030, mouthTop(MW) + 0.030), 0.006, 0.0015);
+    float hookL = seg2(g, vec2(-MW + 0.010, mouthTop(MW)), vec2(-MW - 0.030, mouthTop(MW) + 0.030), 0.006, 0.0015);
+    col = mix(col, INK, 1.0 - smoothstep(0.0, 0.004, min(edge, min(hookR, hookL))));
+#else
+    // Dark inside, a tongue at the back, an ink outline and creases at the corners.
+    float md = mouthDist(dp);
+    float inside = 1.0 - smoothstep(-0.004, 0.002, md);
+    float tng = smoothstep(0.06, 0.0, g.y - mouthBot(g.x))*(1.0 - smoothstep(MW*0.55, MW*0.85, abs(g.x - 0.02)));
+    col = mix(col, mix(MOUTHC, TONGUE, tng*0.9), inside);
+    float edge = abs(md) - 0.004 - 0.004*(1.0 - smoothstep(0.0, MW, abs(g.x)));
+    float hookR = seg2(g, vec2(MW - 0.012, mouthTop(MW) - 0.004), vec2(MW + 0.045, mouthTop(MW) + 0.045), 0.008, 0.0015);
+    float hookL = seg2(g, vec2(-MW + 0.012, mouthTop(MW) - 0.004), vec2(-MW - 0.034, mouthTop(MW) + 0.024), 0.006, 0.0015);
+    col = mix(col, INK, (1.0 - smoothstep(0.0, 0.005, min(edge, min(hookR, hookL))))*step(mouthBack(g.x) + 0.05, dp.z));
+#endif
+  }
+  return col;
+}
+
+vec3 shadeGround(vec3 p, vec3 rd) {
+  vec3 col = vec3(0.060, 0.064, 0.095);
+  vec3 l = normalize(LKEY);
+  float sh = shadow(p + vec3(0.0, 0.002, 0.0), l);
+  col *= mix(0.45, 1.0, sh);
+  float r = length(p.xz/vec2(0.95, 0.95));
+  col *= 1.0 - 0.45*smoothstep(1.4, 0.75, r);
+  col += VOLT*0.035*crackle()*exp(-1.3*dot(p.xz - vec2(0.0, 0.5), p.xz - vec2(0.0, 0.5)));
+  float fade = smoothstep(11.0, 3.5, length(p.xz));
+  return mix(sky(rd), col, fade);
+}
+
+// ---------------------------------------------------------------- the arc between the antennae
+// Skin space to world space, undoing deform() closely enough for a glow.
+vec3 toWorld(vec3 s) {
+  float b = sin(uT*2.4);
+  vec3 w = s;
+  w.z += LEAN;
+  w.x += 0.020*sin(uT*1.6);
+  w.xz *= 1.0 - 0.012*b*0.4;
+  w.y *= 1.0 + 0.016*b;
+  return w;
+}
+// Closest approach between the view ray and a segment: x = distance, y = ray distance.
+vec2 raySeg(vec3 ro, vec3 rd, vec3 a, vec3 b) {
+  vec3 ba = b - a, oa = ro - a;
+  float bb = dot(ba, ba), bd = dot(ba, rd), ob = dot(oa, ba), od = dot(oa, rd);
+  float h = clamp((ob - od*bd)/max(bb - bd*bd, 1e-6), 0.0, 1.0);
+  float t = max(h*bd - od, 0.0);
+  return vec2(length(oa + rd*t - ba*h), t);
+}
+vec3 arcPoint(float i, vec3 A, vec3 B, vec3 M, float seed) {
+  float t = i/10.0;
+  vec3 p = mix(mix(A, M, t), mix(M, B, t), t);
+  vec3 j = vec3(hash1(i*7.1 + seed), hash1(i*3.7 + seed*1.3), hash1(i*5.3 + seed*0.7)) - 0.5;
+  return p + j*0.13*sin(3.14159*t);
+}
+void electric(vec3 ro, vec3 rd, float tSolid, inout vec3 col) {
+  vec3 A = toWorld(antTip(-1.0, 0.0)), B = toWorld(antTip(1.0, 0.0));
+  float fl = crackle();
+#if ANT == 0
+  // Taser prongs: now and then a spark jumps the gap between each pair of prongs.
+  for (int e = 0; e < 2; e++) {
+    float s = e == 0 ? -1.0 : 1.0;
+    float ph = uT/1.3 + 0.5*float(e);
+    if (fract(ph) < 0.22) {
+      float seed = floor(ph)*2.3 + s;
+      vec3 a = toWorld(antTip(s, 0.0)), b = toWorld(antTip(s, 1.0));
+      float core = 1e9;
+      vec3 c0 = a;
+      for (int i = 1; i <= 4; i++) {
+        float tt = float(i)/4.0;
+        vec3 j = (vec3(hash1(float(i)*7.1 + seed), hash1(float(i)*3.7 + seed), hash1(float(i)*5.3 + seed)) - 0.5)*0.05*sin(3.14159*tt);
+        vec3 c1 = mix(a, b, tt) + j;
+        vec2 h = raySeg(ro, rd, c0, c1);
+        if (h.y < tSolid + 0.04) core = min(core, h.x);
+        c0 = c1;
+      }
+      col += (vec3(1.0)*(1.0 - smoothstep(0.0015, 0.0045, core)) + VOLT*exp(-core*core/0.0005)*0.5)*fl;
+    }
+  }
+#endif
+  // Tip sparks.
+  for (int i = 0; i < 2; i++) {
+#if ANT == 2
+    if (i == 1) break;
+#endif
+    vec3 T = i == 0 ? A : B;
+    vec3 oc = T - ro;
+    float t = dot(oc, rd);
+    if (t > 0.0 && t < tSolid + 0.05) {
+      float d = length(oc - rd*t);
+#if ANT >= 4
+      col += HOT*exp(-d*d/0.0006)*0.35*fl + VOLT*exp(-d*d/0.006)*0.25*fl;
+#else
+      col += HOT*exp(-d*d/0.0006)*0.7*fl + VOLT*exp(-d*d/0.006)*0.25*fl;
+#endif
+    }
+  }
+#if ANT >= 4
+  // Small sparks crawl up each feeler toward the tip, leaping off the skin and back, and flicker
+  // in and out.
+  for (int e = 0; e < 2; e++) {
+    float s = e == 0 ? -1.0 : 1.0;
+    for (int k = 0; k < 2; k++) {
+      float fk = float(k);
+      float u0 = 0.15 + 0.60*fract(uT*0.9 + fk*0.5 + 0.25*float(e));
+      float seed = floor(uT*12.0)*1.73 + fk*7.1 + s*3.3;
+      if (hash1(seed) < 0.30) continue;
+      vec3 a0 = antPoint(s, u0), a1 = antPoint(s, min(u0 + 0.16, 1.0));
+      vec3 side = normalize(cross(a1 - a0, vec3(hash1(seed + 1.1) - 0.5, hash1(seed + 2.3) - 0.5, hash1(seed + 3.7) - 0.5)));
+      float r0 = mix(0.095, 0.042, pow(u0, 0.9));
+      vec3 a = toWorld(a0 + side*r0);
+      float core = 1e9;
+      for (int i = 1; i <= 4; i++) {
+        float tt = float(i)/4.0;
+        vec3 j = (vec3(hash1(float(i)*7.1 + seed), hash1(float(i)*3.7 + seed), hash1(float(i)*5.3 + seed)) - 0.5)*0.03;
+        vec3 b = toWorld(mix(a0, a1, tt) + side*(r0 + 0.065*sin(3.14159*tt)) + j*step(tt, 0.9));
+        vec2 h = raySeg(ro, rd, a, b);
+        if (h.y < tSolid + 0.04) core = min(core, h.x);
+        a = b;
+      }
+      col += (HOT*(1.0 - smoothstep(0.0012, 0.0038, core))*0.85 + VOLT*exp(-core*core/0.0003)*0.5)*fl;
+    }
+  }
+#endif
+  // Sparks: now and then a clean jagged spark shoots out of an eye's outer corner and fades.
+  // Each eye and each spark keeps its own rhythm.
+  for (int e = 0; e < 2; e++) {
+    float s = e == 0 ? -1.0 : 1.0;
+    float ef = float(e);
+    vec3 ax = eyeAxis(s);
+    vec3 u = normalize(cross(vec3(0.0, 1.0, 0.0), ax));
+    vec3 w = cross(ax, u);
+    vec3 base = eyeCentre(s) + u*(s*EW*0.98) + w*(eyeMid(EW*0.98) + 0.004) + ax*0.012;
+    for (int k = 0; k < 2; k++) {
+      float fk = float(k);
+      float ph = uT/(1.9 + 0.7*fk + 0.45*ef) + 0.37*fk + 0.61*ef;
+      float f = fract(ph);
+      const float DUR = 0.14;
+      if (f >= DUR) continue;
+      float pr = f/DUR;
+      float grow = smoothstep(0.0, 0.35, pr);
+      float fade = 1.0 - smoothstep(0.55, 1.0, pr);
+      float seed = floor(ph)*1.37 + fk*3.1 + ef*5.7;
+      vec3 dir = normalize(vec3(s*(0.55 + 0.30*hash1(seed)), 0.45 + 0.40*hash1(seed + 1.7), -0.45));
+      float len = 0.26 + 0.10*hash1(seed + 4.2);
+      vec3 a = toWorld(base);
+      float core = 1e9;
+      for (int i = 1; i <= 5; i++) {
+        float ta = float(i - 1)/5.0;
+        if (ta >= grow) break;
+        float tb = min(float(i)/5.0, grow);
+        vec3 j = (vec3(hash1(float(i)*7.1 + seed), hash1(float(i)*3.7 + seed*1.3), hash1(float(i)*5.3 + seed*0.7)) - 0.5)*0.05*step(float(i), 4.5);
+        vec3 b = toWorld(base + dir*len*tb + j);
+        vec2 h = raySeg(ro, rd, a, b);
+        if (h.y < tSolid + 0.04) core = min(core, h.x/mix(1.0, 0.45, tb));
+        a = b;
+      }
+      col += (vec3(1.0)*(1.0 - smoothstep(0.0015, 0.0045, core))*0.9 + ARC*exp(-core*core/0.0004)*0.6)*fade;
+    }
+  }
+}
+
+void main() {
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.6*uFwd);
+  vec3 ro = uRo;
+  vec3 col = sky(rd);
+  float t = 0.0, hitId = 0.0;
+  for (int i = 0; i < 140; i++) {
+    vec2 h = map(ro + rd*t);
+    if (h.x < 0.0008*t) { hitId = h.y; break; }
+    t += h.x*0.7;
+    if (t > 18.0) break;
+  }
+  float tg = rd.y < 0.0 ? -ro.y/rd.y : 1e9;
+  float tSolid = 1e9;
+  if (hitId > 0.0 && t < tg) {
+    tSolid = t;
+    vec3 p = ro + rd*t;
+    vec3 n = normalAt(p);
+    vec3 v = -rd;
+    vec3 l = normalize(LKEY), lr = normalize(LRIM);
+    vec3 dp = deform(p);
+    float occ = ao(p, n);
+    float sh = shadow(p + n*0.01, l);
+    float ndl = dot(n, l);
+    vec3 hv = normalize(l + v);
+    float nv = max(dot(n, v), 0.0);
+    float fres = pow(1.0 - nv, 3.0);
+    vec3 glow = vec3(0.0);
+    vec3 alb;
+    if (hitId > 2.5) {
+      alb = TEETHC;
+    } else if (hitId > 1.5) {
+      float s = dp.x < 0.0 ? -1.0 : 1.0;
+      alb = eyeShade(dp, s, glow);
+    } else {
+      alb = skinAlbedo(dp, glow);
+    }
+    float wrap = max(0.0, (ndl + 0.4)/1.4);
+    col = alb*(wrap*mix(0.5, 1.0, sh)*vec3(0.97, 0.97, 1.0)*1.05 + 0.95*occ*sky(n) + 0.24*occ*vec3(0.85, 0.88, 1.0));
+    // Wet and glossy, like Floppy: a broad sheen plus a tight highlight.
+    col += sh*(0.18*pow(max(dot(n, hv), 0.0), 26.0) + 1.0*pow(max(dot(n, hv), 0.0), 260.0));
+    col += 0.22*pow(max(dot(n, normalize(lr + v)), 0.0), 50.0)*vec3(1.0, 0.92, 0.70);
+    col += 0.18*fres*sky(reflect(rd, n));
+    col += 0.07*fres*VOLT*crackle();
+    col += glow;
+    // Comic ink: dark edge where the surface turns away.
+    col = mix(col, INK, smoothstep(0.20, 0.08, nv)*0.9);
+  } else if (rd.y < 0.0) {
+    col = shadeGround(ro + rd*tg, rd);
+    tSolid = tg;
+  }
+  electric(ro, rd, tSolid, col);
+  col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  vec2 q = gl_FragCoord.xy/uRes;
+  col *= 0.86 + 0.14*pow(16.0*q.x*q.y*(1.0 - q.x)*(1.0 - q.y), 0.25);
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script>
+(function () {
+  const FRAMES = 16;
+  const params = new URLSearchParams(location.search);
+  const CAM = { pitch: 0.12, dist: 7.6, ty: 1.58, tz: -0.05, close: { yaw: 0.0, pitch: 0.05, dist: 3.4, ty: 1.80, tz: 0.2 }, start: 3 };
+  // Frames embedded by the build script, if any.
+  const EMBED = window.__FRAMES__ || null;
+
+  function makeRenderer(canvas, form) {
+    const gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+    if (!gl) return null;
+    function sh(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, document.getElementById("vs").textContent));
+    const m = /^a(\d)m(\d)$/.exec(form) || [0, 0, 2];
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, `#define ANT ${m[1]}\n#define MOUTHV ${m[2]}\n` + document.getElementById("fs").textContent));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(prog, n);
+    const u = { res: U("uRes"), t: U("uT"), ro: U("uRo"), right: U("uRight"), up: U("uUp"), fwd: U("uFwd") };
+    return function draw(cam, time) {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      const cy = Math.cos(cam.pitch);
+      const ro = [Math.sin(cam.yaw)*cy*cam.dist, cam.ty + Math.sin(cam.pitch)*cam.dist, cam.tz + Math.cos(cam.yaw)*cy*cam.dist];
+      const tgt = [0, cam.ty, cam.tz];
+      let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+      let r = [-f[2], 0, f[0]]; const rl = Math.hypot(...r); r = r.map(v => v/rl);
+      const up = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+      gl.uniform2f(u.res, canvas.width, canvas.height);
+      gl.uniform1f(u.t, time);
+      gl.uniform3fv(u.ro, ro); gl.uniform3fv(u.right, r); gl.uniform3fv(u.up, up); gl.uniform3fv(u.fwd, f);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+  }
+
+  // Offline mode: tools/slugs/render_concept.py posts every turntable frame back to itself.
+  if (params.get("render")) {
+    document.body.classList.add("render");
+    const size = parseInt(params.get("size") || "640", 10);
+    (async function () {
+      try {
+        for (const form of (params.get("forms") || "a0m2").split(",")) {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = size;
+          document.body.appendChild(canvas);
+          const draw = makeRenderer(canvas, form);
+          const yawList = (params.get("frames") || "").split(",").filter(Boolean).map(Number);
+          const list = yawList.length ? yawList : [...Array(FRAMES).keys()];
+          const shots = list.map(i => [String(i).padStart(2, "0"), { yaw: i/FRAMES*Math.PI*2, pitch: CAM.pitch, dist: CAM.dist, ty: CAM.ty, tz: CAM.tz }]);
+          shots.push(["close", CAM.close]);
+          for (const [name, cam] of shots) {
+            draw(cam, 2.0);
+            await fetch(`/frame/${form}-${name}.jpg`, { method: "POST", body: canvas.toDataURL("image/jpeg", 0.84) });
+            await new Promise(r => setTimeout(r, 0));
+          }
+          canvas.remove();
+        }
+        await fetch("/done", { method: "POST" });
+      } catch (e) {
+        await fetch("/error", { method: "POST", body: String(e && e.message || e) });
+      }
+    })();
+    return;
+  }
+
+  const box = document.getElementById("box");
+  const still = document.getElementById("still");
+  const hint = document.getElementById("hint");
+  const pressed = kind => (document.querySelector(`[data-${kind}][aria-pressed="true"]`) || {}).dataset;
+  let frame = 2, live = null, liveOn = false, ant = (pressed("ant") || { ant: "4" }).ant, mouth = (pressed("mouth") || { mouth: "2" }).mouth;
+  const form = () => `a${ant}m${mouth}`;
+  const key = n => `${form()}-${typeof n === "number" ? String(n).padStart(2, "0") : n}`;
+  const url = n => EMBED ? EMBED[key(n)] : `frames/${key(n)}.jpg`;
+  function show() { still.src = url(frame); }
+  function preload() { for (let i = 0; i < FRAMES; i++) new Image().src = url(i); new Image().src = url("close"); }
+  function pick(kind, value) {
+    if (kind === "ant") ant = value; else mouth = value;
+    document.querySelectorAll(`[data-${kind}]`).forEach(b => b.setAttribute("aria-pressed", String(b.dataset[kind] === value)));
+    document.querySelectorAll(`[data-${kind}-note]`).forEach(n => { n.hidden = n.dataset[`${kind}Note`] !== value; });
+    if (liveOn) { stopLive(); startLive(); }
+    preload();
+    show();
+  }
+  document.querySelectorAll("[data-ant]").forEach(b => b.addEventListener("click", () => pick("ant", b.dataset.ant)));
+  document.querySelectorAll("[data-mouth]").forEach(b => b.addEventListener("click", () => pick("mouth", b.dataset.mouth)));
+  preload();
+
+  document.querySelectorAll("[data-frame]").forEach(b => b.addEventListener("click", () => {
+    if (liveOn) stopLive();
+    frame = b.dataset.frame === "close" ? "close" : parseInt(b.dataset.frame, 10);
+    show();
+  }));
+
+  let drag = null, acc = 0, yawLive = 0;
+  box.addEventListener("pointerdown", e => { drag = e.clientX; box.setPointerCapture(e.pointerId); if (typeof frame !== "number") { frame = 0; show(); } });
+  box.addEventListener("pointermove", e => {
+    if (drag === null) return;
+    const dx = e.clientX - drag; drag = e.clientX;
+    if (liveOn) { yawLive -= dx*0.01; return; }
+    acc += dx;
+    const step = Math.trunc(acc/14);
+    if (step) { acc -= step*14; frame = ((frame - step) % FRAMES + FRAMES) % FRAMES; show(); }
+  });
+  const end = () => { drag = null; };
+  box.addEventListener("pointerup", end);
+  box.addEventListener("pointercancel", end);
+
+  // Live 3D is opt-in: it runs the full shader, which is heavy on some machines.
+  const liveBtn = document.getElementById("live");
+  function stopLive() {
+    liveOn = false;
+    liveBtn.setAttribute("aria-pressed", "false");
+    if (live) { cancelAnimationFrame(live.raf); live.canvas.remove(); live = null; }
+    still.hidden = false; hint.textContent = "Drag to turn";
+  }
+  function startLive() {
+    const canvas = document.createElement("canvas");
+    const w = Math.min(560, Math.round(box.clientWidth));
+    canvas.width = canvas.height = w;
+    let draw;
+    try { draw = makeRenderer(canvas, form()); } catch (e) { draw = null; }
+    if (!draw) { hint.textContent = "Live 3D isn't available here"; return; }
+    box.insertBefore(canvas, hint);
+    still.hidden = true;
+    liveOn = true;
+    liveBtn.setAttribute("aria-pressed", "true");
+    hint.textContent = "Live 3D · drag to turn";
+    yawLive = (typeof frame === "number" ? frame : 0)/FRAMES*Math.PI*2;
+    const t0 = performance.now();
+    live = { canvas, raf: 0 };
+    (function tick(now) {
+      draw({ yaw: yawLive, pitch: CAM.pitch, dist: CAM.dist, ty: CAM.ty, tz: CAM.tz }, 2 + (now - t0)/1000);
+      if (live) live.raf = requestAnimationFrame(tick);
+    })(t0);
+  }
+  liveBtn.addEventListener("click", () => liveOn ? stopLive() : startLive());
+  show();
+})();
+</script>

@@ -10,7 +10,7 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 | Inferno (fire slug) | **Final design, both forms** (owner, 2026-11-03); in the game place: slot 2, approved inspect, shared transformation (feel verdict pending). **Dragon's Breath main + Fire Curtain passive** (owner, 2026-11-05); not built |  [Design and reference notes](inferno.md) |
 | Aquabeek (water reference) | **Final ability choices:** Crashwave main / Mistbank passive (owner, 2026-11-04); final visual forms and balance remain open | [Decision and history](aquabeek.md) |
 | Frostcrawler (ice reference) | **Iceburst main + Ice Wall passive** (owner, 2026-11-04); balance and final forms open | [Decision and history](frostcrawler.md) |
-| Tazerling (electric reference) | **Chain Lightning main + Livewire passive** (owner, 2026-11-05); balance and final forms open | [Decision and history](tazerling.md) |
+| Tazerling (electric reference) | **Chain Lightning main + Livewire passive** (owner, 2026-11-05); base-form visual concept awaiting owner review (2026-11-12); balance and transformed form open | [Decision and history](tazerling.md) |
 | Boon Doc (healing reference) | **Mending Shot main + Healing Spring passive** (owner, 2026-11-05); not built | [Decision and history](boon-doc.md) |
 | Frightgeist (fear reference) | **Jump Scare main + Decoy passive, owner, 2026-11-05** | [Ability studies](frightgeist.md) |
 | Hop Rock (explosive reference) | **Sticky Bomb main + Mine passive selected by owner, 2026-11-05** | [Ability studies](hop-rock.md) |
