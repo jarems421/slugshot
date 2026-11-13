@@ -1,0 +1,1553 @@
+<title>Aquabeek B Gillbeak</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one large turntable stage with form and view controls; design notes beside it, stacking on phones. */
+:root {
+  --bg: #e4eaee;
+  --paper: #f3f6f8;
+  --ink: #1b2430;
+  --muted: #5a6875;
+  --rule: #c9d3db;
+  --accent: #1f6fa8;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12171d; --paper: #1a222a; --ink: #e3ebf1; --muted: #9aabb8; --rule: #2e3a46; --accent: #6cc3ea; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12171d; --paper: #1a222a; --ink: #e3ebf1; --muted: #9aabb8; --rule: #2e3a46; --accent: #6cc3ea; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(36px, 6vw, 56px); line-height: 1; margin: 6px 0 0; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 0; }
+p { margin: 0; }
+.lede { max-width: 62ch; color: var(--muted); margin-top: 10px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: grid; gap: 12px; min-width: 0; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden; border: 1px solid var(--rule); background: #10141c; touch-action: none; cursor: grab; }
+.canvas-box:active { cursor: grabbing; }
+.canvas-box img, .canvas-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #e3ebf1; background: rgba(16,20,28,.7); padding: 3px 8px; border-radius: 6px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font-family: var(--mono); font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.notes { display: grid; gap: 18px; min-width: 0; }
+dl { margin: 0; display: grid; gap: 12px; }
+dt { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; }
+.caveat { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+body.render { padding: 0; background: #000; }
+body.render .wrap { display: none; }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Slugshot · water slug · prototype B of 3 · concept for review</div>
+    <h1>Aquabeek B · Gillbeak</h1>
+    <p class="lede">Redrawn from the owner's reference, then rebuilt on Inferno's body: a soft, leaning water slug with a teal hood, swept fins and a sculpted face.</p>
+  </div>
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" id="box">
+        <img id="still" alt="Rendered turntable of the Aquabeek B · Gillbeak concept" draggable="false">
+        <div class="hint" id="hint">Drag to turn</div>
+      </div>
+      <div class="controls" role="group" aria-label="Form">
+        <button data-form="f3" aria-pressed="true">Base form</button>
+        <button data-form="comet" aria-pressed="false">Transformed</button>
+      </div>
+      <div class="controls" role="group" aria-label="Camera">
+        <button data-frame="0">Front</button>
+        <button data-frame="3">Three-quarter</button>
+        <button data-frame="6">Side</button>
+        <button data-frame="12">Back</button>
+        <button data-frame="close">Face close-up</button>
+        <button id="live" aria-pressed="false">Live 3D</button>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>The design</h2>
+      
+      <dl id="notes-base"><div><dt>Body</dt><dd>Inferno's body plan: a soft body leaning slightly forward, pooling onto the floor in uneven lobes. No arms or feet. A short tail, shortened again, ends in a small flat fluke.</dd></div><div><dt>Hood</dt><dd>A teal hood over the crown and down the sides of the head, dipping to a point between the eyes. It blends into the blue face instead of ending in a hard seam.</dd></div><div><dt>Fins</dt><dd>A short, broad fin at each top corner and three small fins down each side of the head, all sweeping back, teal paling to glassy tips.</dd></div><div><dt>Back</dt><dd>A low webbed dorsal fin down the back, on a teal stripe that runs from the hood into the tail.</dd></div><div><dt>Eyes</dt><dd>Sculpted like Floppy's rather than painted on: tall almond openings tilted up at the outer corner under a light rolled lid, a bold black liner ending in a sharp wing and five curved lashes. A living iris: deep sea at the top to glowing aqua at the bottom, fine light and dark fibres, a lighter jagged ring round a soft round pupil that slowly breathes, light gathering low in the iris, and a big highlight overlapping the pupil.</dd></div><div><dt>Eyeshadow</dt><dd>Blended, with no edge: deep violet at the lash line fading up into teal shimmer, reaching higher toward the outer corner like a smoky wing.</dd></div><div><dt>Face</dt><dd>A soft muzzle under the eyes gives the face planes, with a wide socket around each eye.</dd></div><div><dt>Mouth</dt><dd>A soft, sweet smile, centred and narrower than the eyes: lips tinted blue-violet, a cupid's bow on the upper lip and a fuller, glossy lower lip, slightly parted over a band of top teeth, with both corners turned up into small dimples, the right a touch higher.</dd></div><div><dt>Markings</dt><dd>A small glowing water drop under the point of the hood. A pale belly starting low on the front, its top a gentle three-crest wave, blended into the blue the same way all round with a foam line just inside its edge. On the belly, a bold glowing drop outlined in deep teal, falling into two deep-teal ripple rings with two small splash droplets.</dd></div><div><dt>Surface</dt><dd>Glossy, with a faint glassy glow at the edges.</dd></div></dl>
+      <dl id="notes-comet" hidden><div><dt>Shape</dt><dd>Unchanged for now: a long eel-dragon that swims in an S, with a short flat bill, a ribbon fin along its back and belly, and a paddle tail.</dd></div><div><dt>Next</dt><dd>Once the base form is agreed, the transformation gets redrawn to match it.</dd></div></dl>
+      <p class="caveat">A concept render, not the game model. Like Inferno, the agreed version gets rebuilt in Blender from this same maths. Glow and water will use Roblox's own emissive surfaces and effects in game.</p>
+    </div>
+  </div>
+</div>
+
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes;
+uniform float uT, uRoll;
+uniform vec3 uRo, uRight, uUp, uFwd;
+
+const vec3 LKEY = vec3(-0.56, 0.68, 0.46);
+const vec3 LRIM = vec3(0.55, 0.45, -0.70);
+
+// Palette, linear. Teal back, ocean-blue front, pale belly: the water slug's familiar colouring.
+#if PROTO == 0
+const vec3 BACKC  = vec3(0.020, 0.360, 0.315);  // #279F96 teal
+const vec3 BODYC  = vec3(0.028, 0.150, 0.520);  // #2F6CBE ocean blue
+const vec3 BELLYC = vec3(0.250, 0.490, 0.780);  // #89BAE5 pale sky
+#elif PROTO == 1
+const vec3 BACKC  = vec3(0.016, 0.290, 0.330);  // #22919B deep teal
+const vec3 BODYC  = vec3(0.020, 0.100, 0.390);  // #2759A8 deep blue
+const vec3 BELLYC = vec3(0.330, 0.600, 0.780);  // #9CCBE5 pale aqua
+#else
+const vec3 BACKC  = vec3(0.025, 0.430, 0.470);  // #2CAEB6 bright teal
+const vec3 BODYC  = vec3(0.016, 0.110, 0.450);  // #235DB4 cobalt
+const vec3 BELLYC = vec3(0.220, 0.520, 0.740);  // #82BEE0 pale cyan
+#endif
+const vec3 INK   = vec3(0.004, 0.010, 0.028);   // deep navy ink
+const vec3 FOAM  = vec3(0.780, 0.960, 1.000);   // white-water foam
+const vec3 GLOWC = vec3(0.220, 0.800, 0.950);   // bioluminescent aqua
+const vec3 MOUTHC = vec3(0.060, 0.010, 0.030);
+const vec3 TONGUE = vec3(0.560, 0.110, 0.150);
+
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+float sdEll(vec3 p, vec3 r) { float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/k1; }
+float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float seg2(vec2 p, vec2 a, vec2 b, float ra, float rb) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+// Exact distance to a quadratic Bezier (after Inigo Quilez); returns (distance, t).
+vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
+  vec3 a = B - A, b = A - 2.0*B + C, c = a*2.0, d = A - pos;
+  float kk = 1.0/dot(b, b);
+  float kx = kk*dot(a, b);
+  float ky = kk*(2.0*dot(a, a) + dot(d, b))/3.0;
+  float kz = kk*dot(d, a);
+  vec2 res;
+  float p = ky - kx*kx, p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
+  if (h >= 0.0) {
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q)/2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
+    vec3 e = d + (c + b*t)*t;
+    res = vec2(dot(e, e), t);
+  } else {
+    float z = sqrt(-p);
+    float v = acos(q/(p*z*2.0))/3.0;
+    float m = cos(v), n = sin(v)*1.732050808;
+    vec3 t = clamp(vec3(m + m, -n - m, n - m)*z - kx, 0.0, 1.0);
+    vec3 e1 = d + (c + b*t.x)*t.x;
+    vec3 e2 = d + (c + b*t.y)*t.y;
+    res = vec2(dot(e1, e1), t.x);
+    float dis = dot(e2, e2);
+    if (dis < res.x) res = vec2(dis, t.y);
+  }
+  res.x = sqrt(res.x);
+  return res;
+}
+// A flattened tapering blade along a Bezier: k squashes one axis so the blade is thin that way.
+// Returns (distance, t).
+vec2 blade(vec3 p, vec3 A, vec3 B, vec3 C, vec3 k, float r0, float r1, float scallop) {
+  vec2 bz = sdBezier(p*k, A*k, B*k, C*k);
+  float r = mix(r0, r1, pow(bz.y, 0.8));
+  // Fin rays push the edge out in soft scallops.
+  r *= 1.0 + scallop*smoothstep(0.12, 0.35, bz.y)*(0.5 + 0.5*sin(bz.y*28.0));
+  float kmax = max(max(k.x, k.y), k.z);
+  return vec2((bz.x - r)/kmax, bz.y);
+}
+
+// ---------------------------------------------------------------- eyes
+#ifndef FACE
+#define FACE 0
+#endif
+#if FORM == 0
+// Almond eyes set into the face, as on Inferno, so the lids can carry the expression.
+#if FACE == 0
+const vec3 EYE_C = vec3(0.320, 1.645, 0.590); const float EW = 0.245; const float ETOP = 0.145; const float EBOT = 0.112; const float ETILT = 0.17;
+#elif FACE == 1
+const vec3 EYE_C = vec3(0.325, 1.645, 0.595); const float EW = 0.235; const float ETOP = 0.180; const float EBOT = 0.142; const float ETILT = 0.08;
+#elif FACE >= 3
+// B, from the owner's reference: a tall, open almond tilted up at the outer corner, a light lid,
+// a big iris filling most of the eye, a bold liner ending in a sharp wing.
+const vec3 EYE_C = vec3(0.322, 1.590, 0.455); const float EW = 0.214; const float ETOP = 0.118; const float EBOT = 0.064; const float ETILT = 0.11;
+const float CURL = 0.078; const float PO = 0.72; const vec3 LID = vec3(0.05, 0.80, -0.01);
+const vec2 WING = vec2(0.082, 0.056); const float LASHES = 0.0;
+#else
+const vec3 EYE_C = vec3(0.320, 1.655, 0.590); const float EW = 0.240; const float ETOP = 0.160; const float EBOT = 0.118; const float ETILT = 0.13;
+#endif
+vec3 eyeCentre(float s) { return vec3(s*EYE_C.x, EYE_C.y, EYE_C.z); }
+#if FACE >= 3
+vec3 eyeAxis(float s) { return normalize(vec3(s*0.45, 0.02, 1.0)); }
+#else
+vec3 eyeAxis(float s) { return normalize(vec3(s*0.40, 0.06, 1.0)); }
+#endif
+#else
+const float EYE_R = 0.150;
+vec3 eyeCentre(float s) { return vec3(s*0.29, 1.37, 1.45); }
+vec3 eyeAxis(float s) { return normalize(vec3(s*0.59, 0.28, 0.76)); }
+#endif
+
+vec3 eyeLocal(vec3 p, float side) {
+  vec3 ax = eyeAxis(side);
+  vec3 u = normalize(cross(vec3(0.0, 1.0, 0.0), ax));
+  vec3 w = cross(ax, u);
+  vec3 q = p - eyeCentre(side);
+  // x runs from the inner corner (-) to the outer corner (+) on both eyes.
+  return vec3(side*dot(q, u), dot(q, w), dot(q, ax));
+}
+
+#if FORM == 0
+#if FACE >= 3
+// The eye's centre line: tilted, and curling up toward the outer corner like a cat-eye.
+float eyeMid(float x) { float o = max(x, 0.0)/EW; return ETILT*x + CURL*o*o; }
+float eyeOpen(float x) { float u = x/EW; return pow(max(0.0, 1.0 - u*u), x > 0.0 ? PO : 0.40); }
+float eyeDist(vec3 p, float s) {
+  vec3 l = eyeLocal(p, s);
+  float a = eyeOpen(l.x);
+  float y = l.y - eyeMid(l.x);
+  return max(max(y - ETOP*a, -EBOT*a - y), (abs(l.x/EW) - 1.0)*EW);
+}
+float lidLine(float x, float s) { return eyeMid(x) + ETOP*(LID.x + LID.y*eyeOpen(x)) + LID.z*x; }
+#else
+float eyeDist(vec3 p, float s) {
+  vec3 l = eyeLocal(p, s);
+  float x = l.x/EW;
+  float a = pow(max(0.0, 1.0 - x*x), 0.42);
+  float y = l.y - ETILT*l.x;
+  return max(max(y - ETOP*a, -EBOT*a - y), (abs(x) - 1.0)*EW);
+}
+// Upper lid line in eye-local space: the lid covers everything above it.
+float lidLine(float x, float s) {
+  float a = pow(max(0.0, 1.0 - (x/EW)*(x/EW)), 0.42);
+#if FACE == 0
+  return ETILT*x + ETOP*(0.16 + 0.22*a) - 0.07*x;                            // heavy, level lids: sly and sure of itself
+#elif FACE == 1
+  return ETILT*x + ETOP*0.72*a;                                              // light lids over the top: bright and open
+#else
+  return ETILT*x + (s < 0.0 ? ETOP*0.82*a : ETOP*(0.08 + 0.26*a) + 0.10*x);  // one lid raised, one dropped
+#endif
+}
+#endif
+#else
+float eyeDist(vec3 p, float s) { vec3 l = eyeLocal(p, s); return length(l.xy) - EYE_R; }
+float lidLine(float x, float s) { return EYE_R*0.30 - 0.30*x; }   // transformed: low, determined
+#endif
+
+// ---------------------------------------------------------------- base form
+#if FORM == 0
+#if PROTO == 0
+const float LEAN = 0.13; const float W = 1.00;
+#elif PROTO == 1
+const float LEAN = 0.11; const float W = 1.08;
+#else
+const float LEAN = 0.19; const float W = 0.94;
+#endif
+
+// A slow, swaying idle, like something floating in a current.
+vec3 deform(vec3 p) {
+  float b = sin(uT*2.0);
+  float up = smoothstep(0.0, 2.0, p.y);
+  p.y /= 1.0 + 0.014*b*up;
+  p.xz /= 1.0 - 0.012*b*(1.0 - 0.6*up);
+  p.x -= 0.018*sin(uT*1.25)*smoothstep(0.8, 1.9, p.y);
+  p.z -= LEAN*smoothstep(0.3, 1.9, p.y);
+  return p;
+}
+
+// Fin-ears (A, C): Inferno's swept ear-antennae, rebuilt as webbed fins.
+void finEar(float s, out vec3 A, out vec3 B, out vec3 C) {
+  float t = uT*1.4 + s*1.3;
+  float end = sin(t - 1.4)*0.06 + 0.02*sin(t*2.3);
+#if PROTO == 0
+  A = vec3(s*0.36, 1.92, -0.02);
+  B = vec3(s*0.58, 2.56 + sin(t - 0.6)*0.02, -0.18);
+  C = vec3(s*(0.84 + end*0.4), 2.52 + end, -0.62 + end*0.4);
+#else
+  A = vec3(s*0.40, 1.84, 0.02);
+  B = vec3(s*0.70, 2.12, -0.12);
+  C = vec3(s*(0.96 + end*0.4), 1.96 + end, -0.52 + end*0.3);
+#endif
+}
+vec2 finEarDist(vec3 p, float s) {
+  vec3 A, B, C; finEar(s, A, B, C);
+#if PROTO == 0
+  // Two rays webbed together: a tall swept point and a shorter one out to the side, with a notch between.
+  vec2 f1 = blade(p, A, B, C, vec3(1.0, 1.0, 2.8), 0.20, 0.026, 0.12);
+  vec3 A2 = A + vec3(s*0.06, -0.06, 0.0);
+  vec3 C2 = vec3(s*0.98, 2.04 + 0.6*(C.y - 2.52), -0.40);
+  vec2 f2 = blade(p, A2, mix(A2, C2, 0.5) + vec3(s*0.02, 0.18, 0.0), C2, vec3(1.0, 1.0, 2.8), 0.16, 0.024, 0.10);
+  return vec2(smin(f1.x, f2.x, 0.10), f1.x < f2.x ? f1.y : f2.y*0.92);
+#else
+  return blade(p, A, B, C, vec3(1.0, 1.0, 2.2), 0.13, 0.018, 0.14);
+#endif
+}
+
+// Gill frills (B): three fanned fins either side of the head.
+void gill(float s, float i, out vec3 A, out vec3 B, out vec3 C) {
+  float t = uT*1.6 + s*1.1 + i*0.9;
+  float end = sin(t)*0.035;
+  A = vec3(s*0.48, 1.97 - 0.13*i, -0.06);
+  B = vec3(s*(0.74 + 0.03*i), 2.13 - 0.22*i, -0.14);
+  C = vec3(s*(0.95 - 0.02*abs(i - 1.0) + end*0.5), 2.28 - 0.25*i + end, -0.32 - 0.04*i + end);
+}
+vec2 gillDist(vec3 p, float s, float i) {
+  vec3 A, B, C; gill(s, i, A, B, C);
+  return blade(p, A, B, C, vec3(1.0, 1.0, 2.2), 0.10 - 0.012*i, 0.024, 0.20);
+}
+
+// Wave crest (C): one blade rising off the crown and curling forward like a breaking wave.
+void crest(out vec3 A, out vec3 B, out vec3 C) {
+  float w = sin(uT*1.3)*0.03;
+  A = vec3(0.0, 1.98, 0.02);
+  B = vec3(0.0, 3.05 + w, -0.62);
+  C = vec3(0.0, 2.62 + w, 0.20 + w);
+}
+vec2 crestDist(vec3 p) {
+  vec3 A, B, C; crest(A, B, C);
+  return blade(p, A, B, C, vec3(1.25, 1.0, 1.0), 0.29, 0.040, 0.0);
+}
+
+// Dorsal fin: a thin webbed sheet down the back, scalloped between rays.
+float dorsal(vec3 p, float y0, float y1, float h) {
+  float t = clamp((p.y - y0)/(y1 - y0), 0.0, 1.0);
+  float zb = -0.36 + 0.03*t;
+  float hh = h*pow(sin(3.14159*pow(t, 0.75)), 0.7)*(0.93 + 0.07*cos(t*25.1));
+  float zo = zb - 0.08 - hh;
+  float d2 = max(max(zo - p.z, p.z - zb), max(y0 - p.y, p.y - y1));
+  float th = mix(0.034, 0.008, clamp((zb - p.z)/(0.08 + hh + 0.001), 0.0, 1.0));
+  return max(d2*0.7, abs(p.x) - th);
+}
+
+float lobes(float th, float phase) { return 1.0 + 0.06*sin(3.0*th + 0.7 + phase) + 0.04*sin(5.0*th - 1.3 + phase*0.6); }
+
+// Mouth: a smile set into the face, with solid teeth and creases at the corners.
+#if FACE == 0
+const vec2 MOUTH = vec2(-0.02, 1.272); const float MW = 0.24; const float MDEEP = 0.080; const float MTILT = -0.20; const float TEETH = 1.0;
+#elif FACE == 1
+const vec2 MOUTH = vec2(0.00, 1.266); const float MW = 0.27; const float MDEEP = 0.095; const float MTILT = 0.00; const float TEETH = 0.050;
+#elif FACE >= 3
+const vec2 MOUTH = vec2(0.0, 1.292); const float MW = 0.150; const float MDEEP = 0.034; const float MTILT = 0.04; const float TEETH = 1.0;
+const vec3 LIPC = vec3(0.24, 0.09, 0.42);   // soft blue-violet lip tint
+#else
+const vec2 MOUTH = vec2(0.03, 1.262); const float MW = 0.26; const float MDEEP = 0.115; const float MTILT = 0.20; const float TEETH = 0.044;
+#endif
+vec2 mouthCoord(vec3 p) { float x = p.x - MOUTH.x; return vec2(x, p.y - MOUTH.y - MTILT*x); }
+#if FACE >= 3
+// B: a soft, sweet smile: centred, both corners turned up (the right a touch higher), lips
+// slightly parted over a band of top teeth.
+float mouthTop(float x) { return 0.95*x*x + 0.25*max(x, 0.0)*max(x, 0.0); }
+float mouthBot(float x) { float u = clamp(x/MW, -1.0, 1.0); return mouthTop(x) - MDEEP*pow(max(0.0, 1.0 - u*u), 0.85); }
+// Outer edges of the lips: an upper lip with a cupid's bow, and a fuller lower lip.
+float lipUp(float x) {
+  float u = clamp(x/MW, -1.0, 1.0);
+  float bow = 0.72 + 0.30*exp(-pow((abs(x) - 0.034)/0.026, 2.0)) - 0.24*exp(-pow(x/0.012, 2.0));
+  return mouthTop(x) + 0.023*pow(max(0.0, 1.0 - u*u), 0.42)*bow;
+}
+float lipLo(float x) { float u = clamp(x/MW, -1.0, 1.0); return mouthBot(x) - 0.030*pow(max(0.0, 1.0 - u*u), 0.65); }
+float bump01(float t) { float s = sin(3.14159*clamp(t, 0.0, 1.0)); return s*s; }
+#else
+float mouthTop(float x) { return 0.45*x*x; }
+float mouthBot(float x) { float k = (MDEEP + 0.45*MW*MW)/(MW*MW); return -MDEEP + k*x*x*(0.55 + 0.45*x*x/(MW*MW)); }
+#endif
+float mouthDist(vec3 p) { vec2 g = mouthCoord(p); return max(max(g.y - mouthTop(g.x), mouthBot(g.x) - g.y), abs(g.x) - MW); }
+
+#if PROTO == 1
+// Fins: one big swept fin at each top corner, three small ones down the side of the head.
+vec2 bigFin(vec3 p, float s) {
+  // Shorter and broader than a horn: a scalloped fin sweeping out, up and back.
+  float e = sin(uT*1.3 + s)*0.02;
+  return blade(p, vec3(s*0.42, 1.94, -0.08), vec3(s*0.68, 2.08, -0.36), vec3(s*(0.80 + e), 2.26 + e, -0.74), vec3(1.0, 1.0, 1.6), 0.20, 0.050, 0.0);
+}
+vec2 smallFin(vec3 p, float s, float i) {
+  float e = sin(uT*1.7 + s + i*0.8)*0.012;
+  float y = 1.84 - 0.15*i;
+  float sc = 1.0 - 0.14*i;
+  return blade(p, vec3(s*0.48, y, -0.06), vec3(s*(0.50 + 0.24*sc), y + 0.01, -0.16), vec3(s*(0.50 + 0.34*sc), y + 0.10*sc + e, -0.32*sc), vec3(1.0, 1.0, 1.5), 0.085*sc, 0.024, 0.0);
+}
+// Low dorsal fin down the back.
+float dorsalB(vec3 p) {
+  float y0 = 0.40, y1 = 1.50;
+  float t = clamp((p.y - y0)/(y1 - y0), 0.0, 1.0);
+  float zb = -0.36 - 0.02*t;
+  float hh = 0.13*pow(sin(3.14159*pow(t, 0.8)), 0.7)*(0.90 + 0.10*cos(t*25.1));
+  float zo = zb - 0.06 - hh;
+  float d2 = max(max(zo - p.z, p.z - zb), max(y0 - p.y, p.y - y1));
+  float th = mix(0.030, 0.007, clamp((zb - p.z)/(0.06 + hh + 0.001), 0.0, 1.0));
+  return max(d2*0.7, abs(p.x) - th);
+}
+// Height of the eye and lids above the head surface, in eye-local space.
+// open < 0 inside the visible eye; the lid rises from the lid edge and rolls back into the skin.
+const float LID_W = 0.042;
+float lidOpen(vec3 l, float ed, float s) { return max(ed, l.y - lidLine(l.x, s)); }
+float eyeRelief(vec3 l, float ed, float s) {
+  float open = lidOpen(l, ed, s);
+  float above = smoothstep(-0.015, 0.025, l.y - eyeMid(l.x));
+  float inner = smoothstep(-EW*0.98, -EW*0.50, l.x);
+  float outer = 1.0 - smoothstep(EW*0.80, EW*1.05, l.x);
+  // Lid profile: full height at the edge, easing back into the skin over LID_W.
+  float u = clamp(open/LID_W, 0.0, 1.0);
+  float prof = (1.0 - u*u)*(1.0 - u*u);
+  float h = mix(0.008, 0.026, above)*inner*outer;
+  float lid = h*prof*smoothstep(-0.004, 0.002, open);
+  // The eye: a gentle dome sitting a little below the lid edge.
+  float dome = 0.016*smoothstep(0.0, -0.06, open) - 0.003;
+  float eye = dome*(1.0 - smoothstep(-0.004, 0.002, open));
+  // A soft crease where the lid meets the brow skin.
+  float cr = (open - LID_W*1.05)/0.012;
+  float crease = -0.004*exp(-cr*cr)*above*inner*outer;
+  return lid + eye + crease;
+}
+// The mouth as sculpture: a recess with solid upper teeth set behind the lip edge, a defined
+// upper lip, a slightly full lower lip, cheeks pushed up by the smile, a dimple, a soft chin.
+// Returns height above the surface (negative = carved in).
+float mouthRelief(vec3 p) {
+  vec2 g = mouthCoord(p);
+  float md = mouthDist(p);
+  float u = clamp(g.x/MW, -1.0, 1.0), w = max(0.0, 1.0 - u*u);
+  // A shallow recess behind the parted lips.
+  float h = -0.014*(1.0 - smoothstep(-0.020, 0.004, md));
+  // Soft rolled lips: a slim upper lip and a fuller lower one, both easing to nothing at the corners.
+  float tU = (g.y - mouthTop(g.x))/max(lipUp(g.x) - mouthTop(g.x), 0.002);
+  float tL = (mouthBot(g.x) - g.y)/max(mouthBot(g.x) - lipLo(g.x), 0.002);
+  h += (0.0030*bump01(tU) + 0.0048*bump01(tL))*w;
+  // The smile lifts both cheeks, the right a little more, and tucks each corner into a small dimple.
+  vec2 cr = g - vec2(MW + 0.045, mouthTop(MW) + 0.045), cl = g - vec2(-MW - 0.045, mouthTop(-MW) + 0.040);
+  h += 0.012*exp(-dot(cr, cr)/0.0070) + 0.010*exp(-dot(cl, cl)/0.0070);
+  vec2 dr = g - vec2(MW + 0.012, mouthTop(MW) + 0.007), dl = g - vec2(-MW - 0.012, mouthTop(-MW) + 0.006);
+  h -= 0.004*(exp(-dot(dr, dr)/0.0006) + exp(-dot(dl, dl)/0.0006));
+  // A soft hollow between the lower lip and the chin.
+  vec2 cn = (g - vec2(0.0, -MDEEP - 0.062))/vec2(0.09, 0.020);
+  h -= 0.004*exp(-dot(cn, cn));
+  return h;
+}
+float skinB(vec3 p) {
+  // Inferno's body plan: a pooled, lobed base, a soft body and neck, then the head.
+  vec3 q = p - vec3(0.0, 0.0, -0.02);
+  float th = atan(q.z, q.x);
+  float k = lobes(th, 0.0);
+  float d = sdEll(vec3(q.x/k, q.y - 0.24, q.z/k), vec3(0.58, 0.30, 0.58))*min(k, 1.0);
+  d = smin(d, sdEll(p - vec3(0.0, 0.80, 0.0), vec3(0.45, 0.70, 0.42)), 0.42);
+  d = smin(d, sdEll(p - vec3(0.0, 1.24, 0.02), vec3(0.47, 0.42, 0.42)), 0.28);
+  float k2 = lobes(th, 1.4);
+  d = smin(d, sdEll(vec3(q.x/k2, q.y - 0.02, q.z/k2), vec3(0.74, 0.06, 0.72))*min(k2, 1.0), 0.28);
+  d = smin(d, sdEll(p - vec3(0.0, 1.66, -0.02), vec3(0.67, 0.47, 0.56)), 0.24);
+  // A rounded crown, so the top of the head domes rather than sitting flat.
+  d = smin(d, sdEll(p - vec3(0.0, 1.86, -0.05), vec3(0.47, 0.36, 0.46)), 0.20);
+  // A soft muzzle under the eyes, so the face has planes rather than being one ball.
+  d = smin(d, sdEll(p - vec3(0.0, 1.40, 0.14), vec3(0.47, 0.29, 0.40)), 0.28);
+  // Short, low tail ending in a small flat fluke.
+  d = smin(d, capT(p, vec3(0.0, 0.10, -0.44), vec3(0.0, 0.06, -0.76), 0.18, 0.03), 0.16);
+  d = smin(d, max(sdEll(p - vec3(0.0, 0.07, -0.82), vec3(0.19, 0.032, 0.10)), -p.y), 0.06);
+  d = smin(d, dorsalB(p), 0.06);
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    d = smin(d, bigFin(p, s).x, 0.12);
+    d = smin(d, smallFin(p, s, 0.0).x, 0.05);
+    d = smin(d, smallFin(p, s, 1.0).x, 0.05);
+    d = smin(d, smallFin(p, s, 2.0).x, 0.05);
+  }
+  // Eyes, built like Floppy's: the eye surface follows the head with a slight dome, so it never
+  // reads hollow from the side, and a solid rolled lid sits over it with a clean ledge.
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    if (p.z > 0.0) {
+      vec3 l = eyeLocal(p, s);
+      d -= eyeRelief(l, eyeDist(p, s), s)*smoothstep(-0.30, -0.10, l.z);
+    }
+  }
+  if (p.z > 0.2) {
+    d -= mouthRelief(p);
+  }
+  return smax(d, -p.y, 0.012);
+}
+#endif
+
+float skin(vec3 p) {
+#if PROTO == 1
+  return skinB(p);
+#endif
+  vec3 q = p - vec3(0.0, 0.0, -0.02);
+  float th = atan(q.z, q.x);
+  float k = lobes(th, 0.0);
+  float d = sdEll(vec3(q.x/k, q.y - 0.24, q.z/k), vec3(0.56*W, 0.30, 0.58))*min(k, 1.0);
+  d = smin(d, sdEll(p - vec3(0.0, 0.80, 0.02), vec3(0.41*W, 0.70, 0.40)), 0.42);
+  d = smin(d, sdEll(p - vec3(0.0, 1.20, 0.02), vec3(0.47*W, 0.52, 0.44)), 0.25);
+  float k2 = lobes(th, 1.4);
+  d = smin(d, sdEll(vec3(q.x/k2, q.y - 0.02, q.z/k2), vec3(0.73*W, 0.06, 0.72))*min(k2, 1.0), 0.28);
+  // Head: one rounded dome running straight into the body, no neck.
+#if PROTO == 2
+  d = smin(d, sdEll(p - vec3(0.0, 1.70, 0.06), vec3(0.64, 0.47, 0.54)), 0.22);
+#else
+  d = smin(d, sdEll(p - vec3(0.0, 1.66, 0.08), vec3(0.69*W, 0.44, 0.56)), 0.22);
+#endif
+  d = smin(d, sdEll(p - vec3(0.0, 1.36, 0.22), vec3(0.50*W, 0.32, 0.40)), 0.30);
+  // Short, low tail ending in a small flat fluke.
+  d = smin(d, capT(p, vec3(0.0, 0.10, -0.50), vec3(0.0, 0.06, -1.00), 0.20, 0.03), 0.18);
+  d = smin(d, max(sdEll(p - vec3(0.0, 0.07, -1.06), vec3(0.24, 0.035, 0.12)), -p.y), 0.06);
+  // Crown features.
+#if PROTO == 0
+  d = smin(d, dorsal(p, 0.32, 1.98, 0.24), 0.06);
+#elif PROTO == 1
+  // A low ridge of three soft fin nubs down the back.
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec3 pr = vec3(p.x*2.6, p.yz);
+    d = smin(d, capT(pr, vec3(0.0, 1.62 - 0.42*fi, -0.42), vec3(0.0, 1.70 - 0.42*fi, -0.62 + 0.03*fi), 0.10, 0.02)/2.6, 0.08);
+  }
+#else
+  d = smin(d, dorsal(p, 0.30, 1.70, 0.16), 0.06);
+  d = smin(d, crestDist(p).x, 0.10);
+#endif
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+#if PROTO == 1
+    d = smin(d, gillDist(p, s, 0.0).x, 0.08);
+    d = smin(d, gillDist(p, s, 1.0).x, 0.08);
+    d = smin(d, gillDist(p, s, 2.0).x, 0.08);
+#else
+    d = smin(d, finEarDist(p, s).x, 0.10);
+#endif
+    if (p.z > 0.0) {
+      vec3 l = eyeLocal(p, s);
+      float ed = eyeDist(p, s);
+      // A shallow lens sunk into a soft socket.
+      d -= 0.018*smoothstep(0.0, -0.06, ed);
+      float rim = (ed - 0.012)/0.022;
+      d += 0.010*exp(-rim*rim);
+      // A soft upper lid of skin over the eye, and a slight lower lid.
+      float lid = smoothstep(-0.006, 0.006, l.y - lidLine(l.x, s))*(1.0 - smoothstep(0.0, 0.035, ed));
+      d -= 0.018*lid;
+      float under = (ed - 0.018)/0.016;
+      d -= 0.006*exp(-under*under)*step(l.y - ETILT*l.x, 0.0);
+      vec2 socket = (p.xy - eyeCentre(s).xy)/vec2(0.30, 0.25);
+      d += 0.010*exp(-dot(socket, socket));
+    }
+  }
+  // A soft fold between the eyes.
+  if (p.z > 0.2) { vec2 mid = (p.xy - vec2(0.0, 1.80))/vec2(0.05, 0.10); d += 0.007*exp(-dot(mid, mid)); }
+  if (p.z > 0.2) d += 0.034*(1.0 - smoothstep(-0.014, 0.010, mouthDist(p)));
+  d = smax(d, -p.y, 0.015);
+  return d;
+}
+
+// ---------------------------------------------------------------- transformed form
+#else
+
+vec3 deform(vec3 p) {
+  vec2 q = p.xy - vec2(0.0, 1.2);
+  float c = cos(uRoll), s = sin(uRoll);
+  return vec3(c*q.x + s*q.y, -s*q.x + c*q.y + 1.2, p.z);
+}
+
+#if PROTO == 1
+const float TAIL_Z = -2.4;
+vec2 spineC(float z) {
+  float w = smoothstep(0.6, -0.8, z);
+  return vec2(0.46*sin(z*1.7 + 0.4 - uT*1.2)*w, 0.24*sin(z*1.2 + 1.2)*w - 0.40*smoothstep(0.7, -0.5, z));
+}
+float bodyR(float z) { return mix(0.07, 0.44, smoothstep(-2.3, -0.3, z)); }
+#else
+const float TAIL_Z = -1.9;
+vec2 spineC(float z) {
+  float w = smoothstep(0.6, -0.8, z);
+  return vec2(0.34*sin(z*1.35 + 0.4)*w, 0.26*sin(z*1.05 + 1.2)*w - 0.42*smoothstep(0.7, -0.5, z));
+}
+float bodyR(float z) { return mix(0.09, 0.48, smoothstep(-1.9, -0.3, z)); }
+#endif
+
+// Head fins: swept fin-ears (A, C) or a fanned gill frill (B).
+void finEar(float s, out vec3 A, out vec3 B, out vec3 C) {
+  float t = uT*2.4 + s*1.3;
+  float end = sin(t - 1.2)*0.05;
+  A = vec3(s*0.30, 1.54, 0.80);
+  B = vec3(s*0.58, 2.10, 0.40);
+  C = vec3(s*(0.86 + end*0.5), 2.04 + end, -0.50);
+}
+vec2 finEarDist(vec3 p, float s) {
+  vec3 A, B, C; finEar(s, A, B, C);
+  return blade(p, A, B, C, vec3(1.0, 1.8, 1.0), 0.20, 0.020, 0.18);
+}
+vec2 gillDist(vec3 p, float s, float i) {
+  float t = uT*2.2 + s + i;
+  float e = sin(t)*0.05;
+  vec3 A = vec3(s*0.40, 1.42 - 0.10*i, 0.72);
+  vec3 B = vec3(s*(0.80 + 0.05*i), 1.62 - 0.28*i, 0.46);
+  vec3 C = vec3(s*(1.10 - 0.03*abs(i - 1.0)), 1.86 - 0.42*i + e, 0.12 + e);
+  return blade(p, A, B, C, vec3(1.0, 1.0, 2.0), 0.12, 0.026, 0.22);
+}
+
+// Pectoral fins (A) or broad manta wings (C), joined to the body along a root.
+#if PROTO == 2
+const float WING_SPAN = 2.55;
+const vec3 WING_ROOT = vec3(0.30, -0.06, 0.50);
+const vec3 WING_S = vec3(0.953, 0.050, -0.301);
+const vec3 WING_C = vec3(-0.301, 0.000, -0.953);
+const vec3 WING_N = vec3(-0.048, 0.996, 0.015);
+float wingTrail(float t) { return 1.55*pow(max(1.0 - t, 0.0), 0.55)*(1.0 - 0.06*abs(sin(t*9.42))); }
+float wingBend(float t) { return -0.30*t*t + 0.16*sin(uT*2.0)*t*t; }
+#else
+const float WING_SPAN = 1.75;
+const vec3 WING_ROOT = vec3(0.30, -0.12, 0.62);
+const vec3 WING_S = vec3(0.803, 0.201, -0.562);
+const vec3 WING_C = vec3(-0.572, 0.000, -0.820);
+const vec3 WING_N = vec3(-0.165, 0.979, 0.115);
+float wingTrail(float t) { return 1.05*pow(max(1.0 - t, 0.0), 0.85)*(1.0 - 0.10*abs(sin(t*12.57))); }
+float wingBend(float t) { return 0.08*sin(t*3.14159) + 0.06*sin(uT*3.0)*t; }
+#endif
+
+vec3 wingUVN(vec3 a) {
+  vec3 q = vec3(abs(a.x), a.yz) - WING_ROOT;
+  float u = dot(q, WING_S);
+  return vec3(u, dot(q, WING_C), dot(q, WING_N) - wingBend(clamp(u/WING_SPAN, 0.0, 1.0)));
+}
+vec3 wingPoint(float t, float v) { return WING_ROOT + WING_S*(t*WING_SPAN) + WING_C*v + WING_N*wingBend(t); }
+float wingOutline(vec3 uvn) {
+  float t = clamp(uvn.x/WING_SPAN, 0.0, 1.0);
+  return max(max(-uvn.y, uvn.y - wingTrail(t)), max(-uvn.x, uvn.x - WING_SPAN));
+}
+float wingD(vec3 a) {
+  vec3 uvn = wingUVN(a);
+  return max(abs(uvn.z)*0.7 - 0.016, wingOutline(uvn)*0.6);
+}
+
+// A sail along the spine: x is thin, y rises off the back, z runs along the body.
+float sail(vec3 a, float z0, float z1, float h, float peak) {
+  float zc = clamp(a.z, z0, z1);
+  vec2 c = spineC(zc);
+  float r = bodyR(zc);
+  float t = (zc - z0)/(z1 - z0);
+  float hh = h*pow(sin(3.14159*pow(t, peak)), 0.8)*(0.84 + 0.16*cos(t*44.0));
+  float y = a.y - c.y;
+  float d2 = max(max(r*0.5 - y, y - (r + hh)), max(z0 - a.z, a.z - z1));
+  float th = mix(0.030, 0.008, clamp((y - r)/(hh + 0.001), 0.0, 1.0));
+  return max(d2*0.6, abs(a.x - c.x) - th);
+}
+// A belly keel fin (B's ribbon runs along the top and bottom).
+float keel(vec3 a, float z0, float z1, float h) {
+  float zc = clamp(a.z, z0, z1);
+  vec2 c = spineC(zc);
+  float r = bodyR(zc);
+  float t = (zc - z0)/(z1 - z0);
+  float hh = h*sin(3.14159*t)*(0.85 + 0.15*cos(t*40.0 + uT*4.0));
+  float y = c.y - a.y;
+  float d2 = max(max(r*0.5 - y, y - (r + hh)), max(z0 - a.z, a.z - z1));
+  return max(d2*0.6, abs(a.x - c.x) - 0.012);
+}
+
+// The grin on the snout, behind the bill.
+const vec2 GRIN = vec2(0.0, -0.15);
+vec2 grinCoord(vec3 a) { return vec2(a.x - GRIN.x, a.y - GRIN.y); }
+float grinTop(float x) { return 0.40*x*x; }
+float grinBottom(float x) { return -0.075 + 1.40*x*x; }
+float grinDist(vec3 a) { vec2 g = grinCoord(a); return max(max(g.y - grinTop(g.x), grinBottom(g.x) - g.y), abs(g.x) - 0.26); }
+
+float skin(vec3 p) {
+  vec3 a = p - vec3(0.0, 1.2, 0.0);
+  vec2 cb = spineC(a.z);
+  float zc = clamp(a.z, TAIL_Z, 0.8);
+  float d = (length(vec3(a.xy - cb, a.z - zc)) - bodyR(zc))*0.82;
+  // Head: a broad skull narrowing into a snout, then a long bill.
+  d = smin(d, sdEll(a - vec3(0.0, 0.10, 0.95), vec3(0.52, 0.38, 0.62)), 0.16);
+  d = smin(d, sdEll(a - vec3(0.0, -0.04, 1.30), vec3(0.36, 0.22, 0.38)), 0.14);
+  d = smin(d, sdEll(a - vec3(0.0, -0.22, 1.18), vec3(0.28, 0.10, 0.34)), 0.10);
+#if PROTO == 0
+  d = smin(d, capT(a, vec3(0.0, -0.05, 1.52), vec3(0.0, -0.08, 2.55), 0.12, 0.012), 0.08);
+#elif PROTO == 1
+  // A short, flat, rounded bill.
+  d = smin(d, sdEll(a - vec3(0.0, -0.10, 1.72), vec3(0.19, 0.065, 0.42)), 0.10);
+#else
+  d = smin(d, capT(a, vec3(0.0, -0.04, 1.50), vec3(0.0, -0.02, 2.80), 0.10, 0.010), 0.08);
+#endif
+#if PROTO == 1
+  d = smin(d, sail(a, -2.25, 0.55, 0.20, 1.0), 0.05);
+  d = smin(d, keel(a, -2.30, -0.30, 0.18), 0.05);
+  // Tail: a soft paddle.
+  vec2 ct = spineC(TAIL_Z);
+  d = smin(d, max(sdEll(vec3(a.x - ct.x, a.y - ct.y, a.z - TAIL_Z + 0.22)*vec3(1.0, 1.0, 1.0), vec3(0.03, 0.30, 0.34)), -1.0), 0.06);
+#else
+  d = smin(d, wingD(a), 0.10);
+  vec3 wa = vec3(abs(a.x), a.yz);
+  d = smin(d, capT(wa, wingPoint(0.0, 0.0), wingPoint(1.0, 0.0), 0.06, 0.012), 0.04);
+  d = smin(d, capT(wa, wingPoint(0.0, 0.0), wingPoint(0.5, wingTrail(0.5)*0.9), 0.026, 0.007), 0.03);
+#if PROTO == 0
+  d = smin(d, sail(a, -1.45, 0.62, 0.55, 0.9), 0.05);
+#else
+  d = smin(d, sail(a, -1.30, 0.30, 0.30, 0.8), 0.05);
+  d = smin(d, blade(a, vec3(0.0, 0.30, 0.95), vec3(0.0, 1.35, 0.20), vec3(0.0, 1.00, 0.95), vec3(1.6, 1.0, 1.0), 0.25, 0.040, 0.0).x, 0.08);
+#endif
+  // Crescent tail fin.
+  vec2 ct = spineC(TAIL_Z);
+  vec3 T = vec3(ct, TAIL_Z);
+  vec3 at = vec3((a.x - ct.x)*2.6, a.yz);
+  vec3 T2 = vec3(0.0, ct.y, TAIL_Z);
+#if PROTO == 0
+  d = smin(d, capT(at, T2, T2 + vec3(0.0, 0.48, -0.36), 0.11*2.6/2.6, 0.012)/2.6, 0.05);
+  d = smin(d, capT(at, T2, T2 + vec3(0.0, -0.42, -0.34), 0.11, 0.012)/2.6, 0.05);
+#else
+  d = smin(d, capT(at, T2, T2 + vec3(0.0, 0.10, -0.70), 0.07, 0.008)/2.6, 0.05);
+#endif
+#endif
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+#if PROTO == 1
+    d = smin(d, gillDist(p, s, 0.0).x, 0.08);
+    d = smin(d, gillDist(p, s, 1.0).x, 0.08);
+    d = smin(d, gillDist(p, s, 2.0).x, 0.08);
+#else
+    d = smin(d, finEarDist(p, s).x, 0.10);
+#endif
+    d += 0.007*(1.0 - smoothstep(-0.015, 0.02, eyeDist(p, s)))*step(0.0, a.z - 0.8);
+  }
+  if (a.z > 0.9) d += 0.026*(1.0 - smoothstep(-0.016, 0.010, grinDist(a)));
+  return d;
+}
+#endif
+
+vec2 map(vec3 p) {
+  p = deform(p);
+  return vec2(skin(p), 1.0);
+}
+
+vec3 normalAt(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  float h = 0.0015;
+  return normalize(k.xyy*map(p + k.xyy*h).x + k.yyx*map(p + k.yyx*h).x + k.yxy*map(p + k.yxy*h).x + k.xxx*map(p + k.xxx*h).x);
+}
+
+float shadow(vec3 ro, vec3 rd) {
+  float res = 1.0, t = 0.03;
+  for (int i = 0; i < 24; i++) {
+    float h = map(ro + rd*t).x;
+    res = min(res, 9.0*h/t);
+    t += clamp(h*0.8, 0.02, 0.25);
+    if (res < 0.001 || t > 4.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+float ao(vec3 p, vec3 n) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 5; i++) {
+    float h = 0.03*float(i);
+    o += (h - map(p + n*h).x)*s; s *= 0.75;
+  }
+  return clamp(1.0 - 2.2*o, 0.0, 1.0);
+}
+
+vec3 sky(vec3 d) { return mix(vec3(0.020, 0.030, 0.050), vec3(0.11, 0.16, 0.22), smoothstep(-0.2, 0.9, d.y)); }
+
+// Eye colour: white, a coloured iris with fine rays, a dark pupil and two highlights.
+vec3 eyeShade(vec3 dp, float s, out vec3 glow) {
+  glow = vec3(0.0);
+#if PROTO == 1 && FORM == 0
+  // B: a living water eye. The iris runs from deep sea at the top to glowing aqua at the bottom,
+  // with moving caustic light inside it, a bright ring around a slightly tall pupil, the lid's
+  // shadow across the top, and a curved window highlight. Edges stay tight.
+  {
+    vec3 l = eyeLocal(dp, s);
+    float lidd = l.y - lidLine(l.x, s);
+    // Both eyes look at one point in front of her, so the gaze holds together from any angle.
+    vec3 g = normalize(vec3(0.0, 1.50, 4.0) - eyeCentre(s));
+    vec3 gu = normalize(cross(vec3(0.0, 1.0, 0.0), g));
+    vec3 gw = cross(g, gu);
+    vec3 gq = dp - eyeCentre(s);
+    vec2 gl = vec2(s*dot(gq, gu), dot(gq, gw));
+    vec3 c = vec3(0.95, 0.97, 0.99);
+    c = mix(c, vec3(0.70, 0.79, 0.90), smoothstep(-0.040, 0.0, lidd)*0.65);
+    vec2 pc = vec2(-0.004, 0.000); float ir = 0.112;
+    vec2 q = gl - pc;
+    float pd = length(q);
+    float a = atan(q.y, q.x);
+    float iris = 1.0 - smoothstep(ir - 0.0025, ir + 0.0015, pd);
+    // Deep to bright, top to bottom.
+    float vy = smoothstep(0.075, -0.085, q.y);
+    vec3 irc = mix(vec3(0.004, 0.040, 0.110), vec3(0.06, 0.60, 0.74), vy);
+    // The pupil: a soft, nearly round oval that slowly breathes wider and narrower.
+    float dil = 1.0 + 0.07*sin(uT*0.8);
+    vec2 pq = q/(vec2(0.030, 0.036)*dil);
+    float pupil = length(pq);
+    // Fibres: light and dark streaks of uneven width running out from the pupil to the rim.
+    float rad = smoothstep(0.032, ir - 0.006, pd);
+    float fib = (0.5 + 0.5*sin(a*41.0 + 2.2*sin(a*7.0)))*(0.5 + 0.5*sin(a*23.0 + 1.3 + 1.5*sin(a*5.0)));
+    irc *= 1.0 + 0.55*(fib - 0.25)*rad;
+    // Collarette: a lighter, jagged ring of colour around the pupil, like a real iris.
+    float coll = pupil - (1.70 + 0.16*sin(a*9.0) + 0.07*sin(a*17.0 + 0.6));
+    irc = mix(irc, vec3(0.18, 0.80, 0.80), (1.0 - smoothstep(-0.05, 0.20, coll))*smoothstep(0.98, 1.20, pupil)*0.45);
+    // Soft drifting caustics in the lower iris only.
+    vec2 cq = q*52.0 + vec2(uT*0.35, -uT*0.25);
+    float cv = sin(cq.x + 1.6*sin(cq.y*0.9 + uT*0.6)) + sin(cq.y*1.1 + 1.6*sin(cq.x*0.8 - uT*0.5));
+    float caustic = pow(1.0 - smoothstep(0.0, 0.55, abs(cv)), 2.0);
+    float cmask = smoothstep(0.050, ir - 0.012, pd)*smoothstep(0.30, 0.90, vy);
+    irc += vec3(0.25, 0.85, 0.95)*caustic*cmask*0.16;
+    // Light gathering in the lower iris, opposite the highlight.
+    irc += vec3(0.12, 0.70, 0.78)*0.40*exp(-pow((pd - 0.078)/0.020, 2.0))*smoothstep(0.0, -0.06, q.y);
+    // Dark limbal ring.
+    irc = mix(irc, vec3(0.002, 0.020, 0.060), smoothstep(ir - 0.020, ir - 0.003, pd));
+    // The lid's shadow over the top of the iris.
+    irc *= 1.0 - 0.55*smoothstep(-0.045, 0.0, lidd);
+    c = mix(c, irc, iris);
+    glow += (vec3(0.06, 0.60, 0.75)*vy*0.14 + vec3(0.25, 0.90, 1.0)*caustic*cmask*0.06)*iris*(1.0 - smoothstep(-0.03, 0.0, lidd)*0.7);
+    // Pupil: deep at the centre, a touch of blue at its soft edge.
+    vec3 pcol = mix(vec3(0.002, 0.005, 0.018), vec3(0.010, 0.050, 0.110), smoothstep(0.45, 1.0, pupil));
+    c = mix(c, pcol, 1.0 - smoothstep(0.93, 1.04, pupil));
+    // Highlights, on the same side of both eyes (one light, up and to her right): a big soft one
+    // overlapping the top of the pupil, a small bright dot low on the other side, and a faint
+    // curved window reflection on the cornea.
+    vec2 qw = vec2(s*q.x, q.y);
+    vec2 hq = mat2(0.86, 0.50, -0.50, 0.86)*(qw - vec2(-0.024, 0.030));
+    float hov = length(hq/vec2(0.025, 0.017));
+    float hdot = length(qw - vec2(0.032, -0.034))/0.0085;
+    float win = exp(-pow((length(qw - vec2(0.030, -0.040)) - 0.110)/0.008, 2.0))*smoothstep(0.0, 0.04, -qw.x + 0.01)*smoothstep(0.0, 0.03, qw.y + 0.005);
+    float hl = max(1.0 - smoothstep(0.80, 1.0, hov), 0.90*(1.0 - smoothstep(0.75, 1.0, hdot)));
+    c = mix(c, vec3(1.0), max(hl, win*0.30)*iris);
+    return c;
+  }
+#endif
+  vec3 l = eyeLocal(dp, s);
+  float ed = eyeDist(dp, s);
+  vec3 c = mix(vec3(0.93, 0.96, 0.98), vec3(0.55, 0.66, 0.76), smoothstep(-0.05, 0.0, ed));
+#if FORM == 1
+  vec2 pc = vec2(-0.025, -0.010); float ir = 0.100; float pr = 0.055; vec3 ic = GLOWC;
+#elif FACE == 0
+  vec2 pc = vec2(-0.030, -0.014); float ir = 0.112; float pr = 0.058; vec3 ic = vec3(0.10, 0.62, 0.48);
+#elif FACE >= 3
+  vec2 pc = vec2(-0.016, -0.010); float ir = 0.118; float pr = 0.056; vec3 ic = vec3(0.06, 0.58, 0.72);
+#elif FACE == 1
+  vec2 pc = vec2(-0.008, 0.004); float ir = 0.120; float pr = 0.054; vec3 ic = GLOWC;
+#else
+  vec2 pc = vec2(s < 0.0 ? 0.010 : -0.020, 0.010); float ir = 0.110; float pr = 0.052; vec3 ic = vec3(0.95, 0.60, 0.10);
+#endif
+  float pd = length(l.xy - pc);
+  float iris = 1.0 - smoothstep(ir - 0.004, ir + 0.002, pd);
+  vec3 irc = mix(ic*1.15, ic*0.40, smoothstep(pr, ir, pd));
+  irc *= 1.0 - 0.20*(0.5 + 0.5*sin(atan(l.y - pc.y, l.x - pc.x)*13.0))*smoothstep(pr, ir, pd);
+  irc = mix(irc, ic*0.15, smoothstep(ir - 0.014, ir, pd));
+  c = mix(c, irc, iris);
+  glow += ic*iris*(1.0 - smoothstep(pr, ir, pd))*0.30;
+  c = mix(c, vec3(0.010, 0.018, 0.045), 1.0 - smoothstep(pr - 0.004, pr + 0.002, pd));
+  float hk = ir/0.112;
+  vec2 h1 = (l.xy - pc - vec2(-0.032, 0.036)*hk)/(0.024*hk);
+  vec2 h2 = (l.xy - pc - vec2(0.034, -0.030)*hk)/(0.012*hk);
+  c = mix(c, vec3(1.0), max(1.0 - smoothstep(0.6, 1.0, length(h1)), 0.8*(1.0 - smoothstep(0.6, 1.0, length(h2)))));
+  return c;
+}
+
+#if PROTO == 1 && FORM == 0
+vec3 albedoB(vec3 dp, out vec3 glow, float pulse) {
+  glow = vec3(0.0);
+  float ax = abs(dp.x);
+  vec3 col = BODYC;
+  // Teal hood: over the crown and down the sides of the head, its front edge dipping to a point between the eyes.
+  float hoodY = ax < 0.25 ? 1.80 + 0.90*ax : (ax < 0.40 ? 2.025 : 2.025 - 5.5*(ax - 0.40)*(ax - 0.40));
+  // The hood blends into the face over a short gradient rather than ending on a hard seam.
+  float hood = smoothstep(-0.065, 0.065, dp.y - hoodY);
+  // A teal stripe down the back, wide at the head, narrowing, then opening into the tail.
+  float bw = 0.08 + 0.42*smoothstep(1.0, 1.95, dp.y) + 0.10*smoothstep(0.35, 0.0, dp.y);
+  float back = smoothstep(0.0, -0.18, dp.z)*(1.0 - smoothstep(bw - 0.09, bw + 0.09, ax));
+  float teal = max(hood, back);
+  col = mix(col, mix(BACKC, GLOWC*0.55, 0.35*smoothstep(1.8, 2.1, dp.y)), teal);
+  // Pale belly following the body's curve: measured as an angle round the body, narrow at the
+  // chest, widening into the pooled base, its top a soft U under the chin.
+  float ang = abs(atan(dp.x, dp.z));
+  float yb = clamp(dp.y, 0.0, 1.3);
+  float span = 0.36 + 0.42*pow(1.0 - smoothstep(0.05, 1.20, yb), 1.2);
+  // Its top is a gentle wave of three crests, with a thin foam line just inside the edge.
+  float wa = ang/0.40;
+  float top = 0.90 - 0.18*wa*wa + 0.032*cos(wa*9.0);
+  // One edge all the way round, measured along the surface, so the sides blend exactly like the wave top.
+  float rr = max(length(dp.xz), 0.25);
+  float bd = smax((ang - span)*rr, dp.y - top, 0.03);
+  float bel = 1.0 - smoothstep(-0.030, 0.020, bd);
+  col = mix(col, mix(BELLYC, FOAM*0.8, 0.35*smoothstep(0.9, 0.1, dp.y)), bel);
+  // A thin foam line just inside the edge, following it down the sides as well as across the top.
+  float foam = (1.0 - smoothstep(0.004, 0.011, abs(bd + 0.040)))*smoothstep(0.03, 0.12, dp.y);
+  col = mix(col, FOAM*0.95, foam*0.8);
+  glow += GLOWC*foam*0.08*pulse;
+  // The front design: a bold glowing water drop falling into the belly, two deep-teal ripple rings
+  // spreading from where it lands, and two small splash droplets.
+  if (dp.z > 0.15) {
+    vec2 e = vec2(dp.x, dp.y - 0.540);
+    float er = length(e/vec2(1.0, 0.30));
+    float r1 = abs(er - 0.126) - 0.0120;
+    float r2 = abs(er - 0.206) - 0.0090;
+    float ring = max(1.0 - smoothstep(0.0, 0.003, r1), 0.90*(1.0 - smoothstep(0.0, 0.003, r2)));
+    // Teardrop pointing up, outlined, with its round end just above the rings.
+    float dr = 0.082, dh = dr*2.1;
+    vec2 dq = vec2(abs(dp.x), dp.y - 0.662);
+    float sa = dr/dh, ca = sqrt(1.0 - sa*sa);
+    float dd = dq.y < dr*sa ? length(dq) - dr : dot(dq - vec2(0.0, dh), vec2(ca, sa));
+    float drop = 1.0 - smoothstep(-0.0015, 0.0015, dd);
+    // The rings break where the drop enters them.
+    ring *= 1.0 - (1.0 - smoothstep(0.0, 0.020, dd - 0.012))*step(0.0, dp.y - 0.540);
+    vec3 ringc = mix(BACKC, BODYC, 0.30)*0.95;
+    col = mix(col, ringc, ring*0.95);
+    // Splash: two little droplets leaping up either side of the drop.
+    float sp = min(length(vec2(abs(dp.x) - 0.132, dp.y - 0.628)) - 0.018, length(vec2(abs(dp.x) - 0.182, dp.y - 0.594)) - 0.011);
+    float spl = 1.0 - smoothstep(-0.0015, 0.0015, sp);
+    // Drop and droplets: bright aqua glowing to foam at the bottom, a deep teal outline, a highlight.
+    vec3 dc = mix(mix(BACKC, GLOWC, 0.55), mix(GLOWC, FOAM, 0.55), smoothstep(dr*1.2, -dr*0.9, dp.y - 0.662));
+    col = mix(col, dc, max(drop, spl));
+    float outline = 1.0 - smoothstep(0.0, 0.0030, abs(min(dd, sp)) - 0.0040);
+    col = mix(col, ringc*0.75, outline);
+    float hl = 1.0 - smoothstep(0.0, 0.006, length((vec2(dp.x, dp.y - 0.662) - vec2(-0.024, 0.014))/vec2(0.75, 1.5)) - 0.012);
+    col = mix(col, FOAM, hl*drop*0.95);
+    glow += GLOWC*(max(drop, spl)*0.40 + ring*0.10)*pulse;
+  }
+  // A teal line following the belly's edge on each side and curving in under the chin.
+  float lineA = span + 0.13;
+  float stripe = (1.0 - smoothstep(0.010, 0.060, abs(ang - lineA)))*smoothstep(0.10, 0.28, dp.y)*(1.0 - smoothstep(top + 0.02, top + 0.10, dp.y));
+  col = mix(col, mix(BACKC, BODYC, 0.25)*1.15, stripe*0.85);
+  // The pooled base catches a lighter blue.
+  col = mix(col, mix(col, BELLYC, 0.45), (1.0 - smoothstep(0.02, 0.09, dp.y))*0.6);
+  // Fins: teal, paling to glassy tips.
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    vec2 f = bigFin(dp, s);
+    float on = (1.0 - smoothstep(0.0, 0.08, f.x))*smoothstep(0.0, 0.40, f.y);
+    col = mix(col, mix(BACKC, mix(BACKC, FOAM, 0.85), smoothstep(0.45, 1.0, f.y)), on);
+    glow += GLOWC*on*pow(smoothstep(0.7, 1.0, f.y), 2.0)*0.45*pulse;
+    for (int j = 0; j < 3; j++) {
+      vec2 g = smallFin(dp, s, float(j));
+      float o = (1.0 - smoothstep(0.0, 0.06, g.x))*smoothstep(0.0, 0.45, g.y);
+      col = mix(col, mix(BACKC, mix(BACKC, FOAM, 0.8), smoothstep(0.50, 1.0, g.y)), o);
+    }
+  }
+  // Dorsal fin: teal with darker rays and a pale edge.
+  float onD = smoothstep(-0.34, -0.42, dp.z)*(1.0 - smoothstep(0.035, 0.055, ax))*smoothstep(0.38, 0.45, dp.y)*(1.0 - smoothstep(1.45, 1.52, dp.y));
+  col = mix(col, mix(BACKC*0.65, BACKC*1.1, 0.5 + 0.5*cos(dp.y*25.1)), onD);
+  col = mix(col, mix(BACKC, FOAM, 0.6), onD*smoothstep(-0.46, -0.54, dp.z)*0.6);
+  // Tail and fluke in teal, paling to foam at the tip.
+  float tail = smoothstep(-0.38, -0.62, dp.z)*(1.0 - smoothstep(0.16, 0.36, dp.y));
+  col = mix(col, mix(BACKC, FOAM, 0.45*smoothstep(-0.74, -0.90, dp.z)), tail);
+  // A small glowing water drop under the point of the hood.
+  if (dp.z > 0.1) {
+    float y = dp.y - 1.765;
+    float w = y < 0.0 ? 0.030*sqrt(max(0.0, 1.0 - (y/0.030)*(y/0.030))) : 0.030*max(0.0, 1.0 - y/0.055);
+    float drop = (1.0 - smoothstep(w - 0.005, w, ax))*step(-0.030, y)*step(y, 0.055);
+    col = mix(col, mix(GLOWC, FOAM, 0.35), drop);
+    glow += GLOWC*drop*0.30*pulse;
+  }
+  // Eyes: the lid takes a slightly deeper, glossy blue exactly over its rolled shape, with a soft
+  // crease shadow beyond it; a bold liner sits on the lid edge and runs out into the wing.
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    if (dp.z > 0.1) {
+      vec3 l = eyeLocal(dp, s);
+      float ed = eyeDist(dp, s);
+      float open = lidOpen(l, ed, s);
+      float above = smoothstep(-0.015, 0.025, l.y - eyeMid(l.x));
+      float inner = smoothstep(-EW*0.92, -EW*0.45, l.x);
+      float outer = 1.0 - smoothstep(EW*0.70, EW*0.98, l.x);
+      // Eyeshadow: deep violet at the lash line blending up into teal shimmer and fading into the
+      // skin with no edge, reaching higher and further toward the outer corner like a smoky wing.
+      float reach = 0.062 + 0.060*smoothstep(-0.5*EW, EW*1.15, l.x);
+      float st = max(open, 0.0)/reach;
+      float upperSide = smoothstep(-0.02, 0.03, l.y - eyeMid(l.x));
+      float sh = pow(1.0 - smoothstep(0.0, 1.0, st), 1.2)*smoothstep(-0.003, 0.001, open);
+      sh *= upperSide*smoothstep(-EW*1.10, -EW*0.45, l.x)*(1.0 - smoothstep(EW*1.15, EW*1.60, l.x));
+      vec3 shc = mix(vec3(0.16, 0.03, 0.34), vec3(0.05, 0.52, 0.66), smoothstep(0.10, 0.65, st));
+      col = mix(col, shc, sh*0.90);
+      glow += vec3(0.05, 0.35, 0.45)*sh*smoothstep(0.30, 0.70, st)*0.08*pulse;
+      // The eye.
+      float vis = 1.0 - smoothstep(-0.002, 0.002, open);
+      vec3 eg;
+      vec3 ec = eyeShade(dp, s, eg);
+      col = mix(col, ec, vis);
+      glow += eg*vis;
+      // Liner on the lid edge, bold at the outer end and tapering to the inner corner; fine below.
+      float taper = mix(0.30, 1.0, smoothstep(-EW, EW*0.8, l.x));
+      float upper = (1.0 - smoothstep(0.0, 0.016*taper, open))*step(-0.002, open)*above*smoothstep(-EW*1.02, -EW*0.92, l.x);
+      float lower = (1.0 - smoothstep(0.0, 0.004, abs(open)))*(1.0 - above)*smoothstep(-EW*0.9, -EW*0.3, l.x)*(1.0 - smoothstep(EW*0.85, EW*0.98, l.x));
+      // The wing continues the lid line past the outer corner, never inside the white.
+      vec2 wroot = vec2(EW*0.78, lidLine(EW*0.78, s) + 0.004);
+      vec2 wtip = vec2(EW, eyeMid(EW)) + WING;
+      float ink = seg2(l.xy, wroot, wtip, 0.016, 0.0010);
+      ink = l.x < EW*0.97 ? max(ink, lidLine(l.x, s) - l.y - 0.002) : max(ink, eyeMid(l.x) - l.y + 0.004);
+      // Lashes: five from the lid edge toward the outer corner, longest outermost, each a tapered
+      // stroke that leaves the lid and curls outward. Only above the lid line, never on the eye.
+      for (int k = 0; k < 5; k++) {
+        float fk = float(k);
+        float lx = EW*(0.24 + 0.17*fk);
+        vec2 root = vec2(lx, lidLine(lx, s) + 0.002);
+        float ang = radians(96.0 - 15.0*fk);
+        vec2 dir = vec2(cos(ang), sin(ang));
+        float len = 0.046 + 0.013*fk;
+        vec2 mid = root + dir*len*0.55;
+        vec2 tip = mid + normalize(dir + vec2(0.32, -0.02))*len*0.50;
+        // One smooth curve, tapering from root to tip.
+        vec2 lb = sdBezier(vec3(l.xy, 0.0), vec3(root, 0.0), vec3(mid, 0.0), vec3(tip, 0.0));
+        float lash = lb.x - mix(0.0095, 0.0007, pow(lb.y, 0.8));
+        ink = min(ink, max(lash, lidLine(l.x, s) - l.y));
+      }
+      col = mix(col, INK, max(max(upper, lower*0.8), 1.0 - smoothstep(0.0, 0.003, ink)));
+    }
+  }
+  // Mouth: tinted lips (cupid's bow on top, a fuller glossy lower lip) slightly parted over a band
+  // of top teeth, a fine line where the lips meet and a small upturned tick at each corner.
+  if (dp.z > 0.2) {
+    float md = mouthDist(dp);
+    vec2 g = mouthCoord(dp);
+    float u = g.x/MW, w = max(0.0, 1.0 - u*u);
+    float inside = 1.0 - smoothstep(-0.0020, 0.0012, md);
+    float open = max(mouthTop(g.x) - mouthBot(g.x), 0.001);
+    float fromTop = (mouthTop(g.x) - g.y)/open;
+    vec3 tc = mix(vec3(0.95, 0.96, 0.98), vec3(0.66, 0.73, 0.86), (1.0 - smoothstep(0.0, 0.40, fromTop))*0.6);
+    vec3 ic = mix(vec3(0.030, 0.012, 0.060), tc, 1.0 - smoothstep(0.50, 0.66, fromTop));
+    ic = mix(ic, vec3(0.04, 0.02, 0.07), smoothstep(0.55, 1.0, abs(u)));
+    col = mix(col, ic, inside);
+    // Lips: the tint fades softly into the skin at the outer edges and at the corners.
+    float lu = smoothstep(-0.0015, 0.0015, g.y - mouthTop(g.x))*(1.0 - smoothstep(-0.004, 0.003, g.y - lipUp(g.x)));
+    float ll = smoothstep(-0.0015, 0.0015, mouthBot(g.x) - g.y)*(1.0 - smoothstep(-0.005, 0.004, lipLo(g.x) - g.y));
+    float cf = 1.0 - smoothstep(0.78, 1.02, abs(u));
+    col = mix(col, LIPC*0.85, lu*0.70*cf);
+    col = mix(col, LIPC, ll*0.68*cf);
+    // Gloss on the lower lip, and a soft shadow under it.
+    float gx = -0.022;
+    vec2 gq = (g - vec2(gx, mix(mouthBot(gx), lipLo(gx), 0.40)))/vec2(0.034, 0.0060);
+    col = mix(col, vec3(0.80, 0.78, 0.98), exp(-dot(gq, gq)*1.6)*0.60*ll);
+    float under = (1.0 - smoothstep(0.0, 0.012, lipLo(g.x) - g.y))*step(g.y, lipLo(g.x))*w;
+    col = mix(col, col*vec3(0.70, 0.74, 0.90), under*0.45);
+    // The line where the lips meet, tapering to the corners, then a small tick turning up at each end.
+    float lw = 0.0020*pow(w, 0.5) + 0.0007;
+    float line = max(abs(g.y - mouthTop(g.x)) - lw, abs(g.x) - MW);
+    vec2 cR = vec2(MW, mouthTop(MW)), cL = vec2(-MW, mouthTop(-MW));
+    float tick = min(seg2(g, cR - vec2(0.006, 0.003), cR + vec2(0.011, 0.012), 0.0022, 0.0006),
+                     seg2(g, cL + vec2(0.006, -0.003), cL + vec2(-0.010, 0.010), 0.0020, 0.0006));
+    col = mix(col, mix(INK, LIPC*0.25, 0.3), 1.0 - smoothstep(0.0, 0.0020, min(line, tick)));
+  }
+  return col;
+}
+#endif
+
+// Returns colour; `glow` receives self-illumination.
+vec3 skinAlbedo(vec3 dp, vec3 n, out vec3 glow) {
+  glow = vec3(0.0);
+  float pulse = 0.80 + 0.20*sin(uT*1.2 + dp.y*1.4);
+#if PROTO == 1 && FORM == 0
+  return albedoB(dp, glow, pulse);
+#endif
+#if FORM == 0
+  float ax = abs(dp.x);
+  vec3 col = BODYC;
+  // Teal back and crown, meeting the blue front along a soft wave line.
+  float wave = 0.07*sin(dp.y*7.0 + ax*3.0 + 0.6);
+  float lift = 0.80*smoothstep(1.78, 2.12, dp.y);
+  float backv = dp.z - 0.06 + wave - lift;
+  float back = smoothstep(0.02, -0.20, backv);
+  col = mix(col, BACKC, back);
+#if PROTO == 2
+  // A thin line of foam where the two colours meet.
+  col = mix(col, FOAM*0.75, (1.0 - smoothstep(0.0, 0.03, abs(backv + 0.09)))*0.75*smoothstep(0.3, 0.6, dp.y));
+#endif
+#if PROTO == 1
+  // Ripple rings across the back, as if a drop landed on it.
+  float rr = length(vec2(dp.x, (dp.y - 1.05)*0.9));
+  float ring = (1.0 - smoothstep(0.012, 0.024, abs(fract(rr*4.2) - 0.5)*0.24))*smoothstep(-0.10, -0.30, dp.z)*smoothstep(0.95, 0.15, rr);
+  col = mix(col, mix(BACKC, FOAM, 0.40), ring*0.65);
+#endif
+  // Pale belly on the front.
+#if PROTO == 0
+  // Its top edge is a rolling wave.
+  float top = 1.02 + 0.045*sin(dp.x*13.0 + 1.2);
+  float half_ = 0.33;
+#elif PROTO == 1
+  float top = 1.00;
+  float half_ = 0.39;
+#else
+  float top = 1.06;
+  float half_ = 0.15 + 0.17*smoothstep(1.05, 0.20, dp.y);
+#endif
+  float bel = smoothstep(0.02, 0.18, dp.z)*(1.0 - smoothstep(top - 0.02, top + 0.02, dp.y))*(1.0 - smoothstep(half_ - 0.07, half_ + 0.01, ax))*smoothstep(0.02, 0.10, dp.y);
+#if PROTO == 1
+  // Soft lighter bands for the belly rolls.
+  bel *= 0.86 + 0.14*smoothstep(0.3, 0.7, abs(fract(dp.y*4.2) - 0.5)*2.0);
+#endif
+  col = mix(col, BELLYC, bel);
+#if PROTO == 0
+  // A lighter crest along the wave edge.
+  col = mix(col, mix(BELLYC, FOAM, 0.6), (1.0 - smoothstep(0.0, 0.035, abs(dp.y - top + 0.03)))*smoothstep(0.02, 0.18, dp.z)*(1.0 - smoothstep(half_ - 0.07, half_ + 0.01, ax))*0.8);
+#endif
+  // Head fins, gills or crest: teal, with darker rays and glowing tips.
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+#if PROTO == 1
+    for (int j = 0; j < 3; j++) {
+      vec2 g = gillDist(dp, s, float(j));
+      float on = (1.0 - smoothstep(0.0, 0.06, g.x))*smoothstep(0.05, 0.20, g.y);
+      col = mix(col, mix(BACKC, BACKC*0.55, 0.5 + 0.5*sin(g.y*28.0)), on*0.9);
+      float tip = on*smoothstep(0.55, 1.0, g.y);
+      col = mix(col, FOAM, tip*0.8);
+      glow += GLOWC*tip*tip*0.70*pulse;
+    }
+#else
+    vec2 f = finEarDist(dp, s);
+    float on = (1.0 - smoothstep(0.0, 0.06, f.x))*smoothstep(0.04, 0.18, f.y);
+    col = mix(col, mix(BACKC, BACKC*0.55, 0.5 + 0.5*sin(f.y*28.0)), on);
+    float tip = on*smoothstep(0.62, 1.0, f.y);
+    col = mix(col, FOAM, tip*0.85);
+    glow += GLOWC*tip*tip*0.80*pulse;
+#endif
+  }
+#if PROTO == 0 || PROTO == 2
+  // Dorsal fin rays and a pale edge.
+  float onFin = smoothstep(-0.30, -0.44, dp.z)*(1.0 - smoothstep(0.04, 0.06, ax));
+  col = mix(col, mix(BACKC*0.6, BACKC, 0.5 + 0.5*cos(dp.y*25.1)), onFin*0.7);
+  col = mix(col, FOAM*0.8, onFin*smoothstep(-0.52, -0.68, dp.z)*0.7);
+#endif
+#if PROTO == 2
+  vec2 cr = crestDist(dp);
+  float onCrest = (1.0 - smoothstep(0.0, 0.05, cr.x))*smoothstep(0.08, 0.22, cr.y);
+  col = mix(col, mix(BACKC, FOAM, smoothstep(0.55, 1.0, cr.y)), onCrest);
+  glow += GLOWC*onCrest*pow(smoothstep(0.65, 1.0, cr.y), 2.0)*0.9*pulse;
+#endif
+#if PROTO == 0
+  // Droplet freckles on the cheeks.
+  if (dp.z > 0.1) {
+    vec2 sq = vec2(ax, dp.y);
+    float dots = min(min(length((sq - vec2(0.50, 1.40))*vec2(1.0, 0.8)), length((sq - vec2(0.56, 1.33))*vec2(1.0, 0.8))), length((sq - vec2(0.47, 1.30))*vec2(1.0, 0.8)));
+    col = mix(col, BACKC, (1.0 - smoothstep(0.014, 0.020, dots))*0.85);
+  }
+#endif
+  // Tail fluke tip fades to foam.
+  col = mix(col, mix(BACKC, FOAM, 0.4), smoothstep(-0.95, -1.18, dp.z)*(1.0 - smoothstep(0.10, 0.16, dp.y)));
+  // Form shadow under the jaw and in the eye sockets, tinted blue rather than grey.
+  if (dp.z > 0.1) {
+    vec2 sk = (vec2(ax, dp.y) - eyeCentre(1.0).xy)/vec2(0.34, 0.24);
+    float jaw = smoothstep(0.98, 1.06, dp.y)*smoothstep(1.13, 1.07, dp.y)*smoothstep(0.55, 0.20, ax);
+    col = mix(col, col*vec3(0.62, 0.70, 0.88), max(0.35*exp(-dot(sk, sk)*1.1), 0.40*jaw));
+  }
+  // Eyes.
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    if (dp.z > 0.1) {
+      vec3 l = eyeLocal(dp, s);
+      float ed = eyeDist(dp, s);
+      float lidd = l.y - lidLine(l.x, s);
+      float inside = (1.0 - smoothstep(-0.004, 0.002, ed));
+      float open = inside*(1.0 - smoothstep(-0.004, 0.002, lidd));
+      vec3 eg;
+      vec3 ec = eyeShade(dp, s, eg);
+      // Lid in a darker teal, with an ink line along its edge.
+      vec3 lidc = mix(BACKC, BODYC, 0.35)*0.85;
+      ec *= 1.0 - 0.38*smoothstep(-0.06, 0.0, lidd);
+      col = mix(col, lidc, inside*(1.0 - open));
+      col = mix(col, ec, open);
+      glow += eg*open;
+      col = mix(col, INK, inside*(1.0 - smoothstep(0.0, 0.010, abs(lidd)))*(1.0 - smoothstep(-0.03, 0.0, ed)));
+      // Outline, heavier on top.
+      col = mix(col, INK, 1.0 - smoothstep(0.0, mix(0.008, 0.015, step(0.0, l.y)), max(ed, -0.002 - ed)));
+    }
+  }
+  // Mouth: dark inside, solid teeth falling into shadow at the corners, and an ink crease hooking up at each end.
+  if (dp.z > 0.2) {
+    float md = mouthDist(dp);
+    vec2 g = mouthCoord(dp);
+    float inside = 1.0 - smoothstep(-0.003, 0.003, md);
+    float depth = mouthTop(g.x) - g.y;
+#if FACE == 2
+    float th = TEETH*(0.72 + 0.28*abs(sin(g.x*3.14159/0.058)));
+#else
+    float th = TEETH;
+#endif
+    float teeth = 1.0 - smoothstep(th - 0.006, th, depth);
+    float corner = smoothstep(0.10, MW, abs(g.x));
+    vec3 tc = mix(vec3(0.95, 0.96, 0.92), vec3(0.18, 0.24, 0.36), max(corner*0.85, 1.0 - smoothstep(0.004, 0.018, depth)));
+    col = mix(col, mix(MOUTHC, tc, teeth), inside);
+    float below = (1.0 - inside)*(1.0 - smoothstep(0.0, 0.05, md))*step(g.y, 0.0);
+    col = mix(col, col*vec3(0.62, 0.68, 0.85), below*0.7);
+    float edge = abs(md) - 0.003 - 0.006*(1.0 - smoothstep(0.0, MW, abs(g.x)));
+    float hookR = seg2(g, vec2(MW - 0.012, mouthTop(MW) - 0.004), vec2(MW + 0.040, mouthTop(MW) + 0.040), 0.007, 0.0015);
+    float hookL = seg2(g, vec2(-MW + 0.012, mouthTop(MW) - 0.004), vec2(-MW - 0.036, mouthTop(MW) + 0.026), 0.006, 0.0015);
+    col = mix(col, INK, 1.0 - smoothstep(0.0, 0.005, min(edge, min(hookR, hookL))));
+  }
+#if FACE == 0
+  // Three gill-slit marks on each cheek.
+  if (dp.z > 0.1) {
+    vec2 sq = vec2(ax, dp.y);
+    float gs = min(min(seg2(sq, vec2(0.49, 1.34), vec2(0.51, 1.45), 0.009, 0.004), seg2(sq, vec2(0.535, 1.33), vec2(0.555, 1.43), 0.008, 0.004)), seg2(sq, vec2(0.58, 1.33), vec2(0.595, 1.41), 0.007, 0.003));
+    col = mix(col, mix(BACKC, BODYC, 0.4)*0.7, 1.0 - smoothstep(0.0, 0.006, gs));
+  }
+#elif FACE == 1
+  // A small water-drop mark on the forehead, glowing faintly.
+  if (dp.z > 0.1) {
+    float y = dp.y - 1.865;
+    float w = y < 0.0 ? 0.042*sqrt(max(0.0, 1.0 - (y/0.042)*(y/0.042))) : 0.042*max(0.0, 1.0 - y/0.075);
+    float drop = (1.0 - smoothstep(w - 0.006, w, ax))*step(-0.042, y)*step(y, 0.075);
+    col = mix(col, mix(GLOWC, FOAM, 0.3), drop);
+    glow += GLOWC*drop*0.35*pulse;
+  }
+#else
+  // Freckles across the nose.
+  if (dp.z > 0.3) {
+    vec2 nz = dp.xy;
+    float fr = min(min(length(nz - vec2(-0.120, 1.455)), length(nz - vec2(-0.062, 1.495))), length(nz - vec2(-0.010, 1.450)));
+    fr = min(fr, min(length(nz - vec2(0.058, 1.490)), length(nz - vec2(0.118, 1.452))));
+    col = mix(col, mix(BACKC, BODYC, 0.5)*0.6, (1.0 - smoothstep(0.011, 0.017, fr))*0.8);
+  }
+#endif
+#else
+  vec3 a = dp - vec3(0.0, 1.2, 0.0);
+  vec2 qb = a.xy - spineC(a.z);
+  float around = atan(abs(qb.x), qb.y);
+  vec3 col = BODYC;
+  // Teal back, pale belly underneath, along a wave line.
+  float wave = 0.25*sin(a.z*6.0);
+  col = mix(col, BACKC, 1.0 - smoothstep(0.75 + wave, 1.15 + wave, around));
+  col = mix(col, BELLYC, smoothstep(2.05, 2.45, around)*0.9);
+  col = mix(col, mix(BACKC, FOAM, 0.35), smoothstep(-1.2, -1.9, a.z)*0.6);
+  // Bill: blue, paling to the tip.
+  col = mix(col, mix(BODYC, BELLYC, 0.7), smoothstep(1.55, 2.6, a.z));
+#if PROTO != 1
+  vec3 wuvn = wingUVN(a);
+  float wt = clamp(wuvn.x/WING_SPAN, 0.0, 1.0);
+  float onWing = (1.0 - smoothstep(0.04, 0.09, abs(wuvn.z)))*(1.0 - smoothstep(0.02, 0.06, wingOutline(wuvn)));
+  vec3 fin = mix(BODYC, BACKC, smoothstep(0.0, 0.7, wt));
+  fin = mix(fin, BACKC*0.6, (0.5 + 0.5*cos(wuvn.y*30.0 + wt*8.0))*0.45);
+  fin = mix(fin, FOAM, (1.0 - smoothstep(0.0, 0.05, wingTrail(wt) - wuvn.y))*0.8);
+  col = mix(col, fin, onWing);
+  glow += GLOWC*onWing*(1.0 - smoothstep(0.0, 0.05, wingTrail(wt) - wuvn.y))*0.25*pulse;
+#endif
+  // Sail and keel: teal with rays, foam edge.
+  float upper = smoothstep(bodyR(clamp(a.z, TAIL_Z, 0.8)) + 0.04, bodyR(clamp(a.z, TAIL_Z, 0.8)) + 0.12, abs(qb.y))*(1.0 - smoothstep(0.03, 0.05, abs(qb.x)));
+  col = mix(col, mix(BACKC*0.6, BACKC, 0.5 + 0.5*cos(a.z*44.0)), upper);
+  col = mix(col, FOAM, upper*smoothstep(0.25, 0.55, abs(qb.y) - bodyR(clamp(a.z, TAIL_Z, 0.8)))*0.6);
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+#if PROTO == 1
+    for (int j = 0; j < 3; j++) {
+      vec2 g = gillDist(dp, s, float(j));
+      float on = (1.0 - smoothstep(0.0, 0.06, g.x))*smoothstep(0.05, 0.20, g.y);
+      col = mix(col, mix(BACKC, BACKC*0.55, 0.5 + 0.5*sin(g.y*28.0)), on*0.9);
+      float tip = on*smoothstep(0.55, 1.0, g.y);
+      col = mix(col, FOAM, tip*0.8);
+      glow += GLOWC*tip*tip*0.7*pulse;
+    }
+#else
+    vec2 f = finEarDist(dp, s);
+    float on = (1.0 - smoothstep(0.0, 0.06, f.x))*smoothstep(0.04, 0.18, f.y);
+    col = mix(col, mix(BACKC, BACKC*0.55, 0.5 + 0.5*sin(f.y*28.0)), on);
+    float tip = on*smoothstep(0.62, 1.0, f.y);
+    col = mix(col, FOAM, tip*0.85);
+    glow += GLOWC*tip*tip*0.8*pulse;
+#endif
+    if (a.z > 0.9) {
+      vec3 l = eyeLocal(dp, s);
+      float ed = eyeDist(dp, s);
+      float lidd = l.y - lidLine(l.x, s);
+      float inside = 1.0 - smoothstep(-0.004, 0.002, ed);
+      float open = inside*(1.0 - smoothstep(-0.004, 0.002, lidd));
+      vec3 eg;
+      vec3 ec = eyeShade(dp, s, eg);
+      col = mix(col, mix(BACKC, BODYC, 0.35)*0.85, inside*(1.0 - open));
+      col = mix(col, ec, open);
+      glow += eg*open;
+      col = mix(col, INK, inside*(1.0 - smoothstep(0.0, 0.010, abs(lidd))));
+      col = mix(col, INK, 1.0 - smoothstep(0.0, 0.010, max(ed, -0.002 - ed)));
+    }
+  }
+  // Grin on the snout, behind the bill.
+  if (a.z > 0.9) {
+    float gd = grinDist(a);
+    vec2 g = grinCoord(a);
+    float inside = 1.0 - smoothstep(-0.003, 0.003, gd);
+    vec3 mc = MOUTHC;
+    float teeth = 1.0 - smoothstep(0.004, 0.012, grinTop(g.x) - g.y - 0.012*(0.5 + 0.5*cos(g.x*70.0)));
+    mc = mix(mc, vec3(0.95, 0.96, 0.93), teeth);
+    col = mix(col, mc, inside);
+    col = mix(col, INK, 1.0 - smoothstep(0.0, 0.010, abs(gd)));
+  }
+#endif
+  return col;
+}
+
+vec3 shadeGround(vec3 p, vec3 rd) {
+  vec3 col = vec3(0.060, 0.075, 0.095);
+  vec3 l = normalize(LKEY);
+  float sh = shadow(p + vec3(0.0, 0.002, 0.0), l);
+  col *= mix(0.45, 1.0, sh);
+#if FORM == 0
+  float r = length(p.xz/vec2(0.95, 0.95));
+  col *= 1.0 - 0.45*smoothstep(1.4, 0.75, r);
+  col += GLOWC*0.05*exp(-1.3*dot(p.xz - vec2(0.0, 0.6), p.xz - vec2(0.0, 0.6)));
+#else
+  col += GLOWC*0.05*exp(-0.9*dot(p.xz - vec2(0.0, -2.3), p.xz - vec2(0.0, -2.3)));
+#endif
+  float fade = smoothstep(11.0, 3.5, length(p.xz));
+  return mix(sky(rd), col, fade);
+}
+
+#if FORM == 1
+const float WAKE_LENGTH = 1.5;
+vec3 tailTip() {
+  vec2 q = spineC(TAIL_Z);
+  float c = cos(uRoll), s = sin(uRoll);
+  return vec3(c*q.x - s*q.y, s*q.x + c*q.y + 1.2, TAIL_Z - 0.2);
+}
+// One spiralling ribbon of water streaming back from the tail, marched as a soft volume.
+void tailWake(vec3 ro, vec3 rd, float tSolid, inout vec3 col) {
+  vec3 tip = tailTip();
+  vec3 bmin = tip - vec3(0.7, 0.7, WAKE_LENGTH + 0.1), bmax = tip + vec3(0.7, 0.7, 0.3);
+  vec3 ta = (bmin - ro)/rd, tb = (bmax - ro)/rd;
+  vec3 mn = min(ta, tb), mx = max(ta, tb);
+  float t0 = max(max(mn.x, mn.y), max(mn.z, 0.0)), t1 = min(min(mx.x, mx.y), min(mx.z, tSolid));
+  if (t1 <= t0) return;
+  const int STEPS = 36;
+  float dt = (t1 - t0)/float(STEPS);
+  float jit = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)))*43758.5453);
+  vec3 sum = vec3(0.0);
+  float alpha = 0.0;
+  for (int i = 0; i < STEPS; i++) {
+    vec3 q = ro + rd*(t0 + (float(i) + jit)*dt) - tip;
+    float along = clamp((-q.z + 0.2)/WAKE_LENGTH, 0.0, 1.0);
+    if (along <= 0.0 || along >= 1.0) continue;
+    float ang = atan(q.y, q.x) - along*7.0 + uT*6.2832;
+    float radius = 0.32*pow(along + 0.05, 0.5)*pow(1.0 - along, 0.8)*1.6;
+    float d = length(q.xy)/max(radius, 0.001);
+    // Two spiralling sheets rather than a solid cone, so it reads as moving water.
+    float sheet = 0.5 + 0.5*cos(ang*2.0);
+    float dens = (1.0 - smoothstep(0.65, 1.0, d))*mix(0.35, 1.0, sheet);
+    if (dens <= 0.0) continue;
+    vec3 c = mix(vec3(0.04, 0.25, 0.65), GLOWC, smoothstep(0.3, 0.9, sheet*(1.0 - d)));
+    c = mix(c, FOAM*1.2, smoothstep(0.75, 1.0, sheet)*(1.0 - along));
+    float k = clamp(dens*dt*16.0, 0.0, 1.0)*smoothstep(0.02, 0.2, along);
+    sum += (1.0 - alpha)*c*k;
+    alpha += (1.0 - alpha)*k;
+  }
+  col = col*(1.0 - alpha) + sum;
+}
+#endif
+
+void main() {
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.6*uFwd);
+  vec3 ro = uRo;
+  vec3 col = sky(rd);
+  float t = 0.0, hitId = 0.0;
+  for (int i = 0; i < 120; i++) {
+    vec2 h = map(ro + rd*t);
+    if (h.x < 0.0008*t) { hitId = h.y; break; }
+    t += h.x*0.7;
+    if (t > 18.0) break;
+  }
+  float tg = rd.y < 0.0 ? -ro.y/rd.y : 1e9;
+  float tSolid = 1e9;
+  if (hitId > 0.0 && t < tg) {
+    tSolid = t;
+    vec3 p = ro + rd*t;
+    vec3 n = normalAt(p);
+    vec3 v = -rd;
+    vec3 l = normalize(LKEY), lr = normalize(LRIM);
+    vec3 dp = deform(p);
+    float occ = ao(p, n);
+    float sh = shadow(p + n*0.01, l);
+    float ndl = dot(n, l);
+    vec3 hv = normalize(l + v);
+    float nv = max(dot(n, v), 0.0);
+    float fres = pow(1.0 - nv, 3.0);
+    vec3 glow;
+    vec3 alb = skinAlbedo(dp, n, glow);
+    float wrap = max(0.0, (ndl + 0.4)/1.4);
+    col = alb*(wrap*mix(0.5, 1.0, sh)*vec3(0.96, 0.98, 1.0)*1.05 + 0.95*occ*sky(n) + 0.24*occ*vec3(0.80, 0.90, 1.0));
+    // Wet and glossy, like Floppy: a broad sheen plus a tight highlight.
+    col += sh*(0.18*pow(max(dot(n, hv), 0.0), 26.0) + 1.0*pow(max(dot(n, hv), 0.0), 260.0));
+    col += 0.24*pow(max(dot(n, normalize(lr + v)), 0.0), 50.0)*vec3(0.70, 0.90, 1.0);
+    col += 0.20*fres*sky(reflect(rd, n));
+    col += glow;
+#if PROTO == 1 && FORM == 0
+    col += 0.10*fres*GLOWC;
+#endif
+    // Comic ink: dark edge where the surface turns away.
+    col = mix(col, INK, smoothstep(0.20, 0.08, nv)*0.9);
+  } else if (rd.y < 0.0) {
+    col = shadeGround(ro + rd*tg, rd);
+  }
+#if FORM == 1
+  tailWake(ro, rd, tSolid, col);
+#endif
+  col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  vec2 q = gl_FragCoord.xy/uRes;
+  col *= 0.86 + 0.14*pow(16.0*q.x*q.y*(1.0 - q.x)*(1.0 - q.y), 0.25);
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script>
+(function () {
+  const PROTO = 1;
+  const FRAMES = 24;
+  const params = new URLSearchParams(location.search);
+  const CAMS = {
+    base: { pitch: 0.12, dist: 7.0, ty: 1.45, tz: -0.05, close: { yaw: 0.0, pitch: 0.04, dist: 3.8, ty: 1.62, tz: 0.2 }, start: 3 },
+    comet: { pitch: 0.18, dist: 7.6, ty: 1.35, tz: -0.10, close: { yaw: 0.50, pitch: 0.12, dist: 6.0, ty: 1.45, tz: 0.6 }, start: 3 },
+  };
+  // Frames embedded by the build script, if any.
+  const EMBED = window.__FRAMES__ || null;
+
+  function makeRenderer(canvas, form) {
+    const gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+    if (!gl) return null;
+    function sh(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, document.getElementById("vs").textContent));
+    const face = form[0] === "f" ? form[1] : "0";
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, `#define FORM ${form === "comet" ? 1 : 0}\n#define FACE ${face}\n#define PROTO ${PROTO}\n` + document.getElementById("fs").textContent));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(prog, n);
+    const u = { res: U("uRes"), t: U("uT"), roll: U("uRoll"), ro: U("uRo"), right: U("uRight"), up: U("uUp"), fwd: U("uFwd") };
+    return function draw(cam, time, roll) {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      const cy = Math.cos(cam.pitch);
+      const ro = [Math.sin(cam.yaw)*cy*cam.dist, cam.ty + Math.sin(cam.pitch)*cam.dist, cam.tz + Math.cos(cam.yaw)*cy*cam.dist];
+      const tgt = [0, cam.ty, cam.tz];
+      let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+      let r = [-f[2], 0, f[0]]; const rl = Math.hypot(...r); r = r.map(v => v/rl);
+      const up = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+      gl.uniform2f(u.res, canvas.width, canvas.height);
+      gl.uniform1f(u.t, time);
+      gl.uniform1f(u.roll, roll);
+      gl.uniform3fv(u.ro, ro); gl.uniform3fv(u.right, r); gl.uniform3fv(u.up, up); gl.uniform3fv(u.fwd, f);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+  }
+
+  // Offline mode: tools/slugs/render_concept.py posts every turntable frame back to itself.
+  if (params.get("render")) {
+    document.body.classList.add("render");
+    const size = parseInt(params.get("size") || "640", 10);
+    (async function () {
+      try {
+        for (const form of (params.get("forms") || "f0,f1,f2,comet").split(",")) {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = size;
+          document.body.appendChild(canvas);
+          const draw = makeRenderer(canvas, form);
+          const c = CAMS[form === "comet" ? "comet" : "base"];
+          const yawList = (params.get("frames") || "").split(",").filter(Boolean).map(Number);
+          const list = yawList.length ? yawList : [...Array(FRAMES).keys()];
+          const shots = list.map(i => [String(i).padStart(2, "0"), { yaw: i/FRAMES*Math.PI*2, pitch: c.pitch, dist: c.dist, ty: c.ty, tz: c.tz }]);
+          shots.push(["close", c.close]);
+          for (const [name, cam] of shots) {
+            draw(cam, 2.0, 0.0);
+            await fetch(`/frame/${form}-${name}.jpg`, { method: "POST", body: canvas.toDataURL("image/jpeg", 0.86) });
+            await new Promise(r => setTimeout(r, 0));
+          }
+          canvas.remove();
+        }
+        await fetch("/done", { method: "POST" });
+      } catch (e) {
+        await fetch("/error", { method: "POST", body: String(e && e.message || e) });
+      }
+    })();
+    return;
+  }
+
+  const box = document.getElementById("box");
+  const still = document.getElementById("still");
+  const hint = document.getElementById("hint");
+  const FORMS = [...document.querySelectorAll("[data-form]")].map(b => b.dataset.form);
+  let form = FORMS[0], frame = CAMS.base.start, live = null, liveBtnOn = false;
+  const cam = () => CAMS[form === "comet" ? "comet" : "base"];
+  const key = (f, n) => `${f}-${typeof n === "number" ? String(n).padStart(2, "0") : n}`;
+  const url = (f, n) => EMBED ? EMBED[key(f, n)] : `frames/${key(f, n)}.jpg`;
+  function show() { still.src = url(form, frame); }
+  for (const f of FORMS) for (let i = 0; i < FRAMES; i++) new Image().src = url(f, i);
+
+  function setForm(next) {
+    const keepView = (form === "comet") === (next === "comet");
+    form = next;
+    if (!keepView) frame = cam().start;
+    document.querySelectorAll("[data-form]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.form === form)));
+    document.getElementById("notes-base").hidden = form === "comet";
+    document.getElementById("notes-comet").hidden = form !== "comet";
+    document.querySelectorAll("[data-face-note]").forEach(n => { n.hidden = form === "comet" || n.dataset.faceNote !== form; });
+    if (liveBtnOn) { stopLive(); startLive(); }
+    show();
+  }
+  document.querySelectorAll("[data-form]").forEach(b => b.addEventListener("click", () => setForm(b.dataset.form)));
+  document.querySelectorAll("[data-frame]").forEach(b => b.addEventListener("click", () => {
+    if (liveBtnOn) stopLive();
+    frame = b.dataset.frame === "close" ? "close" : parseInt(b.dataset.frame, 10);
+    show();
+  }));
+
+  let drag = null, acc = 0, yawLive = 0;
+  box.addEventListener("pointerdown", e => { drag = e.clientX; box.setPointerCapture(e.pointerId); if (typeof frame !== "number") { frame = 0; show(); } });
+  box.addEventListener("pointermove", e => {
+    if (drag === null) return;
+    const dx = e.clientX - drag; drag = e.clientX;
+    if (liveBtnOn) { yawLive -= dx*0.01; return; }
+    acc += dx;
+    const step = Math.trunc(acc/14);
+    if (step) { acc -= step*14; frame = ((frame - step) % FRAMES + FRAMES) % FRAMES; show(); }
+  });
+  const end = () => { drag = null; };
+  box.addEventListener("pointerup", end);
+  box.addEventListener("pointercancel", end);
+
+  // Live 3D is opt-in: it runs the full shader, which is heavy on some machines.
+  const liveBtn = document.getElementById("live");
+  function stopLive() {
+    liveBtnOn = false;
+    liveBtn.setAttribute("aria-pressed", "false");
+    if (live) { cancelAnimationFrame(live.raf); live.canvas.remove(); live = null; }
+    still.hidden = false; hint.textContent = "Drag to turn";
+  }
+  function startLive() {
+    const canvas = document.createElement("canvas");
+    const w = Math.min(560, Math.round(box.clientWidth));
+    canvas.width = canvas.height = w;
+    let draw;
+    try { draw = makeRenderer(canvas, form); } catch (e) { draw = null; }
+    if (!draw) { hint.textContent = "Live 3D isn't available here"; return; }
+    box.insertBefore(canvas, hint);
+    still.hidden = true;
+    liveBtnOn = true;
+    liveBtn.setAttribute("aria-pressed", "true");
+    hint.textContent = "Live 3D · drag to turn";
+    const c = cam();
+    yawLive = (typeof frame === "number" ? frame : 0)/FRAMES*Math.PI*2;
+    const t0 = performance.now();
+    live = { canvas, raf: 0 };
+    (function tick(now) {
+      const t = 2 + (now - t0)/1000;
+      draw({ yaw: yawLive, pitch: c.pitch, dist: c.dist, ty: c.ty, tz: c.tz }, t, form === "comet" ? Math.sin(t*0.9)*0.5 : 0);
+      if (live) live.raf = requestAnimationFrame(tick);
+    })(t0);
+  }
+  liveBtn.addEventListener("click", () => liveBtnOn ? stopLive() : startLive());
+  show();
+})();
+</script>

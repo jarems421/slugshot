@@ -2,6 +2,24 @@
 
 **Confirmed, 2026-11-05:** water clears fire, so Crashwave and Mistbank put out Fire Curtain and burns. Electricity amplifies water effects.
 
+## Implemented - three visual prototypes, awaiting owner review, 2026-11-10
+
+**Owner request:** "a unique design that still resembles the original thing and has a build similar to Inferno", applying the Inferno and Floppy lessons; three different prototypes to compare. The owner supplied screenshots of the franchise slug's base and transformed forms as study material; they are not stored here and have no reuse rights.
+
+All three use Inferno's accepted body plan (upright, slight forward lean, no arms or feet, pooled base, short tail) as signed-distance concept pages, built from one template by [`build_aquabeek_concepts.py`](../../../tools/slugs/build_aquabeek_concepts.py). Pages and turntable frames are under [evidence/aquabeek](evidence/aquabeek/).
+
+| Prototype | Base form | Transformed |
+| --- | --- | --- |
+| A Crestfin | Webbed two-point fin-ears (Inferno's ear sweep), dorsal fin, wave-edged belly, round eyes, two-tooth open smile, droplet freckles | Marlin-dragon: bill, pectoral fins, sail, crescent tail |
+| B Gillbeak | 8% wider; three gill frills a side, back fin nubs and ripple rings, side-eye with one heavier lid, single tooth | Eel-dragon: short flat bill, ribbon fin, paddle tail |
+| C Breaker | Slimmer, more lean; forward-curling wave crest, glowing aqua irises, fangs at the corners, narrow belly | Manta-swordfish: broad flapping wings, long bill, the crest carried over |
+
+**Kept familiar:** blue/teal two-tone, pale belly, head fins, big round eyes, toothy open grin. **Avoided:** the reference's upright notched fins, straight belly panel, buck-tooth gap and arm-like side fins. **Unresolved:** owner choice; B's back rings may read as a target from directly behind; name/IP check; Blender build and Roblox look.
+
+## Implemented - B base form reworked on Inferno's body, awaiting owner review, 2026-11-12
+
+**Owner picked B (Gillbeak)** and supplied a reference to make it "more feminine, unique, and cool"; the face (slanted almond eyes, eyeliner flick, sly smile, forehead drop) followed the reference and is kept. **Current base form:** Inferno's body plan with a forward lean and lobed pooled base; short, broad, smooth top fins and three small side fins, all sweeping back (the owner rejected webbed fans, then the tall horn-like top fins, on 2026-11-12), on a domed head on a teal hood that blends into the face; a low belly with a wave-crest top blended the same all round, and a bold outlined drop-and-ripples emblem with splash droplets; a shortened tail; a face sculpted like Floppy's (eye openings under heavy rolled lids with real eyeballs, a muzzle, a carved smile; since 2026-11-12 a centred sweet smile with tinted blue-violet lips, a cupid's bow and a glossy lower lip) after the owner said the eyes looked painted on; a belly that curves with the body; a low dorsal fin and a short tail with a fluke. **Current eyes, 2026-11-12:** matched to the owner's reference after three options (Cat-eye, Sultry, Fierce) read as too alike: wide open almonds with a lifted outer tip, a big teal iris, a bold liner wing, under a heart-shaped hood. Later the same day: a living iris (fibres, collarette, breathing round pupil, highlight overlapping it) and blended violet-to-teal eyeshadow in place of the lid band. **Unresolved:** the transformed form still has the old round eyes and dolphin-like head; owner review of the reworked base. Evidence: [B page](evidence/aquabeek/b/aquabeek-b.html) and frames.
+
 ## Confirmed - final ability choices, 2026-11-04
 
 **Owner:** "that's final" and "Make those final", referring to **Crashwave** as the main and **Mistbank** as the passive (spoken as "Crushwave" / "Miss Bank"). These are final ability selections, not merely preferred prototype candidates.
