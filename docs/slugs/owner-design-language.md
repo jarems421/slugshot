@@ -41,6 +41,12 @@ Sources: [Floppy catalogue entry](catalog/flopper-inspired.md), [Blender lessons
 - **He asks me to research when a problem keeps recurring** ("do research on how to make these type of things look squishy"). In this chat the search results were thin (paid soft-body add-ons, eyelid-shell advice); being honest about that was fine.
 - **Studio handoff rule (Confirmed, restated in this chat):** "whenever you add something to Studio… close the old Studio tabs and open a new one for me to test." Leave unrelated windows (e.g. Rocklock) open.
 - **"Open it in Blender so I can see it."** He reviews in his own Blender as well as in renders; load the current file into his live session after each build.
+- **"A cool design that is unique to it"** (Boon Doc's eye, 2026-11-14): each slug's eyes carry its element as a design, as Inferno's burning eyes and Rammstone's cracked meteor eyes do; a normal cartoon eye (white, iris, pupil) "looks a bit weird" on an elemental slug. **"Divine"**, **"a healing angel ... not saying give it wings"**: gold light, a halo, rings and sunburst rays, star sparkles.
+- **"Way too similar to the normal [franchise slug]"** (Boon Doc, 2026-11-14): keeping the reference's colour, tall silhouette and long antennae together with its signature feature (one eye) reads as a copy, however the details differ. Keep one signature feature and change the rest.
+- **"A pure fire eye or pure molten rock eye"** (Boon Doc, 2026-11-14): an elemental slug's eye is one material with no eye anatomy. Any pupil, iris ring or white surround reads as "a human eye", "uncanny and off-putting", however stylised the pattern.
+- **"Take the silhouette from the show, but then just make it look more elegant"** (Boon Doc's transformed form, 2026-11-14, pointing to Aquabeek's): the method for transformed forms is the show's silhouette, the slug's own face and theme, and elegant execution.
+- **"Maybe we should have this slug looking like a little bit ugly ... it could be a little joke"** (Boon Doc's transformed form, 2026-11-14): elegance is not always the goal; a slug can be deliberately ugly-funny (fat, warty) while keeping its signature parts (eye, halo, gold).
+- **"I don't know why you added those two lines"** (Boon Doc's transformed form, 2026-11-14): gold lines added as decoration without a reason get removed (also the belly line: "it doesn't make sense to actually have it"). Gold has to mean something: the halo, the lid, the glow.
 
 ## Voice-dictation slips (this chat)
 

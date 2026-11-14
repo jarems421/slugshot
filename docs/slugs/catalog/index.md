@@ -11,7 +11,7 @@ Review the [Blender lessons](../blender-lessons.md) for recurring visual and tec
 | Aquabeek (water reference) | **Final ability choices:** Crashwave main / Mistbank passive (owner, 2026-11-04); final visual forms and balance remain open | [Decision and history](aquabeek.md) |
 | Frostcrawler (ice reference) | **Iceburst main + Ice Wall passive** (owner, 2026-11-04); balance and final forms open | [Decision and history](frostcrawler.md) |
 | Tazerling (electric reference) | **Chain Lightning main + Livewire passive** (owner, 2026-11-05); base-form visual concept awaiting owner review (2026-11-12); balance and transformed form open | [Decision and history](tazerling.md) |
-| Boon Doc (healing reference) | **Mending Shot main + Healing Spring passive** (owner, 2026-11-05); not built | [Decision and history](boon-doc.md) |
+| Boon Doc (healing reference) | **Mending Shot main + Healing Spring passive** (owner, 2026-11-05); not built. **Final base design** (owner, 2026-11-14): a healing angel (crossover head, Healing mint eye with gilded lid, reference smile, halo, angel wings, glowing belly). **Final transformed design** (owner, 2026-11-14): a fat, warty flying toad with a halo, glowing bulb spine and fanned angel wings, a little ugly as a joke; transformed form set aside (2026-11-14) | [Decision and history](boon-doc.md) |
 | Frightgeist (fear reference) | **Jump Scare main + Decoy passive, owner, 2026-11-05** | [Ability studies](frightgeist.md) |
 | Hop Rock (explosive reference) | **Sticky Bomb main + Mine passive selected by owner, 2026-11-05** | [Ability studies](hop-rock.md) |
 | Flatulorhinkus (gas reference) | **Nausea main (owner's idea) + Stink Cloud passive, 2026-11-05** | [Ability studies](flatulorhinkus.md) |

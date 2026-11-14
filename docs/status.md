@@ -16,12 +16,14 @@ Last reviewed 2026-11-04. The short, current truth: **replace lines here when th
 | Inspection | Flip the gun up, the slug's act, flip to catch it down | [Briefs](slugs/catalog/inspect-profiles.md) |
 | Slug roster | 14 slugs (12 acceptable at launch) | [Planning](slugs/ability-planning.md) |
 | Abilities | A main (Q) and a passive (E) per slug, armed for the next shot, skill-based and intertwining, with an [element chart](slugs/ability-specs.md#element-chart---confirmed-2026-11-05). [Specs](slugs/ability-specs.md). Inferno: Dragon's Breath and Fire Curtain. Aquabeek: Crashwave and Mistbank. Arachnet: Snapbind and Silkline. Frostcrawler: Iceburst and Ice Wall. Tazerling: Chain Lightning and Livewire. Rammstone: Shove Punch and a rock cover and map-breaking passive. Boon Doc: Mending Shot and Healing Spring. Tormato: Tornado and Updraft. Vinedrill: Tangle and Bramble. Phosphoro: Flash and Lantern. Flatulorhinkus: Nausea and Stink Cloud. Hop Rock: Sticky Bomb and Mine. Frightgeist: Jump Scare and Decoy. None built in the game yet | [Catalogue](slugs/catalog/index.md) |
+| Boon Doc | Final base and transformed designs (2026-11-14) | [Catalogue](slugs/catalog/boon-doc.md) |
 | Lobby | Slug Grove complete; slow lava gloop approved | [Checkpoint](art/lobby-checkpoint.md) |
 | Art direction | Living Comic-Book Fantasy | [Style guide](art/style-guide.md) |
 
 ## Open with the owner
 
 - **Lobby rounds 3 to 12** (in main and the game place): lit cavern, far side, plain mountain, revamped pit; owner's verdict, hand tests and phone cost pending. [Lobby hub](art/lobby-hub.md).
+- **Boon Doc look** (2026-11-14, committed on `integration/lobby-all`): **final base design** and **final transformed design**, both approved by the owner. Transformed: a fat, warty flying toad (a little ugly as a joke) with one smooth head and a painted cap, the Healing mint eye, wide smile, halo over the forehead, seven glowing ivory-gold bulb spines, thick relaxed arms with glowing fingertips, dangling legs, angel wings flat on the upper back with fanned feathers, a softly blended ivory underside. Snapshots in evidence/boon-doc/base-final and transformed-final. Next: the Blender build, when the owner asks. [Record](slugs/catalog/boon-doc.md).
 - **Tazerling look** (2026-11-12, branch): base-form concept; owner verdict pending. [Record](slugs/catalog/tazerling.md).
 - **Aquabeek look** (2026-11-12, branch `concept/aquabeek-prototypes`): prototype B (Gillbeak) base form reworked on Inferno's body with a sculpted face; transformed form not yet redrawn; owner verdict pending. [Record](slugs/catalog/aquabeek.md).
 - **Rammstone:** the passive's name, and rock cover's lifetime and height. [Spec](slugs/ability-specs.md#rammstone---confirmed-spec-2026-11-06).

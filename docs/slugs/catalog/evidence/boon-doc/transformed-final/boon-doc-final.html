@@ -1,0 +1,1466 @@
+<title>Boon Doc</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one large turntable stage with form and view controls; design notes beside it, stacking on phones. */
+:root {
+  --bg: #e5ede8;
+  --paper: #f3f7f4;
+  --ink: #18261f;
+  --muted: #56695f;
+  --rule: #c7d6cd;
+  --accent: #1d7a55;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #111915; --paper: #18221d; --ink: #e2eee7; --muted: #98ada1; --rule: #2c3b33; --accent: #6fe0b0; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #111915; --paper: #18221d; --ink: #e2eee7; --muted: #98ada1; --rule: #2c3b33; --accent: #6fe0b0; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(36px, 6vw, 56px); line-height: 1; margin: 6px 0 0; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 0; }
+p { margin: 0; }
+.lede { max-width: 62ch; color: var(--muted); margin-top: 10px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: grid; gap: 12px; min-width: 0; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden; border: 1px solid var(--rule); background: #0f1614; touch-action: none; cursor: grab; }
+.canvas-box:active { cursor: grabbing; }
+.canvas-box img, .canvas-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #e2eee7; background: rgba(15,22,20,.7); padding: 3px 8px; border-radius: 6px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font-family: var(--mono); font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.notes { display: grid; gap: 18px; min-width: 0; }
+dl { margin: 0; display: grid; gap: 12px; }
+dt { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; }
+.optrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.optrow .glabel { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 4.5em; }
+.optrow button { padding: 6px 10px; font-size: 12px; }
+.caveat { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+body.render { padding: 0; background: #000; }
+body.render .wrap { display: none; }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Slugshot · healing slug · concept for review</div>
+    <h1>Boon Doc</h1>
+    <p class="lede">Final design, both forms approved by the owner (2026-11-14). Base: the healing slug as a little healing angel, with angel wings, the Healing mint eye, the reference smile and a belly glowing from within. Transformed: a fat, warty flying toad with a halo, glowing bulbs down his spine and angel wings he hasn't earned.</p>
+  </div>
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" id="box">
+        <img id="still" alt="Rendered turntable of the Boon Doc concept" draggable="false">
+        <div class="hint" id="hint">Drag to turn</div>
+      </div>
+      <div class="controls" role="group" aria-label="Form"><button data-form="base" aria-pressed="true">Base form</button><button data-form="comet" aria-pressed="false">Transformed</button></div>
+      <div class="controls" role="group" aria-label="Camera">
+        <button data-frame="0">Front</button>
+        <button data-frame="3">Three-quarter</button>
+        <button data-frame="6">Side</button>
+        <button data-frame="12">Back</button>
+        <button data-frame="close">Face close-up</button>
+        <button data-frame="belly">Belly close-up</button>
+        <button data-frame="top" id="top-btn" hidden>Top</button>
+        <button id="live" aria-pressed="false">Live 3D</button>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>The design</h2>
+      
+      <dl id="notes-base"><div><dt>Head and body</dt><dd>A crossover of Inferno's and Aquabeek's: every mass halfway between theirs, a broad, fairly flat-topped head wider than a thick neck, on a soft muzzle. Upright with a slight lean, no arms or feet; the pooled base spreads in soft folds like the hem of a robe.</dd></div><div><dt>Eye (picked)</dt><dd>Healing mint: pure light with no pupil, a white-gold heart and pale gold turning to soft healing mint toward a teal rim, faint rays turning slowly, a small gleam.</dd></div><div><dt>Mouth (picked)</dt><dd>The owner's drawn reference, bigger and taller: a nearly straight upper line lifting at the corners, a shallow curved lower line, one solid white shape (no tooth lines), a bold outline, a flick at his right corner and a short line under the lip.</dd></div><div><dt>Wings (picked)</dt><dd>Angel wings after the owner's reference: low on the upper back near the spine, a modest size, set apart so they show past his sides from the front, each leaning off the skin and joined to the body only by a slim ivory stem at its root: a top edge arching up and out, hanging down into long feathers. Sculpted rows of small overlapping covert feathers along the top, long flight feathers below that fan out and curve as they go down, their rounded tips scalloping the bottom edge; each wing bends softly, the lower feathers curling back, with a slow ripple flowing down them (Live 3D). The belly's and eye's warm ivory inner light, glowing softly, warming to gold toward the bottom, with warm creases; swaying a little (Live 3D).</dd></div><div><dt>Belly (picked)</dt><dd>Ivory with a fine gold edge, glowing warm from within and warming to luminous white gold toward the base.</dd></div><div><dt>Gilded lid</dt><dd>The rolled upper lid over the eye is gold, thickest at the top and tapering to points at the corners, with a fine ink line.</dd></div><div><dt>Halo</dt><dd>A gold band with a little thickness, floating just above his head, tilted toward you, glowing and bobbing gently (Live 3D).</dd></div><div><dt>Antennae</dt><dd>Soft, of middling length, set toward the edges of the head and flopping back, the tips glowing gold.</dd></div><div><dt>Colour</dt><dd>Soft celadon deepening to teal down the back; gold and ivory are the divine light.</dd></div><div><dt>Healing light</dt><dd>Small four-point stars of gold light drift up round him (Live 3D).</dd></div></dl>
+      <dl id="notes-comet" hidden><div><dt>Idea</dt><dd>The show's transformed form, from the owner's two stills, made a little ugly on purpose (the owner: "it could be a little joke"): a fat, warty, flat-headed toad that is mostly head, with a halo and angel wings it hasn't earned.</dd></div><div><dt>Head and cap</dt><dd>Broad, flat-topped and one smooth surface; the dark teal cap is painted over the top, its front edge dipping over the eye. The Healing mint eye beneath, the halo floating above the forehead, clear of the spines.</dd></div><div><dt>Grin</dt><dd>The reference smile, wider: one solid white shape with a bold outline.</dd></div><div><dt>Body</dt><dd>Fat and saggy: a heavy gut and a double chin, low warts all over the top, sides and face, kept clear of the eye and mouth. Celadon, deepening to teal over the top, the ivory underside following the body's curve and blending slowly up through pale mint into the green, with no edge line, an inner light glowing from the middle of the belly.</dd></div><div><dt>Spine</dt><dd>A row of seven spikes down the middle from the forehead over the head and down the back, largest over the head, each tipped with a round bulb glowing ivory gold and lighting the air round it; they sway in turn (Live 3D).</dd></div><div><dt>Arms</dt><dd>Thick and pudgy, held forward but relaxed and carrying their weight: the upper arm drops to a bent elbow, the forearm reaches forward and the hand hangs from the wrist, four stubby fingers drooping and curling, round pads paling to glowing ivory: healing hands.</dd></div><div><dt>Legs</dt><dd>Short, fat toad legs dangling under the heavy body, as if the wings are only just holding him up: fat thighs, knees bent a little outward, limp three-toed feet pointing down and back, swaying a little (Live 3D).</dd></div><div><dt>Wings</dt><dd>His angel wings lying along his upper back, raised a little off it in a shallow V, the flight feathers fanned open and parting at their tips like a spread wing, beating slowly (Live 3D).</dd></div></dl>
+      <p class="caveat">A concept render, not the game model. Like Inferno, the agreed version gets rebuilt in Blender from this same maths. Glow will use Roblox's own emissive surfaces and effects in game.</p>
+    </div>
+  </div>
+</div>
+
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes;
+uniform float uT;
+uniform vec3 uRo, uRight, uUp, uFwd;
+
+const vec3 LKEY = vec3(-0.56, 0.68, 0.46);
+const vec3 LRIM = vec3(0.55, 0.45, -0.70);
+
+// Palette, linear. A healing angel: soft celadon deepening to teal down the back, an ivory belly,
+// gold divine light and mint healing light.
+const vec3 BODYC  = vec3(0.159, 0.479, 0.324);  // #6FB89A celadon
+const vec3 BACKC  = vec3(0.025, 0.155, 0.144);  // #2C6E6A deep teal
+const vec3 BELLYC = vec3(0.888, 0.855, 0.723);  // #F2EEDD ivory
+const vec3 GOLDC  = vec3(0.905, 0.578, 0.144);  // #F4C96A gold
+const vec3 GLOWC  = vec3(0.200, 1.000, 0.640);  // #7CFFD2 mint healing light
+const vec3 INK    = vec3(0.004, 0.014, 0.016);  // deep green-black ink
+
+#ifndef PLAIN
+#define PLAIN 0
+#endif
+// Design options for the owner to compare (0 = the current design): body markings, eye, mouth, belly.
+#ifndef HEADV
+#define HEADV 0   // head history: 1 Tall egg; the rest are gone
+#endif
+#ifndef BODYV
+#define BODYV 0
+#endif
+#ifndef EYEV
+#define EYEV 0
+#endif
+#ifndef MOUTHV
+#define MOUTHV 0
+#endif
+#ifndef BELLYV
+#define BELLYV 0
+#endif
+
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+float sdEll(vec3 p, vec3 r) { float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/k1; }
+float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float seg2(vec2 p, vec2 a, vec2 b, float ra, float rb) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+// Exact distance to a quadratic Bezier (after Inigo Quilez); returns (distance, t).
+vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
+  vec3 a = B - A, b = A - 2.0*B + C, c = a*2.0, d = A - pos;
+  float kk = 1.0/dot(b, b);
+  float kx = kk*dot(a, b);
+  float ky = kk*(2.0*dot(a, a) + dot(d, b))/3.0;
+  float kz = kk*dot(d, a);
+  vec2 res;
+  float p = ky - kx*kx, p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
+  if (h >= 0.0) {
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q)/2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
+    vec3 e = d + (c + b*t)*t;
+    res = vec2(dot(e, e), t);
+  } else {
+    float z = sqrt(-p);
+    float v = acos(q/(p*z*2.0))/3.0;
+    float m = cos(v), n = sin(v)*1.732050808;
+    vec3 t = clamp(vec3(m + m, -n - m, n - m)*z - kx, 0.0, 1.0);
+    vec3 e1 = d + (c + b*t.x)*t.x;
+    vec3 e2 = d + (c + b*t.y)*t.y;
+    res = vec2(dot(e1, e1), t.x);
+    float dis = dot(e2, e2);
+    if (dis < res.x) res = vec2(dis, t.y);
+  }
+  res.x = sqrt(res.x);
+  return res;
+}
+
+// ---------------------------------------------------------------- the eye (both forms)
+// One big eye in the middle of the face, built the way Aquabeek's are: an almond whose surface
+// follows the head with a slight dome, under a solid rolled upper lid with a crease. Nothing
+// stands out of the head. The same shape, lid and iris carry over to the transformed head.
+const float EW = 0.375;    // half-width
+const float ETOP = 0.270;  // height of the upper arch
+const float EBOT = 0.178;  // depth of the lower arch
+const float LIDK = 0.84;   // how far up the arch the upper lid rests: open and serene
+#if XF == 0
+const vec3 EYE_C = vec3(0.0, 1.660, 0.580);
+vec3 eyeAxis() { return normalize(vec3(0.0, 0.10, 1.0)); }
+#else
+// On the transformed head the eye sits on the front of the broad head, above the snout.
+const vec3 EYE_C = vec3(0.0, 1.540, 0.960);
+vec3 eyeAxis() { return normalize(vec3(0.0, 0.12, 1.0)); }
+#endif
+
+vec3 eyeLocal(vec3 p) {
+  vec3 ax = eyeAxis();
+  vec3 u = normalize(cross(vec3(0.0, 1.0, 0.0), ax));
+  vec3 w = cross(ax, u);
+  vec3 q = p - EYE_C;
+  return vec3(dot(q, u), dot(q, w), dot(q, ax));
+}
+// A rounded upper arch and a flatter lower one, meeting in clean points at both corners, which
+// lift a little for a serene look.
+float eyeMid(float x) { float u = x/EW; return 0.030*u*u*u*u; }
+float eyeOpen(float x) { return pow(max(0.0, 1.0 - (x/EW)*(x/EW)), 0.62); }
+float eyeLow(float x) { return pow(max(0.0, 1.0 - (x/EW)*(x/EW)), 0.85); }
+float eyeDist(vec3 p) {
+  vec3 l = eyeLocal(p);
+  float y = l.y - eyeMid(l.x);
+  return max(max(y - ETOP*eyeOpen(l.x), -EBOT*eyeLow(l.x) - y), (abs(l.x/EW) - 1.0)*EW);
+}
+float lidLine(float x) { return eyeMid(x) + ETOP*LIDK*eyeOpen(x); }
+const float LID_W = 0.054;
+float lidOpen(vec3 l, float ed) { return max(ed, l.y - lidLine(l.x)); }
+// Height of the eye and lids above the head surface: the lid rises from its edge and rolls back
+// into the skin, the eye is a gentle glossy dome just below it, a soft crease sits above the lid
+// and a slight lower lid lifts the cheek.
+float eyeRelief(vec3 l, float ed) {
+  float open = lidOpen(l, ed);
+  float above = smoothstep(-0.015, 0.025, l.y - eyeMid(l.x));
+  float ends = 1.0 - smoothstep(EW*0.82, EW*1.06, abs(l.x));
+  float u = clamp(open/LID_W, 0.0, 1.0);
+  float prof = (1.0 - u*u)*(1.0 - u*u);
+  float lid = mix(0.006, 0.020, above)*ends*prof*smoothstep(-0.004, 0.002, open);
+  float dome = 0.026*smoothstep(0.0, -0.09, open) - 0.004;
+  float eye = dome*(1.0 - smoothstep(-0.004, 0.002, open));
+  float cr = (open - LID_W*1.05)/0.014;
+  float crease = 0.0*cr;
+  return lid + eye + crease;
+}
+
+// ---------------------------------------------------------------- both forms
+// The transformed form (XF 1) is built in the base form's code, as Aquabeek's is, so the eye, lid,
+// mouth, wings and halo are the same code; only its body, pose and placements change.
+#if 1
+const float LEAN = 0.10;
+
+// A calm idle: slow breathing and a gentle sway. Transformed: gliding level, a slow wave travelling
+// back along the body and tail, rising and falling gently; the head stays steady.
+vec3 deform(vec3 p) {
+#if XF == 1
+  p.y -= 0.035*sin(uT*1.8);
+  return p;
+#endif
+  float b = sin(uT*2.0);
+  float up = smoothstep(0.0, 2.0, p.y);
+  p.y /= 1.0 + 0.014*b*up;
+  p.xz /= 1.0 - 0.012*b*(1.0 - 0.6*up);
+  p.x -= 0.018*sin(uT*1.25)*smoothstep(0.8, 1.9, p.y);
+  p.z -= LEAN*smoothstep(0.3, 1.9, p.y);
+  return p;
+}
+
+// The pooled base falls in soft folds like the hem of a robe.
+float lobes(float th, float phase) { return 1.0 + 0.045*sin(7.0*th + 0.4 + phase) + 0.03*sin(3.0*th + 0.7 + phase); }
+
+// Antennae: soft, in the body's own colour, set toward the edges of the crown and flopping back. No bulb: the last stretch of each glows gold. They sway slowly.
+void antenna(float s, out vec3 A, out vec3 B, out vec3 C) {
+  float t = uT*1.3 + s*0.9;
+  float sw = sin(t)*0.05, sw2 = sin(t - 0.8)*0.025;
+#if HEADV == 1
+  const vec3 LIFT = vec3(-0.03, 0.12, 0.0);   // up the taller crown
+#else
+  const vec3 LIFT = vec3(0.0);
+#endif
+  A = vec3(s*(0.38 + LIFT.x), 1.94 + LIFT.y, -0.06);
+  B = vec3(s*(0.50 + LIFT.x + sw2*0.2), 2.30 + LIFT.y, -0.24 + sw2*0.6);
+  C = vec3(s*(0.60 + LIFT.x + sw*0.25), 2.32 + LIFT.y + sw*0.2, -0.62 + sw*0.6);
+}
+vec2 antennaDist(vec3 p, float s) {
+  vec3 A, B, C; antenna(s, A, B, C);
+  const vec3 K = vec3(1.0, 1.0, 1.35);   // a little flatter front to back, like a soft ear
+  vec2 bz = sdBezier(p*K, A*K, B*K, C*K);
+  float r = mix(0.098, 0.046, pow(bz.y, 0.8));
+  return vec2((bz.x - r)/1.35, bz.y);
+}
+
+// The belly, measured as an angle round the body so it follows the curve: narrow at the chest,
+// widening into the pooled base, its top a soft U well below the mouth. x = signed distance to its
+// edge (negative inside), y = 0 down the middle to 1 at the edge.
+vec2 belly(vec3 p) {
+  float ang = abs(atan(p.x, p.z));
+  float yb = clamp(p.y, 0.0, 1.3);
+  float span = 0.50 + 0.42*pow(1.0 - smoothstep(0.05, 1.15, yb), 1.2);
+  float wa = ang/0.50;
+  float top = 0.96 - 0.15*wa*wa;
+  float rr = max(length(p.xz), 0.25);
+  return vec2(smax((ang - span)*rr, p.y - top, 0.04), ang/span);
+}
+
+// Mouths (MOUTHV). 0: the owner's drawn reference, bigger: a nearly straight upper line lifting a
+// little at the corners with a slight dip at the centre, a shallow curved lower line meeting it in
+// points, one solid white shape inside (no tooth lines). 1: a serene closed smile. 2: an open smile
+// with a tongue. 3: a soft lopsided smile. 4: a wide grin showing a band of top teeth.
+// MW half-width, MDEEP the opening at the centre, MTC how far the corners lift, MB extra lift at
+// his right corner, MTF how much of the opening from the top is white, MTG tongue, MCD carve depth.
+#if MOUTHV == 1
+const float MW = 0.255, MDEEP = 0.007, MTC = 0.034, MB = 0.0, MTF = 0.0, MTG = 0.0, MCD = 0.016;
+#elif MOUTHV == 2
+const float MW = 0.270, MDEEP = 0.098, MTC = 0.020, MB = 0.0, MTF = 0.34, MTG = 1.0, MCD = 0.060;
+#elif MOUTHV == 3
+const float MW = 0.270, MDEEP = 0.068, MTC = 0.018, MB = 0.036, MTF = 1.0, MTG = 0.0, MCD = 0.022;
+#elif MOUTHV == 4
+const float MW = 0.300, MDEEP = 0.064, MTC = 0.030, MB = 0.0, MTF = 0.46, MTG = 0.0, MCD = 0.050;
+#elif XF == 1
+const float MW = 0.340, MDEEP = 0.100, MTC = 0.034, MB = 0.0, MTF = 1.0, MTG = 0.0, MCD = 0.030;
+#else
+const float MW = 0.285, MDEEP = 0.092, MTC = 0.026, MB = 0.0, MTF = 1.0, MTG = 0.0, MCD = 0.026;
+#endif
+#if XF == 1
+const vec2 MOUTH = vec2(0.000, 1.275);
+#else
+const vec2 MOUTH = vec2(0.000, 1.255);
+#endif
+vec2 mouthCoord(vec3 p) { return vec2(p.x - MOUTH.x, p.y - MOUTH.y); }
+float mouthTop(float x) { float u = x/MW; return MTC*u*u + MB*max(u, 0.0)*max(u, 0.0) - 0.004*exp(-pow(x/0.020, 2.0)); }
+float mouthBot(float x) { float u = clamp(x/MW, -1.0, 1.0); return mouthTop(x) - MDEEP*pow(max(0.0, 1.0 - u*u), 0.85); }
+float mouthDist(vec3 p) { vec2 g = mouthCoord(p); return max(max(g.y - mouthTop(g.x), mouthBot(g.x) - g.y), abs(g.x) - MW); }
+
+// The halo: a flat gold band floating above the head, tilted toward you so it reads as a ring,
+// bobbing gently. x = distance, y = 0 at its inner edge to 1 at its outer edge.
+#if XF == 1
+const vec3 HALO_C = vec3(0.0, 2.44, 0.60);
+#elif HEADV == 1
+const vec3 HALO_C = vec3(0.0, 2.76, -0.12);
+#else
+const vec3 HALO_C = vec3(0.0, 2.50, -0.10);
+#endif
+const float HALO_R = 0.36;
+vec2 halo(vec3 p) {
+  vec3 q = p - HALO_C - vec3(0.0, 0.035*sin(uT*1.5), 0.0);
+  float ca = cos(0.36), sa = sin(0.36);
+  q = vec3(q.x, ca*q.y + sa*q.z, -sa*q.y + ca*q.z);
+  vec2 r = vec2(length(q.xz) - HALO_R, q.y);
+  return vec2((length(r/vec2(0.058, 0.034)) - 1.0)*0.034, clamp(0.5 + r.x/0.116, 0.0, 1.0));
+}
+
+#if XF == 1
+// The transformed body, after the show's transformed form (the owner's two reference stills): a
+// compact, wide, flat-headed toad that is mostly head, a broad cap overhanging the one eye, a wide
+// grin, frog arms reaching forward with splayed fingers ending in round pads, wavy tendrils streaming
+// back. The owner (concept 3): fatter, thicker arms, a little ugly on purpose, as a joke; a row of
+// spikes down the spine from forehead to back with glowing bulbs on the tips. Kept his: the cap edged
+// in gold, the fingertips glowing ivory like healing hands, angel wings on the back.
+// Flying forward along +z, belly down.
+float bodyMass(vec3 p) {
+  // A fat, saggy torso and a wide head merged into one lump, a sagging gut and a double chin under it.
+  float d = sdEll(p - vec3(0.0, 1.40, -0.22), vec3(0.74, 0.44, 0.84));
+  d = smin(d, sdEll(p - vec3(0.0, 1.52, 0.38), vec3(0.72, 0.40, 0.60)), 0.30);
+  d = smin(d, sdEll(p - vec3(0.0, 1.14, -0.16), vec3(0.62, 0.30, 0.66)), 0.24);
+  d = smin(d, sdEll(p - vec3(0.0, 1.24, 0.40), vec3(0.58, 0.24, 0.54)), 0.20);
+  d = smin(d, sdEll(p - vec3(0.0, 1.08, 0.34), vec3(0.40, 0.16, 0.38)), 0.14);
+  return d;
+}
+// The smooth body's normal (no warts, limbs or cap), for painting the belly along its curve.
+vec3 bodyN(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  const float h = 0.12;   // wide, so the lumps' seams don't show
+  return normalize(k.xyy*bodyMass(p + k.xyy*h) + k.yyx*bodyMass(p + k.yyx*h) + k.yxy*bodyMass(p + k.yxy*h) + k.xxx*bodyMass(p + k.xxx*h));
+}
+// Warts: low, uneven bumps over the top and sides of the back (not the face, cap or belly).
+float warts(vec3 p) {
+  float w = sin(p.x*23.0 + 1.3)*sin(p.z*19.0 + 0.4)*sin(p.y*17.0 + p.x*5.0);
+  w = smoothstep(0.45, 1.0, w) + 0.6*smoothstep(0.55, 1.0, sin(p.x*37.0 - 0.8)*sin(p.z*31.0 + 2.1)*sin(p.y*29.0));
+  float eyeK = smoothstep(1.0, 1.35, length((p - EYE_C)/vec3(0.48, 0.34, 0.60)));
+  float mouthK = 1.0 - (1.0 - smoothstep(0.10, 0.16, abs(p.y - MOUTH.y)))*(1.0 - smoothstep(0.40, 0.48, abs(p.x)))*smoothstep(0.55, 0.75, p.z);
+  return w*smoothstep(1.36, 1.50, p.y)*eyeK*mouthK;
+}
+// The cap: painted only, on the head's own smooth surface: a deep teal cowl over the top whose front
+// edge dips over the eye. (As separate shapes, first a brow ridge and then a shell, it always left a
+// ridge where its skin met the head's.)
+float capLine(vec3 p) {
+  return 1.77 - 0.05*smoothstep(0.45, 0.85, p.z)*(1.0 - smoothstep(0.20, 0.55, abs(p.x)));
+}
+vec3 capLocal(vec3 p) {
+  vec3 q = p - vec3(0.0, 1.80, 0.20);
+  float c = cos(0.14), sn = sin(0.14);
+  return vec3(q.x, c*q.y + sn*q.z, -sn*q.y + c*q.z);
+}
+float capMass(vec3 p) { return sdEll(capLocal(p), vec3(0.58, 0.13, 0.64)); }
+// Arms: thick and pudgy, held forward but relaxed and carrying their weight: the upper arm drops
+// from the shoulder to a bent elbow below the body line, the forearm reaches forward and the hand
+// hangs from the wrist, its four stubby fingers drooping and curling a little, round pads at the
+// ends. x = distance, y = 1 on the fingers and pads.
+vec2 arms(vec3 p) {
+  vec3 q = vec3(abs(p.x), p.y, p.z);
+  float sw = 0.03*sin(uT*2.0), dr = 0.02*sin(uT*2.0 - 0.8);
+  vec3 S = vec3(0.55, 1.34, 0.10), E = vec3(0.84, 1.14, 0.36 + sw), W = vec3(0.74, 1.14, 0.80 + sw);
+  float d = smin(capT(q, S, E, 0.15, 0.11), capT(q, E, W, 0.11, 0.085), 0.07);
+  // The hand: a soft paddle tipping down from the wrist.
+  vec3 hd = normalize(vec3(0.0, -0.40 + dr, 1.0));
+  vec3 P = W + hd*0.08;
+  d = smin(d, sdEll(q - P, vec3(0.13, 0.06, 0.11)), 0.05);
+  float f = 1e3;
+  for (int i = 0; i < 4; i++) {
+    float ang = -0.48 + 0.32*float(i);
+    float l = 0.15 - 0.03*abs(float(i) - 1.5);
+    vec3 dir = normalize(vec3(sin(ang), -0.38 + dr, cos(ang)));
+    vec3 M = P + dir*l;
+    vec3 T = M + normalize(dir + vec3(0.0, -0.75, 0.0))*0.08;   // the curl at the last joint
+    f = min(f, smin(capT(q, P, M, 0.038, 0.032), capT(q, M, T, 0.032, 0.028), 0.015));
+    f = min(f, length(q - T) - 0.042);
+  }
+  float dd = smin(d, f, 0.03);
+  return vec2(dd, f < d ? 1.0 : 0.0);
+}
+// Hind legs: short, fat toad legs dangling under the heavy body, as if the little wings are only
+// just holding him up: fat thighs dropping from the hips, knees bent a little outward, the shins
+// hanging back and down, limp three-toed feet pointing down and back. They sway a little.
+float legs(vec3 p) {
+  vec3 q = vec3(abs(p.x), p.y, p.z);
+  float k = 0.035*sin(uT*2.0 + 1.5);
+  vec3 H = vec3(0.44, 1.12, -0.58), K = vec3(0.64, 0.84, -0.66 + k*0.5), A = vec3(0.54, 0.66, -0.94 + k);
+  float d = smin(capT(q, H, K, 0.22, 0.14), capT(q, K, A, 0.12, 0.08), 0.07);
+  float foot = 1e3;
+  for (int i = 0; i < 3; i++) {
+    float ang = -0.40 + 0.40*float(i);
+    vec3 dir = normalize(vec3(sin(ang)*0.8, -0.85, -0.60));
+    vec3 T = A + dir*0.17;
+    foot = min(foot, min(capT(q, A, T, 0.052, 0.036), length(q - T) - 0.046));
+  }
+  return smin(d, foot, 0.04);
+}
+// The spine: a row of short spikes down the middle from the forehead over the head and down the
+// back, each tipped with a round glowing bulb (like the show's antennae bulbs), largest over the
+// head and shrinking toward the tail, swaying a little in turn.
+// x = distance, y = 0 at a spike's root to 1 at its tip, z = 1 on a bulb.
+const int SPINES = 7;
+vec3 spineBase(int i, out vec3 dir, out float len) {
+  float t = float(i)/float(SPINES - 1);
+  float z = mix(0.52, -0.98, t);
+  // Along the top of the cap and back: highest over the crown, curving down toward the tail.
+  float y = 1.93 - 0.55*pow(max(0.0, (0.10 - z)/1.08), 1.7) - 0.10*smoothstep(0.20, 0.52, z);
+  float lean = mix(0.10, 0.85, t) + 0.10*sin(uT*1.8 - t*3.0);
+  dir = normalize(vec3(0.0, cos(lean), -sin(lean)));
+  len = mix(0.36, 0.24, t)*(i == 0 ? 0.80 : 1.0);
+  return vec3(0.0, y - 0.05, z);
+}
+vec3 spineBulb(vec3 p) {
+  vec3 best = vec3(0.0); float bd = 1e3;
+  for (int i = 0; i < SPINES; i++) {
+    vec3 dir; float len;
+    vec3 B = spineBase(i, dir, len);
+    float s = mix(1.0, 0.75, float(i)/float(SPINES - 1));
+    vec3 c = B + dir*(len + 0.045*s);
+    float d = length(p - c);
+    if (d < bd) { bd = d; best = c; }
+  }
+  return best;
+}
+vec3 spines(vec3 p) {
+  vec3 res = vec3(1e3, 0.0, 0.0);
+  // A box round the whole row, so far-off points (shadows, the floor) get a true lower bound.
+  vec3 bb = abs(p - vec3(0.0, 1.80, -0.35)) - vec3(0.10, 0.64, 1.00);
+  float bd = length(max(bb, 0.0));
+  if (bd > 0.05) return vec3(bd, 0.0, 0.0);
+  for (int i = 0; i < SPINES; i++) {
+    vec3 dir; float len;
+    vec3 B = spineBase(i, dir, len);
+    vec3 T = B + dir*len;
+    float s = mix(1.0, 0.75, float(i)/float(SPINES - 1));
+    vec3 pa = p - B;
+    float h = clamp(dot(pa, dir)/len, 0.0, 1.0);
+    float stalk = capT(p, B, T, 0.070*s, 0.024*s);
+    float bulb = length(p - T - dir*0.045*s) - 0.078*s;
+    float d = smin(stalk, bulb, 0.02);
+    if (d < res.x) res = vec3(d, h, bulb < stalk + 0.01 ? 1.0 : 0.0);
+  }
+  return res;
+}
+#else
+float bodyMass(vec3 p) {
+  // Inferno's body plan: a pooled, lobed base, a soft body and a thick neck growing into the head.
+  // Head and body are a crossover of Inferno's and Aquabeek's: each mass is the average of theirs.
+  vec3 q = p - vec3(0.0, 0.0, -0.02);
+  float th = atan(q.z, q.x);
+  float k = lobes(th, 0.0);
+  float d = sdEll(vec3(q.x/k, q.y - 0.24, q.z/k), vec3(0.57, 0.30, 0.58))*min(k, 1.0);
+  d = smin(d, sdEll(p - vec3(0.0, 0.80, 0.01), vec3(0.45, 0.70, 0.42)), 0.42);
+  d = smin(d, sdEll(p - vec3(0.0, 1.22, 0.02), vec3(0.49, 0.47, 0.44)), 0.26);
+  float k2 = lobes(th, 1.4);
+  d = smin(d, sdEll(vec3(q.x/k2, q.y - 0.02, q.z/k2), vec3(0.71, 0.06, 0.70))*min(k2, 1.0), 0.28);
+  // The head: Inferno's broad, flat-topped wedge and Aquabeek's dome, halfway between, on a soft
+  // muzzle that gives the face planes.
+  d = smin(d, sdEll(p - vec3(0.0, 1.68, 0.04), vec3(0.67, 0.42, 0.56)), 0.20);
+  d = smin(d, sdEll(p - vec3(0.0, 1.83, -0.02), vec3(0.53, 0.38, 0.48)), 0.21);
+  d = smin(d, sdEll(p - vec3(0.0, 1.39, 0.19), vec3(0.48, 0.30, 0.39)), 0.30);
+  // A short, plain tail with a rounded end.
+  return smin(d, capT(p, vec3(0.0, 0.12, -0.42), vec3(0.0, 0.08, -0.74), 0.18, 0.05), 0.16);
+}
+#endif
+
+// ---- Body options (BODYV), all sculpted rather than painted on: 0 plain; 1 lotus base;
+// 2 feathered back; 3 folded wing-fins; 4 ribbon fin; 5 inner glow (light through thin skin, no
+// shape change); 6 petal capelet.
+
+// A soft petal round the body, repeated n times round the vertical axis: R out from the middle, at
+// height h, its long axis leaning out from upright by `tilt` (a negative lean hangs it downward).
+// `skipFront` leaves out petals facing forward. x = distance, y = how far along the petal (0..1).
+vec2 petalRing(vec3 p, float n, float off, float R, float h, float tilt, vec3 rad, float skipFront) {
+  float sec = 6.28318/n;
+  float ang = atan(p.z, p.x) - off;
+  float k = floor(ang/sec + 0.5);
+  float a = k*sec + off;
+  if (skipFront > 0.0 && abs(mod(a - 1.570796 + 3.14159, 6.28318) - 3.14159) < skipFront) return vec2(1.0, 0.0);
+  vec2 cs = vec2(cos(a), sin(a));
+  vec3 q = vec3(dot(p.xz, cs) - R, p.y - h, -p.x*cs.y + p.z*cs.x);
+  float c = cos(tilt), sn = sin(tilt);
+  q.xy = vec2(c*q.x - sn*q.y, sn*q.x + c*q.y);
+  float v = clamp(q.y/rad.y*0.5 + 0.5, 0.0, 1.0);
+  if (tilt < 0.0) v = 1.0 - v;
+  // Narrowing to a soft point at the tip, and cupped a little so each petal holds its shape.
+  q.z *= 1.0 + 0.9*smoothstep(0.55, 1.0, v);
+  q.x += 0.35*rad.x*(q.z*q.z)/(rad.z*rad.z);
+  return vec2(sdEll(q, rad)*0.50, v);
+}
+vec2 lotus(vec3 p) {
+  // Two rings: the outer spread low and wide, the inner more upright between them.
+  vec2 o = petalRing(p, 7.0, 0.0, 0.64, 0.13, 0.95, vec3(0.050, 0.26, 0.25), 0.0);
+  vec2 i = petalRing(p, 7.0, 0.448799, 0.52, 0.24, 0.42, vec3(0.050, 0.27, 0.23), 0.0);
+  return o.x < i.x ? o : i;
+}
+vec2 capelet(vec3 p) {
+  // Nine petals hanging from the neck over the shoulders and back, none over the chest.
+  return petalRing(p, 7.0, -1.570796, 0.50, 1.02, -0.36, vec3(0.045, 0.24, 0.24), 0.95);
+}
+// Feathered back: soft overlapping feathers down the back, each raised a little toward its free
+// lower edge, the upper overlapping the lower like a dove's. x = relief height, y = 0 at a feather's
+// root to 1 at its free edge (0 off the band).
+vec2 featherBack(vec3 p) {
+  if (p.z > 0.12) return vec2(0.0);
+  float ab = atan(p.x, -p.z);
+  float rr = max(length(p.xz), 0.25);
+  const float SW = 0.21, SH = 0.13, SR = 0.62;
+  vec2 st = vec2(ab*rr/SW, p.y/SH);
+  float edgeD = 1.0, shade = 0.0;
+  for (int k = 2; k >= 1; k--) {
+    float rw = floor(st.y) + float(k);
+    float off = 0.5*mod(rw, 2.0);
+    for (int m = -1; m <= 1; m++) {
+      vec2 cc = vec2(floor(st.x - off) + 0.5 + off + float(m), rw);
+      vec2 lq = (st - cc)*vec2(1.0, SH/SW);
+      float dd = length(vec2(lq.x*(1.0 + 0.8*max(-lq.y, 0.0)/SR), lq.y));
+      if (lq.y <= 0.0 && dd < SR && edgeD >= 1.0) { edgeD = (SR - dd)*SW; shade = dd/SR; }
+    }
+  }
+  float band = (1.0 - smoothstep(0.72, 0.92, abs(ab)))*smoothstep(0.26, 0.42, p.y)*(1.0 - smoothstep(1.86, 2.02, p.y));
+  float h = 0.016*shade*smoothstep(0.0, 0.018, edgeD)*band;
+  return vec2(h, shade*band);
+}
+// Angel wings (BODYV 3), after the owner's reference (the archetype only): on each side of the upper
+// back a wing whose top edge arches up and out, hanging down into long feathers, the outer edge
+// curving round to the lowest tip. Sculpted rows of small overlapping covert feathers along the top,
+// then long overlapping flight feathers below whose rounded tips scallop the bottom edge.
+// Coordinates in the wing's plane: a outward from the root, b up from it, n through the wing.
+const float WING_A = 0.80;
+#if XF == 1
+const float WING_S = 0.72;   // the angel wings, on his shoulders
+#else
+const float WING_S = 0.74;   // overall size of the wings
+#endif
+// The wing's root: low on the upper back near the spine, standing just off the skin so the wing
+// joins the body only at its small root joint, not along its whole inner edge.
+#if XF == 1
+vec3 WING_ROOT(float s) { return vec3(s*0.32, 1.90, -0.10); }
+#else
+vec3 WING_ROOT(float s) { return vec3(s*0.17, 1.30, -0.44); }
+#endif
+const float FW = 0.115;   // flight feather width
+float wingTop(float a) { float u = clamp(a/0.86, 0.0, 1.0); return 0.04 + 0.56*pow(sin(3.14159*u), 0.75)*(1.0 - 0.25*u); }
+// The flight feathers fan out from the top: measured across them, they widen and curve outward with
+// depth below the root, so they spread like a real wing instead of running in parallel strips.
+#if XF == 1
+// Transformed: the flight feathers fan open much more, the outer ones swinging outward.
+float fanU(float a, float b) { float dep = clamp(-b, 0.0, 1.3); return (a + 0.10*dep*dep)/(1.0 + 1.05*dep); }
+#else
+float fanU(float a, float b) { float dep = clamp(-b, 0.0, 1.3); return (a + 0.12*dep*dep)/(1.0 + 0.60*dep); }
+#endif
+float wingBot(float a) {
+  float f = fract(fanU(a, -0.30 - 0.66*pow(clamp(a/WING_A, 0.0, 1.0), 0.9))/FW);
+  return -0.28 - 0.66*pow(clamp(a/WING_A, 0.0, 1.0), 0.9) - 0.060*sqrt(max(0.0, 1.0 - (2.0*f - 1.0)*(2.0*f - 1.0)));
+}
+#if XF == 1
+float wingOut(float b) { return WING_A - 0.14*smoothstep(-0.1, 0.45, b) + 0.30*clamp(-b, 0.0, 1.0); }
+#else
+float wingOut(float b) { return WING_A - 0.14*smoothstep(-0.1, 0.45, b); }
+#endif
+// The covert band: the top rows of small feathers, down to this height.
+float covertLine(float a) { return wingTop(a) - 0.30; }
+vec3 wingLocal(vec3 p, float s) {
+#if XF == 1
+  // Lying along the body, raised a little off it in a shallow V and beating slowly: the covert
+  // feathers along the leading edge face forward, the flight feathers fan open behind.
+  float raise = 0.40 + 0.10*sin(uT*2.2);
+  vec3 U = normalize(vec3(s*cos(raise), sin(raise), -0.35));
+  vec3 V = normalize(vec3(0.0, 0.10, 1.0) - U*dot(vec3(0.0, 0.10, 1.0), U));
+#else
+  float sw = 0.02*sin(uT*1.6);
+  float ang = 0.50 + sw;
+  vec3 U = normalize(vec3(s*cos(ang), 0.0, -sin(ang)));
+  // Leaning back at the bottom, so the wing meets the body only at its root, not down its inner edge.
+  vec3 V = normalize(vec3(0.0, 1.0, 0.28) - U*dot(vec3(0.0, 1.0, 0.28), U));
+#endif
+  vec3 N = cross(U, V);
+  vec3 q = p - WING_ROOT(s);
+  float a = dot(q, U), b = dot(q, V);
+  // Cupped across, the lower feathers curling back, and a slow ripple flowing down the feathers, so
+  // the wing reads as soft and free rather than a flat plate. (Distances here are in wing units.)
+  float dep = clamp(-b/WING_S, 0.0, 1.3);
+  float n = dot(q, N)*s - 0.07*pow(clamp(a/(WING_A*WING_S), 0.0, 1.0), 2.0) - 0.08*dep*dep*WING_S
+          - 0.020*WING_S*sin(uT*2.2 - dep*3.0 - a*2.5)*smoothstep(0.1, 1.0, dep);
+  return vec3(a, b, n);
+}
+// The feather pattern at a point of the wing: x = relief height, y = how far across a feather toward
+// its free edge (0..1), z = 1 in the covert band, 0 in the flight feathers.
+vec3 wingFeathers(float a, float b) {
+  if (b > covertLine(a)) {
+    const float SW = 0.135, SH = 0.090, SR = 0.62;
+    vec2 st = vec2(a/SW, b/SH);
+    float edgeD = 1.0, shade = 0.0;
+    for (int k = 2; k >= 1; k--) {
+      float rw = floor(st.y) + float(k);
+      float off = 0.5*mod(rw, 2.0);
+      for (int m = -1; m <= 1; m++) {
+        vec2 cc = vec2(floor(st.x - off) + 0.5 + off + float(m), rw);
+        vec2 lq = (st - cc)*vec2(1.0, SH/SW);
+        float dd = length(lq);
+        if (lq.y <= 0.0 && dd < SR && edgeD >= 1.0) { edgeD = (SR - dd)*SW; shade = dd/SR; }
+      }
+    }
+    return vec3(0.008*shade*smoothstep(0.0, 0.010, edgeD), shade, 1.0);
+  }
+  // Flight feathers overlap sideways, each one's outer edge over the next.
+  float f = fract(fanU(a, b)/FW);
+  return vec3(0.007*f*smoothstep(0.0, 0.08, 1.0 - f), f, 0.0);
+}
+// x = distance, y = how far out (0 root, 1 outer edge), z = feather shade, w = covert band (1) or not.
+float wingStem(vec3 p, float s) { return capT(p, vec3(s*0.13, 1.34, -0.36), WING_ROOT(s) + vec3(s*0.02, 0.04, 0.0), 0.026, 0.020); }
+#if XF == 1
+const vec3 WSPAN = vec3(1.15, 1.0, 1.0);    // not stretched wide; the feathers fan instead
+#else
+const vec3 WSPAN = vec3(1.0);
+#endif
+vec4 angelWing(vec3 p, float s) {
+  vec3 w = wingLocal(p, s)/(WING_S*WSPAN);
+  float a = w.x, b = w.y;
+  float d2 = max(max(b - wingTop(a), wingBot(a) - b), max(-a, a - wingOut(b)))*0.7;
+#if XF == 1
+  // Spread: the flight feathers part toward their tips, small gaps opening between them.
+  if (b < covertLine(a)) {
+    float tt = clamp((covertLine(a) - b)/max(covertLine(a) - wingBot(a), 0.05), 0.0, 1.0);
+    float f = fract(fanU(a, b)/FW);
+    float dep = clamp(-b, 0.0, 1.3);
+    float edge = (0.5 - abs(f - 0.5))*FW*(1.0 + 1.05*dep);
+    d2 = max(d2, (0.030*smoothstep(0.30, 1.0, tt) - edge)*0.7);
+  }
+#endif
+  float th = mix(0.034, 0.012, clamp(a/WING_A, 0.0, 1.0));
+  vec3 fe = wingFeathers(a, b);
+  float d = max(d2, abs(w.z) - th - fe.x)*WING_S*min(min(WSPAN.x, WSPAN.y), WSPAN.z);
+  return vec4(d, clamp(a/WING_A, 0.0, 1.0), fe.y, fe.z);
+}
+// Ribbon fin: a thin, soft fin standing off the middle of the back from the crown to the tail, its
+// height rippling in slow waves. dBody is the body's own distance. x = distance, y = how far out (0..1).
+float ribbonH(float y) {
+  return 0.26*(0.62 + 0.38*sin(y*7.0 - uT*1.6))*smoothstep(0.22, 0.45, y)*(1.0 - smoothstep(1.98, 2.18, y));
+}
+vec2 ribbon(vec3 p, float dBody) {
+  float H = ribbonH(p.y);
+  float v = clamp(dBody/max(H, 0.001), 0.0, 1.0);
+  float th = mix(0.016, 0.004, v);
+  return vec2(max(max(abs(p.x) - th, dBody - H), p.z + 0.10), v);
+}
+
+float skin(vec3 p) {
+  float d = bodyMass(p);
+#if XF == 1
+  d = smin(d, arms(p).x, 0.06);
+  d -= 0.014*warts(p);
+  d = smin(d, legs(p), 0.10);
+  d = smin(d, spines(p).x, 0.05);
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    d = smin(d, angelWing(p, s).x, 0.03);
+  }
+#elif BODYV == 1
+  d = smin(d, lotus(p).x, 0.03);
+#elif BODYV == 2
+  d -= featherBack(p).x;
+#elif BODYV == 3
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    d = min(d, angelWing(p, s).x);
+    // The root joint: a short, slim stem from the back to the top of the wing's inner edge.
+    d = smin(d, wingStem(p, s), 0.012);
+  }
+#elif BODYV == 4
+  d = smin(d, ribbon(p, d).x, 0.03);
+#elif BODYV == 6
+  d = smin(d, capelet(p).x, 0.03);
+#endif
+#if XF == 0
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    d = smin(d, antennaDist(p, s).x, 0.10);
+  }
+#endif
+  if (p.z > 0.0) {
+    vec3 l = eyeLocal(p);
+    d -= eyeRelief(l, eyeDist(p))*smoothstep(-0.30, -0.10, l.z);
+  }
+  if (p.z > 0.2 && abs(p.y - MOUTH.y) < 0.20) {
+    // Set just into the face, so the white sits behind the outline rather than painted on.
+    d = smax(d, -max(mouthDist(p), -d - MCD), 0.004);
+  }
+#if XF == 1
+  return d;
+#else
+  return smax(d, -p.y, 0.012);
+#endif
+}
+
+#endif
+
+vec2 map(vec3 p) {
+  p = deform(p);
+  float h = halo(p).x;
+  float d = skin(p);
+  return h < d ? vec2(h, 2.0) : vec2(d, 1.0);
+}
+
+vec3 normalAt(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  float h = 0.0015;
+  return normalize(k.xyy*map(p + k.xyy*h).x + k.yyx*map(p + k.yyx*h).x + k.yxy*map(p + k.yxy*h).x + k.xxx*map(p + k.xxx*h).x);
+}
+
+float shadow(vec3 ro, vec3 rd) {
+  float res = 1.0, t = 0.03;
+  for (int i = 0; i < 24; i++) {
+    float h = map(ro + rd*t).x;
+    res = min(res, 9.0*h/t);
+    t += clamp(h*0.8, 0.02, 0.25);
+    if (res < 0.001 || t > 4.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+
+float ao(vec3 p, vec3 n) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 5; i++) {
+    float h = 0.03*float(i);
+    o += (h - map(p + n*h).x)*s; s *= 0.75;
+  }
+  return clamp(1.0 - 2.2*o, 0.0, 1.0);
+}
+
+vec3 sky(vec3 d) { return mix(vec3(0.018, 0.030, 0.030), vec3(0.10, 0.17, 0.16), smoothstep(-0.2, 0.9, d.y)); }
+
+// The eye is pure divine light, the way Inferno's is pure fire and Rammstone's molten rock: no
+// pupil, iris or white, nothing that reads as a human eye. One radiant gradient from a white-gold
+// heart through rich gold to deep amber at the rim, with faint rays of light turning slowly through
+// it and a small four-point gleam of light up to one side. Drawn on the eye's own surface.
+float starShape(vec2 v, float len, float w) {
+  float a1 = max(0.0, 1.0 - abs(v.y)/len), a2 = max(0.0, 1.0 - abs(v.x)/(len*0.75));
+  float s1 = 1.0 - smoothstep(0.0, w*a1*a1 + 0.0004, abs(v.x));
+  float s2 = 1.0 - smoothstep(0.0, w*a2*a2 + 0.0004, abs(v.y));
+  return max(max(s1*step(abs(v.y), len), s2*step(abs(v.x), len*0.75)), 1.0 - smoothstep(w*0.9, w*1.6, length(v)));
+}
+// Eyes (EYEV), all pure light with no eye anatomy. 0 Radiant (the current eye), 1 Dawn, 2 Healing
+// mint, 3 Liquid gold, 4 Starlight, 5 Rising light, 6 Pearl, 7 Stained glass.
+vec3 eyeShade(vec3 dp, out vec3 glow) {
+  glow = vec3(0.0);
+  vec3 l = eyeLocal(dp);
+  float lidd = l.y - lidLine(l.x);
+  // Distance from the heart, scaled to the eye's shape: 0 at the heart, about 1 at the rim.
+  vec2 e = (l.xy - vec2(0.0, -0.012))/vec2(EW*0.92, 0.5*(ETOP + EBOT));
+  float r = length(e);
+  float a = atan(e.y, e.x);
+  float heart = 1.0 - smoothstep(0.0, 0.75, r);
+  vec3 hg = vec3(1.0, 0.86, 0.52);
+  float gleamOn = 1.0;
+  vec3 c;
+#if EYEV == 1
+  // Dawn: white at the heart through rose gold and peach to warm amber at the rim, soft light rising.
+  c = mix(vec3(1.00, 0.95, 0.90), vec3(1.00, 0.68, 0.56), smoothstep(0.0, 0.38, r));
+  c = mix(c, vec3(0.90, 0.40, 0.30), smoothstep(0.40, 0.92, r));
+  c = mix(c, vec3(0.42, 0.14, 0.07), smoothstep(0.95, 1.45, r));
+  c *= 1.0 - 0.12*(0.5 + 0.5*sin(e.x*16.0))*smoothstep(0.3, 0.9, r)*smoothstep(-0.2, 0.6, e.y);
+  hg = vec3(1.0, 0.80, 0.66);
+#elif EYEV == 2
+  // Healing mint: a white-gold heart and pale gold, turning to soft healing mint toward a teal rim.
+  c = mix(vec3(1.00, 0.98, 0.88), vec3(0.98, 0.88, 0.56), smoothstep(0.0, 0.26, r));
+  c = mix(c, vec3(0.24, 0.84, 0.58), smoothstep(0.28, 0.70, r));
+  c = mix(c, vec3(0.03, 0.26, 0.20), smoothstep(0.95, 1.40, r));
+  c *= 1.0 - 0.12*(0.5 + 0.5*sin(a*14.0 + uT*0.30))*smoothstep(0.30, 0.85, r);
+  glow += GLOWC*0.10*smoothstep(0.5, 0.9, r)*(1.0 - smoothstep(0.95, 1.2, r));
+#elif EYEV == 3
+  // Liquid gold: molten gold turning slowly, with brighter streaks marbling through it.
+  float m = sin(e.x*7.0 + 1.6*sin(e.y*5.0 + uT*0.5) + uT*0.3)*sin(e.y*6.0 - 1.4*sin(e.x*4.0 - uT*0.4));
+  c = mix(vec3(0.85, 0.50, 0.10), vec3(1.00, 0.86, 0.50), 0.5 + 0.5*m);
+  c = mix(c, vec3(1.00, 0.96, 0.82), (1.0 - smoothstep(0.0, 0.5, r))*0.7);
+  c *= 1.0 + 0.25*smoothstep(0.75, 0.98, 0.5 + 0.5*m);
+  c = mix(c, vec3(0.42, 0.18, 0.03), smoothstep(0.95, 1.45, r));
+#elif EYEV == 4
+  // Starlight: deep warm amber holding a few small stars of light that twinkle, glowing at the heart.
+  c = mix(vec3(0.95, 0.72, 0.36), vec3(0.50, 0.24, 0.05), smoothstep(0.0, 0.85, r));
+  c = mix(c, vec3(0.20, 0.08, 0.02), smoothstep(0.95, 1.45, r));
+  float st = 0.0;
+  for (int i = 0; i < 7; i++) {
+    float fi = float(i);
+    float rad = sqrt(fract(fi*0.618 + 0.21));
+    vec2 sp = vec2(EW*0.72*rad*sin(fi*2.4 + 0.6), 0.115*rad*cos(fi*2.4 + 0.6) - 0.01);
+    float tw = 0.55 + 0.45*sin(uT*2.0 + fi*1.7);
+    st = max(st, starShape(l.xy - sp, mix(0.028, 0.046, fract(fi*0.37))*(0.7 + 0.3*tw), 0.0065)*(0.6 + 0.4*tw));
+  }
+  c = mix(c, vec3(1.0, 0.97, 0.88), st);
+  glow += vec3(1.0, 0.95, 0.80)*st*0.45;
+  hg *= 0.6;
+  gleamOn = 0.0;
+#elif EYEV == 5
+  // Rising light: brightest along the bottom, rising through gold to deep amber under the lid, with
+  // soft streaks of light drifting upward.
+  float h = clamp((l.y + EBOT)/(ETOP + EBOT), 0.0, 1.0);
+  c = mix(vec3(1.00, 0.98, 0.90), vec3(1.00, 0.80, 0.40), smoothstep(0.0, 0.45, h));
+  c = mix(c, vec3(0.70, 0.36, 0.06), smoothstep(0.45, 1.0, h));
+  float streak = pow(0.5 + 0.5*sin(l.x*60.0 + 3.0*sin(l.x*13.0 + uT*0.4)), 6.0)*smoothstep(0.0, 0.3, h);
+  c = mix(c, vec3(1.0, 0.95, 0.80), streak*0.35*(1.0 - h));
+  c = mix(c, c*0.55, smoothstep(0.82, 1.0, abs(l.x)/EW));
+  heart = 1.0 - smoothstep(0.0, 0.5, h);
+#elif EYEV == 6
+  // Pearl: luminous pearly ivory with soft opalescent sheens of mint, rose and gold drifting over it.
+  float w1 = sin(e.x*4.0 + e.y*3.0 + uT*0.4), w2 = sin(-e.x*3.0 + e.y*5.0 - uT*0.3);
+  c = vec3(0.98, 0.96, 0.92) + vec3(-0.07, 0.04, 0.0)*w1 + vec3(0.06, -0.04, -0.07)*w2;
+  c = mix(c, vec3(0.78, 0.68, 0.56), smoothstep(0.75, 1.40, r));
+  hg = vec3(1.0, 0.96, 0.92);
+#elif EYEV == 7
+  // Stained glass: a rose window of eight panes of gold, pale gold and soft mint round a white-gold
+  // glow at the middle, joined by dark gold leading and lit from behind.
+  float sect = floor((a + 3.14159)/0.785398);
+  float fa = fract((a + 3.14159)/0.785398);
+  vec3 pane = mod(sect, 3.0) < 0.5 ? vec3(1.0, 0.80, 0.40) : (mod(sect, 3.0) < 1.5 ? vec3(1.0, 0.93, 0.72) : vec3(0.55, 0.92, 0.72));
+  c = mix(vec3(1.0, 0.97, 0.86), pane, smoothstep(0.08, 0.30, r));
+  float lead = (1.0 - smoothstep(0.0, 0.035, min(fa, 1.0 - fa)*0.785398*r))*smoothstep(0.10, 0.20, r);
+  c = mix(c, vec3(0.36, 0.20, 0.05), lead*0.9);
+  c = mix(c, vec3(0.40, 0.18, 0.04), smoothstep(0.95, 1.45, r));
+#else
+  // Radiant: one gradient from a white-gold heart through rich gold to deep amber at the rim, with
+  // faint rays of light turning slowly through it.
+  c = mix(vec3(1.00, 0.98, 0.90), vec3(1.00, 0.84, 0.46), smoothstep(0.0, 0.42, r));
+  c = mix(c, vec3(0.92, 0.56, 0.14), smoothstep(0.42, 0.95, r));
+  c = mix(c, vec3(0.46, 0.20, 0.03), smoothstep(0.95, 1.45, r));
+  c *= 1.0 - 0.16*(0.5 + 0.5*sin(a*14.0 + uT*0.30))*smoothstep(0.30, 0.85, r);
+#endif
+  c *= 1.0 - 0.32*smoothstep(-0.050, 0.0, lidd);
+  glow += hg*0.40*heart + GOLDC*0.08*(1.0 - smoothstep(0.6, 1.2, r));
+  // A small gleam of light up to one side.
+  float gleam = starShape(l.xy - vec2(-0.118, 0.046), 0.042, 0.0066)*gleamOn;
+  c = mix(c, vec3(1.0), gleam);
+  glow += vec3(1.0, 0.97, 0.90)*gleam*0.40;
+  return c;
+}
+
+float gEye = 0.0;   // how much of the eye is showing at the shaded point, so the skin's sheen skips it
+
+
+
+// The lid takes the skin's colour a little deeper, a bold ink line runs along its edge and a fine
+// one along the lower lid; nothing is painted round the eye.
+void eyeColour(vec3 dp, inout vec3 col, inout vec3 glow, vec3 lidc) {
+  vec3 l = eyeLocal(dp);
+  if (l.z < -0.30) return;
+  float ed = eyeDist(dp);
+  float open = lidOpen(l, ed);
+  float above = smoothstep(-0.015, 0.025, l.y - eyeMid(l.x));
+  float ends = 1.0 - smoothstep(EW*0.82, EW*1.02, abs(l.x));
+  float bw = mix(0.012, 0.085, pow(max(0.0, 1.0 - (l.x/EW)*(l.x/EW)), 0.9));
+  float lidOn = (1.0 - smoothstep(bw - 0.003, bw, open))*step(0.0, open)*above*(1.0 - smoothstep(EW*0.96, EW*1.02, abs(l.x)));
+  float roll = exp(-pow((open - 0.45*bw)/(0.30*bw), 2.0));
+  col = mix(col, mix(lidc*0.80, vec3(1.0, 0.90, 0.60), roll*0.55), lidOn);
+  glow += lidc*lidOn*0.10;
+  col = mix(col, INK, (1.0 - smoothstep(0.0, 0.0025, abs(open - bw)))*lidOn*0.0 + (1.0 - smoothstep(0.0010, 0.0028, abs(open - bw)))*above*step(open, bw + 0.003)*(1.0 - smoothstep(EW*0.80, EW*1.0, abs(l.x)))*0.75);
+  float vis = 1.0 - smoothstep(-0.002, 0.002, open);
+  gEye = vis;
+  vec3 eg;
+  vec3 ec = eyeShade(dp, eg);
+  col = mix(col, ec, vis);
+  glow += eg*vis;
+  float taper = mix(0.55, 1.0, 1.0 - smoothstep(EW*0.55, EW, abs(l.x)));
+  float upper = (1.0 - smoothstep(0.0, 0.020*taper, open))*step(-0.002, open)*above;
+  float lower = (1.0 - smoothstep(0.0, 0.005, abs(open)))*(1.0 - above)*(1.0 - smoothstep(EW*0.80, EW*0.98, abs(l.x)));
+  col = mix(col, INK, max(upper, lower*0.75));
+}
+
+// Returns colour; `glow` receives self-illumination.
+vec3 skinAlbedo(vec3 dp, vec3 n, out vec3 glow) {
+  glow = vec3(0.0);
+  float pulse = 0.80 + 0.20*sin(uT*1.2 + dp.y*1.4);
+#if PLAIN == 1
+  return vec3(0.55);
+#endif
+  float ax = abs(dp.x);
+#if XF == 1
+  // Celadon, deepening to teal along the top and over the cap.
+  vec3 col = mix(BODYC, BACKC, smoothstep(1.48, 1.80, dp.y)*0.70);
+#else
+  // Celadon, deepening to teal down the back and over the crown like a cowl.
+  vec3 col = mix(BODYC, BACKC, smoothstep(0.12, -0.42, dp.z)*0.90);
+  col = mix(col, BACKC, smoothstep(1.98, 2.22, dp.y)*0.50);
+#endif
+  // Coordinates on the back: across from the spine (along the surface) and up.
+  float ab = atan(dp.x, -dp.z);
+  float rr = max(length(dp.xz), 0.25);
+  vec2 bq = vec2(abs(ab)*rr, dp.y);
+  // Body options (BODYV): colour follows each sculpted shape, celadon at the root to ivory at the
+  // free edge, with a soft glow only where light would gather.
+#if XF == 1
+  {
+    // The underside and chest: his ivory belly, glowing from within, warming toward the back, with the
+    // fine gold edge.
+    // Painted by how far the smooth body faces down (e), so the ivory follows the fat body's curve:
+    // celadon paling slowly through soft mint into ivory (no line), and an
+    // inner light growing toward the middle of the underside, warming toward the back.
+    float onA = 1.0 - smoothstep(0.0, 0.02, arms(dp).x);
+    float onL = 1.0 - smoothstep(0.0, 0.02, legs(dp));
+    float uz = smoothstep(1.10, 0.86, dp.z)*smoothstep(-1.10, -0.86, dp.z)*(1.0 - max(onA, onL));
+    float e = 0.55*(-bodyN(dp).y) + 0.45*(1.36 - dp.y)/0.34;
+    float pale = smoothstep(-0.35, 0.20, e)*uz;
+    float bel = smoothstep(-0.05, 0.50, e)*uz;
+    float lamp = smoothstep(0.40, 0.90, e)*uz;
+    col = mix(col, mix(BODYC, BELLYC, 0.40), pale*0.55);
+    col = mix(col, mix(BELLYC, vec3(1.0, 0.96, 0.84), lamp*0.8), bel*bel*(3.0 - 2.0*bel));
+    col = mix(col, vec3(1.0, 0.88, 0.56), bel*smoothstep(0.2, -0.9, dp.z)*0.35);
+    glow += vec3(1.0, 0.88, 0.60)*(bel*0.08 + lamp*0.22)*pulse;
+    // The cap: deep teal on top, a gold line along its rim.
+    float ch = dp.y - capLine(dp);
+    float onCap = smoothstep(-0.015, 0.015, ch)*smoothstep(-0.70, -0.30, dp.z);
+    col = mix(col, mix(BACKC, mix(BODYC, BACKC, 0.5), smoothstep(0.12, 0.0, ch)), onCap);
+    // Arms celadon, the fingers paling to glowing ivory pads: healing hands.
+    vec2 am = arms(dp);
+    float tipz = smoothstep(0.92, 1.06, dp.z);
+    col = mix(col, mix(BODYC, mix(BODYC, BELLYC, 0.75), max(max(am.y*0.4, tipz), smoothstep(0.1, -0.7, n.y)*0.5)), onA);
+    glow += vec3(1.0, 0.92, 0.70)*onA*tipz*0.18*pulse;
+    // Legs celadon with ivory undersides.
+    col = mix(col, mix(BODYC, BELLYC, smoothstep(0.1, -0.7, n.y)*0.6), onL);
+    // Warts a shade lighter on their tops.
+    col = mix(col, col*1.08, smoothstep(0.3, 0.9, warts(dp))*0.5*(1.0 - onCap));
+    // Spines: celadon at the root to ivory, the bulbs glowing the ivory-gold of his belly and eye.
+    vec3 sp = spines(dp);
+    float onS = 1.0 - smoothstep(0.0, 0.02, sp.x);
+    col = mix(col, mix(mix(BODYC, BACKC, 0.2), BELLYC, smoothstep(0.55, 1.0, sp.y)), onS);
+    vec3 bulbC = mix(vec3(0.96, 0.70, 0.26), vec3(1.0, 0.92, 0.66), smoothstep(-0.2, 0.9, dot(n, normalize(dp - spineBulb(dp)))));
+    col = mix(col, bulbC, onS*sp.z);
+    glow += vec3(1.0, 0.78, 0.34)*onS*sp.z*0.85*pulse;
+  }
+#endif
+#if XF == 1 || BODYV == 3
+#define WINGS_ON 1
+#endif
+#if BODYV == 1 && XF == 0
+  {
+    vec2 lp = lotus(dp);
+    float on = 1.0 - smoothstep(0.0, 0.012, lp.x);
+    col = mix(col, mix(mix(BODYC, BACKC, 0.15), BELLYC, smoothstep(0.40, 1.0, lp.y)), on);
+    glow += vec3(1.0, 0.95, 0.80)*on*pow(smoothstep(0.65, 1.0, lp.y), 2.0)*0.20;
+  }
+#elif BODYV == 2
+  {
+    vec2 fb = featherBack(dp);
+    col = mix(col, mix(col, BELLYC, 0.38), smoothstep(0.60, 1.0, fb.y));
+    col = mix(col, col*vec3(0.88, 0.92, 0.92), (1.0 - smoothstep(0.0, 0.30, fb.y))*step(0.001, fb.y)*0.25);
+  }
+#endif
+#ifdef WINGS_ON
+  for (int i = 0; i < 2; i++) {
+    vec4 wg = angelWing(dp, i == 0 ? -1.0 : 1.0);
+    float on = 1.0 - smoothstep(0.0, 0.012, wg.x);
+    // Ivory feathers, lighter toward each free edge with a soft grey crease where the next one
+    // overlaps, warm golden light gathering in the covert rows, and the root blending into the skin.
+    vec3 wc = mix(BELLYC, vec3(1.0, 0.93, 0.76), 0.45);
+    wc = mix(wc*vec3(0.86, 0.80, 0.70), wc, smoothstep(0.0, 0.35, wg.z));
+    wc = mix(wc, vec3(1.0, 0.98, 0.90), smoothstep(0.65, 0.95, wg.z)*0.6);
+    wc = mix(wc, wc*vec3(0.86, 0.80, 0.70), (1.0 - smoothstep(0.0, 0.06, 1.0 - wg.z))*(1.0 - wg.w)*0.45);
+#if XF == 1
+    float low = smoothstep(0.30, 1.0, -wingLocal(dp, i == 0 ? -1.0 : 1.0).y/(WING_S*WSPAN.y))*0.6;
+#else
+    float low = 1.0 - smoothstep(0.40, 1.20, dp.y);
+#endif
+    wc = mix(wc, vec3(1.0, 0.88, 0.56), low*0.45);
+#if XF == 0
+    on = max(on, 1.0 - smoothstep(0.0, 0.012, wingStem(dp, i == 0 ? -1.0 : 1.0)));
+#endif
+    col = mix(col, wc, on);
+    glow += vec3(1.0, 0.88, 0.62)*on*(0.24 + 0.14*low) + vec3(1.0, 0.88, 0.60)*on*wg.w*0.06;
+  }
+#elif BODYV == 4
+  {
+    float dB = bodyMass(dp);
+    vec2 rb = ribbon(dp, dB);
+    float on = (1.0 - smoothstep(0.0, 0.010, rb.x))*smoothstep(0.005, 0.03, dB);
+    vec3 rc = mix(mix(BODYC, GLOWC, 0.25), mix(BELLYC, GLOWC, 0.30), smoothstep(0.2, 0.95, rb.y));
+    col = mix(col, rc, on);
+    glow += mix(GLOWC, vec3(1.0, 0.95, 0.80), 0.5)*on*pow(smoothstep(0.45, 1.0, rb.y), 1.5)*0.45*pulse;
+  }
+#elif BODYV == 5
+  {
+    // Healing light glowing through where the skin is thin: the antennae, tail, hem and edges.
+    float thick = -bodyMass(dp - n*0.14);
+    float thin = 1.0 - smoothstep(0.0, 0.10, thick);
+    vec3 lc = mix(GLOWC, vec3(1.0, 0.90, 0.62), 0.55);
+    col = mix(col, mix(col, lc, 0.55), thin);
+    glow += lc*thin*0.45*pulse;
+  }
+#elif BODYV == 6
+  {
+    vec2 cp = capelet(dp);
+    float on = 1.0 - smoothstep(0.0, 0.012, cp.x);
+    col = mix(col, mix(mix(BODYC, BACKC, 0.20), BELLYC, smoothstep(0.45, 1.0, cp.y)), on);
+    glow += vec3(1.0, 0.95, 0.80)*on*pow(smoothstep(0.70, 1.0, cp.y), 2.0)*0.15;
+  }
+#endif
+#if XF == 0
+  // Belly options (BELLYV): ivory following the body's curve, with a fine gold line just inside its
+  // edge (all but 6). 0 plain gold-edged; 1 inner light; 2 a gold heart; 3 feather scales; 4 a gold
+  // stole; 5 rising light; 6 plain ivory with no edge.
+  vec2 b = belly(dp);
+  float bel = 1.0 - smoothstep(-0.030, 0.020, b.x);
+  col = mix(col, mix(BELLYC, BELLYC*vec3(0.88, 0.92, 0.86), smoothstep(0.2, 1.0, b.y)), bel);
+  float inB = (1.0 - smoothstep(-0.05, -0.02, b.x))*step(-0.05, dp.z);
+  float bu = atan(dp.x, dp.z)*rr;
+#if BELLYV == 1 || BELLYV == 7
+  // Inner light: glowing warm from within, brightest in the middle.
+  float lamp = 1.0 - smoothstep(-0.32, -0.02, b.x);
+  col = mix(col, vec3(1.0, 0.96, 0.82), lamp*0.7*bel);
+  glow += vec3(1.0, 0.88, 0.60)*lamp*bel*0.26;
+#endif
+#if BELLYV == 2
+  // A gold heart outlined on the chest, glowing softly inside.
+  {
+    vec2 hp = (vec2(bu, dp.y) - vec2(0.0, 0.48))/0.25;
+    hp.x = abs(hp.x);
+    float hd;
+    if (hp.y + hp.x > 1.0) hd = length(hp - vec2(0.25, 0.75)) - 0.35355;
+    else hd = sqrt(min(dot(hp - vec2(0.0, 1.0), hp - vec2(0.0, 1.0)), dot(hp - 0.5*max(hp.x + hp.y, 0.0), hp - 0.5*max(hp.x + hp.y, 0.0))))*sign(hp.x - hp.y);
+    hd *= 0.25;
+    float hl = (1.0 - smoothstep(0.004, 0.008, abs(hd)))*inB;
+    float hf = (1.0 - smoothstep(-0.004, 0.0, hd))*inB;
+    col = mix(col, vec3(1.0, 0.93, 0.74), hf*0.6);
+    glow += vec3(1.0, 0.88, 0.60)*hf*0.10;
+    col = mix(col, GOLDC*1.05, hl);
+    glow += GOLDC*hl*0.15;
+  }
+#elif BELLYV == 3
+  // Feather scales: rows of soft pointed feathers hanging over one another, each with a faint gold rim.
+  {
+    const float SW = 0.13, SH = 0.085;
+    vec2 st = vec2(bu/SW, dp.y/SH);
+    float edgeD = 1.0, shade = 0.0;
+    for (int k = 2; k >= 1; k--) {
+      float rw = floor(st.y) + float(k);
+      float off = 0.5*mod(rw, 2.0);
+      for (int m = -1; m <= 1; m++) {
+        vec2 cc = vec2(floor(st.x - off) + 0.5 + off + float(m), rw);
+        vec2 lq = (st - cc)*vec2(1.0, SH/SW);
+        float dd = length(vec2(lq.x*(1.0 + 0.9*max(-lq.y, 0.0)/0.6), lq.y));
+        if (lq.y <= 0.0 && dd < 0.6 && edgeD >= 1.0) { edgeD = (0.6 - dd)*SW; shade = dd/0.6; }
+      }
+    }
+    float rim = (1.0 - smoothstep(0.0025, 0.0060, edgeD))*step(edgeD, 0.99)*inB;
+    col = mix(col, col*vec3(0.86, 0.88, 0.84), (1.0 - smoothstep(0.0, 0.7, shade))*inB*0.6);
+    col = mix(col, vec3(1.0, 0.98, 0.92), smoothstep(0.55, 1.0, shade)*inB*0.6);
+    col = mix(col, GOLDC*0.95, rim*0.9);
+    glow += GOLDC*rim*0.05;
+  }
+#elif BELLYV == 4
+  // A gold stole: two gold bands running down the belly from its top, ending in short fringes.
+  {
+    float sx = abs(abs(bu) - 0.15 - 0.03*smoothstep(0.9, 0.2, dp.y));
+    float band = (1.0 - smoothstep(0.026, 0.030, sx))*step(0.22, dp.y)*inB;
+    float bandEdge = (1.0 - smoothstep(0.0, 0.0035, abs(sx - 0.026)))*step(0.22, dp.y)*inB;
+    float fringe = (1.0 - smoothstep(0.0, 0.003, abs(fract(bu/0.012) - 0.5)*0.012))*(1.0 - smoothstep(0.024, 0.030, sx))*step(0.15, dp.y)*step(dp.y, 0.22)*inB;
+    col = mix(col, mix(GOLDC*0.90, vec3(1.0, 0.90, 0.60), 0.5 + 0.5*sin(dp.y*40.0)*0.3), band);
+    col = mix(col, GOLDC*0.45, bandEdge*0.8);
+    col = mix(col, GOLDC, fringe);
+    glow += GOLDC*(band + fringe)*0.10;
+  }
+#endif
+#if BELLYV == 5 || BELLYV == 7
+  // Rising light: ivory at the top warming to a luminous white gold toward the base.
+  float rise = 1.0 - smoothstep(0.0, 0.75, dp.y);
+  col = mix(col, vec3(1.0, 0.88, 0.56), rise*bel*0.75);
+  glow += GOLDC*rise*rise*bel*0.30;
+#endif
+#if BELLYV != 6
+  float bline = (1.0 - smoothstep(0.0035, 0.0075, abs(b.x + 0.040)))*step(0.06, dp.y)*step(-0.05, dp.z);
+  col = mix(col, GOLDC*1.05, bline);
+  glow += GOLDC*bline*0.14;
+#endif
+  // Antennae: the body's colour, the last stretch glowing gold, paler at the very end.
+  for (int i = 0; i < 2; i++) {
+    vec2 a = antennaDist(dp, i == 0 ? -1.0 : 1.0);
+    float on = 1.0 - smoothstep(0.0, 0.03, a.x);
+    float tip = smoothstep(0.55, 0.90, a.y);
+    col = mix(col, mix(GOLDC*1.1, vec3(1.0, 0.95, 0.82), smoothstep(0.85, 1.0, a.y)), on*tip);
+    glow += GOLDC*on*tip*tip*0.50*pulse;
+  }
+  // A soft form shadow under the jaw, tinted rather than grey.
+  if (dp.z > 0.1) {
+    float jaw = smoothstep(0.98, 1.06, dp.y)*smoothstep(1.16, 1.07, dp.y)*smoothstep(0.50, 0.15, ax);
+    col = mix(col, col*vec3(0.60, 0.72, 0.80), 0.35*jaw);
+  }
+#endif
+  if (dp.z > 0.1) eyeColour(dp, col, glow, GOLDC);
+  // Mouth: white teeth (one solid shape, no tooth lines) with a soft grey band under the upper line
+  // and toward the corners, a dark inside and tongue where the option opens, the ink outline (heavier
+  // along the top), a flick at his right corner and a short line under the lower lip.
+  if (dp.z > 0.2) {
+    float md = mouthDist(dp);
+    vec2 g = mouthCoord(dp);
+    float u = g.x/MW;
+    float inside = 1.0 - smoothstep(-0.0020, 0.0012, md);
+    float open = max(mouthTop(g.x) - mouthBot(g.x), 0.001);
+    float fromTop = (mouthTop(g.x) - g.y)/open;
+    vec3 white = vec3(0.97, 0.97, 0.94);
+    white = mix(white, vec3(0.66, 0.72, 0.72), (1.0 - smoothstep(0.04, 0.20, fromTop))*0.35);
+    white = mix(white, vec3(0.66, 0.72, 0.72), smoothstep(0.72, 0.98, abs(u))*0.45);
+    float teeth = MTF > 0.99 ? 1.0 : 1.0 - smoothstep(MTF - 0.05, MTF + 0.03, fromTop);
+    vec3 dark = vec3(0.10, 0.03, 0.05);
+    float tng = MTG*smoothstep(0.50, 0.85, fromTop)*(1.0 - smoothstep(0.40, 0.68, abs(u)));
+    dark = mix(dark, vec3(0.62, 0.20, 0.24), tng);
+    col = mix(col, mix(dark, white, teeth), inside);
+    float upper = step(mouthBot(g.x) + 0.45*open, g.y);
+    float edge = abs(md) - mix(0.0026, 0.0040, upper)*(1.0 - 0.45*smoothstep(0.75, 1.0, abs(u)));
+    vec2 cR = vec2(MW, mouthTop(MW));
+    float flick = (MOUTHV == 0 || MOUTHV == 3) ? seg2(g, cR + vec2(-0.004, -0.012), cR + vec2(0.006, 0.014), 0.0026, 0.0010) : 1.0;
+    float yc = mouthBot(0.0) - 0.030 + 2.2*g.x*g.x;
+    float chin = MOUTHV == 1 ? 1.0 : max(abs(g.y - yc) - 0.0024*(1.0 - smoothstep(0.02, 0.05, abs(g.x))) - 0.0004, abs(g.x) - 0.050);
+    col = mix(col, INK, 1.0 - smoothstep(0.0, 0.0022, min(min(edge, flick), chin)));
+  }
+  return col;
+}
+
+vec3 shadeGround(vec3 p, vec3 rd) {
+  vec3 col = vec3(0.055, 0.080, 0.075);
+  vec3 l = normalize(LKEY);
+  float sh = shadow(p + vec3(0.0, 0.002, 0.0), l);
+  col *= mix(0.45, 1.0, sh);
+#if XF == 0
+  float r = length(p.xz/vec2(0.95, 0.95));
+  col *= 1.0 - 0.45*smoothstep(1.4, 0.75, r);
+  col += GLOWC*0.035*exp(-1.3*dot(p.xz - vec2(0.0, 0.6), p.xz - vec2(0.0, 0.6)));
+#else
+  col += GLOWC*0.035*exp(-0.9*dot(p.xz - vec2(0.0, -1.3), p.xz - vec2(0.0, -1.3)));
+#endif
+  float fade = smoothstep(11.0, 3.5, length(p.xz));
+  return mix(sky(rd), col, fade);
+}
+
+void main() {
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.6*uFwd);
+  vec3 ro = uRo;
+  vec3 col = sky(rd);
+  float t = 0.0, hitId = 0.0;
+#if XF == 1
+  // Thin fronds and fins in space bent by the swimming wave need smaller steps.
+  for (int i = 0; i < 260; i++) {
+    vec2 h = map(ro + rd*t);
+    if (h.x < 0.0006*t) { hitId = h.y; break; }
+    t += max(h.x*0.45, 0.0015);
+#else
+  for (int i = 0; i < 140; i++) {
+    vec2 h = map(ro + rd*t);
+    if (h.x < 0.0008*t) { hitId = h.y; break; }
+    t += h.x*0.7;
+#endif
+    if (t > 18.0) break;
+  }
+  float tg = rd.y < 0.0 ? -ro.y/rd.y : 1e9;
+  if (hitId > 0.0 && t < tg) {
+    vec3 p = ro + rd*t;
+    vec3 n = normalAt(p);
+    vec3 v = -rd;
+    vec3 l = normalize(LKEY), lr = normalize(LRIM);
+    vec3 dp = deform(p);
+    float occ = ao(p, n);
+    float sh = shadow(p + n*0.01, l);
+    float ndl = dot(n, l);
+    vec3 hv = normalize(l + v);
+    float nv = max(dot(n, v), 0.0);
+    float fres = pow(1.0 - nv, 3.0);
+    vec3 glow;
+    vec3 alb = skinAlbedo(dp, n, glow);
+#if 1
+    if (hitId > 1.5) {
+      // The halo: gold, brightest along the middle of the band, glowing.
+      float hv = halo(dp).y;
+      alb = mix(GOLDC*0.85, vec3(1.0, 0.92, 0.70), exp(-pow((hv - 0.5)/0.22, 2.0))*0.6);
+      glow = GOLDC*(0.55 + 0.35*exp(-pow((hv - 0.5)/0.20, 2.0)));
+    }
+#endif
+    float wrap = max(0.0, (ndl + 0.4)/1.4);
+    col = alb*(wrap*mix(0.5, 1.0, sh)*vec3(1.0, 0.98, 0.95)*1.05 + 0.95*occ*sky(n) + 0.24*occ*vec3(0.85, 1.0, 0.92));
+    // Wet and glossy, like Floppy: a broad sheen plus a tight highlight.
+    float wet = 1.0 - 0.85*gEye;
+    col += sh*(0.18*wet*pow(max(dot(n, hv), 0.0), 26.0) + 1.0*pow(max(dot(n, hv), 0.0), 260.0));
+    col += 0.24*wet*pow(max(dot(n, normalize(lr + v)), 0.0), 50.0)*vec3(0.75, 1.0, 0.88);
+    col += 0.20*wet*fres*sky(reflect(rd, n));
+    col += 0.06*wet*fres*GLOWC;
+    col += glow;
+    // Comic ink: dark edge where the surface turns away.
+    col = mix(col, INK, smoothstep(0.20, 0.08, nv)*0.9);
+  } else if (rd.y < 0.0) {
+    col = shadeGround(ro + rd*tg, rd);
+  }
+#if XF == 1
+  // The spine bulbs light the air round them: a soft warm bloom along the ray near each bulb.
+  {
+    float tEnd = (hitId > 0.0 && t < tg) ? t : min(tg, 30.0);
+    for (int i = 0; i < SPINES; i++) {
+      vec3 dir; float len;
+      vec3 B = spineBase(i, dir, len);
+      float s = mix(1.0, 0.75, float(i)/float(SPINES - 1));
+      vec3 c = B + dir*(len + 0.045*s) + vec3(0.0, 0.035*sin(uT*1.8), 0.0);
+      float tc = clamp(dot(c - ro, rd), 0.0, tEnd);
+      float r = length(ro + rd*tc - c);
+      col += vec3(1.0, 0.80, 0.40)*0.22*exp(-pow(r/(0.16*s), 2.0))*(0.85 + 0.15*sin(uT*1.2 + float(i)));
+    }
+  }
+#endif
+#if XF == 0
+  // Healing sparkles: a few small four-point stars of gold light drifting up round him.
+  {
+    float tEnd = (hitId > 0.0 && t < tg) ? t : min(tg, 30.0);
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      float ph = fract(uT*0.10 + fi*0.143);
+      float an = fi*2.4 + uT*0.25;
+      float rad = 0.92 + 0.18*sin(fi*1.7);
+      vec3 m = vec3(rad*cos(an), 0.25 + 2.5*ph, rad*sin(an) - 0.05);
+      vec3 off = m - ro;
+      float tm = dot(off, rd);
+      if (tm < 0.0 || tm > tEnd) continue;
+      vec3 w = off - rd*tm;
+      vec2 v = vec2(dot(w, uRight), dot(w, uUp))*7.4/tm;
+      float fade = sin(3.14159*ph);
+      float sp = exp(-dot(v, v)/0.00030) + 0.8*exp(-abs(v.x)/0.0022 - abs(v.y)/0.040) + 0.8*exp(-abs(v.y)/0.0022 - abs(v.x)/0.040);
+      col += vec3(1.0, 0.86, 0.50)*sp*fade*0.60;
+    }
+  }
+#endif
+  col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  vec2 q = gl_FragCoord.xy/uRes;
+  col *= 0.86 + 0.14*pow(16.0*q.x*q.y*(1.0 - q.x)*(1.0 - q.y), 0.25);
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script>
+(function () {
+  const FRAMES = 24;
+  const params = new URLSearchParams(location.search);
+  const CAMS = {
+    base: { pitch: 0.12, dist: 7.2, ty: 1.45, tz: -0.05, close: { yaw: 0.0, pitch: 0.05, dist: 4.0, ty: 1.66, tz: 0.2 }, start: 3 },
+    comet: { pitch: 0.20, dist: 7.6, ty: 1.48, tz: -0.20, close: { yaw: 0.40, pitch: 0.10, dist: 4.4, ty: 1.55, tz: 0.40 }, start: 3 },
+  };
+  const isComet = f => f.startsWith("comet");
+  // The owner's picks; the transformed form always wears them.
+  const PICKS = {"b": 3, "e": 2, "m": 0, "y": 7};
+  const GROUPS = ["b", "e", "m", "y"];
+  function optsOf(key) {
+    const o = { b: 0, e: 0, m: 0, y: 0 };
+    for (const g of GROUPS) { const m = key.match(new RegExp(g + "(\\d+)")); if (m) o[g] = +m[1]; }
+    return o;
+  }
+  const keyOf = o => GROUPS.map(g => g + o[g]).join("");
+  const camOf = f => CAMS[isComet(f) ? "comet" : "base"];
+  // Frames embedded by the build script, if any.
+  const EMBED = window.__FRAMES__ || null;
+
+  function makeRenderer(canvas, form) {
+    const gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+    if (!gl) return null;
+    function sh(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, document.getElementById("vs").textContent));
+    const plain = params.get("plain") ? 1 : 0;
+    // Base forms are keyed by their options: "b{body}e{eye}m{mouth}y{belly}".
+    const o = isComet(form) ? Object.assign({}, PICKS) : optsOf(form);
+    const defs = `#define XF ${isComet(form) ? 1 : 0}\n#define PLAIN ${plain}\n#define BODYV ${o.b}\n#define EYEV ${o.e}\n#define MOUTHV ${o.m}\n#define BELLYV ${o.y}\n`;
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, defs + document.getElementById("fs").textContent));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(prog, n);
+    const u = { res: U("uRes"), t: U("uT"), ro: U("uRo"), right: U("uRight"), up: U("uUp"), fwd: U("uFwd") };
+    return function draw(cam, time) {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      const cy = Math.cos(cam.pitch);
+      const ro = [Math.sin(cam.yaw)*cy*cam.dist, cam.ty + Math.sin(cam.pitch)*cam.dist, cam.tz + Math.cos(cam.yaw)*cy*cam.dist];
+      const tgt = [0, cam.ty, cam.tz];
+      let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+      let r = [-f[2], 0, f[0]]; const rl = Math.hypot(...r); r = r.map(v => v/rl);
+      const up = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+      gl.uniform2f(u.res, canvas.width, canvas.height);
+      gl.uniform1f(u.t, time);
+      gl.uniform3fv(u.ro, ro); gl.uniform3fv(u.right, r); gl.uniform3fv(u.up, up); gl.uniform3fv(u.fwd, f);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+  }
+
+  // Offline mode: tools/slugs/render_concept.py posts every turntable frame back to itself.
+  if (params.get("render")) {
+    document.body.classList.add("render");
+    const size = parseInt(params.get("size") || "640", 10);
+    (async function () {
+      try {
+        for (const form of (params.get("forms") || "base,comet").split(",")) {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = size;
+          document.body.appendChild(canvas);
+          const draw = makeRenderer(canvas, form);
+          const c = camOf(form);
+          const yawList = (params.get("frames") || "").split(",").filter(Boolean).map(Number);
+          const list = yawList.length ? yawList : [...Array(FRAMES).keys()];
+          const shots = list.map(i => [String(i).padStart(2, "0"), { yaw: i/FRAMES*Math.PI*2, pitch: c.pitch, dist: c.dist, ty: c.ty, tz: c.tz }]);
+          shots.push(["close", c.close]);
+          if (!isComet(form)) shots.push(["belly", { yaw: 0.0, pitch: 0.02, dist: 4.4, ty: 0.66, tz: 0.2 }]);
+          // The transformed form is also judged from straight above, for the fronds' silhouette.
+          if (isComet(form)) shots.push(["top", { yaw: 0.0, pitch: 1.40, dist: c.dist, ty: c.ty, tz: c.tz }]);
+          for (const [name, cam] of shots) {
+            draw(cam, 2.0);
+            await fetch(`/frame/${form}-${name}.jpg`, { method: "POST", body: canvas.toDataURL("image/jpeg", 0.86) });
+            await new Promise(r => setTimeout(r, 0));
+          }
+          canvas.remove();
+        }
+        await fetch("/done", { method: "POST" });
+      } catch (e) {
+        await fetch("/error", { method: "POST", body: String(e && e.message || e) });
+      }
+    })();
+    return;
+  }
+
+  const box = document.getElementById("box");
+  const still = document.getElementById("still");
+  const hint = document.getElementById("hint");
+  // Stills exist for the current design and for each option on its own (one group changed);
+  // Live 3D draws any combination of picks.
+  const VIEWS = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+  const NAMES = { b: "body", e: "eye", m: "mouth", y: "belly" };
+  // The owner's locked picks and each row's first option, from the build script.
+  const BASE = PICKS;
+  const sel = Object.assign({}, BASE);
+  let last = "b", frame = 3, live = null, liveBtnOn = false, curForm = "base";
+  const cam = () => CAMS[curForm === "comet" ? "comet" : "base"];
+  const liveKey = () => curForm === "comet" ? "comet" : keyOf(sel);
+  const topBtn = document.getElementById("top-btn");
+  const bellyBtn = document.querySelector('[data-frame="belly"]');
+  document.querySelectorAll("[data-form]").forEach(b => b.addEventListener("click", () => {
+    curForm = b.dataset.form;
+    document.querySelectorAll("[data-form]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    document.getElementById("notes-base").hidden = curForm === "comet";
+    document.getElementById("notes-comet").hidden = curForm !== "comet";
+    document.querySelectorAll("[data-opt-note], .optrow").forEach(n => { n.style.display = curForm === "comet" ? "none" : ""; });
+    topBtn.hidden = curForm !== "comet";
+    if (bellyBtn) bellyBtn.hidden = curForm === "comet";
+    if ((frame === "top" && curForm !== "comet") || (frame === "belly" && curForm === "comet")) frame = 3;
+    if (liveBtnOn) { stopLive(); startLive(); }
+    show();
+  }));
+  const stillKey = () => {
+    if (curForm === "comet") return "comet";
+    if (GROUPS.filter(g => sel[g] !== BASE[g]).length <= 1) return keyOf(sel);
+    const o = Object.assign({}, BASE); o[last] = sel[last]; return keyOf(o);
+  };
+  const name = (k, n) => `${k}-${typeof n === "number" ? String(n).padStart(2, "0") : n}`;
+  const url = (k, n) => EMBED ? EMBED[name(k, n)] : `frames/${name(k, n)}.jpg`;
+  function setHint() {
+    if (liveBtnOn) { hint.textContent = "Live 3D · drag to turn"; return; }
+    if (curForm === "comet") { hint.textContent = "Drag to turn"; return; }
+    hint.textContent = GROUPS.filter(g => sel[g] !== BASE[g]).length > 1 ? `Showing your ${NAMES[last]} pick alone · Live 3D shows them together` : "Drag to turn";
+  }
+  function show() { still.src = url(stillKey(), frame); setHint(); }
+  document.querySelectorAll("[data-opt]").forEach(b => b.addEventListener("click", () => {
+    const g = b.dataset.opt;
+    sel[g] = +b.dataset.val; last = g;
+    document.querySelectorAll(`[data-opt="${g}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    document.querySelectorAll(`[data-opt-note^="${g}"]`).forEach(n => { n.hidden = n.dataset.optNote !== g + sel[g]; });
+    if (liveBtnOn) { stopLive(); startLive(); }
+    show();
+  }));
+  document.querySelectorAll("[data-frame]").forEach(b => b.addEventListener("click", () => {
+    if (liveBtnOn) stopLive();
+    const v = b.dataset.frame;
+    frame = v === "close" || v === "belly" || v === "top" ? v : parseInt(v, 10);
+    show();
+  }));
+
+  let drag = null, acc = 0, yawLive = 0;
+  box.addEventListener("pointerdown", e => { drag = e.clientX; box.setPointerCapture(e.pointerId); if (typeof frame !== "number") { frame = 0; show(); } });
+  box.addEventListener("pointermove", e => {
+    if (drag === null) return;
+    const dx = e.clientX - drag; drag = e.clientX;
+    if (liveBtnOn) { yawLive -= dx*0.01; return; }
+    acc += dx;
+    const px = VIEWS.length > 8 ? 14 : 40;
+    const step = Math.trunc(acc/px);
+    if (step) {
+      acc -= step*px;
+      const i = (VIEWS.indexOf(frame) - step) % VIEWS.length;
+      frame = VIEWS[(i + VIEWS.length) % VIEWS.length];
+      show();
+    }
+  });
+  const end = () => { drag = null; };
+  box.addEventListener("pointerup", end);
+  box.addEventListener("pointercancel", end);
+
+  // Live 3D is opt-in: it runs the full shader, which is heavy on some machines.
+  const liveBtn = document.getElementById("live");
+  function stopLive() {
+    liveBtnOn = false;
+    liveBtn.setAttribute("aria-pressed", "false");
+    if (live) { cancelAnimationFrame(live.raf); live.canvas.remove(); live = null; }
+    still.hidden = false; setHint();
+  }
+  function startLive() {
+    const canvas = document.createElement("canvas");
+    const w = Math.min(560, Math.round(box.clientWidth));
+    canvas.width = canvas.height = w;
+    let draw;
+    try { draw = makeRenderer(canvas, liveKey()); } catch (e) { draw = null; }
+    if (!draw) { hint.textContent = "Live 3D isn't available here"; return; }
+    box.insertBefore(canvas, hint);
+    still.hidden = true;
+    liveBtnOn = true;
+    liveBtn.setAttribute("aria-pressed", "true");
+    setHint();
+    const c = cam();
+    yawLive = (typeof frame === "number" ? frame : 0)/FRAMES*Math.PI*2;
+    const t0 = performance.now();
+    live = { canvas, raf: 0 };
+    (function tick(now) {
+      draw({ yaw: yawLive, pitch: c.pitch, dist: c.dist, ty: c.ty, tz: c.tz }, 2 + (now - t0)/1000);
+      if (live) live.raf = requestAnimationFrame(tick);
+    })(t0);
+  }
+  liveBtn.addEventListener("click", () => liveBtnOn ? stopLive() : startLive());
+  show();
+})();
+</script>
