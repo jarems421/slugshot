@@ -194,10 +194,20 @@ local function setup(model: Model)
 		local springs = { squash, sway, lag, tip, pitch, flop, stand }
 		local body = model:FindFirstChild("FloppyBody", true)
 		if body and body:IsA("MeshPart") then
-			task.spawn(function()
+			task.defer(function()
 				local mesh =
 					game:GetService("AssetService")
 						:CreateEditableMeshAsync(Content.fromUri(body.MeshId), { FixedSize = true }) :: EditableMesh
+				-- A holster copy or respawned tool may disappear while the mesh loads.
+				-- Do not register a fitting callback against its destroyed bones.
+				if
+					floppies[model] ~= motion
+					or not model:IsDescendantOf(workspace)
+					or not body:IsDescendantOf(model)
+				then
+					mesh:Destroy()
+					return
+				end
 				local bases, points, meshBones = {}, {}, {}
 				for _, entry in joints do
 					bases[entry.joint.Part1] = entry.base
@@ -254,10 +264,21 @@ local function setup(model: Model)
 				restFoot /= math.max(footCount, 1)
 				local restCentre = (restMin + restMax) / 2
 				fitModels[model] = function()
+					if
+						floppies[model] ~= motion
+						or not model:IsDescendantOf(workspace)
+						or not body:IsDescendantOf(model)
+					then
+						fitModels[model] = nil
+						return
+					end
 					if body.Transparency >= 1 then
 						return
 					end
-					local original = model:GetAttribute("InspectPose") :: CFrame
+					local original = model:GetAttribute("InspectPose")
+					if typeof(original) ~= "CFrame" then
+						return -- wait for this registration's first authored pose
+					end
 					local t = inspectTime()
 					local hop = if t then Inspect.hop(t) else 0
 					-- Only evaluate the sole. Whole-body searches both cost a
@@ -516,8 +537,11 @@ RunService:BindToRenderStep(
 			if inspectModel then
 				inspectModel(dt, false)
 			end
+			-- A performed idle (SlugIdle) sets IdlePhase; the rings then turn once a loop, so its frames join up.
+			local phase = model:GetAttribute("IdlePhase")
+			local at = if typeof(phase) == "number" then phase * LOOP else t
 			for bone, fn in motion do
-				bone.Transform = fn(t)
+				bone.Transform = fn(at)
 			end
 		end
 	end

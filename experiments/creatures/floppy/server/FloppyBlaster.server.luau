@@ -290,6 +290,8 @@ local ok2, container = pcall(InsertService.LoadAsset, InsertService, asset.model
 assert(ok2, "could not load Floppy: " .. tostring(container))
 local floppy = Instance.new("Model")
 floppy.Name = "Floppy"
+-- Which slug each canister model is; clients show only the selected one (CombatClient, Viewmodel, BlasterAnimator).
+floppy:SetAttribute("CanisterSlug", "Floppy")
 for _, child in (container :: Instance):GetChildren() do
 	child.Parent = floppy
 end
@@ -385,6 +387,7 @@ if infernoAsset and infernoAppearance and infernoMaterials then
 		local inferno = Instance.new("Model")
 		-- Not "Inferno": InfernoMotion would set him flipping about inside the gun.
 		inferno.Name = "InfernoLoaded"
+		inferno:SetAttribute("CanisterSlug", "Inferno")
 		for _, child in (infernoContainer :: Instance):GetChildren() do
 			child.Parent = inferno
 		end
@@ -432,6 +435,202 @@ if infernoAsset and infernoAppearance and infernoMaterials then
 		inferno.Parent = tool
 	else
 		warn(`could not load Inferno: {infernoContainer}`)
+	end
+end
+
+-- Rammstone's base form in the canister, fitted like Inferno's: head to the muzzle, belly down, as tall as the
+-- loaded height. RammstoneMotion gives him a slow idle there.
+local rammstoneAsset = ReplicatedStorage:FindFirstChild("RammstoneAsset")
+local rammstoneAppearance = script.Parent:FindFirstChild("RammstoneAppearance")
+local rammstoneMaterials = game:GetService("ServerStorage"):FindFirstChild("RammstoneMaterials")
+if rammstoneAsset and rammstoneAppearance and rammstoneMaterials then
+	local rammstoneOk, ramContainer =
+		pcall(InsertService.LoadAsset, InsertService, (require :: any)(rammstoneAsset).base.model)
+	if rammstoneOk then
+		local rammstone = Instance.new("Model")
+		rammstone.Name = "RammstoneLoaded"
+		rammstone:SetAttribute("CanisterSlug", "Rammstone")
+		for _, child in (ramContainer :: Instance):GetChildren() do
+			child.Parent = rammstone
+		end
+		(ramContainer :: Instance):Destroy();
+		(require :: any)(rammstoneAppearance).dress(rammstone, rammstoneMaterials)
+		local ramBody = rammstone:FindFirstChild("RammstoneBody", true) :: MeshPart
+		local ramRoot = rammstone:FindFirstChild("root", true) :: Bone
+		local ramHead = rammstone:FindFirstChild("head", true) :: Bone
+		local ramEyeL = rammstone:FindFirstChild("RammstoneEyeL", true) :: BasePart
+		local ramEyeR = rammstone:FindFirstChild("RammstoneEyeR", true) :: BasePart
+		-- Fit the body (horns aside) to the loaded height.
+		rammstone:ScaleTo(rammstone:GetScale() * loadedHeight / 0.95) -- the body exports 0.95 tall
+		local ramUp = (ramHead.WorldPosition - ramRoot.WorldPosition).Unit
+		local ramFace = (ramEyeL.Position + ramEyeR.Position) / 2 - ramHead.WorldPosition
+		local ramBack = -(ramFace - ramUp * ramFace:Dot(ramUp)).Unit
+		local ramReference = CFrame.fromMatrix(
+			ramRoot.WorldPosition + ramUp * loadedHeight / 2,
+			ramUp:Cross(ramBack),
+			ramUp,
+			ramBack
+		)
+		rammstone:PivotTo(placed * ramReference:Inverse() * rammstone:GetPivot())
+		local bodyCentre = handle.CFrame:PointToObjectSpace(ramBody.Position)
+		rammstone:PivotTo(
+			rammstone:GetPivot()
+				+ handle.CFrame:VectorToWorldSpace(
+					Vector3.new(canisterCentre.X - bodyCentre.X, canisterCentre.Y - bodyCentre.Y, 0)
+				)
+		)
+		for _, descendant in rammstone:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				attach(
+					descendant,
+					handle.CFrame:ToObjectSpace(descendant.CFrame),
+					descendant.Parent :: Instance
+				)
+				if not descendant:IsA("MeshPart") then
+					descendant.Transparency = 1
+				end
+			end
+		end
+		rammstone:SetAttribute("ChamberCentre", canisterCentre)
+		rammstone:SetAttribute("LoadedHeight", loadedHeight)
+		rammstone.Parent = tool
+	else
+		warn(`could not load Rammstone: {ramContainer}`)
+	end
+end
+
+-- Aquabeek's base form in the canister, fitted like Rammstone's: head to the muzzle, belly down, as tall as the loaded
+-- height. AquabeekMotion gives her a graceful idle there. Fitted under pcall: a failure here must not stop the gun
+-- being handed out below.
+local aquabeekAsset = ReplicatedStorage:FindFirstChild("AquabeekAsset")
+local aquabeekAppearance = script.Parent:FindFirstChild("AquabeekAppearance")
+local aquabeekMaterials = game:GetService("ServerStorage"):FindFirstChild("AquabeekMaterials")
+local function fitAquabeek()
+	if not (aquabeekAsset and aquabeekAppearance and aquabeekMaterials) then
+		return
+	end
+	local aquabeekOk, aquaContainer =
+		pcall(InsertService.LoadAsset, InsertService, (require :: any)(aquabeekAsset).base.model)
+	if aquabeekOk then
+		local aquabeek = Instance.new("Model")
+		aquabeek.Name = "AquabeekLoaded"
+		aquabeek:SetAttribute("CanisterSlug", "Aquabeek")
+		for _, child in (aquaContainer :: Instance):GetChildren() do
+			child.Parent = aquabeek
+		end
+		(aquaContainer :: Instance):Destroy();
+		(require :: any)(aquabeekAppearance).dress(aquabeek, aquabeekMaterials)
+		local aquaBody = aquabeek:FindFirstChild("AquabeekBody", true) :: MeshPart
+		local aquaRoot = aquabeek:FindFirstChild("root", true) :: Bone
+		local aquaHead = aquabeek:FindFirstChild("head", true) :: Bone
+		aquabeek:ScaleTo(aquabeek:GetScale() * loadedHeight / 0.96) -- she exports 0.96 tall
+		local aquaUp = (aquaHead.WorldPosition - aquaRoot.WorldPosition).Unit
+		local aquaFront = -aquaBody.CFrame.LookVector -- she imports facing the mesh's +Z
+		local aquaBack = -(aquaFront - aquaUp * aquaFront:Dot(aquaUp)).Unit
+		local aquaReference = CFrame.fromMatrix(
+			aquaRoot.WorldPosition + aquaUp * loadedHeight / 2,
+			aquaUp:Cross(aquaBack),
+			aquaUp,
+			aquaBack
+		)
+		aquabeek:PivotTo(placed * aquaReference:Inverse() * aquabeek:GetPivot())
+		local bodyCentre = handle.CFrame:PointToObjectSpace(aquaBody.Position)
+		aquabeek:PivotTo(
+			aquabeek:GetPivot()
+				+ handle.CFrame:VectorToWorldSpace(
+					Vector3.new(canisterCentre.X - bodyCentre.X, canisterCentre.Y - bodyCentre.Y, 0)
+				)
+		)
+		for _, descendant in aquabeek:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				attach(
+					descendant,
+					handle.CFrame:ToObjectSpace(descendant.CFrame),
+					descendant.Parent :: Instance
+				)
+				if not descendant:IsA("MeshPart") then
+					descendant.Transparency = 1
+				end
+			end
+		end
+		aquabeek:SetAttribute("ChamberCentre", canisterCentre)
+		aquabeek:SetAttribute("LoadedHeight", loadedHeight)
+		aquabeek.Parent = tool
+	else
+		warn(`could not load Aquabeek: {aquaContainer}`)
+	end
+end
+local aquabeekFitted, aquabeekProblem = pcall(fitAquabeek :: () -> any)
+if not aquabeekFitted then
+	warn(`could not fit Aquabeek in the canister: {aquabeekProblem}`)
+end
+
+-- Tormato's and Boon Doc's base forms in the canister ({id}Loaded), fitted exactly as Aquabeek is: they export the same
+-- way, about 0.96 studs tall and facing the mesh's +Z. Their motion scripts idle them there. Each under pcall, so a
+-- failure warns and the gun is still handed out below.
+local function fitConceptSlug(id: string, bodyName: string)
+	local slugAsset = ReplicatedStorage:FindFirstChild(`{id}Asset`)
+	local appearance = script.Parent:FindFirstChild(`{id}Appearance`)
+	local materials = game:GetService("ServerStorage"):FindFirstChild(`{id}Materials`)
+	if not (slugAsset and appearance and materials) then
+		return
+	end
+	local loaded, slugContainer =
+		pcall(InsertService.LoadAsset, InsertService, (require :: any)(slugAsset).base.model)
+	if not loaded then
+		warn(`could not load {id}: {slugContainer}`)
+		return
+	end
+	local slug = Instance.new("Model")
+	slug.Name = `{id}Loaded`
+	slug:SetAttribute("CanisterSlug", id)
+	for _, child in (slugContainer :: Instance):GetChildren() do
+		child.Parent = slug
+	end
+	(slugContainer :: Instance):Destroy();
+	(require :: any)(appearance).dress(slug, materials)
+	local body = slug:FindFirstChild(bodyName, true) :: MeshPart
+	local root = slug:FindFirstChild("root", true) :: Bone
+	local slugHead = slug:FindFirstChild("head", true) :: Bone
+	slug:ScaleTo(slug:GetScale() * loadedHeight / 0.96)
+	local slugUp = (slugHead.WorldPosition - root.WorldPosition).Unit
+	local slugFront = -body.CFrame.LookVector
+	local slugBack = -(slugFront - slugUp * slugFront:Dot(slugUp)).Unit
+	local slugReference = CFrame.fromMatrix(
+		root.WorldPosition + slugUp * loadedHeight / 2,
+		slugUp:Cross(slugBack),
+		slugUp,
+		slugBack
+	)
+	slug:PivotTo(placed * slugReference:Inverse() * slug:GetPivot())
+	local bodyCentre = handle.CFrame:PointToObjectSpace(body.Position)
+	slug:PivotTo(
+		slug:GetPivot()
+			+ handle.CFrame:VectorToWorldSpace(
+				Vector3.new(canisterCentre.X - bodyCentre.X, canisterCentre.Y - bodyCentre.Y, 0)
+			)
+	)
+	for _, descendant in slug:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			attach(
+				descendant,
+				handle.CFrame:ToObjectSpace(descendant.CFrame),
+				descendant.Parent :: Instance
+			)
+			if not descendant:IsA("MeshPart") then
+				descendant.Transparency = 1
+			end
+		end
+	end
+	slug:SetAttribute("ChamberCentre", canisterCentre)
+	slug:SetAttribute("LoadedHeight", loadedHeight)
+	slug.Parent = tool
+end
+local CONCEPT_SLUGS: { [string]: string } = { Tormato = "TormatoBody", BoonDoc = "BoonDocBody" }
+for id, bodyName in CONCEPT_SLUGS do
+	local fitted, why = pcall(fitConceptSlug :: (string, string) -> any, id, bodyName)
+	if not fitted then
+		warn(`could not fit {id} in the canister: {why}`)
 	end
 end
 

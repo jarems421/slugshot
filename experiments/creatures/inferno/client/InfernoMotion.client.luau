@@ -31,6 +31,15 @@ type FireGlow = {
 	start: Attachment,
 	layers: { FireGlowLayer },
 }
+-- A fire trail off one wing tip in flight (owner, 2026-11-14: "I want fluid trails"; the built wing fire was "just stiff
+-- things"; "a 3D trail of something resembling fire"), one of Combat's FlightTrails. The tip is the wing_tip bone's far end,
+-- a set share of the wing's length on from its head, which follows the wing's beat and any change of scale.
+type WingTrail = {
+	wing: Bone,
+	tip: Bone,
+	way: Vector3,
+	trail: any,
+}
 type Rig = {
 	model: Model,
 	dragon: boolean,
@@ -58,6 +67,7 @@ type Rig = {
 	lastSpin: number,
 	lastRoll: number,
 	glow: FireGlow?,
+	trails: { WingTrail },
 }
 local rigs: { [Model]: Rig } = {}
 -- Ready before the first shot, so the first flame shows.
@@ -250,6 +260,103 @@ local function stepFireGlow(rig: Rig, t: number)
 	end
 end
 
+-- The wing bone runs a span share of 0.05 to 0.5 and the wing_tip bone 0.5 to 1 (tools/slugs/build_inferno.py), so
+-- the tip lies this many wing bones on from the wing_tip bone's head.
+local WING_TIP_REACH = 0.5 / 0.45
+local WING_BONE_LENGTH = 1.06 -- concept units, which sizes the trail
+local FlightTrail = (require :: any)(
+	Players.LocalPlayer.PlayerScripts:WaitForChild("Combat"):WaitForChild("FlightTrail")
+)
+local WING_TRAIL = { -- a FlightTrail.Style
+	layers = {
+		-- A body of fire where he passed, round flame masses packed into one (owner, 2026-11-14: Rammstone's is "the ideal
+		-- trail"; flame tongues read as "individual fireballs ... like PNGs"), rising a little as they burn from yellow
+		-- through orange and red to dark. Two of these, so each is smaller and shorter than Rammstone's one (owner,
+		-- 2026-11-14: several at once "can become a bit overwhelming ... scale them down a bit").
+		{
+			sprite = "blaze",
+			spacing = 0.1,
+			most = 18,
+			size = { 0.34, 0.46, 0.39, 0.19 },
+			lifetime = NumberRange.new(0.45, 0.75),
+			colour = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 110)),
+				ColorSequenceKeypoint.new(0.08, Color3.fromRGB(255, 160, 40)),
+				ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 95, 20)),
+				ColorSequenceKeypoint.new(0.65, Color3.fromRGB(185, 35, 15)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(55, 22, 20)),
+			}),
+			transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0),
+				NumberSequenceKeypoint.new(0.8, 0),
+				NumberSequenceKeypoint.new(1, 1),
+			}),
+			speed = NumberRange.new(0.1, 0.4),
+			acceleration = Vector3.new(0, 1.2, 0),
+			drag = 1.5,
+			spin = NumberRange.new(-60, 60),
+			scatter = 0.09,
+			glow = 0.1,
+			z = 1,
+		},
+		-- Embers thrown off it.
+		{
+			sprite = "lava",
+			spacing = 0.9,
+			size = { 0.09, 0.07, 0 },
+			lifetime = NumberRange.new(0.4, 0.9),
+			colour = ColorSequence.new(Color3.fromRGB(255, 200, 80), Color3.fromRGB(230, 60, 20)),
+			transparency = NumberSequence.new(0),
+			speed = NumberRange.new(1, 2.5),
+			acceleration = Vector3.new(0, 1, 0),
+			drag = 1,
+			glow = 1,
+			z = 2,
+		},
+	} :: { any },
+}
+
+local function addWingTrails(rig: Rig)
+	for _, tag in { "L", "R" } do
+		local wing = (rig.bones["wing_" .. tag] or {})[1]
+		local tip = (rig.bones["wing_tip_" .. tag] or {})[1]
+		if not (wing and tip) then
+			warn(`{rig.model.Name}: no wing bones`)
+			continue
+		end
+		local wingBone, tipBone = wing.bone :: Bone, tip.bone :: Bone
+		table.insert(rig.trails, {
+			wing = wingBone,
+			tip = tipBone,
+			way = tipBone.WorldCFrame:VectorToObjectSpace(
+				(tipBone.WorldPosition - wingBone.WorldPosition).Unit
+			),
+			trail = FlightTrail.new(WING_TRAIL),
+		})
+	end
+end
+
+local function stepWingTrails(rig: Rig)
+	local laying = FlightTrail.ready(rig.model)
+	for _, wing in rig.trails do
+		local part = wing.tip:FindFirstAncestorWhichIsA("BasePart")
+		if not part then
+			continue
+		end
+		local tipFrame = part.CFrame * movedFrame(wing.tip)
+		local length = (tipFrame.Position - (part.CFrame * movedFrame(wing.wing)).Position).Magnitude
+		local at = tipFrame.Position
+			+ tipFrame:VectorToWorldSpace(wing.way) * (length * WING_TIP_REACH)
+		FlightTrail.step(wing.trail, at, length / WING_BONE_LENGTH, laying)
+	end
+end
+
+local function removeWingTrails(rig: Rig)
+	for _, wing in rig.trails do
+		FlightTrail.release(wing.trail)
+	end
+end
+
 local function setup(model: Model)
 	if rigs[model] then
 		return
@@ -342,9 +449,12 @@ local function setup(model: Model)
 		lastFlip = 0,
 		lastSpin = 0,
 		lastRoll = 0,
+		trails = {},
 	}
-	-- In flight his fire trail does this job.
-	if dragon and not flight then
+	-- In flight his wing trails do this job.
+	if flight then
+		addWingTrails(rigs[model])
+	elseif dragon then
 		addFireGlow(rigs[model])
 	end
 end
@@ -638,13 +748,12 @@ local function stepBase(rig: Rig, dt: number)
 end
 
 local WING_TRANSFORM_FOLD = 1.1
-local WING_FIRE_STATIONS = 7
-local WING_FIRE_RIPPLE = { 0.05, 0.13 } -- concept units, inner and outer row
 
 local function stepDragon(rig: Rig, dt: number)
 	local t = rig.clock
 	if rig.flight and rig.model:GetAttribute("Landed") then
 		stepFireGlow(rig, t)
+		stepWingTrails(rig)
 		return
 	end
 	local hold = rig.model:GetAttribute("ReviewHold") == true
@@ -781,27 +890,9 @@ local function stepDragon(rig: Rig, dt: number)
 			* CFrame.fromAxisAngle(item.z, -cBank * 0.5 - headLag)
 	end
 	antennae(rig, dt, -0.12 * beat * size / 0.42 + 0.5 * cForward + math.abs(rollSpeed) * 0.04)
-	if rig.flight then
-		-- A ripple runs out along each wing's fire and back through its licks; the outer row adds to the inner one.
-		for _, tag in { "L", "R" } do
-			for station = 1, WING_FIRE_STATIONS do
-				for row, reach in WING_FIRE_RIPPLE do
-					local ripple = t * 11 - station * 0.95 - row * 1.1
-					drive(
-						rig,
-						`wfire_{tag}_{station}_{row}`,
-						Vector3.new(
-							0.5 * reach * math.cos(ripple * 0.7),
-							reach * math.sin(ripple),
-							0.6 * reach * math.sin(ripple * 1.3)
-						)
-					)
-				end
-			end
-		end
-	end
-	-- Last, so it sees every bone where this frame put it.
+	-- Last, so they see every bone where this frame put it.
 	stepFireGlow(rig, t)
+	stepWingTrails(rig)
 end
 
 RunService.RenderStepped:Connect(function(dt: number)
@@ -811,6 +902,7 @@ RunService.RenderStepped:Connect(function(dt: number)
 	dt = math.min(dt, 1 / 15)
 	for model, rig in rigs do
 		if not model:IsDescendantOf(workspace) then
+			removeWingTrails(rig)
 			rigs[model] = nil
 			continue
 		end

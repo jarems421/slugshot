@@ -24,6 +24,8 @@ local GAZE_SIDE, GAZE_UP, GAZE_BACK = 0.018, 0.008, 0.03
 -- -0.15 and slope -0.05 the other way. So each eye travels its own distance and turns by the difference in slope.
 local CLOSED_DEPTH = { [1] = 0.172, [-1] = 0.112 }
 local CLOSED_TURN = math.atan(0.29)
+local TAU = 2 * math.pi
+local BLINK_DEPTH = 0.55 -- of the way to closed
 local FAR = 90 -- studs; no face work on a Floppy too far away to read
 
 -- Lid amounts are relative to the tired resting lids in Tuning (faceLid).
@@ -310,16 +312,26 @@ local function step(face: Face, dt: number, camera: Vector3)
 			then since / 0.4
 			elseif since < 0.5 then 1
 			else 1 - (since - 0.5) / 0.5
-		blink = 0.5 - 0.5 * math.cos(amount * math.pi)
+		-- Never a full blink: only Aquabeek closes her eyes (owner, 2026-11-15); his lids sink a little over halfway.
+		blink = BLINK_DEPTH * (0.5 - 0.5 * math.cos(amount * math.pi))
 	end
 	local chosenBlink = face.model:GetAttribute("FaceBlink")
 	if typeof(chosenBlink) == "number" then
 		blink = chosenBlink
 	end
-	-- A small, slow mouthing so the face is never fully still.
-	local mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)
+	-- A small, slow mouthing so the face is never fully still. A performed idle (SlugIdle) sets IdlePhase, its loop's
+	-- progress, and the mouthing then repeats with the loop (whole cycles) so its frames can be captured seamlessly.
+	local phase = face.model:GetAttribute("IdlePhase")
+	local mouthing, lift
+	if typeof(phase) == "number" then
+		mouthing = 0.5 + 0.5 * math.sin(TAU * 2 * phase) * math.sin(TAU * 5 * phase)
+		lift = 0.006 * math.sin(TAU * 2 * phase)
+	else
+		mouthing = 0.5 + 0.5 * math.sin(clock * 2.3) * math.sin(clock * 5.7)
+		lift = 0.006 * math.sin(clock * 1.7)
+	end
 	local jaw = face.jaw + (if inspecting then 0 else 0.008 * mouthing)
-	local lift = if inspecting then 0 else 0.006 * math.sin(clock * 1.7)
+	lift = if inspecting then 0 else lift
 	local open = face.lid + face.squint
 	local rest = T.faceLid + open
 	-- The rims slope down toward the nose, which reads as anger: turn them so the outer corners
