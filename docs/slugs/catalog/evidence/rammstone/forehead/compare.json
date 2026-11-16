@@ -1,0 +1,22 @@
+{
+  "front": {
+    "iou": 0.941,
+    "sheetOnly": 1198,
+    "modelOnly": 685
+  },
+  "side-left": {
+    "iou": 0.939,
+    "sheetOnly": 1048,
+    "modelOnly": 701
+  },
+  "back": {
+    "iou": 0.851,
+    "sheetOnly": 1125,
+    "modelOnly": 3627
+  },
+  "side-right": {
+    "iou": 0.88,
+    "sheetOnly": 2633,
+    "modelOnly": 1004
+  }
+}

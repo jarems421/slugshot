@@ -55,6 +55,22 @@ local function closeShotPace(launch: any, slug: Combat.Slug, params: RaycastPara
 	return 1
 end
 
+-- Shot seconds until the launch path first hits something, or nil if it lands nowhere within its flight.
+local function predictedImpact(launch: any, slug: Combat.Slug, params: RaycastParams): number?
+	local step = 1 / 60
+	local limit = slug.Expires or Combat.MaxFlight
+	local clock = 0
+	while clock < limit do
+		local from = Combat.flightTime(slug, clock)
+		local to = Combat.flightTime(slug, clock + step)
+		if Combat.sweep(launch.origin, launch.velocity, slug, from, to, params) then
+			return clock + step
+		end
+		clock += step
+	end
+	return nil
+end
+
 function Transformation.new(
 	slugId: string,
 	base: Model,
@@ -74,7 +90,12 @@ function Transformation.new(
 	form:PivotTo(PARKED)
 	-- Initialize before parenting so the motion script never sees fully open wings at the reveal.
 	form:SetAttribute("TimeScale", Transformation.timeScale)
+	local impact = predictedImpact(launch, slug, params)
+	if impact then
+		form:SetAttribute("ImpactIn", impact) -- shot seconds from now, for a form that acts on landing (a punch)
+	end
 	form:SetAttribute("TransformFold", 1)
+	form:SetAttribute("Reveal", 0) -- 0 to 1 as the form grows in; its trails wait for most of it (FlightTrail.READY)
 	form.Parent = parent
 	local anchor = Instance.new("Part")
 	anchor.Name = "TransformationAura"
@@ -187,6 +208,7 @@ function Transformation.step(state: State, elapsed: number, cframe: CFrame)
 		+ motion.tilt * math.sin(since * motion.tiltRate) * reveal
 	state.form:ScaleTo(state.formScale * (motion.revealScale + (1 - motion.revealScale) * reveal))
 	state.form:SetAttribute("TransformFold", 1 - ease(since / motion.foldTime))
+	state.form:SetAttribute("Reveal", reveal)
 	state.form:PivotTo(cframe * CFrame.Angles(0, 0, angle))
 	-- Same glow, same size at the swap; it warms briefly and diffuses away without a second flash or burst.
 	local fade = 1 - ease(since / aura.fadeTime)

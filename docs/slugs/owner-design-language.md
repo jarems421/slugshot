@@ -41,12 +41,37 @@ Sources: [Floppy catalogue entry](catalog/flopper-inspired.md), [Blender lessons
 - **He asks me to research when a problem keeps recurring** ("do research on how to make these type of things look squishy"). In this chat the search results were thin (paid soft-body add-ons, eyelid-shell advice); being honest about that was fine.
 - **Studio handoff rule (Confirmed, restated in this chat):** "whenever you add something to Studio… close the old Studio tabs and open a new one for me to test." Leave unrelated windows (e.g. Rocklock) open.
 - **"Open it in Blender so I can see it."** He reviews in his own Blender as well as in renders; load the current file into his live session after each build.
+
+- **"What do you think? Should we just remove it?"** (Rammstone's fangs, 2026-11-13): he wanted a straight opinion with the reason, then took it ("Nice vein. Let's just remove the things for now"). When repeated tweaks of one feature keep failing, say whether it belongs at all.
+
+- **"Transformed"** (Rammstone, 2026-11-13): a new body that carries the slug's face, as Inferno's slug-dragon does ("look at burpy for example"). Adding arms and horns to the base form "aint transformed"; the owner was annoyed it needed saying.
+
+- **"Superman ass pose"**, **"fists look goofy"**, **"a decapitated bodybuilder"** (Rammstone's transformed form, 2026-11-13): a heroic flying pose, real fists and a huge torso under a small head all read as silly to the owner. They wanted hands tucked in at his sides and a swing on impact, rock lumps for hands, and a body about as wide as the head that tapers like Burpy's.
+
+- **"Oomph"**, **"too light work"**, **"a small little bop"** (Rammstone's punch, 2026-11-13): a strike needs a visible wind-up (coil away, weight shifted), a fast whole-body swing and a held follow-through, not just the arm moving.
+
 - **"A cool design that is unique to it"** (Boon Doc's eye, 2026-11-14): each slug's eyes carry its element as a design, as Inferno's burning eyes and Rammstone's cracked meteor eyes do; a normal cartoon eye (white, iris, pupil) "looks a bit weird" on an elemental slug. **"Divine"**, **"a healing angel ... not saying give it wings"**: gold light, a halo, rings and sunburst rays, star sparkles.
+
 - **"Way too similar to the normal [franchise slug]"** (Boon Doc, 2026-11-14): keeping the reference's colour, tall silhouette and long antennae together with its signature feature (one eye) reads as a copy, however the details differ. Keep one signature feature and change the rest.
+
 - **"A pure fire eye or pure molten rock eye"** (Boon Doc, 2026-11-14): an elemental slug's eye is one material with no eye anatomy. Any pupil, iris ring or white surround reads as "a human eye", "uncanny and off-putting", however stylised the pattern.
+
 - **"Take the silhouette from the show, but then just make it look more elegant"** (Boon Doc's transformed form, 2026-11-14, pointing to Aquabeek's): the method for transformed forms is the show's silhouette, the slug's own face and theme, and elegant execution.
+
 - **"Maybe we should have this slug looking like a little bit ugly ... it could be a little joke"** (Boon Doc's transformed form, 2026-11-14): elegance is not always the goal; a slug can be deliberately ugly-funny (fat, warty) while keeping its signature parts (eye, halo, gold).
+
 - **"I don't know why you added those two lines"** (Boon Doc's transformed form, 2026-11-14): gold lines added as decoration without a reason get removed (also the belly line: "it doesn't make sense to actually have it"). Gold has to mean something: the halo, the lid, the glow.
+
+- **"Windy, like tornado-y ... I just don't like doing the human eye designs"**, **"a touch more grey"** (Tormato, 2026-11-14): eyes are the owner's favourite part to design; an elemental eye can be the element in motion (a turning vortex, blowing streaks), not only a glow. Considering, unconfirmed: round 1 reads "a touch more grey" on a red-and-yellow slug as grey accents tied to the element (gusts, the horns' twist, the eyes), keeping the reference palette.
+- **"Too similar to the base design"**, **"only the healing slug has it because it's like unique"**, **"it looks too basic ... two solid colours"** (Tormato round 1, 2026-11-14): the kept signature feature can still be too close to the reference: changing its surface (a corkscrew twist) is not enough; change its kind or shape (antennae, streamers, a crest, horns swept back). An aura or ring of effect round the body belongs to one slug (Boon Doc), not every slug. A body of two flat colours is too basic: add patterns with a reason. The owner asked for several horn or antenna designs to choose from.
+- **"Make it look more like it's like twisting around ... because it's like tornado-y"** (Tormato round 2, 2026-11-14): a body pattern should act out the element. Straight diagonal stripes read as stripes; bands that spiral round the whole body, tightening toward the base like a funnel, read as a tornado. The owner disliked marks on the back and back of the head (gusts, a cloud cap) and asked to test a spiky mohawk.
+- **"It's nice. It's in the right direction, but I don't really like it that much"** (Tormato's forehead, 2026-11-15): small icon-like marks (a swirl, chevrons, streaks) on the forehead were not enough; try bolder shapes that belong to the head. **"Slightly more positive canthal tilt"**: the owner names eye-shape terms precisely; outer corners higher than inner.
+- **"Reads as forehead wrinkles"**, **"I don't like how it's only going to one side"** (Tormato's tornado mark, 2026-11-15): stacked horizontal lines on a forehead read as wrinkles, however clean; one solid silhouette reads as a symbol. A mark on the face's centre line should be symmetric or balance its curve (turn one way, then the other). The base design was finalised with the straight mark.
+- **"Doesn't really look like the reference image that much"**, **"the horn should be grown out better"**, **"the wings look way too stiff"** (Tormato's transformed form, 2026-11-15): follow the show's transformed silhouette closely (here a dragon with legs, membrane wings and big curled horns) even when another slug is also a dragon; the face can stay the base face if signature parts grow up (horns grown into ram curls). Rigid flat wings read stiff; bones, scallops and a flap that travels along the span read alive.
+- **"I don't like it personally"**, **"three different directions that I can go down"** (Tazerling, 2026-11-16, after a break to finish three other slugs): coming back with fresh eyes, the owner judged the slug against the finished ones rather than the last round. After many single-part rounds, the request was for whole directions that "don't look too similar", not another part fix. Considering: show directions that differ in palette, silhouette feature, body pattern and eye at once.
+- **"Too fluid, all moving at the same time ... not lightningy enough"**, then **"the lightning effect just feels tacky"** (Tazerling's body, 2026-11-16): lightning reads as lightning when each bolt strikes on its own clock (snap on, stutter, fade, new shape), not when lines drift together; but a body covered in bolts, crisp or blended, read as tacky once the eyes and sparks carried the element. Considering: let the eyes, sparks and tips carry it, the body plain or with rare faint strikes. When a short note could mean two effects, ask which before acting (the assistant guessed the eye arcs, wrongly).
+- **"Did i ask for a fish ... did u even try"** (Tazerling's transformed form, 2026-11-16): read the reference images part by part before building (limbs, hands, posture, what each yellow shape is attached to), and compare the first render against them side by side. Concept 1 turned a limbed, lunging beast into a finned fish from a glance at the silhouette.
+- **"It's basically Ramstone"**, **"the back ... I mean like the back of the body. So not the spine"**, **"I hate the horn stuff"** (Tazerling's transformed form, 2026-11-16): the owner reads the show's transformed slugs as variants of one body plan; when they name an approved slug, trace its actual build numbers. "Back" can mean the rear half of the body, not the spine. Thin bolts streaming off a head read as horns.
 
 ## Voice-dictation slips (this chat)
 
@@ -339,6 +364,11 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 - **"Fireballs":** anything assembled from many separate flames or puffs. They want one designed shape.
 - **"Horizontal" flames on a wing:** seen from the shooter's position behind the slug, a band along the wing's span, not a flame standing up from it.
 - **"Stick to" / "blended":** the fire grows out from under the part instead of sitting on top of it.
+- **"A bit overwhelming" (2026-11-14):** a slug with several trail streams should carry about one trail's worth in total; scale each stream down, never change the design or the number of streams.
+- **"Individual fireballs ... like PNGs" / "spraying" (2026-11-14):** a trail's main bulk must be one smooth, continuous body, like Rammstone's ("the ideal trail"); separate, recognisable sprites only as accents (splatter particles are liked).
+- **"Colored tubes" (2026-11-14):** a clean geometric shape, however round, is not a trail; a trail is "something resembling" the slug's element (fire, molten lava / rock, water).
+- **"3D trail" (2026-11-14):** round in every view, meeting the tip as a solid shape, not a flat ribbon whose square end shows ("a flat line attaching onto a tip"); "last on like a second".
+- **"Fluid" vs "stiff" trails (2026-11-14):** fluid is a Roblox Trail that streams behind the motion (Rammstone's thin lava streak, "perfect"); stiff is any built shape riding the bones (Inferno's wing fire, Aquabeek's water veils), however much it ripples.
 - **"Spinning" for a fired slug:** twirling along the flight line, lying flat and head first, not standing upright.
 
 
@@ -390,3 +420,8 @@ The elaborate hop and bum-shake act built from those phrases was then rejected a
 ## Original Floppy means restoration (2026-11-04)
 
 **Confirmed:** “original design with the flat bottom” means restore the approved creature and its normal antenna attachment/face materials. The owner rejects the new under-eye paint and antenna relocation. Keep enlargement subordinate to containment; retain the planted lower half and the original smooth upper-body wiggle. Burpy’s animation is explicitly approved. Do not reinterpret a local defect as permission to redesign accepted features.
+
+
+## Aquabeek's transformed form (2026-11-14)
+
+**Confirmed:** a transformed form gets its own head; keeping the base head on a new body read as "flat-faced". Eyes set on the sides of a head read "like a pigeon's"; turning the pupils toward the front fixed it without moving the eyes. A drawn mouth line along a beak was "the most uncanny thing"; a paler lower beak (a dolphin's mouth) was chosen. "Fat cheeks and a really fat belly" meant the chin and jaw masses hanging below the head, judged from the front. "This is the design" ends the design rounds: build it.

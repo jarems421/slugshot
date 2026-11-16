@@ -1,5 +1,9 @@
 # Loadout controls and slug inspect
 
+## Lobby equipment and persistent HUD (2026-11-13)
+
+**Confirmed (owner):** spawn with the gun holstered on the hip; it cannot be drawn or fired in the lobby. Training draws it automatically, with no new equip/unequip key. E remains the passive ability. Health and the existing canister hotbar stay in their normal positions, and F inventory is available in both zones. Number keys and the wheel can select a carried slug in the lobby without drawing the weapon. No loadout-selection step is required before entering; the intended approximately 30-second team draft after entering PvP comes later. Manual holstering for Veylume is deferred. [Implementation and evidence](pvp-ui.md#ui-cleanup-direction-2026-11-13), [equipment ownership](decisions/0032-persistent-lobby-hud-and-holstered-equipment.md).
+
 ## Current: first-person inspect view (2026-11-07)
 
 **Confirmed, owner, 2026-11-07:** both inspections must work in the game, at the same size, and the slug must be bigger and noticeable. Of three options (camera moves in, first-person inspect, bigger canister) the owner chose first-person inspect.

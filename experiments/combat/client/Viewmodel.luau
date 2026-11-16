@@ -76,6 +76,18 @@ local function armScale(): Vector3
 	return Vector3.new(T.armWidth, T.armLength, T.armWidth)
 end
 
+-- Whether part belongs to one of the slug models in the tool's canister (tagged CanisterSlug by FloppyBlaster).
+local function inCanister(part: Instance, tool: Tool): boolean
+	local at = part.Parent
+	while at and at ~= tool do
+		if at:GetAttribute("CanisterSlug") ~= nil then
+			return true
+		end
+		at = at.Parent
+	end
+	return false
+end
+
 -- Actual muzzle in the real handle's frame, including rotated mesh extents. The visible
 -- gun is the first-person copy when there is one, otherwise the held tool itself.
 local function gunPoint(where: () -> Vector3): Vector3?
@@ -90,11 +102,7 @@ local function gunPoint(where: () -> Vector3): Vector3?
 		for _, part in tool:GetDescendants() do
 			if part:IsA("BasePart") and part ~= handle then
 				local offset = handle.CFrame:ToObjectSpace(part.CFrame)
-				if
-					part.Transparency < 1
-					and not part:FindFirstAncestor("Floppy")
-					and not part:FindFirstAncestor("InfernoLoaded")
-				then
+				if part.Transparency < 1 and not inCanister(part, tool) then
 					local half = part.Size / 2
 					local reach = math.abs(offset.XVector.Z) * half.X
 						+ math.abs(offset.YVector.Z) * half.Y

@@ -97,6 +97,21 @@
       },
       "InfernoAsset": {
         "$path": "private-assets/inferno/InfernoAsset.luau"
+      },
+      "RammstoneAsset": {
+        "$path": "private-assets/rammstone/RammstoneAsset.luau"
+      },
+      "AquabeekAsset": {
+        "$path": "private-assets/aquabeek/AquabeekAsset.luau"
+      },
+      "TormatoAsset": {
+        "$path": "private-assets/tormato/TormatoAsset.luau"
+      },
+      "BoonDocAsset": {
+        "$path": "private-assets/boon-doc/BoonDocAsset.luau"
+      },
+      "TrailArt": {
+        "$path": "private-assets/trails/TrailArt.luau"
       }
     },
     "ServerScriptService": {
@@ -123,6 +138,18 @@
         },
         "InfernoAppearance": {
           "$path": "experiments/creatures/inferno/server/InfernoAppearance.luau"
+        },
+        "RammstoneAppearance": {
+          "$path": "experiments/creatures/rammstone/server/RammstoneAppearance.luau"
+        },
+        "AquabeekAppearance": {
+          "$path": "experiments/creatures/aquabeek/server/AquabeekAppearance.luau"
+        },
+        "TormatoAppearance": {
+          "$path": "experiments/creatures/tormato/server/TormatoAppearance.luau"
+        },
+        "BoonDocAppearance": {
+          "$path": "experiments/creatures/boondoc/server/BoonDocAppearance.luau"
         }
       },
       "Combat": {
@@ -186,6 +213,18 @@
         },
         "InfernoTeeth": {
           "$path": "experiments/creatures/inferno/client/InfernoTeeth.client.luau"
+        },
+        "RammstoneMotion": {
+          "$path": "experiments/creatures/rammstone/client/RammstoneMotion.client.luau"
+        },
+        "AquabeekMotion": {
+          "$path": "experiments/creatures/aquabeek/client/AquabeekMotion.client.luau"
+        },
+        "TormatoMotion": {
+          "$path": "experiments/creatures/tormato/client/TormatoMotion.client.luau"
+        },
+        "BoonDocMotion": {
+          "$path": "experiments/creatures/boondoc/client/BoonDocMotion.client.luau"
         }
       }
     },
@@ -199,6 +238,18 @@
       },
       "InfernoMaterials": {
         "$path": "private-assets/inferno/materials.rbxmx"
+      },
+      "RammstoneMaterials": {
+        "$path": "private-assets/rammstone/materials.rbxmx"
+      },
+      "AquabeekMaterials": {
+        "$path": "private-assets/aquabeek/materials.rbxmx"
+      },
+      "TormatoMaterials": {
+        "$path": "private-assets/tormato/materials.rbxmx"
+      },
+      "BoonDocMaterials": {
+        "$path": "private-assets/boon-doc/materials.rbxmx"
       }
     }
   }

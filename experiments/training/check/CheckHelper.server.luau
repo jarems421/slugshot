@@ -26,3 +26,28 @@ knock.OnServerEvent:Connect(function(_player: Player, dummy: any)
 		humanoid.Health = 0
 	end
 end)
+
+-- Attempts a real server equip to verify the production lobby policy reverses it.
+local equip = Instance.new("RemoteFunction")
+equip.Name = "TrainingCheckEquip"
+equip.Parent = ReplicatedStorage
+equip.OnServerInvoke = function(player: Player): boolean
+	local character = player.Character
+	local backpack = player:FindFirstChildOfClass("Backpack")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local tool = backpack and backpack:FindFirstChild("Blaster")
+	if not character or not humanoid or not tool or not tool:IsA("Tool") then
+		return false
+	end
+	humanoid:EquipTool(tool)
+	task.wait(0.4)
+	return tool.Parent == backpack and not tool.Enabled
+end
+
+local respawn = Instance.new("RemoteFunction")
+respawn.Name = "TrainingCheckRespawn"
+respawn.Parent = ReplicatedStorage
+respawn.OnServerInvoke = function(player: Player): boolean
+	player:LoadCharacterAsync()
+	return true
+end

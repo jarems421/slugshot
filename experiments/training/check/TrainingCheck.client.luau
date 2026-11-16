@@ -5,6 +5,21 @@ local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local LogService = game:GetService("LogService")
+
+local runtimeError = false
+LogService.MessageOut:Connect(function(message: string, kind: Enum.MessageType)
+	if
+		kind == Enum.MessageType.MessageError
+		and (
+			string.find(message, "FloppyIdle", 1, true)
+			or string.find(message, "Equipment", 1, true)
+			or string.find(message, "Inventory", 1, true)
+		)
+	then
+		runtimeError = true
+	end
+end)
 
 local player = Players.LocalPlayer
 local floorPlan = require(ReplicatedStorage:WaitForChild("TrainingFloor")) :: any
@@ -33,9 +48,191 @@ local function untilTrue(predicate: () -> boolean, limit: number): boolean
 	return false
 end
 local function armed(): boolean
-	local character, backpack = player.Character, player:FindFirstChildOfClass("Backpack")
-	return (character ~= nil and character:FindFirstChild("Blaster") ~= nil)
-		or (backpack ~= nil and backpack:FindFirstChild("Blaster") ~= nil)
+	local character = player.Character
+	return character ~= nil and character:FindFirstChild("Blaster") ~= nil
+end
+
+local function checkHolster(label: string, selectedId: string)
+	local template = game:GetService("StarterPack"):WaitForChild("Blaster")
+	local ghost: Model? = nil
+	result(
+		untilTrue(function()
+			ghost = (workspace.CurrentCamera :: Camera):FindFirstChild(
+					"BlasterHolsterVisual"
+				) :: Model?
+			return ghost ~= nil and (ghost :: Model):GetAttribute("HolsteredSlugId") == selectedId
+		end, 5),
+		`{label}: holster shows {selectedId}`
+	)
+	if not ghost then
+		return
+	end
+	local model = ghost :: Model
+	local handle = model:FindFirstChild("VisualHandle") :: BasePart
+	local character = player.Character :: Model
+	local leg = (
+		character:FindFirstChild("Right Leg") or character:FindFirstChild("RightUpperLeg")
+	) :: BasePart
+	say(
+		`{label} muzzle vertical {handle.CFrame.LookVector.Y}, relative to thigh {handle.CFrame.LookVector:Dot(
+			leg.CFrame.UpVector
+		)}`
+	)
+	result(
+		handle.CFrame.LookVector:Dot(leg.CFrame.UpVector) < -0.9,
+		`{label}: muzzle faces down along the thigh`
+	)
+	local scale = model:GetScale()
+	local worst, checked = 0, 0
+	for _, name in { "CanisterTeal", "FloppyBody", "InfernoBody" } do
+		local source = template:FindFirstChild(name, true)
+		local copy = model:FindFirstChild(name, true)
+		local weld = source and source:FindFirstChildOfClass("Weld")
+		if copy and copy:IsA("BasePart") and weld then
+			local actual = handle.CFrame:ToObjectSpace(copy.CFrame)
+			worst = math.max(worst, (actual.Position - weld.C0.Position * scale).Magnitude)
+			checked += 1
+		end
+	end
+	result(
+		checked == 3 and worst < 0.02,
+		`{label}: canister and slugs retain authored weld positions`
+	)
+	local hidden = model:FindFirstChild(
+		if selectedId == "Floppy" then "InfernoBody" else "FloppyBody",
+		true
+	) :: BasePart?
+	result(
+		hidden ~= nil and (hidden :: BasePart).Transparency == 1,
+		`{label}: other loaded slug hidden`
+	)
+	result(
+		model:FindFirstChildWhichIsA("Motor6D", true) ~= nil,
+		`{label}: skinned rig joints retained`
+	)
+end
+
+local function checkLobby(label: string)
+	local character = player.Character :: Model
+	local movement = player.PlayerScripts:WaitForChild("MovementSandbox")
+	local firstPerson = (require :: any)(movement:WaitForChild("FirstPerson"))
+	firstPerson.setActive(false)
+	local backpack = player:WaitForChild("Backpack")
+	result(
+		untilTrue(function()
+			local tool = backpack:FindFirstChild("Blaster") :: Tool?
+			return tool ~= nil and not tool.Enabled and not armed()
+		end, 10),
+		`{label}: gun carried but not equipped`
+	)
+	result(character:GetAttribute("LobbyHolstered") == true, `{label}: server requests hip holster`)
+	result(
+		untilTrue(function()
+			return (workspace.CurrentCamera :: Camera):FindFirstChild("BlasterHolsterVisual") ~= nil
+		end, 5),
+		`{label}: hip visual exists`
+	)
+	local hud = player.PlayerGui:WaitForChild("CombatHUD") :: ScreenGui
+	local bar = hud:WaitForChild("SlugBar")
+	result(
+		bar:WaitForChild("Health"):FindFirstChild("Sprint") == nil,
+		`{label}: sprint label removed`
+	)
+	local bag = bar:WaitForChild("InventoryToggle") :: TextButton
+	result(
+		bag.Text == "" and bag:FindFirstChild("Bag") ~= nil and bag.Position.Y.Offset < 40,
+		`{label}: bag icon beside health`
+	)
+	result(
+		hud.Enabled and (bar:WaitForChild("Health") :: Frame).Visible,
+		`{label}: health and hotbar visible`
+	)
+	say("press Two")
+	result(
+		untilTrue(function()
+			return character:GetAttribute("SelectedSlugSlot") == 2
+		end, 4),
+		`{label}: number key selects a slug`
+	)
+	result(not armed(), `{label}: selecting does not draw the gun`)
+	checkHolster(label, "Inferno")
+	say("press F")
+	local inventory = bar:WaitForChild("Inventory") :: Frame
+	result(
+		untilTrue(function()
+			return player:GetAttribute("PvpMenu") == "Inventory" and inventory.Visible
+		end, 4),
+		`{label}: F opens inventory`
+	)
+	if label == "spawn" then
+		task.wait(0.6) -- measure the tile after the inventory's opening animation
+		local content = inventory:WaitForChild("Content")
+		local tile = content:WaitForChild("Tile2"):WaitForChild("Inferno") :: TextButton
+		local inset = GuiService:GetGuiInset()
+		local centre = tile.AbsolutePosition + tile.AbsoluteSize / 2 + inset
+		local viewport = (workspace.CurrentCamera :: Camera).ViewportSize
+		say(
+			`click {math.round(centre.X)} {math.round(centre.Y)} {math.round(viewport.X)} {math.round(
+				viewport.Y
+			)}`
+		)
+		local title = content:WaitForChild("Detail"):WaitForChild("SlugName") :: TextLabel
+		result(
+			untilTrue(function()
+				return title.Text == "Inferno"
+			end, 4),
+			"inventory selection updates details"
+		)
+		say(`inventory details before capture: {title.Text}`)
+	end
+	shot(`{label}-inventory`)
+	say("press F")
+	untilTrue(function()
+		return player:GetAttribute("PvpMenu") == nil
+	end, 4)
+	local remote = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
+	local rejection = ""
+	local response = remote.OnClientEvent:Connect(function(kind: string, data: any)
+		if kind == "Rejected" and data.id == 903113 then
+			rejection = data.reason
+		end
+	end)
+	local root = character:WaitForChild("HumanoidRootPart") :: BasePart
+	remote:FireServer("Fire", {
+		id = 903113,
+		slot = 2,
+		origin = root.Position,
+		direction = Vector3.zAxis,
+		charge = 1,
+	})
+	result(
+		untilTrue(function()
+			return rejection == "lobby"
+		end, 4),
+		`{label}: server rejects a forged lobby shot`
+	)
+	response:Disconnect()
+	local equip = ReplicatedStorage:WaitForChild("TrainingCheckEquip") :: RemoteFunction
+	result(equip:InvokeServer(), `{label}: server reverses a forced draw`)
+	say("press R")
+	say("press E")
+	task.wait(0.5)
+	result(
+		not armed() and character:GetAttribute("SlugInspectAt") == nil,
+		`{label}: inspect and passive cannot draw`
+	)
+	shot(`{label}-holster`)
+	if label == "spawn" then
+		local camera = workspace.CurrentCamera :: Camera
+		local savedFrame, savedType = camera.CFrame, camera.CameraType
+		camera.CameraType = Enum.CameraType.Scriptable
+		camera.CFrame = CFrame.lookAt(
+			root.CFrame:PointToWorldSpace(Vector3.new(3.4, 0.3, 2.4)),
+			root.CFrame:PointToWorldSpace(Vector3.new(1, -0.6, 0))
+		)
+		shot("holster-close")
+		camera.CFrame, camera.CameraType = savedFrame, savedType
+	end
 end
 
 -- Holds W (check.ps1 presses it for real) and wades in at 35 degrees to the portal.
@@ -155,20 +352,99 @@ local function view(name: string, from: Vector3, at: Vector3)
 	shot(name)
 end
 
+local function worldView(name: string, frame: CFrame)
+	local camera = workspace.CurrentCamera :: Camera
+	local previous, kind = camera.CFrame, camera.CameraType
+	camera.CameraType, camera.CFrame = Enum.CameraType.Scriptable, frame
+	shot(name)
+	camera.CameraType, camera.CFrame = kind, previous
+end
+
 local function run()
+	result(
+		untilTrue(function()
+			return workspace:GetAttribute("HubSceneLightsReady") == true
+		end, 10),
+		"complete wall lighting ready at startup"
+	)
+	local art = workspace:WaitForChild("HubArt")
+	local function countLights(name: string): number
+		local count = 0
+		for _, item in art:GetChildren() do
+			if item.Name == name and item:FindFirstChildOfClass("SpotLight") then
+				count += 1
+			end
+		end
+		return count
+	end
+	local lower, upper, roof =
+		countLights("WallWash"), countLights("WallWashHigh"), countLights("RoofWash")
+	result(lower > 0 and upper == 21 and roof == 18, "lower, upper and roof washes arrive together")
 	workspace:SetAttribute("LoadingScreenTiming", true) -- local only: the loading screen logs its slow frames
 	local character = player.Character or player.CharacterAdded:Wait()
 	character:WaitForChild("HumanoidRootPart")
+	checkLobby("spawn")
+	local respawn = ReplicatedStorage:WaitForChild("TrainingCheckRespawn") :: RemoteFunction
+	respawn:InvokeServer()
+	result(
+		untilTrue(function()
+			return player.Character ~= nil
+				and player.Character ~= character
+				and (player.Character :: Model):FindFirstChild("HumanoidRootPart") ~= nil
+		end, 15),
+		"lobby respawn completes"
+	)
+	task.wait(1)
+	checkLobby("respawn")
+	local wallView = CFrame.lookAt(Vector3.new(0, 40, 0), Vector3.new(0, 155, -295))
+	if untilTrue(function()
+		return art:FindFirstChild("hub-cavern-00") ~= nil
+	end, 60) then
+		worldView("wall-startup", wallView)
+	end
 	result(
 		untilTrue(function()
 			return workspace:GetAttribute("TrainingReady") == true
-		end, 150),
+		end, 300),
 		"arena built"
 	)
 	task.wait(3)
-	result(not armed(), "no gun in the lobby")
-	local gui = player.PlayerGui:FindFirstChild("CombatHUD")
-	result(gui == nil or not (gui :: ScreenGui).Enabled, "no combat HUD in the lobby")
+	result(
+		countLights("WallWash") == lower
+			and countLights("WallWashHigh") == upper
+			and countLights("RoofWash") == roof,
+		"wall lighting count unchanged after scenery load"
+	)
+	local rims = 0
+	for _, item in art:GetDescendants() do
+		if item:GetAttribute("LuminousRim") and item:IsA("MeshPart") then
+			rims += 1
+			result(
+				item.Material == Enum.Material.Neon
+					and item.Color.R > 0.8
+					and not item:HasTag("HubDistantInk"),
+				"cavern cap rim pale, emissive and retained at low detail"
+			)
+		end
+	end
+	result(rims > 0, "cavern mushrooms have luminous rims")
+	worldView("wall-settled", wallView)
+	local closest: BasePart? = nil
+	for _, item in art:GetDescendants() do
+		if item:IsA("BasePart") and item:GetAttribute("LuminousRim") then
+			if
+				not closest
+				or item.Position.Magnitude < (closest :: BasePart).Position.Magnitude
+			then
+				closest = item
+			end
+		end
+	end
+	if closest then
+		local point = closest.Position
+		local inward = (-point * Vector3.new(1, 0, 1)).Unit
+		worldView("cavern-rim", CFrame.lookAt(point + inward * 25 + Vector3.new(0, 10, 0), point))
+	end
 
 	local lobbyFrame: CFrame
 	for _, entry in layout.portals do
@@ -188,101 +464,125 @@ local function run()
 		)}`
 	)
 	result(arrivedAt.Magnitude < 160 and arrivedAt.Y > -3, "standing on the island")
-	result(untilTrue(armed, 3), "gun handed over")
+	result(untilTrue(armed, 3), "gun drawn in training")
 	task.wait(2.5)
 	result((root.Position - ORIGIN).Magnitude < 160, "the motion check left the player there")
 	shot("arrival")
 
-	local moving = workspace:FindFirstChild("Moving 28", true) :: Model
-	local remote = ReplicatedStorage:WaitForChild("TrainingDummySettings") :: RemoteEvent
-	local a = moving:GetPivot().Position
-	task.wait(2)
-	result((moving:GetPivot().Position - a).Magnitude > 1, "moving dummy moves")
-	remote:FireServer("Speed", 0)
-	task.wait(0.4)
-	a = moving:GetPivot().Position
-	task.wait(0.5)
-	result((moving:GetPivot().Position - a).Magnitude < 0.01, "stop holds it")
-	remote:FireServer("Speed", 99)
-	task.wait(0.3)
-	result(workspace:GetAttribute("TrainingDummySpeed") == 0, "forged speed refused")
-	remote:FireServer("Health", 300)
-	task.wait(0.3)
-	local humanoid = moving:FindFirstChildOfClass("Humanoid") :: Humanoid
-	result(humanoid.MaxHealth == 300, "HP setting applies")
-	remote:FireServer("Speed", 7)
-	task.wait(0.2)
-	remote:FireServer("Health", 100)
-	task.wait(0.3)
+	if not workspace:GetAttribute("TrainingUiOnly") then
+		local moving = workspace:FindFirstChild("Moving 28", true) :: Model
+		local remote = ReplicatedStorage:WaitForChild("TrainingDummySettings") :: RemoteEvent
+		local a = moving:GetPivot().Position
+		task.wait(2)
+		result((moving:GetPivot().Position - a).Magnitude > 1, "moving dummy moves")
+		remote:FireServer("Speed", 0)
+		task.wait(0.4)
+		a = moving:GetPivot().Position
+		task.wait(0.5)
+		result((moving:GetPivot().Position - a).Magnitude < 0.01, "stop holds it")
+		remote:FireServer("Speed", 99)
+		task.wait(0.3)
+		result(workspace:GetAttribute("TrainingDummySpeed") == 0, "forged speed refused")
+		remote:FireServer("Health", 300)
+		task.wait(0.3)
+		local humanoid = moving:FindFirstChildOfClass("Humanoid") :: Humanoid
+		result(humanoid.MaxHealth == 300, "HP setting applies")
+		remote:FireServer("Speed", 7)
+		task.wait(0.2)
+		remote:FireServer("Health", 100)
+		task.wait(0.3)
 
-	-- Knocked out, a dummy falls back flat, then stands up again at full health.
-	local still = workspace:FindFirstChild("Still 35", true) :: Model
-	local upright = still:GetPivot()
-	local stillHumanoid = still:FindFirstChildOfClass("Humanoid") :: Humanoid
-	view("knockdown-before", Vector3.new(70, 6, 52), Vector3.new(58, 3, 35))
-	local knock = ReplicatedStorage:WaitForChild("TrainingCheckKnock") :: RemoteEvent
-	knock:FireServer(still)
-	local lowest, back = 1, 0
-	local deadline = os.clock() + 0.9
-	-- Announced while it lies on the ground: the capture script polls the log every 0.3 s.
-	task.delay(0.32, say, "capture knockdown-down")
-	while os.clock() < deadline do
-		local up = still:GetPivot().UpVector
-		if up.Y < lowest then
-			-- The firing line is toward +Z, so falling back sends the top toward -Z.
-			lowest, back = up.Y, -up.Z
+		-- Knocked out, a dummy falls back flat, then stands up again at full health.
+		local still = workspace:FindFirstChild("Still 35", true) :: Model
+		local upright = still:GetPivot()
+		local stillHumanoid = still:FindFirstChildOfClass("Humanoid") :: Humanoid
+		view("knockdown-before", Vector3.new(70, 6, 52), Vector3.new(58, 3, 35))
+		local knock = ReplicatedStorage:WaitForChild("TrainingCheckKnock") :: RemoteEvent
+		knock:FireServer(still)
+		local lowest, back = 1, 0
+		local deadline = os.clock() + 0.9
+		-- Announced while it lies on the ground: the capture script polls the log every 0.3 s.
+		task.delay(0.32, say, "capture knockdown-down")
+		while os.clock() < deadline do
+			local up = still:GetPivot().UpVector
+			if up.Y < lowest then
+				-- The firing line is toward +Z, so falling back sends the top toward -Z.
+				lowest, back = up.Y, -up.Z
+			end
+			task.wait()
 		end
-		task.wait()
-	end
-	say(`knockdown lowest up {string.format("%.2f", lowest)}`)
-	result(lowest < 0.3, "a knocked-out dummy falls flat")
-	result(back > 0.9, "it falls backwards, away from the firing line")
-	task.wait(1.2)
-	result(
-		(still:GetPivot().Position - upright.Position).Magnitude < 0.01
-			and still:GetPivot().UpVector:Dot(upright.UpVector) > 0.9999,
-		"it stands back up where it was"
-	)
-	result(stillHumanoid.Health == stillHumanoid.MaxHealth, "at full health")
-	shot("knockdown-after")
-
-	view("juice-side", Vector3.new(15, 7, 114), Vector3.new(0, 10, 128))
-	view("juice-front", Vector3.new(0, 8, 102), Vector3.new(0, 11, 128))
-	view("juice-corner", Vector3.new(-9, 3.5, 119), Vector3.new(-10, 2, 128))
-	view("above", Vector3.new(230, 190, 250), Vector3.new(0, -14, 0))
-	view("top", Vector3.new(0, 300, 1), Vector3.zero) -- under the void's lid
-	view("firing-line", Vector3.new(40, 6, 80), Vector3.new(80, 4, -40))
-	view("course", Vector3.new(-20, 9, 90), Vector3.new(-60, 4, -10))
-	view("walls", Vector3.new(-80, 10, 46), Vector3.new(-112, 10, -10))
-	view("runes", Vector3.new(0, 7, 124), Vector3.new(0, 6, 88))
-	view("runes-move", Vector3.new(-24, 6, 106), Vector3.new(-26, 6.5, 89))
-	view("runes-target", Vector3.new(24, 6, 106), Vector3.new(26, 6.5, 89))
-	view("station", Vector3.new(52, 6, 92), Vector3.new(60, 3, 82))
-	view("edge-down", Vector3.new(-100, 7, -70), Vector3.new(-190, -80, -130))
-	view("void", Vector3.new(60, 8, -70), Vector3.new(300, 60, -500))
-	workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-	task.wait(0.5)
-	local at_ = floorPlan.station.at
-	local place_ = ReplicatedStorage:WaitForChild("TrainingCheckPlace") :: RemoteEvent
-	place_:FireServer(
-		CFrame.new(
-			ORIGIN + Vector3.new(at_[1] - 6, 3.5, at_[2] + 4),
-			ORIGIN + Vector3.new(at_[1], 3, at_[2])
+		say(`knockdown lowest up {string.format("%.2f", lowest)}`)
+		result(lowest < 0.3, "a knocked-out dummy falls flat")
+		result(back > 0.9, "it falls backwards, away from the firing line")
+		task.wait(1.2)
+		result(
+			(still:GetPivot().Position - upright.Position).Magnitude < 0.01
+				and still:GetPivot().UpVector:Dot(upright.UpVector) > 0.9999,
+			"it stands back up where it was"
 		)
-	)
-	task.wait(1.5)
-	shot("prompt")
-	say("press F")
-	task.wait(1)
-	result(player:GetAttribute("PvpMenu") == "TrainingDummies", "F opens the dummy settings")
-	shot("panel")
-	player:SetAttribute("PvpMenu", "Settings")
-	shot("settings-tab")
-	player:SetAttribute("PvpMenu", "TrainingDummies")
-	task.wait(0.4)
-	say("press F")
-	task.wait(0.8)
-	result(player:GetAttribute("PvpMenu") == nil, "F closes them")
+		result(stillHumanoid.Health == stillHumanoid.MaxHealth, "at full health")
+		shot("knockdown-after")
+
+		view("juice-side", Vector3.new(15, 7, 114), Vector3.new(0, 10, 128))
+		view("juice-front", Vector3.new(0, 8, 102), Vector3.new(0, 11, 128))
+		view("juice-corner", Vector3.new(-9, 3.5, 119), Vector3.new(-10, 2, 128))
+		view("above", Vector3.new(230, 190, 250), Vector3.new(0, -14, 0))
+		view("top", Vector3.new(0, 300, 1), Vector3.zero) -- under the void's lid
+		view("firing-line", Vector3.new(40, 6, 80), Vector3.new(80, 4, -40))
+		view("course", Vector3.new(-20, 9, 90), Vector3.new(-60, 4, -10))
+		view("walls", Vector3.new(-80, 10, 46), Vector3.new(-112, 10, -10))
+		view("runes", Vector3.new(0, 7, 124), Vector3.new(0, 6, 88))
+		view("runes-move", Vector3.new(-24, 6, 106), Vector3.new(-26, 6.5, 89))
+		view("runes-target", Vector3.new(24, 6, 106), Vector3.new(26, 6.5, 89))
+		view("station", Vector3.new(52, 6, 92), Vector3.new(60, 3, 82))
+		view("edge-down", Vector3.new(-100, 7, -70), Vector3.new(-190, -80, -130))
+		view("void", Vector3.new(60, 8, -70), Vector3.new(300, 60, -500))
+	end
+
+	do
+		workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+		task.wait(0.5)
+		local at_ = floorPlan.station.at
+		local place_ = ReplicatedStorage:WaitForChild("TrainingCheckPlace") :: RemoteEvent
+		place_:FireServer(
+			CFrame.new(
+				ORIGIN + Vector3.new(at_[1] - 6, 3.5, at_[2] + 4),
+				ORIGIN + Vector3.new(at_[1], 3, at_[2])
+			)
+		)
+		local stationPoint = ORIGIN + Vector3.new(at_[1], 4.2, at_[2])
+		result(
+			untilTrue(function()
+				return (root.Position - stationPoint).Magnitude < 12
+			end, 5),
+			"standing beside the dummy station"
+		)
+		-- PromptShown depends on the station being in the gameplay view. The earlier
+		-- third-person camera still faced away after teleporting the character.
+		local stationCamera = workspace.CurrentCamera :: Camera
+		stationCamera.CameraType = Enum.CameraType.Scriptable
+		stationCamera.CFrame = CFrame.lookAt(root.Position + Vector3.new(0, 1.5, 0), stationPoint)
+		result(
+			untilTrue(function()
+				local controls = player.PlayerGui:FindFirstChild("TrainingControls")
+				return controls ~= nil and controls:FindFirstChild("TrainingPromptBoard") ~= nil
+			end, 5),
+			"dummy station prompt visible"
+		)
+		shot("prompt")
+		say("press F")
+		task.wait(1)
+		result(player:GetAttribute("PvpMenu") == "TrainingDummies", "F opens the dummy settings")
+		shot("panel")
+		player:SetAttribute("PvpMenu", "Settings")
+		shot("settings-tab")
+		player:SetAttribute("PvpMenu", "TrainingDummies")
+		task.wait(0.4)
+		say("press F")
+		task.wait(0.8)
+		result(player:GetAttribute("PvpMenu") == nil, "F closes them")
+		stationCamera.CameraType = Enum.CameraType.Custom
+	end
 
 	local at = floorPlan.arrival.portal
 	local position = ORIGIN + Vector3.new(at[1], at[2], at[3])
@@ -291,8 +591,9 @@ local function run()
 		untilTrue(function()
 			return not armed()
 		end, 3),
-		"gun gone again"
+		"gun holstered again"
 	)
+	checkLobby("return")
 	result(
 		untilTrue(function()
 			return (root.Position - ORIGIN).Magnitude > 1000
@@ -314,6 +615,47 @@ local function run()
 	shot("lobby-portal")
 	lobbyCamera.CameraType = Enum.CameraType.Custom
 	cross(lobbyFrame, true, "enter again")
+	result(untilTrue(armed, 3), "gun drawn after re-entry")
+	local combat = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
+	local accepted = false
+	local response = combat.OnClientEvent:Connect(function(kind: string, data: any)
+		if kind == "Shot" and data.id == 903114 and data.shooter == player then
+			accepted = true
+		end
+	end)
+	root = (player.Character :: Model):WaitForChild("HumanoidRootPart") :: BasePart
+	combat:FireServer("Fire", {
+		id = 903114,
+		slot = 2,
+		origin = root.Position,
+		direction = Vector3.xAxis,
+		charge = 0.2,
+	})
+	result(
+		untilTrue(function()
+			return accepted
+		end, 4),
+		"server accepts a training shot"
+	)
+	response:Disconnect()
+	if workspace:GetAttribute("TrainingUiOnly") then
+		local previous = player.Character
+		respawn:InvokeServer()
+		result(
+			untilTrue(function()
+				local current = player.Character
+				return current ~= nil
+					and current ~= previous
+					and current:GetAttribute("TrainingArrived") == true
+					and armed()
+			end, 15),
+			"training respawn draws only after arrival"
+		)
+		root = (player.Character :: Model):WaitForChild("HumanoidRootPart") :: BasePart
+		result((root.Position - ORIGIN).Magnitude < 160, "training respawn is inside the arena")
+		shot("training-respawn")
+	end
+	result(not runtimeError, "no equipment, inventory or slug callback errors")
 	say("done")
 end
 

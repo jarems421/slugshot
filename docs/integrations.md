@@ -40,3 +40,7 @@ The test place passed its contract assertion and both startup probes. StudioTest
 To roll back only these integrations: `rojo plugin uninstall`, `claude mcp remove Roblox_Studio -s local`, and remove the named server table from the project Codex config. Studio's toggle controls its MCP server. Preserve other servers and trust entries. Pre-edit backups were retained in ignored `build/integration-backups/` where applicable.
 
 GitHub publication and these integrations are approved. Blender, extra plugins, gameplay dependencies, asset uploads and publishing a Roblox experience remain outside scope. Repeating the authorized foundation checks does not need fresh approval.
+
+## Studio proxy recovery (2026-11-14)
+
+**Implemented/verified:** the local launcher was pinned to an outdated StudioMCP binary and reported no sessions. Backed it up under ignored `build/integration-backups/`, changed it to resolve the registered Studio ContentFolder, and replaced only obsolete proxy processes. Existing project MCP authorization applies. Current official StudioMCP stdio calls successfully inspect, edit, save a local review and drive input. The original app tool transport closed when its obsolete proxy stopped; a new app session may be needed. No new plugin, account, security permission or experience publication. Unrelated Studio windows preserved.

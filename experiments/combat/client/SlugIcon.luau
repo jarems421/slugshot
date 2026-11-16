@@ -393,9 +393,64 @@ function SlugIcon.mount(
 	}
 	table.insert(icons, icon)
 	task.spawn(function()
-		if ReplicatedStorage:WaitForChild("CombatAssets", 30) then
+		local assets = ReplicatedStorage:WaitForChild("CombatAssets", 30)
+		if not assets or not frame.Parent then
+			return
+		end
+		-- The folder replicates before its imported models. Replace the stand-in
+		-- when this slug arrives, and prefer its base-form icon over flight art.
+		local rendered: Instance? = nil
+		local partsWatch: RBXScriptConnection? = nil
+		local settleToken = 0
+		local function refresh(force: boolean?)
+			local source = assets:FindFirstChild(slugId .. "Icon")
+				or assets:FindFirstChild(slugId .. "Flight")
+			if source == rendered and icon.model and not force then
+				return
+			end
+			if source ~= rendered then
+				-- A model's parts replicate after the model itself, so a copy made on arrival can be empty
+				-- (2026-11-14: Inferno, Rammstone and Aquabeek icons blank after a respawn). Draw it again once its
+				-- parts have stopped arriving.
+				if partsWatch then
+					partsWatch:Disconnect()
+					partsWatch = nil
+				end
+				if source then
+					partsWatch = source.DescendantAdded:Connect(function(item)
+						if not item:IsA("BasePart") then
+							return
+						end
+						settleToken += 1
+						local mine = settleToken
+						task.delay(0.3, function()
+							if mine == settleToken and frame.Parent then
+								refresh(true)
+							end
+						end)
+					end)
+				end
+			end
+			rendered = source
+			for _, child in frame:GetChildren() do
+				if child:IsA("WorldModel") or child:IsA("Camera") then
+					child:Destroy()
+				end
+			end
 			place(icon, slugId, fill / room, (floorGap or DEFAULT_FLOOR_GAP) / room)
 		end
+		local connection = assets.ChildAdded:Connect(function(child)
+			if child.Name == slugId .. "Icon" or child.Name == slugId .. "Flight" then
+				refresh()
+			end
+		end)
+		frame.Destroying:Once(function()
+			connection:Disconnect()
+			if partsWatch then
+				partsWatch:Disconnect()
+			end
+		end)
+		refresh()
 	end)
 	return icon
 end

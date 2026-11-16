@@ -1,0 +1,1087 @@
+<title>Tormato</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one large turntable stage with option and view controls; design notes beside it, stacking on phones. */
+:root {
+  --bg: #ebe7e4;
+  --paper: #f6f3f1;
+  --ink: #241a18;
+  --muted: #6a5c58;
+  --rule: #d6ccc8;
+  --accent: #b8402a;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #161314; --paper: #1f1b1c; --ink: #efe7e4; --muted: #ab9d99; --rule: #3a3234; --accent: #f08a6e; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #161314; --paper: #1f1b1c; --ink: #efe7e4; --muted: #ab9d99; --rule: #3a3234; --accent: #f08a6e; color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(36px, 6vw, 56px); line-height: 1; margin: 6px 0 0; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 0; }
+p { margin: 0; }
+.lede { max-width: 62ch; color: var(--muted); margin-top: 10px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { display: grid; gap: 12px; min-width: 0; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden; border: 1px solid var(--rule); background: #151314; touch-action: none; cursor: grab; }
+.canvas-box:active { cursor: grabbing; }
+.canvas-box img, .canvas-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: #efe7e4; background: rgba(21,19,20,.7); padding: 3px 8px; border-radius: 6px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font-family: var(--mono); font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.notes { display: grid; gap: 18px; min-width: 0; }
+dl { margin: 0; display: grid; gap: 12px; }
+dt { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 2px 0 0; }
+.optrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.optrow .glabel { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 4.5em; }
+.optrow button { padding: 6px 10px; font-size: 12px; }
+.caveat { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+body.render { padding: 0; background: #000; }
+body.render .wrap { display: none; }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Slugshot · wind slug · concept for review</div>
+    <h1>Tormato</h1>
+    <p class="lede">Base form final (owner, 2026-11-15). Transformed form, round 4: your dragon wings, ram horns curled up over his head like Rammstone's, no arms or legs, and a striped red tail with a small grey tip.</p>
+  </div>
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" id="box">
+        <img id="still" alt="Rendered turntable of the Tormato concept" draggable="false">
+        <div class="hint" id="hint">Drag to turn</div>
+      </div>
+      <div class="controls" role="group" aria-label="Form"><button data-form="base" aria-pressed="true">Base form</button><button data-form="comet" aria-pressed="false">Transformed</button></div>
+      <div class="controls" role="group" aria-label="Camera">
+        <button data-frame="0">Front</button>
+        <button data-frame="3">Three-quarter</button>
+        <button data-frame="6">Side</button>
+        <button data-frame="12">Back</button>
+        <button data-frame="close">Face close-up</button>
+        <button data-frame="belly">Belly close-up</button>
+        <button data-frame="top" hidden>From above</button>
+        <button id="live" aria-pressed="false">Live 3D</button>
+      </div>
+    </div>
+    <div class="notes">
+      <h2>The design</h2>
+      
+      <dl id="notes-base"><div><dt>Head and body</dt><dd>Boon Doc's approved body plan, upright with a slight lean, the crown a little taller like the reference's dome. The pooled base's folds twist as they rise, like a skirt mid-spin. He sways in a slow circle, as if the wind keeps turning him (Live 3D).</dd></div><div><dt>Eyes</dt><dd>Eye of the storm in the almond shape, with a positive canthal tilt: the outer corners sit higher than the inner. The top arch peaks toward the inner corner and the bottom dips lowest toward the outer; the inner end is blunt and round, closed by the fine lower line. Each eye sits a little below the skin and rises in a rounded glassy cap under a rolled upper lid; the storm sinks in like a funnel, sliding against the rim as he turns.</dd></div><div><dt>Horns</dt><dd>Short, thick pale-yellow horns laid straight back by the wind, the tips lifting and dipped in storm grey; set a little further forward on the head and about a fifth shorter.</dd></div><div><dt>Twister bands</dt><dd>Deep crimson bands of wind spiral up round him, tight near the base and opening toward the shoulders, with a slow wave so they flow. Each is one long brush stroke per turn, fine at both ends, thinning to a point wherever it meets the belly or the face. Where they open out toward the shoulders, a finer line runs between each pair, so his upper back is never bare. They wheel slowly round him in Live 3D.</dd></div><div><dt>Forehead</dt><dd>A tornado mark in the bands' crimson: one solid funnel, wide and rounded at the top and narrowing straight down to a point just above his eyes, with thin curved gaps across it, slanted a touch so it reads as spinning.</dd></div><div><dt>Mouth</dt><dd>The lopsided open grin, high on the face and calm, with a row of top teeth and two round, pointed fangs rising from behind the lower lip, clear below the top teeth from the front, the side or three-quarters.</dd></div><div><dt>Colour</dt><dd>Vermilion, redder than Inferno's orange, deepening down the back and warming over the muzzle; a butter-yellow belly with a warm line round its edge and faint ripples of air across it; storm grey for the wind.</dd></div></dl>
+      <dl id="notes-comet" hidden><div><dt>Idea</dt><dd>After your reference: a red dragon with curled horns and dragon wings. His own face and colours make him Tormato, and the grey-fraying wings keep him clear of Inferno.</dd></div><div><dt>Head and face</dt><dd>His base face (Eye of the storm eyes, the grin with two fangs, the tornado mark) with the horns grown into thick ram horns curled like Rammstone's: each rises up and back, then curls round above and behind his head and forward again, the point pushed forward, so the curl sits up out of his face. Ridged, with storm-grey tips.</dd></div><div><dt>Body</dt><dd>A dragon's torso with no arms or legs: the back of his head flows into a thick neck and a deep chest dropping below the head, a narrower waist, then haunches.</dd></div><div><dt>Wings (your pick)</dt><dd>Dragon wings: an arm bone out to the wrist, three finger bones splaying to the trailing edge, scalloped membrane between them. Vermilion deepening toward the edge, which frays into storm grey; the bones darker. The flap travels out along the span, so they bend rather than hinge (Live 3D).</dd></div><div><dt>Tail</dt><dd>A long red tail tapering smoothly from his haunches to a point, curving up a little, striped with the crimson twister bands that wind along his body, and tipped with a small storm-grey tip like the slugs' antenna tips.</dd></div><div><dt>Belly</dt><dd>Butter yellow underneath, from under the chin back along the body, narrowing down the tail.</dd></div></dl>
+      <p class="caveat">A concept render, not the game model. Like Inferno, the agreed version gets rebuilt in Blender from this same maths. Glow will use Roblox's own emissive surfaces and effects in game.</p>
+    </div>
+  </div>
+</div>
+
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uRes;
+uniform float uT;
+uniform vec3 uRo, uRight, uUp, uFwd;
+
+const vec3 LKEY = vec3(-0.56, 0.68, 0.46);
+const vec3 LRIM = vec3(0.55, 0.45, -0.70);
+
+// Palette, linear. The reference's red and yellow, redder than Inferno's orange, with storm grey
+// for the wind: his eyes and his horn tips.
+const vec3 BODYC  = vec3(0.686, 0.063, 0.025);  // #D8472C vermilion
+const vec3 BACKC  = vec3(0.392, 0.030, 0.014);  // #A8301F deep red
+const vec3 BELLYC = vec3(0.913, 0.686, 0.168);  // #F5D872 butter yellow
+const vec3 BODYL  = vec3(0.820, 0.150, 0.060);  // #E9693F warm vermilion for the muzzle
+const vec3 CRIMSON = vec3(0.260, 0.018, 0.012); // #8B2218 deep crimson for tonal marks
+const vec3 HORNC  = vec3(0.855, 0.672, 0.270);  // #EED68E pale horn yellow
+const vec3 STORM  = vec3(0.262, 0.287, 0.330);  // #8C929C storm grey
+const vec3 STORMD = vec3(0.060, 0.070, 0.090);  // #474D56 dark storm
+const vec3 WIND   = vec3(0.860, 0.910, 0.950);  // pale wind white
+const vec3 AIR    = vec3(0.400, 0.480, 0.580);  // #AAB8C7 pale storm light, the eyes' ground
+const vec3 INK    = vec3(0.014, 0.006, 0.006);  // deep red-black ink
+const vec3 MOUTHC = vec3(0.060, 0.008, 0.012);
+const vec3 TONGUE = vec3(0.560, 0.080, 0.090);
+const vec3 TEETHC = vec3(0.930, 0.930, 0.890);
+
+#ifndef PLAIN
+#define PLAIN 0
+#endif
+// 0 the base form, 1 the transformed form.
+#ifndef XF
+#define XF 0
+#endif
+// 1 holds the transformed form in its rest pose (body straight, wings level) for the Blender build.
+#ifndef REST
+#define REST 0
+#endif
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float smax(float a, float b, float k) { return -smin(-a, -b, k); }
+float sdEll(vec3 p, vec3 r) { float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0 - 1.0)/k1; }
+float capT(vec3 p, vec3 a, vec3 b, float ra, float rb) {
+  vec3 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float seg2(vec2 p, vec2 a, vec2 b, float ra, float rb) {
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba*h) - mix(ra, rb, h);
+}
+float hash1(float n) { return fract(sin(n)*43758.5453); }
+// Exact distance to a quadratic Bezier (after Inigo Quilez); returns (distance, t).
+vec2 sdBezier(vec3 pos, vec3 A, vec3 B, vec3 C) {
+  vec3 a = B - A, b = A - 2.0*B + C, c = a*2.0, d = A - pos;
+  float kk = 1.0/dot(b, b);
+  float kx = kk*dot(a, b);
+  float ky = kk*(2.0*dot(a, a) + dot(d, b))/3.0;
+  float kz = kk*dot(d, a);
+  vec2 res;
+  float p = ky - kx*kx, p3 = p*p*p;
+  float q = kx*(2.0*kx*kx - 3.0*ky) + kz;
+  float h = q*q + 4.0*p3;
+  if (h >= 0.0) {
+    h = sqrt(h);
+    vec2 x = (vec2(h, -h) - q)/2.0;
+    vec2 uv = sign(x)*pow(abs(x), vec2(1.0/3.0));
+    float t = clamp(uv.x + uv.y - kx, 0.0, 1.0);
+    vec3 e = d + (c + b*t)*t;
+    res = vec2(dot(e, e), t);
+  } else {
+    float z = sqrt(-p);
+    float v = acos(q/(p*z*2.0))/3.0;
+    float m = cos(v), n = sin(v)*1.732050808;
+    vec3 t = clamp(vec3(m + m, -n - m, n - m)*z - kx, 0.0, 1.0);
+    vec3 e1 = d + (c + b*t.x)*t.x;
+    vec3 e2 = d + (c + b*t.y)*t.y;
+    res = vec2(dot(e1, e1), t.x);
+    float dis = dot(e2, e2);
+    if (dis < res.x) res = vec2(dis, t.y);
+  }
+  res.x = sqrt(res.x);
+  return res;
+}
+
+// ---------------------------------------------------------------- body
+const float LEAN = 0.10;
+// A breezy idle: slow breathing, and the top drifting round in a slow circle as if the wind keeps
+// turning him.
+vec3 deform(vec3 p) {
+#if XF == 1
+  // Transformed: gliding level and bobbing gently, a slow wave running back along the body, the
+  // tornado tail swinging behind; the head stays steady.
+#if REST == 1
+  return p;
+#endif
+  p.y -= 0.035*sin(uT*1.8);
+  float back = smoothstep(-0.5, -3.2, p.z);
+  p.y -= 0.07*back*sin(uT*2.2 + p.z*1.6);
+  p.x -= 0.10*back*back*sin(uT*1.5 + p.z*1.2);
+  return p;
+#endif
+  float b = sin(uT*2.2);
+  float up = smoothstep(0.0, 2.0, p.y);
+  p.y /= 1.0 + 0.014*b*up;
+  p.xz /= 1.0 - 0.012*b*(1.0 - 0.6*up);
+  float sw = smoothstep(0.6, 2.0, p.y);
+  p.x -= 0.024*sin(uT*1.3)*sw;
+  p.z -= 0.012*cos(uT*1.3)*sw;
+  p.z -= LEAN*smoothstep(0.3, 1.9, p.y);
+  return p;
+}
+
+// The pooled base's folds twist as they rise, like a skirt mid-spin.
+float lobes(float th, float y, float phase) {
+  float tw = th + 2.4*y;
+  return 1.0 + 0.05*sin(5.0*tw + 0.4 + phase) + 0.03*sin(3.0*tw + 0.7 + phase);
+}
+
+float bodyMass(vec3 p) {
+  // Boon Doc's approved body plan (a crossover of Inferno's and Aquabeek's): a pooled, lobed base, a
+  // soft body and a thick neck growing into the head; the crown a little taller, like the reference's dome.
+  vec3 q = p - vec3(0.0, 0.0, -0.02);
+  float th = atan(q.z, q.x);
+  float k = lobes(th, q.y, 0.0);
+  float d = sdEll(vec3(q.x/k, q.y - 0.24, q.z/k), vec3(0.57, 0.30, 0.58))*min(k, 1.0)*0.9;
+  d = smin(d, sdEll(p - vec3(0.0, 0.80, 0.01), vec3(0.45, 0.70, 0.42)), 0.42);
+  d = smin(d, sdEll(p - vec3(0.0, 1.22, 0.02), vec3(0.49, 0.47, 0.44)), 0.26);
+  float k2 = lobes(th, q.y, 1.4);
+  d = smin(d, sdEll(vec3(q.x/k2, q.y - 0.02, q.z/k2), vec3(0.71, 0.06, 0.70))*min(k2, 1.0)*0.9, 0.28);
+  d = smin(d, sdEll(p - vec3(0.0, 1.68, 0.04), vec3(0.67, 0.42, 0.56)), 0.20);
+  d = smin(d, sdEll(p - vec3(0.0, 1.86, -0.02), vec3(0.53, 0.40, 0.48)), 0.21);
+  d = smin(d, sdEll(p - vec3(0.0, 1.39, 0.19), vec3(0.48, 0.30, 0.39)), 0.30);
+  // A short, plain tail with a rounded end.
+  return smin(d, capT(p, vec3(0.0, 0.12, -0.42), vec3(0.0, 0.08, -0.74), 0.18, 0.05), 0.16);
+}
+
+// ---------------------------------------------------------------- eyes
+// Two big eyes set into the head the way Aquabeek's are, never bulging: the surface follows the head
+// with a slight dome, with no lid band (it read as eyeshadow on Tazerling). An almond drawn by the
+// rule (the owner kept it from round 5's three shapes): the upper arch peaks toward the inner corner,
+// the lower arch dips lowest toward the outer, and the outer corner barely lifts. The inner end is
+// blunt and round rather than pinched to a point.
+const vec3 EYE_C = vec3(0.340, 1.700, 0.525);
+const float EW = 0.262, ETOP = 0.178, EBOT = 0.128;
+const vec2 ECEN = vec2(-0.02, 0.012), ESC = vec2(0.225, 0.138);   // the storm's centre and size
+vec3 eyeCentre(float s) { return vec3(s*EYE_C.x, EYE_C.y, EYE_C.z); }
+vec3 eyeAxis(float s) { return normalize(vec3(s*0.47, 0.06, 1.0)); }
+vec3 eyeLocal(vec3 p, float s) {
+  vec3 ax = eyeAxis(s);
+  vec3 u = normalize(cross(vec3(0.0, 1.0, 0.0), ax));
+  vec3 w = cross(ax, u);
+  vec3 q = p - eyeCentre(s);
+  // x runs from the inner corner (-) to the outer corner (+) on both eyes.
+  return vec3(s*dot(q, u), dot(q, w), dot(q, ax));
+}
+// The centre line (rising toward the outer corner), and the upper and lower arches as fractions of
+// ETOP and EBOT along the eye's width; lower powers toward the inner corner round its end off.
+const float CANTHAL = 0.075;   // positive canthal tilt: rise per unit across, outer corner up
+float eyeMid(float x) { float o = max(x, 0.0)/EW; return 0.022*o*o + CANTHAL*x; }
+float innerRound(float x) { return smoothstep(0.0, -1.0, x/EW); }
+float eyeOpen(float x) { float u = x/EW; return pow(max(0.0, 1.0 - u*u), mix(0.58, 0.44, innerRound(x)))*(1.0 - 0.16*u); }
+float eyeLow(float x) { float u = x/EW; return pow(max(0.0, 1.0 - u*u), mix(0.75, 0.46, innerRound(x)))*(1.0 + 0.10*u); }
+float eyeDist(vec3 p, float s) {
+  vec3 l = eyeLocal(p, s);
+  float y = l.y - eyeMid(l.x);
+  return max(max(y - ETOP*eyeOpen(l.x), -EBOT*eyeLow(l.x) - y), (abs(l.x/EW) - 1.0)*EW);
+}
+float lidLine(float x) { return eyeMid(x) + ETOP*0.80*eyeOpen(x); }
+float lidOpen(vec3 l, float ed) { return max(ed, l.y - lidLine(l.x)); }
+// The eye's depth, sculpted rather than painted: the rim sits a little below the skin, the eye rises
+// from it in a rounded glassy cap (its middle only a touch proud of the skin, so it never bulges), and
+// the upper lid rolls over the top edge with a soft crease above it. Same skin, no lid band.
+float eyeRelief(vec3 l, float ed) {
+  float open = lidOpen(l, ed);
+  float cap = sqrt(smoothstep(0.0, -0.12, open));
+  float inside = (-0.020 + 0.034*cap)*(1.0 - smoothstep(-0.014, 0.006, open));
+  // Shallower at the inner corner, where the eye turns toward the viewer and the recess's wall caught
+  // the light as a pale sliver.
+  inside *= 1.0 - 0.75*smoothstep(0.45, 0.95, -l.x/EW);
+  float lidd = l.y - lidLine(l.x);
+  float span = 1.0 - smoothstep(EW*0.70, EW*1.05, abs(l.x));
+  float roll = (0.011*exp(-pow((lidd - 0.014)/0.016, 2.0)) - 0.004*exp(-pow((lidd - 0.062)/0.014, 2.0)))*span;
+  return inside + roll;
+}
+// A direction in the eye's own frame (the same axes as eyeLocal).
+vec3 eyeDir(vec3 d, float s) {
+  vec3 ax = eyeAxis(s);
+  vec3 u = normalize(cross(vec3(0.0, 1.0, 0.0), ax));
+  vec3 w = cross(ax, u);
+  return vec3(s*dot(d, u), dot(d, w), dot(d, ax));
+}
+
+// ---------------------------------------------------------------- mouth
+// A lopsided open grin, sculpted like Aquabeek's: carved into the muzzle, rising to his left, rolled
+// lips, dimples, one row of top teeth and two fangs poking up from the bottom, the right one a touch
+// taller (the reference's two buck teeth are left out).
+const vec2 MOUTH = vec2(0.020, 1.325);
+const float MW = 0.285, MDEEP = 0.142, MTILT = 0.10, TH = 0.046;
+const float MCURVE = 0.42;   // how far the corners turn up
+vec2 mouthCoord(vec3 p) { float x = p.x - MOUTH.x; return vec2(x, p.y - MOUTH.y - MTILT*x); }
+float mouthTop(float x) { return MCURVE*x*x; }
+float mouthBot(float x) { float k = (MDEEP + MCURVE*MW*MW)/(MW*MW); return -MDEEP + k*x*x*(0.55 + 0.45*x*x/(MW*MW)); }
+float mouthDist(vec3 p) { vec2 g = mouthCoord(p); return max(max(g.y - mouthTop(g.x), mouthBot(g.x) - g.y), abs(g.x) - MW); }
+float mouthBack(float x) { return 0.450 - 0.95*x*x; }
+const vec2 FANG_X = vec2(-0.140, 0.135);   // his right, his left
+const vec2 FANG_H = vec2(0.064, 0.056);
+float mouthRelief(vec3 p) {
+  vec2 g = mouthCoord(p);
+  float md = mouthDist(p);
+  float upper = step(0.0, g.y - mouthTop(g.x)*0.5 + 0.02);
+  float roll = exp(-pow((max(md, 0.0) - 0.012)/0.012, 2.0));
+  float h = roll*mix(0.018, 0.010, upper)*(1.0 - smoothstep(MW - 0.02, MW + 0.03, abs(g.x)));
+  vec2 dh = g - vec2(MW + 0.012, mouthTop(MW) + 0.010), dl = g - vec2(-MW - 0.010, mouthTop(MW) + 0.004);
+  h -= 0.014*exp(-dot(dh, dh)/0.0006) + 0.008*exp(-dot(dl, dl)/0.0005);
+  // A soft hollow between the lower lip and the chin.
+  vec2 cn = (g - vec2(0.0, -MDEEP - 0.075))/vec2(0.14, 0.024);
+  h -= 0.007*exp(-dot(cn, cn));
+  return h;
+}
+
+// ---------------------------------------------------------------- horns
+// The owner's pick from round 2: short, thick pale-yellow horns laid straight back by the wind, the
+// tips lifting and dipped in storm grey, unlike the reference's upward curve. Each is one
+// smooth quadratic sweep (a chain of capsules showed its joints as ridges), drawn on his left (s = 1)
+// and mirrored.
+vec3 onSide(vec3 p, float s) { return vec3(s*p.x, p.y, p.z); }
+void hornCurve(float s, out vec3 A, out vec3 B, out vec3 C) {
+  float sw = sin(uT*1.3 + s*0.7);
+  A = onSide(vec3(0.30, 1.99, 0.08), s);
+  B = onSide(vec3(0.50, 2.14, -0.22), s);
+  C = onSide(vec3(0.53, 2.33 + 0.01*sw, -0.46), s);
+}
+float hornRad(float t) { return mix(0.130, 0.012, pow(t, 0.80)); }
+// x = distance, y = 0 at the root to 1 at the tip.
+#if XF == 1
+// Transformed: the horns grown out into thick ram horns curled like Rammstone's (owner): from the same
+// roots each rises up and back, then curls round above and behind the head's top corners, down and
+// forward again, the point pushed forward, so the curl sits up out of his face. Thick most of the way, tapering only
+// near the end. One tightening spiral round a centre above and behind the root, drifting a little
+// outward; a chain of capsules joined with plain min.
+const int RSEG = 24;
+const vec3 RAM_C = vec3(0.0, 2.20, -0.28);   // the curl's centre (x set per point)
+const float RAM_TILT = 0.40;   // the curl's plane leans outward by this much (radians)
+// A point on the curl relative to its centre, the curl's plane leaning outward.
+vec3 ramOffset(float ph, float R) { return R*vec3(sin(ph)*sin(RAM_TILT), sin(ph)*cos(RAM_TILT), cos(ph)); }
+vec3 ramPoint(float s, float t) {
+  // Starts at the root (0.30, 1.99, 0.08), whose angle and distance from the centre set the start.
+  const float PH0 = -0.528, R0 = 0.417;
+  float ph = mix(PH0, 4.90, t);   // up the front, over the top, back, down and forward again
+  float R = mix(R0, 0.15, t);
+  vec3 q = vec3(0.30, 1.99, 0.08) + ramOffset(ph, R) - ramOffset(PH0, R0);
+  q.x += 0.42*t - 0.10*t*t;   // spreading out toward the head's top corners
+  return onSide(q, s);
+}
+float ramRad(float t) { return 0.165 - 0.07*t - 0.085*smoothstep(0.55, 1.0, t); }
+vec2 hornDist(vec3 p, float s) {
+  float bd = length(p - onSide(vec3(0.58, 2.18, -0.28), s)) - 0.68;
+  if (bd > 0.12) return vec2(bd, 0.0);
+  float best = 1e3, bt = 0.0;
+  vec3 prev = ramPoint(s, 0.0);
+  for (int i = 1; i <= RSEG; i++) {
+    float t1 = float(i)/float(RSEG);
+    vec3 cur = ramPoint(s, t1);
+    vec3 pa = p - prev, ba = cur - prev;
+    float h = clamp(dot(pa, ba)/dot(ba, ba), 0.0, 1.0);
+    float t = t1 - (1.0 - h)/float(RSEG);
+    float d = length(pa - ba*h) - ramRad(t);
+    if (d < best) { best = d; bt = t; }
+    prev = cur;
+  }
+  return vec2(best, bt);
+}
+#else
+vec2 hornDist(vec3 p, float s) {
+  // A sphere round the horn, so far-off points get a cheap lower bound; the cut-off is past the
+  // blend with the head (0.07), so it never shows as a seam.
+  float bd = length(p - onSide(vec3(0.44, 2.16, -0.18), s)) - 0.52;
+  if (bd > 0.12) return vec2(bd, 0.0);
+  vec3 A, B, C;
+  hornCurve(s, A, B, C);
+  vec2 h = sdBezier(p, A, B, C);
+  return vec2(h.x - hornRad(h.y), h.y);
+}
+#endif
+
+// ---------------------------------------------------------------- markings
+// The forehead's tornado mark (the owner's pick from round 7): one solid crimson funnel, wide and
+// rounded at the top and narrowing straight down to a point just above the eyes, with thin gaps of
+// skin curving across it, slanted a touch so it reads as spinning. Upright and even: round 9's leaned
+// one way, and the owner chose straight over an S-curve. Separate stacked strokes read as forehead wrinkles
+// (round 8), so the shape is one silhouette and its lines run on a slant. Measured on the head: x
+// across, y the arc up over the top from the front (the forehead seen from the front is only about
+// 0.0 to 0.22 before the head curves away).
+const vec3 CROWN = vec3(0.0, 1.86, -0.02);
+vec2 crownCoord(vec3 p) {
+  vec3 d = normalize(p - CROWN);
+  return vec2(d.x, atan(d.y, d.z))*0.45;
+}
+// x = coverage (0..1), y = across the funnel (1 on his right, the lit side, to -1 on his left).
+vec2 browMark(vec3 p) {
+  vec2 g = crownCoord(p);
+  const float TOP = 0.235, HALF = 0.150;
+  float u = clamp(g.y/TOP, 0.0, 1.0);   // 0 at the tip, 1 at the top
+  float hw = mix(0.006, HALF, pow(u, 1.35));
+  float x = g.x;
+  float t = clamp(x/HALF, -1.0, 1.0);
+  float d = max(abs(x) - hw, max(-g.y, g.y - TOP - 0.022*(1.0 - t*t)));
+  float cov = 1.0 - smoothstep(-0.004, 0.002, d);
+  // The wind's gaps, curving evenly like the front of each turn and slanted a touch so it spins.
+  float v = (g.y - 0.08*x - 0.9*x*x)/0.050;
+  cov *= 1.0 - smoothstep(0.40, 0.45, abs(fract(v) - 0.5))*step(0.012, hw);
+  return vec2(cov, -x/max(hw, 0.006));
+}
+
+// The belly, measured as an angle round the body so it follows the curve: narrow at the chest,
+// widening into the pooled base, its top a soft U well below the mouth. x = signed distance to its
+// edge (negative inside), y = 0 down the middle to 1 at the edge.
+vec2 belly(vec3 p) {
+  float ang = abs(atan(p.x, p.z));
+  float yb = clamp(p.y, 0.0, 1.3);
+  float span = 0.50 + 0.42*pow(1.0 - smoothstep(0.05, 1.15, yb), 1.2);
+  float wa = ang/0.50;
+  float top = 0.98 - 0.15*wa*wa;
+  float rr = max(length(p.xz), 0.25);
+  return vec2(smax((ang - span)*rr, p.y - top, 0.04), ang/span);
+}
+
+// Twister bands: the wind of a tornado wrapping round him. Four bands spiral up round the body, wound
+// tight near the base and opening into steeper sweeps toward the shoulders, like a funnel, with a slow
+// wave so each line flows rather than running ruler-straight. Each is one long brush stroke per turn,
+// fine at both ends and fullest past the middle, and every edge it meets (the belly, the face, the base)
+// thins it to a point rather than cutting it off. They turn slowly (Live 3D).
+// x = coverage (0..1), y = across the band (-1 lower edge to 1 upper edge).
+const float BAND_N = 4.0;
+vec2 twister(vec3 p) {
+  float th0 = atan(p.x, -p.z);
+  float th = th0 - uT*0.5;
+  float u = BAND_N*th/6.28318 + 3.4*p.y - 0.5*p.y*p.y + 0.16*sin(2.0*th + 2.5*p.y);
+  float k = floor(u);
+  float q = fract(th/6.28318 + hash1(k)*0.7)/0.84;
+  float shape = q < 1.0 ? sin(3.14159*pow(q, 1.5)) : 0.0;
+  float top = mix(1.62, 1.08, smoothstep(1.5, 2.5, abs(th0)));
+  float m = smoothstep(0.06, 0.26, p.y)*(1.0 - smoothstep(top - 0.30, top, p.y))*smoothstep(0.0, 0.12, belly(p).x);
+  float w = 0.165*(0.85 + 0.30*hash1(k + 7.0))*shape*m;
+  float c = fract(u) - 0.5;
+  float cov = (1.0 - smoothstep(w*0.55, w, abs(c)))*step(0.006, w);
+  // Where the funnel opens toward the shoulders the bands spread apart, so a finer line runs between
+  // each pair there, offset along the turn so the strokes overlap rather than line up.
+  float u2 = u + 0.5;
+  float k2 = floor(u2);
+  float q2 = fract(th/6.28318 + 0.45 + hash1(k2 + 3.0)*0.7)/0.80;
+  float shape2 = q2 < 1.0 ? sin(3.14159*pow(q2, 1.4)) : 0.0;
+  float w2 = 0.085*shape2*m*smoothstep(0.70, 1.05, p.y);
+  float c2 = fract(u2) - 0.5;
+  float cov2 = (1.0 - smoothstep(w2*0.55, w2, abs(c2)))*step(0.006, w2);
+  if (cov2 > cov) return vec2(cov2, c2/max(w2, 0.006));
+  return vec2(cov, c/max(w, 0.006));
+}
+
+#if XF == 1
+// ---------------------------------------------------------------- the transformed body
+// After the show's transformed form (a red winged dragon trailing wind), made his own and kept clear
+// of Inferno's slug-dragon: the base head and face, the horns grown into ram curls; a dragon's body
+// flying level along +z with dragon wings whose edges fray into storm grey; no arms or legs; a long
+// red tail striped with the twister bands, tightening toward a small storm-grey tip. The
+// butter-yellow belly runs underneath.
+const float TAIL_Z0 = 1.50, TAIL_L = 1.60;   // where the tail starts behind the head, and its length
+// The body's centre line: level at the chest, the tail dipping and curling a little to one side.
+vec2 xfAxis(float z) {
+  float t = clamp((-z - TAIL_Z0)/TAIL_L, 0.0, 1.0);
+  return vec2(0.22*sin(t*3.2)*t, 1.28 + 0.05*t + 0.20*t*t);
+}
+float tailT(float z) { return clamp((-z - TAIL_Z0)/TAIL_L, 0.0, 1.0); }
+
+// The wings, after the owner's reference: dragon wings, not bat-stiff boards. An arm bone runs out
+// and forward to the wrist, then the leading edge sweeps back to the tip; three finger bones splay
+// from the wrist to the trailing edge, and the membrane between them is scalloped. The flap is a wave
+// travelling out along the span, so the wing bends rather than hinging. Measured in the wing's
+// plane: x across the span from the root, z along the chord (forward +).
+// x = distance, y = span fraction (0..1), z = 1 on a bone.
+const float SPAN = 2.05;
+const vec2 WRIST = vec2(0.80, 0.50);
+float wingLe(float x) { return 0.15 + 0.95*x*(1.0 - x/1.6); }
+float wingTe0(float x) { return -0.72 + 0.12*x; }
+float wingTe(float x) {
+  float sc = fract((x - 0.62)/0.47);
+  return wingTe0(x) + 0.20*sin(3.14159*sc)*smoothstep(0.55, 0.75, x)*(1.0 - smoothstep(1.85, 2.0, x));
+}
+vec3 wing(vec3 p, float s) {
+  vec3 q = vec3(s*p.x - 0.42, p.y - 1.52, p.z + 0.95);
+  float x = clamp(q.x, 0.0, SPAN);
+  // The flap: lifting and falling, the outer wing following a beat behind.
+#if REST == 1
+  float yw = x*0.30 + 0.04*x*x;
+#else
+  float yw = x*(0.30 + 0.22*sin(uT*2.6 - x*1.2)) + 0.04*x*x;
+#endif
+  vec2 g = vec2(q.x, q.z);
+  float d2 = max(max(g.y - wingLe(x), wingTe(x) - g.y), max(-g.x, g.x - SPAN));
+  // Bones: the arm to the wrist, the hand to the tip, three fingers to the trailing edge.
+  float bone = seg2(g, vec2(0.0, 0.10), WRIST, 0.060, 0.040);
+  bone = min(bone, seg2(g, WRIST, vec2(SPAN, wingLe(SPAN)), 0.036, 0.010));
+  bone = min(bone, seg2(g, WRIST, vec2(1.09, wingTe0(1.09)), 0.030, 0.008));
+  bone = min(bone, seg2(g, WRIST, vec2(1.56, wingTe0(1.56)), 0.030, 0.008));
+  bone = min(bone, seg2(g, WRIST, vec2(0.62, wingTe0(0.62)), 0.030, 0.010));
+  float boneH = 1.0 - smoothstep(0.0, 0.02, bone);
+  float th = mix(0.010, 0.022, 1.0 - x/SPAN) + 0.022*boneH;
+  float d = max(min(d2, bone), abs(q.y - yw) - th);
+  return vec3(d*0.6, x/SPAN, boneH);
+}
+
+float xfMass(vec3 p) {
+  // The base head, crown and muzzle, unchanged, so the face's code still fits it.
+  float d = sdEll(p - vec3(0.0, 1.68, 0.04), vec3(0.67, 0.42, 0.56));
+  d = smin(d, sdEll(p - vec3(0.0, 1.86, -0.02), vec3(0.53, 0.40, 0.48)), 0.21);
+  d = smin(d, sdEll(p - vec3(0.0, 1.39, 0.19), vec3(0.48, 0.30, 0.39)), 0.30);
+  // A dragon's torso: the back of the head flows into a thick neck, a deep chest dropping below the
+  // head, a narrower waist, and haunches before the tail.
+  d = smin(d, sdEll(p - vec3(0.0, 1.56, -0.40), vec3(0.52, 0.42, 0.56)), 0.30);
+  d = smin(d, sdEll(p - vec3(0.0, 1.22, -0.72), vec3(0.62, 0.56, 0.58)), 0.36);
+  d = smin(d, sdEll(p - vec3(0.0, 1.24, -1.08), vec3(0.46, 0.41, 0.40)), 0.30);
+  d = smin(d, sdEll(p - vec3(0.0, 1.28, -1.36), vec3(0.48, 0.41, 0.36)), 0.30);
+  // The tail.
+  float tt = (-p.z - TAIL_Z0)/TAIL_L;
+  float t = clamp(tt, 0.0, 1.0);
+  vec2 c = xfAxis(p.z);
+  vec2 q = p.xy - c;
+  // A red dragon's tail tapering smoothly from the haunches to a fine point; signed along its length,
+  // so the inside has a real distance (a flat zero there gave NaN normals: black patches).
+  float r = 0.40*pow(max(1.0 - t, 0.0), 1.1) + 0.012;
+  float radial = length(q) - r;
+  float along = max(-tt, tt - 1.0)*TAIL_L;
+  float tail = (length(vec2(max(radial, 0.0), max(along, 0.0))) + min(max(radial, along), 0.0))*0.75;
+  d = smin(d, tail, 0.32);
+  // A flat belly, like Inferno's transformed form: the underside sliced level under the chest, rising
+  // gently toward the tail, with a soft edge; below the jaw, so the head is untouched.
+  float floorY = 0.88 + 0.14*max(-p.z - 0.45, 0.0);
+  d = mix(d, smax(d, floorY - p.y, 0.12), smoothstep(0.05, -0.25, p.z));
+  // Wings, joined along the shoulders.
+  for (int i = 0; i < 2; i++) d = smin(d, wing(p, i == 0 ? -1.0 : 1.0).x, 0.10);
+  return d;
+}
+
+// The belly underneath, from under the chin back along the body and narrowing down the tail.
+// x = signed distance to its edge (negative inside), y = 0 down the middle to 1 at the edge.
+vec2 xfBelly(vec3 p) {
+  vec2 c = xfAxis(p.z);
+  vec2 q = p.xy - c;
+  float ang = abs(atan(q.x, -q.y));   // 0 straight down
+  float t = tailT(p.z);
+  float span = mix(0.85, 0.30, smoothstep(0.0, 0.8, t))*(1.0 - smoothstep(0.72, 0.86, t));
+  float rr = max(length(q), 0.15);
+  return vec2(smax((ang - span)*rr, p.z - 0.08, 0.06), ang/max(span, 0.01));
+}
+
+// Twister bands along the body and down the tail, tightening toward the tip as a tornado does and
+// turning faster there. x = coverage, y = across the band (-1 lower edge to 1 upper).
+vec2 xfTwister(vec3 p) {
+  vec2 c = xfAxis(p.z);
+  vec2 q = p.xy - c;
+  float t = tailT(p.z);
+  float th = atan(q.x, q.y) - uT*(0.6 + 2.0*t);
+  float z = max(-p.z - 0.15, 0.0);
+  float u = BAND_N*th/6.28318 + 1.6*z + 1.1*z*z + 0.16*sin(2.0*th + 2.5*z);
+  float k = floor(u);
+  float qq = fract(th/6.28318 + hash1(k)*0.7)/0.84;
+  float shape = qq < 1.0 ? sin(3.14159*pow(qq, 1.5)) : 0.0;
+  float m = smoothstep(0.15, 0.45, z)*(1.0 - smoothstep(0.78, 0.88, t))*smoothstep(0.0, 0.12, xfBelly(p).x);
+  float w = 0.165*(0.85 + 0.30*hash1(k + 7.0))*shape*m;
+  // No band here: return before smoothstep gets equal edges, which is undefined and gave NaN.
+  if (w < 0.006) return vec2(0.0);
+  float cc = fract(u) - 0.5;
+  float cov = (1.0 - smoothstep(w*0.55, w, abs(cc)))*step(0.006, w);
+  return vec2(cov, cc/max(w, 0.006));
+}
+#endif
+
+// ---------------------------------------------------------------- the whole slug
+// Skin without the mouth carved: used for the teeth, which sit just inside it.
+float body(vec3 p) {
+#if XF == 1
+  float d = xfMass(p);
+  if (p.z < -0.2 && d < 0.10) d -= 0.002*xfTwister(p).x;
+#else
+  float d = bodyMass(p);
+  if (p.y > 0.06 && p.y < 1.66 && d < 0.10) {
+    // The bands stand just off the skin, so they read as wind wrapped round him rather than paint.
+    d -= 0.002*twister(p).x;
+  }
+#endif
+#if XF == 1
+  if (p.y > 1.45) {
+#else
+  if (p.y > 1.8) {
+#endif
+    for (int i = 0; i < 2; i++) d = smin(d, hornDist(p, i == 0 ? -1.0 : 1.0).x, 0.07);
+  }
+  if (p.z > 0.0 && abs(p.y - 1.69) < 0.40) {
+    for (int i = 0; i < 2; i++) {
+      float s = i == 0 ? -1.0 : 1.0;
+      vec3 l = eyeLocal(p, s);
+      d -= eyeRelief(l, eyeDist(p, s))*smoothstep(-0.30, -0.10, l.z);
+    }
+  }
+  return d;
+}
+
+// x = distance, y = part: 1 skin, 3 teeth.
+vec2 parts(vec3 p) {
+  float b = body(p);
+  float d = b;
+  bool nearMouth = p.z > 0.15 && abs(p.y - 1.31) < 0.28;
+  vec2 g = mouthCoord(p);
+  if (nearMouth) {
+    d -= mouthRelief(p);
+    d = smax(d, -max(mouthDist(p), mouthBack(g.x) - p.z), 0.014);
+  }
+  d = smax(d, -p.y, 0.012);
+  vec2 res = vec2(d, 1.0);
+  if (nearMouth) {
+    // One solid row of top teeth just behind the lip, and two fangs rising from the bottom.
+    float band = max(g.y - (mouthTop(g.x) + 0.04), (mouthTop(g.x) - TH) - g.y);
+    float teeth = max(band, abs(g.x) - (MW - 0.030));
+    teeth = max(max(teeth, b + 0.020), mouthBack(g.x) + 0.02 - p.z);
+    // Two fangs: round cones rooted just behind the lower lip, measured across the face and in depth
+    // (by the skin's own distance), leaning back a touch toward their points, so each reads as a
+    // fang from the front, the side or three-quarters.
+    float gy = g.y - mouthBot(g.x);
+    for (int i = 0; i < 2; i++) {
+      float fx = i == 0 ? FANG_X.x : FANG_X.y, fh = i == 0 ? FANG_H.x : FANG_H.y;
+      float h = clamp(gy/fh, 0.0, 1.0);
+      float cone = length(vec2(g.x - fx, b + 0.034 + 0.012*h)) - mix(0.026, 0.003, pow(h, 0.9));
+      teeth = min(teeth, max(cone, max(gy - fh, -gy - 0.04)));
+    }
+    if (teeth < res.x) res = vec2(teeth, 3.0);
+  }
+  return res;
+}
+
+vec2 map(vec3 p) { return parts(deform(p)); }
+
+vec3 normalAt(vec3 p) {
+  const vec2 k = vec2(1.0, -1.0);
+  float h = 0.0015;
+  return normalize(k.xyy*map(p + k.xyy*h).x + k.yyx*map(p + k.yyx*h).x + k.yxy*map(p + k.yxy*h).x + k.xxx*map(p + k.xxx*h).x);
+}
+float shadow(vec3 ro, vec3 rd) {
+  float res = 1.0, t = 0.03;
+  for (int i = 0; i < 24; i++) {
+    float h = map(ro + rd*t).x;
+    res = min(res, 9.0*h/t);
+    t += clamp(h*0.8, 0.02, 0.25);
+    if (res < 0.001 || t > 4.0) break;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+float ao(vec3 p, vec3 n) {
+  float o = 0.0, s = 1.0;
+  for (int i = 1; i <= 5; i++) {
+    float h = 0.03*float(i);
+    o += (h - map(p + n*h).x)*s; s *= 0.75;
+  }
+  return clamp(1.0 - 2.2*o, 0.0, 1.0);
+}
+vec3 sky(vec3 d) { return mix(vec3(0.026, 0.024, 0.028), vec3(0.15, 0.145, 0.165), smoothstep(-0.2, 0.9, d.y)); }
+
+// ---------------------------------------------------------------- colour
+// The eyes are pure wind, the way Inferno's are pure fire and Rammstone's molten rock: no pupil,
+// iris or white. Storm grey turning to pale wind light, always moving. Drawn on the eye's own surface.
+vec3 gRd = vec3(0.0, 0.0, -1.0);   // the view ray, for the eye's inner depth
+vec3 eyeShade(vec3 dp, float s, out vec3 glow) {
+  vec3 l = eyeLocal(dp, s);
+  float lidd = l.y - lidLine(l.x);
+  float open = lidOpen(l, eyeDist(dp, s));
+  // Scaled to the open part of the eye: 0 in the middle, about 1 at the rim.
+  vec2 e = (l.xy - ECEN)/ESC;
+  // The storm sinks into the eye like a funnel, deepest in the middle: the rings are drawn that far
+  // below the glass along the view ray, so they slide against the rim as he turns.
+  vec3 rl = eyeDir(gRd, s);
+  float depth = 0.075*(1.0 - smoothstep(0.0, 1.0, dot(e, e)));
+  e += rl.xy/max(-rl.z, 0.35)*depth/ESC;
+  float r = length(e);
+  float a = atan(e.y, e.x);
+  float heart = 0.0;
+  // Pale storm light, deepening to slate toward the rim: air, not metal.
+  vec3 c = mix(AIR, AIR*0.45, smoothstep(0.25, 1.15, r));
+  float light = 0.0;
+  // Eye of the storm (the owner's pick): rings of wind wheeling round a calm, bright middle,
+  // wobbling as they drift out.
+  float ring = 0.5 + 0.5*sin(r*15.0 + 1.4*sin(a*3.0 + uT*0.9) - uT*2.4);
+  light = smoothstep(0.50, 0.95, ring)*smoothstep(0.30, 0.48, r)*(1.0 - smoothstep(0.9, 1.15, r)*0.6);
+  heart = 1.0 - smoothstep(0.10, 0.34, r);
+  c = mix(c, WIND, light);
+  c = mix(c, vec3(1.0, 0.99, 0.96), heart);
+  // Shadowed under the upper lid's roll and darkening into the recess round the rim.
+  c *= 1.0 - 0.45*smoothstep(-0.075, 0.0, lidd);
+  c *= mix(0.55, 1.0, smoothstep(0.0, -0.035, open));
+  glow = (AIR*0.12 + WIND*0.22*light + vec3(1.0, 0.98, 0.94)*heart*0.30)*mix(0.5, 1.0, smoothstep(-0.06, 0.0, -lidd));
+  return c;
+}
+
+float gEye = 0.0;   // how much of an eye is showing at the shaded point, so the skin's sheen skips it
+
+// Returns colour; `glow` receives self-illumination.
+vec3 skinAlbedo(vec3 dp, out vec3 glow) {
+  glow = vec3(0.0);
+  gEye = 0.0;
+#if PLAIN == 1
+  return vec3(0.55);
+#endif
+  float ax = abs(dp.x);
+  // Vermilion, deepening to a darker red down the back and warming to a lighter red over the muzzle.
+  vec3 col = mix(BODYC, BACKC, smoothstep(0.10, -0.45, dp.z)*0.60);
+  vec3 mz = (dp - vec3(0.0, 1.36, 0.40))/vec3(0.42, 0.26, 0.30);
+  col = mix(col, BODYL, 0.55*exp(-dot(mz, mz)*1.6));
+#if XF == 1
+  // Transformed: deeper red along the top of the body, the tail greying into wind toward its point.
+  vec2 xa = xfAxis(dp.z);
+  float tt = tailT(dp.z);
+  col = mix(BODYC, BACKC, 0.6*smoothstep(0.0, 0.40, dp.y - xa.y)*smoothstep(0.0, -0.5, dp.z));
+  col = mix(col, BODYL, 0.55*exp(-dot(mz, mz)*1.6));
+  vec2 tw = xfTwister(dp);
+  col = mix(col, mix(CRIMSON*0.80, CRIMSON*1.45, smoothstep(0.1, 1.0, tw.y)), tw.x);
+  // The tail's tip storm grey, like the slugs' antenna tips.
+  col = mix(col, mix(STORM*1.1, mix(STORM, WIND, 0.35), smoothstep(0.95, 1.0, tt)), smoothstep(0.86, 0.91, tt));
+#else
+  // Twister bands: solid deep crimson ribbons of wind, catching the light only along the upper edge.
+  // (Dark lower edges over a raised band read as folds or cuts in the skin.)
+  if (dp.y > 0.06 && dp.y < 1.66) {
+    vec2 tw = twister(dp);
+    col = mix(col, mix(CRIMSON*0.80, CRIMSON*1.45, smoothstep(0.1, 1.0, tw.y)), tw.x);
+  }
+#endif
+  if (dp.y > 1.84) {
+    vec2 bm = browMark(dp);
+    col = mix(col, mix(CRIMSON*0.80, CRIMSON*1.45, smoothstep(0.1, 1.0, bm.y)), bm.x);
+  }
+  // Butter-yellow belly following the body's curve, warming a little toward the pooled base, with
+  // faint ripples of air across it and a warm line where it meets the red.
+#if XF == 1
+  vec2 b = xfBelly(dp);
+#else
+  vec2 b = belly(dp);
+#endif
+  float bel = 1.0 - smoothstep(-0.030, 0.012, b.x);
+  vec3 bc = mix(BELLYC, BELLYC*vec3(1.0, 0.82, 0.62), smoothstep(0.9, 0.1, dp.y)*0.5);
+  bc = mix(bc, bc*vec3(0.92, 0.84, 0.76), smoothstep(0.3, 1.0, b.y));
+  float rv = (dp.y + 0.10*b.y*b.y + 0.015*sin(dp.x*14.0))/0.15;
+  float rip = (1.0 - smoothstep(0.05, 0.14, abs(fract(rv) - 0.5)))*(1.0 - smoothstep(0.55, 0.95, b.y))*smoothstep(0.12, 0.26, dp.y);
+  bc = mix(bc, bc*vec3(0.94, 0.78, 0.55), 0.55*rip);
+  col = mix(col, bc, bel);
+  col = mix(col, mix(BODYC, CRIMSON, 0.5), (1.0 - smoothstep(0.0, 0.010, abs(b.x + 0.004)))*0.6);
+#if XF == 1
+  // Wings: the membrane vermilion deepening toward the scalloped trailing edge, which frays into storm
+  // grey like the wind he trails; the bones a darker red.
+  for (int i = 0; i < 2; i++) {
+    float s = i == 0 ? -1.0 : 1.0;
+    vec3 wg = wing(dp, s);
+    if (wg.x > 0.03 || wg.y < 0.02) continue;
+    float on = (1.0 - smoothstep(0.0, 0.03, wg.x))*smoothstep(0.02, 0.10, wg.y);
+    float gz = dp.z + 0.95, gx = clamp(s*dp.x - 0.42, 0.0, SPAN);
+    float toEdge = clamp((gz - wingTe(gx))/max(wingLe(gx) - wingTe(gx), 0.05), 0.0, 1.0);
+    vec3 wc = mix(mix(BODYC, BACKC, 0.55), BODYC, smoothstep(0.0, 0.7, toEdge));
+    wc = mix(wc, mix(STORM, WIND, 0.25), (1.0 - smoothstep(0.0, 0.22, toEdge))*smoothstep(0.35, 0.6, wg.y));
+    wc = mix(wc, CRIMSON*1.3, wg.z);
+    col = mix(col, wc, on);
+  }
+#endif
+  // Horns: pale yellow, the tips dipped in storm grey.#endif
+  // Horns: pale yellow, the tips dipped in storm grey.
+  for (int i = 0; i < 2; i++) {
+    vec2 h = hornDist(dp, i == 0 ? -1.0 : 1.0);
+    float on = 1.0 - smoothstep(0.0, 0.02, h.x);
+#if XF == 1
+    // Grown horns: ridged like a ram's, the ridges a shade darker.
+    vec3 hc = HORNC*mix(1.0, 0.80, smoothstep(0.55, 0.95, sin(h.y*70.0))*smoothstep(0.08, 0.2, h.y));
+    col = mix(col, mix(hc, STORM*1.15, smoothstep(0.70, 0.95, h.y)), on*smoothstep(0.0, 0.06, h.y));
+#else
+    col = mix(col, mix(HORNC, STORM*1.15, smoothstep(0.55, 0.90, h.y)), on*smoothstep(0.0, 0.06, h.y));
+#endif
+  }
+  if (dp.z > 0.1) {
+    // A soft form shadow under the jaw, tinted rather than grey.
+    float jaw = smoothstep(1.00, 1.08, dp.y)*smoothstep(1.18, 1.10, dp.y)*smoothstep(0.50, 0.15, ax)*(1.0 - bel);
+    col = mix(col, col*vec3(0.62, 0.55, 0.62), 0.35*jaw);
+    // Eyes: the wind runs right up to a bold ink line along the top edge, heaviest in the middle,
+    // with a fine one underneath. Nothing painted round them.
+    for (int i = 0; i < 2; i++) {
+      float s = i == 0 ? -1.0 : 1.0;
+      vec3 l = eyeLocal(dp, s);
+      if (l.z < -0.30) continue;
+      float ed = eyeDist(dp, s);
+      float open = lidOpen(l, ed);
+      float above = smoothstep(-0.015, 0.025, l.y - eyeMid(l.x));
+      float vis = 1.0 - smoothstep(-0.002, 0.002, open);
+      gEye = max(gEye, vis);
+      vec3 eg;
+      vec3 ec = eyeShade(dp, s, eg);
+      col = mix(col, ec, vis);
+      glow += eg*vis;
+      float taper = mix(0.40, 1.0, 1.0 - smoothstep(EW*0.45, EW, abs(l.x)));
+      float upper = (1.0 - smoothstep(0.0, 0.022*taper, open))*step(-0.002, open)*above*(1.0 - smoothstep(EW*0.96, EW*1.04, abs(l.x)));
+      float lower = (1.0 - smoothstep(0.0, 0.005, abs(open)))*(1.0 - above)*(1.0 - smoothstep(EW*0.75, EW*0.98, l.x))*(1.0 - smoothstep(EW*0.94, EW*1.02, -l.x));
+      col = mix(col, INK, max(upper, lower*0.75));
+    }
+  }
+  // Mouth: dark inside, a tongue at the back, an ink outline and creases at the corners.
+  if (dp.z > 0.2 && abs(dp.y - 1.31) < 0.28) {
+    vec2 g = mouthCoord(dp);
+    float md = mouthDist(dp);
+    float inside = 1.0 - smoothstep(-0.004, 0.002, md);
+    float tng = smoothstep(0.06, 0.0, g.y - mouthBot(g.x))*(1.0 - smoothstep(MW*0.55, MW*0.85, abs(g.x - 0.04)));
+    col = mix(col, mix(MOUTHC, TONGUE, tng*0.9), inside);
+    float edge = abs(md) - 0.004 - 0.004*(1.0 - smoothstep(0.0, MW, abs(g.x)));
+    float hookR = seg2(g, vec2(MW - 0.012, mouthTop(MW) - 0.004), vec2(MW + 0.036, mouthTop(MW) + 0.034), 0.007, 0.0015);
+    float hookL = seg2(g, vec2(-MW + 0.012, mouthTop(MW) - 0.004), vec2(-MW - 0.026, mouthTop(MW) + 0.018), 0.005, 0.0015);
+    col = mix(col, INK, (1.0 - smoothstep(0.0, 0.005, min(edge, min(hookR, hookL))))*step(mouthBack(g.x) + 0.05, dp.z));
+  }
+  return col;
+}
+
+vec3 shadeGround(vec3 p, vec3 rd) {
+  vec3 col = vec3(0.070, 0.066, 0.068);
+  vec3 l = normalize(LKEY);
+  float sh = shadow(p + vec3(0.0, 0.002, 0.0), l);
+  col *= mix(0.45, 1.0, sh);
+  float r = length(p.xz/vec2(0.95, 0.95));
+  col *= 1.0 - 0.45*smoothstep(1.4, 0.75, r);
+  float fade = smoothstep(11.0, 3.5, length(p.xz));
+  return mix(sky(rd), col, fade);
+}
+
+void main() {
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 rd = normalize(uv.x*uRight + uv.y*uUp + 2.6*uFwd);
+  vec3 ro = uRo;
+  vec3 col = sky(rd);
+  float t = 0.0, hitId = 0.0;
+  for (int i = 0; i < 160; i++) {
+    vec2 h = map(ro + rd*t);
+    if (h.x < 0.0008*t) { hitId = h.y; break; }
+    t += h.x*0.7;
+    if (t > 18.0) break;
+  }
+  float tg = rd.y < 0.0 ? -ro.y/rd.y : 1e9;
+  bool hit = hitId > 0.0 && t < tg;
+  if (hit) {
+    vec3 p = ro + rd*t;
+    vec3 n = normalAt(p);
+    vec3 v = -rd;
+    vec3 l = normalize(LKEY), lr = normalize(LRIM);
+    vec3 dp = deform(p);
+    float occ = ao(p, n);
+    float sh = shadow(p + n*0.01, l);
+    float ndl = dot(n, l);
+    vec3 hv = normalize(l + v);
+    float nv = max(dot(n, v), 0.0);
+    float fres = pow(1.0 - nv, 3.0);
+    vec3 glow;
+    vec3 alb;
+    if (hitId > 2.5) {
+      // Teeth: off-white, shadowed toward the back of the mouth.
+      vec2 g = mouthCoord(dp);
+      alb = TEETHC*mix(0.55, 1.0, smoothstep(mouthBack(g.x) + 0.02, mouthBack(g.x) + 0.09, dp.z));
+      glow = vec3(0.0);
+      gEye = 0.0;
+    } else {
+      gRd = rd;
+      alb = skinAlbedo(dp, glow);
+    }
+    float wrap = max(0.0, (ndl + 0.4)/1.4);
+    col = alb*(wrap*mix(0.5, 1.0, sh)*vec3(1.0, 0.97, 0.94)*1.05 + 0.95*occ*sky(n) + 0.22*occ*vec3(0.95, 0.92, 0.96));
+    // Wet and glossy, like Floppy: a broad sheen plus a tight highlight.
+    float wet = 1.0 - 0.85*gEye;
+    col += sh*(0.18*wet*pow(max(dot(n, hv), 0.0), 26.0) + 1.0*pow(max(dot(n, hv), 0.0), 260.0));
+    col += 0.24*wet*pow(max(dot(n, normalize(lr + v)), 0.0), 50.0)*vec3(0.90, 0.92, 1.0);
+    col += 0.20*wet*fres*sky(reflect(rd, n));
+    col += gEye*(sh*0.85*pow(max(dot(n, hv), 0.0), 140.0) + 0.30*pow(max(dot(n, normalize(lr + v)), 0.0), 90.0) + 0.12*sky(reflect(rd, n)));
+    col += glow;
+    // Comic ink: dark edge where the surface turns away.
+    col = mix(col, INK, smoothstep(0.20, 0.08, nv)*0.9);
+  } else if (rd.y < 0.0) {
+    col = shadeGround(ro + rd*tg, rd);
+  }
+  col = col*(2.51*col + 0.03)/(col*(2.43*col + 0.59) + 0.14);
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0/2.2));
+  vec2 q = gl_FragCoord.xy/uRes;
+  col *= 0.86 + 0.14*pow(16.0*q.x*q.y*(1.0 - q.x)*(1.0 - q.y), 0.25);
+  gl_FragColor = vec4(col, 1.0);
+}
+</script>
+
+<script>
+(function () {
+  const FRAMES = 24;
+  const params = new URLSearchParams(location.search);
+  const CAMS = {
+    base: { pitch: 0.12, dist: 7.2, ty: 1.50, tz: -0.05, close: { yaw: 0.0, pitch: 0.05, dist: 4.0, ty: 1.80, tz: 0.2 } },
+    comet: { pitch: 0.22, dist: 8.8, ty: 1.45, tz: -0.90, close: { yaw: 0.50, pitch: 0.10, dist: 4.6, ty: 1.62, tz: 0.15 } },
+  };
+  const isComet = f => f.startsWith("comet");
+  const camOf = f => CAMS[isComet(f) ? "comet" : "base"];
+  // The current picks, from the build script; each option row is a shader define.
+  const PICKS = {};
+  const DEFINES = {};
+  const GROUPS = Object.keys(PICKS);
+  function optsOf(key) {
+    const o = Object.assign({}, PICKS);
+    for (const g of GROUPS) { const m = key.match(new RegExp(g + "(\\d+)")); if (m) o[g] = +m[1]; }
+    return o;
+  }
+  const keyOf = o => GROUPS.map(g => g + o[g]).join("") || "base";
+  // Frames embedded by the build script, if any.
+  const EMBED = window.__FRAMES__ || null;
+
+  function makeRenderer(canvas, form) {
+    const gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+    if (!gl) return null;
+    function sh(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, document.getElementById("vs").textContent));
+    const o = optsOf(form);
+    let defs = `#define PLAIN ${params.get("plain") ? 1 : 0}\n#define XF ${isComet(form) ? 1 : 0}\n`;
+    for (const g of GROUPS) defs += `#define ${DEFINES[g]} ${o[g]}\n`;
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, defs + document.getElementById("fs").textContent));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(prog, n);
+    const u = { res: U("uRes"), t: U("uT"), ro: U("uRo"), right: U("uRight"), up: U("uUp"), fwd: U("uFwd") };
+    return function draw(cam, time) {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      const cy = Math.cos(cam.pitch);
+      const ro = [Math.sin(cam.yaw)*cy*cam.dist, cam.ty + Math.sin(cam.pitch)*cam.dist, cam.tz + Math.cos(cam.yaw)*cy*cam.dist];
+      const tgt = [0, cam.ty, cam.tz];
+      let f = tgt.map((v, i) => v - ro[i]); const fl = Math.hypot(...f); f = f.map(v => v/fl);
+      let r = [-f[2], 0, f[0]]; const rl = Math.hypot(...r); r = r.map(v => v/rl);
+      const up = [r[1]*f[2] - r[2]*f[1], r[2]*f[0] - r[0]*f[2], r[0]*f[1] - r[1]*f[0]];
+      gl.uniform2f(u.res, canvas.width, canvas.height);
+      gl.uniform1f(u.t, time);
+      gl.uniform3fv(u.ro, ro); gl.uniform3fv(u.right, r); gl.uniform3fv(u.up, up); gl.uniform3fv(u.fwd, f);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+  }
+
+  // Offline mode: tools/slugs/render_concept.py posts every turntable frame back to itself.
+  if (params.get("render")) {
+    document.body.classList.add("render");
+    const size = parseInt(params.get("size") || "640", 10);
+    (async function () {
+      try {
+        for (const form of (params.get("forms") || keyOf(PICKS)).split(",")) {
+          const canvas = document.createElement("canvas");
+          canvas.width = canvas.height = size;
+          document.body.appendChild(canvas);
+          const draw = makeRenderer(canvas, form);
+          const yawList = (params.get("frames") || "").split(",").filter(Boolean).map(Number);
+          const list = yawList.length ? yawList : [...Array(FRAMES).keys()];
+          const c = camOf(form);
+          const shots = list.map(i => [String(i).padStart(2, "0"), { yaw: i/FRAMES*Math.PI*2, pitch: c.pitch, dist: c.dist, ty: c.ty, tz: c.tz }]);
+          shots.push(["close", c.close]);
+          if (isComet(form)) shots.push(["top", { yaw: 0.0, pitch: 1.40, dist: c.dist, ty: c.ty, tz: c.tz }]);
+          else shots.push(["belly", { yaw: 0.0, pitch: 0.02, dist: 4.4, ty: 0.66, tz: 0.2 }]);
+          for (const [name, cam] of shots) {
+            draw(cam, 2.0);
+            await fetch(`/frame/${form}-${name}.jpg`, { method: "POST", body: canvas.toDataURL("image/jpeg", 0.86) });
+            await new Promise(r => setTimeout(r, 0));
+          }
+          canvas.remove();
+        }
+        await fetch("/done", { method: "POST" });
+      } catch (e) {
+        await fetch("/error", { method: "POST", body: String(e && e.message || e) });
+      }
+    })();
+    return;
+  }
+
+  const box = document.getElementById("box");
+  const still = document.getElementById("still");
+  const hint = document.getElementById("hint");
+  // Stills exist for the picks and for each option on its own (one row changed); Live 3D draws any
+  // combination.
+  const VIEWS = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+  const NAMES = {};
+  const sel = Object.assign({}, PICKS);
+  let last = GROUPS[0], frame = 3, live = null, liveBtnOn = false, curForm = "base";
+  const topBtn = document.querySelector('[data-frame="top"]');
+  const bellyBtn = document.querySelector('[data-frame="belly"]');
+  const stillKey = () => {
+    if (curForm === "comet") return "comet";
+    if (GROUPS.filter(g => sel[g] !== PICKS[g]).length <= 1) return keyOf(sel);
+    const o = Object.assign({}, PICKS); o[last] = sel[last]; return keyOf(o);
+  };
+  const name = (k, n) => `${k}-${typeof n === "number" ? String(n).padStart(2, "0") : n}`;
+  const url = (k, n) => EMBED ? EMBED[name(k, n)] : `frames/${name(k, n)}.jpg`;
+  function setHint() {
+    if (liveBtnOn) { hint.textContent = "Live 3D · drag to turn"; return; }
+    hint.textContent = GROUPS.filter(g => sel[g] !== PICKS[g]).length > 1 ? `Showing your ${NAMES[last]} pick alone · Live 3D shows them together` : "Drag to turn";
+  }
+  function show() { still.src = url(stillKey(), frame); setHint(); }
+  document.querySelectorAll("[data-opt]").forEach(b => b.addEventListener("click", () => {
+    const g = b.dataset.opt;
+    sel[g] = +b.dataset.val; last = g;
+    document.querySelectorAll(`[data-opt="${g}"]`).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    document.querySelectorAll(`[data-opt-note^="${g}"]`).forEach(n => { n.hidden = n.dataset.optNote !== g + sel[g]; });
+    if (liveBtnOn) { stopLive(); startLive(); }
+    show();
+  }));
+  document.querySelectorAll("[data-frame]").forEach(b => b.addEventListener("click", () => {
+    if (liveBtnOn) stopLive();
+    const v = b.dataset.frame;
+    frame = v === "close" || v === "belly" || v === "top" ? v : parseInt(v, 10);
+    show();
+  }));
+  // Base form or transformed: each has its own notes and its own extra view.
+  document.querySelectorAll("[data-form]").forEach(b => b.addEventListener("click", () => {
+    curForm = b.dataset.form;
+    document.querySelectorAll("[data-form]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    document.getElementById("notes-base").hidden = curForm === "comet";
+    document.getElementById("notes-comet").hidden = curForm !== "comet";
+    document.querySelectorAll("[data-opt-note], .optrow").forEach(n => { n.style.display = curForm === "comet" ? "none" : ""; });
+    topBtn.hidden = curForm !== "comet";
+    bellyBtn.hidden = curForm === "comet";
+    if ((frame === "top" && curForm !== "comet") || (frame === "belly" && curForm === "comet")) frame = 3;
+    if (liveBtnOn) { stopLive(); startLive(); }
+    show();
+  }));
+
+  let drag = null, acc = 0, yawLive = 0;
+  box.addEventListener("pointerdown", e => { drag = e.clientX; box.setPointerCapture(e.pointerId); if (typeof frame !== "number") { frame = 0; show(); } });
+  box.addEventListener("pointermove", e => {
+    if (drag === null) return;
+    const dx = e.clientX - drag; drag = e.clientX;
+    if (liveBtnOn) { yawLive -= dx*0.01; return; }
+    acc += dx;
+    const px = VIEWS.length > 8 ? 14 : 40;
+    const step = Math.trunc(acc/px);
+    if (step) {
+      acc -= step*px;
+      const i = (VIEWS.indexOf(frame) - step) % VIEWS.length;
+      frame = VIEWS[(i + VIEWS.length) % VIEWS.length];
+      show();
+    }
+  });
+  const end = () => { drag = null; };
+  box.addEventListener("pointerup", end);
+  box.addEventListener("pointercancel", end);
+
+  // Live 3D is opt-in: it runs the full shader, which is heavy on some machines.
+  const liveBtn = document.getElementById("live");
+  function stopLive() {
+    liveBtnOn = false;
+    liveBtn.setAttribute("aria-pressed", "false");
+    if (live) { cancelAnimationFrame(live.raf); live.canvas.remove(); live = null; }
+    still.hidden = false; setHint();
+  }
+  function startLive() {
+    const canvas = document.createElement("canvas");
+    const w = Math.min(560, Math.round(box.clientWidth));
+    canvas.width = canvas.height = w;
+    let draw;
+    try { draw = makeRenderer(canvas, curForm === "comet" ? "comet" : keyOf(sel)); } catch (e) { draw = null; }
+    if (!draw) { hint.textContent = "Live 3D isn't available here"; return; }
+    box.insertBefore(canvas, hint);
+    still.hidden = true;
+    liveBtnOn = true;
+    liveBtn.setAttribute("aria-pressed", "true");
+    setHint();
+    yawLive = (typeof frame === "number" ? frame : 0)/FRAMES*Math.PI*2;
+    const t0 = performance.now();
+    live = { canvas, raf: 0 };
+    (function tick(now) {
+      const c = CAMS[curForm];
+      draw({ yaw: yawLive, pitch: c.pitch, dist: c.dist, ty: c.ty, tz: c.tz }, 2 + (now - t0)/1000);
+      if (live) live.raf = requestAnimationFrame(tick);
+    })(t0);
+  }
+  liveBtn.addEventListener("click", () => liveBtnOn ? stopLive() : startLive());
+  show();
+})();
+</script>

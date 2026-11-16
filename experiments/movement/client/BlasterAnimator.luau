@@ -8,6 +8,7 @@
 -- grows that copy back into the hand before the real gun shows, so nothing pops.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local StarterPack = game:GetService("StarterPack")
 local Motion = require(script.Parent.BlasterMotion)
 local Recoil = require(script.Parent.BlasterRecoil)
 local FirstPerson = require(script.Parent.FirstPerson)
@@ -29,6 +30,7 @@ type Ghost = {
 	frame: CFrame,
 	scale: number,
 	fade: number,
+	selectedId: string,
 }
 type Pose = { frame: CFrame, scale: number, fade: number }
 type State = {
@@ -50,6 +52,7 @@ type State = {
 	holsterGrip: CFrame,
 	parts: { BasePart },
 	connections: { RBXScriptConnection },
+	lobby: boolean,
 }
 local states: { [Model]: State } = {}
 
@@ -93,11 +96,12 @@ local function makeLayer(joint: Grip): Layer
 end
 
 local function vanishing(character: Model): boolean
-	return (character:GetAttribute("HolsterMode") or Motion.DefaultMode) == "Vanish"
+	return character:GetAttribute("LobbyHolstered") ~= true
+		and (character:GetAttribute("HolsterMode") or Motion.DefaultMode) == "Vanish"
 end
 
 -- Visual copy of the tool. Clone the complete model so skinned bones and PBR maps
--- survive; strip only executable/physical joints and lights. It lives under the
+-- survive; strip scripts, physical welds and lights, keeping skin Motor6Ds. It lives under the
 -- camera (client-only visuals) and its handle is renamed, so nothing can take it
 -- for a tool or a pickup.
 local function makeGhost(character: Model, tool: Tool): Ghost?
@@ -108,9 +112,58 @@ local function makeGhost(character: Model, tool: Tool): Ghost?
 		return nil
 	end
 	local copied = tool:Clone()
-	local copiedFrame = (copied:FindFirstChild("Handle") :: BasePart).CFrame
+	local copiedHandlePart = copied:FindFirstChild("Handle") :: BasePart
+	local copiedFrame = copiedHandlePart.CFrame
+	-- A StarterPack/backpack tool has not been assembled by physics. Its imported
+	-- mesh CFrames are not the authored weapon layout: solve that from its welds.
+	if not tool:IsDescendantOf(workspace) then
+		local links: { [BasePart]: JointInstance } = {}
+		for _, joint in copied:GetDescendants() do
+			if joint:IsA("JointInstance") and joint.Part0 and joint.Part1 then
+				local part1 = joint.Part1 :: BasePart
+				if not links[part1] or joint:IsA("Weld") then
+					links[part1] = joint
+				end
+			end
+		end
+		local frames: { [BasePart]: CFrame } = { [copiedHandlePart] = copiedFrame }
+		local visiting: { [BasePart]: boolean } = {}
+		local function resolve(part: BasePart): CFrame
+			if frames[part] then
+				return frames[part]
+			end
+			local joint = links[part]
+			if not joint or not joint.Part0 or visiting[part] then
+				return part.CFrame
+			end
+			visiting[part] = true
+			local frame = resolve(joint.Part0) * joint.C0 * joint.C1:Inverse()
+			visiting[part] = nil
+			frames[part] = frame
+			return frame
+		end
+		for _, part in copied:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CFrame = resolve(part)
+			end
+		end
+	end
+	local chosen = character:GetAttribute("SelectedSlugId") or tool:GetAttribute("SelectedSlugId")
+	local selectedId = if typeof(chosen) == "string" then chosen else "Floppy"
+	-- Each canister model carries its slug in CanisterSlug (FloppyBlaster); hide all but the selected one.
+	for _, slug in copied:GetChildren() do
+		local id = slug:GetAttribute("CanisterSlug")
+		if typeof(id) == "string" and id ~= selectedId then
+			for _, part in slug:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.Transparency = 1
+				end
+			end
+		end
+	end
 	local model = Instance.new("Model")
 	model.Name = "BlasterHolsterVisual"
+	model:SetAttribute("HolsteredSlugId", selectedId)
 	for _, child in copied:GetChildren() do
 		child.Parent = model
 	end
@@ -125,7 +178,7 @@ local function makeGhost(character: Model, tool: Tool): Ghost?
 		if
 			item:IsA("BaseScript")
 			or item:IsA("ModuleScript")
-			or item:IsA("JointInstance")
+			or (item:IsA("JointInstance") and not item:IsA("Motor6D"))
 			or item:IsA("Constraint")
 			or item:IsA("Light")
 		then
@@ -180,6 +233,7 @@ local function makeGhost(character: Model, tool: Tool): Ghost?
 		frame = copiedFrame,
 		scale = 1,
 		fade = 0,
+		selectedId = selectedId,
 	}
 end
 
@@ -347,12 +401,13 @@ function Animator.start()
 			holsterGrip = CFrame.identity,
 			parts = {},
 			connections = {},
+			lobby = false,
 		}
 		states[character] = state
 		table.insert(
 			state.connections,
 			character.ChildAdded:Connect(function(item)
-				if blaster(item) then
+				if blaster(item) and character:GetAttribute("LobbyHolstered") ~= true then
 					equip(state, item :: Tool)
 				end
 			end)
@@ -372,6 +427,16 @@ function Animator.start()
 		end
 	end
 	local function playerAdded(player: Player)
+		player.CharacterRemoving:Connect(function(character: Model)
+			local state = states[character]
+			if state then
+				clear(state)
+				for _, connection in state.connections do
+					connection:Disconnect()
+				end
+				states[character] = nil
+			end
+		end)
 		player.CharacterAdded:Connect(watch)
 		if player.Character then
 			watch(player.Character)
@@ -405,6 +470,39 @@ function Animator.start()
 					end
 					states[character] = nil
 					continue
+				end
+				-- A lobby spawn never equips first, so there is no draw/holster event
+				-- to create its hip copy. The replicated template works for all players,
+				-- including remote players whose backpacks are not visible here.
+				if character:GetAttribute("LobbyHolstered") == true then
+					if not state.lobby then
+						clear(state)
+						state.tool, state.lobby = nil, true
+					end
+					local chosen = character:GetAttribute("SelectedSlugId") or "Floppy"
+					if state.ghost and state.ghost.selectedId ~= chosen then
+						dropGhost(state)
+					end
+					if not state.ghost then
+						local template = StarterPack:FindFirstChild("Blaster")
+						if template and template:IsA("Tool") then
+							state.ghost = makeGhost(character, template)
+							local hip = state.ghost
+							if hip then
+								local pose = hipPose(hip)
+								place(hip, hip.anchor, pose.frame, pose.scale, pose.fade)
+							end
+						end
+					end
+					continue
+				elseif state.lobby then
+					state.lobby = false
+					for _, item in character:GetChildren() do
+						if item:IsA("Tool") and blaster(item) then
+							equip(state, item)
+							break
+						end
+					end
 				end
 				local ghost = state.ghost
 				if ghost and not (ghost.anchor.Parent and ghost.attach.Parent) then

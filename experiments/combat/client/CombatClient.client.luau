@@ -26,7 +26,7 @@ local Reticle = (require :: any)(movement:WaitForChild("Reticle"))
 local Keybinds = (require :: any)(movement:WaitForChild("Keybinds"))
 local remote = ReplicatedStorage:WaitForChild("SlugshotCombat") :: RemoteEvent
 local selectedSlot = 1
-local slugId = Combat.Loadout[selectedSlot]
+local slugId = Combat.loadoutOf(player)[selectedSlot]
 local slug = Combat.Slugs[slugId]
 local POINT_HOLD = 0.35 -- the arm keeps pointing this long after a shot
 
@@ -69,6 +69,9 @@ marker.Parent = markerLayer
 
 -- Aim and fire -----------------------------------------------------------------------
 local function blaster(): Tool?
+	if not Combat.canUseBlaster(player) then
+		return nil
+	end
 	local character = player.Character
 	if not character then
 		return nil
@@ -90,7 +93,7 @@ local function cancelInspect()
 end
 
 local function selectSlot(slot: number): boolean
-	local id = Combat.Loadout[slot]
+	local id = Combat.loadoutOf(player)[slot]
 	if AimCursor.menuOpen() or not id or not Combat.Slugs[id] then
 		return false
 	end
@@ -103,7 +106,13 @@ local function selectSlot(slot: number): boolean
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	local backpack = player:FindFirstChildOfClass("Backpack")
-	if humanoid and humanoid.Health > 0 and not blaster() and backpack then
+	if
+		Combat.canUseBlaster(player)
+		and humanoid
+		and humanoid.Health > 0
+		and not blaster()
+		and backpack
+	then
 		for _, item in backpack:GetChildren() do
 			if Combat.isBlaster(item) then
 				humanoid:EquipTool(item :: Tool)
@@ -117,12 +126,19 @@ end
 local function cycleSlot(direction: number)
 	for offset = 1, Combat.SlotCount do
 		local slot = (selectedSlot - 1 + direction * offset) % Combat.SlotCount + 1
-		if Combat.Loadout[slot] then
+		if Combat.loadoutOf(player)[slot] then
 			selectSlot(slot)
 			return
 		end
 	end
 end
+-- A swap in the inventory can change which slug sits in the selected slot.
+player:GetAttributeChangedSignal("Loadout"):Connect(function()
+	local id = Combat.loadoutOf(player)[selectedSlot]
+	if id and Combat.Slugs[id] then
+		slugId, slug = id, Combat.Slugs[id]
+	end
+end)
 for slot = 1, Combat.SlotCount do
 	Keybinds.on(`slug{slot}`, function(pressed: boolean)
 		if pressed then
@@ -571,8 +587,8 @@ end
 -- SlugReady on the tool; this player's own gun follows the local prediction.
 local shown: { [Tool]: boolean } = {}
 local shownSlug: { [Tool]: string } = {}
--- Each slug's loaded model in the canister; only the selected one shows.
-local LOADED_MODELS: { [string]: string } = { Floppy = "Floppy", Inferno = "InfernoLoaded" }
+-- Each slug's loaded model in the canister carries its slug in CanisterSlug (FloppyBlaster); only the selected one
+-- shows, so a new slug needs no list here.
 local contentWatch: { [Tool]: RBXScriptConnection } = {}
 local function setCanister(tool: Tool, visible: boolean)
 	if not contentWatch[tool] then
@@ -605,9 +621,9 @@ local function setCanister(tool: Tool, visible: boolean)
 				return if handle and handle:IsA("BasePart") then handle.Position else nil
 			end)
 	end
-	for id, name in LOADED_MODELS do
-		local loaded = tool:FindFirstChild(name)
-		if loaded then
+	for _, loaded in tool:GetChildren() do
+		local id = loaded:GetAttribute("CanisterSlug")
+		if typeof(id) == "string" then
 			local show = visible and id == selectedId
 			for _, item in loaded:GetDescendants() do
 				if item:IsA("BasePart") then

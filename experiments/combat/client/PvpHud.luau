@@ -9,6 +9,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local Theme = require(script.Parent.PvpTheme)
 local SlugIcon = require(script.Parent.SlugIcon)
+local Fx = require(script.Parent.PvpFx)
+local CanisterIdle = require(script.Parent.CanisterIdle)
 local GooBar = require(script.Parent.GooBar)
 
 local player = Players.LocalPlayer
@@ -17,15 +19,24 @@ local Keybinds = (require :: any)(movement:WaitForChild("Keybinds"))
 
 local Hud = {}
 
-local CAN_W, CAN_GAP = 70, 12
-local CAP_W, CAP_H = 70, 20 -- the same size as the base (owner, 2026-11-07)
-local GLASS_W, GLASS_H = 54, 72
-local BASE_W, BASE_H = 70, 22
+-- Owner, 2026-11-15: the canisters "a bit big ... very chunky for no reason", so smaller (were 70 wide, 112 tall), and
+-- then "reduce the size of the chunky grey top, and especially the bottom" (cap and base were 20 and 22 tall, then 14
+-- and 18).
+local CAN_W, CAN_GAP = 60, 10
+local CAP_W, CAP_H = 60, 10 -- the same width as the base (owner, 2026-11-07)
+local GLASS_W, GLASS_H = 46, 62
+local BASE_W, BASE_H = 60, 12
 local CAN_H = CAP_H + GLASS_H + BASE_H - 2 -- the glass tucks 1 px under each end
+local SHINE_PX = 2 -- the glass's reflections, in screen pixels
 local LIFT = 6 -- the selected canister stands this much higher
-local GOO_W, GOO_H = 300, 16
-local HEALTH_SCALE = 1.3 -- the goo is drawn for 16 px, so the bar grows as a whole
+-- Owner, 2026-11-14: the bar a bit thinner (was 16 tall). Owner, 2026-11-15: shorter now the canisters are smaller, "a
+-- bit longer" than their row "but not as long as it is" (was 300): it overhangs the row by about 20 a side.
+local GOO_W, GOO_H = 260, 11
+local HEALTH_SCALE = 1.43 -- the bar grows as a whole (owner, 2026-11-14: 10% bigger than 1.3)
 local HEALTH_H = math.ceil((GOO_H + 6) * HEALTH_SCALE)
+-- The same gap between the bar and the inventory button on its left as the health number on its right (owner,
+-- 2026-11-15: the button sat "too close"; "make sure the space ... are both the same").
+local HEALTH_GAP = 12
 local ROW_Y = HEALTH_H + 26
 local FILL = 0.6 -- the slug's share of the glass's height (owner, 2026-11-07: smaller)
 local GLASS_SELECTED, GLASS_IDLE, GLASS_EMPTY = 0, 0.25, 0.4 -- glass transparency
@@ -34,7 +45,6 @@ local RETURN_TWEEN = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirect
 local LIFT_TWEEN = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
 local METAL = Color3.fromRGB(36, 41, 50)
-local METAL_LIGHT = Color3.fromRGB(84, 95, 110)
 local GLASS = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(96, 156, 164)),
 	ColorSequenceKeypoint.new(0.2, Color3.fromRGB(34, 62, 70)),
@@ -51,7 +61,7 @@ type Slot = {
 	shade: Frame?,
 	count: TextLabel?,
 	flash: Frame?,
-	icon: SlugIcon.Icon?,
+	slug: GuiObject?, -- the slug standing in the glass
 }
 
 local function metal(parent: Instance, props: { [string]: any }): Frame
@@ -62,17 +72,6 @@ local function metal(parent: Instance, props: { [string]: any }): Frame
 	Theme.corner(part, 4)
 	Theme.edge(part, 2)
 	return part
-end
-
-local function line(parent: Instance, y: number, inset: number, colour: Color3, alpha: number)
-	Theme.new("Frame", {
-		Position = UDim2.fromOffset(inset, y),
-		Size = UDim2.new(1, -inset * 2, 0, 1),
-		BackgroundColor3 = colour,
-		BackgroundTransparency = alpha,
-		BorderSizePixel = 0,
-		Parent = parent,
-	})
 end
 
 -- One canister: cap, glass and base, with the slug standing in the glass.
@@ -101,19 +100,33 @@ local function canister(row: Frame, index: number, slugId: string?): Slot
 	Theme.corner(glass, 3)
 	Theme.edge(glass, 2)
 	Theme.new("UIGradient", { Color = GLASS, Parent = glass })
-	-- Reflections down the tube, both thin (owner, 2026-11-07: the left was twice as wide as the right).
-	for _, streak in { { 6, 2, 0.6 }, { GLASS_W - 9, 2, 0.78 } } do
+	-- Two thin reflections down the tube, framing the slug (owner, 2026-11-15: "keep the two thin white lines inside";
+	-- the lines on the cap and base went). Each is exactly SHINE_PX screen pixels wide whatever the HUD's scale: a
+	-- fraction over two drew as two or three pixels depending on where the canister landed (Rammstone's read thicker).
+	local shines: { Frame } = {}
+	for _, streak in { { 6, 0.6 }, { GLASS_W - 8, 0.78 } } do
 		local shine = Theme.new("Frame", {
 			Position = UDim2.fromOffset(streak[1], 7),
-			Size = UDim2.new(0, streak[2], 1, -14),
+			Size = UDim2.new(0, 2, 1, -14),
 			BackgroundColor3 = Color3.new(1, 1, 1),
-			BackgroundTransparency = streak[3],
+			BackgroundTransparency = streak[2],
 			BorderSizePixel = 0,
 			ZIndex = 2,
 			Parent = glass,
 		})
-		Theme.corner(shine, 2)
+		table.insert(shines, shine)
 	end
+	local function sizeShines()
+		-- A share of the glass's width, since UDim offsets are whole numbers.
+		local width = glass.AbsoluteSize.X
+		if width > 0 then
+			for _, shine in shines do
+				shine.Size = UDim2.new(SHINE_PX / width, 0, 1, -14)
+			end
+		end
+	end
+	glass:GetPropertyChangedSignal("AbsoluteSize"):Connect(sizeShines)
+	sizeShines()
 
 	local cap = metal(frame, {
 		Name = "Cap",
@@ -126,14 +139,12 @@ local function canister(row: Frame, index: number, slugId: string?): Slot
 	for notch = 1, 5 do
 		Theme.new("Frame", {
 			Position = UDim2.fromOffset(notch * CAP_W / 6 - 2, 0),
-			Size = UDim2.fromOffset(3, 6),
+			Size = UDim2.fromOffset(3, 4),
 			BackgroundColor3 = Theme.Ink,
 			BorderSizePixel = 0,
 			Parent = cap,
 		})
 	end
-	line(cap, CAP_H - 8, 3, METAL_LIGHT, 0.45)
-	line(cap, CAP_H - 5, 3, METAL_LIGHT, 0.25)
 
 	local base = metal(frame, {
 		Name = "Base",
@@ -142,14 +153,11 @@ local function canister(row: Frame, index: number, slugId: string?): Slot
 		Size = UDim2.fromOffset(BASE_W, BASE_H),
 		ZIndex = 3,
 	})
-	-- The thread.
-	line(base, 3, 3, METAL_LIGHT, 0.25)
-	line(base, 6, 3, METAL_LIGHT, 0.45)
-	local key = Theme.label(base, "", Theme.Title, 12, {
+	local key = Theme.label(base, "", Theme.Title, 10, {
 		Name = "Key",
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -2),
-		Size = UDim2.fromOffset(22, 12),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(22, 10),
 		TextXAlignment = Enum.TextXAlignment.Center,
 		BackgroundColor3 = Theme.Accent,
 		BackgroundTransparency = 1,
@@ -166,8 +174,25 @@ local function canister(row: Frame, index: number, slugId: string?): Slot
 		filled = slugId ~= nil,
 	}
 	if slugId then
-		-- Standing still for now (owner, 2026-11-07); it leaves the glass while it is fired.
-		slot.icon = SlugIcon.mount(glass, slugId, FILL, false)
+		-- It leaves the glass while it is fired; it plays its idle as a flipbook (CanisterIdle).
+		-- A sharp picture of the game's own icon view where there is one (tools/ui/build_canister_slugs.py; owner,
+		-- 2026-11-15: the live view looked "very like low resolution"), the live view for a slug without one.
+		local picture = Fx.asset(`canister{slugId}`)
+		local small = Fx.asset(`canisterIdle{slugId}Small`)
+		local sheets = { Fx.asset(`canisterIdle{slugId}1`), Fx.asset(`canisterIdle{slugId}2`) }
+		if picture ~= "" or small ~= "" or (sheets[1] ~= "" and sheets[2] ~= "") then
+			local holder = Theme.new("Frame", {
+				Name = "Slug",
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				ZIndex = 1, -- under the reflections, as the live view was
+				Parent = glass,
+			})
+			CanisterIdle.mount(holder, picture, small, sheets)
+			slot.slug = holder
+		else
+			slot.slug = SlugIcon.mount(glass, slugId, FILL, false).frame
+		end
 		slot.shade = Theme.new("Frame", {
 			Name = "Shade",
 			Size = UDim2.fromScale(1, 0),
@@ -177,7 +202,7 @@ local function canister(row: Frame, index: number, slugId: string?): Slot
 			ZIndex = 4,
 			Parent = glass,
 		})
-		slot.count = Theme.label(glass, "", Theme.TitleBold, 24, {
+		slot.count = Theme.label(glass, "", Theme.TitleBold, 21, {
 			Name = "Count",
 			Size = UDim2.fromScale(1, 1),
 			TextXAlignment = Enum.TextXAlignment.Center,
@@ -218,12 +243,18 @@ function Hud.create(): ScreenGui
 	local bar = Theme.new("Frame", {
 		Name = "SlugBar",
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -24),
+		-- Raised a little (owner, 2026-11-15: "a little bit more in your face"; was 24 off the bottom).
+		Position = UDim2.new(0.5, 0, 1, -50),
 		Size = UDim2.fromOffset(rowWidth, ROW_Y + CAN_H),
 		BackgroundTransparency = 1,
 		Parent = gui,
 	})
 	Theme.fitHud(gui, Theme.new("UIScale", { Parent = bar }))
+	-- Where the health bar sits, for the inventory button (Inventory): its left end, which overhangs the canister row,
+	-- and its middle, in the slug bar's own units.
+	bar:SetAttribute("HealthLeft", (rowWidth - (GOO_W + 6) * HEALTH_SCALE) / 2)
+	bar:SetAttribute("HealthMiddle", (GOO_H + 6) * HEALTH_SCALE / 2)
+	bar:SetAttribute("HealthGap", HEALTH_GAP)
 
 	-- Health ---------------------------------------------------------------------------
 	local health = Theme.new("Frame", {
@@ -239,29 +270,14 @@ function Hud.create(): ScreenGui
 	local goo = GooBar.new(health, Vector2.zero, GOO_W, GOO_H)
 	local number = Theme.label(health, "100", Theme.TitleBold, 22, {
 		Name = "Number",
-		Position = UDim2.new(1, 8, 0, -1),
+		-- Level with the bar, HEALTH_GAP clear of it on screen. The digits sit low in their line, so the label is lifted
+		-- to centre the digits themselves (owner, 2026-11-15: "still needs to be moved up a bit").
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(1 + HEALTH_GAP / HEALTH_SCALE / (GOO_W + 6), 0, 0.5, -2), -- as a share: offsets are whole
 		Size = UDim2.fromOffset(46, 24),
 		TextStrokeColor3 = Theme.Ink,
 		TextStrokeTransparency = 0.5,
 	})
-	local sprint = Theme.label(health, "Sprint on", Theme.Body, 13, {
-		Name = "Sprint",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.fromOffset(-8, 2),
-		Size = UDim2.fromOffset(80, 18),
-		TextXAlignment = Enum.TextXAlignment.Right,
-		TextColor3 = Theme.Accent,
-		TextStrokeColor3 = Theme.Ink,
-		TextStrokeTransparency = 0.5,
-		Visible = false,
-	})
-	local function refreshSprint()
-		sprint.Visible = player:GetAttribute("SprintActive") == true
-			and player:GetAttribute("SprintMode") ~= "Always"
-	end
-	player:GetAttributeChangedSignal("SprintActive"):Connect(refreshSprint)
-	player:GetAttributeChangedSignal("SprintMode"):Connect(refreshSprint)
-
 	local shownUntil = 0
 	local function refreshNumber()
 		local mode = player:GetAttribute("HealthNumber")
@@ -309,8 +325,9 @@ function Hud.create(): ScreenGui
 		Parent = bar,
 	})
 	local slots: { Slot } = {}
+	local loadout = Combat.loadoutOf(player)
 	for index = 1, count do
-		slots[index] = canister(row, index, Combat.Loadout[index])
+		slots[index] = canister(row, index, loadout[index])
 	end
 	local function refreshKeys()
 		for index, slot in slots do
@@ -322,6 +339,19 @@ function Hud.create(): ScreenGui
 	end
 	Keybinds.onChanged(refreshKeys)
 	refreshKeys()
+	-- A swap in the inventory rebuilds the canisters whose slug changed (CanisterIdle drops a picture once it loses its
+	-- parent, so nothing is left running).
+	player:GetAttributeChangedSignal("Loadout"):Connect(function()
+		local now = Combat.loadoutOf(player)
+		for index = 1, count do
+			if now[index] ~= loadout[index] then
+				slots[index].frame:Destroy()
+				slots[index] = canister(row, index, now[index])
+			end
+		end
+		loadout = now
+		refreshKeys()
+	end)
 
 	-- Every slot retains its own cooldown while another slug is selected.
 	local cooling: { [number]: boolean } = {}
@@ -343,8 +373,8 @@ function Hud.create(): ScreenGui
 					TweenService:Create(flash, RETURN_TWEEN, { BackgroundTransparency = 1 }):Play()
 				end
 				cooling[index] = remaining > 0
-				if slot.icon then
-					slot.icon.frame.Visible = remaining <= 0
+				if slot.slug then
+					slot.slug.Visible = remaining <= 0
 				end
 				shade.Size = UDim2.fromScale(1, math.clamp(remaining / Combat.Cooldown, 0, 1))
 				label.Text = if remaining > 0 then string.format("%.1f", remaining) else ""

@@ -12,6 +12,20 @@ local WATER_Y = -0.3
 -- A Floppy looks up mostly from the waist. Tilting only the head sheared the cheek, which is part head-weighted,
 -- against the fully head-bound lids, and smeared his dark under-eyes into streaks (owner, 2026-11-03).
 local WAIST_LIFT = 0.8
+-- The newer slugs (all but Floppy and Inferno, who have their own face and motion scripts) are performed by SlugIdle:
+-- breathing, their idle and facial acting, and their own answer when they notice you (owner, 2026-11-16: "none of them
+-- have facial animations ... they dont do anything when ur walking past and looking at them"). They are inked from a
+-- small pool, nearest first: a Highlight each would pass Roblox's limit with the hub's own ink.
+local SlugIdle: any = nil
+task.spawn(function()
+	-- The combat scripts may arrive after this one; a lobby-only place has none.
+	local combat = Players.LocalPlayer:WaitForChild("PlayerScripts"):WaitForChild("Combat", 30)
+	local module = combat and combat:WaitForChild("SlugIdle", 10)
+	if module then
+		SlugIdle = (require :: any)(module)
+	end
+end)
+local INK_COUNT, INK_FAR = 4, 60
 local rays = RaycastParams.new()
 rays.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -38,6 +52,9 @@ type Slug = {
 	lookPitch: number,
 	mood: number,
 	inferno: boolean,
+	floppy: boolean,
+	performer: any?, -- a SlugIdle.Idle
+	offset: number, -- where in its idle loop this one is
 	size: number,
 	shown: boolean,
 	lastFrame: CFrame,
@@ -164,7 +181,15 @@ local function prepare(model: Model): Slug?
 			table.insert(parts, item)
 		end
 	end
-	local inferno = model:GetAttribute("Slug") == "Inferno"
+	local id = model:GetAttribute("Slug")
+	local inferno = id == "Inferno"
+	local performer = nil
+	if SlugIdle and id ~= "Inferno" and id ~= "Floppy" then
+		performer = SlugIdle.new(model, id)
+		if performer then
+			performer.unit = model:GetAttribute("WorldSlugSize") :: number
+		end
+	end
 	local slug: Slug = {
 		model = model,
 		parts = parts,
@@ -187,6 +212,9 @@ local function prepare(model: Model): Slug?
 		lookPitch = 0.4,
 		mood = 0,
 		inferno = inferno,
+		floppy = id == "Floppy",
+		performer = performer,
+		offset = random:NextNumber(0, 60),
 		size = model:GetAttribute("WorldSlugSize") :: number,
 		shown = true,
 		lastFrame = pivot,
@@ -275,6 +303,52 @@ local function decide(now: number, player: Vector3, camera: CFrame)
 	end
 end
 
+local inkLines: { Highlight } = {}
+local inkNear: { Slug } = {}
+local function ink(eye: Vector3)
+	if #inkLines == 0 then
+		local folder = Instance.new("Folder")
+		folder.Name = "GroveInk"
+		folder.Parent = workspace
+		for _ = 1, INK_COUNT do
+			local line = Instance.new("Highlight")
+			line.Name = "Ink"
+			line.FillTransparency = 1
+			line.OutlineColor = Color3.fromRGB(14, 14, 18) -- the hub's ink (HubMotion)
+			line.DepthMode = Enum.HighlightDepthMode.Occluded
+			line.Enabled = false
+			line.Parent = folder
+			table.insert(inkLines, line)
+		end
+	end
+	table.clear(inkNear)
+	for _, slug in slugs do
+		if slug.performer and slug.shown and (slug.position - eye).Magnitude < INK_FAR then
+			table.insert(inkNear, slug)
+		end
+	end
+	table.sort(inkNear, function(a: Slug, b: Slug): boolean
+		return (a.position - eye).Magnitude < (b.position - eye).Magnitude
+	end)
+	for index, line in inkLines do
+		local slug = inkNear[index]
+		local model: Model? = if slug then slug.model else nil
+		if line.Adornee ~= model then
+			line.Adornee = model
+		end
+		line.Enabled = slug ~= nil
+		if slug then
+			-- Fading over the last third of the reach, so a line never pops off a slug in plain view.
+			local t = math.clamp(
+				((slug.position - eye).Magnitude - INK_FAR * 0.66) / (INK_FAR * 0.34),
+				0,
+				1
+			)
+			line.OutlineTransparency = t * t * (3 - 2 * t)
+		end
+	end
+end
+
 local function step(dt: number)
 	local camera = workspace.CurrentCamera
 	if not camera then
@@ -290,6 +364,7 @@ local function step(dt: number)
 	local player = if root then root.Position else camera.CFrame.Position
 	rays.FilterDescendantsInstances = if character then { character, group } else { group }
 	local limit = if workspace:GetAttribute("HubDetailLow") then 70 else SHOW_NEAR
+	ink(camera.CFrame.Position)
 	for _, slug in slugs do
 		local show = (slug.position - camera.CFrame.Position).Magnitude
 			< limit + (if slug.shown then 12 else 0)
@@ -372,7 +447,7 @@ local function step(dt: number)
 			or slug.lookBlend > 0.001
 			or math.abs(press - slug.lastPress) > 0.0001
 			or math.abs(slug.lookBlend - slug.lastLook) > 0.0001
-		if not slug.inferno and poseChanged then
+		if slug.floppy and poseChanged then
 			slug.model:SetAttribute("FaceExpression", 1)
 			slug.model:SetAttribute("FaceLook", Vector2.new(0, 0.8 * slug.lookBlend))
 			slug.model:SetAttribute("FaceGreeting", slug.lookBlend)
@@ -399,6 +474,14 @@ local function step(dt: number)
 			end
 			slug.lastPress, slug.lastLook = press, slug.lookBlend
 		end
+		local performer = slug.performer
+		if performer then
+			performer.react = slug.lookBlend
+			performer.press = press
+			-- Up at your face, as Floppy does (owner, 2026-11-16: "make the slugs actually look up at you").
+			performer.lookUp = slug.lookPitch * slug.lookBlend
+			SlugIdle.pose(performer, now + slug.offset)
+		end
 		if RunService:IsStudio() then
 			slug.model:SetAttribute("GroveStage", stage)
 			slug.model:SetAttribute(
@@ -417,7 +500,7 @@ task.spawn(function()
 	group = workspace:WaitForChild("HubArt"):WaitForChild("GroveSlugs")
 	task.wait(1)
 	rays.FilterDescendantsInstances = { group }
-	for _, model in group:GetChildren() do
+	local function arrive(model: Instance)
 		if model:IsA("Model") then
 			local slug = prepare(model)
 			if slug then
@@ -425,5 +508,13 @@ task.spawn(function()
 			end
 		end
 	end
+	for _, model in group:GetChildren() do
+		arrive(model)
+	end
+	-- Residents made from the combat icon models join a little later (HubArt).
+	group.ChildAdded:Connect(function(model)
+		task.wait(0.5)
+		arrive(model)
+	end)
 	RunService:BindToRenderStep("GroveResidents", Enum.RenderPriority.Character.Value + 1, step)
 end)

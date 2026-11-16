@@ -24,11 +24,15 @@ local ready: { [string]: number } = {}
 local function selectedSlug(): string?
 	local character = player.Character
 	local slot = character and character:GetAttribute("SelectedSlugSlot")
-	return Combat.Loadout[if typeof(slot) == "number" then slot else 1]
+	return Combat.loadoutOf(player)[if typeof(slot) == "number" then slot else 1]
 end
 
 local function press(kind: Abilities.Kind)
-	if not AimCursor.menuOpen() and Abilities.ability(selectedSlug(), kind) then
+	if
+		Combat.canUseBlaster(player)
+		and not AimCursor.menuOpen()
+		and Abilities.ability(selectedSlug(), kind)
+	then
 		remote:FireServer("Arm", if armed == kind then false else kind)
 	end
 end
@@ -48,7 +52,7 @@ remote.OnClientEvent:Connect(function(kind: string, data: any)
 end)
 
 -- One chip for each of the selected slug's abilities, in the PvP UI's look: Q left of the HUD's
--- canisters and E right of them, so they share its scale and hide with it in the lobby.
+-- canisters and E right of them, so they share its scale.
 local canisters = player
 	:WaitForChild("PlayerGui")
 	:WaitForChild("CombatHUD")

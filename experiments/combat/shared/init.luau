@@ -66,10 +66,44 @@ Combat.ShotRate = 4 -- requests per second accepted before the cooldown check
 -- Slot order; switching between slots comes with the second slug. Places that set the workspace attribute
 -- SlugshotAbilityLab (the target range) also carry slugs whose abilities are being built.
 Combat.Loadout = if workspace:GetAttribute("SlugshotAbilityLab") == true
-	then { "Floppy", "Inferno", "Aquabeek" }
-	else { "Floppy", "Inferno" }
+	then { "Floppy", "Inferno", "Rammstone", "Aquabeek", "Tormato" }
+	else { "Floppy", "Inferno", "Rammstone" }
+-- Every slug built so far in this place; the inventory swaps them in and out of the carried slots (owner, 2026-11-16:
+-- "this is what the inventory is for, make it so you can swap out the slugs in your HUD bar using inventory").
+Combat.Roster = if workspace:GetAttribute("SlugshotAbilityLab") == true
+	then { "Floppy", "Inferno", "Rammstone", "Aquabeek", "Tormato", "BoonDoc" }
+	else { "Floppy", "Inferno", "Rammstone" }
 Combat.SlotCount = 5 -- owner, 2026-11-02: five carried slugs
+
+-- A player's carried slugs, slot by slot: the default loadout until they swap slugs in from the roster in the inventory.
+-- The server keeps it as the player's "Loadout" attribute (slug ids joined by commas) and is the only one to set it.
+function Combat.loadoutOf(player: Player?): { string }
+	local saved = player and player:GetAttribute("Loadout")
+	if typeof(saved) ~= "string" or saved == "" then
+		return Combat.Loadout
+	end
+	local out = {}
+	for id in string.gmatch(saved, "[^,]+") do
+		if Combat.Slugs[id] then
+			table.insert(out, id)
+		end
+	end
+	return out
+end
 Combat.SlugTotal = 13 -- owner, 2026-11-01: Floppy plus twelve planned models
+
+-- The game lobby carries a holstered blaster, but only training permits weapon use.
+-- Other combat test places keep their existing behaviour. The place flag is built in,
+-- so the restriction also applies before the arena has finished loading.
+function Combat.canUseBlaster(player: Player): boolean
+	if workspace:GetAttribute("SlugshotLobbyTraining") ~= true then
+		return true
+	end
+	local character = player.Character
+	return player:GetAttribute("InTraining") == true
+		and character ~= nil
+		and character:GetAttribute("TrainingArrived") == true
+end
 
 Combat.Slugs = {
 	-- Weakest slug: a droopy, tumbling flop that lands short of other slugs. 7 damage, no
@@ -107,8 +141,26 @@ Combat.Slugs = {
 		ExactFrom = 2,
 		Blurb = "A cocky little menace. Fast, hot and hits hard.",
 	},
-	-- Placeholder flight for building Crashwave and Mistbank (docs/slugs/ability-specs.md); no model yet, so it
-	-- draws the stand-in and does not transform.
+	-- Rammstone (docs/slugs/catalog/rammstone.md): heavier and slower than Inferno, a hard hitter. Prototype numbers for
+	-- the owner's playtest; Shove Punch and the rock cover are not built yet (docs/slugs/ability-specs.md). He transforms
+	-- like Inferno, into his flying brute, and punches as he lands (RammstoneMotion).
+	Rammstone = {
+		Label = "Rammstone",
+		Damage = 22,
+		Speed = { 220, 280, 340 },
+		Gravity = 28,
+		Drag = 0.08,
+		Radius = 0.35,
+		Tumble = 0,
+		Size = Combat.ShotSlugSize,
+		Transforms = true,
+		Transformation = { Spin = 0.15, Flash = 0.05, Cruise = 0.4, Slowdown = 0.04 },
+		Expires = Combat.Cooldown,
+		ExactFrom = 2,
+		Blurb = "A grinning rock brute. Heavy, and he punches.",
+	},
+	-- Aquabeek (docs/slugs/catalog/aquabeek.md): prototype flight numbers while Crashwave and Mistbank are built
+	-- (docs/slugs/ability-specs.md). She transforms like Inferno, into her bladed flying form (AquabeekMotion).
 	Aquabeek = {
 		Label = "Aquabeek",
 		Damage = 20,
@@ -118,9 +170,45 @@ Combat.Slugs = {
 		Radius = 0.3,
 		Tumble = 0,
 		Size = Combat.ShotSlugSize,
-		Transforms = false,
+		Transforms = true,
+		Transformation = { Spin = 0.15, Flash = 0.05, Cruise = 0.4, Slowdown = 0.04 },
+		Expires = Combat.Cooldown,
 		ExactFrom = 2,
-		Blurb = "Placeholder water slug. Q: Crashwave. E: Mistbank.",
+		Blurb = "A sleek water slug with a knowing smile. Q: Crashwave. E: Mistbank.",
+	},
+	-- Tormato (docs/slugs/catalog/tormato.md): prototype flight numbers, light and quick; Tornado and Updraft are not
+	-- built yet (docs/slugs/ability-specs.md). He transforms like Inferno, into his little red dragon (TormatoMotion).
+	Tormato = {
+		Label = "Tormato",
+		Damage = 18,
+		Speed = { 240, 320, 400 },
+		Gravity = 22,
+		Drag = 0.06,
+		Radius = 0.3,
+		Tumble = 0,
+		Size = Combat.ShotSlugSize,
+		Transforms = true,
+		Transformation = { Spin = 0.15, Flash = 0.05, Cruise = 0.4, Slowdown = 0.04 },
+		Expires = Combat.Cooldown,
+		ExactFrom = 2,
+		Blurb = "A grinning wind slug with storms for eyes.",
+	},
+	-- Boon Doc (docs/slugs/catalog/boon-doc.md): prototype flight numbers, slower and gentler; Mending Shot and Healing
+	-- Spring are not built yet. He transforms like Inferno, into his fat flying toad (BoonDocMotion).
+	BoonDoc = {
+		Label = "Boon Doc",
+		Damage = 15,
+		Speed = { 200, 260, 320 },
+		Gravity = 30,
+		Drag = 0.1,
+		Radius = 0.32,
+		Tumble = 0,
+		Size = Combat.ShotSlugSize,
+		Transforms = true,
+		Transformation = { Spin = 0.15, Flash = 0.05, Cruise = 0.4, Slowdown = 0.04 },
+		Expires = Combat.Cooldown,
+		ExactFrom = 2,
+		Blurb = "A little healing angel with one bright eye.",
 	},
 } :: { [string]: Slug }
 

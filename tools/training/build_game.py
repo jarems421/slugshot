@@ -1,4 +1,4 @@
-"""Build SlugshotLobbyTraining.rbxlx: the lobby with the training arena, its portal, and the guns inside it only.
+"""Build SlugshotLobbyTraining.rbxlx: lobby, training and a lobby-holstered blaster.
 
 Starts from the lobby's project and adds the range's combat, so both stay as they are. Generated under ignored build/.
 """
@@ -53,33 +53,42 @@ def main():
     tree["Workspace"]["$properties"]["FallenPartsDestroyHeight"] = -2000
     # Slugs whose abilities are being built (Aquabeek) join the loadout here too (owner, 2026-11-06).
     tree["Workspace"].setdefault("$attributes", {})["SlugshotAbilityLab"] = True
+    tree["Workspace"]["$attributes"]["SlugshotLobbyTraining"] = True
 
     shared = tree["ReplicatedStorage"]
-    for name in ("Combat", "GooArt", "FloppyAsset", "InfernoAsset"):
+    for name in ("Combat", "GooArt", "FloppyAsset", "InfernoAsset", "RammstoneAsset", "AquabeekAsset", "TormatoAsset",
+                 "BoonDocAsset", "TrailArt"):
         shared[name] = range_tree["ReplicatedStorage"][name]
     shared["TrainingFloor"] = {PATH: "experiments/training/shared/floor.json"}
 
     services = tree["ServerScriptService"]
     services["MovementSandbox"][PATH] = str(server)
     integration = dict(range_tree["ServerScriptService"]["FloppyIntegration"])
-    del integration["ReadyBlaster"]  # the arena hands the gun over instead
+    del integration["ReadyBlaster"]  # Equipment owns lobby holstering and training draw
     services["FloppyIntegration"] = integration
     services["Combat"] = range_tree["ServerScriptService"]["Combat"]
     services["SettingsPersistence"] = range_tree["ServerScriptService"]["SettingsPersistence"]
     services["Training"] = {
         "$className": "Folder",
         "TrainingArena": {PATH: "experiments/training/server/TrainingArena.server.luau"},
+        "Equipment": {PATH: "experiments/training/server/Equipment.server.luau"},
         "Motion": {PATH: "experiments/training/server/Motion.luau"},
     }
 
     scripts = tree["StarterPlayer"]["StarterPlayerScripts"]
     for name in ("RocklockBlaster", "FloppyIdle", "Combat", "FloppyFace", "InfernoMotion", "InfernoInspect",
-                 "InfernoTeeth"):
+                 "InfernoTeeth", "RammstoneMotion", "AquabeekMotion", "TormatoMotion", "BoonDocMotion"):
         scripts[name] = range_tree["StarterPlayer"]["StarterPlayerScripts"][name]
+    # The lobby runs these same scripts for its grove; one copy each, or every Inferno effect (flight trails, the grove's
+    # fire glow) is made twice.
+    for grove, own in (("GroveInfernoMotion", "InfernoMotion"), ("GroveFloppyFace", "FloppyFace")):
+        if scripts.get(grove, {}).get(PATH) == scripts[own][PATH]:
+            del scripts[grove]
     scripts["Training"] = {PATH: "experiments/training/client"}
 
     storage = tree["ServerStorage"]
-    for name in ("BlasterMesh", "FloppyMaterials", "InfernoMaterials"):
+    for name in ("BlasterMesh", "FloppyMaterials", "InfernoMaterials", "RammstoneMaterials", "AquabeekMaterials",
+                 "TormatoMaterials", "BoonDocMaterials"):
         storage[name] = range_tree["ServerStorage"][name]
     storage["TrainingLayout"] = {PATH: "build/training/floor/floor-layout.json"}
     storage["TrainingDraft"] = {PATH: "private-assets/training/TrainingDraft.luau"}
@@ -90,8 +99,10 @@ def main():
     path.write_text(json.dumps(project, indent=2), encoding="utf-8")
     subprocess.run(["rojo", "build", str(path), "--output", str(PLACE)], cwd=ROOT, check=True)
     print(f"Built {PLACE}")
-    if "--check" in sys.argv:
+    if "--check" in sys.argv or "--ui-check" in sys.argv:
         project["name"] = "SlugshotLobbyTrainingCheck"
+        if "--ui-check" in sys.argv:
+            tree["Workspace"]["$attributes"]["TrainingUiOnly"] = True
         scripts["TrainingCheck"] = {PATH: str(ROOT/"experiments/training/check/TrainingCheck.client.luau")}
         services["TrainingCheckHelper"] = {PATH: str(ROOT/"experiments/training/check/CheckHelper.server.luau")}
         path = OUT/"check.project.json"

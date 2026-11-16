@@ -11,6 +11,17 @@ public static class Win {
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
+    public delegate bool EnumProc(IntPtr h, IntPtr p);
+    [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr h, EnumProc f, IntPtr p);
+    public static IntPtr Viewport(IntPtr root, int width, int height) {
+        IntPtr found = IntPtr.Zero;
+        EnumChildWindows(root, (h, p) => {
+            RECT r; GetWindowRect(h, out r);
+            if (Math.Abs(r.R-r.L-width) <= 4 && Math.Abs(r.B-r.T-height) <= 4) found = h;
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
     public struct RECT { public int L, T, R, B; }
 }
 "@
@@ -21,7 +32,7 @@ $exe = (Get-ChildItem "$env:LOCALAPPDATA\Roblox\Versions" -Recurse -Filter Roblo
 $started = Get-Date
 $proc = Start-Process $exe -ArgumentList "`"$place`"" -PassThru -WindowStyle Normal
 $hwnd = [IntPtr]::Zero
-for ($i = 0; $i -lt 60; $i++) {
+for ($i = 0; $i -lt 120; $i++) {
     Start-Sleep -Seconds 1
     $live = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
     if ($live -and $live.MainWindowTitle -like "*SlugshotLobbyTrainingCheck*") { $hwnd = $live.MainWindowHandle; break }
@@ -53,6 +64,7 @@ $lastPress = Get-Date
 $seen = @{}
 $running = $false
 $done = $false
+$failures = 0
 $logDir = "$env:LOCALAPPDATA\Roblox\logs"
 while (-not $done -and ((Get-Date) - $started).TotalSeconds -lt $Timeout) {
     Start-Sleep -Milliseconds 300
@@ -70,10 +82,28 @@ while (-not $done -and ((Get-Date) - $started).TotalSeconds -lt $Timeout) {
                     $seen[$key] = $true
                     $clean = $line.Trim() -replace "^.*?\[FLog::[A-Za-z]+\] ", ""
                     if ($line -match "TRAINCHECK|\[Training\]") { $running = $true }
+                    if ($line -match "TRAINCHECK FAIL") { $failures++ }
                     if ($line -match "TRAINCHECK capture (\S+)") { Capture $Matches[1] }
                     elseif ($line -match "TRAINCHECK key down") { [Win]::SetForegroundWindow($hwnd) | Out-Null; [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x57, [IntPtr]1) | Out-Null }
                     elseif ($line -match "TRAINCHECK key up") { [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x57, [IntPtr]0xC0000001L) | Out-Null }
-                    elseif ($line -match "TRAINCHECK press F") { [Win]::SetForegroundWindow($hwnd) | Out-Null; [Win]::PostMessage($hwnd, 0x0100, [IntPtr]0x46, [IntPtr]1) | Out-Null; Start-Sleep -Milliseconds 80; [Win]::PostMessage($hwnd, 0x0101, [IntPtr]0x46, [IntPtr]0xC0000001L) | Out-Null }
+                    elseif ($line -match "TRAINCHECK click (\d+) (\d+) (\d+) (\d+)") {
+                        $clickX, $clickY, $viewW, $viewH = [int]$Matches[1], [int]$Matches[2], [int]$Matches[3], [int]$Matches[4]
+                        $viewHandle = [Win]::Viewport($hwnd, $viewW, $viewH)
+                        if ($viewHandle -eq [IntPtr]::Zero) { throw "Could not find the test viewport for native mouse input" }
+                        [Win]::SetForegroundWindow($hwnd) | Out-Null
+                        $point = [IntPtr](($clickY -shl 16) -bor $clickX)
+                        [Win]::PostMessage($viewHandle, 0x0200, [IntPtr]0, $point) | Out-Null
+                        [Win]::PostMessage($viewHandle, 0x0201, [IntPtr]1, $point) | Out-Null
+                        Start-Sleep -Milliseconds 80
+                        [Win]::PostMessage($viewHandle, 0x0202, [IntPtr]0, $point) | Out-Null
+                    }
+                    elseif ($line -match "TRAINCHECK press (F|Two|Return|R|E)") {
+                        $keyCode = @{ F = 0x46; Two = 0x32; Return = 0x0D; R = 0x52; E = 0x45 }[$Matches[1]]
+                        [Win]::SetForegroundWindow($hwnd) | Out-Null
+                        [Win]::PostMessage($hwnd, 0x0100, [IntPtr]$keyCode, [IntPtr]1) | Out-Null
+                        Start-Sleep -Milliseconds 80
+                        [Win]::PostMessage($hwnd, 0x0101, [IntPtr]$keyCode, [IntPtr]0xC0000001L) | Out-Null
+                    }
                     elseif ($line -match "TRAINCHECK done") { $done = $true }
                     Write-Output $clean
                 }
@@ -85,3 +115,4 @@ while (-not $done -and ((Get-Date) - $started).TotalSeconds -lt $Timeout) {
 Capture "end"
 Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue
 Write-Output "finished after $([int]((Get-Date) - $started).TotalSeconds)s, completed=$done"
+if (-not $done -or $failures -gt 0) { throw "Training check failed: completed=$done, failures=$failures" }

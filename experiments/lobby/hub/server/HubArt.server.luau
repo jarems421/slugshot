@@ -354,6 +354,16 @@ local function loadPiece(key: string): Model?
 			end
 		end
 	end
+	-- Cavern shelf mushrooms use the same pale luminous cap silhouette as the
+	-- walkable grove's mushrooms, instead of a charcoal outline around the glow.
+	if key == "hub-gun-sideshroom-a" or key == "hub-gun-sideshroom-b" then
+		local rim = model:FindFirstChild("Cap_Ink", true)
+		if rim and rim:IsA("MeshPart") then
+			rim.Color = Color3.fromRGB(220, 248, 255)
+			rim.Material = Enum.Material.Neon
+			rim:SetAttribute("LuminousRim", true)
+		end
+	end
 	for _, part in model:GetDescendants() do
 		if part:IsA("MeshPart") then
 			part.CanCollide = false
@@ -893,11 +903,8 @@ local function sceneLights()
 			)
 		end
 	end
-	-- The wall's upper half and the roof's underside, which those can't reach (owner, 2026-11-07: the lower wall lit nicely,
-	-- the upper area too dark; the whole top of the map too dark). The wall stands at about 295 studs out up to 150, then the
-	-- roof curves in to about 200 studs out at 235 (measured from its meshes). Two more rings: one from 95 studs up lighting
-	-- the wall from 105 to 165, over the mouth and the edges of the mountain's alcove too; one from 168, close under the
-	-- roof, lighting its underside, over the mountain too. Brighter than the foot's, as the mist dims what is high and far.
+	-- Mid-wall and roof washes overlap the foot lights. The wall's High mesh
+	-- spans roughly 149 to 251 studs; crystal pools provide its local colour.
 	index = 0
 	for degrees = 0, 345, 15 do
 		if degrees >= 75 and degrees <= 105 then
@@ -2016,10 +2023,24 @@ local SLUG_STUDS = (require :: any)(ReplicatedStorage:WaitForChild("Combat")).Wo
 local SLUG_SOURCE = 2.72
 -- Inferno's base form is exported at Floppy's height, so 0.34 x that length is his reference length (CombatServer).
 local INFERNO_SOURCE = 0.34 * SLUG_SOURCE
--- 14 supported habitats: nine Floppies and five Infernos. Site 6 is a pond rock
--- too narrow to support a two-stud resident; retain all source sites for the concept.
+-- 14 supported habitats. Site 6 is a pond rock too narrow to support a two-stud resident; retain all source sites for
+-- the concept. Every slug lives here (owner, 2026-11-16: "add the variety of slugs we have into the slug exhibition
+-- area"): three Floppies, three Infernos and two each of the rest.
 local GROVE_SITES = { 1, 3, 10, 11, 12, 13, 15, 16, 18, 19, 23, 25, 27, 30 }
-local GROVE_INFERNOS = { [1] = true, [11] = true, [13] = true, [18] = true, [19] = true }
+local GROVE_INFERNOS = { [1] = true, [13] = true, [19] = true }
+-- The others come from the combat server's icon models (CombatAssets, built as the server starts), so they join once
+-- those are ready; a Floppy takes the site if one never arrives (a lobby-only place has none).
+local GROVE_OTHERS: { [number]: string } = {
+	[10] = "Rammstone",
+	[27] = "Rammstone",
+	[11] = "Aquabeek",
+	[23] = "Aquabeek",
+	[15] = "Tormato",
+	[30] = "Tormato",
+	[3] = "BoonDoc",
+	[18] = "BoonDoc",
+}
+local GROVE_WAIT = 60 -- seconds to wait for the icon models
 
 local function groveAt(x: number, y: number, z: number): Vector3
 	return GROVE * Vector3.new(x * UNIT, y * UNIT, z * UNIT)
@@ -2314,6 +2335,38 @@ local function groveInferno(): Model?
 	return model
 end
 
+-- A combat icon model (SlugVisuals.iconModel: pivot at its centre, +Y up, its face toward -Z) as a grove resident:
+-- grove size, its pivot on the ground under it.
+local function groveResident(icon: Model, id: string): Model
+	local model = icon:Clone()
+	local Combat = (require :: any)(ReplicatedStorage:WaitForChild("Combat"))
+	model:ScaleTo(model:GetScale() * SLUG_STUDS / Combat.Slugs[id].Size)
+	local pivot = model:GetPivot()
+	local low = math.huge
+	for _, part in model:GetDescendants() do
+		if part:IsA("MeshPart") then
+			local cf, size = part.CFrame, part.Size
+			for _, x in { -1, 1 } do
+				for _, y in { -1, 1 } do
+					for _, z in { -1, 1 } do
+						local corner = cf:PointToWorldSpace(size / 2 * Vector3.new(x, y, z))
+						low = math.min(low, pivot:PointToObjectSpace(corner).Y)
+					end
+				end
+			end
+		end
+	end
+	model.WorldPivot = pivot * CFrame.new(0, if low < math.huge then low else 0, 0)
+	for _, part in model:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+			part.CanCollide, part.CanQuery, part.CanTouch = false, false, false
+			part.CastShadow = false
+		end
+	end
+	return model
+end
+
 local function groveSlugModels()
 	local asset = require(ServerStorage:WaitForChild("FloppyAsset")) :: any
 	local ok, container = pcall(function()
@@ -2356,14 +2409,10 @@ local function groveSlugModels()
 	local group = Instance.new("Folder")
 	group.Name = "GroveSlugs"
 	group.Parent = art
-	for _, index in GROVE_SITES do
+	local function settle(slug: Model, index: number, id: string)
 		local site = groveSlugs[index]
-		local slug = (if GROVE_INFERNOS[index] then inferno else template):Clone()
 		slug.Name = `GroveSlug{index}`
-		slug:SetAttribute(
-			"Slug",
-			if GROVE_INFERNOS[index] and inferno ~= template then "Inferno" else "Floppy"
-		)
+		slug:SetAttribute("Slug", id)
 		slug:SetAttribute("GroveResident", true)
 		slug:SetAttribute("WorldSlugSize", SLUG_STUDS)
 		slug:SetAttribute("GroveOrigin", GROVE.Position)
@@ -2372,6 +2421,31 @@ local function groveSlugModels()
 				* CFrame.Angles(0, site.heading, 0)
 		)
 		slug.Parent = group
+	end
+	local spare = template:Clone()
+	task.spawn(function()
+		local assets = ReplicatedStorage:WaitForChild("CombatAssets", GROVE_WAIT)
+		for index, id in GROVE_OTHERS do
+			local icon = assets and assets:WaitForChild(id .. "Icon", GROVE_WAIT)
+			if icon and icon:IsA("Model") then
+				settle(groveResident(icon, id), index, id)
+			else
+				warn(`HubArt: no {id} for the grove, a Floppy lives at site {index}`)
+				settle(spare:Clone(), index, "Floppy")
+			end
+		end
+		spare:Destroy()
+	end)
+	for _, index in GROVE_SITES do
+		if GROVE_OTHERS[index] then
+			continue
+		end
+		local slug = (if GROVE_INFERNOS[index] then inferno else template):Clone()
+		settle(
+			slug,
+			index,
+			if GROVE_INFERNOS[index] and inferno ~= template then "Inferno" else "Floppy"
+		)
 	end
 	if inferno ~= template then
 		inferno:Destroy()
@@ -2406,10 +2480,67 @@ local FLORA_KEYS: { [number]: string } = {
 	[6] = "hub-flora-gunstar-b",
 }
 
+-- Wall crystal pools must exist before the wall geometry arrives. Reuse the
+-- same templates later so their settled light layout and asset loads stay identical.
+local crystalCache: { [string]: Model } = {}
+local crystalShapes: { [string]: number } = {}
+local crystalSites = table.clone(gunSide.crystals)
+table.move(farSide.crystals, 1, #farSide.crystals, #crystalSites + 1, crystalSites)
+
+local function crystalTemplate(key: string): Model?
+	local source: Model? = crystalCache[key]
+	if not source then
+		source = libraryPiece(key, 1)
+		if source then
+			crystalCache[key] = source
+			local lo, hi = paintedBounds(source)
+			local size = hi - lo
+			crystalShapes[key] = math.min(1, size.Y * 1.1 / math.max(size.X, size.Z))
+		end
+	end
+	return source
+end
+
+local function wallCrystalLights()
+	local count = 0
+	for _, site in crystalSites do
+		local source = crystalTemplate(site.key)
+		local glow = if site.glow ~= nil then site.glow else 1
+		if source and (site.tilt > 0.5 or site.y > 15) and glow > 0 then
+			local lean = Vector3.new(site.lx, 0, site.lz)
+			local size = site.height * crystalShapes[site.key]
+			local grows = if lean.Magnitude > 0
+				then Vector3.yAxis * math.cos(site.tilt) + lean.Unit * math.sin(site.tilt)
+				else Vector3.yAxis
+			local brightest: PointLight? = nil
+			for _, light in source:GetDescendants() do
+				if
+					light:IsA("PointLight")
+					and (not brightest or light.Brightness > brightest.Brightness)
+				then
+					brightest = light
+				end
+			end
+			if brightest then
+				softGlow(
+					Vector3.new(site.x, site.y, site.z) + grows * size * 0.3,
+					brightest.Color,
+					1.5 * glow,
+					math.clamp(size * 1.6, 20, 50)
+				)
+				count += 1
+			end
+		end
+	end
+	workspace:SetAttribute("HubWallCrystalLightsReady", true)
+	print(`HubArt: {count} crystals light the rock round them`)
+end
+
 local function groveProps()
 	local cache: { [string]: Model } = {}
 	local function template(key: string, glow: number): Model?
-		local model = cache[key]
+		local model: Model? = cache[key]
+			or (if string.sub(key, 1, 9) == "crystals-" then crystalTemplate(key) else nil)
 		if not model then
 			model = libraryPiece(key, glow)
 			if model and string.sub(key, 1, 9) == "mushroom-" then
@@ -2565,22 +2696,12 @@ local function groveProps()
 		end
 	end
 	-- The cavern's crystals (owner, 2026-11-04: our own designs), leaning out from the wall, spire or floor they grow on.
-	local crystalSites = table.clone(gunSide.crystals)
-	table.move(farSide.crystals, 1, #farSide.crystals, #crystalSites + 1, crystalSites)
-	local shapes: { [string]: number } = {}
-	local wallGlows = 0
 	for index, site in crystalSites do
 		local source = template(site.key, 1)
 		if source then
 			-- How tall the design is for its widest side: a wide one is made smaller, so no side runs past the site's size
 			-- by more than a tenth.
-			local share = shapes[site.key]
-			if not share then
-				local lo, hi = paintedBounds(source)
-				local size = hi - lo
-				share = math.min(1, size.Y * 1.1 / math.max(size.X, size.Z))
-				shapes[site.key] = share
-			end
+			local share = crystalShapes[site.key]
 			local copy = plant(
 				source,
 				crystals,
@@ -2593,47 +2714,19 @@ local function groveProps()
 			)
 			local lean = Vector3.new(site.lx, 0, site.lz)
 			if site.tilt > 0 and lean.Magnitude > 0 then
-				local axis = Vector3.yAxis:Cross(lean.Unit)
+				local axis = Vector3.new(0, 1, 0):Cross(lean.Unit)
 				copy:PivotTo(
 					CFrame.new(site.x, site.y, site.z)
 						* CFrame.fromAxisAngle(axis, site.tilt)
 						* CFrame.Angles(0, index * 1.9, 0)
 				)
 			end
-			-- On walls, ceilings and high up, a soft pool of its colour on the rock round it: its own light sits at its tip,
-			-- 20 or 30 studs out from the rock, and reaches 14 at most. Those on the floor have the floor's light round them.
-			-- A site may ask for less where many grow close together (glow, a share of the usual).
-			local glow = if site.glow ~= nil then site.glow else 1
-			if (site.tilt > 0.5 or site.y > 15) and glow > 0 then
-				local size = site.height * share
-				local grows = if lean.Magnitude > 0
-					then Vector3.yAxis * math.cos(site.tilt) + lean.Unit * math.sin(site.tilt)
-					else Vector3.yAxis
-				local brightest: PointLight? = nil
-				for _, light in copy:GetDescendants() do
-					if
-						light:IsA("PointLight")
-						and (not brightest or light.Brightness > brightest.Brightness)
-					then
-						brightest = light
-					end
-				end
-				if brightest then
-					softGlow(
-						Vector3.new(site.x, site.y, site.z) + grows * size * 0.3,
-						brightest.Color,
-						1.5 * glow,
-						math.clamp(size * 1.6, 20, 50)
-					)
-					wallGlows += 1
-				end
-			end
 		end
 	end
-	print(`HubArt: {wallGlows} crystals light the rock round them`)
 	for _, model in cache do
 		model:Destroy()
 	end
+	table.clear(crystalCache)
 	-- The plants: one of each loaded, then copies. Each is modelled round its root at the ground.
 	local flora = Instance.new("Model")
 	flora.Name = "GroveFlora"
@@ -2657,7 +2750,11 @@ local function groveProps()
 			)
 			copy.Parent = flora
 			for _, part in copy:GetDescendants() do
-				if part:IsA("MeshPart") and isInk(part) then
+				if
+					part:IsA("MeshPart")
+					and isInk(part)
+					and not part:GetAttribute("LuminousRim")
+				then
 					CollectionService:AddTag(part, "HubDistantInk")
 				end
 			end
@@ -2697,7 +2794,7 @@ local function placeOnRock(name: string, sites: { any })
 	folder.Parent = art
 	local sources: { [string]: Model } = {}
 	for _, site in sites do
-		local source = sources[site.key]
+		local source: Model? = sources[site.key]
 		if source == nil then
 			local loaded = loadPiece(site.key)
 			if not loaded then
@@ -2713,7 +2810,7 @@ local function placeOnRock(name: string, sites: { any })
 		copy:PivotTo(CFrame.lookAt(at, at - Vector3.new(site.ox, 0, site.oz)))
 		copy.Parent = folder
 		for _, part in copy:GetDescendants() do
-			if part:IsA("MeshPart") and isInk(part) then
+			if part:IsA("MeshPart") and isInk(part) and not part:GetAttribute("LuminousRim") then
 				CollectionService:AddTag(part, "HubDistantInk")
 			end
 		end
@@ -2818,7 +2915,9 @@ local function buildGunSide()
 	-- and the shop's mat stand in the hole's shade with no lamp, while the velvet round them glows by itself. Soft, high
 	-- enough over the path that a character walking under it isn't lit up. Concept units: the path runs from -23.6 to the
 	-- hole's rim at -14.4, the mat lies in front of the door.
-	for _, at in { Vector3.new(0, 2.4, -21.5), Vector3.new(0, 2.4, -16.8), Vector3.new(0, 2.4, -4.4) } do
+	for _, at in
+		{ Vector3.new(0, 2.4, -21.5), Vector3.new(0, 2.4, -16.8), Vector3.new(0, 2.4, -4.4) }
+	do
 		softGlow(GUN * (at * UNIT), Color3.fromRGB(190, 150, 255), 1.1, 32)
 	end
 end
@@ -2904,13 +3003,12 @@ local function farCaveMist()
 	layer(80, 5, true, 11)
 	-- Below the drifting layers, sheets of mist, thickening downward to a solid one in the colour the rock is painted
 	-- fading into, well above the cave's floor. They run into the rock all round, so no edge shows.
-	for _, sheet in
-		{
-			{ -128, 0.55, Color3.fromRGB(92, 78, 156) },
-			{ -146, 0.3, Color3.fromRGB(74, 64, 130) },
-			{ -165, 0, Color3.fromRGB(56, 51, 107) },
-		}
-	do
+	local sheets = {
+		{ height = -128, transparency = 0.55, color = Color3.fromRGB(92, 78, 156) },
+		{ height = -146, transparency = 0.3, color = Color3.fromRGB(74, 64, 130) },
+		{ height = -165, transparency = 0, color = Color3.fromRGB(56, 51, 107) },
+	}
+	for _, sheet in sheets do
 		local part = Instance.new("Part")
 		part.Name = "MistSheet"
 		part.Anchored = true
@@ -2920,9 +3018,9 @@ local function farCaveMist()
 		part.CastShadow = false
 		part.Material = Enum.Material.SmoothPlastic
 		part.Size = Vector3.new(560, 1, 430)
-		part.Position = Vector3.new(0, sheet[1], 500)
-		part.Transparency = sheet[2]
-		part.Color = sheet[3]
+		part.Position = Vector3.new(0, sheet.height, 500)
+		part.Transparency = sheet.transparency
+		part.Color = sheet.color
 		part.Parent = folder
 	end
 	layer(-125, 9, false, 13)
@@ -3058,7 +3156,10 @@ local function buildGrove()
 	local dress = art:FindFirstChild("hub-grove-dress")
 	if dress then
 		for _, part in dress:GetDescendants() do
-			if part:IsA("MeshPart") and (string.find(part.Name, "^Bushes") or string.find(part.Name, "^Vines")) then
+			if
+				part:IsA("MeshPart")
+				and (string.find(part.Name, "^Bushes") or string.find(part.Name, "^Vines"))
+			then
 				part:Destroy()
 			end
 		end
@@ -3109,6 +3210,11 @@ local function retireBlockOut()
 end
 
 lighting()
+-- Establish the complete final wall/roof light rig before any yielding asset
+-- loads. Previously the upper-wall washes appeared only after the whole hub.
+sceneLights()
+wallCrystalLights()
+workspace:SetAttribute("HubSceneLightsReady", true)
 hideBlockOut()
 buildRock()
 buildBridges()
@@ -3122,7 +3228,6 @@ buildGunSide()
 buildFarSide()
 hubMist()
 zoneSlabs()
-sceneLights()
 shadeLights()
 buildCollision(function()
 	retireBlockOut()
@@ -3132,7 +3237,7 @@ for _, key in DISTANT do
 	local model = art:FindFirstChild(key)
 	if model then
 		for _, part in model:GetDescendants() do
-			if part:IsA("MeshPart") and isInk(part) then
+			if part:IsA("MeshPart") and isInk(part) and not part:GetAttribute("LuminousRim") then
 				CollectionService:AddTag(part, "HubDistantInk")
 			end
 		end

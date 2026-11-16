@@ -15,7 +15,7 @@ local lobbyLayout =
 	require(ReplicatedStorage:WaitForChild("LobbyScale"):WaitForChild("layout")) :: any
 local remote = ReplicatedStorage:WaitForChild("TrainingPortal") :: RemoteEvent
 local LoadingScreen = (require :: any)(
-	(script.Parent :: Instance).Parent:WaitForChild("Combat"):WaitForChild("LoadingScreen")
+	player:WaitForChild("PlayerScripts"):WaitForChild("Combat"):WaitForChild("LoadingScreen")
 )
 
 local ORIGIN = Vector3.new(floorPlan.origin[1], floorPlan.origin[2], floorPlan.origin[3])
@@ -77,15 +77,6 @@ local function root(): BasePart?
 end
 
 local busy = false
-local function setHud()
-	local inside = player:GetAttribute("InTraining") == true
-	local playerGui = player:FindFirstChildOfClass("PlayerGui")
-	local hud = playerGui and playerGui:FindFirstChild("CombatHUD")
-	if hud and hud:IsA("ScreenGui") then
-		hud.Enabled = inside
-	end
-end
-
 local function lobbyLook(): Vector3
 	for _, entry in lobbyLayout.portals do
 		if entry.name == "Training" then
@@ -181,7 +172,6 @@ local function travel(action: string, frame: CFrame, side: number)
 		task.wait()
 	end
 	setArenaLight(player:GetAttribute("InTraining") == true)
-	setHud()
 	body = root()
 	if body then
 		local eye = body.Position + Vector3.new(0, 1.5, 0)
@@ -240,14 +230,6 @@ task.spawn(function()
 			task.wait(0.08)
 			busy, holding = false, false
 		end
-	end
-end)
-
-player:GetAttributeChangedSignal("InTraining"):Connect(setHud)
-task.spawn(function()
-	for _ = 1, 40 do
-		setHud()
-		task.wait(0.5)
 	end
 end)
 

@@ -11,32 +11,29 @@ Last reviewed 2026-11-04. The short, current truth: **replace lines here when th
 | Area | Decision | Record |
 | --- | --- | --- |
 | Floppy | Final design; never transforms, so it has no abilities | [Catalogue](slugs/catalog/flopper-inspired.md) |
-| Inferno | Final design, both forms | [Catalogue](slugs/catalog/inferno.md) |
+| Inferno | Final design, both forms; in flight, a smooth body of fire off each wing tip on Rammstone's recipe, scaled down for two (2026-11-14, owner verdict pending) | [Catalogue](slugs/catalog/inferno.md) |
+| Aquabeek | Final design, both forms (2026-11-14) | [Catalogue](slugs/catalog/aquabeek.md) |
 | Inferno inspect | Playful Flame | [Studies](slugs/inferno-inspect-studies.md) |
 | Inspection | Flip the gun up, the slug's act, flip to catch it down | [Briefs](slugs/catalog/inspect-profiles.md) |
 | Slug roster | 14 slugs (12 acceptable at launch) | [Planning](slugs/ability-planning.md) |
 | Abilities | A main (Q) and a passive (E) per slug, armed for the next shot, skill-based and intertwining, with an [element chart](slugs/ability-specs.md#element-chart---confirmed-2026-11-05). [Specs](slugs/ability-specs.md). Inferno: Dragon's Breath and Fire Curtain. Aquabeek: Crashwave and Mistbank. Arachnet: Snapbind and Silkline. Frostcrawler: Iceburst and Ice Wall. Tazerling: Chain Lightning and Livewire. Rammstone: Shove Punch and a rock cover and map-breaking passive. Boon Doc: Mending Shot and Healing Spring. Tormato: Tornado and Updraft. Vinedrill: Tangle and Bramble. Phosphoro: Flash and Lantern. Flatulorhinkus: Nausea and Stink Cloud. Hop Rock: Sticky Bomb and Mine. Frightgeist: Jump Scare and Decoy. None built in the game yet | [Catalogue](slugs/catalog/index.md) |
 | Boon Doc | Final base and transformed designs (2026-11-14) | [Catalogue](slugs/catalog/boon-doc.md) |
+| Tormato | Final base and transformed designs (2026-11-15) | [Catalogue](slugs/catalog/tormato.md) |
 | Lobby | Slug Grove complete; slow lava gloop approved | [Checkpoint](art/lobby-checkpoint.md) |
 | Art direction | Living Comic-Book Fantasy | [Style guide](art/style-guide.md) |
 
 ## Open with the owner
 
-- **Lobby rounds 3 to 12** (in main and the game place): lit cavern, far side, plain mountain, revamped pit; owner's verdict, hand tests and phone cost pending. [Lobby hub](art/lobby-hub.md).
-- **Boon Doc look** (2026-11-14, committed on `integration/lobby-all`): **final base design** and **final transformed design**, both approved by the owner. Transformed: a fat, warty flying toad (a little ugly as a joke) with one smooth head and a painted cap, the Healing mint eye, wide smile, halo over the forehead, seven glowing ivory-gold bulb spines, thick relaxed arms with glowing fingertips, dangling legs, angel wings flat on the upper back with fanned feathers, a softly blended ivory underside. Snapshots in evidence/boon-doc/base-final and transformed-final. Next: the Blender build, when the owner asks. [Record](slugs/catalog/boon-doc.md).
-- **Tazerling look** (2026-11-12, branch): base-form concept; owner verdict pending. [Record](slugs/catalog/tazerling.md).
-- **Aquabeek look** (2026-11-12, branch `concept/aquabeek-prototypes`): prototype B (Gillbeak) base form reworked on Inferno's body with a sculpted face; transformed form not yet redrawn; owner verdict pending. [Record](slugs/catalog/aquabeek.md).
-- **Rammstone:** the passive's name, and rock cover's lifetime and height. [Spec](slugs/ability-specs.md#rammstone---confirmed-spec-2026-11-06).
-- **Ability system** (2026-11-06, in main): shared system plus Aquabeek built and checked in Studio; Q/E arming, Inventory on F, themed name tags. Movement v7.40: straight wall runs with a hop up, smoother kicks; owner feel pending. [Built so far](slugs/ability-specs.md#built-so-far---2026-11-06).
-- **Inspection and shot size** (2026-11-07, in main): R in third person shows the act in first person, with the canister held nearer so the slug reads about 1.4 times bigger; Inferno's flame inspection now in the game place; fired slugs 1.3 studs, lobby slugs stay 2. Owner verdict pending. [Inspect note](loadout-controls.md#current-first-person-inspect-view-2026-11-07).
-- **Canister HUD** (2026-11-07, in main): the slug bar is five separate canisters like the blaster's, with the health bar 1.3 times bigger on top and the Q/E chips either side; revised for the owner's notes (no inner outline, smaller still slugs, cap the size of the base). Checked in Studio with real keys; owner verdict pending. [PvP UI](pvp-ui.md#what-the-owner-chose).
-- **Inspections** (2026-11-07, in main): livelier Burpy (deeper inhale, strain, resting breath), Floppy loaded as tall as Burpy, Floppy looks up from the waist so his under-eyes stop smearing; fired slugs 1.3 studs. Burpy's mesh memory: the grove's display Infernos filled it; fixed, ready in both views; the act needs the owner's look. [Inspect studies](slugs/inferno-inspect-studies.md).
-- **Aim and wall runs** (2026-11-07, in main): Floppy flies flatter (120/145/170, gravity 35, drag 0.2) and empty space aims 100 studs out, so shots stop lobbing over the crosshair; wall runs hold their height (v7.41). Owner feel pending; wall runs not yet tried by hand. [Combat](combat.md#flatter-floppy-and-a-farther-empty-space-aim-2026-11-07-current), [movement](movement.md#what-changed-in-v741-wall-runs-hold-their-height).
-- **Ability specs:** every slug's main and passive defined and confirmed (2026-11-06), with the element chart, Q/E arming, cooldowns and caps. Next: classes and rarities. [Specs](slugs/ability-specs.md).
-- **Remaining kits:** none; every other slug has a main and a passive. Floppy has no abilities. Read the [ability playbook](slugs/ability-playbook.md) first.
-- **Ability planning rule:** base concepts first with numbers later; maps get built around the abilities; Rocklock V2 was only a test.
-- **Shared transformation:** the glow, twirl and reveal are in; the owner's verdict on feel is pending. [Transformation](slugs/transformation-system.md).
-- **Animation tooling** (2026-11-04): director and procedural skills, motion preview and motion review are new and unproven on a real slug task. [Library](slugs/motion-library.md).
+Full wording of these items, as of 2026-11-16, is in [status history](status-history.md#status-open-items-moved-2026-11-16).
+
+- **Slug idles and faces** (2026-11-16): reusable `SlugIdle` performances, HUD canister flipbooks, Aquabeek's eyes, mouth bones on Aquabeek, Rammstone, Tormato and Boon Doc, Tormato's spinning eyes, every slug in the Slug Grove; verdict pending. [PvP UI](pvp-ui.md), [lobby hub](art/lobby-hub.md).
+- **HUD and UI** (2026-11-14 to 16): satchel, health bar, canisters and gaps; inventory loadout swap (six slugs, five slots); verdict pending. [PvP UI](pvp-ui.md).
+- **Flight trails** (2026-11-14): Rammstone's confirmed as the ideal; Inferno's and Aquabeek's on his recipe, scaled down; verdict pending.
+- **Tazerling:** final base design; transformed form concept 4 pending. [Record](slugs/catalog/tazerling.md).
+- **Tormato, Boon Doc, Aquabeek, Rammstone:** designs final and in the game place; a shot's transformation and flight not yet seen for Tormato and Boon Doc. [Catalogue](slugs/catalog/index.md).
+- **Lobby rounds 3 to 12:** verdict, hand tests and phone cost pending. [Lobby hub](art/lobby-hub.md).
+- **Earlier, verdict pending:** ability system and Aquabeek's kit, inspection and shot size, canister HUD, livelier inspections, flatter Floppy aim and wall runs (2026-11-06 to 07); shared transformation feel. [Ability specs](slugs/ability-specs.md), [inspect note](loadout-controls.md).
+- **Next design steps:** classes and rarities; abilities first, maps after, numbers later. [Playbook](slugs/ability-playbook.md).
 
 ## Known problems
 
@@ -46,4 +43,4 @@ Last reviewed 2026-11-04. The short, current truth: **replace lines here when th
 
 ## Before you start
 
-Other worktrees hold in-progress branches (`git worktree list`); preserve them. Every branch was merged into `main` on 2026-11-07, with nothing left uncommitted. Check `git status` first and do not discard what you did not make.
+Other worktrees hold in-progress branches (`git worktree list`); preserve them. All work to 2026-11-16 is committed on `integration/lobby-all`. Check `git status` first and do not discard what you did not make.

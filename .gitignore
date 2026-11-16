@@ -26,3 +26,6 @@ Thumbs.db
 # Private third-party animation sources, conversions and local asset IDs.
 /private-assets/
 /experiments/movement/private/
+
+# Blender backups
+*.blend1

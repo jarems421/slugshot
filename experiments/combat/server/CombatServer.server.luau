@@ -86,38 +86,6 @@ local function buildInfernoModels()
 	local asset = (require :: any)(assetModule)
 	local Appearance = (require :: any)(appearance)
 	local scale = Combat.Slugs.Inferno.Size / (0.34 * 2.72)
-	-- Fire glows on its own rather than being lit like skin.
-	local function glowing(part: MeshPart, name: string)
-		local template = materials:FindFirstChild(name)
-		assert(template and template:IsA("SurfaceAppearance"), `no material for {name}`)
-		part.TextureID = ""
-		part.Color = Color3.new(1, 1, 1)
-		part.Material = Enum.Material.SmoothPlastic
-		part.CastShadow = false
-		local surface = template:Clone()
-		surface.EmissiveStrength = 2.5
-		surface.Parent = part
-	end
-	-- The flying dragon's wing fire: its own model on matching bones, lined up by its root bone (tools/slugs/build_wing_fire.py).
-	local function addWingFire(model: Model)
-		local container = InsertService:LoadAsset(asset.comicWingFireModel)
-		local mine = model:FindFirstChild("root", true) :: Bone
-		local theirs = container:FindFirstChild("root", true) :: Bone
-		assert(mine and theirs, "wing fire root bones missing")
-		local shift = mine.WorldPosition - theirs.WorldPosition
-		for _, item in container:GetDescendants() do
-			if item:IsA("BasePart") then
-				item.Position += shift
-				if item:IsA("MeshPart") then
-					glowing(item, "InfernoWingFire")
-				end
-			end
-		end
-		for _, child in container:GetChildren() do
-			child.Parent = model
-		end
-		container:Destroy()
-	end
 	local function build(id: number, name: string): (Model, Vector3)
 		local container = InsertService:LoadAsset(id)
 		local model = Instance.new("Model")
@@ -127,9 +95,8 @@ local function buildInfernoModels()
 		end
 		container:Destroy()
 		Appearance.dress(model, materials, Combat.Slugs.Inferno.Size)
-		if name == "InfernoTransformed" then
-			addWingFire(model)
-		end
+		-- In flight his fire trails off his wing tips (InfernoMotion). The built wing fire (tools/slugs/build_wing_fire.py)
+		-- is no longer clipped on: owner, 2026-11-14, "it just looks too stiff ... I want fluid trails".
 		for _, item in model:GetDescendants() do
 			if item:IsA("BasePart") then
 				item.Anchored = true
@@ -186,6 +153,279 @@ local infernoOk, infernoProblem = pcall(buildInfernoModels :: () -> any)
 if not infernoOk then
 	warn(`[Combat] Inferno models unavailable, shots draw a stand-in: {infernoProblem}`)
 end
+
+-- Rammstone, as Inferno: he leaves the gun in his base form (RammstoneIcon, RammstoneFlight) and SlugTransformation
+-- swaps him to his transformed form in flight (RammstoneTransformed), which RammstoneMotion drives (flight idle, the
+-- punch on impact, the red trail and pebbles). Exported at Floppy's height (tools/slugs/export_rammstone_roblox.py).
+local function buildRammstoneModels()
+	local assetModule = ReplicatedStorage:FindFirstChild("RammstoneAsset")
+	local appearance = ServerScriptService:WaitForChild("FloppyIntegration")
+		:FindFirstChild("RammstoneAppearance")
+	local materials = ServerStorage:FindFirstChild("RammstoneMaterials")
+	if not (assetModule and appearance and materials) then
+		return
+	end
+	local asset = (require :: any)(assetModule)
+	local Appearance = (require :: any)(appearance)
+	local size = Combat.Slugs.Rammstone.Size
+	local scale = size / (0.34 * 2.72)
+	local function build(id: number, name: string): Model
+		local container = InsertService:LoadAsset(id)
+		local model = Instance.new("Model")
+		model.Name = name
+		for _, child in container:GetChildren() do
+			child.Parent = model
+		end
+		container:Destroy()
+		Appearance.dress(model, materials)
+		for _, item in model:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Anchored = true
+				item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+				item.CastShadow = false
+				if not item:IsA("MeshPart") then
+					item.Transparency = 1
+				end
+			elseif item:IsA("Bone") then
+				item.Transform = CFrame.identity
+			end
+		end
+		model:ScaleTo(model:GetScale() * scale)
+		return model
+	end
+	local function pivot(model: Model, centre: Vector3, up: Vector3, front: Vector3)
+		front = (front - up * front:Dot(up)).Unit
+		model.WorldPivot = CFrame.fromMatrix(centre, up:Cross(-front), up, -front)
+		model.Parent = combatAssets
+	end
+	local function bone(model: Model, name: string): Bone
+		local found = model:FindFirstChild(name, true)
+		assert(found and found:IsA("Bone"), `{model.Name} has no bone {name}`)
+		return found
+	end
+
+	local brute = build(asset.transformed.model, "RammstoneTransformed")
+	local body, tail = bone(brute, "Body"), bone(brute, "Tail")
+	local forward = (body.WorldPosition - tail.WorldPosition).Unit
+	local side = (bone(brute, "UpperArm.L").WorldPosition - bone(brute, "UpperArm.R").WorldPosition).Unit
+	local up = forward:Cross(side).Unit
+	if up.Y < 0 then
+		up = -up
+	end
+	pivot(brute, body.WorldPosition, up, forward)
+
+	local base = build(asset.base.model, "RammstoneIcon")
+	local root, head = bone(base, "root"), bone(base, "head")
+	local baseUp = (head.WorldPosition - root.WorldPosition).Unit
+	local eyeL = base:FindFirstChild("RammstoneEyeL", true) :: BasePart
+	local eyeR = base:FindFirstChild("RammstoneEyeR", true) :: BasePart
+	assert(eyeL and eyeR, "Rammstone's eyes are missing")
+	pivot(
+		base,
+		root.WorldPosition + baseUp * (size / 2),
+		baseUp,
+		(eyeL.Position + eyeR.Position) / 2 - head.WorldPosition
+	)
+	local flight = base:Clone()
+	flight.Name = "RammstoneFlight"
+	flight.Parent = combatAssets
+end
+local rammstoneOk, rammstoneProblem = pcall(buildRammstoneModels :: () -> any)
+if not rammstoneOk then
+	warn(`[Combat] Rammstone models unavailable, shots draw a stand-in: {rammstoneProblem}`)
+end
+
+-- Aquabeek, as Rammstone: she leaves the gun in her base form (AquabeekIcon, AquabeekFlight) and SlugTransformation
+-- swaps her to her transformed form in flight (AquabeekTransformed), which AquabeekMotion drives (rippling blades, the
+-- water trails off her blade tips). Exported at Floppy's height (tools/slugs/export_aquabeek_roblox.py).
+local function buildAquabeekModels()
+	local assetModule = ReplicatedStorage:FindFirstChild("AquabeekAsset")
+	local appearance = ServerScriptService:WaitForChild("FloppyIntegration")
+		:FindFirstChild("AquabeekAppearance")
+	local materials = ServerStorage:FindFirstChild("AquabeekMaterials")
+	if not (assetModule and appearance and materials) then
+		return
+	end
+	local asset = (require :: any)(assetModule)
+	local Appearance = (require :: any)(appearance)
+	local size = Combat.Slugs.Aquabeek.Size
+	local scale = size / (0.34 * 2.72)
+	local function build(id: number, name: string): Model
+		local container = InsertService:LoadAsset(id)
+		local model = Instance.new("Model")
+		model.Name = name
+		for _, child in container:GetChildren() do
+			child.Parent = model
+		end
+		container:Destroy()
+		Appearance.dress(model, materials)
+		for _, item in model:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Anchored = true
+				item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+				item.CastShadow = false
+				if not item:IsA("MeshPart") then
+					item.Transparency = 1
+				end
+			elseif item:IsA("Bone") then
+				item.Transform = CFrame.identity
+			end
+		end
+		model:ScaleTo(model:GetScale() * scale)
+		return model
+	end
+	local function pivot(model: Model, centre: Vector3, up: Vector3, front: Vector3)
+		front = (front - up * front:Dot(up)).Unit
+		model.WorldPivot = CFrame.fromMatrix(centre, up:Cross(-front), up, -front)
+		model.Parent = combatAssets
+	end
+	local function bone(model: Model, name: string): Bone
+		local found = model:FindFirstChild(name, true)
+		assert(found and found:IsA("Bone"), `{model.Name} has no bone {name}`)
+		return found
+	end
+
+	local fish = build(asset.transformed.model, "AquabeekTransformed")
+	local body, tail = bone(fish, "Body"), bone(fish, "Tail")
+	local forward = (body.WorldPosition - tail.WorldPosition).Unit
+	local side = (
+		bone(fish, "BladeMiddle1.L").WorldPosition - bone(fish, "BladeMiddle1.R").WorldPosition
+	).Unit
+	local up = forward:Cross(side).Unit
+	if up.Y < 0 then
+		up = -up
+	end
+	pivot(fish, body.WorldPosition, up, forward)
+
+	local base = build(asset.base.model, "AquabeekIcon")
+	local root, head = bone(base, "root"), bone(base, "head")
+	local baseUp = (head.WorldPosition - root.WorldPosition).Unit
+	-- She imports facing the mesh's +Z, the reverse of its look vector (seen in Studio: the look vector showed her back).
+	-- Roblox drops bones without skinned vertices, so a marker bone doesn't survive the import.
+	local baseBody = base:FindFirstChild("AquabeekBody", true) :: MeshPart
+	assert(baseBody, "Aquabeek's body is missing")
+	pivot(base, root.WorldPosition + baseUp * (size / 2), baseUp, -baseBody.CFrame.LookVector)
+	local flight = base:Clone()
+	flight.Name = "AquabeekFlight"
+	flight.Parent = combatAssets
+end
+local aquabeekOk, aquabeekProblem = pcall(buildAquabeekModels :: () -> any)
+if not aquabeekOk then
+	warn(`[Combat] Aquabeek models unavailable, shots draw a stand-in: {aquabeekProblem}`)
+end
+
+-- Tormato and Boon Doc, exported as Aquabeek is (tools/slugs/export_tormato_roblox.py, export_boon_doc_roblox.py) and
+-- built the same way: the base form leaves the gun ({id}Icon, {id}Flight) and SlugTransformation swaps in the
+-- transformed form ({id}Transformed), which each slug's motion script drives. Both import facing the mesh's +Z, as she
+-- does. `front` and `back` name bones whose difference points forward on the transformed form; `left` and `right` a
+-- pair across it.
+type ConceptSlug = {
+	id: string,
+	body: string, -- the base form's body MeshPart
+	front: { string },
+	back: { string },
+	left: string,
+	right: string,
+}
+local function buildConceptSlug(spec: ConceptSlug)
+	local assetModule = ReplicatedStorage:FindFirstChild(`{spec.id}Asset`)
+	local appearance = ServerScriptService:WaitForChild("FloppyIntegration")
+		:FindFirstChild(`{spec.id}Appearance`)
+	local materials = ServerStorage:FindFirstChild(`{spec.id}Materials`)
+	if not (assetModule and appearance and materials) then
+		return
+	end
+	local asset = (require :: any)(assetModule)
+	local Appearance = (require :: any)(appearance)
+	local size = Combat.Slugs[spec.id].Size
+	local scale = size / (0.34 * 2.72)
+	local function build(id: number, name: string): Model
+		local container = InsertService:LoadAsset(id)
+		local model = Instance.new("Model")
+		model.Name = name
+		for _, child in container:GetChildren() do
+			child.Parent = model
+		end
+		container:Destroy()
+		Appearance.dress(model, materials)
+		for _, item in model:GetDescendants() do
+			if item:IsA("BasePart") then
+				item.Anchored = true
+				item.CanCollide, item.CanQuery, item.CanTouch = false, false, false
+				item.CastShadow = false
+				if not item:IsA("MeshPart") then
+					item.Transparency = 1
+				end
+			elseif item:IsA("Bone") then
+				item.Transform = CFrame.identity
+			end
+		end
+		model:ScaleTo(model:GetScale() * scale)
+		return model
+	end
+	local function pivot(model: Model, centre: Vector3, up: Vector3, front: Vector3)
+		front = (front - up * front:Dot(up)).Unit
+		model.WorldPivot = CFrame.fromMatrix(centre, up:Cross(-front), up, -front)
+		model.Parent = combatAssets
+	end
+	local function bone(model: Model, name: string): Bone
+		local found = model:FindFirstChild(name, true)
+		assert(found and found:IsA("Bone"), `{model.Name} has no bone {name}`)
+		return found
+	end
+	local function mean(model: Model, names: { string }): Vector3
+		local sum = Vector3.zero
+		for _, name in names do
+			sum += bone(model, name).WorldPosition
+		end
+		return sum / #names
+	end
+
+	local flying = build(asset.transformed.model, `{spec.id}Transformed`)
+	local front, back = mean(flying, spec.front), mean(flying, spec.back)
+	local forward = (front - back).Unit
+	local side = (bone(flying, spec.left).WorldPosition - bone(flying, spec.right).WorldPosition).Unit
+	local up = forward:Cross(side).Unit
+	if up.Y < 0 then
+		up = -up
+	end
+	pivot(flying, (front + back) / 2, up, forward)
+
+	local base = build(asset.base.model, `{spec.id}Icon`)
+	local root, head = bone(base, "root"), bone(base, "head")
+	local baseUp = (head.WorldPosition - root.WorldPosition).Unit
+	local baseBody = base:FindFirstChild(spec.body, true) :: MeshPart
+	assert(baseBody, `{spec.id}'s body is missing`)
+	pivot(base, root.WorldPosition + baseUp * (size / 2), baseUp, -baseBody.CFrame.LookVector)
+	local flight = base:Clone()
+	flight.Name = `{spec.id}Flight`
+	flight.Parent = combatAssets
+end
+for _, spec: ConceptSlug in
+	{
+		{
+			id = "Tormato",
+			body = "TormatoBody",
+			front = { "Head" },
+			back = { "Tail1" },
+			left = "Wing1.L",
+			right = "Wing1.R",
+		},
+		{
+			id = "BoonDoc",
+			body = "BoonDocBody",
+			front = { "Arm1.L", "Arm1.R" },
+			back = { "Leg1.L", "Leg1.R" },
+			left = "Arm1.L",
+			right = "Arm1.R",
+		},
+	}
+do
+	local built, why = pcall(buildConceptSlug :: (ConceptSlug) -> any, spec)
+	if not built then
+		warn(`[Combat] {spec.id} models unavailable, shots draw a stand-in: {why}`)
+	end
+end
 combatAssets.Parent = ReplicatedStorage
 
 type Shot = {
@@ -241,13 +481,76 @@ local function stateOf(player: Player): Shooter
 end
 
 local function showSelection(character: Model, tool: Tool, state: Shooter)
+	local loadout = Combat.loadoutOf(Players:GetPlayerFromCharacter(character))
 	tool:SetAttribute("SelectedSlugSlot", state.selected)
-	tool:SetAttribute("SelectedSlugId", Combat.Loadout[state.selected])
+	tool:SetAttribute("SelectedSlugId", loadout[state.selected])
 	tool:SetAttribute("SlugReady", os.clock() >= (state.ready[state.selected] or 0))
 	character:SetAttribute("SelectedSlugSlot", state.selected)
+	character:SetAttribute("SelectedSlugId", loadout[state.selected])
+end
+
+local function watchZone(player: Player)
+	player:GetAttributeChangedSignal("InTraining"):Connect(function()
+		if not Combat.canUseBlaster(player) then
+			AbilityRuntime.cancel(player)
+		end
+	end)
+end
+Players.PlayerAdded:Connect(watchZone)
+for _, player in Players:GetPlayers() do
+	watchZone(player)
 end
 
 remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
+	if not Combat.canUseBlaster(player) then
+		if kind == "Arm" then
+			AbilityRuntime.arm(player, nil, nil)
+		elseif kind == "Fire" and typeof(payload) == "table" then
+			reject(player, payload.id, "lobby")
+		end
+		-- Selecting and swapping carried slugs are allowed in the lobby; drawing,
+		-- inspecting, arming and shooting are not.
+		if kind ~= "Select" and kind ~= "CancelInspect" and kind ~= "Carry" then
+			return
+		end
+	end
+	-- The inventory swaps a slug from the roster into a carried slot; one already carried trades places with whatever
+	-- was there (owner, 2026-11-16: "make it so you can swap out the slugs in your HUD bar using inventory").
+	if kind == "Carry" then
+		local slot, id =
+			typeof(payload) == "table" and payload.slot, typeof(payload) == "table" and payload.slug
+		if
+			typeof(slot) ~= "number"
+			or slot ~= slot
+			or slot % 1 ~= 0
+			or slot < 1
+			or slot > Combat.SlotCount
+			or typeof(id) ~= "string"
+			or not table.find(Combat.Roster, id)
+		then
+			return
+		end
+		local loadout = table.clone(Combat.loadoutOf(player))
+		local from = table.find(loadout, id)
+		if from then
+			loadout[from] = loadout[slot]
+		end
+		loadout[slot] = id
+		player:SetAttribute("Loadout", table.concat(loadout, ","))
+		local state = stateOf(player)
+		if from == state.selected or slot == state.selected then
+			AbilityRuntime.cancel(player)
+		end
+		local character = player.Character
+		if character then
+			character:SetAttribute("SelectedSlugId", loadout[state.selected])
+			local tool = blasterOf(character)
+			if tool then
+				showSelection(character, tool, state)
+			end
+		end
+		return
+	end
 	if kind == "Select" or kind == "Inspect" or kind == "CancelInspect" then
 		local character = player.Character
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -267,7 +570,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 				or payload % 1 ~= 0
 				or payload < 1
 				or payload > Combat.SlotCount
-				or not Combat.Slugs[Combat.Loadout[payload]]
+				or not Combat.Slugs[Combat.loadoutOf(player)[payload]]
 			then
 				return
 			end
@@ -277,6 +580,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 			state.selected = payload
 			character:SetAttribute("SlugInspectAt", nil)
 			character:SetAttribute("SelectedSlugSlot", payload)
+			character:SetAttribute("SelectedSlugId", Combat.loadoutOf(player)[payload])
 			if tool then
 				showSelection(character, tool, state)
 			end
@@ -294,7 +598,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		if payload == false then
 			AbilityRuntime.arm(player, nil, nil)
 		elseif payload == "main" or payload == "passive" then
-			AbilityRuntime.arm(player, Combat.Loadout[stateOf(player).selected], payload)
+			AbilityRuntime.arm(player, Combat.loadoutOf(player)[stateOf(player).selected], payload)
 		end
 		return
 	end
@@ -324,7 +628,7 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 	if slot ~= state.selected then
 		return reject(player, id, "selection", slot)
 	end
-	local slugId = Combat.Loadout[slot]
+	local slugId = Combat.loadoutOf(player)[slot]
 	local slug = if slugId then Combat.Slugs[slugId] else nil
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -379,6 +683,9 @@ remote.OnServerEvent:Connect(function(player: Player, kind: any, payload: any)
 		end
 		-- Equipped state was checked on receipt. Holstering after a committed
 		-- release must not cancel a shot just because replication needed to catch up.
+	end
+	if not Combat.canUseBlaster(player) then
+		return fail("lobby")
 	end
 	if (origin - root.Position).Magnitude > Combat.MaxOriginOffset then
 		return fail("origin")

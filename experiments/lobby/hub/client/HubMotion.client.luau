@@ -8,6 +8,39 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+-- Native focus follows the player's feet and can clip the tall cavern's lights.
+-- Wait for the native camera to initialize, then update in PreRender, after its
+-- bound camera steps. Correct Focus values in an earlier step are insufficient.
+-- The view/controls stay native. Warm the upper wall in the default slightly
+-- downward view; steep downward views return focus to pit height.
+task.spawn(function()
+	local playerScripts = Players.LocalPlayer:WaitForChild("PlayerScripts")
+	local _ = (require :: any)(playerScripts:WaitForChild("PlayerModule"))
+	RunService.PreRender:Wait()
+	RunService.PreRender:Connect(function()
+		local camera = workspace.CurrentCamera
+		if
+			not camera
+			or camera.CameraType == Enum.CameraType.Scriptable
+			or Players.LocalPlayer:GetAttribute("InTraining")
+		then
+			return
+		end
+		local base = camera.Focus.Position
+		local look = camera.CFrame.LookVector
+		local horizontal = Vector3.new(look.X, 0, look.Z)
+		if horizontal.Magnitude < 0.001 then
+			return
+		end
+		-- The wall reaches 330 studs out and 251 up. Pitch must not shorten the
+		-- forward distance, or the upper wall leaves the lighting volume again.
+		local ahead = camera.CFrame.Position + horizontal.Unit * 160
+		local upperView = math.clamp((look.Y + 0.6) / 0.25, 0, 1)
+		local height = base.Y + math.max(0, 125 - base.Y) * upperView
+		camera.Focus = CFrame.new(ahead.X, height, ahead.Z)
+	end)
+end)
+
 local ORBIT = 0.12
 local BRIDGE_UNIT = 2.55 -- studs per bridge unit
 local MOVE_RATE = 1 / 30
@@ -616,7 +649,7 @@ local function startSwirl(e: ParticleEmitter)
 	if e.Enabled then
 		e:Emit(1)
 	end
-	swirls[e] = os.clock() + (e:GetAttribute("SwirlPeriod") or 10)
+	swirls[e] = os.clock() + ((e:GetAttribute("SwirlPeriod") :: number?) or 10)
 end
 local function addSwirl(instance: Instance)
 	if instance:IsA("ParticleEmitter") then
@@ -642,7 +675,7 @@ RunService.Heartbeat:Connect(function()
 		if not e.Parent then
 			swirls[e] = nil
 		elseif now >= due then
-			swirls[e] = due + (e:GetAttribute("SwirlPeriod") or 10)
+			swirls[e] = due + ((e:GetAttribute("SwirlPeriod") :: number?) or 10)
 			if e.Enabled then
 				e:Emit(1)
 			end

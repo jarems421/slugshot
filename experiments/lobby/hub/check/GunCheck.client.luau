@@ -68,7 +68,8 @@ task.spawn(function()
 	for radius = 82, 106, 3 do
 		local row = {}
 		for side = -12, 12, 4 do
-			local hit = workspace:Raycast(Vector3.new(-radius, 30, side), Vector3.new(0, -60, 0), only)
+			local hit =
+				workspace:Raycast(Vector3.new(-radius, 30, side), Vector3.new(0, -60, 0), only)
 			table.insert(row, if hit then string.format("%.2f", hit.Position.Y) else "-")
 		end
 		print(`GUNCHECK ground r={radius} {table.concat(row, " ")}`)

@@ -3,6 +3,7 @@
 -- own parts, with the same slime along the top and the same liquid sliders. The server owns and checks both values.
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
+local ContextActionService = game:GetService("ContextActionService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -458,6 +459,18 @@ ProximityPromptService.PromptShown:Connect(function(prompt: ProximityPrompt)
 	if not isStation(prompt) then
 		return
 	end
+	-- F belongs to the nearby station while its prompt is visible. Handle it
+	-- before the general inventory binding, so one press cannot toggle both menus.
+	local action = "TrainingDummySettings"
+	ContextActionService:BindActionAtPriority(action, function(_, state)
+		if UserInputService:GetFocusedTextBox() then
+			return Enum.ContextActionResult.Pass
+		end
+		if state == Enum.UserInputState.Begin then
+			Theme.toggleMenu(MENU)
+		end
+		return Enum.ContextActionResult.Sink
+	end, false, Enum.ContextActionPriority.High.Value + 1, prompt.KeyboardKeyCode)
 	local board = Instance.new("BillboardGui")
 	board.Name = "TrainingPromptBoard"
 	board.Adornee = prompt.Parent :: Instance
@@ -494,6 +507,7 @@ ProximityPromptService.PromptShown:Connect(function(prompt: ProximityPrompt)
 	})
 	board.Parent = gui
 	prompt.PromptHidden:Once(function()
+		ContextActionService:UnbindAction(action)
 		board:Destroy()
 	end)
 end)

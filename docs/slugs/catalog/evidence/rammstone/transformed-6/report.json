@@ -1,0 +1,35 @@
+{
+  "tool": "4.5.14 LTS",
+  "triangles": 94566,
+  "body_triangles": 48116,
+  "plates": 36,
+  "punch_frames": [
+    1,
+    9,
+    11,
+    13,
+    15,
+    18,
+    24,
+    38,
+    46
+  ],
+  "renders": [
+    "front.png",
+    "side-left.png",
+    "back.png",
+    "side-right.png",
+    "three-quarter.png",
+    "hero.png",
+    "chase.png",
+    "face.png",
+    "punch-01.png",
+    "punch-09.png",
+    "punch-11.png",
+    "punch-13.png",
+    "punch-15.png",
+    "punch-18.png",
+    "punch-24.png",
+    "punch-38.png"
+  ]
+}

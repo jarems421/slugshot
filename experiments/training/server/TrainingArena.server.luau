@@ -8,9 +8,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
-local StarterPack = game:GetService("StarterPack")
 
-local Combat = require(ReplicatedStorage:WaitForChild("Combat"))
 local LookPack = require(ReplicatedStorage:WaitForChild("LookPack"))
 local Motion = require(script.Parent.Motion)
 local floorPlan = require(ReplicatedStorage:WaitForChild("TrainingFloor")) :: any
@@ -732,44 +730,6 @@ local portalRemote = Instance.new("RemoteEvent")
 portalRemote.Name = "TrainingPortal"
 portalRemote.Parent = ReplicatedStorage
 
-local function isBlaster(item: Instance): boolean
-	return Combat.isBlaster(item)
-end
-
-local function setArmed(player: Player, armed: boolean)
-	local character, backpack = player.Character, player:FindFirstChildOfClass("Backpack")
-	if not backpack then
-		return
-	end
-	local carried: any = nil
-	for _, holder in { character, backpack } :: { any } do
-		for _, item in holder:GetChildren() do
-			if isBlaster(item) then
-				if armed then
-					carried = item
-				else
-					item:Destroy()
-				end
-			end
-		end
-	end
-	if armed then
-		if not carried then
-			local tool = StarterPack:FindFirstChild("Blaster")
-			if tool then
-				local copy = tool:Clone() :: Tool
-				copy.Parent = backpack
-				carried = copy
-			end
-		end
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		if carried and humanoid then
-			carried:SetAttribute("HoldStyle", "Pistol")
-			humanoid:EquipTool(carried)
-		end
-	end
-end
-
 local function warp(player: Player, frame: CFrame)
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
@@ -823,15 +783,19 @@ portalRemote.OnServerEvent:Connect(function(player: Player, action: any, lateral
 		if near(player, lobbyPortalFrame().Position, 26) then
 			lastUse[player] = now
 			warp(player, throughFrame(arenaPortalFrame(), lateral))
+			if player.Character then
+				player.Character:SetAttribute("TrainingArrived", true)
+			end
 			player:SetAttribute("InTraining", true)
-			setArmed(player, true)
 		end
 	elseif action == "Exit" and player:GetAttribute("InTraining") then
 		local at = floorPlan.arrival.portal
 		if near(player, world(at[1], at[2], at[3]), 26) then
 			lastUse[player] = now
-			setArmed(player, false)
 			player:SetAttribute("InTraining", false)
+			if player.Character then
+				player.Character:SetAttribute("TrainingArrived", nil)
+			end
 			warp(player, throughFrame((lobbyPortalFrame()), lateral))
 		end
 	end
@@ -846,14 +810,9 @@ local function watch(player: Player)
 		end
 		if player:GetAttribute("InTraining") then
 			warp(player, arrivalFrame())
-			setArmed(player, true)
-		else
-			setArmed(player, false)
+			character:SetAttribute("TrainingArrived", true)
 		end
 	end)
-	if player.Character then
-		setArmed(player, player:GetAttribute("InTraining") == true)
-	end
 end
 Players.PlayerAdded:Connect(watch)
 for _, player in Players:GetPlayers() do
@@ -872,10 +831,6 @@ task.spawn(function()
 			local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
 			if root and player:GetAttribute("InTraining") and root.Position.Y < FALL_Y then
 				warp(player, arrivalFrame())
-			end
-			-- The blaster reaches backpacks whenever its build finishes, so the lobby is kept clear rather than cleared once.
-			if not player:GetAttribute("InTraining") then
-				setArmed(player, false)
 			end
 		end
 	end

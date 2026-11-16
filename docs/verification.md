@@ -53,3 +53,11 @@ Project scripts/assertions passed without project-script errors. The Studio sess
 No requested Rojo/MCP/runtime/two-client test remains uncompleted. Outside-task checks remain unverified: full engine-aware CLI types, interactive VS Code diagnostics, a model-driven tool call from an interactive Claude chat, new-session skill discovery, device/stress/network-impairment tests and Blender exports. The bundled skill validator still lacks PyYAML; dependency-free project metadata/parity checks pass instead. Existing IDE chats may need a reload/new session to expose new tools; native Codex connectivity is verified.
 
 See [testing](testing.md) to reproduce. Source was restored before the final automated build and commit.
+
+## Satchel and wall startup (2026-11-14)
+
+**Automated:** combat checks including foundation/movement pass; normal game builds. HubArt/HubMotion pass StyLua, Selene and engine-aware strict analysis with the absolute game sourcemap. Python UI/harness scripts compile.
+
+**Runtime/integration:** actual inventory F/click interaction and 45 image bindings verified; fresh-Play native wall captures and the unchanged 177-soft-light checksum recorded in the [report](evidence/2026-11-14-satchel-and-wall-investigation.json). Current official Studio MCP works through stdio fallback; original app transport needs reload. Owner visual acceptance, multiplayer and device coverage pending. Prior broad training suite's five timing failures remain recorded.
+
+**Final scoped runtime:** all 11 wall/satchel/lifecycle assertions pass in69seconds; five delayed-model preview checks pass. Combat checks rerun after the preview correction and pass. Four Studio script hashes match filesystem.

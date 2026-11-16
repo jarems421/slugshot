@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-14",
+  "scope": "Reference satchel, upper-wall startup lighting and late slug-preview refresh",
+  "state": {
+    "icon": "Implemented/verified in native Studio; owner visual verdict pending",
+    "wall_lighting": "Implemented/verified in fresh one-client Studio Play; owner visual/device acceptance pending"
+  },
+  "icon": {
+    "source": "assets/source/ui/goo/icon-inventory.svg",
+    "png": "assets/source/ui/goo/icon-inventory.png",
+    "generator": "tools/ui/build_inventory_icon.py",
+    "provenance": "Original vector redraw guided by owner-provided satchel reference; no source pixels copied",
+    "runtime": "Uploaded image renders at 36px HUD size; moderation Approved",
+    "private_references": "Ignored private UI cache; no IDs in this report",
+    "private_mapping": "44 previous bindings restored and unchanged; 45 including satchel. Selected uploads now merge into existing private module despite a partial cache.",
+    "interaction": "Repeated on final source: real F input opens (inventoryOpen=true), satchel click closes (inventoryClosed=true)."
+  },
+  "offline": {
+    "combat": "python tools/verify_combat.py passed, including foundation/movement checks",
+    "hub_art": "StyLua, Selene and strict luau-lsp analysis pass",
+    "normal_game": "Build passes; original HubMaterials mapping retained; no WallCrownWash, CavernWallFill or WallReviewCamera experiment code in normal place"
+  },
+  "runtime": {
+    "gray_mask_check": {
+      "passes": 6,
+      "failures": 0,
+      "captures": "build/lobby/wall-startup/gray-mask/",
+      "visual_result": "FAIL: captured PBR paint/normal textures missing despite passing material-value assertions. This is not a successful lighting fix."
+    },
+    "prior_static_check": "One material assertion used exact float equality and failed; corrected to tolerance in the experimental harness. No art acceptance inferred.",
+    "baked_fill_runtime_setter": "Rejected by Plugin capability. Replaced with a separate serialized experimental material build; never enabled in final normal game.",
+    "focus_trial": "Earlier timing/default-pitch candidates failed and were superseded. Final PreRender focus waits for PlayerModule; forward focus 160 studs, height125; default slight downward view warms upper wall, steep downward/training/Scriptable views retain their own focus.",
+    "distance_trial": "Configured view-distance priority was not reflected in native client property check; discarded.",
+    "extra_lights_trial": "Measured High wall extends to 251 studs. An extra 21-light crown ring helped held-focus diagnostics but failed normal-camera appearance; removed.",
+    "crystal_startup": "Existing original wall pools now precede wall imports; templates reused later. Ready observed at5.95seconds in native-focus comparison and9.73seconds during default-pitch test.",
+    "settled_lights": {
+      "point_lights": 543,
+      "spot_lights": 87,
+      "soft_lights": 177,
+      "soft_property_checksum_before": 3414417226,
+      "soft_property_checksum_after": 3414417226,
+      "checksum_method": "Sorted formatted XYZ, brightness, range and RGB records; rolling33 hash from5381 modulo2^32."
+    },
+    "final_scoped_check": {
+      "passes": 11,
+      "failures": 0,
+      "completed_seconds": 69,
+      "captures": "build/lobby/wall-startup/final-combined/",
+      "coverage": [
+        "Original wall materials retained",
+        "Satchel loads",
+        "Crystal pools ready before wall setup completes",
+        "View position unchanged",
+        "Forward/upward lighting focus",
+        "Default downward pitch prewarms upper wall",
+        "Training native focus",
+        "Lobby return",
+        "Steep downward native focus",
+        "Scriptable camera own focus"
+      ]
+    },
+    "native_window_captures": {
+      "comparison_dark_upper_wall": "build/lobby/wall-startup/native-focus-30.png",
+      "combined_early_upper_view": "build/lobby/wall-startup/crystal-order-30.png",
+      "combined_default_pitch_then_upper_view": "build/lobby/wall-startup/combined-default-startup.png",
+      "combined_opposite_wall": "build/lobby/wall-startup/combined-opposite-wall.png",
+      "restored_green_health": "build/lobby/wall-startup/ready-ui-native.png",
+      "note": "Actual Studio PrintWindow captures. First combined view around26seconds; default-pitch warmup followed by look-up at36.69seconds; opposite wall at162.30seconds with HubSolid=true. Fresh Play uses cached engine assets. MCP offscreen renders differ and are not acceptance evidence.",
+      "final_ui_and_wall": "build/lobby/wall-startup/final-satchel-and-upper-wall.png",
+      "final_inventory_open": "build/lobby/wall-startup/final-inventory-open.png"
+    },
+    "slug_preview_race": {
+      "problem": "CombatAssets can replicate before individual templates; initial stand-in previously stayed forever.",
+      "fix": "Refresh on relevant model arrival, prefer base icon over flight, replace previous viewport world/camera and disconnect on frame destruction.",
+      "deterministic_checks": {
+        "initial_placeholder": true,
+        "late_flight_replaces_it": true,
+        "later_base_icon_preferred": true,
+        "one_world_only": true,
+        "one_camera_only": true
+      },
+      "production_check": "FloppyFlight119descendants, InfernoIcon171, RammstoneIcon48 present in hotbar/inventory after fresh Play. Aquabeek remains its existing unimplemented-art stand-in. Temporary client fixtures removed and Play restarted."
+    },
+    "final_client": {
+      "clock_seconds": 174.625,
+      "HubSolid": true,
+      "full_rig_ready": true,
+      "crystal_lights_ready": true,
+      "bag_loaded": true,
+      "client_error_count": 0
+    }
+  },
+  "studio": "Prior MCP authorization confirmed. Refreshed outdated version-pinned local launcher to registered Studio binary; current official proxy connected through native stdio fallback. Old app transport closed and may need new app session. Source edits saved locally and four script checksums exactly match filesystem;45 UI references verified. Other Studio windows preserved.",
+  "review_place": "build/SlugshotLobbyTraining-Satchel-Clean.rbxlx",
+  "balance": "Five slots retained. Four versus five remains Considering; no balance or future PvP draft-flow change.",
+  "limits": [
+    "Owner visual acceptance pending",
+    "No multiplayer/mobile/controller coverage",
+    "Fresh Play uses cached engine assets; first-install downloads untested",
+    "Geometry/textures still arrive progressively; this does not eliminate whole-scene load time",
+    "Prior broad training suite still has five timing failures",
+    "No experience published; no account/security/graphics preferences changed",
+    "Original app MCP transport needs reload; official stdio fallback works"
+  ],
+  "source_fidelity": {
+    "HubArt": {
+      "bytes": 115252,
+      "hash": 1288547016
+    },
+    "HubMotion": {
+      "bytes": 25996,
+      "hash": 1823844023
+    },
+    "SlugIcon": {
+      "bytes": 15943,
+      "hash": 1394140243
+    },
+    "Inventory": {
+      "bytes": 9547,
+      "hash": 3089524525
+    }
+  }
+}

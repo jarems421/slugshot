@@ -67,6 +67,41 @@ local styles: { [string]: Style } = {
 		motion = Styles.DefaultMotion,
 		aura = Styles.DefaultAura,
 	},
+	-- Rammstone: the same twirl and diffuse glow as Inferno's, in rock red, into his flying brute (owner: "make sure the
+	-- transformation is similar to Burpee's"); his red trail and pebbles are RammstoneMotion's.
+	Rammstone = {
+		formScale = 2.6,
+		glow = Color3.fromRGB(235, 52, 32),
+		core = Color3.fromRGB(255, 205, 170),
+		motion = Styles.DefaultMotion,
+		aura = Styles.DefaultAura,
+	},
+	-- Aquabeek: the same twirl and diffuse glow, in her bioluminescent aqua, into her bladed flying form; her water
+	-- trail and droplets are AquabeekMotion's.
+	Aquabeek = {
+		formScale = 2.6,
+		glow = Color3.fromRGB(56, 204, 242),
+		core = Color3.fromRGB(205, 245, 255),
+		motion = Styles.DefaultMotion,
+		aura = Styles.DefaultAura,
+	},
+	-- Tormato: the same twirl and glow in his vermilion, into his little red dragon; his wind trails are TormatoMotion's.
+	Tormato = {
+		formScale = 2.6,
+		glow = Color3.fromRGB(232, 78, 46),
+		core = Color3.fromRGB(240, 246, 255),
+		motion = Styles.DefaultMotion,
+		aura = Styles.DefaultAura,
+	},
+	-- Boon Doc: the same twirl and glow in his healing mint with a gold core, into his flying toad; his glowing motes are
+	-- BoonDocMotion's.
+	BoonDoc = {
+		formScale = 2.6,
+		glow = Color3.fromRGB(110, 230, 190),
+		core = Color3.fromRGB(255, 236, 170),
+		motion = Styles.DefaultMotion,
+		aura = Styles.DefaultAura,
+	},
 }
 
 function Styles.of(slugId: string): Style
